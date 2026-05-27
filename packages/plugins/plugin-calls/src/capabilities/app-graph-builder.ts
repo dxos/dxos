@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -19,7 +20,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'active-call',
+        id: DXN.make('org.dxos.plugin.calls.extension.activeCall'),
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const callManagerAtom = capabilities.atom(CallsCapabilities.Manager);
@@ -33,7 +34,7 @@ export default Capability.makeModule(
             joined
               ? [
                   AppNode.makeDeckCompanion({
-                    id: 'active-call',
+                    id: DXN.make('org.dxos.plugin.calls.extension.activeCall'),
                     label: ['call-panel.label', { ns: meta.id }],
                     icon: 'ph--video-conference--regular',
                     data: null,
@@ -45,7 +46,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createTypeExtension({
-        id: 'channel-chat-companion',
+        id: DXN.make('org.dxos.plugin.calls.extension.channelChatCompanion'),
         type: Channel.Channel,
         connector: (channel, get) => {
           const callManagerAtom = capabilities.atom(CallsCapabilities.Manager);
@@ -63,7 +64,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: 'chat',
+              id: DXN.make('org.dxos.plugin.calls.extension.chat'),
               label: ['channel-companion.label', { ns: meta.id }],
               icon: 'ph--hash--regular',
               data: 'chat',

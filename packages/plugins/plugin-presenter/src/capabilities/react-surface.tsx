@@ -8,6 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DXN } from '@dxos/keys';
 import { Collection, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 
@@ -20,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'document',
+        id: DXN.make('org.dxos.plugin.presenter.surface.document'),
         position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,
@@ -35,7 +36,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
       }),
       Surface.create({
-        id: 'collection',
+        id: DXN.make('org.dxos.plugin.presenter.surface.collection'),
         position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,
@@ -50,12 +51,12 @@ export default Capability.makeModule(() =>
         component: ({ role, data }) => <CollectionPresenterArticle role={role} subject={data.subject.object} />,
       }),
       Surface.create({
-        id: 'slide',
+        id: DXN.make('org.dxos.plugin.presenter.surface.slide'),
         filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.presenter.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

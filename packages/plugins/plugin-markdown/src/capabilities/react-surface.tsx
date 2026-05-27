@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import {
   Surface,
   useAtomCapability,
@@ -29,7 +30,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'surface.document',
+        id: DXN.make('org.dxos.plugin.markdown.surface.surfaceDocument'),
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
@@ -47,7 +48,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.text',
+        id: DXN.make('org.dxos.plugin.markdown.surface.surfaceText'),
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
         filter: AppSurface.oneOf(
@@ -68,7 +69,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.plugin-settings',
+        id: DXN.make('org.dxos.plugin.markdown.surface.surfacePluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
@@ -76,13 +77,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.editable',
+        id: DXN.make('org.dxos.plugin.markdown.surface.surfaceEditable'),
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
         component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
       }),
       Surface.create({
-        id: 'surface.preview',
+        id: DXN.make('org.dxos.plugin.markdown.surface.surfacePreview'),
         filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable !== true),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),

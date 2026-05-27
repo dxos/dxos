@@ -8,17 +8,19 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
 export type SpacetimeSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
 export const SpacetimeSettings = ({ settings, onSettingsChange }: SpacetimeSettingsProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(DXN.getName(meta.id));
 
   return (
     <SettingsForm.Viewport>
-      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}></SettingsForm.Section>
+      <SettingsForm.Section title={t('settings.title', { ns: DXN.getName(meta.id) })}></SettingsForm.Section>
     </SettingsForm.Viewport>
   );
 };

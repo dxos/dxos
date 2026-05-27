@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.slack',
+  id: DXN.make('org.dxos.plugin.slack'),
   name: 'Slack',
   author: 'DXOS',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-slack',

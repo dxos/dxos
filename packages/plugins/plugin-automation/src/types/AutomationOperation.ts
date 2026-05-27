@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 // Value-side `EchoURI` import keeps TS declaration emit portable — `TriggerTemplate`
 // references `EchoURI.Schema` and the inferred `CreateTriggerFromTemplate` type
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
@@ -19,11 +19,11 @@ import { meta } from '#meta';
 import { TriggerTemplate } from './schema';
 export { _EchoURIReference };
 
-const AUTOMATION_OPERATION = `${meta.id}.operation`;
+const AUTOMATION_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 export const CreateTriggerFromTemplate = Operation.make({
   meta: {
-    key: `${AUTOMATION_OPERATION}.create-trigger-from-template`,
+    key: DXN.make(`${AUTOMATION_OPERATION}.createTriggerFromTemplate`),
     name: 'Create Trigger From Template',
     icon: 'ph--lightning--regular',
   },

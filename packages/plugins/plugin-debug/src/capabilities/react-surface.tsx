@@ -8,6 +8,7 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
@@ -91,7 +92,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.debug.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -106,7 +107,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'space',
+        id: DXN.make('org.dxos.plugin.debug.surface.space'),
         role: 'article',
         filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
         component: ({ role, data }) => {
@@ -139,18 +140,18 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'app-graph',
+        id: DXN.make('org.dxos.plugin.debug.surface.appGraph'),
         role: 'article',
         filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
-        id: 'tools-explorer',
+        id: DXN.make('org.dxos.plugin.debug.surface.toolsExplorer'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
       }),
       Surface.create({
-        id: 'wireframe',
+        id: DXN.make('org.dxos.plugin.debug.surface.wireframe'),
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         position: 'first',
@@ -163,7 +164,7 @@ export default Capability.makeModule(
         ),
       }),
       Surface.create({
-        id: 'object-debug',
+        id: DXN.make('org.dxos.plugin.debug.surface.objectDebug'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
@@ -171,12 +172,12 @@ export default Capability.makeModule(
         component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: 'devtools-overview',
+        id: DXN.make('org.dxos.plugin.debug.surface.devtoolsOverview'),
         filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
-        id: 'space-objects',
+        id: DXN.make('org.dxos.plugin.debug.surface.spaceObjects'),
         filter: AppSurface.literal(
           Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
           'space-objects',
@@ -192,7 +193,7 @@ export default Capability.makeModule(
       }),
 
       Surface.create({
-        id: 'status',
+        id: DXN.make('org.dxos.plugin.debug.surface.status'),
         role: 'status-indicator',
         position: 'first',
         component: () => <DebugStatus />,
@@ -203,42 +204,42 @@ export default Capability.makeModule(
       //
 
       Surface.create({
-        id: 'client.config',
+        id: DXN.make('org.dxos.plugin.debug.surface.clientConfig'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Config),
         component: () => <ConfigPanel vaultSelector={false} />,
       }),
       Surface.create({
-        id: 'client.storage',
+        id: DXN.make('org.dxos.plugin.debug.surface.clientStorage'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Storage),
         component: () => <StoragePanel />,
       }),
       Surface.create({
-        id: 'client.logs',
+        id: DXN.make('org.dxos.plugin.debug.surface.clientLogs'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Logs),
         component: () => <LoggingPanel />,
       }),
       Surface.create({
-        id: 'client.diagnostics',
+        id: DXN.make('org.dxos.plugin.debug.surface.clientDiagnostics'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Diagnostics),
         component: () => <DiagnosticsPanel />,
       }),
       Surface.create({
-        id: 'halo.identity',
+        id: DXN.make('org.dxos.plugin.debug.surface.haloIdentity'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Identity),
         component: () => <IdentityPanel />,
       }),
       Surface.create({
-        id: 'halo.devices',
+        id: DXN.make('org.dxos.plugin.debug.surface.haloDevices'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Devices),
         component: () => <DeviceListPanel />,
       }),
       Surface.create({
-        id: 'halo.keyring',
+        id: DXN.make('org.dxos.plugin.debug.surface.haloKeyring'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Keyring),
         component: () => <KeyringPanel />,
       }),
       Surface.create({
-        id: 'halo.credentials',
+        id: DXN.make('org.dxos.plugin.debug.surface.haloCredentials'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Halo.Credentials),
         component: () => {
           const space = useActiveSpace();
@@ -250,7 +251,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.spaces',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoSpaces'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Spaces),
         component: () => {
           const { invokePromise } = useOperationInvoker();
@@ -262,7 +263,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.space',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoSpace'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Space),
         component: () => {
           const space = useActiveSpace();
@@ -279,7 +280,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.feeds',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoFeeds'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Feeds),
         component: () => {
           const space = useActiveSpace();
@@ -291,7 +292,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.objects',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoObjects'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Objects),
         component: () => {
           const space = useActiveSpace();
@@ -303,7 +304,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.schema',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoSchema'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Schema),
         component: () => {
           const space = useActiveSpace();
@@ -315,7 +316,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.automerge',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoAutomerge'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Automerge),
         component: () => {
           const space = useActiveSpace();
@@ -327,12 +328,12 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.queues',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoQueues'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Queues),
         component: () => <QueuesPanel />,
       }),
       Surface.create({
-        id: 'echo.members',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoMembers'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Members),
         component: () => {
           const space = useActiveSpace();
@@ -344,22 +345,22 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'echo.metadata',
+        id: DXN.make('org.dxos.plugin.debug.surface.echoMetadata'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Metadata),
         component: () => <MetadataPanel />,
       }),
       Surface.create({
-        id: 'mesh.signal',
+        id: DXN.make('org.dxos.plugin.debug.surface.meshSignal'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Signal),
         component: () => <SignalPanel />,
       }),
       Surface.create({
-        id: 'mesh.swarm',
+        id: DXN.make('org.dxos.plugin.debug.surface.meshSwarm'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Swarm),
         component: () => <SwarmPanel />,
       }),
       Surface.create({
-        id: 'mesh.network',
+        id: DXN.make('org.dxos.plugin.debug.surface.meshNetwork'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Mesh.Network),
         component: () => {
           const space = useActiveSpace();
@@ -371,12 +372,12 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'edge.dashboard',
+        id: DXN.make('org.dxos.plugin.debug.surface.edgeDashboard'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Dashboard),
         component: () => <EdgeDashboardPanel />,
       }),
       Surface.create({
-        id: 'edge.workflows',
+        id: DXN.make('org.dxos.plugin.debug.surface.edgeWorkflows'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Workflows),
         component: () => {
           const space = useActiveSpace();
@@ -388,7 +389,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'edge.traces',
+        id: DXN.make('org.dxos.plugin.debug.surface.edgeTraces'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Traces),
         component: () => {
           const space = useActiveSpace();
@@ -402,7 +403,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'edge.testing',
+        id: DXN.make('org.dxos.plugin.debug.surface.edgeTesting'),
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Testing),
         component: () => {
           const { invokePromise } = useOperationInvoker();

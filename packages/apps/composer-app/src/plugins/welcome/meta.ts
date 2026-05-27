@@ -3,9 +3,10 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.welcome',
+  id: DXN.make('org.dxos.plugin.welcome'),
   name: 'Welcome',
   author: 'DXOS',
   tags: ['system'],

@@ -6,12 +6,13 @@ import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 
 import * as Plugin from './plugin';
 import * as PluginAssetCache from './plugin-asset-cache';
 import * as UrlLoader from './url-loader';
 
-const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+const testMeta = { id: DXN.make('org.dxos.plugin.test'), name: 'Test' };
 
 const memoryStorage = (initial: string | null = null): UrlLoader.Storage => {
   let value = initial;
@@ -93,7 +94,7 @@ describe('UrlLoader', () => {
       };
 
       // Seed a remote entry without a version.
-      storage.set('test-key', JSON.stringify([{ id: 'org.dxos.plugin.foo', url: 'http://example.com/p.mjs' }]));
+      storage.set('test-key', JSON.stringify([{ id: DXN.make('org.dxos.plugin.foo'), url: 'http://example.com/p.mjs' }]));
 
       UrlLoader.setInstalledVersion('org.dxos.plugin.foo', 'v1.0.0', { storage, key: 'test-key' });
 
@@ -115,7 +116,7 @@ describe('UrlLoader', () => {
       };
       storage.set(
         'test-key',
-        JSON.stringify([{ id: 'org.dxos.plugin.foo', url: 'http://example.com/p.mjs', version: 'v1.0.0' }]),
+        JSON.stringify([{ id: DXN.make('org.dxos.plugin.foo'), url: 'http://example.com/p.mjs', version: 'v1.0.0' }]),
       );
 
       UrlLoader.setInstalledVersion('org.dxos.plugin.foo', 'v2.0.0', { storage, key: 'test-key' });

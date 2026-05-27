@@ -4,6 +4,8 @@
 
 import { type Resource } from '@dxos/react-ui';
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 import { Model, Scene } from '#types';
 
@@ -27,7 +29,7 @@ export const translations = [
         'typename.label_one': 'Object',
         'typename.label_other': 'Objects',
       },
-      [meta.id]: {
+      [DXN.getName(meta.id)]: {
         'plugin.name': 'Spacetime',
 
         'settings.title': 'Spacetime settings',

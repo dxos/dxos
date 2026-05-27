@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
+import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { List, ListItem, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -38,8 +39,9 @@ const DefaultStory = () => {
   const [selected, setSelected] = useState<string | undefined>();
 
   const handleAdd = useCallback(() => {
-    const id = `test-${random.number.int({ min: 0, max: 1_000 })}`;
-    const styles = getHashStyles(id);
+    const shortId = `test${random.number.int({ min: 0, max: 1_000 })}`;
+    const id = DXN.make(`org.dxos.story.surface.${shortId}`);
+    const styles = getHashStyles(shortId);
 
     manager.capabilities.contribute({
       module: 'test',
@@ -47,12 +49,12 @@ const DefaultStory = () => {
       implementation: create({
         id,
         role: 'item',
-        filter: (data): data is any => (data as any)?.id === id,
-        component: ({ ref }) => <TestComponent id={id} styles={styles} ref={ref} />,
+        filter: (data): data is any => (data as any)?.id === shortId,
+        component: ({ ref }) => <TestComponent id={shortId} styles={styles} ref={ref} />,
       }),
     });
 
-    setSelected(id);
+    setSelected(shortId);
   }, [manager]);
 
   const handleSelect = useCallback(() => {
@@ -64,7 +66,7 @@ const DefaultStory = () => {
       module: 'error',
       interface: Capabilities.ReactSurface,
       implementation: create({
-        id: 'error',
+        id: DXN.make('org.dxos.story.surface.error'),
         role: 'item',
         filter: (data): data is any => (data as any)?.id === 'error',
         component: () => {

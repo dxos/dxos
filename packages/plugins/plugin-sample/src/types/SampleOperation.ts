@@ -11,11 +11,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 // Convention: prefix all operation keys with the plugin's meta.id to avoid collisions.
-const SAMPLE_OPERATION = `${meta.id}.operation`;
+const SAMPLE_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 // `Operation.make` creates a typed operation definition.
 // - `meta.key`: globally unique identifier used for routing and invocation.
@@ -23,7 +24,7 @@ const SAMPLE_OPERATION = `${meta.id}.operation`;
 // - `input`: Effect/Schema defining the expected input shape.
 // - `output`: Effect/Schema defining the return shape.
 export const CreateSampleItem = Operation.make({
-  meta: { key: `${SAMPLE_OPERATION}.create-sample-item`, name: 'Create Sample Item', icon: 'ph--plus--regular' },
+  meta: { key: DXN.make(`${SAMPLE_OPERATION}.createSampleItem`), name: 'Create Sample Item', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotations({ description: 'Display name for the item.' }),
   }),
@@ -33,7 +34,7 @@ export const CreateSampleItem = Operation.make({
 });
 
 export const Randomize = Operation.make({
-  meta: { key: `${SAMPLE_OPERATION}.randomize`, name: 'Randomize Sample Item', icon: 'ph--shuffle--regular' },
+  meta: { key: DXN.make(`${SAMPLE_OPERATION}.randomize`), name: 'Randomize Sample Item', icon: 'ph--shuffle--regular' },
   input: Schema.Struct({
     item: Schema.Any.annotations({ description: 'The SampleItem to randomize.' }),
   }),
@@ -41,7 +42,7 @@ export const Randomize = Operation.make({
 });
 
 export const UpdateStatus = Operation.make({
-  meta: { key: `${SAMPLE_OPERATION}.update-status`, name: 'Update Status', icon: 'ph--pencil--regular' },
+  meta: { key: DXN.make(`${SAMPLE_OPERATION}.updateStatus`), name: 'Update Status', icon: 'ph--pencil--regular' },
   input: Schema.Struct({
     item: Schema.Any.annotations({ description: 'The SampleItem to update.' }),
     status: Schema.String.annotations({ description: 'The new status value.' }),

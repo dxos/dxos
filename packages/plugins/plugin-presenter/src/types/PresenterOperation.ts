@@ -7,17 +7,17 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Collection } from '@dxos/echo';
+import { Collection, DXN } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
 
-const PRESENTER_OPERATION = `${meta.id}.operation`;
+const PRESENTER_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 // TODO(wittjosiah): This appears to be unused.
 export const TogglePresentation = Operation.make({
   meta: {
-    key: `${PRESENTER_OPERATION}.toggle-presentation`,
+    key: DXN.make(`${PRESENTER_OPERATION}.togglePresentation`),
     name: 'Toggle Presentation',
     icon: 'ph--presentation--regular',
   },

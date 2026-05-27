@@ -8,6 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -21,7 +22,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       GraphBuilder.createExtension({
-        id: 'root',
+        id: DXN.make('org.dxos.plugin.support.extension.root'),
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -65,7 +66,7 @@ export default Capability.makeModule(
       // article. The panel surface (`help-companion` in react-surface)
       // renders the owning plugin's `meta.description`.
       GraphBuilder.createExtension({
-        id: 'help-companion',
+        id: DXN.make('org.dxos.plugin.support.extension.helpCompanion'),
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -82,7 +83,7 @@ export default Capability.makeModule(
       // Deck companion: feedback / help tab in the complementary sidebar (R1).
       // Renders the FeedbackPanel via the `deck-companion--help` surface.
       GraphBuilder.createExtension({
-        id: 'help',
+        id: DXN.make('org.dxos.plugin.support.extension.help'),
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -100,7 +101,7 @@ export default Capability.makeModule(
       // Deck companion: Discord community tab in the complementary sidebar (R1).
       // Renders the Discord widget iframe via the `deck-companion--discord` surface.
       GraphBuilder.createExtension({
-        id: 'discord',
+        id: DXN.make('org.dxos.plugin.support.extension.discord'),
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -120,7 +121,7 @@ export default Capability.makeModule(
       // The extension itself is positioned `first` so its node is inserted ahead of other
       // `position: 'first'` siblings (Settings, Collections) under the personal space.
       GraphBuilder.createExtension({
-        id: 'welcome',
+        id: DXN.make('org.dxos.plugin.support.extension.welcome'),
         position: 'first',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {

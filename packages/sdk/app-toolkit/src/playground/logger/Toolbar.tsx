@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { DXN } from '@dxos/keys';
 import { Button } from '@dxos/react-ui';
 
 import { LogOperation } from './schema';
@@ -22,7 +23,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'org.dxos.test.logger.action',
+        id: DXN.make('org.dxos.test.logger.action'),
         role: 'toolbar',
         component: Logger,
       }),

@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.navtree',
+  id: DXN.make('org.dxos.plugin.navtree'),
   name: 'Navtree',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -31,4 +32,4 @@ export const meta: Plugin.Meta = {
 // TODO(wittjosiah): Factor out.
 export const KEY_BINDING = 'KeyBinding';
 // TODO(wittjosiah): Factor out.
-export const COMMANDS_DIALOG = `${meta.id}.commands-dialog`;
+export const COMMANDS_DIALOG = DXN.make(`${DXN.getName(meta.id)}.commandsDialog`);

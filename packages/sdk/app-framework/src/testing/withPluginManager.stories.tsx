@@ -7,6 +7,8 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { DXN } from '@dxos/keys';
+
 import { Capabilities } from '../common';
 import { Capability } from '../core';
 import { Surface } from '../ui';
@@ -32,7 +34,7 @@ const meta = {
         Capability.contributes(
           Capabilities.ReactSurface,
           Surface.create({
-            id: 'test',
+            id: DXN.make('org.dxos.story.surface.test'),
             role: 'main',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),

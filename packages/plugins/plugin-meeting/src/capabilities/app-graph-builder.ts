@@ -11,6 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Feed, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CallsCapabilities } from '@dxos/plugin-calls';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
@@ -45,7 +46,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
       GraphBuilder.createTypeExtension({
-        id: 'share-call-link',
+        id: DXN.make('org.dxos.plugin.meeting.extension.shareCallLink'),
         type: Channel.Channel,
         actions: (channel, get) => {
           const space = getSpace(channel);
@@ -74,7 +75,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'call-companion',
+        id: DXN.make('org.dxos.plugin.meeting.extension.callCompanion'),
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(CallsCapabilities.Manager);
@@ -101,7 +102,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'call-transcript',
+        id: DXN.make('org.dxos.plugin.meeting.extension.callTranscript'),
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
@@ -176,7 +177,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'meeting-transcript-companion',
+        id: DXN.make('org.dxos.plugin.meeting.extension.meetingTranscriptCompanion'),
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.succeed([

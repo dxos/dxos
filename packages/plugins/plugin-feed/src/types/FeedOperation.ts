@@ -8,19 +8,19 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
 import * as Magazine from './Magazine';
 import * as Subscription from './Subscription';
 
-const FEED_OPERATION = `${meta.id}.operation`;
+const FEED_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
 export const SyncFeed = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.sync-feed`,
+    key: DXN.make(`${FEED_OPERATION}.syncFeed`),
     name: 'Sync Feed',
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
@@ -38,7 +38,7 @@ export const SyncFeed = Operation.make({
  */
 export const ListCandidatePosts = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.list-candidate-posts`,
+    key: DXN.make(`${FEED_OPERATION}.listCandidatePosts`),
     name: 'List Candidate Posts',
     description: "Returns uncurated Posts from a Magazine's referenced feeds.",
     icon: 'ph--list--regular',
@@ -68,7 +68,7 @@ export const ListCandidatePosts = Operation.make({
  */
 export const FetchArticleContent = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.fetch-article-content`,
+    key: DXN.make(`${FEED_OPERATION}.fetchArticleContent`),
     name: 'Fetch Article Content',
     description: "Fetches and extracts text + image URLs from a Post's article page.",
     icon: 'ph--article--regular',
@@ -96,7 +96,7 @@ export const FetchArticleContent = Operation.make({
  */
 export const LoadPostContent = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.load-post-content`,
+    key: DXN.make(`${FEED_OPERATION}.loadPostContent`),
     name: 'Load Post Content',
     description: 'Fetches and stores the full article content on a Post.',
     icon: 'ph--download--regular',
@@ -115,7 +115,7 @@ export const LoadPostContent = Operation.make({
  */
 export const AddPostToMagazine = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.add-post-to-magazine`,
+    key: DXN.make(`${FEED_OPERATION}.addPostToMagazine`),
     name: 'Add Post to Magazine',
     description: 'Enriches a Post with snippet/imageUrl and appends it to a Magazine.',
     icon: 'ph--plus--regular',
@@ -148,7 +148,7 @@ export const AddPostToMagazine = Operation.make({
  */
 export const RefreshMagazine = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.refresh-magazine`,
+    key: DXN.make(`${FEED_OPERATION}.refreshMagazine`),
     name: 'Refresh Magazine',
     description: 'Syncs feeds, curates new posts, and applies per-feed keep limits.',
     icon: 'ph--arrows-clockwise--regular',
@@ -172,7 +172,7 @@ export const RefreshMagazine = Operation.make({
  */
 export const CurateMagazine = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.curate-magazine`,
+    key: DXN.make(`${FEED_OPERATION}.curateMagazine`),
     name: 'Curate Magazine',
     description: "Adds uncurated Posts from the Magazine's feeds with derived snippets.",
     icon: 'ph--sparkle--regular',

@@ -4,6 +4,7 @@
 
 import type { FC, PropsWithChildren, ReactNode, RefCallback } from 'react';
 
+import { DXN } from '@dxos/keys';
 import type { MakeOptional, Position } from '@dxos/util';
 
 /**
@@ -166,7 +167,7 @@ export type ComponentFunction<T extends Record<string, any> = Record<string, any
  */
 export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
   kind: 'react';
-  id: string;
+  id: DXN.DXN;
   role: string | string[];
   position?: Position;
   component: ComponentFunction<T>;
@@ -178,7 +179,7 @@ export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
  */
 export type WebComponentDefinition<T extends Record<string, any> = any> = Readonly<{
   kind: 'web-component';
-  id: string;
+  id: DXN.DXN;
   role: string | string[];
   position?: Position;
   /**
@@ -198,7 +199,7 @@ export type Definition<T extends Record<string, any> = any> = ReactDefinition<T>
  * Typed React surface definition — role is derived from the filter's bindings.
  */
 export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly<{
-  id: string;
+  id: DXN.DXN;
   filter: SurfaceFilter<T>;
   component: ComponentFunction<T>;
   position?: Position;
@@ -208,7 +209,7 @@ export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly
  * Typed Web Component surface definition.
  */
 export type TypedWebComponentDefinition<T extends Record<string, any> = any> = Readonly<{
-  id: string;
+  id: DXN.DXN;
   filter: SurfaceFilter<T>;
   tagName: string;
   position?: Position;

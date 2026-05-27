@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space';
@@ -20,7 +21,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'devtools',
+        id: DXN.make('org.dxos.plugin.debug.extension.devtools'),
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),
         connector: (node, get) =>
           Effect.gen(function* () {
@@ -353,7 +354,7 @@ export default Capability.makeModule(
 
       // Debug object companion.
       GraphBuilder.createExtension({
-        id: 'debug-object',
+        id: DXN.make('org.dxos.plugin.debug.extension.debugObject'),
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -369,7 +370,7 @@ export default Capability.makeModule(
 
       // Devtools deck companion.
       GraphBuilder.createExtension({
-        id: 'devtools-overview',
+        id: DXN.make('org.dxos.plugin.debug.extension.devtoolsOverview'),
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -385,7 +386,7 @@ export default Capability.makeModule(
 
       // Object explorer.
       GraphBuilder.createExtension({
-        id: 'space-objects',
+        id: DXN.make('org.dxos.plugin.debug.extension.spaceObjects'),
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

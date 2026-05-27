@@ -31,6 +31,8 @@ import {
   TracePanel,
   TriggerStatus,
 } from '#containers';
+import { DXN } from '@dxos/keys';
+
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
 import { type Assistant } from '#types';
 
@@ -38,7 +40,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.assistant.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
@@ -46,7 +48,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'chat',
+        id: DXN.make('org.dxos.plugin.assistant.surface.chat'),
         role: 'article',
         filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
           typeof data.attendableId === 'string' &&
@@ -57,19 +59,19 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'agent',
+        id: DXN.make('org.dxos.plugin.assistant.surface.agent'),
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         component: ({ data, role }) => (
           <AgentArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'agent-properties',
+        id: DXN.make('org.dxos.plugin.assistant.surface.agentProperties'),
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
         component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'companion-chat',
+        id: DXN.make('org.dxos.plugin.assistant.surface.companionChat'),
         role: 'article',
         filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
@@ -86,7 +88,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'companion-invocations',
+        id: DXN.make('org.dxos.plugin.assistant.surface.companionInvocations'),
         role: 'article',
         filter: (data): data is { companionTo: Sequence.Sequence } =>
           (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
@@ -108,21 +110,21 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'blueprint',
+        id: DXN.make('org.dxos.plugin.assistant.surface.blueprint'),
         filter: AppSurface.object(AppSurface.Article, Blueprint.Blueprint),
         component: ({ data, role }) => (
           <BlueprintArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'prompt',
+        id: DXN.make('org.dxos.plugin.assistant.surface.prompt'),
         filter: AppSurface.object(AppSurface.Article, Routine.Routine),
         component: ({ data, role }) => (
           <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'plan',
+        id: DXN.make('org.dxos.plugin.assistant.surface.plan'),
         filter: AppSurface.object(AppSurface.Article, Plan.Plan),
         component: ({ data, role }) => (
           <PlanArticle role={role} subject={data.subject} attendableId={data.attendableId} />
@@ -134,7 +136,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'trace',
+        id: DXN.make('org.dxos.plugin.assistant.surface.trace'),
         filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--trace'), 'trace'),
         component: () => {
           const space = useActiveSpace();
@@ -150,7 +152,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'status',
+        id: DXN.make('org.dxos.plugin.assistant.surface.status'),
         role: 'status-indicator',
         component: () => {
           const space = useActiveSpace();
@@ -162,7 +164,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'prompts',
+        id: DXN.make('org.dxos.plugin.assistant.surface.prompts'),
         filter: AppSurface.subject(
           Surface.makeType<{ subject: Obj.Any; attendableId: string }>('prompts'),
           Obj.isObject,

@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { Capability } from '../core';
 import { Label } from './translations';
@@ -21,7 +22,7 @@ export namespace UndoOperation {
    */
   export const ShowUndo = Operation.make({
     meta: {
-      key: `${UNDO_NAMESPACE}.operation.show-undo`,
+      key: DXN.make(`${UNDO_NAMESPACE}.operation.showUndo`),
       name: 'Show Undo',
       description: 'Show an undo toast notification.',
       icon: 'ph--arrow-counter-clockwise--regular',

@@ -11,6 +11,7 @@ import * as Stream from 'effect/Stream';
 
 import { Operation } from '@dxos/compute';
 import { OperationInvoker } from '@dxos/operation';
+import { DXN } from '@dxos/keys';
 
 //
 // Test Operations
@@ -19,31 +20,31 @@ import { OperationInvoker } from '@dxos/operation';
 export const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: 'test.compute' },
+  meta: { key: DXN.make('org.dxos.test.compute') },
 });
 
 export const HalveCompute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: 'test.halve-compute' },
+  meta: { key: DXN.make('org.dxos.test.halveCompute') },
 });
 
 export const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: 'test.to-string' },
+  meta: { key: DXN.make('org.dxos.test.toString') },
 });
 
 export const Add = Operation.make({
   input: Schema.Tuple(Schema.Number, Schema.Number),
   output: Schema.Number,
-  meta: { key: 'test.add' },
+  meta: { key: DXN.make('org.dxos.test.add') },
 });
 
 export const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: 'test.side-effect' },
+  meta: { key: DXN.make('org.dxos.test.sideEffect') },
 });
 
 //

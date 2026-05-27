@@ -6,10 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { Credential, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 export const SyncIssues = Operation.make({
   meta: {
-    key: 'org.dxos.function.linear.sync-issues',
+    key: DXN.make('org.dxos.function.linear.sync-issues'),
     name: 'Linear',
     description: 'Sync issues from Linear.',
     icon: 'ph--arrows-clockwise--regular',

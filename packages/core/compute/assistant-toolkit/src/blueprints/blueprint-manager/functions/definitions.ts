@@ -7,10 +7,11 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 export const QueryBlueprints = Operation.make({
   meta: {
-    key: 'org.dxos.function.blueprint-manager.query-blueprints',
+    key: DXN.make('org.dxos.function.blueprint-manager.query-blueprints'),
     name: 'Query blueprints',
     description: 'Queries available blueprints.',
     icon: 'ph--blueprint--regular',
@@ -22,7 +23,7 @@ export const QueryBlueprints = Operation.make({
 
 export const EnableBlueprints = Operation.make({
   meta: {
-    key: 'org.dxos.function.blueprint-manager.enable-blueprints',
+    key: DXN.make('org.dxos.function.blueprint-manager.enable-blueprints'),
     name: 'Enable blueprints',
     description:
       'Enables blueprints in the current conversation by their keys. Only blueprints with agentCanEnable=true can be enabled. Always call [query-blueprints] first to discover available blueprint keys.',
@@ -48,7 +49,7 @@ export const EnableBlueprints = Operation.make({
 
 export const UpdateBlueprints = Operation.make({
   meta: {
-    key: 'org.dxos.function.blueprint-manager.refresh-blueprints',
+    key: DXN.make('org.dxos.function.blueprint-manager.refresh-blueprints'),
     name: 'Refresh blueprints',
     description:
       'Updates the blueprints saved to the database with the latest version from the registry. Sometimes blueprints in the database can become outdated. Use this function to pull in the latest versions.',

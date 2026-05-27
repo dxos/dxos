@@ -8,6 +8,7 @@ import React, { lazy } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DXN } from '@dxos/keys';
 
 import { Sidekick } from '#types';
 
@@ -18,7 +19,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'sidekick-dashboard',
+        id: DXN.make('org.dxos.plugin.sidekick.surface.sidekickDashboard'),
         filter: AppSurface.object(AppSurface.Article, Sidekick.Profile),
         component: ({ data, role }) => (
           <SidekickArticle role={role} subject={data.subject} attendableId={data.attendableId} />

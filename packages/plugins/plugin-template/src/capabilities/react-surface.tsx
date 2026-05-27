@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -17,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'root',
+        id: DXN.make('org.dxos.plugin.template.surface.root'),
         filter: AppSurface.object(AppSurface.Article, Template.Data),
         component: ({ data, role }) => (
           <TemplatePanel role={role} subject={data.subject} attendableId={data.attendableId} />

@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { Card } from '@dxos/react-ui';
 import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
@@ -24,7 +25,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create<{ subject: Person.Person }>({
-        id: 'schema-popover--contact',
+        id: DXN.make('org.dxos.plugin.preview.surface.schemaPopoverContact'),
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Person.Person),
         component: ({ data, role }) => {
@@ -37,7 +38,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--organization',
+        id: DXN.make('org.dxos.plugin.preview.surface.schemaPopoverOrganization'),
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Organization.Organization),
         component: ({ data, role }) => {
@@ -50,7 +51,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--project',
+        id: DXN.make('org.dxos.plugin.preview.surface.schemaPopoverProject'),
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
         component: ({ data, role }) => {
@@ -58,7 +59,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--task',
+        id: DXN.make('org.dxos.plugin.preview.surface.schemaPopoverTask'),
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Task.Task),
         component: ({ data, role }) => {
@@ -66,7 +67,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
-        id: 'schema-popover--expando',
+        id: DXN.make('org.dxos.plugin.preview.surface.schemaPopoverExpando'),
         filter: AppSurface.object(AppSurface.Card, Expando.Expando),
         component: ({ data, role }) => {
           return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
@@ -74,7 +75,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'schema-popover--dynamic-type',
+        id: DXN.make('org.dxos.plugin.preview.surface.schemaPopoverDynamicType'),
         role: 'card--content',
         filter: (data): data is { subject: Obj.Unknown } => {
           if (!Obj.isObject(data.subject)) {
@@ -105,7 +106,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create({
-        id: 'fallback-popover',
+        id: DXN.make('org.dxos.plugin.preview.surface.fallbackPopover'),
         role: 'card--content',
         position: 'last',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
@@ -115,7 +116,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'fallback-json',
+        id: DXN.make('org.dxos.plugin.preview.surface.fallbackJson'),
         role: 'card--content',
         position: 'last',
         filter: (data): data is Record<string, unknown> => true,
@@ -125,7 +126,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'section',
+        id: DXN.make('org.dxos.plugin.preview.surface.section'),
         position: 'last',
         filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
         component: ({ data }) => {

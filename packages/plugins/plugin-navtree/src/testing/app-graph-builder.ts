@@ -6,6 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { random } from '@dxos/random';
@@ -26,14 +27,14 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
     Effect.all([
       // Create app menu actions.
       GraphBuilder.createExtension({
-        id: 'app-menu',
+        id: DXN.make('org.dxos.plugin.navtree.extension.appMenu'),
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
               id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
-                log.info('action', { id: 'app-menu', index: i });
+                log.info('action', { id: DXN.make('org.dxos.plugin.navtree.extension.appMenu'), index: i });
               }),
               properties: {
                 label: `Action ${i}`,
@@ -45,12 +46,12 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create user account node.
       GraphBuilder.createExtension({
-        id: 'user-account',
+        id: DXN.make('org.dxos.plugin.navtree.extension.userAccount'),
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             Node.make({
-              id: 'user-account',
+              id: DXN.make('org.dxos.plugin.navtree.extension.userAccount'),
               type: 'user-account',
               properties: {
                 label: 'User profile',
@@ -63,7 +64,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
               },
               nodes: [
                 Node.make({
-                  id: 'profile',
+                  id: DXN.make('org.dxos.plugin.navtree.extension.profile'),
                   type: 'profile',
                   properties: {
                     label: 'Profile',
@@ -71,7 +72,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                   },
                 }),
                 Node.make({
-                  id: 'devices',
+                  id: DXN.make('org.dxos.plugin.navtree.extension.devices'),
                   type: 'devices',
                   properties: {
                     label: 'Devices',
@@ -79,7 +80,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                   },
                 }),
                 Node.make({
-                  id: 'security',
+                  id: DXN.make('org.dxos.plugin.navtree.extension.security'),
                   type: 'security',
                   properties: {
                     label: 'Security',
@@ -92,7 +93,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create space (workspace) nodes directly under root.
       GraphBuilder.createExtension({
-        id: 'spaces',
+        id: DXN.make('org.dxos.plugin.navtree.extension.spaces'),
         match: NodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.sync(() => {
@@ -127,14 +128,14 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create space actions.
       GraphBuilder.createExtension({
-        id: 'space-actions',
+        id: DXN.make('org.dxos.plugin.navtree.extension.spaceActions'),
         match: NodeMatcher.whenNodeType('space'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
               id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
-                log.info('action', { id: 'space-actions', index: i });
+                log.info('action', { id: DXN.make('org.dxos.plugin.navtree.extension.spaceActions'), index: i });
               }),
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
@@ -145,7 +146,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create object nodes.
       GraphBuilder.createExtension({
-        id: 'objects',
+        id: DXN.make('org.dxos.plugin.navtree.extension.objects'),
         match: NodeMatcher.whenNodeType('space'),
         connector: (_, get) =>
           Effect.sync(() => {
@@ -178,14 +179,14 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create object actions.
       GraphBuilder.createExtension({
-        id: 'object-actions',
+        id: DXN.make('org.dxos.plugin.navtree.extension.objectActions'),
         match: NodeMatcher.whenNodeType('object'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
               id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
-                log.info('action', { id: 'object-actions', index: i });
+                log.info('action', { id: DXN.make('org.dxos.plugin.navtree.extension.objectActions'), index: i });
               }),
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,

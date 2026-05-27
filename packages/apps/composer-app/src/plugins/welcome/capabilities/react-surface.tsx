@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 
 import {
@@ -24,7 +25,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'welcome',
+        id: DXN.make('org.dxos.plugin.welcome.surface.welcome'),
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
         component: () => {
           const client = useClient();
@@ -34,7 +35,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'native-redirect',
+        id: DXN.make('org.dxos.plugin.welcome.surface.nativeRedirect'),
         filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
         component: ({ data }) => <NativeRedirectDialog {...data.props} />,
       }),

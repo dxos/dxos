@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.assistant',
+  id: DXN.make('org.dxos.plugin.assistant'),
   name: 'Assistant',
   author: 'DXOS',
   description: trim`
@@ -36,7 +37,7 @@ export const meta: Plugin.Meta = {
   spec: 'PLUGIN.mdl',
 };
 
-export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;
+export const ASSISTANT_DIALOG = DXN.make(`${DXN.getName(meta.id)}.assistantDialog`);
 
 /** Companion variant identifier for the assistant chat panel. */
 export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';

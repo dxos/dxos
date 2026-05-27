@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { NOT_FOUND_PATH } from '@dxos/app-toolkit';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
+import { DXN } from '@dxos/keys';
 
 import { DeckSettings } from '#components';
 import { meta } from '#meta';
@@ -18,7 +19,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.deck.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -26,7 +27,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'not-found',
+        id: DXN.make('org.dxos.plugin.deck.surface.notFound'),
         role: 'article',
         filter: (data): data is { attendableId: string } => data.attendableId === NOT_FOUND_PATH,
         component: () => <NotFoundArticle />,

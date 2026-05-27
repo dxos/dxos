@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.outliner',
+  id: DXN.make('org.dxos.plugin.outliner'),
   name: 'Outliner',
   author: 'DXOS',
   description: trim`
@@ -28,4 +29,4 @@ export const meta: Plugin.Meta = {
   tags: ['labs'],
 };
 
-export const QUICK_ENTRY_DIALOG = `${meta.id}.quick-entry-dialog`;
+export const QUICK_ENTRY_DIALOG = DXN.make(`${DXN.getName(meta.id)}.quickEntryDialog`);

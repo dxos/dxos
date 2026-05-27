@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
@@ -15,7 +16,7 @@ export const TriggerTemplate = Schema.Union(
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${meta.id}.action.create-trigger-from-template`,
+    `${DXN.getName(meta.id)}.action.create-trigger-from-template`,
     {
       input: Schema.Struct({
         db: Database.Database,

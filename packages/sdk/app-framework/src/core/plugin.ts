@@ -9,6 +9,7 @@ import * as Pipeable from 'effect/Pipeable';
 
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -149,13 +150,11 @@ class PluginModuleImpl implements PluginModule {
 
 export type Meta = {
   /**
-   * Globally unique ID.
+   * Globally unique ID in DXN format.
    *
-   * Expected to be in the form of a valid URL.
-   *
-   * @example org.dxos.plugin.example
+   * @example DXN.make('org.dxos.plugin.example')
    */
-  id: string;
+  id: DXN.DXN;
 
   /**
    * Human-readable name.
@@ -231,7 +230,7 @@ export type Meta = {
    * substitute an alternative implementation that satisfies the dependent's
    * capability needs in its own way.
    */
-  dependsOn?: string[];
+  dependsOn?: DXN.DXN[];
 };
 
 /**
@@ -355,14 +354,15 @@ const resolveModule = (
   options?: any,
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
+  const pluginName = DXN.getName(meta.id);
   const id = Option.fromNullable(moduleOptions.id).pipe(
     Option.match({
       onNone: () => {
         const exportName = Capability.getModuleTag(moduleOptions.activate);
         invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
-        return computeModuleId(meta.id, exportName);
+        return computeModuleId(pluginName, exportName);
       },
-      onSome: (id) => computeModuleId(meta.id, id),
+      onSome: (id) => computeModuleId(pluginName, id),
     }),
   );
   return new PluginModuleImpl({ ...moduleOptions, id });
@@ -377,7 +377,7 @@ const resolveModule = (
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
   const meta = builder.meta;
-  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
+  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${DXN.getName(meta.id)} declares itself as a dependency.`);
 
   const factory = (options: T) => {
     const modules = builder.modules.map((module) => resolveModule(meta, module, options));

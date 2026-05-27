@@ -4,10 +4,11 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 // TODO(wittjosiah): Rename plugin (package + id) from `native` to `app` to match the user-facing name.
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.native',
+  id: DXN.make('org.dxos.plugin.native'),
   name: 'App',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',

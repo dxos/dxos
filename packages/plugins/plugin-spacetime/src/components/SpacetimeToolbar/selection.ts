@@ -4,6 +4,8 @@
 
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 
 import { type SelectionMode } from '../../tools';
@@ -22,7 +24,7 @@ export const createSelectionModeActions =
     builder.group(
       'selection-mode',
       {
-        label: ['selection-mode.label', { ns: meta.id }],
+        label: ['selection-mode.label', { ns: DXN.getName(meta.id) }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
@@ -32,7 +34,7 @@ export const createSelectionModeActions =
         for (const [mode, icon] of Object.entries(selectionModes)) {
           group.action(
             mode,
-            { label: [`selection-mode.${mode}.label`, { ns: meta.id }], checked: currentMode === mode, icon },
+            { label: [`selection-mode.${mode}.label`, { ns: DXN.getName(meta.id) }], checked: currentMode === mode, icon },
             () => onModeChange(mode as SelectionMode),
           );
         }

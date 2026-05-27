@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer } from '@dxos/devtools';
+import { DXN } from '@dxos/keys';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
@@ -19,14 +20,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'root',
+        id: DXN.make('org.dxos.plugin.pipeline.surface.root'),
         filter: AppSurface.object(AppSurface.Article, Pipeline.Pipeline),
         component: ({ data, role }) => (
           <PipelineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'companion.invocations',
+        id: DXN.make('org.dxos.plugin.pipeline.surface.companionInvocations'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'invocations'),
           AppSurface.companion(AppSurface.Article, Pipeline.Pipeline),
@@ -44,7 +45,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-properties',
+        id: DXN.make('org.dxos.plugin.pipeline.surface.objectProperties'),
         filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
         component: ({ data }) => <PipelineProperties pipeline={data.subject} />,
       }),

@@ -9,6 +9,7 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
 const Item = ({
@@ -70,7 +71,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'org.dxos.test.generator.main',
+        id: DXN.make('org.dxos.test.generator.main'),
         role: 'primary',
         component: Main,
       }),

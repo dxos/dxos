@@ -6,13 +6,15 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { Surface } from '../ui';
 import { createTestApp } from './harness';
 import { render, renderSurface } from './react';
 
-const testMeta = { id: 'org.dxos.plugin.test.react-harness', name: 'ReactHarnessTest' };
+const testMeta = { id: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' };
 
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({
@@ -22,7 +24,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
-            id: 'greeting',
+            id: DXN.make('org.dxos.test.surface.greeting'),
             role: 'greeting',
             component: ({ data }) => <span data-testid='greeting'>hello {data.message}</span>,
           }),

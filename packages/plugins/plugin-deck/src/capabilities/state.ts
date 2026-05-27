@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '#types';
@@ -49,7 +50,7 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}.state`,
+      key: DXN.make(`${DXN.getName(meta.id)}.state`),
       schema: StoredDeckState,
       defaultValue: () => ({ ...defaultDeckState }),
     });

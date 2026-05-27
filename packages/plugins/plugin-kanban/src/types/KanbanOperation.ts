@@ -8,11 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { View } from '@dxos/echo';
+import { View, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-const KANBAN_OPERATION = `${meta.id}.operation`;
+const KANBAN_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 export const DeleteCardFieldOutput = Schema.Struct({
   field: View.FieldSchema.annotations({ description: 'The deleted field schema.' }),
@@ -23,7 +23,7 @@ export const DeleteCardFieldOutput = Schema.Struct({
 export type DeleteCardFieldOutput = Schema.Schema.Type<typeof DeleteCardFieldOutput>;
 
 export const DeleteCardField = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.delete-card-field`, name: 'Delete Card Field', icon: 'ph--minus-circle--regular' },
+  meta: { key: DXN.make(`${KANBAN_OPERATION}.deleteCardField`), name: 'Delete Card Field', icon: 'ph--minus-circle--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     view: View.View,
@@ -39,7 +39,7 @@ export const DeleteCardOutput = Schema.Struct({
 export type DeleteCardOutput = Schema.Schema.Type<typeof DeleteCardOutput>;
 
 export const DeleteCard = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.delete-card`, name: 'Delete Card', icon: 'ph--trash--regular' },
+  meta: { key: DXN.make(`${KANBAN_OPERATION}.deleteCard`), name: 'Delete Card', icon: 'ph--trash--regular' },
   input: Schema.Struct({
     card: Schema.Any,
   }),
@@ -48,7 +48,7 @@ export const DeleteCard = Operation.make({
 
 export const RestoreCardField = Operation.make({
   meta: {
-    key: `${KANBAN_OPERATION}.restore-card-field`,
+    key: DXN.make(`${KANBAN_OPERATION}.restoreCardField`),
     name: 'Restore Card Field',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -63,7 +63,7 @@ export const RestoreCardField = Operation.make({
 });
 
 export const RestoreCard = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.restore-card`, name: 'Restore Card', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: { key: DXN.make(`${KANBAN_OPERATION}.restoreCard`), name: 'Restore Card', icon: 'ph--clock-counter-clockwise--regular' },
   input: Schema.Struct({
     card: Schema.Any.annotations({ description: 'The card to restore.' }),
   }),

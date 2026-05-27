@@ -9,15 +9,16 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Channel } from '@dxos/types';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 import * as Meeting from './Meeting';
 
-const MEETING_OPERATION = `${meta.id}.operation`;
+const MEETING_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 export const Create = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.create`, name: 'Create Meeting', icon: 'ph--video-camera--regular' },
+  meta: { key: DXN.make(`${MEETING_OPERATION}.create`), name: 'Create Meeting', icon: 'ph--video-camera--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -29,7 +30,7 @@ export const Create = Operation.make({
 });
 
 export const SetActive = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.set-active`, name: 'Set Active Meeting', icon: 'ph--video-camera--regular' },
+  meta: { key: DXN.make(`${MEETING_OPERATION}.setActive`), name: 'Set Active Meeting', icon: 'ph--video-camera--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Schema.optional(Meeting.Meeting),
@@ -41,7 +42,7 @@ export const SetActive = Operation.make({
 
 export const HandlePayload = Operation.make({
   meta: {
-    key: `${MEETING_OPERATION}.handle-payload`,
+    key: DXN.make(`${MEETING_OPERATION}.handlePayload`),
     name: 'Handle Meeting Payload',
     icon: 'ph--arrows-clockwise--regular',
   },
@@ -55,7 +56,7 @@ export const HandlePayload = Operation.make({
 });
 
 export const Summarize = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.summarize`, name: 'Summarize Meeting', icon: 'ph--text-align-left--regular' },
+  meta: { key: DXN.make(`${MEETING_OPERATION}.summarize`), name: 'Summarize Meeting', icon: 'ph--text-align-left--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     meeting: Meeting.Meeting,

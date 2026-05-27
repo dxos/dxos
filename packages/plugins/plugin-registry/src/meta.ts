@@ -5,6 +5,7 @@
 import { type Plugin } from '@dxos/app-framework';
 import { pinnedWorkspaceId } from '@dxos/app-toolkit';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const REGISTRY_ID = pinnedWorkspaceId('dxos:plugin-registry');
 export const REGISTRY_KEY = 'plugin-registry';
@@ -31,7 +32,7 @@ export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/
 export const getPluginSpecPath = (pluginId: string): string => `${getPluginPath(pluginId)}/spec`;
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.registry',
+  id: DXN.make('org.dxos.plugin.registry'),
   name: 'Plugins',
   author: 'DXOS',
   description: trim`
@@ -43,4 +44,4 @@ export const meta: Plugin.Meta = {
 };
 
 /** Cascade-disable confirmation dialog surface id. */
-export const DISABLE_DEPENDENTS_DIALOG = `${meta.id}.disable-dependents-dialog`;
+export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${DXN.getName(meta.id)}.disableDependentsDialog`);

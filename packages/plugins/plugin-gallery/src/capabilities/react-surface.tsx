@@ -11,6 +11,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
 import { GalleryArticle, GalleryShow } from '#containers';
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 import { Gallery } from '#types';
 
@@ -18,14 +20,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'article',
+        id: DXN.make('org.dxos.plugin.gallery.surface.article'),
         filter: AppSurface.object(AppSurface.Article, Gallery.Gallery),
         component: ({ data, role }) => (
           <GalleryArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'show',
+        id: DXN.make('org.dxos.plugin.gallery.surface.show'),
         position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,

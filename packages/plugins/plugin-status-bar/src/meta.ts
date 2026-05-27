@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.statusBar',
+  id: DXN.make('org.dxos.plugin.statusBar'),
   name: 'Status Bar',
   author: 'DXOS',
   description: trim`

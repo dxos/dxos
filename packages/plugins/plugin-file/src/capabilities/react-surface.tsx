@@ -10,6 +10,7 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DXN } from '@dxos/keys';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
@@ -22,7 +23,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'article',
+        id: DXN.make('org.dxos.plugin.file.surface.article'),
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, File.File),
           AppSurface.object(AppSurface.Section, File.File),
@@ -31,7 +32,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <FileArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'create-form',
+        id: DXN.make('org.dxos.plugin.file.surface.createForm'),
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<Record<string, string[]>>(
@@ -56,7 +57,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.file.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

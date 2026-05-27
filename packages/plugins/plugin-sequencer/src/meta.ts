@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.sequencer',
+  id: DXN.make('org.dxos.plugin.sequencer'),
   name: 'Sequencer',
   author: 'DXOS',
   description: trim`

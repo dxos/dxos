@@ -14,6 +14,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Entity, type Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -557,7 +558,7 @@ export const flush = (builder: GraphBuilder): Promise<void> => {
  * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
  */
 export type CreateExtensionRawOptions = {
-  id: string;
+  id: DXN.DXN;
   relation?: Node.RelationInput;
   position?: Position;
   resolver?: ResolverExtension;
@@ -580,7 +581,8 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     actionGroups: _actionGroups,
   } = extension;
   const normalizedRelation = normalizeRelation(relation);
-  const getId = (key: string) => `${id}/${key}`;
+  const nsid = DXN.getName(id);
+  const getId = (key: string) => `${nsid}/${key}`;
 
   const resolver =
     _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
@@ -669,7 +671,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
-  id: string;
+  id: DXN.DXN;
   match: (node: Node.Node) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
@@ -795,7 +797,7 @@ const createConnectorWithRuntime = <TData, R>(
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
 export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity, R = never> = {
-  id: string;
+  id: DXN.DXN;
   type: T;
   actions?: (
     object: Entity.Entity<Schema.Schema.Type<T>>,

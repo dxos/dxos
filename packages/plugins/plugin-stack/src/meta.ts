@@ -4,11 +4,12 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
-export const SECTION_IDENTIFIER = 'org.dxos.type.stackSection';
+export const SECTION_IDENTIFIER = DXN.make('org.dxos.type.stackSection');
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.stack',
+  id: DXN.make('org.dxos.plugin.stack'),
   // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
   //   Conside renaming this to the collection plugin and trying to factor more collections logic from the space plugin.
   name: 'Collections',

@@ -3,9 +3,10 @@
 //
 
 import { type Plugin } from '../core';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.process-manager',
+  id: DXN.make('org.dxos.plugin.processManager'),
   name: 'Process Manager Plugin',
   author: 'DXOS',
   description:

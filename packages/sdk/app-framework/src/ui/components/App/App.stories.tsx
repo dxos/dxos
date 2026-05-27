@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
+import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../../common';
 import { Capability, Plugin } from '../../../core';
@@ -14,7 +15,7 @@ import { useApp } from '../../hooks';
 
 // Minimal plugin that contributes a ReactRoot.
 const TestPlugin = Plugin.define<{ error?: boolean }>({
-  id: 'org.dxos.plugin.test',
+  id: DXN.make('org.dxos.plugin.test'),
   name: 'Test Plugin',
   tags: ['system'],
 }).pipe(
@@ -24,7 +25,7 @@ const TestPlugin = Plugin.define<{ error?: boolean }>({
     activate: () =>
       Effect.succeed([
         Capability.contributes(Capabilities.ReactRoot, {
-          id: 'org.dxos.plugin.test.root',
+          id: DXN.make('org.dxos.plugin.test.root'),
           root: () => {
             useEffect(() => {
               let t: NodeJS.Timeout;

@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.theme',
+  id: DXN.make('org.dxos.plugin.theme'),
   name: 'Theme',
   author: 'DXOS',
   description: trim`

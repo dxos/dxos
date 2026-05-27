@@ -5,9 +5,10 @@
 import { type Plugin } from '@dxos/app-framework';
 import { meta as fileMeta } from '@dxos/plugin-file';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.wnfs',
+  id: DXN.make('org.dxos.plugin.wnfs'),
   name: 'WNFS',
   author: 'DXOS',
   description: trim`

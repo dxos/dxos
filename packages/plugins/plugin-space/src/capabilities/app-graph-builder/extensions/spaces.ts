@@ -15,6 +15,7 @@ import {
 } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
@@ -49,7 +50,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: 'primary-actions',
+      id: DXN.make('org.dxos.plugin.space.extension.primaryActions'),
       position: 'first',
       match: NodeMatcher.whenRoot,
       actions: () =>
@@ -154,7 +155,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: 'spaces',
+      id: DXN.make('org.dxos.plugin.space.extension.spaces'),
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         const client = capabilities.get(ClientCapabilities.Client);
@@ -219,7 +220,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: 'actions',
+      id: DXN.make('org.dxos.plugin.space.extension.actions'),
       match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));

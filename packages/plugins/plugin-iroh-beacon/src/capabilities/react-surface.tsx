@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { DXN } from '@dxos/keys';
 
 import { BeaconStatusIndicator } from '#components';
 
@@ -14,7 +15,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'beacon-status',
+        id: DXN.make('org.dxos.plugin.irohBeacon.surface.beaconStatus'),
         role: 'status-indicator',
         component: () => <BeaconStatusIndicator />,
       }),

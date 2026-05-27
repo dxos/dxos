@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.pwa',
+  id: DXN.make('org.dxos.plugin.pwa'),
   name: 'PWA',
   author: 'DXOS',
   description: trim`

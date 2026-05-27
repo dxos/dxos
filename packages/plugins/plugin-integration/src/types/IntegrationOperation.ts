@@ -7,21 +7,21 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, DXN } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import * as Integration from './Integration';
 
-const INTEGRATION_OPERATION = `${meta.id}.operation`;
+const INTEGRATION_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 /**
  * Generic create operation: produces an empty Integration bound to the given AccessToken.
  */
 export const CreateIntegration = Operation.make({
   meta: {
-    key: `${INTEGRATION_OPERATION}.create-integration`,
+    key: DXN.make(`${INTEGRATION_OPERATION}.createIntegration`),
     name: 'Create Integration',
     description: 'Creates a new Integration bound to an existing AccessToken.',
     icon: 'ph--plugs-connected--regular',
@@ -42,7 +42,7 @@ export const CreateIntegration = Operation.make({
  */
 export const SetIntegrationTargets = Operation.make({
   meta: {
-    key: `${INTEGRATION_OPERATION}.set-integration-targets`,
+    key: DXN.make(`${INTEGRATION_OPERATION}.setIntegrationTargets`),
     name: 'Set Integration Targets',
     description: "Reconciles an Integration's targets to match the chosen selection.",
     icon: 'ph--sliders--regular',

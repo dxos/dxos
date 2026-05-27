@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { type CapabilityManager } from '../../../core';
 import { isSurfaceAvailable } from './SurfaceComponent';
 import { type RoleToken, type SurfaceFilter, create, isSurfaceFilter, makeType } from './types';
@@ -35,7 +37,7 @@ describe('isSurfaceFilter', () => {
 describe('create', () => {
   test('accepts the legacy { role, filter } shape', ({ expect }) => {
     const def = create({
-      id: 'legacy',
+      id: DXN.make('org.dxos.test.surface.legacy'),
       role: 'article',
       filter: (data): data is { x: number } => typeof (data as any).x === 'number',
       component: () => null,
@@ -50,7 +52,7 @@ describe('create', () => {
     const filter: SurfaceFilter<Record<string, any>> = {
       bindings: [{ role: 'article', guard: (d) => (d as any).subject === 'ok' }],
     };
-    const def = create({ id: 'typed-single', filter, component: () => null });
+    const def = create({ id: DXN.make('org.dxos.test.surface.typedSingle'), filter, component: () => null });
     expect(def.role).toBe('article');
     expect(def.filter!({ subject: 'ok' }, 'article')).toBe(true);
     expect(def.filter!({ subject: 'no' }, 'article')).toBe(false);
@@ -63,7 +65,7 @@ describe('create', () => {
         { role: 'section', guard: (d) => (d as any).subject === 's' },
       ],
     };
-    const def = create({ id: 'typed-multi', filter, component: () => null });
+    const def = create({ id: DXN.make('org.dxos.test.surface.typedMulti'), filter, component: () => null });
     expect(def.role).toEqual(['article', 'section']);
     // Role-specific guard.
     expect(def.filter!({ subject: 'a' }, 'article')).toBe(true);
@@ -77,7 +79,7 @@ describe('create', () => {
 
   test('passes position through untouched', ({ expect }) => {
     const filter: SurfaceFilter<Record<string, any>> = { bindings: [{ role: 'r', guard: () => true }] };
-    const def = create({ id: 'pos', filter, component: () => null, position: 'last' });
+    const def = create({ id: DXN.make('org.dxos.test.surface.pos'), filter, component: () => null, position: 'last' });
     expect(def.position).toBe('last');
   });
 });

@@ -23,7 +23,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, DXN } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -724,7 +724,7 @@ describe('TriggerDispatcher', () => {
      * via {@link OperationHandlerSet.provide} below.
      */
     const ProbeOp = Operation.make({
-      meta: { key: 'test.trigger-dispatcher.probe-database', name: 'Probe Database' },
+      meta: { key: DXN.make('test.trigger-dispatcher.probeDatabase'), name: 'Probe Database' },
       input: Schema.Any,
       output: Schema.Struct({ spaceId: Schema.String }),
       services: [Database.Service],

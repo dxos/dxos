@@ -11,6 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Script } from '@dxos/compute';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -28,7 +29,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.script.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -48,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'script.article',
+        id: DXN.make('org.dxos.plugin.script.surface.scriptArticle'),
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Script.Script),
@@ -69,7 +70,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'notebook.article',
+        id: DXN.make('org.dxos.plugin.script.surface.notebookArticle'),
         filter: AppSurface.object(AppSurface.Article, Notebook.Notebook),
         component: ({ data, role }) => {
           const compiler = useCompiler();
@@ -84,12 +85,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'properties',
+        id: DXN.make('org.dxos.plugin.script.surface.properties'),
         filter: AppSurface.object(AppSurface.ObjectProperties, Script.Script),
         component: ({ data, role }) => <ScriptProperties role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'companion.execute',
+        id: DXN.make('org.dxos.plugin.script.surface.companionExecute'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'execute'),
           AppSurface.companion(AppSurface.Article, Script.Script),
@@ -97,7 +98,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <TestContainer script={data.companionTo} role={role} />,
       }),
       Surface.create({
-        id: 'companion.logs',
+        id: DXN.make('org.dxos.plugin.script.surface.companionLogs'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'logs'),
           AppSurface.companion(AppSurface.Article, Script.Script),

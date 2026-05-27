@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability, type Plugin as PluginNS } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
@@ -63,7 +64,7 @@ export default Capability.makeModule(
       // plugin-code isn't enabled) or the spec content can't be resolved,
       // the node is absent and the button stays hidden.
       GraphBuilder.createExtension({
-        id: 'plugin-spec',
+        id: DXN.make('org.dxos.plugin.code.extension.pluginSpec'),
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node) => {
           const plugin = node.data as PluginNS.Plugin;
@@ -77,7 +78,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             Node.make({
-              id: 'spec',
+              id: DXN.make('org.dxos.plugin.code.extension.spec'),
               type: PLUGIN_SPEC_TYPE,
               data: makePluginSpecSubject({ pluginId: id, name, content }),
               properties: {
@@ -92,7 +93,7 @@ export default Capability.makeModule(
 
       // Top-level "Code Projects" section in each space that has at least one CodeProject.
       GraphBuilder.createExtension({
-        id: 'code-projects-section',
+        id: DXN.make('org.dxos.plugin.code.extension.codeProjectsSection'),
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const projects = get(AtomQuery.make(space.db, Filter.type(CodeProject.CodeProject)));
@@ -116,7 +117,7 @@ export default Capability.makeModule(
 
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       GraphBuilder.createExtension({
-        id: 'code-project-listing',
+        id: DXN.make('org.dxos.plugin.code.extension.codeProjectListing'),
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();

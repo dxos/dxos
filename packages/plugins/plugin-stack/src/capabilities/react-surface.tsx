@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection } from '@dxos/echo';
@@ -17,7 +18,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'article',
+        id: DXN.make('org.dxos.plugin.stack.surface.article'),
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ role, data }) => {
           return <StackArticle attendableId={data.attendableId} role={role} subject={data.subject} />;

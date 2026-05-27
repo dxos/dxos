@@ -9,6 +9,7 @@ import React, { useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { Button } from '@dxos/react-ui';
 
 import { Number, createAlertOperation, createPluginId } from './generator';
@@ -30,7 +31,8 @@ export const Toolbar = () => {
 
   const count = (useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
 
-  const generatorPlugins = plugins.filter((plugin) => plugin.meta.id.startsWith('org.dxos.test.generator.'));
+  const prefix = 'org.dxos.test.generator.';
+  const generatorPlugins = plugins.filter((plugin) => DXN.getName(plugin.meta.id).startsWith(prefix));
 
   return (
     <>
@@ -38,7 +40,7 @@ export const Toolbar = () => {
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
         <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(plugin.meta.id))}>
-          {plugin.meta.id.replace('org.dxos.test.generator.', '')}
+          {DXN.getName(plugin.meta.id).replace(prefix, '')}
         </Button>
       ))}
     </>
@@ -50,7 +52,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'org.dxos.test.generator.toolbar',
+        id: DXN.make('org.dxos.test.generator.toolbar'),
         role: 'toolbar',
         component: Toolbar,
       }),

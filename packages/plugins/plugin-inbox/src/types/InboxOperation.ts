@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref, DXN } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Message } from '@dxos/types';
 
@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
-const INBOX_OPERATION = `${meta.id}.operation`;
+const INBOX_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 /** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
 const RemoteTarget = Schema.Struct({
@@ -32,7 +32,7 @@ export const GetGoogleCalendars = Operation.make({
   //   runs because composer's invoker doesn't carry per-space Database. The handler provides
   //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
   meta: {
-    key: `${INBOX_OPERATION}.get-google-calendars`,
+    key: DXN.make(`${INBOX_OPERATION}.getGoogleCalendars`),
     name: 'Get Google Calendars',
     description:
       'Discover Google Calendars reachable from an integration and materialize a Calendar object per remote calendar.',
@@ -47,7 +47,7 @@ export const GetGoogleCalendars = Operation.make({
 });
 
 export const AddMailbox = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.add-mailbox`, name: 'Add Mailbox', icon: 'ph--envelope--regular' },
+  meta: { key: DXN.make(`${INBOX_OPERATION}.addMailbox`), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
@@ -62,7 +62,7 @@ export const AddMailbox = Operation.make({
 
 export const DraftEmail = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.draft-email`,
+    key: DXN.make(`${INBOX_OPERATION}.draftEmail`),
     name: 'Draft email',
     description: 'Creates a new email draft.',
     icon: 'ph--pencil--regular',
@@ -93,7 +93,7 @@ export const DraftEmail = Operation.make({
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.draft-email-and-open`,
+    key: DXN.make(`${INBOX_OPERATION}.draftEmailAndOpen`),
     name: 'Draft email and open',
     icon: 'ph--pencil--regular',
   },
@@ -112,7 +112,7 @@ export const DraftEmailAndOpen = Operation.make({
 
 export const GmailSend = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-mail-send`,
+    key: DXN.make(`${INBOX_OPERATION}.googleMailSend`),
     name: 'Send Gmail',
     description: 'Send emails via Gmail.',
     icon: 'ph--paper-plane-tilt--regular',
@@ -133,7 +133,7 @@ export const GmailSend = Operation.make({
 
 export const GoogleMailSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-mail-sync`,
+    key: DXN.make(`${INBOX_OPERATION}.googleMailSync`),
     name: 'Sync Google Mail',
     description: 'Sync emails from Gmail to the mailbox feed.',
     icon: 'ph--arrows-clockwise--regular',
@@ -174,7 +174,7 @@ export const GoogleMailSync = Operation.make({
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
 export const SyncMailbox = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.sync-mailbox`,
+    key: DXN.make(`${INBOX_OPERATION}.syncMailbox`),
     name: 'Sync Mailbox',
     description: 'Runs Google Mail sync and notifies of progress.',
     icon: 'ph--arrows-clockwise--regular',
@@ -189,7 +189,7 @@ export const SyncMailbox = Operation.make({
 
 export const GoogleCalendarSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-calendar-sync`,
+    key: DXN.make(`${INBOX_OPERATION}.googleCalendarSync`),
     name: 'Sync Google Calendar',
     description:
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
@@ -219,7 +219,7 @@ export const GoogleCalendarSync = Operation.make({
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
 export const SyncCalendar = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.sync-calendar`,
+    key: DXN.make(`${INBOX_OPERATION}.syncCalendar`),
     name: 'Sync Calendar',
     description: 'Runs Google Calendar sync and notifies of progress.',
     icon: 'ph--arrows-clockwise--regular',
@@ -234,7 +234,7 @@ export const SyncCalendar = Operation.make({
 
 export const GetGoogleContactGroups = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.get-google-contact-groups`,
+    key: DXN.make(`${INBOX_OPERATION}.getGoogleContactGroups`),
     name: 'Get Google Contact Groups',
     description: 'Discover Google Contact Groups reachable from an integration.',
     icon: 'ph--users--regular',
@@ -249,7 +249,7 @@ export const GetGoogleContactGroups = Operation.make({
 
 export const GoogleContactsSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-contacts-sync`,
+    key: DXN.make(`${INBOX_OPERATION}.googleContactsSync`),
     name: 'Sync Google Contacts',
     description: 'Sync contacts from a Google Contact group into Person objects in the space.',
     icon: 'ph--arrows-clockwise--regular',
@@ -272,7 +272,7 @@ export const GoogleContactsSync = Operation.make({
 
 export const SyncContacts = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.sync-contacts`,
+    key: DXN.make(`${INBOX_OPERATION}.syncContacts`),
     name: 'Sync Contacts',
     description: 'Runs Google Contacts sync and notifies of progress.',
     icon: 'ph--arrows-clockwise--regular',
@@ -286,7 +286,7 @@ export const SyncContacts = Operation.make({
 
 export const ReadEmail = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.read-email`,
+    key: DXN.make(`${INBOX_OPERATION}.readEmail`),
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
     icon: 'ph--envelope-open--regular',
@@ -315,7 +315,7 @@ export const ReadEmail = Operation.make({
 });
 export const ClassifyEmail = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.classify-email`,
+    key: DXN.make(`${INBOX_OPERATION}.classifyEmail`),
     name: 'Classify email',
     description:
       'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',
@@ -341,7 +341,7 @@ export const ClassifyEmail = Operation.make({
 });
 
 export const ExtractContact = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact', icon: 'ph--user--regular' },
+  meta: { key: DXN.make(`${INBOX_OPERATION}.extractContact`), name: 'Extract Contact', icon: 'ph--user--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -351,7 +351,7 @@ export const ExtractContact = Operation.make({
 });
 
 export const ExtractMessage = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
+  meta: { key: DXN.make(`${INBOX_OPERATION}.extractMessage`), name: 'Extract Message' },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,

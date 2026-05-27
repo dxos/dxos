@@ -6,9 +6,11 @@ import React from 'react';
 
 import { Button, useTranslation } from '@dxos/react-ui';
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '../../meta';
 
-export const NATIVE_REDIRECT_DIALOG = `${meta.id}.component.native-redirect-dialog`;
+export const NATIVE_REDIRECT_DIALOG = DXN.make(`${DXN.getName(meta.id)}.componentNativeRedirectDialog`);
 
 /**
  * Shown after the native app has been successfully opened via custom scheme.

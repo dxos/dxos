@@ -11,6 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
@@ -36,7 +37,7 @@ export default Capability.makeModule(
       // in the global action menu (e.g., the "+" button in the navigation tree).
       // `position: 'first'` places the action in the primary action area.
       GraphBuilder.createExtension({
-        id: 'root-actions',
+        id: DXN.make('org.dxos.plugin.sample.extension.rootActions'),
         position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -64,7 +65,7 @@ export default Capability.makeModule(
       // This matches Space nodes and returns a section node when SampleItem objects exist.
       // `AppNode.makeSection` builds a virtual branch node (non-navigable, non-draggable).
       GraphBuilder.createExtension({
-        id: 'section',
+        id: DXN.make('org.dxos.plugin.sample.extension.section'),
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const items = get(AtomQuery.make(space.db, Filter.type(SampleItem.SampleItem)));
@@ -74,7 +75,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeSection({
-              id: 'sample-section',
+              id: DXN.make('org.dxos.plugin.sample.extension.sampleSection'),
               type: SAMPLE_SECTION_TYPE,
               label: ['plugin.name', { ns: meta.id }],
               icon: 'ph--book-open--regular',
@@ -89,7 +90,7 @@ export default Capability.makeModule(
       // Matches nodes of `SAMPLE_SECTION_TYPE` and queries the space's database.
       // `createObjectNode` builds a standard app-graph node using the registered metadata.
       GraphBuilder.createExtension({
-        id: 'section-items',
+        id: DXN.make('org.dxos.plugin.sample.extension.sectionItems'),
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === SAMPLE_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -108,12 +109,12 @@ export default Capability.makeModule(
       // `GraphBuilder.createTypeExtension` is a convenience that matches nodes whose data
       // is an ECHO object of the specified type. The callback receives the typed object.
       GraphBuilder.createTypeExtension({
-        id: 'item-actions',
+        id: DXN.make('org.dxos.plugin.sample.extension.itemActions'),
         type: SampleItem.SampleItem,
         actions: (item) =>
           Effect.succeed([
             Node.makeAction({
-              id: 'randomize',
+              id: DXN.make('org.dxos.plugin.sample.extension.randomize'),
               data: () => Operation.invoke(SampleOperation.Randomize, { item }),
               properties: {
                 label: ['randomize-item.label', { ns: meta.id }],
@@ -124,7 +125,7 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: 'archive',
+              id: DXN.make('org.dxos.plugin.sample.extension.archive'),
               data: () => Operation.invoke(SampleOperation.UpdateStatus, { item, status: 'archived' }),
               properties: {
                 label: ['archive-item.label', { ns: meta.id }],
@@ -143,12 +144,12 @@ export default Capability.makeModule(
       // The `data` string identifies which companion surface to render (matched by the
       // `literalArticle` filter in react-surface.tsx).
       GraphBuilder.createTypeExtension({
-        id: 'related-companion',
+        id: DXN.make('org.dxos.plugin.sample.extension.relatedCompanion'),
         type: SampleItem.SampleItem,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'related',
+              id: DXN.make('org.dxos.plugin.sample.extension.related'),
               label: ['related-companion.label', { ns: meta.id }],
               icon: 'ph--users-three--regular',
               data: 'related',
@@ -162,12 +163,12 @@ export default Capability.makeModule(
       // The surface role follows the convention: `deck-companion--{id}`.
       // `position: 'last'` places it after higher-priority companions.
       GraphBuilder.createExtension({
-        id: 'deck-companion',
+        id: DXN.make('org.dxos.plugin.sample.extension.deckCompanion'),
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'sample-panel',
+              id: DXN.make('org.dxos.plugin.sample.extension.samplePanel'),
               label: ['deck-companion.label', { ns: meta.id }],
               icon: 'ph--book-open--regular',
               data: 'sample-panel' as const,

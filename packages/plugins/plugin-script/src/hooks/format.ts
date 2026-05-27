@@ -8,6 +8,7 @@ import prettierPluginTypescript from 'prettier/plugins/typescript';
 
 import { type Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
@@ -39,7 +40,7 @@ export const createFormat = (script: Script.Script) => {
       }
     },
     {
-      label: ['format.label', { ns: meta.id }],
+      label: ['format.label', { ns: DXN.getName(meta.id) }],
       icon: 'ph--magic-wand--regular',
     },
   );

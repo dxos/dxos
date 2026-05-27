@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
+import { DXN } from '@dxos/keys';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
@@ -120,7 +121,7 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
 };
 
 const storyMeta = {
-  id: 'org.dxos.app-framework.story',
+  id: DXN.make('org.dxos.appFramework.story'),
   name: 'Story',
   tags: ['system'],
 };

@@ -6,6 +6,8 @@ import '../components/MapSurface';
 
 import * as Effect from 'effect/Effect';
 
+import { DXN } from '@dxos/keys';
+
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
@@ -15,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.createWeb({
-        id: 'surface.map',
+        id: DXN.make('org.dxos.plugin.mapSolid.surface.map'),
         role: ['article', 'section'],
         tagName: 'dx-map-surface',
         position: 'first',

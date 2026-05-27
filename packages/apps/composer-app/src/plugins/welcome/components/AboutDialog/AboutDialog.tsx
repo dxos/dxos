@@ -8,6 +8,8 @@ import React from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Button, Dialog, Link, Message, Trans, useTranslation } from '@dxos/react-ui';
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '../../meta';
 
 const ENV_LABELS: Record<string, string> = {
@@ -28,7 +30,7 @@ const parseUrl = (url: string): URL | undefined => {
   }
 };
 
-export const ABOUT_DIALOG = `${meta.id}.component.about-dialog`;
+export const ABOUT_DIALOG = DXN.make(`${DXN.getName(meta.id)}.componentAboutDialog`);
 
 export const AboutDialog = () => {
   const { t } = useTranslation(meta.id);

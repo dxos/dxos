@@ -12,6 +12,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
@@ -35,7 +36,7 @@ export default Capability.makeModule(() =>
       // The Article/Section tokens inherently require a string `attendableId` on
       // the data, matching the article data contract.
       Surface.create({
-        id: 'article',
+        id: DXN.make('org.dxos.plugin.sample.surface.article'),
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, SampleItem.SampleItem),
           AppSurface.object(AppSurface.Section, SampleItem.SampleItem),
@@ -49,7 +50,7 @@ export default Capability.makeModule(() =>
       // Renders in the per-object properties panel (gear icon companion).
       // `AppSurface.object(AppSurface.ObjectProperties, Schema)` matches when viewing properties for this type.
       Surface.create({
-        id: 'object-properties',
+        id: DXN.make('org.dxos.plugin.sample.surface.objectProperties'),
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, SampleItem.SampleItem),
         component: ({ data }) => <SampleProperties subject={data.subject} />,
@@ -61,7 +62,7 @@ export default Capability.makeModule(() =>
       // the atom into typed `settings` and `updateSettings`. The settings component
       // receives these as props via `SettingsArticleProps<T>` and never touches the atom.
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.sample.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -75,7 +76,7 @@ export default Capability.makeModule(() =>
       // indicator hides/shows when the setting is toggled. This must be in the
       // component (not the filter) so the atom subscription triggers re-renders.
       Surface.create({
-        id: 'status',
+        id: DXN.make('org.dxos.plugin.sample.surface.status'),
         role: 'status-indicator',
         component: () => {
           const settings = useAtomCapability(SampleCapabilities.Settings);
@@ -89,7 +90,7 @@ export default Capability.makeModule(() =>
       // with id 'related' AND the companionTo must be a SampleItem.
       // The `data.companionTo` prop contains the parent ECHO object.
       Surface.create({
-        id: 'related-companion',
+        id: DXN.make('org.dxos.plugin.sample.surface.relatedCompanion'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'related'),
           AppSurface.companion(AppSurface.Article, SampleItem.SampleItem),
@@ -102,7 +103,7 @@ export default Capability.makeModule(() =>
       // The role follows the convention: `deck-companion--{id}` where `{id}` matches
       // the `data` field from `AppNode.makeDeckCompanion` in the graph builder.
       Surface.create({
-        id: 'deck-companion',
+        id: DXN.make('org.dxos.plugin.sample.surface.deckCompanion'),
         filter: AppSurface.literal(
           Surface.makeType<{ subject: string }>('deck-companion--sample-panel'),
           'sample-panel',

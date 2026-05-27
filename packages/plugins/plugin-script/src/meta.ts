@@ -4,9 +4,10 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.script',
+  id: DXN.make('org.dxos.plugin.script'),
   name: 'Scripts',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -27,5 +28,5 @@ export const meta: Plugin.Meta = {
 // TODO(ZaymonFC): Configure by scopes?
 export const defaultScriptsForIntegration: Record<string, string[]> = {
   // TODO(wittjosiah): Also include content extraction scripts in the default set.
-  'gmail.com': ['org.dxos.script.gmail'],
+  'gmail.com': [DXN.make('org.dxos.script.gmail')],
 };

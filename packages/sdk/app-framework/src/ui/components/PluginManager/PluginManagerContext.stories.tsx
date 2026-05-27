@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
+import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../../common';
 import { PluginManagerContext } from '../../../context';
@@ -118,7 +119,7 @@ const CounterComponent = () => {
 
 // Plugin that provides the Counter capability and renders the UI
 const CounterPlugin = Plugin.define({
-  id: 'org.dxos.plugin.counter',
+  id: DXN.make('org.dxos.plugin.counter'),
   name: 'Counter Plugin',
   tags: ['system'],
 }).pipe(
@@ -145,7 +146,7 @@ const CounterPlugin = Plugin.define({
 
         // Contribute the UI
         Capability.contributes(Capabilities.ReactRoot, {
-          id: 'org.dxos.plugin.counter.root',
+          id: DXN.make('org.dxos.plugin.counter.root'),
           root: CounterComponent,
         }),
       ]);

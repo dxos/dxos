@@ -8,6 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { DXN } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
@@ -20,14 +21,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'channel',
+        id: DXN.make('org.dxos.plugin.thread.surface.channel'),
         filter: AppSurface.object(AppSurface.Article, Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
           <ChannelArticle role={role} subject={subject} attendableId={attendableId} />
         ),
       }),
       Surface.create({
-        id: 'chat-companion',
+        id: DXN.make('org.dxos.plugin.thread.surface.chatCompanion'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
@@ -42,7 +43,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'thread',
+        id: DXN.make('org.dxos.plugin.thread.surface.thread'),
         filter: AppSurface.object(AppSurface.Article, Thread.Thread),
         component: ({ data: { subject } }) => {
           const space = getSpace(subject);
@@ -54,7 +55,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'comments',
+        id: DXN.make('org.dxos.plugin.thread.surface.comments'),
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'comments'),
           AppSurface.companion(AppSurface.Article),
@@ -63,7 +64,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CommentsCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.thread.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

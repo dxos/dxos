@@ -16,6 +16,7 @@ import * as TestClock from 'effect/TestClock';
 
 import { invariant } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
+import { DXN } from '@dxos/keys';
 
 import { ActivationEvents } from '../common';
 import * as ActivationEvent from './activation-event';
@@ -24,14 +25,14 @@ import type * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
-const String = Capability.make<{ string: string }>('org.dxos.test.string');
-const Number = Capability.make<{ number: number }>('org.dxos.test.number');
-const Total = Capability.make<{ total: number }>('org.dxos.test.total');
+const String = Capability.make<{ string: string }>(DXN.make('org.dxos.test.string'));
+const Number = Capability.make<{ number: number }>(DXN.make('org.dxos.test.number'));
+const Total = Capability.make<{ total: number }>(DXN.make('org.dxos.test.total'));
 
-const CountEvent = ActivationEvent.make('org.dxos.test.count');
-const FailEvent = ActivationEvent.make('org.dxos.test.fail');
+const CountEvent = ActivationEvent.make(DXN.make('org.dxos.test.count'));
+const FailEvent = ActivationEvent.make(DXN.make('org.dxos.test.fail'));
 
-const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+const testMeta = { id: DXN.make('org.dxos.plugin.test'), name: 'Test' };
 
 // TODO(wittjosiah): Factor out?
 const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
@@ -330,7 +331,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects (synchronous throws) in module activation', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('org.dxos.test.defect');
+      const DefectEvent = ActivationEvent.make(DXN.make('org.dxos.test.defect'));
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -365,7 +366,7 @@ describe('PluginManager', () => {
       const defectLog = capturedErrors.find(
         (entry) =>
           entry.message?.includes('module failed to activate') &&
-          entry.context?.module === 'org.dxos.plugin.test.module.DefectInEffectSync',
+          entry.context?.module === DXN.make('org.dxos.plugin.test.module.DefectInEffectSync'),
       );
       assert.isNotNull(defectLog, 'Expected error log for defect');
       assert.strictEqual(defectLog?.context?.isDefect, true, 'Expected isDefect to be true for synchronous throw');
@@ -376,7 +377,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects when activate throws before returning Effect', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('org.dxos.test.defect-immediate');
+      const DefectEvent = ActivationEvent.make(DXN.make('org.dxos.test.defectImmediate'));
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -412,7 +413,7 @@ describe('PluginManager', () => {
       const defectLog = capturedErrors.find(
         (entry) =>
           entry.message?.includes('module failed to activate') &&
-          entry.context?.module === 'org.dxos.plugin.test.module.DefectImmediate',
+          entry.context?.module === DXN.make('org.dxos.plugin.test.module.DefectImmediate'),
       );
       assert.isNotNull(defectLog, 'Expected error log for immediate defect');
       assert.strictEqual(
@@ -549,7 +550,7 @@ describe('PluginManager', () => {
 
   it.effect('should be able to fire custom activation events', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -557,7 +558,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -565,7 +566,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define({ id: DXN.make('org.dxos.test.plugin3'), name: 'Plugin 3' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -681,7 +682,7 @@ describe('PluginManager', () => {
         state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
       };
 
-      const Count = Plugin.define({ id: 'org.dxos.test.count', name: 'Count' }).pipe(
+      const Count = Plugin.define({ id: DXN.make('org.dxos.test.count'), name: 'Count' }).pipe(
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
@@ -763,7 +764,7 @@ describe('PluginManager', () => {
 
   it.effect('should be reactive', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -771,7 +772,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -779,7 +780,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define({ id: DXN.make('org.dxos.test.plugin3'), name: 'Plugin 3' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -892,8 +893,8 @@ describe('PluginManager', () => {
         }
       });
 
-      const SlowEvent = ActivationEvent.make('org.dxos.test.slow');
-      const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-plugin', name: 'Slow Plugin' }).pipe(
+      const SlowEvent = ActivationEvent.make(DXN.make('org.dxos.test.slow'));
+      const SlowPlugin = Plugin.define({ id: DXN.make('org.dxos.test.slowPlugin'), name: 'Slow Plugin' }).pipe(
         Plugin.addModule({
           id: 'SlowModule',
           activatesOn: SlowEvent,
@@ -936,11 +937,11 @@ describe('PluginManager', () => {
   it.effect('should prevent concurrent loads of the same module via semaphore', () =>
     Effect.gen(function* () {
       // Two different events that both can trigger the same module.
-      const EventA = ActivationEvent.make('org.dxos.test.event-a');
-      const EventB = ActivationEvent.make('org.dxos.test.event-b');
+      const EventA = ActivationEvent.make(DXN.make('org.dxos.test.eventA'));
+      const EventB = ActivationEvent.make(DXN.make('org.dxos.test.eventB'));
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define({ id: 'org.dxos.test.concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
+      const ConcurrentPlugin = Plugin.define({ id: DXN.make('org.dxos.test.concurrentPlugin'), name: 'Concurrent Plugin' }).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
@@ -987,7 +988,7 @@ describe('PluginManager', () => {
 
   it.effect('should deactivate all active modules on shutdown', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin1',
@@ -995,7 +996,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Plugin2',
@@ -1060,7 +1061,7 @@ describe('PluginManager', () => {
   it.effect('should deactivate modules in reverse activation order during shutdown', () =>
     Effect.gen(function* () {
       const deactivationOrder: string[] = [];
-      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: DXN.make('org.dxos.test.plugin1'), name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'First',
@@ -1075,7 +1076,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: DXN.make('org.dxos.test.plugin2'), name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: ActivationEvents.Startup,
           id: 'Second',
@@ -1241,7 +1242,7 @@ describe('PluginManager', () => {
   );
 
   describe('Plugin.lazy', () => {
-    const lazyMeta = { id: 'org.dxos.plugin.lazy', name: 'Lazy' };
+    const lazyMeta = { id: DXN.make('org.dxos.plugin.lazy'), name: 'Lazy' };
 
     it('exposes meta synchronously without invoking the loader', () => {
       let loaderCalls = 0;
@@ -1484,8 +1485,8 @@ describe('PluginManager', () => {
 
     it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
       Effect.gen(function* () {
-        const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
-        const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-activation', name: 'Slow Activation' }).pipe(
+        const SlowEvent = ActivationEvent.make(DXN.make('org.dxos.test.activationTimeout'));
+        const SlowPlugin = Plugin.define({ id: DXN.make('org.dxos.test.slowActivation'), name: 'Slow Activation' }).pipe(
           Plugin.addModule({
             id: 'Slow',
             activatesOn: SlowEvent,
@@ -1529,7 +1530,7 @@ describe('PluginManager', () => {
 
     it.effect('records and auto-disables a lazy plugin whose loader exceeds the load timeout', () =>
       Effect.gen(function* () {
-        const lazyMeta = { id: 'org.dxos.test.slow-load', name: 'Slow Load' };
+        const lazyMeta = { id: DXN.make('org.dxos.test.slowLoad'), name: 'Slow Load' };
         // The dynamic import never resolves; the manager's load timeout should
         // surface this as a `LazyPluginError` whose `cause` is `PluginTimeoutError`.
         const LazyTest = Plugin.lazy(lazyMeta, () => new Promise<{ default: Plugin.PluginFactory }>(() => {}));
@@ -1572,8 +1573,8 @@ describe('PluginManager', () => {
 
     it.effect('records non-timeout activation errors as reason: error', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
-        const FailingPlugin = Plugin.define({ id: 'org.dxos.test.failing', name: 'Failing' }).pipe(
+        const FailingEvent = ActivationEvent.make(DXN.make('org.dxos.test.activationError'));
+        const FailingPlugin = Plugin.define({ id: DXN.make('org.dxos.test.failing'), name: 'Failing' }).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1602,8 +1603,8 @@ describe('PluginManager', () => {
 
     it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
       Effect.gen(function* () {
-        const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
-        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core', tags: ['system'] }).pipe(
+        const FailingEvent = ActivationEvent.make(DXN.make('org.dxos.test.coreFail'));
+        const CorePlugin = Plugin.define({ id: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] }).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1631,8 +1632,8 @@ describe('PluginManager', () => {
     it.effect('clearFailure removes the failure record and re-enable starts fresh', () =>
       Effect.gen(function* () {
         let shouldFail = true;
-        const Event = ActivationEvent.make('org.dxos.test.flaky');
-        const FlakyPlugin = Plugin.define({ id: 'org.dxos.test.flaky', name: 'Flaky' }).pipe(
+        const Event = ActivationEvent.make(DXN.make('org.dxos.test.flaky'));
+        const FlakyPlugin = Plugin.define({ id: DXN.make('org.dxos.test.flaky'), name: 'Flaky' }).pipe(
           Plugin.addModule({
             id: 'Maybe',
             activatesOn: Event,
@@ -1674,60 +1675,61 @@ describe('PluginManager', () => {
   describe('plugin dependencies (dependsOn)', () => {
     // Build a small plugin with a `dependsOn` chain. The helper keeps each test
     // focused on the dependency semantics rather than module wiring.
-    const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
-      Plugin.make(Plugin.define({ id, name: id, dependsOn, tags }))();
+    const p = (name: string): DXN.DXN => DXN.make(`org.dxos.test.${name}`);
+    const makePlugin = (id: DXN.DXN, dependsOn?: DXN.DXN[], tags?: string[]) =>
+      Plugin.make(Plugin.define({ id, name: DXN.getName(id), dependsOn, tags }))();
 
     it.effect('enable resolves the transitive closure in dependency-first order', () =>
       Effect.gen(function* () {
-        const a = makePlugin('a');
-        const b = makePlugin('b', ['a']);
-        const c = makePlugin('c', ['b']);
+        const a = makePlugin(p('a'));
+        const b = makePlugin(p('b'), [p('a')]);
+        const c = makePlugin(p('c'), [p('b')]);
         const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
 
-        const ok = yield* manager.enable('c');
+        const ok = yield* manager.enable(p('c'));
         assert.isTrue(ok);
         // `a` enables first, then `b`, then `c`.
-        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b', 'c']);
+        assert.deepStrictEqual(manager.getEnabled(), [p('a'), p('b'), p('c')]);
       }),
     );
 
     it.effect('enable is idempotent when dependencies are already enabled', () =>
       Effect.gen(function* () {
-        const a = makePlugin('a');
-        const b = makePlugin('b', ['a']);
+        const a = makePlugin(p('a'));
+        const b = makePlugin(p('b'), [p('a')]);
         const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
 
-        yield* manager.enable('a');
-        yield* manager.enable('b');
-        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b']);
+        yield* manager.enable(p('a'));
+        yield* manager.enable(p('b'));
+        assert.deepStrictEqual(manager.getEnabled(), [p('a'), p('b')]);
         // Re-enabling shouldn't duplicate entries.
-        yield* manager.enable('b');
-        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b']);
+        yield* manager.enable(p('b'));
+        assert.deepStrictEqual(manager.getEnabled(), [p('a'), p('b')]);
       }),
     );
 
     it.effect('enable with a missing declared dependency records a PluginDependencyError', () =>
       Effect.gen(function* () {
-        const dependent = makePlugin('dependent', ['org.dxos.missing']);
+        const dependent = makePlugin(p('dependent'), [DXN.make(DXN.make('org.dxos.missing'))]);
         const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
 
-        const ok = yield* manager.enable('dependent');
+        const ok = yield* manager.enable(p('dependent'));
         assert.isFalse(ok);
         assert.deepStrictEqual(manager.getEnabled(), []);
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
-        assert.strictEqual(failures[0].id, 'dependent');
+        assert.strictEqual(failures[0].id, p('dependent'));
         assert.instanceOf(failures[0].error, Plugin.PluginDependencyError);
       }),
     );
 
     it.effect('enable detects A↔B cycle and records a cycle failure', () =>
       Effect.gen(function* () {
-        const a = makePlugin('a', ['b']);
-        const b = makePlugin('b', ['a']);
+        const a = makePlugin(p('a'), [p('b')]);
+        const b = makePlugin(p('b'), [p('a')]);
         const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
 
-        const ok = yield* manager.enable('a');
+        const ok = yield* manager.enable(p('a'));
         assert.isFalse(ok);
         assert.deepStrictEqual(manager.getEnabled(), []);
         const failures = manager.getFailed();
@@ -1740,27 +1742,27 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         // Dependent declares a dep that is intentionally unregistered — the
         // caller has accepted responsibility for satisfying it some other way.
-        const dependent = makePlugin('dependent', ['org.dxos.alt-impl']);
+        const dependent = makePlugin(p('dependent'), [DXN.make(DXN.make('org.dxos.altImpl'))]);
         const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
 
-        const ok = yield* manager.enable('dependent', { resolveDependencies: false });
+        const ok = yield* manager.enable(p('dependent'), { resolveDependencies: false });
         assert.isTrue(ok);
-        assert.deepStrictEqual(manager.getEnabled(), ['dependent']);
+        assert.deepStrictEqual(manager.getEnabled(), [p('dependent')]);
         assert.strictEqual(manager.getFailed().length, 0);
       }),
     );
 
     it.effect('disable cascades to transitive dependents by default', () =>
       Effect.gen(function* () {
-        const a = makePlugin('a');
-        const b = makePlugin('b', ['a']);
-        const c = makePlugin('c', ['b']);
+        const a = makePlugin(p('a'));
+        const b = makePlugin(p('b'), [p('a')]);
+        const c = makePlugin(p('c'), [p('b')]);
         const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
 
-        yield* manager.enable('c');
-        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b', 'c']);
+        yield* manager.enable(p('c'));
+        assert.deepStrictEqual(manager.getEnabled(), [p('a'), p('b'), p('c')]);
 
-        const ok = yield* manager.disable('a');
+        const ok = yield* manager.disable(p('a'));
         assert.isTrue(ok);
         // Cascade tears down `c` (leaf) and `b` before `a`.
         assert.deepStrictEqual(manager.getEnabled(), []);
@@ -1769,51 +1771,51 @@ describe('PluginManager', () => {
 
     it.effect('default disable refuses when a transitive dependent is core', () =>
       Effect.gen(function* () {
-        const lib = makePlugin('lib');
-        const coreClient = makePlugin('coreClient', ['lib'], ['system']);
+        const lib = makePlugin(p('lib'));
+        const coreClient = makePlugin(p('coreClient'), [p('lib')], [p('system')]);
         const manager = PluginManager.make({
           plugins: [lib, coreClient],
-          enabled: ['lib'],
+          enabled: [p('lib')],
           pluginLoader,
         });
 
-        const exit = yield* Effect.exit(manager.disable('lib'));
+        const exit = yield* Effect.exit(manager.disable(p('lib')));
         assert.isTrue(Exit.isFailure(exit));
         // No state mutation when cascade is refused for a core dependent.
-        assert.isTrue(manager.getEnabled().includes('lib'));
+        assert.isTrue(manager.getEnabled().includes(p('lib')));
         assert.isTrue(manager.getEnabled().includes('coreClient'));
       }),
     );
 
     it.effect('disable with cascade: false disables only the target', () =>
       Effect.gen(function* () {
-        const a = makePlugin('a');
-        const b = makePlugin('b', ['a']);
+        const a = makePlugin(p('a'));
+        const b = makePlugin(p('b'), [p('a')]);
         const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
 
-        yield* manager.enable('b');
-        const ok = yield* manager.disable('a', { cascade: false });
+        yield* manager.enable(p('b'));
+        const ok = yield* manager.disable(p('a'), { cascade: false });
         assert.isTrue(ok);
         // `b` is left enabled-but-broken (no `a` to satisfy its declared dep).
-        assert.deepStrictEqual(manager.getEnabled(), ['b']);
+        assert.deepStrictEqual(manager.getEnabled(), [p('b')]);
       }),
     );
 
     it.effect('getDependencies and getDependents reflect the declared graph', () =>
       Effect.gen(function* () {
-        const a = makePlugin('a');
-        const b = makePlugin('b', ['a']);
-        const c = makePlugin('c', ['b']);
+        const a = makePlugin(p('a'));
+        const b = makePlugin(p('b'), [p('a')]);
+        const c = makePlugin(p('c'), [p('b')]);
         const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
 
-        assert.deepStrictEqual([...manager.getDependencies('c', { transitive: false })], ['b']);
-        assert.deepStrictEqual([...manager.getDependencies('c', { transitive: true })], ['a', 'b']);
+        assert.deepStrictEqual([...manager.getDependencies(p('c'), { transitive: false })], [p('b')]);
+        assert.deepStrictEqual([...manager.getDependencies(p('c'), { transitive: true })], [p('a'), p('b')]);
 
-        assert.deepStrictEqual([...manager.getDependents('a', { transitive: false })], ['b']);
-        assert.deepStrictEqual([...manager.getDependents('a', { transitive: true })], ['c', 'b']);
+        assert.deepStrictEqual([...manager.getDependents(p('a'), { transitive: false })], [p('b')]);
+        assert.deepStrictEqual([...manager.getDependents(p('a'), { transitive: true })], [p('c'), p('b')]);
 
-        yield* manager.enable('b');
-        assert.deepStrictEqual([...manager.getDependents('a', { transitive: true, enabledOnly: true })], ['b']);
+        yield* manager.enable(p('b'));
+        assert.deepStrictEqual([...manager.getDependents(p('a'), { transitive: true, enabledOnly: true })], [p('b')]);
       }),
     );
 
@@ -1821,10 +1823,10 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         // The "remote" plugin is not pre-registered; the loader knows about
         // it, simulating a fetch from the registry.
-        const remote = makePlugin('remote');
-        const dependent = makePlugin('dependent', ['remote']);
+        const remote = makePlugin(p('remote'));
+        const dependent = makePlugin(p('dependent'), [p('remote')]);
         const remoteLoader = Effect.fn(function* (id: string) {
-          if (id === 'remote') {
+          if (id === p('remote')) {
             return { plugin: remote };
           }
           throw new Error(`Unknown id: ${id}`);
@@ -1841,7 +1843,7 @@ describe('PluginManager', () => {
         registry.set(manager.pluginRegistry.plugins, {
           entries: [
             {
-              id: 'remote',
+              id: p('remote'),
               name: 'Remote',
               moduleUrl: 'about:blank',
               repo: 'example/remote',
@@ -1852,16 +1854,16 @@ describe('PluginManager', () => {
           error: null,
         });
 
-        const ok = yield* manager.enable('dependent');
+        const ok = yield* manager.enable(p('dependent'));
         assert.isTrue(ok);
-        assert.deepStrictEqual(manager.getEnabled(), ['remote', 'dependent']);
-        assert.isTrue(manager.getPlugins().some((plugin) => plugin.meta.id === 'remote'));
+        assert.deepStrictEqual(manager.getEnabled(), [p('remote'), p('dependent')]);
+        assert.isTrue(manager.getPlugins().some((plugin) => plugin.meta.id === p('remote')));
       }),
     );
 
     it.effect('enable records install-failed when a catalog-only dep fails to load', () =>
       Effect.gen(function* () {
-        const dependent = makePlugin('dependent', ['remote-broken']);
+        const dependent = makePlugin(p('dependent'), [p('remote-broken')]);
         const failingLoader = Effect.fn(function* (_id: string) {
           return yield* Effect.fail(new Error('fetch failed'));
         });
@@ -1875,7 +1877,7 @@ describe('PluginManager', () => {
         registry.set(manager.pluginRegistry.plugins, {
           entries: [
             {
-              id: 'remote-broken',
+              id: p('remote-broken'),
               name: 'Broken',
               moduleUrl: 'about:blank',
               repo: 'example/broken',
@@ -1886,12 +1888,12 @@ describe('PluginManager', () => {
           error: null,
         });
 
-        const ok = yield* manager.enable('dependent');
+        const ok = yield* manager.enable(p('dependent'));
         assert.isFalse(ok);
         assert.deepStrictEqual(manager.getEnabled(), []);
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
-        assert.strictEqual(failures[0].id, 'dependent');
+        assert.strictEqual(failures[0].id, p('dependent'));
         assert.instanceOf(failures[0].error, Plugin.PluginDependencyError);
       }),
     );

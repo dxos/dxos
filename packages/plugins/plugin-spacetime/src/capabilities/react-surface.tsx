@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -18,14 +19,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'scene',
+        id: DXN.make('org.dxos.plugin.spacetime.surface.scene'),
         filter: AppSurface.object(AppSurface.Article, Scene.Scene),
         component: ({ data, role }) => {
           return <SpacetimeArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
         },
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: DXN.make('org.dxos.plugin.spacetime.surface.pluginSettings'),
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

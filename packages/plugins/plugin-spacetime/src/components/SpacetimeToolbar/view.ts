@@ -4,6 +4,8 @@
 
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
+import { DXN } from '@dxos/keys';
+
 import { meta } from '#meta';
 
 import { type EditorState } from '../../tools';
@@ -18,7 +20,7 @@ export const createViewActions =
     builder.group(
       'view',
       {
-        label: ['view.label', { ns: meta.id }],
+        label: ['view.label', { ns: DXN.getName(meta.id) }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'multiple',
@@ -30,7 +32,7 @@ export const createViewActions =
         group.action(
           'showGrid',
           {
-            label: ['view.grid.label', { ns: meta.id }],
+            label: ['view.grid.label', { ns: DXN.getName(meta.id) }],
             checked: editorState.showGrid,
             icon: 'ph--grid-four--regular',
           },
@@ -38,7 +40,7 @@ export const createViewActions =
         );
         group.action(
           'showDebug',
-          { label: ['view.debug.label', { ns: meta.id }], checked: editorState.showDebug, icon: 'ph--bug--regular' },
+          { label: ['view.debug.label', { ns: DXN.getName(meta.id) }], checked: editorState.showDebug, icon: 'ph--bug--regular' },
           () => update({ showDebug: !editorState.showDebug }),
         );
       },

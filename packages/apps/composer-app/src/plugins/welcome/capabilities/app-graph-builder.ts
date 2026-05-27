@@ -8,6 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { ABOUT_DIALOG } from '../components';
 import { meta } from '../meta';
@@ -15,7 +16,7 @@ import { meta } from '../meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extension = yield* GraphBuilder.createExtension({
-      id: 'about',
+      id: DXN.make('org.dxos.plugin.welcome.extension.about'),
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([

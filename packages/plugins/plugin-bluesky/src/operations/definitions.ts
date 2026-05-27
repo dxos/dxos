@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, DXN } from '@dxos/echo';
 import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const BLUESKY_OPERATION = `${meta.id}.operation`;
+const BLUESKY_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 /**
  * Discovery — list the available Bluesky sync targets for the integration's
@@ -23,7 +23,7 @@ const BLUESKY_OPERATION = `${meta.id}.operation`;
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
-    key: `${BLUESKY_OPERATION}.get-bluesky-targets`,
+    key: DXN.make(`${BLUESKY_OPERATION}.getBlueskyTargets`),
     name: 'Get Bluesky Targets',
     description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
@@ -43,7 +43,7 @@ export const GetBlueskyTargets = Operation.make({
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
-    key: `${BLUESKY_OPERATION}.sync-bluesky-targets`,
+    key: DXN.make(`${BLUESKY_OPERATION}.syncBlueskyTargets`),
     name: 'Sync Bluesky',
     description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
     icon: 'ph--arrows-clockwise--regular',

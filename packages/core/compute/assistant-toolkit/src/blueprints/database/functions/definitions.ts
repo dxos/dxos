@@ -7,11 +7,12 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation, Tag } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const Query = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.query',
+    key: DXN.make('org.dxos.function.database.query'),
     name: 'Query',
     icon: 'ph--magnifying-glass--regular',
     description: trim`
@@ -106,7 +107,7 @@ export const Query = Operation.make({
 
 export const Load = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.load',
+    key: DXN.make('org.dxos.function.database.load'),
     name: 'Load object',
     icon: 'ph--download--regular',
     description: trim`
@@ -127,7 +128,7 @@ export const Load = Operation.make({
 
 export const ObjectCreate = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.object-create',
+    key: DXN.make('org.dxos.function.database.object-create'),
     name: 'Create object',
     icon: 'ph--plus--regular',
     description: trim`
@@ -147,7 +148,7 @@ export const ObjectCreate = Operation.make({
 
 export const ObjectUpdate = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.object-update',
+    key: DXN.make('org.dxos.function.database.object-update'),
     name: 'Update object',
     icon: 'ph--pencil--regular',
     description: trim`
@@ -166,7 +167,7 @@ export const ObjectUpdate = Operation.make({
 
 export const ObjectDelete = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.object-delete',
+    key: DXN.make('org.dxos.function.database.object-delete'),
     name: 'Delete object',
     description: trim`
       Deletes the object.
@@ -182,7 +183,7 @@ export const ObjectDelete = Operation.make({
 
 export const SchemaAdd = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.schema-add',
+    key: DXN.make('org.dxos.function.database.schema-add'),
     name: 'Add schema',
     icon: 'ph--plus--regular',
     description: trim`
@@ -203,7 +204,7 @@ export const SchemaAdd = Operation.make({
 
 export const SchemaList = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.schema-list',
+    key: DXN.make('org.dxos.function.database.schema-list'),
     name: 'List schemas',
     icon: 'ph--list--regular',
     description: trim`
@@ -219,7 +220,7 @@ export const SchemaList = Operation.make({
 
 export const ContextAdd = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.context-add',
+    key: DXN.make('org.dxos.function.database.context-add'),
     name: 'Add to context',
     icon: 'ph--plus-circle--regular',
     description: trim`
@@ -238,7 +239,7 @@ export const ContextAdd = Operation.make({
 
 export const ContextRemove = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.context-remove',
+    key: DXN.make('org.dxos.function.database.context-remove'),
     name: 'Remove from context',
     icon: 'ph--minus-circle--regular',
     description: trim`
@@ -257,7 +258,7 @@ export const ContextRemove = Operation.make({
 
 export const RelationCreate = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.relation-create',
+    key: DXN.make('org.dxos.function.database.relation-create'),
     name: 'Create relation',
     icon: 'ph--arrows-merge--regular',
     description: trim`
@@ -279,7 +280,7 @@ export const RelationCreate = Operation.make({
 
 export const RelationDelete = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.relation-delete',
+    key: DXN.make('org.dxos.function.database.relation-delete'),
     name: 'Delete relation',
     description: trim`
       Deletes the relation.
@@ -295,7 +296,7 @@ export const RelationDelete = Operation.make({
 
 export const TagAdd = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.tag-add',
+    key: DXN.make('org.dxos.function.database.tag-add'),
     name: 'Add tag',
     icon: 'ph--tag--regular',
     description: trim`
@@ -314,7 +315,7 @@ export const TagAdd = Operation.make({
 
 export const TagRemove = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.tag-remove',
+    key: DXN.make('org.dxos.function.database.tag-remove'),
     name: 'Remove tag',
     icon: 'ph--tag--regular',
     description: trim`

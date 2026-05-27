@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
@@ -24,7 +25,7 @@ export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
 
 export const Adjust = Operation.make({
   meta: {
-    key: `${meta.id}.operation.adjust`,
+    key: DXN.make(`${DXN.getName(meta.id)}.operation.adjust`),
     name: 'Adjust',
     description: 'Adjust the layout of a plank.',
     icon: 'ph--layout--regular',
@@ -39,7 +40,7 @@ export const Adjust = Operation.make({
 
 export const UpdatePlankSize = Operation.make({
   meta: {
-    key: `${meta.id}.operation.update-plank-size`,
+    key: DXN.make(`${DXN.getName(meta.id)}.operation.updatePlankSize`),
     name: 'Update Plank Size',
     description: 'Update the size of a plank.',
     icon: 'ph--arrows-out--regular',

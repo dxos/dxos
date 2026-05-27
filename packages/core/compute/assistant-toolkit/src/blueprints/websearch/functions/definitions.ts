@@ -5,11 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const Fetch = Operation.make({
   meta: {
-    key: 'org.dxos.function.web-search.fetch',
+    key: DXN.make('org.dxos.function.web-search.fetch'),
     name: 'Fetch web page',
     icon: 'ph--globe-simple--regular',
     description: trim`

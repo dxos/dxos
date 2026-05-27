@@ -14,6 +14,8 @@ import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
+import { DXN } from '@dxos/keys';
+
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
 import { OutlineOperation } from '#types';
 
@@ -21,7 +23,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'root',
+        id: DXN.make('org.dxos.plugin.outliner.extension.root'),
         match: (node) => {
           if (!Obj.isObject(node.data)) {
             return Option.none();
@@ -67,7 +69,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createExtension({
-        id: 'quick-entry',
+        id: DXN.make('org.dxos.plugin.outliner.extension.quickEntry'),
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([

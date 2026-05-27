@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Script } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -15,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: 'execute',
+        id: DXN.make('org.dxos.plugin.script.extension.execute'),
         type: Script.Script,
         connector: () =>
           Effect.succeed([
@@ -28,7 +29,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: 'logs',
+        id: DXN.make('org.dxos.plugin.script.extension.logs'),
         type: Script.Script,
         connector: () =>
           Effect.succeed([

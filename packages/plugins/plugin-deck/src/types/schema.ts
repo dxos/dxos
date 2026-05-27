@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Label, LayoutOperation } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -126,12 +127,12 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}.action.adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${DXN.getName(meta.id)}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${DXN.getName(meta.id)}.action.update-plank-size`, {
     input: Schema.Struct({
       id: Schema.String,
       size: Schema.Number,

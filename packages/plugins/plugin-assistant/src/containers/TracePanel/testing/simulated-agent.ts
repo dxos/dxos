@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Process, Trace } from '@dxos/compute';
 import { ObjectId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 export interface AgentScenario {
   readonly prompt: string;
@@ -51,7 +52,7 @@ const writeAndFlush = <T>(eventType: Trace.EventType<T>, payload: T) =>
  */
 export const SimulatedAgent = Process.make(
   {
-    key: 'org.dxos.testing.process.agent',
+    key: DXN.make('org.dxos.testing.process.agent'),
     input: Schema.Number,
     output: Schema.Void,
     services: [Trace.TraceService],

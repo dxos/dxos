@@ -5,9 +5,10 @@
 import { type Plugin } from '@dxos/app-framework';
 import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
+import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.tictactoe',
+  id: DXN.make('org.dxos.plugin.tictactoe'),
   name: 'Tic-Tac-Toe',
   author: 'DXOS',
   description: trim`
