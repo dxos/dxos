@@ -191,20 +191,30 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       }
       const edgeSel = select(svgEl).selectAll<SVGGElement, GraphLayoutEdge<SpaceGraphNode>>('g.dx-edge');
       edgeSel.style('opacity', (edge) => {
-        if (!node) {return null;}
+        if (!node) {
+          return null;
+        }
         const isConnected = edge.source.id === node.id || edge.target.id === node.id;
         return isConnected ? null : '0.08';
       });
       edgeSel
         .select<SVGPathElement>('path')
         .style('stroke', (edge) => {
-          if (!node) {return null;}
-          if (edge.source.id === node.id) {return 'var(--color-orange-500)';}
-          if (edge.target.id === node.id) {return 'var(--color-sky-500)';}
+          if (!node) {
+            return null;
+          }
+          if (edge.source.id === node.id) {
+            return 'var(--color-orange-500)';
+          }
+          if (edge.target.id === node.id) {
+            return 'var(--color-sky-500)';
+          }
           return null;
         })
         .style('stroke-width', (edge) => {
-          if (!node) {return null;}
+          if (!node) {
+            return null;
+          }
           const isConnected = edge.source.id === node.id || edge.target.id === node.id;
           return isConnected ? '1.5px' : null;
         });
