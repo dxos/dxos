@@ -492,10 +492,10 @@ describe('Integration tests', () => {
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
         }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-        const [stored] = await db.register([LocalTestSchema]);
+        const [stored] = await db.registry.register([LocalTestSchema]);
         schemaDxn = Type.getURI(stored)!;
 
-        const object = db.add(Obj.make(stored, { field: 'test' }));
+        const object = db.add(Obj.make(stored as unknown as Type.AnyObj, { field: 'test' } as any));
         // After fork, the schema attached to objects is the rebuilt Effect Schema (from jsonSchema),
         // not identical to the Type.Type entity returned by register. Compare URIs instead.
         expect(Type.getURI(Obj.getType(object)!)).to.eq(Type.getURI(stored));
@@ -530,7 +530,7 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const schema = db.graph.registry.types.find(
           (t) => Type.getTypename(t) === 'com.example.type.test',
-        ) as Type.RuntimeType;
+        );
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
@@ -551,9 +551,9 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.register([TestSchema.Person]);
+      const [schema] = await db.registry.register([TestSchema.Person]);
       typeURI = Type.getURI(schema)!;
-      db.add(Obj.make(schema, { name: 'Bob' }));
+      db.add(Obj.make(schema as unknown as Type.AnyObj, { name: 'Bob' } as any));
       await db.flush();
     }
 

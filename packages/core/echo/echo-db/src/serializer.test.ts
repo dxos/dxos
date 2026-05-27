@@ -240,7 +240,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await db.schemaRegistry.register([
+        await db.registry.register([
           {
             typename,
             version: '0.1.0',
@@ -280,7 +280,7 @@ describe('Serializer', () => {
         // And the registry query path — the one Composer's markdown editor
         // hits via `useLinkQuery` — must not throw `Invalid typename` from
         // `getSortKey` for any returned schema.
-        const results = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+        const results = db.graph.registry.types;
         for (const schema of results) {
           expect(() => Type.getTypename(schema as any)).not.to.throw();
         }

@@ -5636,6 +5636,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-registry':
+        specifier: workspace:*
+        version: link:../echo-registry
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
@@ -5718,6 +5721,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5995,6 +6001,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
       react:
         specifier: ~19.2.3
         version: 19.2.6
@@ -6010,28 +6019,19 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo-pipeline
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
     devDependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
@@ -6060,6 +6060,9 @@ importers:
       '@solidjs/testing-library':
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.11)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
@@ -7692,6 +7695,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -7717,6 +7723,9 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 16.0.4
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
 
   packages/e2e/rpc-tunnel-e2e:
     dependencies:
@@ -17699,6 +17708,9 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
+      '@dxos/echo-registry':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-registry
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

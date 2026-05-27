@@ -180,21 +180,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          switch (dxn.kind) {
-            case DXN.kind.TYPE: {
-              const schema = this._registry.getTypeByDXN(dxn.toString());
-              status = schema != null ? 'resolved' : 'missing';
-              return schema;
-            }
-            case DXN.kind.ECHO: {
-              status = 'error';
-              throw new Error('Not implemented: Resolving schema stored in the database');
-            }
-            default: {
-              status = 'unknown dxn';
-              return undefined;
-            }
+          // The registry handles both DXN-form (typename-based) and echo-form URIs.
+          const typeEntity = this._registry.getTypeByDXN(uri.toString());
+          if (typeEntity != null) {
+            status = 'resolved';
+            return Type.getSchema(typeEntity);
           }
+          status = 'missing';
+          return undefined;
         } finally {
           if (TRACE_REF_RESOLUTION) {
             log.info('resolveSchema', {
@@ -211,10 +204,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        if (DXN.isDXN(uri)) {
-          return this.schemaRegistry.getSchemaByDXN(uri);
-        }
-        return undefined;
+        return this._registry.getTypeByDXN(uri.toString());
       },
     } satisfies Ref.Resolver;
   }

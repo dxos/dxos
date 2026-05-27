@@ -10,18 +10,18 @@ import { type ObjectId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../Annotation';
+import { getMetaChecked } from '../common/api';
 import { ChangeId } from '../common/proxy';
-import { EntityKind, SchemaKindId } from '../common/types';
+import { EntityKind, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../JsonSchema';
 import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../Obj';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
-  setTypenameInSchema,
   updateFieldNameInSchema,
   updateFieldsInSchema,
 } from './manipulation';
-import { PersistentSchema } from './persistent-schema';
+import { TypeSchema as PersistentSchema } from './type-schema';
 
 /**
  * Base schema type.
@@ -129,9 +129,11 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
    */
   return class {
     private static get _schema() {
-      // The field is DynamicEchoSchema in runtime, but is serialized as PersisentSchema in automerge.
-      return Schema.Union(PersistentSchema, Schema.instanceOf(EchoSchema)).annotations(
-        PersistentSchema.ast.annotations,
+      // The field is DynamicEchoSchema in runtime, but is serialized as PersistentSchema in automerge.
+      // PersistentSchema is now a Type entity; retrieve its underlying Effect Schema via StaticTypeSchemaSlot.
+      const persistentEffectSchema = PersistentSchema[StaticTypeSchemaSlot];
+      return Schema.Union(persistentEffectSchema, Schema.instanceOf(EchoSchema)).annotations(
+        persistentEffectSchema.ast.annotations,
       );
     }
 
@@ -246,11 +248,15 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   public get typename(): string {
-    return this._persistentSchema.typename;
+    // typename lives in ObjectMeta.key on the new TypeSchema entity.
+    const meta = getMetaChecked(this._persistentSchema as any);
+    return (meta.key as string | undefined) ?? this._persistentSchema.id;
   }
 
   public get version(): string {
-    return this._persistentSchema.version;
+    // version lives in ObjectMeta.version on the new TypeSchema entity.
+    const meta = getMetaChecked(this._persistentSchema as any);
+    return (meta.version as string | undefined) ?? '0.0.0';
   }
 
   public get readonly(): boolean {
@@ -298,14 +304,14 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   public get [SchemaMetaSymbol](): SchemaMeta {
-    return { id: this.id, typename: this.typename, version: this._persistentSchema.version };
+    return { id: this.id, typename: this.typename, version: this.version };
   }
 
   /**
    * Reference to the underlying persistent schema object.
    */
-  public get persistentSchema(): Type.PersistentType {
-    return this._persistentSchema as Type.PersistentType;
+  public get persistentSchema(): PersistentSchema {
+    return this._persistentSchema;
   }
 
   public getProperties(): SchemaAST.PropertySignature[] {
@@ -323,21 +329,10 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * @throws Error if the schema is readonly.
    */
-  public updateTypename(typename: string): void {
-    const updated = setTypenameInSchema(this._getSchema(), typename);
-    this._change((schema) => {
-      schema.typename = typename;
-      schema.jsonSchema = toJsonSchema(updated);
-    });
-  }
-
-  /**
-   * @throws Error if the schema is readonly.
-   */
   public addFields(fields: Schema.Struct.Fields): void {
     const extended = addFieldsToSchema(this._getSchema(), fields);
     this._change((schema) => {
-      schema.jsonSchema = toJsonSchema(extended);
+      (schema as any).jsonSchema = toJsonSchema(extended);
     });
   }
 
@@ -347,7 +342,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   public updateFields(fields: Schema.Struct.Fields): void {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
     this._change((schema) => {
-      schema.jsonSchema = toJsonSchema(updated);
+      (schema as any).jsonSchema = toJsonSchema(updated);
     });
   }
 
@@ -357,7 +352,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }): void {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
     this._change((schema) => {
-      schema.jsonSchema = toJsonSchema(renamed);
+      (schema as any).jsonSchema = toJsonSchema(renamed);
     });
   }
 
@@ -367,7 +362,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   public removeFields(fieldNames: string[]): void {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
     this._change((schema) => {
-      schema.jsonSchema = toJsonSchema(removed);
+      (schema as any).jsonSchema = toJsonSchema(removed);
     });
   }
 

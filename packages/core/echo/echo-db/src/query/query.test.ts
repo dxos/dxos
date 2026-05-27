@@ -13,15 +13,16 @@ import {
   Dataset,
   type Entity,
   Feed,
+  Filter,
   type Hypergraph,
   Obj,
   Order,
+  Query,
   Ref,
   Relation,
   Type,
   View,
 } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EchoURI, PublicKey } from '@dxos/keys';
@@ -2437,10 +2438,10 @@ describe('Query', () => {
 
     test('query mutable schema objects', async () => {
       const [schema] = await db.registry.register([TestSchema.Person]);
-      const contact = db.add(Obj.make(schema, {}));
+      const contact = db.add(Obj.make(schema as Type.AnyObj, {}));
 
       // NOTE: Must use `Filter.type` with the stored Type.Type entity since matching is done by the object id of the schema entity.
-      const query = db.query(Query.type(schema));
+      const query = db.query(Query.type(schema as Type.AnyObj));
       const result = await query.run();
       expect(result).to.have.length(1);
       expect(result[0]).to.eq(contact);

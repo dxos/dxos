@@ -321,7 +321,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.string).to.eq('foo');
 
       peer.client.graph.registry.addTypes([TestSchema.Example]);
-      expect(Obj.getSchema(obj)).to.eq(TestSchema.Example);
+      expect(Obj.getType(obj)).to.eq(TestSchema.Example);
     }
   });
 

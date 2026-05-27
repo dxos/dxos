@@ -8,7 +8,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { Entity, Obj } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
   EncodedReference,
@@ -35,7 +35,7 @@ import {
   ObjectMetaSchema,
   ObjectVersionId,
   ParentId,
-  PersistentSchema,
+  TypeSchema as PersistentSchema,
   type ReactiveHandler,
   Ref,
   RefImpl,
@@ -631,25 +631,46 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
     const typeURI = EncodedReference.toURI(typeRef);
-    const typeDxn = DXN.tryMake(typeURI);
-    if (typeDxn) {
-      const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
-      if (staticType != null) {
-        return staticType;
-      }
-      const typename = DXN.getName(typeDxn);
-      const version = DXN.getVersion(typeDxn);
-      return target[symbolInternals].database.schemaRegistry
-        .query({ typename, ...(version ? { version } : {}) })
-        .runSync()[0];
+    const registry = target[symbolInternals].database.graph.registry;
+    // Look up by the raw typeURI string — the registry normalises DXN forms.
+    const fromRegistry = registry.getTypeByDXN(typeURI);
+    if (fromRegistry != null) {
+      return fromRegistry;
     }
+    const database = target[symbolInternals].database;
+
+    // For dxn:echo:@:objectId references, load the PersistentSchema on demand.
+    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
+    if (echoRefMatch) {
+      const echoId = echoRefMatch[1];
+      if (echoId != null) {
+        const found = registry.getTypeByDXN(`dxn:echo:@:${echoId}`);
+        if (found != null) {
+          return found;
+        }
+        const schemaObject = database.getObjectById(echoId);
+        if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
+          return database._getOrRegisterPersistentSchema(schemaObject as any);
+        }
+      }
+    }
+
+    // Legacy EchoURI form (echo://spaceId/objectId or echo:/<objectId>) — load on demand.
     const echoUri = EchoURI.tryParse(typeURI);
     if (echoUri) {
-      const id = EchoURI.getObjectId(echoUri);
-      if (id) {
-        return target[symbolInternals].database.schemaRegistry.getSchemaById(id);
+      const echoId = EchoURI.getObjectId(echoUri);
+      if (echoId != null) {
+        const found = registry.getTypeByDXN(`dxn:echo:@:${echoId}`);
+        if (found != null) {
+          return found;
+        }
+        const schemaObject = database.getObjectById(echoId);
+        if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
+          return database._getOrRegisterPersistentSchema(schemaObject as any);
+        }
       }
     }
+
     return undefined;
   }
 
@@ -677,7 +698,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const typeURI = EncodedReference.toURI(typeRef);
-
     const database = target[symbolInternals].database;
 
     // Skip protobuf types as they are runtime registered types.
@@ -685,10 +705,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const database = target[symbolInternals].database;
-    const fromRegistry = database.graph.registry.getTypeByDXN(typeDXN.toString());
+    const fromRegistry = database.graph.registry.getTypeByDXN(typeURI);
     if (fromRegistry != null) {
-      return fromRegistry;
+      return Type.getSchema(fromRegistry);
     }
 
     // For dxn:echo:@:objectId references, load the PersistentSchema on demand
@@ -699,7 +718,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
-          return database._getOrRegisterPersistentSchema(schemaObject);
+          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject as any);
+          return Type.getSchema(typeEntity);
         }
       }
     }
@@ -711,7 +731,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
-          return database._getOrRegisterPersistentSchema(schemaObject);
+          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject as any);
+          return Type.getSchema(typeEntity);
         }
       }
     }

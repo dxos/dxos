@@ -104,11 +104,13 @@ describe('Registry', () => {
     registry.addTypes([schema]);
 
     // Exact DXN lookup.
+    expect(registry.getTypeByDXN(`dxn:${typename}:${version}`)).toBe(schema);
+    // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
     expect(registry.getTypeByDXN(`dxn:type:${typename}:${version}`)).toBe(schema);
     // Short-form lookup (without dxn: prefix).
     expect(registry.getTypeByDXN(`${typename}:${version}`)).toBe(schema);
     // Missing DXN.
-    expect(registry.getTypeByDXN('dxn:type:org.example.Bar:1.0.0')).toBeUndefined();
+    expect(registry.getTypeByDXN('dxn:org.example.Bar:1.0.0')).toBeUndefined();
   });
 
   test('types are not surfaced in list()', ({ expect }) => {

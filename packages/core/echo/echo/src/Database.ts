@@ -328,7 +328,7 @@ export const runQueryFirst: {
  */
 export const registerSchema = (
   input: SchemaRegistry.RegisterSchemaInput[],
-): Effect.Effect<Type.Type[], never, Service> =>
+): Effect.Effect<Type.AnyEntity[], never, Service> =>
   Service.pipe(
     Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.registry.register(input))),
     Effect.withSpan('Database.registerSchema'),

@@ -15,6 +15,7 @@ import type * as Database from './Database';
 import type * as EntityModule from './Entity';
 import * as internal from './internal';
 import * as typeInternal from './internal/Type';
+import { EchoSchema } from './internal/Type/echo-schema';
 import type * as RelationModule from './Relation';
 
 //
@@ -698,3 +699,39 @@ export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
     draft.jsonSchema = internal.toJsonSchema(removed);
   });
 };
+
+/**
+ * Returns the identifier DXN string (`dxn:echo:@:<objectId>`) for a persisted
+ * type entity (one returned by the database), or `undefined` for in-memory
+ * static type declarations.
+ *
+ * The identifier DXN is the canonical key under which the type is indexed in
+ * the graph registry (as opposed to the typename-based DXN). Callers that want
+ * the human-readable typename DXN should use `Type.getURI` instead.
+ */
+export const getDXN = (input: AnyEntity): string | undefined => {
+  // Only persisted Type entities (attached to a database) have an identifier DXN.
+  if (isType(input) && getDatabase(input) != null && typeof (input as any).id === 'string') {
+    return `dxn:echo:@:${(input as any).id}`;
+  }
+  return undefined;
+};
+
+/**
+ * The persisted Type entity (stored schema). Alias for `Type.Type`.
+ * @deprecated Use `Type.Type` with `Filter.type(Type.Type)` instead.
+ */
+export const PersistentType: Type<typeInternal.TypeSchema> = typeInternal.TypeSchema as any;
+
+/**
+ * Runtime wrapper for a persisted Type entity.
+ * Wraps a TypeSchema object to provide reactive schema rebuilding.
+ * @deprecated Use `Type.AnyEntity` and `Type.getDatabase()` to discriminate
+ * in-memory vs. in-database types instead of `instanceof Type.RuntimeType`.
+ */
+export const RuntimeType = EchoSchema;
+
+/**
+ * @deprecated See {@link RuntimeType}.
+ */
+export type RuntimeType = EchoSchema;

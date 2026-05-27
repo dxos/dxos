@@ -109,7 +109,7 @@ export class RegistryImpl implements Registry.Registry {
     this.#changed.emit();
   }
 
-  register(_inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+  register(_inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
     throw new Error('Registry is not bound to a database. Use db.registry.register() instead.');
   }
 
@@ -159,30 +159,31 @@ const getId = (object: Obj.Unknown): string => {
 
 /**
  * Returns the canonical DXN string key for a schema type.
- * Format: "dxn:type:<typename>:<version>".
+ * Format: "dxn:<typename>:<version>" — matches what `getSchemaURI` writes into object documents.
  */
 const getTypeDXN = (schema: Type.AnyEntity): string => {
   const typename = Type.getTypename(schema);
   const version = Type.getVersion(schema);
   invariant(typename, 'Schema type must have a typename');
   invariant(version, 'Schema type must have a version');
-  return `dxn:type:${typename}:${version}`;
+  return `dxn:${typename}:${version}`;
 };
 
 /**
- * Normalizes a DXN string to the canonical "dxn:type:<typename>:<version>" form.
- * Accepts both the full form and the short "typename:version" form.
+ * Normalizes a DXN string to the canonical "dxn:<typename>:<version>" form.
+ * Accepts:
+ *  - Full DXN: "dxn:<typename>:<version>"
+ *  - Legacy prefixed form: "dxn:type:<typename>:<version>" → "dxn:<typename>:<version>"
+ *  - Short form without prefix: "<typename>:<version>" → "dxn:<typename>:<version>"
  */
 const normalizeDXN = (dxn: string): string => {
+  // Strip legacy "dxn:type:" prefix to match the canonical "dxn:<typename>:<version>" format.
+  if (dxn.startsWith('dxn:type:')) {
+    return `dxn:${dxn.slice('dxn:type:'.length)}`;
+  }
   if (dxn.startsWith('dxn:')) {
     return dxn;
   }
-  // Legacy short form: "typename:version" — prefix with "dxn:type:".
-  const lastColon = dxn.lastIndexOf(':');
-  if (lastColon === -1) {
-    return `dxn:type:${dxn}:`;
-  }
-  const typename = dxn.slice(0, lastColon);
-  const version = dxn.slice(lastColon + 1);
-  return `dxn:type:${typename}:${version}`;
+  // Legacy short form: "typename:version" — prefix with "dxn:".
+  return `dxn:${dxn}`;
 };

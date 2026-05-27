@@ -26,7 +26,7 @@ import {
   type AnyProperties,
   MetaId,
   type ObjectMeta,
-  PersistentSchema,
+  TypeSchema as PersistentSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   assertObjectModel,
@@ -121,7 +121,7 @@ class EchoDatabaseRegistry implements Registry.Registry {
     return this.#delegate.touch();
   }
 
-  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
     return this.#db._registerSchemas(inputs);
   }
 }
@@ -149,7 +149,7 @@ export interface EchoDatabase extends Database.Database {
    * @internal
    * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
    */
-  _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.RuntimeType;
+  _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity;
 
   /**
    * Run migrations.
@@ -305,23 +305,25 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    * Called by EchoDatabaseRegistry.register().
    */
-  async _registerSchemas(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
-    const results: Type.RuntimeType[] = [];
+  async _registerSchemas(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
+    const results: Type.AnyEntity[] = [];
     for (const input of inputs) {
-      if (Schema.isSchema(input)) {
-        results.push(this._addPersistentSchema(input));
+      if (Type.isType(input)) {
+        // Type.AnyEntity — extract the underlying Effect Schema from its slot.
+        const effectSchema = Type.getSchema(input);
+        results.push(this._addPersistentSchema(effectSchema));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
-        const schema = this._addPersistentSchema(
+        const typeEntity = this._addPersistentSchema(
           JsonSchema.toEffectSchema({
             ...input.jsonSchema,
             typename: input.typename,
             version: input.version,
           }),
         );
-        results.push(schema);
+        results.push(typeEntity);
         if (input.name) {
-          Obj.update(schema.persistentSchema, (ps) => {
-            ps.name = input.name;
+          Type.update(typeEntity, (mutable) => {
+            mutable.name = input.name;
           });
         }
       } else {
@@ -334,15 +336,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
+   * Returns the Type.AnyEntity registered in the graph registry for this persisted schema.
    */
-  _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.RuntimeType {
+  _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity {
     const identifierDXN = `dxn:echo:@:${schema.id}`;
     const existing = this.graph.registry.getTypeByDXN(identifierDXN);
-    if (existing instanceof Type.RuntimeType) {
+    if (existing != null) {
       return existing;
     }
     this._registerPersistentSchema(schema);
-    return this.graph.registry.getTypeByDXN(identifierDXN) as Type.RuntimeType;
+    return this.graph.registry.getTypeByDXN(identifierDXN)!;
   }
 
   private _registerPersistentSchema(schema: PersistentSchema): void {
@@ -350,17 +353,17 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return;
     }
     this._registeredPersistentSchemaIds.add(schema.id);
-    const runtimeType = new Type.RuntimeType(schema);
+    // Register the TypeSchema entity directly — no EchoSchema wrapper needed.
+    // Reactivity is handled by subscribing to core updates and calling registry.touch().
     this._ctx.onDispose(
-      getObjectCore(schema).updates.on(() => {
-        runtimeType._invalidate();
+      getObjectCore(schema as any).updates.on(() => {
         this.graph.registry.touch();
       }),
     );
-    this.graph.registry.addTypes([runtimeType]);
+    this.graph.registry.addTypes([schema as unknown as Type.AnyEntity]);
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.RuntimeType {
+  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.AnyEntity {
     let schema = schemaInput;
     if (schema instanceof Type.RuntimeType) {
       schema = schema.snapshot.annotations({ [TypeIdentifierAnnotationId]: undefined });
@@ -368,12 +371,17 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
+    // Create a TypeSchema entity using the internal createObject utility.
+    // We pass typename/version via ObjectMeta (MetaId) since TypeSchema no longer
+    // has them as own data fields.
     const schemaToStore = createPersistentObject(PersistentSchema, {
-      ...meta,
+      [MetaId]: { keys: [], key: meta.typename, version: meta.version },
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    });
-    const typeId = `dxn:echo:@:${schemaToStore.id}`;
-    schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
+    } as any);
+    const typeId = `dxn:echo:@:${(schemaToStore as any).id}`;
+    // Update jsonSchema with the full annotated schema.
+    // TypeSchema.jsonSchema is readonly in the type but writable via change context.
+    (schemaToStore as any).jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
@@ -386,12 +394,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    const persistentSchema = this.add(schemaToStore);
-    this._registerPersistentSchema(persistentSchema);
-    const result = this.graph.registry.getTypeByDXN(typeId) as Type.RuntimeType;
-    invariant(result instanceof Type.RuntimeType);
-    result._rebuild();
-    return result;
+    const persistentSchema = this.add(schemaToStore as any);
+    this._registerPersistentSchema(persistentSchema as unknown as PersistentSchema);
+    return this.graph.registry.getTypeByDXN(typeId)!;
   }
 
   @synchronized
@@ -460,18 +465,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
-      if (schema != null) {
-        const typename = Type.getTypename(schema);
-        const version = Type.getVersion(schema);
-        const identifierDXN = Type.getDXN(schema);
+      const typeEntity = Obj.getType(obj as unknown as Obj.Unknown);
+      if (typeEntity != null) {
+        const typename = Type.getTypename(typeEntity);
+        const version = Type.getVersion(typeEntity);
+        const identifierDXN = Type.getDXN(typeEntity);
         const inRegistry =
           typename && version
             ? this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`) !== undefined ||
               (identifierDXN != null && this.graph.registry.getTypeByDXN(identifierDXN.toString()) !== undefined)
             : false;
         if (!inRegistry) {
-          throw createSchemaNotRegisteredError(schema);
+          throw createSchemaNotRegisteredError(typeEntity);
         }
       }
 

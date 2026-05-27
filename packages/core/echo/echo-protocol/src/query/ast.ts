@@ -460,7 +460,7 @@ export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
  * Selects from a specific feed (by its underlying queue DXN).
  */
 export const FeedScope = Schema.TaggedStruct('feed', {
-  feedUri: DXN.Schema,
+  feedUri: Schema.String,
 });
 export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 

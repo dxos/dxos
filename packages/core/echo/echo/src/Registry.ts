@@ -118,7 +118,7 @@ export interface Registry {
    * Requires the registry to be bound to a database.
    * Throws if called on a registry without a database backing (e.g. the hypergraph-level registry).
    */
-  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
+  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]>;
 }
 
 /**
