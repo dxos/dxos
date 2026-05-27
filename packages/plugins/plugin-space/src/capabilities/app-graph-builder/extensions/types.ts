@@ -262,8 +262,10 @@ const createSchemaNode = ({
       (mutableSchema) => {
         const snapshot = get(AtomObj.make(mutableSchema));
         return {
-          label:
-            (snapshot as { name?: string }).name || ['object-name.placeholder', { ns: Type.getTypename(Type.Type) }],
+          label: (snapshot as { name?: string }).name || [
+            'object-name.placeholder',
+            { ns: Type.getTypename(Type.Type) },
+          ],
           nodeId: typename,
         };
       },

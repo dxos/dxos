@@ -7,8 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
 import { useSchema } from '@dxos/echo-react';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, type Presentation, getFormProperties, omitId } from '@dxos/react-ui-form';

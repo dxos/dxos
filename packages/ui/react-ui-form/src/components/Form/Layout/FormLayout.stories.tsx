@@ -82,9 +82,9 @@ const FLIGHT_LAYOUT_COMPACT = trim`
  * (or `Form.FieldSet layoutName="…"`) picks the variant; without a name
  * the `'default'` entry is used.
  */
-const AnnotatedFlight = Type.getSchema(Flight).annotations({}).pipe(
-  FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }),
-);
+const AnnotatedFlight = Type.getSchema(Flight)
+  .annotations({})
+  .pipe(FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }));
 
 type StoryProps = {
   schema: Schema.Schema<any>;

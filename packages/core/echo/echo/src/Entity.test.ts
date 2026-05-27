@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import * as Entity from './Entity';
 import * as Obj from './Obj';
 import * as Relation from './Relation';
-import * as Type from './Type';
 import { TestSchema } from './testing';
+import * as Type from './Type';
 
 const makeObject = () =>
   Obj.make(TestSchema.Person, {

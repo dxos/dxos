@@ -27,11 +27,7 @@
         "keys": []
       },
       "@uri": "echo://BWBUB3UAS3CVNPW542SN6H2DGZ4RTT2EC/01KSN359MVMT4ASAXV84MV3037",
-      "array": [
-        "one",
-        "two",
-        "three"
-      ],
+      "array": ["one", "two", "three"],
       "string": "hello world!",
       "value": 100
     },
@@ -106,16 +102,8 @@
             }
           }
         },
-        "propertyOrder": [
-          "testField",
-          "id",
-          "name",
-          "todo"
-        ],
-        "required": [
-          "testField",
-          "id"
-        ],
+        "propertyOrder": ["testField", "id", "name", "todo"],
+        "required": ["testField", "id"],
         "type": "object",
         "typename": "com.example.type.test",
         "version": "0.1.0"
