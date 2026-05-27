@@ -11,7 +11,7 @@ import type { ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -169,16 +169,37 @@ export type Meta = typeof Meta;
 export type JSON = internal.ObjectJSON;
 
 /**
- * Get the canonical URI of an entity (object or relation). Returns `URI.URI` —
- * today always an EchoURI, but future entity kinds may surface other URI schemes;
- * narrow with `EchoURI.parse(uri)` or `DXN.tryMake(uri)` at the point of use.
+ * Whether the entity is a type-kind entity (a `Type.Type` produced by
+ * `Type.makeObject` / `Type.makeRelation`, or a persisted schema). Type entities
+ * carry their identity (typename/version) on themselves rather than referencing a
+ * separate type, so the accessors below route them through the `Type.*` module.
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
+const isTypeEntity = (entity: unknown): boolean =>
+  internal.getEntityKindBrand(entity) === internal.EntityKind.Type;
 
 /**
- * Get the DXN of an entity's type.
+ * Any value the read accessors operate on: a reactive entity, a snapshot, or a
+ * type entity (`Type.AnyEntity`). Type entities are accepted because they are
+ * first-class entities — `getURI`, `getTypename`, etc. work on them too.
  */
-export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeURI;
+export type AnyInput = Unknown | Snapshot | Type.AnyEntity;
+
+/**
+ * Get the canonical URI of an entity (object, relation, or type). Returns `URI.URI` —
+ * an `EchoURI` for object/relation instances and persisted types, or a typename
+ * `DXN` for static type entities; narrow with `EchoURI.parse(uri)` or
+ * `DXN.tryMake(uri)` at the point of use.
+ */
+export const getURI = (entity: AnyInput): URI.URI =>
+  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity) : internal.getUri(entity as Unknown);
+
+/**
+ * Get the DXN of an entity's type. For object/relation instances this is the URI
+ * of the type they were created from; for a type entity it is the URI of the
+ * meta-type ({@link Type.Type}, `dxn:org.dxos.type.schema:0.1.0`).
+ */
+export const getTypeURI = (entity: AnyInput): URI.URI | undefined =>
+  isTypeEntity(entity) ? Type.getURI(Type.Type) : internal.getTypeURI(entity as Unknown);
 
 /**
  * Get the type entity (`Type.AnyEntity`) the instance was created from.
@@ -187,14 +208,20 @@ export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = inte
  * (e.g. a freshly deserialized snapshot whose type entity hasn't been wired
  * up yet, or an entity loaded from storage before its schema is known). To
  * get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
+ *
+ * For a type entity, returns the meta-type {@link Type.Type} (a type entity's
+ * type is "Type").
  */
-export const getType = (entity: Unknown | Snapshot): Type.AnyEntity | undefined =>
-  internal.getType(entity) as Type.AnyEntity | undefined;
+export const getType = (entity: AnyInput): Type.AnyEntity | undefined =>
+  isTypeEntity(entity) ? Type.Type : (internal.getType(entity) as Type.AnyEntity | undefined);
 
 /**
- * Get the typename of an entity's type.
+ * Get the typename of an entity's type. For object/relation instances this is the
+ * typename of the type they were created from; for a type entity it is the type's
+ * own typename (e.g. `com.example.type.person`).
  */
-export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
+export const getTypename = (entity: AnyInput): string | undefined =>
+  isTypeEntity(entity) ? Type.getTypename(entity as Type.AnyEntity) : internal.getTypename(entity as Unknown);
 
 /**
  * Get the database an entity belongs to.

@@ -99,33 +99,33 @@ describe('Entity', () => {
     });
   });
 
-  // Type entities pass `isEntity`, but the Entity.* accessors above are oriented at
-  // object/relation *instances* and are NOT meaningful for a type entity — its
-  // "type" is the meta-schema, not a referenced type. Callers that hold a type
-  // entity must use the `Type.*` accessors instead.
+  // Type entities are first-class entities: the Entity.* accessors work on them too.
+  // `getURI`/`getTypename` return the type's OWN identity, while `getType`/`getTypeURI`
+  // (which mean "the type this entity is an instance of") resolve to the meta-type
+  // `Type.Type`.
   describe('type entity', () => {
-    test('shared accessors that work', () => {
+    test('isEntity / getMeta / isDeleted', () => {
       expect(Entity.isEntity(TestSchema.Person)).toBe(true);
       expect(Entity.getMeta(TestSchema.Person)).toBeDefined();
       expect(Entity.isDeleted(TestSchema.Person)).toBe(false);
     });
 
-    test('instance-oriented accessors are not meaningful for a type entity', () => {
-      // No instance identity / type pointer to read.
-      expect(Entity.getTypename(TestSchema.Person)).toBeUndefined();
-      expect(Entity.getTypeURI(TestSchema.Person)).toBeUndefined();
-      expect(Entity.getType(TestSchema.Person)).toBeUndefined();
-      // These throw rather than return undefined — use the Type.* accessors below.
-      expect(() => Entity.getURI(TestSchema.Person)).toThrow();
-      expect(() => Entity.toJSON(TestSchema.Person)).toThrow();
+    test('getURI / getTypename return the type entity’s own identity', () => {
+      expect(Entity.getURI(TestSchema.Person)).toBe('dxn:com.example.type.person:0.1.0');
+      expect(Entity.getTypename(TestSchema.Person)).toBe('com.example.type.person');
     });
 
-    test('Type.* accessors are the correct API for type entities', () => {
+    test('getType / getTypeURI resolve to the meta-type (Type.Type)', () => {
+      expect(Entity.getType(TestSchema.Person)).toBe(Type.Type);
+      expect(Entity.getTypeURI(TestSchema.Person)).toBe('dxn:org.dxos.type.schema:0.1.0');
+    });
+
+    test('Entity.* and Type.* agree on type identity', () => {
+      expect(Entity.getURI(TestSchema.Person)).toBe(Type.getURI(TestSchema.Person));
+      expect(Entity.getTypename(TestSchema.Person)).toBe(Type.getTypename(TestSchema.Person));
       expect(Type.isType(TestSchema.Person)).toBe(true);
       expect(Type.isObject(TestSchema.Person)).toBe(true);
       expect(Type.isRelation(TestSchema.HasManager)).toBe(true);
-      expect(Type.getURI(TestSchema.Person)).toBe('dxn:com.example.type.person:0.1.0');
-      expect(Type.getTypename(TestSchema.Person)).toBe('com.example.type.person');
       expect(Type.getVersion(TestSchema.Person)).toBe('0.1.0');
     });
   });

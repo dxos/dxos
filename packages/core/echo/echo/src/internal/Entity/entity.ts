@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
+import { ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import {
@@ -49,6 +50,13 @@ export interface EchoTypeSchema<
 
   /** Schema-kind brand indicating what kind of instance this type describes. */
   readonly [SchemaKindId]: K;
+
+  /**
+   * Entity id. Always present — stamped at construction even for static
+   * declarations — but NOT the type's identity: a static type resolves its URI
+   * to the typename DXN, not `echo:/<id>` (see `getTypeURIFromSpecifier`).
+   */
+  readonly id: ObjectId;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
   readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
@@ -168,6 +176,12 @@ export const makeEchoTypeSchema = <
     [SchemaKindId]: kind,
     [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
     [MetaId]: meta,
+    // Like every ECHO entity, a static type entity carries an `id`. It is NOT
+    // its identity — static types resolve their URI to the typename DXN (see
+    // `getTypeURIFromSpecifier`, which discriminates static vs persisted by
+    // `isInstanceOf(PersistentType, ...)`, not by id presence). The id only
+    // becomes the URI once the type is persisted into a database.
+    id: ObjectId.random(),
     // NOTE: typename/version are intentionally NOT own properties. They live in
     // `[MetaId]` (ObjectMeta.key/version) and are read via `Type.getTypename` /
     // `Type.getVersion`, matching persisted `Type.Type` entities.

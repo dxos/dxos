@@ -14,7 +14,16 @@ import { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
-import { type AnyEntity, type AnyProperties, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  EntityKind,
+  KindId,
+  MetaId,
+  TypeId,
+  getSchema,
+  getStaticTypeSchema,
+} from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
@@ -91,19 +100,26 @@ export const getTypeURIFromSpecifier = (
   }
   if (typeof input === 'object' && input !== null && KindId in input) {
     // `Type.Type` entity:
+    //  - Static (declared via `Type.makeObject(dxn)`): URI is the typename DXN.
+    //    Static entities are discriminated by the hidden `StaticTypeSchemaSlot`
+    //    (stamped only by `makeEchoTypeSchema`); persisted types rebuild from
+    //    `jsonSchema` and never carry it. NOTE: a static entity DOES have a
+    //    random `id`, but that id is not its identity — its URI is the typename
+    //    DXN, so we must NOT key on id-presence here.
     //  - Persisted (stored ECHO object): URI is local `echo:/<objectId>` —
     //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
     //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
-    //  - Static (declared via `Type.makeObject(dxn)`): URI is the typename DXN.
+    if (getStaticTypeSchema(input) !== undefined) {
+      // Static entities carry typename/version in `ObjectMeta` (`[MetaId].key` /
+      // `.version`), not as own properties — read them through meta.
+      const meta = (input as { [MetaId]?: { key?: string; version?: string } })[MetaId];
+      if (typeof meta?.key === 'string' && typeof meta?.version === 'string') {
+        return DXN.make(meta.key, meta.version);
+      }
+    }
     const entity = input as { id?: string };
     if (typeof entity.id === 'string' && ObjectId.isValid(entity.id)) {
       return EchoURI.make({ objectId: entity.id });
-    }
-    // Static entities carry typename/version in `ObjectMeta` (`[MetaId].key` /
-    // `.version`), not as own properties — read them through meta.
-    const meta = (input as { [MetaId]?: { key?: string; version?: string } })[MetaId];
-    if (typeof meta?.key === 'string' && typeof meta?.version === 'string') {
-      return DXN.make(meta.key, meta.version);
     }
     return getUriFromEntity(input as AnyEntity);
   }

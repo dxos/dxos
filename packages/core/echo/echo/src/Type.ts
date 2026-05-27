@@ -35,8 +35,14 @@ interface BaseTypeEntity<A> {
    */
   readonly [internal.KindId]: internal.EntityKind.Type;
 
-  /** Object id — present once the type has been persisted into a database. */
-  readonly id?: ObjectId;
+  /**
+   * Object id. Like all ECHO entities, type entities always carry an id —
+   * stamped at construction for in-memory (static) declarations and assigned by
+   * the database once persisted. The id does NOT determine the entity's URI:
+   * static types resolve to their typename DXN, persisted types to `echo:/<id>`
+   * (see `getTypeURIFromSpecifier`).
+   */
+  readonly id: ObjectId;
 
   readonly name?: string;
   // NOTE: `typename` / `version` are intentionally NOT fields on any type-entity
