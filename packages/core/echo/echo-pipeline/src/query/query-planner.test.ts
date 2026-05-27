@@ -1042,7 +1042,7 @@ describe('QueryPlanner', () => {
             "scope": [
               {
                 "_tag": "feed",
-                "feedUri": "dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E",
+                "feedUri": "echo://B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO/01JJRA86VK4H1TEB6QQVSWXP0E",
               },
             ],
             "selector": {
