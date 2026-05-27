@@ -8,8 +8,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type FlockBoid, FlockModel } from './FlockModel';
 import { Vec2 } from '../../util';
+import { type FlockBoid, FlockModel } from './FlockModel';
 
 // Boids flocking.
 // https://en.wikipedia.org/wiki/Boids
@@ -112,7 +112,6 @@ type TickConfig = {
   /** Pre-computed `rgba(r, g, b, 1-trail)` string used by the fade fillRect. */
   fadeStyle: string;
 };
-
 
 const updateBoid = (
   b: FlockBoid,
@@ -445,8 +444,7 @@ export const Flock = ({
     ctx.clearRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
-      const cursor =
-        cursorRepel > 0 && cursorRef.current ? { position: cursorRef.current, radius: cursorRepel } : null;
+      const cursor = cursorRepel > 0 && cursorRef.current ? { position: cursorRef.current, radius: cursorRepel } : null;
       tick(canvas.current!, { width, height }, boids, obstacles, cursor, tickConfig);
     });
 
