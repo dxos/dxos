@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Routine, Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, Type, View } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
 
@@ -18,14 +18,21 @@ export default SchemaList.pipe(
     Effect.fn(function* () {
       const { db } = yield* Database.Service;
       const types = yield* db.graph.registry.listTypes();
-      const schema = [...types];
-      return schema
-        .filter((type) => !excludedTypenames.includes(Type.getTypename(type)))
-        .map((type) => ({
-          typename: Type.getTypename(type),
-          jsonSchema: type.jsonSchema,
-          kind: Type.isRelation(type) ? 'relation' : 'record',
-        }));
+      return [...types]
+        .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
+        .sort((a, b) => {
+          const aKey = `${Type.getTypename(a)}:${Type.getVersion(a)}`;
+          const bKey = `${Type.getTypename(b)}:${Type.getVersion(b)}`;
+          return aKey.localeCompare(bKey);
+        })
+        .map((schema) => {
+          const meta = Type.getMeta(schema);
+          return {
+            typename: Type.getTypename(schema),
+            jsonSchema: JsonSchema.toJsonSchema(schema),
+            kind: meta?.sourceSchema ? 'relation' : 'record',
+          };
+        });
     }),
   ),
 );
