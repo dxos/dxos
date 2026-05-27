@@ -90,9 +90,7 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  // `EchoObjectSchema(...)` yields a static `Type.Obj` entity; unwrap to its
-  // source schema (which carries the typename annotation) before handing it to
-  // `createEchoSchema`, which expects a raw Effect Schema.
+  // EchoObjectSchema wraps a static Type.Obj entity; unwrap to the source schema for createEchoSchema.
   const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
   const schema = createEchoSchema(Type.getSchema(typeSchema));
 

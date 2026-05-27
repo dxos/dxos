@@ -142,9 +142,6 @@ describe('Type', () => {
         source: TestSchema.Person,
         target: TestSchema.Person,
       });
-      // See `Type.makeObjectFromJsonSchema` draft test — typename/version
-      // live in meta. Drafts default `version` to `'0.0.0'` and leave the
-      // typename (`ObjectMeta.key`) undefined until assigned.
       expect(Type.getVersion(draft)).toBe('0.0.0');
       const meta = Type.getMeta(draft);
       expect(meta.key).toBeUndefined();
