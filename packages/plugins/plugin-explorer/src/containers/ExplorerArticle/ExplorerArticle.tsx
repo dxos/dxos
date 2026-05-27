@@ -26,7 +26,7 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { Flock, type FlockSeed } from '@dxos/react-ui-sfx';
-import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
+import { SpaceGraphModel, type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
 // Side-effect import: ExplorerArticle drives `SVG.Graph` directly (previously the CSS
 // was pulled in transitively via `ForceGraph.tsx`, which we no longer use). Without it
 // the `g.dx-edge path` rules — including `fill: none` — never reach the bundle and SVG
@@ -153,7 +153,7 @@ const isVariant = (value: unknown): value is ExplorerArticleVariant =>
 
 type VisualizationProps = {
   variant: ExplorerArticleVariant;
-  model: NonNullable<ReturnType<typeof useGraphModel>>;
+  model: NonNullable<SpaceGraphModel>;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 };
 
@@ -201,12 +201,15 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     setProjector(createProjector(variant as Exclude<ExplorerArticleVariant, 'swarm'>, svgRef.current, prev));
   }, [variant]);
 
-  // Keep the model's reactive graph atom alive across SVG.Graph unmount cycles.
-  // The atom auto-disposes when its last subscriber unsubscribes (effect-atom
-  // default), which means the SVG variant ↔ swarm swap would wipe model.graph
-  // to its initial empty value while the canvas was mounted. A no-op subscription
-  // pinned to the model's lifetime keeps the atom retained.
-  useEffect(() => model?.subscribe(() => {}), [model]);
+  // Subscribe to the model's reactive graph atom. Two purposes:
+  //  1. Keep-alive: effect-atom auto-disposes atoms when no subscribers remain
+  //     (its documented default). Without this, swarm ↔ SVG variant swaps would
+  //     wipe model.graph to its initial empty value while the canvas is mounted.
+  //  2. Re-render: when model data first arrives (asynchronously from the ECHO
+  //     query), bump local state so flockSeeds re-memos and Flock receives the
+  //     new node positions.
+  const [modelRev, setModelRev] = useState(0);
+  useEffect(() => model?.subscribe(() => setModelRev((r) => r + 1)), [model]);
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
@@ -247,9 +250,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     return ({ width, height }: { width: number; height: number }): FlockSeed[] => {
       const cx = width / 2;
       const cy = height / 2;
-      const snapshot = new Map(
-        (lastLayoutRef.current?.graph.nodes ?? []).map((node) => [node.id, node] as const),
-      );
+      const snapshot = new Map((lastLayoutRef.current?.graph.nodes ?? []).map((node) => [node.id, node] as const));
       const modelNodes = model?.graph.nodes ?? [];
       if (modelNodes.length) {
         const spread = Math.min(width, height) * 0.5;
@@ -272,7 +273,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       }
       return [];
     };
-  }, [model, variant]);
+  }, [model, variant, modelRev]);
 
   if (variant === 'swarm') {
     return (
@@ -295,6 +296,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       onSelect={handleSelect}
     />
   );
+
   return (
     <SVG.Root ref={svgRef}>{variant === 'force' ? <SVG.Zoom extent={[1 / 2, 2]}>{inner}</SVG.Zoom> : inner}</SVG.Root>
   );
@@ -453,6 +455,7 @@ const appendRadialLeafLabel = (
   if (!label) {
     return;
   }
+
   const targetX = (node as any).tx ?? node.x ?? 0;
   const targetY = (node as any).ty ?? node.y ?? 0;
   const angleDeg = (Math.atan2(targetY, targetX) * 180) / Math.PI;
@@ -487,6 +490,7 @@ const appendRadialGroupLabel = (
   if (!node.label) {
     return;
   }
+
   const targetX = (node as any).tx ?? node.x ?? 0;
   const targetY = (node as any).ty ?? node.y ?? 0;
   const angleDeg = (Math.atan2(targetY, targetX) * 180) / Math.PI;
@@ -522,6 +526,7 @@ const appendRootLabel = (
   if (!node.label) {
     return;
   }
+
   group
     .append('text')
     .classed('dx-cluster-label', true)

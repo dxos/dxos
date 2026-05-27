@@ -165,7 +165,7 @@ const renderObstacles = (context: CanvasRenderingContext2D, obstacles: FlockObst
     context.fill();
   });
 
-  context.filter = 'blur(0)';
+  context.filter = 'blur(10px)';
 };
 
 const tick = (
@@ -177,17 +177,25 @@ const tick = (
 ) => {
   const { trail, maxVelocity, alignment, cohesion, separation } = config;
 
-  // Trail fade: paint semi-transparent black over the previous frame so older
-  // pixels darken additively toward true #000. The alternative (alpha-blitting
-  // onto a cleared buffer) stalls at α ≈ 3–4 / 255 due to integer rounding,
-  // leaving a permanent ~#0f residue over a dark page.
+  // Trail fade: multiply each RGB channel by `trail` with floor (`| 0`). Going
+  // through the canvas compositor (fillRect rgba(0,0,0,1-trail) source-over) is
+  // faster but leaves a sticky rounding band around RGB=9 — Chrome's
+  // premultiplied source-over rounds up just often enough that pixels never
+  // decay all the way to 0. Floor on a CPU pass guarantees monotonic decay.
   const context = canvas.getContext('2d')!;
-  context.fillStyle = `rgba(0, 0, 0, ${1 - trail})`;
-  context.fillRect(0, 0, width, height);
+  const img = context.getImageData(0, 0, width, height);
+  const data = img.data;
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = (data[i] * trail) | 0;
+    data[i + 1] = (data[i + 1] * trail) | 0;
+    data[i + 2] = (data[i + 2] * trail) | 0;
+  }
+  context.putImageData(img, 0, 0);
 
   // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
   renderObstacles(context, obstacles);
 
+  // Calculate forces.
   boids.forEach((b1) => {
     const forces: Record<'alignment' | 'cohesion' | 'separation' | 'avoidance', Vec2> = {
       alignment: new Vec2(),
@@ -265,6 +273,7 @@ const generateFlockObstacles = (dimensions: Dimensions, numObstacles: number): F
       radius: 20 + Math.random() * 50,
     });
   }
+
   return obstacles;
 };
 
@@ -278,6 +287,7 @@ const generateFlockBoids = (
     b.color = d3.interpolateRainbow(i / num);
     b.last = [];
   });
+
   return boids;
 };
 
@@ -326,7 +336,7 @@ export const Flock = ({
   numObstacles = 0,
   coloring = 'Movement',
   radius = 2,
-  trail = 10,
+  trail = 15,
   maxVelocity = 0.5,
   alignment = 3,
   cohesion = 3,
@@ -377,12 +387,21 @@ export const Flock = ({
       return;
     }
 
+    // Initialise the canvas to opaque black once. Without this, the very first
+    // pixels start at α=0 (transparent) and the per-frame source-over fillRect
+    // asymptotes to α ≈ 246/255 in 8-bit storage — letting the page background
+    // bleed ~3.5 % through. Starting opaque means fillRect maintains α=255
+    // (final.α = src.α + dest.α(1−src.α) = 1−trail + trail·1 = 1).
+    const initCtx = canvas.current.getContext('2d')!;
+    initCtx.fillStyle = '#000';
+    initCtx.fillRect(0, 0, width, height);
+
     const interval = d3.interval(() => {
       tick(canvas.current!, { width, height }, boids, obstacles, {
         coloring,
         radius,
         maxVelocity,
-        trail: (85 + trail) / 100,
+        trail: (80 + trail) / 100,
         alignment: alignment / 100,
         cohesion: cohesion / 100,
         separation: separation / 100,
