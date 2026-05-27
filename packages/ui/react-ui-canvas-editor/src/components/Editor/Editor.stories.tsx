@@ -130,7 +130,8 @@ const meta = {
           }
 
           const createObjects = createObjectFactory(space.db, generator);
-          await createObjects(spec as TypeSpec[]);
+          const resolvedSpec: TypeSpec[] = spec.map((s: any) => ({ ...s, type: resolveType(s.type) }));
+          await createObjects(resolvedSpec);
           await space.db.flush({ indexes: true });
         }
       },
