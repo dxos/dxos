@@ -31,7 +31,7 @@ export const handler = Effect.fn(function* ({
 
   const schemas = allSchemas
     .map((schema) => {
-      const schemaAnnotation = getTypeAnnotation(schema);
+      const schemaAnnotation = getTypeAnnotation(Type.getSchema(schema));
       return {
         id: Type.getDXN(schema)?.toString(),
         typename: schemaAnnotation?.typename ?? '',

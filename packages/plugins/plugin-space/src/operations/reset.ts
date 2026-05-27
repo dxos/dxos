@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 
@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       }
 
       log.info('reset: reading schema registry');
-      const schemas = space.db.schemaRegistry.query().runSync();
+      const schemas = space.db.graph.registry.types;
 
       const feeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
@@ -97,7 +97,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       }
 
       const afterEntities = snapshotEntities(space);
-      const afterSchemas = space.db.schemaRegistry.query().runSync();
+      const afterSchemas = space.db.graph.registry.types;
       const afterFeeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
         (space.internal.data.pipeline?.dataFeeds?.length ?? 0);
