@@ -15,6 +15,7 @@ import {
   GraphClusterProjector,
   GraphForceProjector,
   type GraphLayout,
+  type GraphLayoutEdge,
   type GraphLayoutNode,
   GraphLatticeProjector,
   type GraphProjector,
@@ -142,8 +143,14 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
+  // Track the hovered node so we can colour edges incident to it. Outgoing edges
+  // (source = hovered) → amber; incoming (target = hovered) → sky; everything
+  // else stays neutral. Per the d3 hierarchical-edge-bundling convention.
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
   const handleInspect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode> | null, event: MouseEvent) => {
+      setHoveredId(node?.id ?? null);
       // null = pointerleave: forward to the shared hover handler so it can clear any preview.
       if (!node) {
         onNodeHover?.(null);
@@ -152,6 +159,27 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
       onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
     },
     [onNodeHover],
+  );
+
+  // Memoed attributes object — SVG.Graph keys its internal renderer on
+  // `props.attributes` identity, so a new object reference is what triggers
+  // re-emit + repaint of edge `data-color` attributes when hover changes.
+  const attributes = useMemo(
+    () => ({
+      edge: (edge: GraphLayoutEdge<SpaceGraphNode, SpaceGraphEdge>) => {
+        if (!hoveredId) {
+          return {};
+        }
+        if (edge.source.id === hoveredId) {
+          return { data: { color: 'amber' } };
+        }
+        if (edge.target.id === hoveredId) {
+          return { data: { color: 'sky' } };
+        }
+        return {};
+      },
+    }),
+    [hoveredId],
   );
 
   // Cluster-only: clicking a root / group node toggles its subtree open/closed.
@@ -182,6 +210,7 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
               model={model}
               projector={projector}
               renderNode={renderNode}
+              attributes={attributes}
               drag={variant === 'force'}
               onInspect={handleInspect}
               onSelect={handleSelect}
