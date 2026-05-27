@@ -152,7 +152,9 @@ describe('EchoSchema', () => {
     const [orgSchema] = await db.registry.register([OrgSchema]);
     const [contactSchema] = await db.registry.register([ContactSchema]);
     const org = db.add(Obj.make(orgSchema as unknown as Type.AnyObj, { name: 'DXOS' } as any));
-    const contact = db.add(Obj.make(contactSchema as unknown as Type.AnyObj, { name: 'Bot', org: Ref.make(org) } as any));
+    const contact = db.add(
+      Obj.make(contactSchema as unknown as Type.AnyObj, { name: 'Bot', org: Ref.make(org) } as any),
+    );
     expect((contact as any).org?.target?.id).to.eq(org.id);
   });
 

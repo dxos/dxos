@@ -112,7 +112,12 @@ const meta = {
 
               const messageQueueDxn = Feed.getQueueUri(messageFeed)!;
               const messageView = ViewModel.make({
-                query: Query.select(Filter.type(Message.Message)).from([{ _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(messageQueueDxn)}:${EchoURI.getObjectId(messageQueueDxn)}` }]),
+                query: Query.select(Filter.type(Message.Message)).from([
+                  {
+                    _tag: 'feed' as const,
+                    feedUri: `dxn:queue:data:${EchoURI.getSpaceId(messageQueueDxn)}:${EchoURI.getObjectId(messageQueueDxn)}`,
+                  },
+                ]),
                 jsonSchema: JsonSchema.toJsonSchema(Message.Message),
               });
 

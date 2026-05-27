@@ -589,9 +589,7 @@ export class QueryExecutor extends Resource {
 
     const execSpaceScopes = step.scope.filter((s): s is QueryAST.SpaceScope => s._tag === 'space');
     const spaces = execSpaceScopes.map((s) => s.spaceId as SpaceId);
-    const queues = step.scope
-      .filter((s): s is QueryAST.FeedScope => s._tag === 'feed')
-      .map((s) => String(s.feedUri));
+    const queues = step.scope.filter((s): s is QueryAST.FeedScope => s._tag === 'feed').map((s) => String(s.feedUri));
     const allQueuesFromSpaces = execSpaceScopes.some((s) => s.includeAllFeeds === true);
 
     const trace: ExecutionTrace = {

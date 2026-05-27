@@ -179,7 +179,12 @@ export const generator = () => ({
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).from([{ _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queueDxn)}:${EchoURI.getObjectId(queueDxn)}` }]),
+            ).from([
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queueDxn)}:${EchoURI.getObjectId(queueDxn)}`,
+              },
+            ]),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
           const contactsView = ViewModel.make({

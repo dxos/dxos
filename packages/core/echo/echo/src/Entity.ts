@@ -174,8 +174,7 @@ export type JSON = internal.ObjectJSON;
  * carry their identity (typename/version) on themselves rather than referencing a
  * separate type, so the accessors below route them through the `Type.*` module.
  */
-const isTypeEntity = (entity: unknown): boolean =>
-  internal.getEntityKindBrand(entity) === internal.EntityKind.Type;
+const isTypeEntity = (entity: unknown): boolean => internal.getEntityKindBrand(entity) === internal.EntityKind.Type;
 
 /**
  * Any value the read accessors operate on: a reactive entity, a snapshot, or a

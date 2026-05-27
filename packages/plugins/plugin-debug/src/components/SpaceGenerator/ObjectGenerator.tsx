@@ -4,7 +4,6 @@
 
 import type * as Schema from 'effect/Schema';
 
-
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { EchoURI, Filter, Key, Type, View } from '@dxos/echo';

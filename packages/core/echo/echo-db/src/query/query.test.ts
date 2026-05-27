@@ -622,7 +622,10 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from([
-            { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+            {
+              _tag: 'feed' as const,
+              feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+            },
           ]),
         )
         .first();
@@ -682,7 +685,10 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}` },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`,
+              },
             ]),
           )
           .run();
@@ -696,7 +702,10 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}` },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`,
+              },
             ]),
           )
           .run();
@@ -710,8 +719,14 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}` },
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}` },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`,
+              },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`,
+              },
             ]),
           )
           .run();
@@ -1963,7 +1978,10 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+              },
             ]),
           )
           .run();
@@ -1976,7 +1994,10 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('React', { type: 'full-text' })).from([
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+              },
             ]),
           )
           .run();
@@ -1989,7 +2010,10 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([
-              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+              {
+                _tag: 'feed' as const,
+                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+              },
             ]),
           )
           .run();
@@ -2043,7 +2067,10 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
-            { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+            {
+              _tag: 'feed' as const,
+              feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+            },
           ]),
         )
         .first();
