@@ -408,5 +408,5 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "vitest.disableWorkspaceWarning": true,
   "vitest.rootConfig": "vitest.all.config.ts",
-  "typescript.native-preview.tsdk": "/Users/burdon/Code/dxos/dxos/.claude/worktrees/crazy-taussig-af3b75/node_modules/@typescript/native-preview"
+  "typescript.native-preview.tsdk": "${workspaceFolder}/node_modules/@typescript/native-preview"
 }
