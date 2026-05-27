@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -19,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.search.extension.spaceSearch'),
+        id: 'space-search',
         match: NodeMatcher.whenRoot,
         connector: Effect.fnUntraced(function* (node, get) {
           const client = yield* Capability.get(ClientCapabilities.Client);
@@ -39,7 +38,7 @@ export default Capability.makeModule(
         }),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.search.extension.root'),
+        id: 'root',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([

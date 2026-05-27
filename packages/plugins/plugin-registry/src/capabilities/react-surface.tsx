@@ -9,7 +9,6 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 
 import { DisableDependentsAlert } from '#components';
 import {
@@ -28,7 +27,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.bundled'),
+        id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('bundled')),
         component: () => {
           const manager = usePluginManager();
@@ -45,7 +44,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.installed'),
+        id: 'installed',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('installed')),
         component: () => {
           const manager = usePluginManager();
@@ -62,7 +61,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.recommended'),
+        id: 'recommended',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('recommended')),
         component: () => {
           const manager = usePluginManager();
@@ -79,7 +78,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.labs'),
+        id: 'labs',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
         component: () => {
           const predicate = useMemo<PluginPredicate>(
@@ -93,12 +92,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.registry'),
+        id: 'registry',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('registry')),
         component: () => <PublicRegistryArticle id={registryCategoryId('registry')} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.pluginDetails'),
+        id: 'plugin-details',
         filter: AppSurface.subject(AppSurface.Article, Plugin.isPlugin),
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
@@ -118,7 +117,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <DisableDependentsAlert {...data.props} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.registry.surface.pluginSettings'),
+        id: 'plugin-settings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,

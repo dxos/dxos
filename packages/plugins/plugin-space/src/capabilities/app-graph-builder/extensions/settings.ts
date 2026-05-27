@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import { AppNode, AppNodeMatcher, isPersonalSpace } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -27,7 +26,7 @@ import { SETTINGS_SECTION_TYPE } from '#types';
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const sectionExtension = yield* GraphBuilder.createExtension({
-    id: DXN.make('org.dxos.plugin.space.extension.settingsSection'),
+    id: 'settings-section',
     match: AppNodeMatcher.whenSpace,
     connector: (space) =>
       Effect.succeed([
@@ -45,7 +44,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
   });
 
   const childrenExtension = yield* GraphBuilder.createExtension({
-    id: DXN.make('org.dxos.plugin.space.extension.settingsSections'),
+    id: 'settings-sections',
     match: (node) => {
       const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
       return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();

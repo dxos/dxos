@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Pipeline } from '@dxos/types';
 
@@ -16,7 +15,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: DXN.make('org.dxos.plugin.pipeline.extension.triggers'),
+        id: 'triggers',
         type: Pipeline.Pipeline,
         connector: () =>
           Effect.succeed([

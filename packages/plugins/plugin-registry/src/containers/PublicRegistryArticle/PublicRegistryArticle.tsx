@@ -9,7 +9,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type Registry, Plugin, UrlLoader } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
@@ -33,7 +32,7 @@ const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {
-      id: DXN.tryMake(plugin.id) ?? DXN.make(plugin.id),
+      id: plugin.id,
       name: plugin.name,
       description: plugin.description,
       homePage: plugin.homePage,

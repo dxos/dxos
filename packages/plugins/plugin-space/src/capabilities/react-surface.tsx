@@ -13,7 +13,6 @@ import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } fro
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Collection, Database, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
@@ -72,19 +71,19 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.collectionFallback'),
+        id: 'collection-fallback',
         position: 'last',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.recordArticle'),
+        id: 'record-article',
         position: 'last',
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.pluginSettings'),
+        id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -101,7 +100,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.companionObjectProperties'),
+        id: 'companion.object-properties',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'settings'),
           AppSurface.companion(AppSurface.Article),
@@ -109,7 +108,7 @@ export default Capability.makeModule(
         component: ({ ref, data, role }) => <ObjectProperties role={role} subject={data.companionTo} ref={ref} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.companionRelated'),
+        id: 'companion.related',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'related'),
           AppSurface.companion(AppSurface.Article),
@@ -117,7 +116,7 @@ export default Capability.makeModule(
         component: ({ data, role }) => <RelatedArticle role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.spaceSettingsProperties'),
+        id: 'space-settings-properties',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.general`),
         component: ({ ref }) => {
           const space = useActiveSpace();
@@ -129,7 +128,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.spaceSettingsMembers'),
+        id: 'space-settings-members',
         position: 'first',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
         component: () => {
@@ -142,7 +141,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.spaceSettingsSchema'),
+        id: 'space-settings-schema',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.schema`),
         component: () => {
           const space = useActiveSpace();
@@ -154,7 +153,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.selectedObjects'),
+        id: 'selected-objects',
         role: 'article',
         filter: (data): data is { companionTo: Obj.Unknown; subject: 'selected-objects' } => {
           if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
@@ -209,7 +208,7 @@ export default Capability.makeModule(
         component: ({ data }) => <CreateObjectDialog {...data.props} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.createInitialSpaceFormHue'),
+        id: 'create-initial-space-form-[hue]',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
@@ -233,7 +232,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.createInitialSpaceFormIcon'),
+        id: 'create-initial-space-form-[icon]',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
@@ -262,7 +261,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.typenameFormInput'),
+        id: 'typename-form-input',
         role: 'form-input',
         filter: (
           data,
@@ -294,7 +293,7 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.objectProperties'),
+        id: 'object-properties',
         role: 'object-properties',
         filter: (data): data is { subject: Obj.Unknown } => {
           if (!Obj.isObject(data.subject)) {
@@ -332,12 +331,12 @@ export default Capability.makeModule(
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.menuFooter'),
+        id: 'menu-footer',
         filter: AppSurface.subject(AppSurface.MenuFooter, Obj.isObject),
         component: ({ data }) => <MenuFooter object={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.navtreePresence'),
+        id: 'navtree-presence',
         role: 'navtree-item-end',
         filter: (data): data is { id: string; subject: Obj.Unknown; open?: boolean } =>
           typeof data.id === 'string' && Obj.isObject(data.subject),
@@ -348,7 +347,7 @@ export default Capability.makeModule(
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.navtreePresenceFallback'),
+        id: 'navtree-presence-fallback',
         role: 'navtree-item-end',
         position: 'last',
         filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
@@ -356,13 +355,13 @@ export default Capability.makeModule(
       }),
       // TODO(wittjosiah): Broken?
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.navtreeSyncStatus'),
+        id: 'navtree-sync-status',
         role: 'navtree-item-end',
         filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
         component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.navbarPresence'),
+        id: 'navbar-presence',
         role: 'navbar-end',
         position: 'first',
         filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
@@ -378,12 +377,12 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.collectionSection'),
+        id: 'collection-section',
         filter: AppSurface.object(AppSurface.Section, Collection.Collection),
         component: ({ data }) => <CollectionSection subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.space.surface.status'),
+        id: 'status',
         role: 'status-indicator',
         component: () => <SyncStatus />,
       }),

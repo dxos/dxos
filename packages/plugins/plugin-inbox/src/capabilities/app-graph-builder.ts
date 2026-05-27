@@ -12,7 +12,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { DXN, EchoURI } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -48,7 +48,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.mailboxesSection'),
+        id: 'mailboxes-section',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
@@ -71,7 +71,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.mailboxListing'),
+        id: 'mailbox-listing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -153,7 +153,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.mailboxDrafts'),
+        id: 'mailbox-drafts',
         match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
         connector: (node, get) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
@@ -199,7 +199,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.mailboxMessage'),
+        id: 'mailbox-message',
         match: (node) =>
           Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -231,7 +231,7 @@ export default Capability.makeModule(
       // Feed object node extension: creates hidden, navigable nodes for mailbox messages.
       // Uses ~ prefix for attention propagation to the parent mailbox.
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.feedObjectNode'),
+        id: 'feed-object-node',
         match: (node) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
           return node.type === Mailbox.Mailbox.typename && mailbox
@@ -300,7 +300,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.calendarEvent'),
+        id: 'calendar-event',
         match: (node) =>
           Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -327,7 +327,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.syncMailbox'),
+        id: 'sync-mailbox',
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -362,7 +362,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.inbox.extension.syncCalendar'),
+        id: 'sync-calendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar, get) => {
           const db = Obj.getDatabase(calendar);

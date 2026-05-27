@@ -21,8 +21,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
 
-import { DXN } from '@dxos/keys';
-
 import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
@@ -51,7 +49,7 @@ const actionWeights = {
 
 const createGraph = (client: Client, registry: Registry.Registry): Graph.ExpandableGraph => {
   const spaceBuilderExtension = GraphBuilder.createExtensionRaw({
-    id: DXN.make('org.example.graph.space'),
+    id: 'space',
     connector: (node) =>
       Atom.make((get) =>
         Function.pipe(
@@ -79,7 +77,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
   });
 
   const objectBuilderExtension = GraphBuilder.createExtensionRaw({
-    id: DXN.make('org.example.graph.object'),
+    id: 'object',
     connector: (node) => {
       return Atom.make((get) =>
         Function.pipe(

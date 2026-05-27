@@ -10,7 +10,6 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { getParentId, useNode } from '@dxos/plugin-graph';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
@@ -40,7 +39,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.pluginSettings'),
+        id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -48,7 +47,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.drafts'),
+        id: 'drafts',
         role: ['article'],
         filter: (
           data,
@@ -75,7 +74,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.mailbox'),
+        id: 'mailbox',
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: ({ data }) => {
           return (
@@ -84,7 +83,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.draftMessage'),
+        id: 'draft-message',
         role: ['article'],
         filter: (data): data is { subject: Message.Message } => DraftMessage.instanceOf(data.subject),
         component: ({ data: { subject }, role }) => {
@@ -92,7 +91,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.message'),
+        id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (
@@ -122,7 +121,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.event'),
+        id: 'event',
         filter: AppSurface.oneOf(
           AppSurface.allOf(
             AppSurface.object(AppSurface.Article, Event.Event),
@@ -141,19 +140,19 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.calendar'),
+        id: 'calendar',
         filter: AppSurface.object(AppSurface.Article, Calendar.Calendar),
         component: ({ data, role }) => (
           <CalendarArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.messageCard'),
+        id: 'message-card',
         filter: AppSurface.object(AppSurface.Card, Message.Message),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.eventCard'),
+        id: 'event-card',
         filter: AppSurface.object(AppSurface.Card, Event.Event),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
       }),
@@ -171,24 +170,24 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.mailboxProperties'),
+        id: 'mailbox-properties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Mailbox.Mailbox),
         component: ({ data }) => <MailboxProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.calendarProperties'),
+        id: 'calendar-properties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Calendar.Calendar),
         component: ({ data }) => <CalendarProperties subject={data.subject} />,
       }),
 
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.contactRelated'),
+        id: 'contact-related',
         filter: AppSurface.object(AppSurface.Related, Person.Person),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.inbox.surface.organizationRelated'),
+        id: 'organization-related',
         filter: AppSurface.object(AppSurface.Related, Organization.Organization),
         component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
       }),

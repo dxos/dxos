@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AppPlugin } from '../../plugin';
@@ -15,7 +14,7 @@ import { LogOperation } from './schema';
 const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
 const meta = {
-  id: DXN.make('org.dxos.test.logger'),
+  id: 'org.dxos.test.logger',
   name: 'Logger',
 };
 

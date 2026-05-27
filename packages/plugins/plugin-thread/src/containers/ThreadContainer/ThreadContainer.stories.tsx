@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { DXN } from '@dxos/keys';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -62,7 +61,7 @@ const meta = {
         Capability.contributes(
           Capabilities.ReactSurface,
           Surface.create({
-            id: DXN.make('org.dxos.story.thread.testCard'),
+            id: 'test',
             role: 'card',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),

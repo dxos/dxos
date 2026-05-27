@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -30,7 +29,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.presenter.graph.root'),
+      id: 'root',
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {

@@ -10,7 +10,6 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
@@ -22,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.kanban.surface.root'),
+        id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Kanban.Kanban),
@@ -31,13 +30,13 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.kanban.surface.objectProperties'),
+        id: 'object-properties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.kanban.surface.createInitialSchemaFormPivotColumn'),
+        id: 'create-initial-schema-form-[pivot-column]',
         role: 'form-input',
         filter: (
           data,

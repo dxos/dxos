@@ -36,7 +36,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: DXN.make('org.dxos.plugin.assistant.extension.root'),
+        id: 'root',
         type: Chat.Chat,
         actions: (chat) => {
           return Effect.succeed([
@@ -60,7 +60,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.assistant.extension.assistant'),
+        id: 'assistant',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -128,7 +128,7 @@ export default Capability.makeModule(
 
       // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.assistant.extension.companionChat'),
+        id: 'companion-chat',
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
@@ -160,7 +160,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.assistant.extension.invocations'),
+        id: 'invocations',
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
           NodeMatcher.whenEchoTypeMatches(Routine.Routine),
@@ -168,7 +168,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: DXN.make('org.dxos.plugin.assistant.extension.invocations'),
+              id: 'invocations',
               label: ['invocations.label', { ns: meta.id }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
@@ -177,7 +177,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.assistant.extension.trace'),
+        id: 'trace',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

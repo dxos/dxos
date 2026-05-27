@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
-import { DXN, PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: DXN.make(`${DXN.getName(meta.id)}.state`),
+      key: `${meta.id}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),
     });

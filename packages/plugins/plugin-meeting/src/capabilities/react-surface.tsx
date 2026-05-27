@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { Channel } from '@dxos/types';
 
 import { MeetingSettings } from '#components';
@@ -21,7 +20,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.meeting.surface.pluginSettings'),
+        id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -29,14 +28,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.meeting.surface.meeting'),
+        id: 'meeting',
         filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
         component: ({ role, data }) => (
           <MeetingArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.meeting.surface.meetingCompanion'),
+        id: 'meeting-companion',
         role: 'article',
         filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
           (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

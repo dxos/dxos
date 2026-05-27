@@ -8,7 +8,6 @@ import React, { type ComponentProps } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 
 import {
   DevicesContainer,
@@ -32,17 +31,17 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make(Account.Profile),
+        id: Account.Profile,
         filter: AppSurface.literal(AppSurface.Article, Account.Profile),
         component: () => <ProfileContainer />,
       }),
       Surface.create({
-        id: DXN.make(Account.Devices),
+        id: Account.Devices,
         filter: AppSurface.literal(AppSurface.Article, Account.Devices),
         component: () => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
       }),
       Surface.create({
-        id: DXN.make(Account.Security),
+        id: Account.Security,
         filter: AppSurface.literal(AppSurface.Article, Account.Security),
         component: () => <RecoveryCredentialsContainer />,
       }),

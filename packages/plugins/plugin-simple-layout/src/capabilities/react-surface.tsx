@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { NOT_FOUND_PATH } from '@dxos/app-toolkit';
 import { NotFoundArticle } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 import { Node } from '@dxos/plugin-graph';
 
 import { Home, NavBranch } from '#components';
@@ -25,19 +24,19 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.simpleLayout.surface.home'),
+        id: 'home',
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
         component: () => <Home />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.simpleLayout.surface.notFound'),
+        id: 'not-found',
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === NOT_FOUND_PATH,
         component: () => <NotFoundArticle />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.simpleLayout.surface.navBranch'),
+        id: 'nav-branch',
         role: 'article',
         position: 'last',
         filter: (data): data is SurfaceData => {

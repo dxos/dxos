@@ -3,6 +3,7 @@
 //
 
 import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
+import { DXN } from '@dxos/keys';
 
 import { type Plugin } from '../core';
 
@@ -49,6 +50,7 @@ export const serializeManifest = (
   JSON.stringify(
     {
       ...meta,
+      id: DXN.getName(meta.id),
       assets,
       ...(devEntry !== undefined ? { devEntry } : {}),
     },

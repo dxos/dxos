@@ -17,8 +17,6 @@ import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import { DXN } from '@dxos/keys';
-
 import { qualifyId } from './util';
 
 const exampleId = (id: number) => `dx:test:${id}`;
@@ -41,7 +39,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.resolver'),
+          id: 'resolver',
           resolver: () => Atom.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 }),
         }),
       );
@@ -62,7 +60,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.resolver'),
+          id: 'resolver',
           resolver: () => Atom.make((get) => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(name) })),
         }),
       );
@@ -90,7 +88,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.resolver'),
+          id: 'resolver',
           resolver: (id) =>
             id === childId ? Atom.make({ id: childId, type: EXAMPLE_TYPE, data: 'resolved' }) : Atom.make(null),
         }),
@@ -120,12 +118,12 @@ describe('GraphBuilder', () => {
 
       GraphBuilder.addExtension(builder, [
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.resolver'),
+          id: 'resolver',
           resolver: (id) =>
             id === childId ? Atom.make({ id: childId, type: EXAMPLE_TYPE, data: 'resolved-child' }) : Atom.make(null),
         }),
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -174,7 +172,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -215,14 +213,14 @@ describe('GraphBuilder', () => {
 
       GraphBuilder.addExtension(builder, [
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.resolver'),
+          id: 'resolver',
           resolver: (id) =>
             id === qualifyId('root', 'shared')
               ? Atom.make((get) => ({ id: qualifyId('root', 'shared'), type: EXAMPLE_TYPE, data: get(resolverData) }))
               : Atom.make(null),
         }),
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -271,14 +269,14 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.outboundConnector'),
+          id: 'outbound-connector',
           connector: () => Atom.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
         }),
       );
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.inboundConnector'),
+          id: 'inbound-connector',
           relation: Node.childRelation('inbound'),
           connector: () => Atom.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
         }),
@@ -307,7 +305,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
@@ -335,7 +333,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
@@ -366,7 +364,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: () => Atom.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
         }),
       );
@@ -391,7 +389,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector2'),
+          id: 'connector-2',
           connector: () => Atom.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
         }),
       );
@@ -410,7 +408,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: () => Atom.make((get) => get(nodes)),
         }),
       );
@@ -442,7 +440,7 @@ describe('GraphBuilder', () => {
 
       GraphBuilder.addExtension(builder, [
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.root'),
+          id: 'root',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -509,7 +507,7 @@ describe('GraphBuilder', () => {
         GraphBuilder.addExtension(
           builder,
           GraphBuilder.createExtensionRaw({
-            id: DXN.make('org.example.graph.inlineConnector'),
+            id: 'inline-connector',
             connector: () => Atom.make((get) => get(nodesAtom)),
           }),
         );
@@ -624,7 +622,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: () => Atom.make((get) => get(nodes)),
         }),
       );
@@ -664,7 +662,7 @@ describe('GraphBuilder', () => {
 
       GraphBuilder.addExtension(builder, [
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.root'),
+          id: 'root',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -677,7 +675,7 @@ describe('GraphBuilder', () => {
             ),
         }),
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector1'),
+          id: 'connector1',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -691,7 +689,7 @@ describe('GraphBuilder', () => {
             ),
         }),
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector2'),
+          id: 'connector2',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -785,7 +783,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: (node) => {
             return Atom.make((get) =>
               Function.pipe(
@@ -822,7 +820,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -863,7 +861,7 @@ describe('GraphBuilder', () => {
         GraphBuilder.addExtension(
           builder,
           GraphBuilder.createExtensionRaw({
-            id: DXN.make('org.example.graph.testConnector'),
+            id: 'test-connector',
             connector,
           }),
         );
@@ -885,7 +883,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
           }),
@@ -911,7 +909,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               Effect.succeed([
@@ -947,7 +945,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: 'c' }]),
             actions: (node, get) =>
@@ -987,7 +985,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.lateExtension'),
+            id: 'late-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               Effect.succeed([{ id: 'late-act', data: () => Effect.void, properties: { label: 'Late' } }]),
@@ -1022,7 +1020,7 @@ describe('GraphBuilder', () => {
         // Note: The actions callback must USE the service for R to be inferred correctly.
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               // Use TestService in the callback to include it in R.
@@ -1077,7 +1075,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             resolver: (id, get) => Effect.succeed({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
           }),
@@ -1099,7 +1097,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
             actions: (node, get) =>
@@ -1141,7 +1139,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.testExtension'),
+            id: 'test-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }]),
           }),
@@ -1179,7 +1177,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.failingExtension'),
+            id: 'failing-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.fail(new Error('Connector failed intentionally')),
           }),
@@ -1206,7 +1204,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.failingActionsExtension'),
+            id: 'failing-actions-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) => Effect.fail(new Error('Actions failed intentionally')),
           }),
@@ -1233,7 +1231,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.failingResolverExtension'),
+            id: 'failing-resolver-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             resolver: (id, get) => Effect.fail(new Error('Resolver failed intentionally')),
           }),
@@ -1257,7 +1255,7 @@ describe('GraphBuilder', () => {
         // Add a failing extension.
         const failingExtensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.failingExtension'),
+            id: 'failing-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.fail(new Error('This one fails')),
           }),
@@ -1266,7 +1264,7 @@ describe('GraphBuilder', () => {
         // Add a working extension.
         const workingExtensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: DXN.make('org.example.graph.workingExtension'),
+            id: 'working-extension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) =>
               Effect.succeed([{ id: 'child-from-working', type: EXAMPLE_TYPE, data: 'success' }]),
@@ -1297,7 +1295,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createTypeExtension({
-            id: DXN.make('org.example.graph.typeExtension'),
+            id: 'type-extension',
             type: TestSchema.Person,
             connector: (object) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: object }]),
           }),
@@ -1325,7 +1323,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.badConnector'),
+          id: 'bad-connector',
           connector: () => Atom.make([{ id: 'foo/bar', type: EXAMPLE_TYPE, data: null }]),
         }),
       );
@@ -1338,7 +1336,7 @@ describe('GraphBuilder', () => {
       const builder = GraphBuilder.make({ registry });
       GraphBuilder.addExtension(builder, [
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.level1'),
+          id: 'level1',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -1350,7 +1348,7 @@ describe('GraphBuilder', () => {
             ),
         }),
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.level2'),
+          id: 'level2',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -1386,7 +1384,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.inlineConnector'),
+          id: 'inline-connector',
           connector: () =>
             Atom.make([
               {
@@ -1429,7 +1427,7 @@ describe('GraphBuilder', () => {
 
       GraphBuilder.addExtension(builder, [
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.parents'),
+          id: 'parents',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(
@@ -1444,7 +1442,7 @@ describe('GraphBuilder', () => {
             ),
         }),
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.constantChild'),
+          id: 'constant-child',
           connector: () => Atom.make([{ id: 'shared', type: EXAMPLE_TYPE, data: 'constant' }]),
         }),
       ]);
@@ -1478,7 +1476,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: DXN.make('org.example.graph.connector'),
+          id: 'connector',
           connector: (node) =>
             Atom.make((get) =>
               Function.pipe(

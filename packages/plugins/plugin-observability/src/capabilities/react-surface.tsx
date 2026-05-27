@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { DXN } from '@dxos/keys';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ObservabilitySettings } from '#components';
@@ -19,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.observability.surface.root'),
+        id: 'root',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings } = useSettingsState<Settings.Settings>(subject.atom);

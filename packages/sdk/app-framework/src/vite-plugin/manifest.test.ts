@@ -15,7 +15,7 @@ describe('serializeManifest', () => {
       { assets: ['index.mjs', 'style.css', 'chunks/lib-abc.js'] },
     );
     expect(JSON.parse(json)).toEqual({
-      id: DXN.make('org.example.plugin'),
+      id: 'org.example.plugin',
       name: 'Example',
       description: 'Demo',
       tags: ['new'],
@@ -30,7 +30,7 @@ describe('serializeManifest', () => {
       { assets: [], devEntry: 'src/plugin.tsx' },
     );
     expect(JSON.parse(json)).toEqual({
-      id: DXN.make('org.example.plugin'),
+      id: 'org.example.plugin',
       name: 'Example',
       version: '0.0.0-dev',
       assets: [],

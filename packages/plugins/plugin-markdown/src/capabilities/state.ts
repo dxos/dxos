@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { createKvsStore } from '@dxos/effect';
 import { createEditorStateStore } from '@dxos/ui-editor';
-import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 import { MarkdownCapabilities } from '#types';
@@ -29,13 +28,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: DXN.make(`${DXN.getName(meta.id)}.state`),
+      key: `${meta.id}.state`,
       schema: MarkdownCapabilities.StateSchema,
       defaultValue: () => ({ viewMode: {} }),
     });
 
     // TODO(wittjosiah): Fold into state.
-    const editorState = createEditorStateStore(`${DXN.getName(meta.id)}.editor`);
+    const editorState = createEditorStateStore(`${meta.id}.editor`);
 
     const editorViews = createEditorViewRegistry();
 

@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 
 import { AppNode } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // TODO(wittjosiah): This is currently necessary for type portability.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -27,7 +26,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Object settings plank companion.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.settingsCompanion'),
+      id: 'settings',
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([
@@ -43,7 +42,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
 
     // Related objects plank companion.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.relatedCompanion'),
+      id: 'related',
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([
@@ -59,7 +58,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
 
     // View selected objects companion.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.selectedObjectsCompanion'),
+      id: 'selected-objects',
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();

@@ -13,7 +13,6 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -167,13 +166,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
-            id: DXN.make('org.dxos.story.deck.surface.storyNavigation'),
+            id: 'story-navigation',
             role: 'navigation',
             filter: (data): data is { current: string } => typeof (data as any).current === 'string',
             component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
           }),
           Surface.create({
-            id: DXN.make('org.dxos.story.deck.surface.storyArticle'),
+            id: 'story-article',
             role: 'article',
             filter: (data): data is Record<string, unknown> =>
               typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo == null,
@@ -202,7 +201,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             },
           }),
           Surface.create({
-            id: DXN.make('org.dxos.story.deck.surface.storyArticleCompanion'),
+            id: 'story-article-companion',
             role: 'article',
             filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
               typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
@@ -235,12 +234,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     activate: Effect.fnUntraced(function* () {
       const extensions = yield* Effect.all([
         GraphBuilder.createExtension({
-          id: DXN.make('org.dxos.story.deck.extension.storyItems'),
+          id: 'story-items',
           match: NodeMatcher.whenRoot,
           connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
         }),
         GraphBuilder.createExtension({
-          id: DXN.make('org.dxos.story.deck.extension.storyItemCompanions'),
+          id: 'story-item-companions',
           match: NodeMatcher.whenNodeType('story-item'),
           connector: (node) =>
             Effect.succeed([

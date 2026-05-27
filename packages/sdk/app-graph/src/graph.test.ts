@@ -6,8 +6,6 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
-
 import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
 import * as Node from './node';
@@ -724,7 +722,7 @@ describe('Graph', () => {
     GraphBuilder.addExtension(
       builder,
       GraphBuilder.createExtensionRaw({
-        id: DXN.make('org.example.graph.test'),
+        id: 'test',
         connector: () => {
           expandCalled = true;
           return Atom.make([]);
@@ -760,7 +758,7 @@ describe('Graph', () => {
     GraphBuilder.addExtension(
       builder,
       GraphBuilder.createExtensionRaw({
-        id: DXN.make('org.example.graph.test'),
+        id: 'test',
         resolver: () => {
           initializeCalled = true;
           return Atom.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });

@@ -10,7 +10,6 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -66,7 +65,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.thread.graph.commentsCompanion'),
+        id: 'comments-companion',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
@@ -86,7 +85,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.thread.graph.commentToolbar'),
+        id: 'comment-toolbar',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();

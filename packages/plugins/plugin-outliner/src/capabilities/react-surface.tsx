@@ -8,7 +8,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 
 import { JournalArticle, OutlineCard, OutlineArticle, QuickEntryDialog } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.outliner.surface.articleJournal'),
+        id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Journal.Journal),
@@ -29,7 +28,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.outliner.surface.articleOutline'),
+        id: 'article.outline',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Outline.Outline),
@@ -40,7 +39,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.outliner.surface.cardOutline'),
+        id: 'card.outline',
         filter: AppSurface.object(AppSurface.Card, Outline.Outline),
         component: ({ data }) => <OutlineCard subject={data.subject} />,
       }),

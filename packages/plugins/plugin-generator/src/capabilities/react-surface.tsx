@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.generator.surface.generation'),
+        id: 'generation',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Generation.Generation),
           AppSurface.object(AppSurface.Section, Generation.Generation),
@@ -28,13 +27,13 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.generator.surface.objectProperties'),
+        id: 'object-properties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Generation.Generation),
         component: ({ data }) => <GenerationProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.generator.surface.pluginSettings'),
+        id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

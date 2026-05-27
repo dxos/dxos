@@ -11,15 +11,13 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { AutomationSettings, FunctionsContainer } from '#containers';
-import { DXN } from '@dxos/keys';
-
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.automation.surface.spaceSettingsFunctions'),
+        id: 'space-settings-functions',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-functions`),
         component: () => {
           const space = useActiveSpace();
@@ -31,7 +29,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.automation.surface.spaceSettingsAutomation'),
+        id: 'space-settings-automation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-automation`),
         component: () => {
           const space = useActiveSpace();
@@ -43,7 +41,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.automation.surface.companionAutomation'),
+        id: 'companion.automation',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'automation'),
           AppSurface.companion(AppSurface.Article),

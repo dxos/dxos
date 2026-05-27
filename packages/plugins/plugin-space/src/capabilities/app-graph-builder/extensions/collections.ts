@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-toolkit';
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -53,7 +52,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   return yield* Effect.all([
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.collectionsSection'),
+      id: 'collections-section',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -95,7 +94,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Root collection objects under the Collections virtual node.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.collections'),
+      id: 'collections',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -137,7 +136,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.objects'),
+      id: 'objects',
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -175,7 +174,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Object actions.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.objectActions'),
+      id: 'object-actions',
       match: (node) => {
         return Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type && Obj.getDatabase(node.data)
           ? Option.some({ object: node.data, nodeId: node.id })

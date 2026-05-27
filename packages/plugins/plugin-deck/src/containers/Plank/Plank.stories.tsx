@@ -9,7 +9,6 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -43,7 +42,7 @@ random.seed(101);
 const storySurfaceExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
-    id: DXN.make('org.dxos.story.deck.surface.storyArticle'),
+    id: 'story-article',
     role: 'article',
     component: ({ data }) => {
       const subject = (data as any)?.subject;

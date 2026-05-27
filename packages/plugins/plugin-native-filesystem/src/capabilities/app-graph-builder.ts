@@ -9,7 +9,6 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -45,7 +44,7 @@ export const createFilesystemEntryExtensions = (
 ) =>
   Effect.all([
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.nativeFilesystem.graph.workspaceEntries'),
+      id: 'workspace-entries',
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -68,7 +67,7 @@ export const createFilesystemEntryExtensions = (
     }),
 
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.nativeFilesystem.graph.directoryEntries'),
+      id: 'directory-entries',
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -104,7 +103,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.nativeFilesystem.graph.primaryActions'),
+        id: 'primary-actions',
         position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -128,7 +127,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.nativeFilesystem.graph.workspaces'),
+        id: 'workspaces',
         match: NodeMatcher.whenRoot,
         connector: (_node, get) => {
           const [stateAtom] = get(stateCapabilitiesAtom);
@@ -209,7 +208,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.nativeFilesystem.graph.workspaceSettings'),
+        id: 'workspace-settings',
         match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([

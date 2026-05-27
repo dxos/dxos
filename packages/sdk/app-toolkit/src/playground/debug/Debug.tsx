@@ -8,7 +8,6 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
-import { DXN } from '@dxos/keys';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export const Debug = () => {
@@ -35,7 +34,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: DXN.make('org.dxos.test.debug.main'),
+        id: 'org.dxos.test.debug.main',
         role: 'secondary',
         component: Debug,
       }),

@@ -7,9 +7,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { DXN } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
-import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../../common';
 import { PluginManagerContext } from '../../../context';
@@ -146,7 +146,7 @@ const CounterPlugin = Plugin.define({
 
         // Contribute the UI
         Capability.contributes(Capabilities.ReactRoot, {
-          id: DXN.make('org.dxos.plugin.counter.root'),
+          id: 'org.dxos.plugin.counter.root',
           root: CounterComponent,
         }),
       ]);

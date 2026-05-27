@@ -8,7 +8,6 @@ import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-fram
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -24,7 +23,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.settings.extension.action'),
+        id: 'action',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -44,7 +43,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.settings.extension.core'),
+        id: 'core',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -62,7 +61,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.settings.extension.plugins'),
+        id: 'plugins',
         match: NodeMatcher.whenId(getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);

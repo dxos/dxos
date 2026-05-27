@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, type Registry, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
@@ -24,7 +23,7 @@ const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {
-      id: DXN.tryMake(entry.id) ?? DXN.make(entry.id),
+      id: entry.id,
       name: entry.name,
       description: entry.description,
       homePage: entry.homePage,
@@ -43,7 +42,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.registry.extension.openRegistry'),
+        id: 'open-registry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -59,7 +58,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.registry.extension.registry'),
+        id: 'registry',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -134,7 +133,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.registry.extension.actions'),
+        id: 'actions',
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         actions: () =>
           Effect.succeed([
@@ -155,7 +154,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.registry.extension.plugins'),
+        id: 'plugins',
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
@@ -176,7 +175,7 @@ export default Capability.makeModule(
 
           const registryEntries = get(manager.pluginRegistry.plugins).entries;
           const registryNodes = registryEntries
-            .filter((entry) => !installedIds.has(DXN.tryMake(entry.id) ?? DXN.make(entry.id)))
+            .filter((entry) => !installedIds.has(entry.id))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({

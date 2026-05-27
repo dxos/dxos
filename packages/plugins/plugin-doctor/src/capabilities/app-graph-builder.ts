@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -17,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make(`${DXN.getName(meta.id)}.extension.diagnosticsDeckCompanion`),
+        id: `${meta.id}/diagnostics-deck-companion`,
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

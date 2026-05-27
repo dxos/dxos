@@ -10,7 +10,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Graph } from '@dxos/app-graph';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -104,7 +103,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
 const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
-    id: DXN.make('org.dxos.story.deck.surface.storyArticle'),
+    id: 'story-article',
     role: 'article',
     component: ({ data: { subject } }) => {
       if (!subject) {

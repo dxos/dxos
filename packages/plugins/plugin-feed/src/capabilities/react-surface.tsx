@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
@@ -17,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.feed.surface.subscriptionFeed'),
+        id: 'subscription-feed',
         filter: AppSurface.literal(AppSurface.Article, 'feeds-root'),
         component: ({ data, role }) => {
           const space = useActiveSpace();
@@ -29,28 +28,28 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.feed.surface.magazineArticle'),
+        id: 'magazine-article',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
         component: ({ data, role }) => (
           <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.feed.surface.feedArticle'),
+        id: 'feed-article',
         filter: AppSurface.object(AppSurface.Article, Subscription.Subscription),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.feed.surface.postArticle'),
+        id: 'post-article',
         filter: AppSurface.object(AppSurface.Article, Subscription.Post),
         component: ({ data, role }) => (
           <PostArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.feed.surface.postCard'),
+        id: 'post-card',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Subscription.Post),
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,

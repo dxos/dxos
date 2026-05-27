@@ -7,8 +7,6 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { DXN } from '@dxos/keys';
-
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -25,7 +23,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.map.surface.map'),
+        id: 'surface.map',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Map.Map),
@@ -54,14 +52,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.map.surface.objectProperties'),
+        id: 'surface.object-properties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: DXN.make('org.dxos.plugin.map.surface.createInitialSchemaFormPropertyOfInterest'),
+        id: 'surface.create-initial-schema-form-[property-of-interest]',
         role: 'form-input',
         filter: (
           data,
@@ -94,7 +92,7 @@ export default Capability.makeModule(() =>
 
             // Look for properties that use the LatLng format enum
             const properties = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && value !== null && 'format' in value && (value as { format: unknown }).format === Format.TypeFormat.GeoPoint) {
+              if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
                 acc.push(key);
               }
               return acc;

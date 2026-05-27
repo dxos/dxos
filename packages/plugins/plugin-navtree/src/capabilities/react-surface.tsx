@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React, { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
@@ -23,7 +22,7 @@ export default Capability.makeModule(() =>
         component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.navtree.surface.navigation'),
+        id: 'navigation',
         role: 'navigation',
         filter: (data): data is { popoverAnchorId?: string; current: string } => typeof data.current === 'string',
         component: ({ data, ref }) => {
@@ -37,14 +36,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.navtree.surface.documentTitle'),
+        id: 'document-title',
         role: 'document-title',
         component: ({ data }) => (
           <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.navtree.surface.searchInput'),
+        id: 'search-input',
         role: 'search-input',
         position: 'last',
         component: () => <CommandsTrigger />,

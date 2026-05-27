@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -22,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.code.surface.specArticle'),
+        id: 'spec-article',
         role: ['article', 'section'],
         filter: (data): data is { subject: Spec.Spec; attendableId?: string } =>
           Obj.instanceOf(Spec.Spec, data.subject) &&
@@ -32,7 +31,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.code.surface.codeArticle'),
+        id: 'code-article',
         role: ['article', 'section'],
         filter: (data): data is { subject: CodeProject.CodeProject; attendableId?: string } =>
           Obj.instanceOf(CodeProject.CodeProject, data.subject) &&
@@ -42,7 +41,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.code.surface.codeSettings'),
+        id: 'code-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -50,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.code.surface.pluginSpec'),
+        id: 'plugin-spec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: ({ data: { subject }, role }) => <SpecView role={role} content={subject.content} readOnly />,
       }),

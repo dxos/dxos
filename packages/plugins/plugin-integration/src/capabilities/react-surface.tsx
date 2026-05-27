@@ -8,7 +8,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { findAnnotation } from '@dxos/effect';
@@ -24,14 +23,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.integration.surface.integrationArticle'),
+        id: 'integration-article',
         filter: AppSurface.object(AppSurface.Article, Integration.Integration),
         component: ({ data, role }) => (
           <IntegrationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.integration.surface.integrationAuth'),
+        id: 'integration-auth',
         role: 'integration--auth',
         filter: (
           data,
@@ -50,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.integration.surface.syncTargetsDialog'),
+        id: 'sync-targets-dialog',
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
           AppSurface.Dialog,
           SYNC_TARGETS_DIALOG,
@@ -58,12 +57,12 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.integration.surface.customTokenDialog'),
+        id: 'custom-token-dialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.integration.surface.integrationProviderSelector'),
+        id: 'integration-provider-selector',
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;

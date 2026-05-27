@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -166,7 +165,7 @@ const setupNativeFilesystemGraphBuilder = ({
 
 const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystemState>) =>
   GraphBuilder.createExtension({
-    id: DXN.make('org.dxos.plugin.nativeFilesystem.test.workspaces'),
+    id: 'test-workspaces',
     match: NodeMatcher.whenRoot,
     connector: (_node, get) =>
       Effect.succeed(

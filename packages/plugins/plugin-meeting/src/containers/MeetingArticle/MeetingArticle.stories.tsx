@@ -9,7 +9,6 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { Feed, Obj, Query, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -25,7 +24,7 @@ import { Meeting } from '#types';
 
 import { MeetingArticle } from './MeetingArticle';
 
-const MarkdownExtensionsPlugin = Plugin.define({ id: DXN.make('org.dxos.story.meeting.markdownExtensions'), name: 'Story Extensions' }).pipe(
+const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions', name: 'Story Extensions' }).pipe(
   Plugin.addModule({
     id: 'extensions',
     activatesOn: MarkdownEvents.SetupExtensions,

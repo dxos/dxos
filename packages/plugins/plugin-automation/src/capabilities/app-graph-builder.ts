@@ -11,15 +11,13 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { DXN } from '@dxos/keys';
-
 import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.automation.extension.spaceSettingsAutomation'),
+        id: 'space-settings-automation',
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () =>
           Effect.succeed([
@@ -34,7 +32,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.automation.extension.spaceSettingsFunctions'),
+        id: 'space-settings-functions',
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () =>
           Effect.succeed([
@@ -49,7 +47,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: DXN.make('org.dxos.plugin.automation.extension.scriptCompanion'),
+        id: 'script-companion',
         type: Script.Script,
         connector: (script) =>
           Effect.succeed([

@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { DXN } from '@dxos/keys';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ActivationEvents, Capabilities } from '../../../common';
 import { Capability, Plugin } from '../../../core';
@@ -25,7 +25,7 @@ const TestPlugin = Plugin.define<{ error?: boolean }>({
     activate: () =>
       Effect.succeed([
         Capability.contributes(Capabilities.ReactRoot, {
-          id: DXN.make('org.dxos.plugin.test.root'),
+          id: 'org.dxos.plugin.test.root',
           root: () => {
             useEffect(() => {
               let t: NodeJS.Timeout;

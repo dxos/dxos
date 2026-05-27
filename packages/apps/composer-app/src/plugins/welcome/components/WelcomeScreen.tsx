@@ -15,12 +15,10 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
-import { DXN } from '@dxos/keys';
-
 import { meta } from '../meta';
 import { Welcome, WelcomeState } from './Welcome';
 
-export const WELCOME_SCREEN = DXN.make(`${DXN.getName(meta.id)}.componentWelcomeScreen`);
+export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const searchProps = new URLSearchParams(window.location.search);

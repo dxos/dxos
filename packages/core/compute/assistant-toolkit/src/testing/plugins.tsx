@@ -37,7 +37,7 @@ export const capabilities: Capability.Any[] = [
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({
-      id: DXN.make('org.dxos.assistantToolkit.surface.pluginImage'),
+      id: 'plugin-image',
       role: 'card--content',
       filter: (data: any): data is any => isImage(data.value),
       component: ({ data }) => (
@@ -54,7 +54,7 @@ export const capabilities: Capability.Any[] = [
   Capability.contributes(
     Capabilities.ReactSurface,
     Surface.create({
-      id: DXN.make('org.dxos.assistantToolkit.surface.pluginDefault'),
+      id: 'plugin-default',
       role: 'card--content',
       position: 'last',
       component: ({ data }) => (

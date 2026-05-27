@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
@@ -18,7 +17,7 @@ import { Account, ClientCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.client.extension.root'),
+      id: 'root',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([

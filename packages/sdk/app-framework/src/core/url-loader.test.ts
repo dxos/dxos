@@ -94,7 +94,7 @@ describe('UrlLoader', () => {
       };
 
       // Seed a remote entry without a version.
-      storage.set('test-key', JSON.stringify([{ id: DXN.make('org.dxos.plugin.foo'), url: 'http://example.com/p.mjs' }]));
+      storage.set('test-key', JSON.stringify([{ id: 'org.dxos.plugin.foo', url: 'http://example.com/p.mjs' }]));
 
       UrlLoader.setInstalledVersion('org.dxos.plugin.foo', 'v1.0.0', { storage, key: 'test-key' });
 
@@ -116,7 +116,7 @@ describe('UrlLoader', () => {
       };
       storage.set(
         'test-key',
-        JSON.stringify([{ id: DXN.make('org.dxos.plugin.foo'), url: 'http://example.com/p.mjs', version: 'v1.0.0' }]),
+        JSON.stringify([{ id: 'org.dxos.plugin.foo', url: 'http://example.com/p.mjs', version: 'v1.0.0' }]),
       );
 
       UrlLoader.setInstalledVersion('org.dxos.plugin.foo', 'v2.0.0', { storage, key: 'test-key' });

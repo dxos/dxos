@@ -12,7 +12,6 @@ import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
@@ -49,7 +48,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Types section virtual node under each space.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.typesSection'),
+      id: 'types-section',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -73,7 +72,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Schema nodes under the Types virtual node.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.types'),
+      id: 'types',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -116,7 +115,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.schemaChildren'),
+      id: 'schema-children',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return space && (Obj.instanceOf(Type.PersistentType, node.data) || Schema.isSchema(node.data))
@@ -169,7 +168,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Objects of the schema type under the {All} node.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.typeCollectionObjects'),
+      id: 'type-collection-objects',
       match: (node) => {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typename) {
           return Option.none();
@@ -208,7 +207,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Actions for schema nodes.
     GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.space.extension.schemaActions'),
+      id: 'schema-actions',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();

@@ -9,7 +9,6 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { RangeList, SheetArticle } from '#containers';
@@ -19,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.sheet.surface.sheet'),
+        id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
@@ -41,7 +40,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.sheet.surface.objectProperties'),
+        id: 'object-properties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),

@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { DXN } from '@dxos/keys';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DiagnosticsPanel } from '#containers';
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.doctor.surface.doctorDiagnostics'),
+        id: 'doctor-diagnostics',
         filter: AppSurface.literal(
           Surface.makeType<{ subject: string }>(`deck-companion--${DIAGNOSTICS_DECK_COMPANION_ID}`),
           DIAGNOSTICS_DECK_COMPANION_ID,

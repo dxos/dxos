@@ -8,7 +8,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 
 import { SupportSettings } from '#components';
 import {
@@ -31,7 +30,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.supportTicket'),
+        id: 'support-ticket',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Support.Ticket),
           AppSurface.object(AppSurface.Section, Support.Ticket),
@@ -41,22 +40,22 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.welcomeArticle'),
+        id: 'welcome-article',
         filter: AppSurface.literal(AppSurface.Article, WELCOME_NODE_ID),
         component: ({ role }) => <WelcomeArticle role={role} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.feedback'),
+        id: 'feedback',
         role: 'deck-companion--help',
         component: () => <FeedbackPanel />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.discord'),
+        id: 'discord',
         role: 'deck-companion--discord',
         component: () => <DiscordPanel />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.helpMenu'),
+        id: 'help-menu',
         role: 'status-indicator',
         position: 'last',
         component: () => <HelpMenu />,
@@ -66,7 +65,7 @@ export default Capability.makeModule(() =>
       // `companion(Article)` with no schema filter; the resolver inside the
       // panel maps `companionTo` → owning plugin → `meta.description`.
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.helpCompanion'),
+        id: 'help-companion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
           AppSurface.companion(AppSurface.Article),
@@ -74,22 +73,22 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SupportCompanion companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.hints'),
+        id: 'hints',
         role: 'hints',
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.keyshortcuts'),
+        id: 'keyshortcuts',
         role: 'keyshortcuts',
         component: () => <ShortcutsList />,
       }),
       Surface.create({
-        id: DXN.make(SHORTCUTS_DIALOG),
+        id: SHORTCUTS_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
         component: () => <ShortcutsDialogContent />,
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.support.surface.settings'),
+        id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

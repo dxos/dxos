@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.game.surface.game'),
+        id: 'game',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Game),
           AppSurface.object(AppSurface.Section, Game),
@@ -28,7 +27,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.game.surface.gameCard'),
+        id: 'game-card',
         filter: AppSurface.object(AppSurface.Card, Game),
         component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
       }),

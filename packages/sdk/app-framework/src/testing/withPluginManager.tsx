@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
-import { DXN } from '@dxos/keys';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 

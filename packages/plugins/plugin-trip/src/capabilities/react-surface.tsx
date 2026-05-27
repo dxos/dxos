@@ -8,7 +8,6 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DXN } from '@dxos/keys';
 
 import { SegmentArticle, TripArticle } from '#containers';
 import { Segment, Trip } from '#types';
@@ -17,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.trip.surface.trip'),
+        id: 'surface.trip',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Trip.Trip),
           AppSurface.object(AppSurface.Section, Trip.Trip),
@@ -34,7 +33,7 @@ export default Capability.makeModule(() =>
       // selected the graph builder's 'segment' sentinel falls through and
       // the surface simply doesn't render.
       Surface.create({
-        id: DXN.make('org.dxos.plugin.trip.surface.segment'),
+        id: 'surface.segment',
         filter: AppSurface.allOf(
           AppSurface.object(AppSurface.Article, Segment.Segment),
           AppSurface.companion(AppSurface.Article, Trip.Trip),

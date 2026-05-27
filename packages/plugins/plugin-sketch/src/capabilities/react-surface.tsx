@@ -11,8 +11,6 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SketchSettings } from '#components';
 import { SketchArticle } from '#containers';
-import { DXN } from '@dxos/keys';
-
 import { meta } from '#meta';
 import { Sketch, SketchCapabilities, type Settings } from '#types';
 
@@ -20,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.sketch.surface.sketch'),
+        id: 'sketch',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Sketch.Sketch; attendableId: string } =>
@@ -31,7 +29,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.sketch.surface.pluginSettings'),
+        id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

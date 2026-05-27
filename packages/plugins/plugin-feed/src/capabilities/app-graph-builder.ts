@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
@@ -38,7 +37,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Show Subscription.Subscription objects as nodes under each space.
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.feed.extension.subscriptionFeeds'),
+        id: 'subscription-feeds',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Subscription)));
@@ -49,7 +48,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
             Node.make({
-              id: DXN.make('org.dxos.plugin.feed.extension.feeds'),
+              id: 'feeds',
               type: 'feeds', // TODO(burdon): Const.
               data: 'feeds-root', // TODO(burdon): Const.
               properties: { label: 'Feeds', icon: 'ph--rss--regular', role: 'branch', position: 'first' },
@@ -68,7 +67,7 @@ export default Capability.makeModule(
 
       // Companion panel: resolve the selected feed from the SubscriptionsArticle.
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.feed.extension.subscriptionFeedsCompanion'),
+        id: 'subscription-feeds-companion',
         match: NodeMatcher.whenNodeType('feeds'),
         connector: (matched, get) => {
           const space = getActiveSpace(capabilities.get(ClientCapabilities.Client), capabilities);
@@ -85,7 +84,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeCompanion({
-              id: DXN.make('org.dxos.plugin.feed.extension.feed'),
+              id: 'feed',
               label: ['feed-companion.label', { ns: meta.id }],
               icon: 'ph--article--regular',
               data: selectedFeed,
@@ -96,7 +95,7 @@ export default Capability.makeModule(
 
       // Companion panel: resolve the selected Post under a Magazine node.
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.feed.extension.magazinePost'),
+        id: 'magazine-post',
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })
@@ -127,13 +126,13 @@ export default Capability.makeModule(
 
       // Actions on each Subscription.Subscription node.
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.feed.extension.feedActions'),
+        id: 'feed-actions',
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),
         actions: (feed) =>
           Effect.succeed([
             {
-              id: DXN.make('org.dxos.plugin.feed.extension.sync'),
+              id: 'sync',
               data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
               properties: {
                 label: ['sync-feed.label', { ns: meta.id }],
@@ -142,7 +141,7 @@ export default Capability.makeModule(
               },
             },
             {
-              id: DXN.make('org.dxos.plugin.feed.extension.delete'),
+              id: 'delete',
               data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
               properties: {
                 label: ['delete-object.label', { ns: Subscription.Subscription.typename }],

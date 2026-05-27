@@ -24,7 +24,7 @@ const TestPlugin = Plugin.define(testMeta).pipe(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create<{ message: string }>({
-            id: DXN.make('org.dxos.test.surface.greeting'),
+            id: 'greeting',
             role: 'greeting',
             component: ({ data }) => <span data-testid='greeting'>hello {data.message}</span>,
           }),

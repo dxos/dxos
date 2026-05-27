@@ -275,7 +275,7 @@ describe('AppSurface', () => {
   describe('Surface.create + SurfaceFilter integration', () => {
     test('derives role and runs guard on matching role', ({ expect }) => {
       const definition = SurfaceInternals.create({
-        id: DXN.make('org.dxos.test.surface.article'),
+        id: 'test/article',
         filter: AppSurface.object(AppSurface.Article, TypeA),
         component: () => null,
       });
@@ -286,7 +286,7 @@ describe('AppSurface', () => {
 
     test('registers multi-role with role-scoped guards via oneOf', ({ expect }) => {
       const definition = SurfaceInternals.create({
-        id: DXN.make('org.dxos.test.surface.multi'),
+        id: 'test/multi',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, TypeA),
           AppSurface.object(AppSurface.Section, TypeA),

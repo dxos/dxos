@@ -9,7 +9,6 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Ref } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -29,7 +28,7 @@ export default Capability.makeModule(
     );
 
     const extension = yield* GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.trip.extension.tripSegment'),
+      id: 'trip-segment',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
         const trip = matched.trip;

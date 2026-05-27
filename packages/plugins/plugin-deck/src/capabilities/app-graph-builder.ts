@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -18,13 +17,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.deck.extension.notFound'),
+        id: 'not-found',
         match: NodeMatcher.whenRoot,
         connector: () => Effect.succeed([AppNode.makeNotFound()]),
       }),
 
       GraphBuilder.createExtension({
-        id: DXN.make('org.dxos.plugin.deck.extension.root'),
+        id: 'root',
         match: NodeMatcher.whenRoot,
         actions: (_node, get) =>
           Effect.gen(function* () {

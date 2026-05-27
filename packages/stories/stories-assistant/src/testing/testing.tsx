@@ -27,7 +27,6 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -266,7 +265,7 @@ type StoryPluginOptions = {
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: DXN.make('com.example.plugin.testing'),
+  id: 'com.example.plugin.testing',
   name: 'Testing',
 }).pipe(
   Plugin.addModule({

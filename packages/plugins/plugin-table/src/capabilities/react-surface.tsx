@@ -5,8 +5,6 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { DXN } from '@dxos/keys';
-
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -18,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: DXN.make('org.dxos.plugin.table.surface.table'),
+        id: 'table',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Table.Table),
@@ -30,7 +28,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: DXN.make('org.dxos.plugin.table.surface.tableCard'),
+        id: 'table-card',
         filter: AppSurface.object(AppSurface.Card, Table.Table),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,
       }),

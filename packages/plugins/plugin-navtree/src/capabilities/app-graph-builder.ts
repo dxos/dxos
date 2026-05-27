@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -15,7 +14,7 @@ import { COMMANDS_DIALOG, meta } from '#meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: DXN.make('org.dxos.plugin.navtree.extension.root'),
+      id: 'root',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([

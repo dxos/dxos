@@ -5,8 +5,6 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { DXN } from '@dxos/keys';
-
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -19,7 +17,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: DXN.make('org.dxos.plugin.conductor.surface.root'),
+        id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, CanvasBoard.CanvasBoard),
