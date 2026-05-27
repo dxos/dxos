@@ -201,6 +201,13 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     setProjector(createProjector(variant as Exclude<ExplorerArticleVariant, 'swarm'>, svgRef.current, prev));
   }, [variant]);
 
+  // Keep the model's reactive graph atom alive across SVG.Graph unmount cycles.
+  // The atom auto-disposes when its last subscriber unsubscribes (effect-atom
+  // default), which means the SVG variant ↔ swarm swap would wipe model.graph
+  // to its initial empty value while the canvas was mounted. A no-op subscription
+  // pinned to the model's lifetime keeps the atom retained.
+  useEffect(() => model?.subscribe(() => {}), [model]);
+
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
   const handleInspect = useCallback(
@@ -233,29 +240,37 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     [variant, projector],
   );
 
-  // Build the boid seeds from the snapshot of the last graph layout. Graph coordinates
-  // are center-origin; the Flock canvas uses top-left origin, so translate by the
-  // container center. Fall back to a random spread inside the container when there's no
-  // prior layout (e.g. the user lands directly on flock).
+  // Build boid seeds from the current model graph, falling back to the last SVG layout
+  // for positions where available. Graph coordinates are center-origin; the Flock canvas
+  // uses top-left origin, so translate by the container center.
   const flockSeeds = useMemo(() => {
     return ({ width, height }: { width: number; height: number }): FlockSeed[] => {
-      const nodes = lastLayoutRef.current?.graph.nodes;
-      const modelNodes = model?.graph.nodes ?? [];
-      const count = nodes?.length ?? modelNodes.length;
       const cx = width / 2;
       const cy = height / 2;
-      if (nodes && nodes.length) {
-        return nodes.map((node) => ({
-          x: cx + (node.x ?? 0),
-          y: cy + (node.y ?? 0),
-        }));
+      const snapshot = new Map(
+        (lastLayoutRef.current?.graph.nodes ?? []).map((node) => [node.id, node] as const),
+      );
+      const modelNodes = model?.graph.nodes ?? [];
+      if (modelNodes.length) {
+        const spread = Math.min(width, height) * 0.5;
+        return modelNodes.map((node) => {
+          const prev = snapshot.get(node.id);
+          if (prev && prev.x != null && prev.y != null) {
+            return { x: cx + prev.x, y: cy + prev.y };
+          }
+          return {
+            x: cx + (Math.random() - 0.5) * spread,
+            y: cy + (Math.random() - 0.5) * spread,
+          };
+        });
       }
 
-      // No prior layout — spread points around the center so the flock still has bodies.
-      return Array.from({ length: count }, () => ({
-        x: cx + (Math.random() - 0.5) * Math.min(width, height) * 0.5,
-        y: cy + (Math.random() - 0.5) * Math.min(width, height) * 0.5,
-      }));
+      // No model nodes yet — fall back to the snapshot if present, else a small random spread.
+      const snapshotNodes = lastLayoutRef.current?.graph.nodes ?? [];
+      if (snapshotNodes.length) {
+        return snapshotNodes.map((node) => ({ x: cx + (node.x ?? 0), y: cy + (node.y ?? 0) }));
+      }
+      return [];
     };
   }, [model, variant]);
 

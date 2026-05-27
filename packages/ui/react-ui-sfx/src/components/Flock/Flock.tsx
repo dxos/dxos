@@ -169,11 +169,11 @@ const renderObstacles = (context: CanvasRenderingContext2D, obstacles: FlockObst
 };
 
 const tick = (
-  boids: FlockBoid[],
-  obstacles: FlockObstacle[],
   canvas: HTMLCanvasElement,
   offscreenCanvas: HTMLCanvasElement,
   { width, height }: Dimensions,
+  boids: FlockBoid[],
+  obstacles: FlockObstacle[],
   config: TickConfig,
 ) => {
   const { trail, maxVelocity, alignment, cohesion, separation } = config;
@@ -201,7 +201,9 @@ const tick = (
     obstacles.forEach((o) => {
       const diff = o.position.clone().subtract(b1.position);
       const distance = diff.length();
-      if (distance < o.radius) {
+      // Guard against distance === 0: scaleTo divides by length and would
+      // poison the simulation with Infinity/NaN if a boid lands on an obstacle.
+      if (distance > 0 && distance < o.radius) {
         forces.avoidance.add(diff.clone().scaleTo(-1 / distance));
         forces.avoidance.active = true;
         avoid = true;
@@ -241,8 +243,10 @@ const tick = (
       }
     });
 
+    // Movement and Grey both read from `b1.last` to colorize; record the same history
+    // for both so Grey isn't stuck at an empty array (which yields NaN colors).
     const { coloring } = config;
-    if (coloring === 'Movement') {
+    if (coloring === 'Movement' || coloring === 'Grey') {
       const last = b1.last ?? (b1.last = []);
       const sum = alignment + cohesion + separation;
       last.push(sum > 0 ? b1.acceleration.length() / sum : 0);
@@ -345,6 +349,7 @@ export const Flock = ({
     if (!container) {
       return;
     }
+
     const rect = container.getBoundingClientRect();
     setSize({ width: rect.width, height: rect.height });
     const observer = new ResizeObserver((entries) => {
@@ -379,23 +384,16 @@ export const Flock = ({
     }
 
     const interval = d3.interval(() => {
-      tick(
-        boids,
-        obstacles,
-        canvas.current!,
-        buffer.current!,
-        { width, height },
-        {
-          coloring,
-          radius,
-          maxVelocity,
-          trail: (80 + trail) / 100,
-          alignment: alignment / 100,
-          cohesion: cohesion / 100,
-          separation: separation / 100,
-          avoidance: avoidance / 10,
-        },
-      );
+      tick(canvas.current!, buffer.current!, { width, height }, boids, obstacles, {
+        coloring,
+        radius,
+        maxVelocity,
+        trail: (80 + trail) / 100,
+        alignment: alignment / 100,
+        cohesion: cohesion / 100,
+        separation: separation / 100,
+        avoidance: avoidance / 10,
+      });
     });
 
     return () => interval.stop();
