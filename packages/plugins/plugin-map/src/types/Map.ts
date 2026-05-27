@@ -32,6 +32,7 @@ const MapSchema = Schema.Struct({
 
 // Declared as an interface (not `type =`) so downstream emit references `Map`
 // by name rather than expanding the inferred shape — keeps consumers portable.
+// TODO(wittjosiah): Try to clean up this type inference.
 export interface Map extends Type.InstanceType<typeof MapSchema> {}
 export const Map: Type.Obj<Map> = MapSchema as any;
 

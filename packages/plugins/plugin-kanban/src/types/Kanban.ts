@@ -47,6 +47,7 @@ const KanbanV1Schema = Schema.Struct({
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.kanban', '0.1.0')));
 // Declared as an interface (not `type =`) so downstream emit references `KanbanV1`
 // by name rather than expanding the inferred shape — keeps consumers portable.
+// TODO(wittjosiah): Try to clean up this type inference.
 export interface KanbanV1 extends Type.InstanceType<typeof KanbanV1Schema> {}
 export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 
@@ -101,6 +102,8 @@ export const Kanban = Schema.Struct({
  *
  * Declared as an interface (not `type =`) so downstream emit references `Kanban`
  * by name rather than expanding the inferred shape — keeps consumers portable.
+ *
+ * TODO(wittjosiah): Try to clean up this type inference.
  */
 export interface Kanban extends Type.InstanceType<typeof Kanban> {}
 

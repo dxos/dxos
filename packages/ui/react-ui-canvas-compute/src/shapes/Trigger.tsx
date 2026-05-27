@@ -31,6 +31,7 @@ const TriggerShapeSchema = Schema.extend(
 //   The fields are written out (rather than derived via `Schema.Schema.Type<typeof TriggerShapeSchema>`)
 //   because deriving re-expands the schema and re-inlines the non-portable union; keeping `functionTrigger`
 //   as a named `Ref.Ref<Trigger.Trigger>` is what holds the union behind a portable name.
+// TODO(wittjosiah): Try to clean up this type inference.
 export interface TriggerShape extends ComputeShape {
   type: 'trigger';
   functionTrigger?: Ref.Ref<Trigger.Trigger>;
