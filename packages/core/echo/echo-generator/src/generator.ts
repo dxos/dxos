@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
+import { EchoSchema } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

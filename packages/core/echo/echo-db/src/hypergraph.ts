@@ -8,7 +8,7 @@ import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
 import { make as makeRegistry } from '@dxos/echo-registry';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';

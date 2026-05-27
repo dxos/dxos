@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 
-import { DXN, Database, type Entity, type Filter, Query, type QueryResult, Registry, type Type, URI } from '@dxos/echo';
+import { Database, type Entity, type Filter, Query, type QueryResult, Registry, type Type, URI } from '@dxos/echo';
 import { WeakDictionary } from '@dxos/util';
 
 /**

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, type Registry, Type } from '@dxos/echo';
+import { type Registry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
   Format,
