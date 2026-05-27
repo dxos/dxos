@@ -19,6 +19,7 @@ const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutM
     'bg-toolbar-surface dx-toolbar',
     density === 'lg' && 'h-(--dx-rail-size) px-3!',
     density === 'sm' && 'h-7 px-2!',
+    density === 'xs' && 'h-6 px-1.5!',
     disabled && '*:opacity-20',
     !layoutManaged && layout,
     ...etc,

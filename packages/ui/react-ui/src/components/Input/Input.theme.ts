@@ -125,7 +125,13 @@ const switchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =
 const withSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
-    props.density === 'lg' ? 'text-lg' : props.density === 'sm' ? 'text-sm' : 'text-base pointer-fine:text-sm',
+    props.density === 'lg'
+      ? 'text-lg'
+      : props.density === 'sm'
+        ? 'text-sm'
+        : props.density === 'xs'
+          ? 'text-xs'
+          : 'text-base pointer-fine:text-sm',
     props.disabled && 'cursor-not-allowed',
     ...etc,
   );
@@ -137,7 +143,9 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       ? 'size-12 rounded-xs'
       : props.density === 'sm'
         ? 'size-7 rounded-xs'
-        : 'size-10 pointer-fine:size-8 rounded-xs',
+        : props.density === 'xs'
+          ? 'size-6 rounded-xs'
+          : 'size-10 pointer-fine:size-8 rounded-xs',
     'bg-input-surface text-base-foreground transition-colors border border-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
@@ -158,6 +166,14 @@ const descriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props,
 const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(inputTextLabel, props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
+const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
+  mx(
+    'shrink-0 inline-flex items-center justify-center size-7 rounded-xs',
+    'bg-input-surface text-subdued hover:text-base-foreground hover:bg-hover-surface',
+    'dx-focus-ring',
+    ...etc,
+  );
+
 export const inputTheme = {
   input,
   textArea,
@@ -171,4 +187,5 @@ export const inputTheme = {
   switchThumb,
   validation,
   descriptionAndValidation,
+  triggerIcon,
 };

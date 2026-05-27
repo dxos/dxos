@@ -25,7 +25,7 @@ export const withTheme =
     return (
       <ThemeProvider
         tx={tx}
-        themeMode={theme as ThemeMode}
+        themeMode={(theme as ThemeMode) || 'dark'}
         resourceExtensions={translations}
         noCache={noCache}
         platform={platform}

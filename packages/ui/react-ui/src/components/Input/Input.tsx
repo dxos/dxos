@@ -4,7 +4,18 @@
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type ForwardRefExoticComponent,
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
@@ -33,10 +44,115 @@ import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
+import {
+  SegmentedDate,
+  type SegmentedDateProps,
+  SegmentedDateTime,
+  type SegmentedDateTimeProps,
+  SegmentedTime,
+  type SegmentedTimeProps,
+} from './SegmentedInput';
 
 type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
+
+//
+// Trigger context — lets a sibling `Input.TriggerIcon` open a picker registered by a field inside
+// the same `Input.Root`. Each registered handler is keyed; the most recent registration wins.
+//
+
+type InputTriggerHandler = () => void;
+
+type InputTriggerContextValue = {
+  registerTrigger: (handler: InputTriggerHandler) => () => void;
+  trigger: () => void;
+  hasTrigger: boolean;
+};
+
+const InputTriggerContext = createContext<InputTriggerContextValue | undefined>(undefined);
+
+/**
+ * Field hook. Pass an opener function; while the field is mounted, an `Input.TriggerIcon`
+ * sibling will call this opener on press. Returns a no-op when used outside `Input.Root`.
+ */
+const useInputTrigger = (handler: InputTriggerHandler | undefined) => {
+  const ctx = useContext(InputTriggerContext);
+  useEffect(() => {
+    if (!ctx || !handler) {
+      return;
+    }
+    return ctx.registerTrigger(handler);
+  }, [ctx, handler]);
+};
+
+//
+// Root — wraps the @dxos/react-input primitive root with the trigger registry.
+//
+
+const Root = (props: InputRootProps) => {
+  const handlerRef = useRef<InputTriggerHandler | null>(null);
+  const [hasTrigger, setHasTrigger] = useState(false);
+
+  const registerTrigger = useCallback((handler: InputTriggerHandler) => {
+    handlerRef.current = handler;
+    setHasTrigger(true);
+    return () => {
+      if (handlerRef.current === handler) {
+        handlerRef.current = null;
+        setHasTrigger(false);
+      }
+    };
+  }, []);
+
+  const trigger = useCallback(() => {
+    handlerRef.current?.();
+  }, []);
+
+  const value = useMemo(() => ({ registerTrigger, trigger, hasTrigger }), [registerTrigger, trigger, hasTrigger]);
+
+  return (
+    <InputTriggerContext.Provider value={value}>
+      <InputRoot {...props} />
+    </InputTriggerContext.Provider>
+  );
+};
+
+Root.displayName = 'Input.Root';
+
+//
+// TriggerIcon — sibling button that opens the picker of the registered field. Renders nothing
+// when no field in the surrounding `Input.Root` has registered an opener.
+//
+
+type TriggerIconProps = ThemedClassName<
+  Omit<ComponentPropsWithRef<'button'>, 'children' | 'onClick'> & {
+    icon?: string;
+  }
+>;
+
+const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
+  ({ classNames, icon = 'ph--calendar--regular', ...props }, forwardedRef) => {
+    const ctx = useContext(InputTriggerContext);
+    const { tx } = useThemeContext();
+    if (!ctx?.hasTrigger) {
+      return null;
+    }
+    return (
+      <button
+        type='button'
+        ref={forwardedRef}
+        {...props}
+        onClick={ctx.trigger}
+        className={tx('input.triggerIcon', {}, classNames) ?? undefined}
+      >
+        <Icon size={4} icon={icon} />
+      </button>
+    );
+  },
+);
+
+TriggerIcon.displayName = 'Input.TriggerIcon';
 
 //
 // Label
@@ -198,149 +314,22 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 TextInput.displayName = 'Input.TextInput';
 
 //
-// Time
+// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
+// spinbutton semantics, and immutable separators. ISO string API:
+//   - Date     `YYYY-MM-DD`
+//   - Time     `HH:mm`
+//   - DateTime `YYYY-MM-DDTHH:mm`
+// `Date` and `DateTime` accept an optional `iconSide` to render a calendar trigger that opens
+// a popover-mounted DatePicker.
 //
 
-type TimeProps = InputSharedProps &
-  ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>> & {
-    /** Show the native time-picker icon (clock). Defaults to true. */
-    icon?: boolean;
-    /** Show the time-of-day text. Defaults to true. Hide to render an icon-only trigger. */
-    time?: boolean;
-  };
+const Time = SegmentedTime;
+const Date_ = SegmentedDate;
+const DateTime = SegmentedDateTime;
 
-const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
-  (
-    {
-      __inputScope,
-      classNames,
-      density: densityProp,
-      elevation: elevationProp,
-      variant,
-      icon = true,
-      time = true,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-    const density = useDensityContext(densityProp);
-    const elevation = useElevationContext(elevationProp);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-
-    return (
-      <TextInputPrimitive
-        {...props}
-        type='time'
-        className={tx(
-          'input.input',
-          {
-            variant,
-            disabled: props.disabled,
-            density,
-            elevation,
-            validationValence,
-          },
-          // TODO(burdon): Move to theme.
-          // Force 32px (native time inputs add intrinsic height; the density
-          // `min-h-[2.5rem]` arbitrary value also outranks plain `min-h-8`).
-          // '!h-8 !min-h-8 box-border leading-none',
-          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
-          !time && 'text-transparent',
-          classNames,
-        )}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-Time.displayName = 'Input.Time';
-
-//
-// Date
-//
-
-type DateInputProps = InputSharedProps &
-  ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>> & {
-    /** Show the native calendar-picker icon. Defaults to true. */
-    icon?: boolean;
-  };
-
-const Date_ = forwardRef<HTMLInputElement, InputScopedProps<DateInputProps>>(
-  (
-    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, icon = true, ...props },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-    const density = useDensityContext(densityProp);
-    const elevation = useElevationContext(elevationProp);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-
-    return (
-      <TextInputPrimitive
-        {...props}
-        type='date'
-        className={tx(
-          'input.input',
-          {
-            variant,
-            disabled: props.disabled,
-            density,
-            elevation,
-            validationValence,
-          },
-          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
-          classNames,
-        )}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-Date_.displayName = 'Input.Date';
-
-//
-// DateTime (datetime-local)
-//
-
-type DateTimeInputProps = DateInputProps;
-
-// TODO(burdon): Use DatePicker.
-const DateTime = forwardRef<HTMLInputElement, InputScopedProps<DateTimeInputProps>>(
-  (
-    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, icon = true, ...props },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-    const density = useDensityContext(densityProp);
-    const elevation = useElevationContext(elevationProp);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-
-    return (
-      <TextInputPrimitive
-        {...props}
-        type='datetime-local'
-        className={tx(
-          'input.input',
-          {
-            variant,
-            disabled: props.disabled,
-            density,
-            elevation,
-            validationValence,
-          },
-          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
-          classNames,
-        )}
-        ref={forwardedRef}
-      />
-    );
-  },
-);
-
-DateTime.displayName = 'Input.DateTime';
+type TimeProps = SegmentedTimeProps;
+type DateInputProps = SegmentedDateProps;
+type DateTimeInputProps = SegmentedDateTimeProps;
 
 //
 // TextArea
@@ -494,7 +483,8 @@ Switch.displayName = 'Input.Switch';
 //
 
 export const Input = {
-  Root: InputRoot,
+  Root,
+  TriggerIcon,
   PinInput,
   TextInput,
   TextArea,
@@ -508,6 +498,8 @@ export const Input = {
   Validation,
   DescriptionAndValidation,
 };
+
+export { useInputTrigger };
 
 export type {
   InputVariant,

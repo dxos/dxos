@@ -83,6 +83,12 @@
   .dx-button[data-density='sm'] {
     @apply min-h-[1.75rem] px-2;
   }
+  .dx-button[data-density='xs'] {
+    @apply min-h-[1.5rem] px-1.5 text-xs;
+  }
+  .dx-button[data-density='xs'].aspect-square {
+    @apply size-6 px-0;
+  }
   @media (pointer: fine) {
     .dx-button[data-density='md'] {
       @apply min-h-[2rem] px-2.5;

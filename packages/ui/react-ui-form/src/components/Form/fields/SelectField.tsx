@@ -75,4 +75,4 @@ const getIconHueStyles = (iconHue?: string): string | undefined => {
   return styles?.foreground;
 };
 
-import { getStyles, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';

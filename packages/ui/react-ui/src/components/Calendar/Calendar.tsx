@@ -2,147 +2,192 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import { CalendarDate, parseDate } from '@internationalized/date';
+import React, { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import {
-  DayPicker,
-  type ClassNames,
-  type CustomComponents,
-  type DayPickerProps,
-  type DayProps,
-  type FooterProps,
-  type NavProps,
-  useDayPicker,
-} from 'react-day-picker';
+  Button as RACButton,
+  Calendar as RACCalendar,
+  CalendarCell as RACCalendarCell,
+  type CalendarProps as RACCalendarProps,
+  CalendarGrid as RACCalendarGrid,
+  CalendarGridBody as RACCalendarGridBody,
+  CalendarGridHeader as RACCalendarGridHeader,
+  CalendarHeaderCell as RACCalendarHeaderCell,
+  Heading as RACHeading,
+  RangeCalendar as RACRangeCalendar,
+  type RangeCalendarProps as RACRangeCalendarProps,
+  type DateValue,
+} from 'react-aria-components';
 
 import { type ClassNameValue } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { useTranslation } from '../../primitives';
-import { translationKey } from '../../translations';
-import { composableProps } from '../../util';
-import { IconButton } from '../Button';
+import { Icon } from '../Icon';
 
-// Slot names match react-day-picker v9 `ClassNames` enum values.
-const themeSlots = [
-  'root',
-  'months',
-  'month',
-  'month_caption',
-  'caption_label',
-  'nav',
-  'button_previous',
-  'button_next',
-  'month_grid',
-  'weekdays',
-  'weekday',
-  'week',
-  'day',
-  'day_button',
-  'selected',
-  'today',
-  'outside',
-  'disabled',
-  'range_start',
-  'range_middle',
-  'range_end',
-  'hidden',
-  'footer',
-] as const;
+//
+// Date <-> CalendarDate conversion.
+// External API stays `Date` (and `{from,to}`-style range objects) so existing call sites keep working.
+//
 
-// Distribute `Omit` over the DayPicker discriminated union so each variant preserves its correlated
-// `mode` / `selected` / `onSelect` triple at call sites.
-type DistributiveOmit<U, K extends keyof any> = U extends unknown ? Omit<U, K> : never;
-
-export type CalendarRootProps = DistributiveOmit<DayPickerProps, 'classNames' | 'className'> & {
-  /** Consumer-facing theming override (DXOS convention). Merged with any `className` from a Slot parent. */
-  classNames?: ClassNameValue;
-  /** Forwarded from a Radix Slot parent; merged with `classNames`. */
-  className?: string;
-  /** Slot-level class overrides matching react-day-picker's `ClassNames` shape. Merged on top of theme defaults. */
-  slots?: Partial<ClassNames>;
+const toCalendarDate = (date: Date | undefined): CalendarDate | null => {
+  if (!date) {
+    return null;
+  }
+  return new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
 };
 
-const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>(({ slots, components, ...props }, _forwardedRef) => {
-  const { tx } = useThemeContext();
-  const themed: Partial<ClassNames> = {};
-  for (const slot of themeSlots) {
-    themed[slot] = tx(`calendar.${slot}`, {}, slots?.[slot]);
+const fromCalendarDate = (value: DateValue | null | undefined): Date | undefined => {
+  if (!value) {
+    return undefined;
   }
-  // composableProps merges any `className` from a Slot parent with the consumer-facing `classNames` and
-  // the theme default into a single `className` for DayPicker; DayPicker doesn't forward refs.
-  const { className } = composableProps(props, { classNames: tx('calendar.root', {}) });
+  return new Date(value.year, value.month - 1, value.day);
+};
+
+export type DateRange = { from: Date; to?: Date };
+
+//
+// Public API.
+//
+
+type BaseCalendarProps = {
+  classNames?: ClassNameValue;
+  className?: string;
+  isDisabled?: boolean;
+  minValue?: Date;
+  maxValue?: Date;
+  /** Month to render when there's no selection — driven by the consuming picker. */
+  defaultMonth?: Date;
+};
+
+type SingleProps = BaseCalendarProps & {
+  mode?: 'single';
+  selected?: Date;
+  onSelect?: (date: Date | undefined) => void;
+};
+
+type RangeProps = BaseCalendarProps & {
+  mode: 'range';
+  selected?: DateRange;
+  onSelect?: (range: DateRange | undefined) => void;
+};
+
+export type CalendarRootProps = SingleProps | RangeProps;
+
+const CalendarShell = ({
+  classNames,
+  className,
+  isDisabled,
+  children,
+}: {
+  classNames?: ClassNameValue;
+  className?: string;
+  isDisabled?: boolean;
+  children: ReactNode;
+}) => {
+  const { tx } = useThemeContext();
   return (
-    <DayPicker
-      // Spread loses union narrowing inside the function body; restore the type at the DayPicker boundary.
-      {...(props as DayPickerProps)}
-      className={className}
-      classNames={{ ...themed, root: undefined }}
-      components={{
-        MonthCaption: CalendarMonthCaption,
-        Nav: CalendarNav,
-        ...(components ?? {}),
-      }}
-    />
+    <div
+      className={tx('calendar.root', {}, classNames, className) ?? undefined}
+      aria-disabled={isDisabled || undefined}
+    >
+      {children}
+    </div>
+  );
+};
+
+const CalendarChrome = () => {
+  const { tx } = useThemeContext();
+  return (
+    <header className={tx('calendar.nav', {}) ?? undefined}>
+      <RACButton slot='previous' className={tx('calendar.button_previous', {}) ?? undefined}>
+        <Icon size={4} icon='ph--caret-left--regular' />
+      </RACButton>
+      <RACHeading className={tx('calendar.caption_label', {}) ?? undefined} />
+      <RACButton slot='next' className={tx('calendar.button_next', {}) ?? undefined}>
+        <Icon size={4} icon='ph--caret-right--regular' />
+      </RACButton>
+    </header>
+  );
+};
+
+const CalendarGridContent = () => {
+  const { tx } = useThemeContext();
+  return (
+    <RACCalendarGrid className={tx('calendar.month_grid', {}) ?? undefined}>
+      <RACCalendarGridHeader className={tx('calendar.weekdays', {}) ?? undefined}>
+        {(day) => (
+          <RACCalendarHeaderCell className={tx('calendar.weekday', {}) ?? undefined}>{day}</RACCalendarHeaderCell>
+        )}
+      </RACCalendarGridHeader>
+      <RACCalendarGridBody>
+        {(date) => <RACCalendarCell date={date} className={tx('calendar.day', {}) ?? undefined} />}
+      </RACCalendarGridBody>
+    </RACCalendarGrid>
+  );
+};
+
+const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, _forwardedRef) => {
+  const { classNames, className, isDisabled, minValue, maxValue, defaultMonth } = props;
+  const defaultFocused = toCalendarDate(defaultMonth) ?? undefined;
+
+  if (props.mode === 'range') {
+    const racProps: RACRangeCalendarProps<CalendarDate> = {
+      isDisabled,
+      minValue: toCalendarDate(minValue) ?? undefined,
+      maxValue: toCalendarDate(maxValue) ?? undefined,
+      defaultFocusedValue: defaultFocused,
+      value: props.selected?.from
+        ? {
+            start: toCalendarDate(props.selected.from)!,
+            end: toCalendarDate(props.selected.to ?? props.selected.from)!,
+          }
+        : undefined,
+      onChange: (next) => {
+        if (!next) {
+          props.onSelect?.(undefined);
+          return;
+        }
+        const from = fromCalendarDate(next.start);
+        const to = fromCalendarDate(next.end);
+        if (from) {
+          props.onSelect?.({ from, to });
+        }
+      },
+    };
+    return (
+      <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled}>
+        <RACRangeCalendar {...racProps}>
+          <CalendarChrome />
+          <CalendarGridContent />
+        </RACRangeCalendar>
+      </CalendarShell>
+    );
+  }
+
+  const racProps: RACCalendarProps<CalendarDate> = {
+    isDisabled,
+    minValue: toCalendarDate(minValue) ?? undefined,
+    maxValue: toCalendarDate(maxValue) ?? undefined,
+    defaultFocusedValue: defaultFocused,
+    value: toCalendarDate(props.selected),
+    onChange: (next) => props.onSelect?.(fromCalendarDate(next)),
+  };
+  return (
+    <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled}>
+      <RACCalendar {...racProps}>
+        <CalendarChrome />
+        <CalendarGridContent />
+      </RACCalendar>
+    </CalendarShell>
   );
 });
 
 CalendarRoot.displayName = 'Calendar.Root';
 
-//
-// Slot defaults exposed on the namespace.
-// Consumers may pass these (or their own wrappers) via DayPicker's `components` prop.
-//
-
-// The default MonthCaption is rendered inside the nav (see CalendarNav); hide the per-month caption.
-const CalendarMonthCaption: CustomComponents['MonthCaption'] = () => <span hidden />;
-
-const CalendarNav: CustomComponents['Nav'] = ({
-  onPreviousClick,
-  onNextClick,
-  previousMonth,
-  nextMonth,
-  ...rest
-}: NavProps) => {
-  const { t } = useTranslation(translationKey);
-  const { months } = useDayPicker();
-  const displayed = months[0]?.date;
-  return (
-    <nav {...rest}>
-      <IconButton
-        variant='ghost'
-        iconOnly
-        icon='ph--caret-left--regular'
-        label={t('calendar.nav.previous.label')}
-        disabled={!previousMonth}
-        onClick={onPreviousClick}
-      />
-      <span className='text-sm font-medium'>
-        {displayed?.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
-      </span>
-      <IconButton
-        variant='ghost'
-        iconOnly
-        icon='ph--caret-right--regular'
-        label={t('calendar.nav.next.label')}
-        disabled={!nextMonth}
-        onClick={onNextClick}
-      />
-    </nav>
-  );
-};
-
-const CalendarFooter: CustomComponents['Footer'] = ({ ...rest }: FooterProps) => <div {...rest} />;
-
-const CalendarDay: CustomComponents['Day'] = ({ day, modifiers: _modifiers, ...rest }: DayProps) => {
-  return <div {...rest}>{day.date.getDate()}</div>;
-};
-
 export const Calendar = {
   Root: CalendarRoot,
-  Day: CalendarDay,
-  MonthCaption: CalendarMonthCaption,
-  Nav: CalendarNav,
-  Footer: CalendarFooter,
 };
 
-export type { ClassNames as CalendarClassNames, DayPickerProps };
+// Re-export the iso parser for convenience.
+export { parseDate as parseCalendarDate };
+export type { ComponentPropsWithoutRef };
