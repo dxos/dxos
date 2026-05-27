@@ -300,6 +300,31 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return Reflect.ownKeys(target);
   }
 
+  getOwnPropertyDescriptor(target: ProxyTarget, prop: string | symbol): PropertyDescriptor | undefined {
+    const desc = Reflect.getOwnPropertyDescriptor(target, prop);
+    if (!desc) {
+      return undefined;
+    }
+    // For initialized ECHO objects outside a change context, report configurable string data
+    // properties as non-writable. This ensures `Object.getOwnPropertyDescriptor(obj, k)?.writable`
+    // returns false, preventing external traversal (e.g. Storybook arg mutation) from attempting
+    // direct assignment — which the `set` trap already blocks with an error.
+    // Only applicable when configurable: true; non-configurable properties (e.g. array `length`)
+    // cannot have their `writable` flag changed without violating the ECMAScript Proxy invariant.
+    // Inside Obj.update() we report writable: true so that Reflect.set(target, prop, value, receiver)
+    // succeeds (OrdinarySet checks receiver.[[GetOwnProperty]] for writable).
+    // Only data descriptors (not accessors) can have writable set.
+    // Accessor descriptors have get/set and cannot also have value/writable.
+    if (typeof prop === 'string' && desc.configurable && !('get' in desc) && !('set' in desc)) {
+      const echoRoot = getEchoRoot(target);
+      const isInitialized = ChangeId in echoRoot || EventId in echoRoot;
+      if (isInitialized && !isInChangeContext(echoRoot)) {
+        return { ...desc, writable: false };
+      }
+    }
+    return desc;
+  }
+
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
     const echoRoot = getEchoRoot(target);
 
