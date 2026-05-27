@@ -154,7 +154,7 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
 
     return orientation === 'bottom' ? (
       <ChannelLayout
-        {...composableProps(props, { classNames: 'flex flex-col bs-full min-h-0' })}
+        {...composableProps(props, { classNames: 'flex flex-col h-full min-h-0' })}
         id={id}
         ref={forwardedRef}
         state={renderState}

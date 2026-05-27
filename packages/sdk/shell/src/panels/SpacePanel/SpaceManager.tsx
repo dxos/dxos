@@ -117,7 +117,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
       noopInvite: {
         label: t('create-space-invitation.label'),
         description: '',
-        icon: 'ph--placeholder--regular',
+        icon: 'ph--circle-dashed--regular',
         onClick: () => {},
       },
     } as Record<string, ActionMenuItem>);

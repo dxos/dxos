@@ -179,7 +179,17 @@ export class Binder extends Resource {
 
     log('_updateBindings resolved', {
       resolvedBlueprints: resolvedBlueprints.length,
-      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Blueprint.getKey(bp)),
+      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
+    });
+
+    // Drop blueprints that have no registry key — they cannot be used downstream
+    // (e.g. tool/operation registration calls Blueprint.getKey which throws).
+    const keyedBlueprints = resolvedBlueprints.filter((bp) => {
+      if (Obj.getMeta(bp).key === undefined) {
+        log.warn('dropping blueprint with no meta key', { uri: Obj.getURI(bp) });
+        return false;
+      }
+      return true;
     });
 
     // Filter current state to only items still in the reduced binding set,
@@ -188,13 +198,13 @@ export class Binder extends Resource {
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
       const uri = Obj.getURI(obj);
-      return uri != null && reducedBlueprintDxns.has(uri);
+      return uri != null && reducedBlueprintDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const uri = Obj.getURI(obj);
       return uri != null && reducedObjectDxns.has(uri);
     });
-    const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
+    const mergedBlueprints = this._mergeInto(filteredBlueprints, keyedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._blueprints, mergedBlueprints);

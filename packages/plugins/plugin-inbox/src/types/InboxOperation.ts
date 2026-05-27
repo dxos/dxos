@@ -362,6 +362,7 @@ export const ExtractMessage = Operation.make({
   output: Schema.Struct({
     extractorId: Schema.String,
     created: Schema.Number,
+    updated: Schema.Number,
     summary: Schema.optional(Schema.String),
   }),
 });

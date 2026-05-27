@@ -39,10 +39,10 @@ const MessageCardStory = () => {
   return (
     <IntrinsicCardContainer>
       <Card.Root>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
-        </Card.Toolbar>
+        </Card.Header>
         <MessageCard role='card--content' subject={subject} />
       </Card.Root>
     </IntrinsicCardContainer>

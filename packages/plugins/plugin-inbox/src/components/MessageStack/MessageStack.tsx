@@ -228,7 +228,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.IconBlock>
               <DxAvatar
                 hue={hue}
@@ -244,8 +244,8 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
               <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
             </Card.Title>
             <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
+          </Card.Header>
+          <Card.Body>
             <Card.Row icon='ph--user--regular'>
               <Card.Text>{from}</Card.Text>
             </Card.Row>
@@ -272,7 +272,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
                 </div>
               </Card.Row>
             )}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -336,7 +336,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
             </Card.IconBlock>
@@ -344,8 +344,8 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
               <span className='grow truncate font-medium'>{subject}</span>
             </Card.Title>
             <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
+          </Card.Header>
+          <Card.Body>
             {/* TODO(burdon): Currently limits to last n messages. */}
             {messages.slice(0, 4).map((message) => {
               const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
@@ -374,7 +374,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
                 </Card.Row>
               );
             })}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>

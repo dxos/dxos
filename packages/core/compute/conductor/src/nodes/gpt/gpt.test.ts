@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Trace } from '@dxos/compute';
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import type { QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { type ServiceContainer } from '@dxos/functions-runtime';
@@ -66,19 +66,17 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       'gpt with history',
       Effect.fnUntraced(
         function* () {
-          const conversation = queues.create();
-          yield* Effect.promise(() =>
-            conversation.append([
-              Obj.make(Message.Message, {
-                created: new Date().toISOString(),
-                sender: { role: 'user' },
-                blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
-              }),
-            ]),
-          );
+          const conversation = db.add(Feed.make());
+          yield* Feed.append(conversation, [
+            Obj.make(Message.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
+            }),
+          ]).pipe(Effect.provide(services.createLayer()));
           const input: GptInput = {
             prompt: 'I have twice as many oranges as apples. How many oranges do I have?',
-            conversation: Ref.fromURI(conversation.uri),
+            conversation: Ref.make(conversation),
           };
 
           const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
@@ -90,8 +88,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(typeof output.text).toBe('string');
           expect(output.text.length).toBeGreaterThan(10);
 
-          const conversationMessages = yield* Effect.promise(() =>
-            queues.get<Message.Message>(conversation.uri).queryObjects(),
+          const conversationMessages = yield* Feed.runQuery(conversation, Filter.type(Message.Message)).pipe(
+            Effect.provide(services.createLayer()),
           );
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');

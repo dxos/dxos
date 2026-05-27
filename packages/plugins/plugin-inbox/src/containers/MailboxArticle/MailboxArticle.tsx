@@ -23,6 +23,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
+import { useArticleKeyboardNavigation } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, type Mailbox } from '#types';
@@ -138,6 +139,25 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     setFilterText(filterProp ?? '');
     setFilter(builder.build(filterProp ?? '').filter);
   }, [filterProp, builder]);
+
+  // n / p keyboard navigation: clamp at the ends of the sorted message list.
+  const messageIds = useMemo(() => sortedMessages.map((message) => message.id), [sortedMessages]);
+  const handleNavigate = useCallback(
+    (messageId: string) => {
+      const message = sortedMessages.find((m) => m.id === messageId);
+      if (!message || !db) {
+        return;
+      }
+      void showItem({
+        contextId: id,
+        selectionId: message.id,
+        companion: linkedSegment('message'),
+        path: getMailboxMessagePath(db.spaceId, mailbox.id, message.id),
+      });
+    },
+    [db, id, mailbox.id, sortedMessages, showItem],
+  );
+  useArticleKeyboardNavigation({ articleId: id, ids: messageIds, currentId, onSelect: handleNavigate });
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {

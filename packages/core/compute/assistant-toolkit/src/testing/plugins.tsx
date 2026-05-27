@@ -41,13 +41,13 @@ export const capabilities: Capability.Any[] = [
       role: 'card--content',
       filter: (data: any): data is any => isImage(data.value),
       component: ({ data }) => (
-        <Card.Content>
+        <Card.Body>
           <img
             className='grow object-cover'
             src={`data:image/jpeg;base64,${data.value.source.data}`}
             alt={data.value.prompt ?? `Generated image [id=${data.value.id}]`}
           />
-        </Card.Content>
+        </Card.Body>
       ),
     }),
   ),
@@ -58,7 +58,7 @@ export const capabilities: Capability.Any[] = [
       role: 'card--content',
       position: 'last',
       component: ({ data }) => (
-        <Card.Content>
+        <Card.Body>
           <Syntax.Root data={data}>
             <Syntax.Content>
               <Syntax.Filter />
@@ -67,7 +67,7 @@ export const capabilities: Capability.Any[] = [
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>
-        </Card.Content>
+        </Card.Body>
       ),
     }),
   ),

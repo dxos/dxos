@@ -649,6 +649,65 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('append returns existing positions for duplicate blocks and never wastes positions', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const makeBlock = (sequence: number): Block =>
+        Block.make({
+          feedId,
+          actorId: ALICE,
+          sequence,
+          prevActorId: null,
+          prevSequence: null,
+          position: null,
+          timestamp: Date.now(),
+          data: new Uint8Array([sequence]),
+        });
+
+      const firstBlocks = [makeBlock(0), makeBlock(1), makeBlock(2)];
+      const firstAppend = yield* feed.append({
+        requestId: 'req-first',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: firstBlocks,
+      });
+      expect(firstAppend.positions).toEqual([0, 1, 2]);
+
+      // Re-appending the same blocks must return their existing positions and not advance the
+      // namespace position counter; otherwise the client would try to UPDATE blocks to wasted
+      // positions and hit the (feedPrivateId, position) UNIQUE constraint.
+      const secondAppend = yield* feed.append({
+        requestId: 'req-second',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: firstBlocks,
+      });
+      expect(secondAppend.positions).toEqual([0, 1, 2]);
+
+      // A subsequent append of new blocks should resume from position 3, not from a wasted slot.
+      const newAppend = yield* feed.append({
+        requestId: 'req-new',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [makeBlock(3)],
+      });
+      expect(newAppend.positions).toEqual([3]);
+
+      const all = yield* feed.query({
+        requestId: 'req-query',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        position: -1,
+      });
+      expect(all.blocks.map((block) => block.position)).toEqual([0, 1, 2, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('append ignores duplicate Lamport timestamp and preserves original data', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();

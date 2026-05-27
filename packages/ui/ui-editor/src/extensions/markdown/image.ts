@@ -8,16 +8,25 @@ import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemir
 
 import { focusField } from '../focus';
 
-export type ImageOptions = {};
+export type ImageNodeData = { name: 'Image'; url: string };
+
+export type ImageOptions = {
+  /**
+   * Predicate that returns true to suppress rendering of an image node.
+   * When skipped, the markdown link source is left visible to the user instead of being
+   * replaced by an `<img>` widget.
+   */
+  skip?: (node: ImageNodeData) => boolean;
+};
 
 /**
  * Create image decorations.
  */
-export const image = (_options: ImageOptions = {}): Extension => {
+export const image = (options: ImageOptions = {}): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => {
-        return Decoration.set(buildDecorations(state, 0, state.doc.length));
+        return Decoration.set(buildDecorations(state, 0, state.doc.length, options));
       },
       update: (value: DecorationSet, tr: Transaction) => {
         if (!tr.docChanged && !tr.selection) {
@@ -42,7 +51,7 @@ export const image = (_options: ImageOptions = {}): Extension => {
           filterFrom: from,
           filterTo: to,
           filter: () => false,
-          add: buildDecorations(tr.state, from, to),
+          add: buildDecorations(tr.state, from, to, options),
         });
       },
       provide: (field) => EditorView.decorations.from(field),
@@ -50,7 +59,7 @@ export const image = (_options: ImageOptions = {}): Extension => {
   ];
 };
 
-const buildDecorations = (state: EditorState, from: number, to: number) => {
+const buildDecorations = (state: EditorState, from: number, to: number, options: ImageOptions = {}) => {
   const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
   syntaxTree(state).iterate({
@@ -63,6 +72,11 @@ const buildDecorations = (state: EditorState, from: number, to: number) => {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
           // Some plugins might be using custom URLs; avoid attempts to render those URLs.
           if (url.match(/^https?:\/\//) === null && url.match(/^file?:\/\//) === null) {
+            return;
+          }
+
+          // Consumer-supplied filter (e.g., disable remote-image rendering by setting).
+          if (options.skip?.({ name: 'Image', url })) {
             return;
           }
 

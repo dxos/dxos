@@ -637,8 +637,12 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => objInternal.is
 /**
  * Get the label of the object.
  * Accepts both reactive objects and snapshots.
+ *
+ * @param options.fallback `'typename'` returns the object's typename when no
+ *   label is set (e.g. `org.dxos.type.table`).
  */
-export const getLabel = (entity: Unknown | Snapshot): string | undefined => internal.getLabel(entity);
+export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
+  internal.getLabel(entity, options);
 
 /**
  * Set the label of the object.

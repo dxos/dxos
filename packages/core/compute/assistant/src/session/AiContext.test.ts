@@ -24,6 +24,7 @@ const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
         run: async () => [],
       }) as any,
     sync: async () => {},
+    getSyncState: async () => ({ blocksToPull: 0, blocksToPush: 0, totalBlocks: 0 }),
   };
   const layer = Layer.succeed(Feed.FeedService, mockFeedService);
   return Effect.runSync(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(layer)));

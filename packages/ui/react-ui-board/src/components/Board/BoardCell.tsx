@@ -69,7 +69,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
       onClick={() => onSelect?.(item.id)}
       ref={rootRef}
     >
-      <Card.Toolbar>
+      <Card.Header>
         <Card.DragHandle ref={dragHandleRef} />
         <Toolbar.Separator variant='gap' />
         {dragState !== 'dragging' && (
@@ -81,7 +81,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
             onClick={() => onDelete?.(item.id)}
           />
         )}
-      </Card.Toolbar>
+      </Card.Header>
       {children}
     </Card.Root>
   );

@@ -168,6 +168,7 @@ export const Spec: Story = {
     // Feed — should show the Feed selector field (a Ref(Feed) combobox). The combobox
     // isn't associated with its label, so match the field's <label> element directly.
     await selectKind(combobox, 'f');
-    await expect(canvas.findByText('Feed', { selector: 'label' })).resolves.toBeInTheDocument();
+    await expect(combobox).not.toBeDisabled();
+    await expect(await canvas.findByText('Feed', { selector: 'label' })).toBeInTheDocument();
   },
 };

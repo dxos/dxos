@@ -29,7 +29,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
           Option.map(Type.getSchema),
           Option.flatMap(Annotation.IconAnnotation.get),
           Option.map(({ icon }) => icon),
-          Option.getOrElse(() => 'ph--placeholder--regular'),
+          Option.getOrElse(() => 'ph--circle-dashed--regular'),
         );
 
   return (
@@ -41,13 +41,13 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root classNames='dx-card-max-width'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.Icon icon={icon} />
-                <Card.Title>{Obj.getLabel(subject)}</Card.Title>
-              </Card.Toolbar>
-              <Card.Content>
+                <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
+              </Card.Header>
+              <Card.Body>
                 <Surface.Surface type={AppSurface.Card} data={{ subject }} limit={1} />
-              </Card.Content>
+              </Card.Body>
             </Card.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}

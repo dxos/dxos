@@ -115,16 +115,16 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth ref={forwardedRef}>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.IconBlock />
             <Card.Title>{result.label}</Card.Title>
-          </Card.Toolbar>
+          </Card.Header>
           {result.snippet && (
-            <Card.Content>
+            <Card.Body>
               <Card.Row>
                 <Card.Text variant='description'>{result.snippet}</Card.Text>
               </Card.Row>
-            </Card.Content>
+            </Card.Body>
           )}
         </Card.Root>
       </Focus.Item>

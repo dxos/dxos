@@ -150,7 +150,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           <NavTreeItemAction
             testId={primaryAction.properties?.testId}
             label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
+            icon={primaryAction.properties?.icon ?? 'ph--circle-dashed--regular'}
             parent={item}
             path={path}
             monolithic={Node.isAction(primaryAction)}
@@ -197,7 +197,7 @@ const MenuActions = ({
         density='lg'
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
-        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}

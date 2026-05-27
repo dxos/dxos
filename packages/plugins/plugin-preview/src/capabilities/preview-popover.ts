@@ -64,7 +64,7 @@ export default Capability.makeModule(
         return;
       }
 
-      const title = titleProp ?? Obj.getLabel(result.object);
+      const title = titleProp ?? Obj.getLabel(result.object, { fallback: 'typename' });
 
       await invokePromise(LayoutOperation.UpdatePopover, {
         subjectRef: dxn,

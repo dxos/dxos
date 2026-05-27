@@ -9,7 +9,6 @@ import { JSONPath } from 'jsonpath-plus';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { EchoURI, ObjectId } from '@dxos/keys';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -131,16 +130,15 @@ export const registry: Record<NodeType, Executable> = {
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
   }),
 
-  // Creates a new queue.
+  // Creates a new feed.
   'make-queue': defineComputeNode({
     input: Schema.Struct({}),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Ref.Ref(Feed.Feed) }),
     exec: synchronizedComputeFunction(
       Effect.fnUntraced(function* () {
-        const { queues } = yield* QueueService;
-        const queue = queues.create();
+        const feed = yield* Database.add(Feed.make());
         return {
-          [DEFAULT_OUTPUT]: Ref.fromURI(queue.uri),
+          [DEFAULT_OUTPUT]: Ref.make(feed),
         };
       }),
     ),
@@ -205,9 +203,8 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const { queues } = yield* QueueService;
-        const echoUri = EchoURI.isEchoURI(id) ? EchoURI.parse(id) : EchoURI.make({ objectId: id });
-        const messages = yield* Effect.promise(() => queues.get(echoUri).queryObjects());
+        const feed = yield* Database.resolve(EchoURI.parse(id), Feed.Feed).pipe(Effect.orDie);
+        const messages = yield* Feed.runQuery(feed, Filter.everything());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -222,17 +219,26 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        if (EchoURI.isEchoURI(id)) {
-          const parsed = EchoURI.parse(id);
-          const echoUri = EchoURI.getObjectId(parsed);
-          const spaceId = EchoURI.getSpaceId(parsed);
+        // Legacy `dxn:queue:` URIs identify a feed/queue; everything else is an ECHO container.
+        if (typeof id === 'string' && id.startsWith('dxn:queue:')) {
+          const mappedItems = items.map((item: any) => ({
+            ...item,
+            id: item.id ?? ObjectId.random(),
+          }));
+          const feed = yield* Database.resolve(EchoURI.parse(id), Feed.Feed).pipe(Effect.orDie);
+          yield* Feed.append(feed, mappedItems);
+          return {};
+        } else {
+          const echoUri = EchoURI.parse(id);
+          const echoId = EchoURI.getObjectId(echoUri);
+          const spaceId = EchoURI.getSpaceId(echoUri);
+          invariant(echoId, 'Object ID missing from EchoURI');
           const { db } = yield* Database.Service;
           if (spaceId != null) {
             invariant(db.spaceId === spaceId, 'Space mismatch');
           }
-          invariant(echoUri, 'Object ID missing from EchoURI');
 
-          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoUri)).run());
+          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
             const schema = yield* Effect.promise(async () =>
               db.schemaRegistry
@@ -243,7 +249,7 @@ export const registry: Record<NodeType, Executable> = {
             );
 
             for (const item of items) {
-              const { id: _id, '@type': _type, ...rest } = item;
+              const { id: _id, '@type': _type, ...rest } = item as any;
               // TODO(dmaretskyi): Forbid type on create.
               db.add(Obj.make(Type.assertObject(schema), rest));
             }
@@ -252,15 +258,6 @@ export const registry: Record<NodeType, Executable> = {
             throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
           }
 
-          return {};
-        } else {
-          const mappedItems = items.map((item: any) => ({
-            ...item,
-            id: item.id ?? ObjectId.random(),
-          }));
-          const { queues } = yield* QueueService;
-          const queueEchoUri = EchoURI.make({ objectId: id });
-          yield* Effect.promise(() => queues.get(queueEchoUri).append(mappedItems));
           return {};
         }
       }),

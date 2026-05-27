@@ -43,6 +43,26 @@ const preprocessHtml = (html: string): string => {
 
 const toMarkdown = (html: string): string => turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
 
+/**
+ * Strip residual HTML/XML tags that survive turndown conversion (e.g., MS Office namespaced
+ * tags like <o:p>, <v:shape>, conditional comments, stray <span style=...>).
+ *
+ * Namespaced tags and MS conditional comments are stripped unconditionally — they have no
+ * meaning in genuine plaintext bodies. The generic inline-tag pass (<span>, <font>, <u>,
+ * <div>) is opt-in via `fromHtml` so we don't eat literal angle-bracketed text in plaintext
+ * messages.
+ */
+const stripResidualTags = (str: string, { fromHtml = false }: { fromHtml?: boolean } = {}): string => {
+  const cleaned = str
+    // 1. Conditional comments: <!--[if mso]>...<![endif]-->.
+    .replace(/<!--\s*\[if[^\]]*\][\s\S]*?<!\[endif\]\s*-->/gi, '')
+    // 2. Namespaced tags (<o:p>, <v:shape>, <w:WordDocument/>, <m:mathPr>, etc.).
+    .replace(/<\/?[a-zA-Z][\w-]*:[^>]*>/g, '');
+
+  // 3. Stray known-bad inline tags that survive turndown in edge cases — HTML pipeline only.
+  return fromHtml ? cleaned.replace(/<\/?(span|font|u|div)\b[^>]*>/gi, '') : cleaned;
+};
+
 const stripWhitespace = (str: string): string => {
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return (
@@ -64,7 +84,9 @@ export const normalizeText = (text: string): string => {
   // Collapse runs of blank lines for both HTML (after markdown conversion) and
   // plain-text emails so the rendered message never shows more than one blank
   // line between paragraphs.
-  return stripWhitespace(isHTML(text) ? toMarkdown(text) : text);
+  const fromHtml = isHTML(text);
+  const converted = fromHtml ? toMarkdown(text) : text;
+  return stripWhitespace(stripResidualTags(converted, { fromHtml }));
 };
 
 // TODO(burdon): Customizable parser for plaintext.

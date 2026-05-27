@@ -1,0 +1,530 @@
+---
+id: org.dxos.plugin.voxel
+name: VoxelPlugin
+version: 0.1.0
+---
+
+A 3D voxel editor plugin for `DXOS` Composer. Users create, paint, and sculpt block-based
+3D worlds that are persisted as `World` objects in ECHO and replicated across peers in
+real-time. The editor runs entirely in the browser via `@react-three/fiber` (Three.js),
+requires no server-side rendering, and is designed to work offline-first.
+
+Worlds are represented as a sparse `VoxelMap` — a coordinate-keyed record of voxel
+properties — so only occupied cells are stored. Grid dimensions and block size are
+configurable per-world, defaulting to a 32×32 ground plane with unit-sized blocks.
+
+The plugin also exposes a Conway's Game of Life simulation that runs on the ground plane
+(z=0), letting users seed well-known patterns (glider, LWSS, Gosper glider gun, pulsar,
+etc.) and step them forward in real-time. Life ticks apply standard Conway rules (survive
+on 2–3 neighbours; born on exactly 3) using the existing voxel data as the cell state.
+
+Four agent-callable operations — `QueryWorld`, `AddVoxels`, `RemoveVoxels`, and
+`GenerateShape` — give AI assistants first-class access to read and modify the world.
+`GenerateShape` supports five geometric primitives (cube, wall, sphere, cylinder, tower)
+placed at an arbitrary origin with a caller-supplied hue.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type VoxelProps
+  fields:
+    hue: string                  # Chromatic hue name (e.g. blue, red, green)
+```
+
+```mdl
+type VoxelData
+  fields:
+    x: number
+    y: number
+    z: number                    # Height (z=0 is ground plane)
+    hue: string
+```
+
+```mdl
+type VoxelMap
+  desc: Sparse map of occupied voxels. Keys are "x:y:z".
+  fields:
+    [key: string]: VoxelProps
+```
+
+```mdl
+type World
+  desc: |
+    ECHO object (typename: org.dxos.type.voxel) representing a voxel world.
+    Persisted via ECHO and replicated across peers.
+  fields:
+    name?: string
+    gridX?: number               # Grid extent along x-axis (default 32)
+    gridY?: number               # Grid extent along y-axis (default 32)
+    blockSize?: number           # Size of each block in scene units (default 1)
+    voxels?: VoxelMap
+```
+
+```mdl
+type ToolMode
+  literals: select | add | remove
+```
+
+```mdl
+type ModelType
+  literals: cube | wall | sphere | cylinder | tower
+```
+
+```mdl
+type Origin
+  fields:
+    x: number
+    y: number
+    z: number
+```
+
+## Components
+
+```mdl
+component VoxelEditor
+  desc: |
+    Interactive Three.js Canvas rendering the voxel world. Supports
+    Blender-style orbit controls (middle-click orbit, Shift+middle pan,
+    scroll zoom) and a ghost cursor preview. In readOnly mode the camera
+    auto-fits the voxel bounds with no ground plane or orbit controls.
+  props:
+    voxels: VoxelData[]
+    gridX?: number               # Default 16
+    gridY?: number               # Default 16
+    blockSize?: number           # Default 1
+    toolMode?: ToolMode          # Default add
+    selectedHue?: string         # Default blue
+    showGrid?: boolean           # Default true
+    selectedPosition?: Origin    # Highlights the last-placed voxel
+    readOnly?: boolean
+  emits:
+    onAddVoxel(voxel: VoxelData)
+    onRemoveVoxel(position: Origin)
+  layout: |
+    ┌─────────────────────────────────────┐
+    │  Three.js Canvas (WebGL)            │
+    │  ┌──────────────────────────────┐   │
+    │  │  VoxelBlock × N              │   │
+    │  │  GhostCursor (add/remove)    │   │
+    │  │  SelectionIndicator          │   │
+    │  │  Grid (ground plane)         │   │
+    │  └──────────────────────────────┘   │
+    │  [GizmoViewport] (bottom-right)     │
+    └─────────────────────────────────────┘
+```
+
+```mdl
+component VoxelToolbar
+  desc: |
+    Composable toolbar providing tool-mode toggle, hue picker, and
+    optional action buttons. Rendered inside VoxelArticle via Panel.Toolbar.
+  props:
+    toolMode: ToolMode
+    selectedHue: string
+    showGrid: boolean
+    lifeRunning?: boolean
+  actions:
+    onToolModeChange(mode: ToolMode)
+    onHueChange(hue: string)
+    onToggleGrid()
+    onClear?()
+    onGenerate?()
+    onToggleLife?()
+    onSeedLife?()
+  layout: |
+    ┌────────────────────────────────────────┐
+    │ [Select][Add][Remove] │ [Grid] [Shape] │
+    │ [Clear] ││ [Seed][Play/Pause] │ HuePicker │
+    └────────────────────────────────────────┘
+```
+
+```mdl
+component VoxelArticle
+  desc: |
+    Full editor surface (article role). Combines VoxelToolbar inside
+    Panel.Toolbar with VoxelEditor inside Panel.Content. Owns all
+    interaction state (toolMode, selectedHue, showGrid, lifeRunning).
+  props:
+    subject: World               # ECHO World object
+    attendableId?: string
+  state:
+    toolMode: ToolMode
+    selectedHue: string
+    showGrid: boolean
+    lifeRunning: boolean
+    selectedPosition?: Origin
+  layout: |
+    ┌─────────────────────────────────────┐
+    │ VoxelToolbar                        │  ← Panel.Toolbar
+    ├─────────────────────────────────────┤
+    │ VoxelEditor (grows to fill)         │  ← Panel.Content
+    │                                     │
+    │  hint bar (bottom, centered)        │
+    └─────────────────────────────────────┘
+```
+
+```mdl
+component VoxelCard
+  desc: |
+    Read-only card surface (card role). Renders a VoxelEditor in readOnly
+    mode; camera auto-fits the bounding box of all voxels.
+  props:
+    subject: World
+  layout: |
+    ┌──────────────┐
+    │ VoxelEditor  │  ← readOnly, no toolbar
+    │  (auto-fit)  │
+    └──────────────┘
+```
+
+## Operations
+
+Pure read operations — no side effects.
+
+```mdl
+op queryWorld
+  desc: Returns the current state of the voxel world including all voxels, grid dimensions, and block size.
+  input:
+    world: Ref<World>
+  output: QueryWorldResult
+  requires: [Database.Service]
+```
+
+Effectful operations — mutate persistent ECHO state.
+
+```mdl
+op addVoxels
+  desc: Adds one or more voxels to the world at specified coordinates with a given hue.
+  input:
+    world: Ref<World>
+    voxels: VoxelData[]
+  output: AddVoxelsResult
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: Existing voxels at the same coordinates are overwritten.
+```
+
+```mdl
+op removeVoxels
+  desc: Removes voxels at specified coordinates from the world.
+  input:
+    world: Ref<World>
+    positions: Origin[]
+  output: RemoveVoxelsResult
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: Positions with no voxel are silently ignored.
+```
+
+```mdl
+op generateShape
+  desc: Generates a 3D geometric shape (cube, wall, sphere, cylinder, or tower) and places it at the given origin.
+  input:
+    world: Ref<World>
+    shape: ModelType
+    origin: Origin
+    hue: string
+  output: GenerateShapeResult
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+## Features
+
+```mdl
+feat F-1: Place Voxel
+
+  req F-1.1:
+    when: tool mode is add and user clicks the ground plane
+    then: a new voxel is placed at the clicked grid cell at z=0
+
+  req F-1.2:
+    when: tool mode is add and user clicks the face of an existing voxel
+    then: a new voxel is placed adjacent to the clicked face
+
+  req F-1.3:
+    when: tool mode is add and cursor is over a valid placement target
+    then: a semi-transparent ghost cursor shows the pending voxel position
+
+  req F-1.4:
+    when: the target cell is outside the grid bounds
+    then: placement is rejected; no voxel is created
+```
+
+```mdl
+feat F-2: Remove Voxel
+
+  req F-2.1:
+    when: tool mode is remove and user clicks an existing voxel
+    then: the voxel is deleted from the world
+
+  req F-2.2:
+    when: tool mode is remove and cursor hovers over a voxel
+    then: a red ghost cursor indicates the voxel will be removed
+```
+
+```mdl
+feat F-3: Hue Selection
+
+  req F-3.1:
+    when: user selects a hue via the HuePicker in the toolbar
+    then: newly placed voxels use the selected hue
+
+  req F-3.2:
+    when: hue is changed
+    then: existing voxels are not recolored
+```
+
+```mdl
+feat F-4: Generate Shape
+
+  req F-4.1:
+    when: user clicks the "Generate shape" toolbar button
+    then: a random ModelType is chosen and placed at selectedPosition (or origin)
+
+  req F-4.2:
+    when: op:generateShape is invoked by an agent
+    then: the specified shape is placed at the given origin with the given hue
+
+  req F-4.3: All five ModelTypes (cube, wall, sphere, cylinder, tower) are supported.
+```
+
+```mdl
+feat F-5: Game of Life Simulation
+
+  req F-5.1:
+    when: user clicks "Seed" in the toolbar
+    then: a random well-known pattern is applied to the ground plane (z=0)
+
+  req F-5.2:
+    when: user clicks "Play"
+    then: the simulation ticks every 500 ms using standard Conway rules
+
+  req F-5.3:
+    when: user clicks "Pause"
+    then: ticking stops; current voxel state is preserved
+
+  req F-5.4:
+    when: a tick completes
+    then: updated world is written to ECHO and replicated to peers
+
+  req F-5.5: Non-ground voxels (z>0) are unaffected by the simulation.
+```
+
+```mdl
+feat F-6: World Persistence
+
+  req F-6.1:
+    when: a voxel is added or removed interactively
+    then: the World object is updated in ECHO via useObject
+
+  req F-6.2:
+    when: an ECHO update arrives from a peer
+    then: VoxelArticle re-renders with the new voxel state
+
+  req F-6.3:
+    when: a World object is created
+    then: it is stored with typename org.dxos.type.voxel and appears in the space
+    tags: [collaborative]
+```
+
+```mdl
+feat F-7: Camera and Navigation
+
+  req F-7.1:
+    when: editor opens
+    then: camera is positioned to show the full grid with perspective view
+
+  req F-7.2:
+    when: user middle-clicks and drags
+    then: camera orbits around the grid center
+
+  req F-7.3:
+    when: user Shift+middle-clicks and drags
+    then: camera pans
+
+  req F-7.4:
+    when: user scrolls
+    then: camera zooms
+
+  req F-7.5:
+    when: VoxelCard renders in readOnly mode
+    then: camera auto-fits all voxels; pan/zoom/orbit are disabled
+```
+
+## Acceptance
+
+```mdl
+test T-1: Place voxel on ground
+  given: editor open, tool mode is add, selectedHue is blue
+  when: user clicks an empty cell on the ground plane
+  then:
+    - a blue voxel appears at z=0 at the clicked position
+    - world.voxels contains the new entry
+```
+
+```mdl
+test T-2: Place voxel on face
+  given: a voxel exists at (0, 0, 0), tool mode is add
+  when: user clicks the top face of that voxel
+  then:
+    - a new voxel is placed at (0, 0, 1)
+    - world.voxels has two entries
+```
+
+```mdl
+test T-3: Remove voxel
+  given: a voxel exists at (1, 1, 0), tool mode is remove
+  when: user clicks that voxel
+  then:
+    - voxel is removed from world.voxels
+    - VoxelEditor re-renders with the voxel gone
+```
+
+```mdl
+test T-4: Out-of-bounds placement rejected
+  given: grid is 32×32, tool mode is add
+  when: user attempts to place a voxel at (20, 20, 0) which is outside the half-extent
+  then:
+    - no voxel is added
+    - world.voxels is unchanged
+```
+
+```mdl
+test T-5: Generate shape via toolbar
+  given: editor open, selectedHue is red, selectedPosition is (2, 2, 0)
+  when: user clicks the "Generate shape" button
+  then:
+    - a random shape is placed at (2, 2, 0) with red hue
+    - world.voxels is updated with new voxels
+```
+
+```mdl
+test T-6: op:generateShape — sphere
+  given: a World with empty voxels
+  when: op:generateShape called with shape=sphere, origin=(0,0,0), hue=green
+  then:
+    - world contains voxels forming a sphere of radius 3 centered at origin
+    - all voxels have hue green
+```
+
+```mdl
+test T-7: Life simulation tick
+  given: a glider pattern seeded at origin, lifeRunning is true
+  when: 500ms elapses
+  then:
+    - world.voxels is updated to the next generation
+    - non-ground voxels (z>0) are unchanged
+```
+
+```mdl
+test T-8: Collaborative sync
+  given: two peers share the same ECHO space, one has the World open
+  when: peer A places a voxel
+  then:
+    - World.voxels is written to ECHO
+    - peer B's VoxelArticle re-renders showing the new voxel
+```
+
+```mdl
+test T-9: op:queryWorld
+  given: a World with 5 voxels, gridX=32, gridY=32, blockSize=1
+  when: op:queryWorld is called
+  then:
+    - result.voxelCount === 5
+    - result.gridX === 32
+    - result.gridY === 32
+    - result.blockSize === 1
+    - result.voxels has 5 entries
+```
+
+```mdl
+test T-10: Card read-only mode
+  given: a World with several voxels
+  when: VoxelCard is rendered
+  then:
+    - camera auto-fits voxel bounds
+    - clicking the canvas does not add or remove voxels
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
