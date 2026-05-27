@@ -105,6 +105,29 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     await invokePromise(ClientOperation.RecoverIdentity);
   }, [invokePromise]);
 
+  const handleRecoverWithOAuth = useCallback(
+    async (provider: string) => {
+      if (pendingRef.current) {
+        return;
+      }
+      if (error) {
+        setError(false);
+      }
+      pendingRef.current = true;
+      try {
+        await invokePromise(ClientOperation.RedeemOAuthRecovery, { provider });
+        void invokePromise(ClientOperation.CreateAgent);
+        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+      } catch (err) {
+        log.catch(err);
+        setError(true);
+      } finally {
+        pendingRef.current = false;
+      }
+    },
+    [invokePromise, error],
+  );
+
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
     await invokePromise(ClientOperation.CreateIdentity, {}).catch(() => {
@@ -197,6 +220,59 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     [hubUrl, identity, client, invokePromise, error],
   );
 
+  const handleCreateAccountWithOAuth = useCallback(
+    async ({ code, provider }: { code: string; provider: string }) => {
+      if (pendingRef.current) {
+        return;
+      }
+      if (error) {
+        setError(false);
+      }
+      pendingRef.current = true;
+      try {
+        // 1. Ensure a local identity exists — OAuth recovery registration requires one (it
+        //    serializes the personal-space genesis credential issued by this identity).
+        const ensureIdentity = async () => {
+          if (identity) {
+            return identity;
+          }
+          await invokePromise(ClientOperation.CreateIdentity, {});
+          return client.halo.identity.get();
+        };
+        const resolvedIdentity = await ensureIdentity();
+        invariant(resolvedIdentity, 'identity should exist after create');
+
+        // 2. Register the OAuth provider as a recovery method; kms-service returns the
+        //    provider-verified email.
+        const registerResult = await invokePromise(ClientOperation.RegisterOAuthRecovery, { provider });
+        if (registerResult.error) {
+          throw registerResult.error;
+        }
+        const email = registerResult.data?.email;
+        invariant(email, 'OAuth provider did not return a verified email');
+
+        // 3. Redeem the invitation code with the verified email to mint the hub Account.
+        const result = await redeemAccountInvitation({
+          hubUrl,
+          email,
+          identityKey: resolvedIdentity.identityKey.toHex(),
+          code: code.replace(/-/g, '').toUpperCase(),
+        });
+        if ('accountId' in result) {
+          log.info('account created', { accountId: result.accountId });
+          void invokePromise(ClientOperation.CreateAgent);
+        }
+        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+      } catch (err) {
+        log.catch(err);
+        setError(true);
+      } finally {
+        pendingRef.current = false;
+      }
+    },
+    [hubUrl, identity, client, invokePromise, error],
+  );
+
   const handleJoinWaitlist = useCallback(
     async (email: string) => {
       if (pendingRef.current) {
@@ -230,8 +306,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       onPasskey={!identity ? handlePasskey : undefined}
       onJoinIdentity={!identity ? handleJoinIdentity : undefined}
       onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
+      onRecoverWithOAuth={!identity ? handleRecoverWithOAuth : undefined}
       onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
       onCreateAccount={!identity ? handleCreateAccount : undefined}
+      onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
       onJoinWaitlist={handleJoinWaitlist}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
       onGoToLogin={handleGoToLogin}

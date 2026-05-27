@@ -17,6 +17,9 @@ import { type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode 
 
 const supportsPasskeys = (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
 
+/** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
+const ATMOSPHERE_PROVIDER = 'atproto';
+
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
@@ -33,8 +36,10 @@ export const Welcome = ({
   onPasskey,
   onJoinIdentity,
   onRecoverIdentity,
+  onRecoverWithOAuth,
   onValidateInvitationCode,
   onCreateAccount,
+  onCreateAccountWithOAuth,
   onJoinWaitlist,
   onSpaceInvitation,
   onGoToLogin,
@@ -229,6 +234,7 @@ export const Welcome = ({
                 onEmailKeyDown={handleEmailKeyDown}
                 onJoinIdentity={onJoinIdentity}
                 onRecoverIdentity={onRecoverIdentity}
+                onRecoverWithOAuth={onRecoverWithOAuth}
               />
             )}
 
@@ -299,6 +305,18 @@ export const Welcome = ({
                   onSubmit={handleCreateAccount}
                   validation={error ? t('email-error.message') : null}
                 />
+                {onCreateAccountWithOAuth && (
+                  <>
+                    <OrDivider>{t('or-divider.label')}</OrDivider>
+                    <CompoundRow
+                      icon='ph--cloud--regular'
+                      disabled={pending}
+                      onClick={() => onCreateAccountWithOAuth({ code, provider: ATMOSPHERE_PROVIDER })}
+                    >
+                      {t('atmosphere-account-button.label')}
+                    </CompoundRow>
+                  </>
+                )}
                 <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
               </div>
             )}
@@ -408,6 +426,7 @@ type LoginTabProps = {
   onEmailKeyDown: (ev: KeyboardEvent<HTMLInputElement>) => void;
   onJoinIdentity?: () => unknown;
   onRecoverIdentity?: () => unknown;
+  onRecoverWithOAuth?: (provider: string) => unknown;
 };
 
 /**
@@ -435,6 +454,7 @@ const LoginTab = ({
   onEmailKeyDown,
   onJoinIdentity,
   onRecoverIdentity,
+  onRecoverWithOAuth,
 }: LoginTabProps) => {
   type MoreOption = {
     key: string;
@@ -486,6 +506,17 @@ const LoginTab = ({
       label: t('login-recovery.label'),
       description: t('login-recovery.description'),
       onClick: () => onRecoverIdentity(),
+    });
+  }
+  // Atmosphere/atproto OAuth recovery: completes an OAuth flow to recover an existing identity
+  // without a stored recovery code.
+  if (onRecoverWithOAuth) {
+    moreOptions.push({
+      key: 'atmosphere',
+      icon: 'ph--cloud--regular',
+      label: t('login-atmosphere.label'),
+      description: t('login-atmosphere.description'),
+      onClick: () => onRecoverWithOAuth(ATMOSPHERE_PROVIDER),
     });
   }
 
@@ -600,16 +631,36 @@ const InlineForm = ({
   );
 };
 
-const CompoundRow = ({ icon, onClick, children }: { icon: string; onClick?: () => unknown; children: ReactNode }) => (
+const CompoundRow = ({
+  icon,
+  onClick,
+  disabled,
+  children,
+}: {
+  icon: string;
+  onClick?: () => unknown;
+  disabled?: boolean;
+  children: ReactNode;
+}) => (
   <button
     type='button'
     onClick={onClick}
-    className='flex items-center gap-3 px-4 py-3 rounded-md border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/50 text-left w-full'
+    disabled={disabled}
+    className='flex items-center gap-3 px-4 py-3 rounded-md border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/50 disabled:opacity-50 text-left w-full'
   >
     <Icon icon={icon} size={5} />
     <span className='flex-1'>{children}</span>
     <Icon icon='ph--caret-right--bold' size={4} />
   </button>
+);
+
+/** Horizontal "or" separator between alternative auth methods. */
+const OrDivider = ({ children }: { children: ReactNode }) => (
+  <div className='flex items-center gap-3 text-xs text-description'>
+    <div className='flex-1 border-t border-neutral-700' />
+    <span className='uppercase tracking-widest'>{children}</span>
+    <div className='flex-1 border-t border-neutral-700' />
+  </div>
 );
 
 export default Welcome;

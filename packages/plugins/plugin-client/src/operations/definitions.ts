@@ -105,3 +105,38 @@ export const RedeemToken = Operation.make({
   }),
   output: Schema.Void,
 });
+
+/**
+ * Recover an existing identity by completing an OAuth flow with a registered recovery provider
+ * (e.g. atproto / Atmosphere). Opens the provider authorization popup, redeems the returned
+ * one-time recovery proof via IdentityService.recoverIdentity, and admits this device into HALO.
+ */
+export const RedeemOAuthRecovery = Operation.make({
+  meta: { key: `${CLIENT_OPERATION}.redeem-oauth-recovery`, name: 'Redeem OAuth Recovery', icon: 'ph--cloud--regular' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    provider: Schema.String,
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Register an OAuth provider (e.g. atproto / Atmosphere) as a recovery method for the current
+ * identity. Requires an existing local identity; supplies the personal-space genesis credential
+ * so kms-service can route the refresh token to the personal space. Returns the verified email
+ * from the provider so the caller can mint a hub Account.
+ */
+export const RegisterOAuthRecovery = Operation.make({
+  meta: {
+    key: `${CLIENT_OPERATION}.register-oauth-recovery`,
+    name: 'Register OAuth Recovery',
+    icon: 'ph--cloud--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    provider: Schema.String,
+  }),
+  output: Schema.Struct({
+    email: Schema.String,
+  }),
+});
