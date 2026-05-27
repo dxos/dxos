@@ -4,12 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { dbg } from '@dxos/log';
+import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export type SelectFieldOptions = FormFieldComponentProps & {
-  options?: Array<{ value: string | number; label?: string }>;
+  options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;
 };
 
 export const SelectField = ({
@@ -48,10 +49,14 @@ export const SelectField = ({
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {options?.map(({ value, label }) => (
+                {options?.map(({ value, label, secondaryLabel, icon, iconHue }) => (
                   // NOTE: Numeric values are converted to and from strings.
                   <Select.Option key={String(value)} value={String(value)}>
-                    {label ?? String(value)}
+                    <span className='flex items-center flex-row gap-2'>
+                      {icon && <Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
+                      {label ?? String(value)}
+                      {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
+                    </span>
                   </Select.Option>
                 ))}
               </Select.Viewport>
@@ -64,3 +69,11 @@ export const SelectField = ({
     </Input.Root>
   );
 };
+
+const getIconHueStyles = (iconHue?: string): string | undefined => {
+  const styles = iconHue ? getStyles(iconHue) : undefined;
+
+  return styles?.foreground;
+};
+
+import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
