@@ -338,9 +338,9 @@ const useSpaceCounts = (space: Space): SpaceCounts => {
 
   const [schemas, setSchemas] = useState(0);
   useEffect(() => {
-    const query = space.db.schemaRegistry.query();
-    setSchemas(query.runSync().length);
-    return query.subscribe(() => setSchemas(query.results.length));
+    const { registry } = space.db.graph;
+    setSchemas(registry.types.length);
+    return registry.changed.on(() => setSchemas(registry.types.length));
   }, [space]);
 
   const pipeline = useMulticastObservable(space.pipeline);

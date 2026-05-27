@@ -17,7 +17,7 @@ export default RelationCreate.pipe(
       const types = yield* db.graph.registry.listTypes();
       const foundSchema = types.find((t) => Type.getTypename(t) === typename);
       invariant(foundSchema, `Schema not found: ${typename}`);
-      invariant(Type.isRelationSchema(foundSchema), 'Schema is not a relation schema');
+      invariant(Type.isRelation(foundSchema), 'Schema is not a relation schema');
       const schema = foundSchema;
 
       const sourceObj = yield* Database.load(source);

@@ -31,7 +31,7 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
       return Filter.nothing();
     }
 
-    const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+    const schemas = db.graph.registry.types;
     const feedSchemas = schemas.filter((type) => {
       const annotation = FeedAnnotation.get(Type.getSchema(type));
       return Option.isSome(annotation) && annotation.value === true;

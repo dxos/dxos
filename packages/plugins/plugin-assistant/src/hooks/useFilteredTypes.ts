@@ -5,15 +5,15 @@
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 
 const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
   Array.from(
     new Set(
       db.graph.registry.types
-        .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-        .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
+        .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+        .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false))),
     ),
   );
 

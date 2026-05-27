@@ -86,8 +86,8 @@ const selectTypename = Effect.fn(function* (
   const { db } = yield* Database.Service;
   const allSchemas = yield* db.graph.registry.listTypes();
   const schemas = allSchemas
-    .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
-    .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
+    .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 
   const choices = schemas.map((schema) => ({

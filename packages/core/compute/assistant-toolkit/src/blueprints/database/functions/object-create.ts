@@ -19,7 +19,7 @@ export default ObjectCreate.pipe(
       const types = yield* db.graph.registry.listTypes();
       const foundSchema = types.find((t) => Type.getTypename(t) === typename);
       invariant(foundSchema, `Schema not found: ${typename}`);
-      invariant(Type.isObjectSchema(foundSchema), 'Schema is not an object schema');
+      invariant(Type.isObject(foundSchema), 'Schema is not an object schema');
       const schema = foundSchema;
 
       const object = db.add(

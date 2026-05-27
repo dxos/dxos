@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { JsonSchema, Obj, Type } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo/internal';
+
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 
@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceO
         registry,
         view,
         baseSchema: JsonSchema.toJsonSchema(schema),
-        change: createEchoChangeCallback(view, schema as EchoSchema),
+        change: createEchoChangeCallback(view, schema),
       });
 
       const result = projection.deleteFieldProjection(input.fieldId);

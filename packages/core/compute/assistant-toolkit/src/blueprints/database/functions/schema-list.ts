@@ -26,11 +26,10 @@ export default SchemaList.pipe(
           return aKey.localeCompare(bKey);
         })
         .map((schema) => {
-          const meta = Type.getMeta(schema);
           return {
             typename: Type.getTypename(schema),
             jsonSchema: JsonSchema.toJsonSchema(schema),
-            kind: meta?.sourceSchema ? 'relation' : 'record',
+            kind: Type.isRelation(schema) ? 'relation' : 'record',
           };
         });
     }),

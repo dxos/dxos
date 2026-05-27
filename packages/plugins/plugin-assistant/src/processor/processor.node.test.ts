@@ -12,8 +12,8 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+import { Capabilities } from '@dxos/app-framework';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import { AiChatProcessor } from './processor';
 
@@ -28,8 +28,8 @@ describe('Chat processor', () => {
         yield* Database.add(feed);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
         const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
-        const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as AutomationCapabilities.ComputeRuntime;
-        const processor = new AiChatProcessor(session, managedRuntime, feed);
+        const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
+        const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any);
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },

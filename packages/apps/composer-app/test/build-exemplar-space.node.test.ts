@@ -1112,7 +1112,7 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
  * then return the collection for wiring into the root.
  *
- * We register the schema via space.db.schemaRegistry.register() so that a TypeSchema ECHO object
+ * We register the schema via space.db.registry.register() so that a TypeSchema ECHO object
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
@@ -1126,7 +1126,7 @@ const addRoastLogCollection = async (
   // discover and render the schema without it being compiled into the app. Pass the
   // explicit object form so `name` is stored on the TypeSchema — passing a
   // Type.AnyEntity directly does not auto-derive a display name.
-  await space.db.schemaRegistry.register([
+  await space.db.registry.register([
     {
       typename,
       version: '0.1.0',

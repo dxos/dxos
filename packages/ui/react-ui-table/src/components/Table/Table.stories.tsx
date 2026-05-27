@@ -178,7 +178,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const [schema] = await space.db.register([Example]);
+        const [schema] = await space.db.registry.register([Example]) as unknown as [typeof Example];
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: Type.getTypename(schema),

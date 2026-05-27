@@ -52,13 +52,14 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
   // TODO(dmaretskyi): Also do references.
   return allSchemas
     .filter((schema) => {
-      if (getTypeAnnotation(schema)?.kind !== Entity.Kind.Relation) {
+      const annotation = getTypeAnnotation(Type.getSchema(schema));
+      if (annotation?.kind !== Entity.Kind.Relation) {
         return false;
       }
 
       return (
-        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
-        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.targetSchema!)
+        isSchemaAddressableByDXN(anchor, annotation.sourceSchema!) ||
+        isSchemaAddressableByDXN(anchor, annotation.targetSchema!)
       );
     })
     .map(

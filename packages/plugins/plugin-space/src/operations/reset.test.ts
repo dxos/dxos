@@ -108,7 +108,7 @@ describe('SpaceOperation.Reset', () => {
     const afterSchemas = await space.db.query(Filter.type(Type.PersistentType)).run();
     expect(
       afterSchemas,
-      `expected no schemas after reset, got ${afterSchemas.map((s) => Obj.getTypename(s)).join(', ')}`,
+      `expected no schemas after reset, got ${afterSchemas.map((s) => Type.getTypename(s)).join(', ')}`,
     ).toHaveLength(0);
   });
 });
