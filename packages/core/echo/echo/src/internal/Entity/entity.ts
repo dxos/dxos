@@ -17,6 +17,7 @@ import {
   MetaId,
   type ObjectMeta,
   SchemaKindId,
+  StaticTypeMarkerId,
   StaticTypeSchemaSlot,
 } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
@@ -175,6 +176,9 @@ export const makeEchoTypeSchema = <
     [KindId]: 'type' as EntityKind.Type,
     [SchemaKindId]: kind,
     [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
+    // Marks this as a static (in-memory) type entity so URI resolution maps it
+    // to the typename DXN rather than `echo:/<id>` (see `getTypeURIFromSpecifier`).
+    [StaticTypeMarkerId]: true,
     [MetaId]: meta,
     // Like every ECHO entity, a static type entity carries an `id`. It is NOT
     // its identity — static types resolve their URI to the typename DXN (see

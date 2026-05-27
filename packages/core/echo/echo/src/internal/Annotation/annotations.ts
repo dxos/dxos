@@ -22,7 +22,7 @@ import {
   MetaId,
   TypeId,
   getSchema,
-  getStaticTypeSchema,
+  isStaticTypeEntity,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
@@ -101,15 +101,14 @@ export const getTypeURIFromSpecifier = (
   if (typeof input === 'object' && input !== null && KindId in input) {
     // `Type.Type` entity:
     //  - Static (declared via `Type.makeObject(dxn)`): URI is the typename DXN.
-    //    Static entities are discriminated by the hidden `StaticTypeSchemaSlot`
-    //    (stamped only by `makeEchoTypeSchema`); persisted types rebuild from
-    //    `jsonSchema` and never carry it. NOTE: a static entity DOES have a
-    //    random `id`, but that id is not its identity — its URI is the typename
-    //    DXN, so we must NOT key on id-presence here.
+    //    Static entities carry the `StaticTypeMarkerId` (stamped only by
+    //    `makeEchoTypeSchema`); persisted types never expose it. NOTE: a static
+    //    entity DOES have a random `id`, but that id is not its identity — its
+    //    URI is the typename DXN, so we must NOT key on id-presence here.
     //  - Persisted (stored ECHO object): URI is local `echo:/<objectId>` —
     //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
     //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
-    if (getStaticTypeSchema(input) !== undefined) {
+    if (isStaticTypeEntity(input)) {
       // Static entities carry typename/version in `ObjectMeta` (`[MetaId].key` /
       // `.version`), not as own properties — read them through meta.
       const meta = (input as { [MetaId]?: { key?: string; version?: string } })[MetaId];
