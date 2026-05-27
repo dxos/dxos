@@ -244,7 +244,7 @@ export const registry: Record<NodeType, Executable> = {
             const types = yield* db.graph.registry.listTypes();
             const schema = types.find((t) => Type.getTypename(t) === schemaTypename);
             invariant(schema, `Schema not found: ${schemaTypename}`);
-            invariant(Type.isObjectSchema(schema), `Schema is not an object schema: ${schemaTypename}`);
+            invariant(Type.isObject(schema), `Schema is not an object schema: ${schemaTypename}`);
 
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item as any;
