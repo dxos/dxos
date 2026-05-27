@@ -14,7 +14,7 @@ import { raise } from '@dxos/debug';
 import { Annotation, type Database, Entity, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 import { Icon, Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles } from '@dxos/ui-theme';
@@ -195,7 +195,7 @@ class ObjectsTreeModel {
     return {
       id: entity.id,
       type: Relation.isSnapshot(entity)
-        ? Relation.getSourceDXN(entity).asEchoDXN()?.echoId === anchor
+        ? EchoURI.getObjectId(Relation.getSourceDXN(entity)) === anchor
           ? 'outgoing-relation'
           : 'incoming-relation'
         : 'object',
