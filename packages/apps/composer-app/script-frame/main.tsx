@@ -32,12 +32,7 @@ const main = async () => {
     '@dxos/plugin-explorer': await import('@dxos/plugin-explorer'),
   }));
 
-  const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
-  if (!code) {
-    throw new Error('No code provided.');
-  }
-
-  const Component = lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
+  // Script frame functionality removed due to security vulnerability (arbitrary code execution via URL hash)
 
   const services = new ClientServicesProxy(
     createIFramePort({
