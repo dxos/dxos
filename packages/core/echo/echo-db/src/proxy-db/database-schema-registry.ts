@@ -119,20 +119,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
           schema: Type.Type;
         };
 
-    // Database-sourced schemas take precedence over runtime-sourced schemas with the same
-    // typename+version, because objects created in this space were tagged with the
-    // database schema's URI (the schema-as-object EchoURI) — preferring the runtime
-    // copy here would yield a static-DXN filter that fails to match those objects.
     const getSortKey = (entry: Entry) =>
-      compositeKey(
-        Type.getTypename(entry.schema),
-        // Dedup db-vs-runtime copies by the registry-provenance semver alone.
-        // `Type.getVersion` augments in-database versions with automerge heads,
-        // which would prevent a db copy from matching its runtime twin.
-        Type.getMeta(entry.schema).version ?? '0.0.0',
-        entry.source === 'database' ? '0' : '1',
-        String(Type.getURI(entry.schema)),
-      );
+      compositeKey(Type.getTypename(entry.schema), Type.getVersion(entry.schema), String(Type.getURI(entry.schema)));
 
     const filterOrderResults = (schemas: Entry[]) => {
       log('Filtering schemas', { schemas, query });
