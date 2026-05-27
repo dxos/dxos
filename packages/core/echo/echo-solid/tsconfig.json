@@ -14,9 +14,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/effect"
-    },
-    {
       "path": "../../../common/effect-atom-solid"
     },
     {

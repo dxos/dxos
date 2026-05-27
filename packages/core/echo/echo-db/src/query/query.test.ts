@@ -2462,6 +2462,81 @@ describe('Query', () => {
     });
   });
 
+  describe('RegistryQuerySource', () => {
+    /**
+     * Scope constant targeting the local in-process registry.
+     * Use `.from(REGISTRY_SCOPE)` to include registry objects in a query.
+     * Use `.from([SPACE_SCOPE, REGISTRY_SCOPE])` to combine DB + registry.
+     * Without an explicit registry scope, db.query() / graph.query() only returns DB objects.
+     */
+    const REGISTRY_SCOPE = { _tag: 'registry' as const, location: 'local' as const };
+
+    let db: EchoDatabase, graph: Hypergraph.Hypergraph;
+
+    beforeEach(async () => {
+      ({ db, graph } = await builder.createDatabase());
+    });
+
+    test('query with registry scope returns objects from graph.registry', async ({ expect }) => {
+      // Add an object only to the in-memory registry — NOT to any database.
+      const registryObj = Obj.make(TestSchema.Expando, { value: 42 });
+      graph.registry.add([registryObj]);
+
+      // Query scoped to registry only fans in registry objects.
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).from(REGISTRY_SCOPE))
+        .run();
+      expect(results).toHaveLength(1);
+      expect((results[0] as any).value).toBe(42);
+    });
+
+    test('query with registry + space scope coalesces registry and db objects', async ({ expect }) => {
+      // One object in the registry, one in the database.
+      graph.registry.add([Obj.make(TestSchema.Expando, { value: 1 })]);
+
+      db.add(Obj.make(TestSchema.Expando, { value: 2 }));
+      await db.flush();
+
+      // Scoped to both the space and registry returns both.
+      const spacePlusRegistryScope = [{ _tag: 'space' as const, spaceId: db.spaceId }, REGISTRY_SCOPE];
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).from(spacePlusRegistryScope))
+        .run();
+      expect(results).toHaveLength(2);
+      const values = results.map((r) => (r as any).value).sort();
+      expect(values).toEqual([1, 2]);
+    });
+
+    test('db.query() auto-scopes to space and excludes graph.registry objects', async ({ expect }) => {
+      // Registry-only object.
+      graph.registry.add([Obj.make(TestSchema.Expando, { value: 42 })]);
+
+      // DB-only object.
+      db.add(Obj.make(TestSchema.Expando, { value: 99 }));
+      await db.flush();
+
+      // db.query() implicitly adds .from(db) with only a space scope — registry excluded.
+      const dbResults = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(dbResults).toHaveLength(1);
+      expect((dbResults[0] as any).value).toBe(99);
+    });
+
+    test('subscription with registry scope re-fires when graph.registry changes', async ({ expect }) => {
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando)).from(REGISTRY_SCOPE));
+
+      const trigger = new Trigger<void>();
+      const unsub = query.subscribe(() => {
+        trigger.wake();
+      });
+      onTestFinished(() => unsub());
+
+      graph.registry.add([Obj.make(TestSchema.Expando, { value: 7 })]);
+
+      await asyncTimeout(trigger.wait(), 500);
+      expect(query.results).toHaveLength(1);
+    });
+  });
+
   describe('Filter.childOf', () => {
     test('two echo objects - positive test', async () => {
       const { db } = await builder.createDatabase();
