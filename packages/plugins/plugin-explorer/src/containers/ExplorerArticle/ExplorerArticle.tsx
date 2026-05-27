@@ -28,10 +28,6 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
-// Side-effect import: ExplorerArticle drives `SVG.Graph` directly (previously the CSS
-// was pulled in transitively via `ForceGraph.tsx`, which we no longer use). Without it
-// the `g.dx-edge path` rules — including `fill: none` — never reach the bundle and SVG
-// defaults (stroke: none, fill: black) make every edge invisible.
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type TreeNode } from '#components';
@@ -195,20 +191,20 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       }
       const edgeSel = select(svgEl).selectAll<SVGGElement, GraphLayoutEdge<SpaceGraphNode>>('g.dx-edge');
       edgeSel.style('opacity', (edge) => {
-        if (!node) return null;
+        if (!node) {return null;}
         const isConnected = edge.source.id === node.id || edge.target.id === node.id;
         return isConnected ? null : '0.08';
       });
       edgeSel
         .select<SVGPathElement>('path')
         .style('stroke', (edge) => {
-          if (!node) return null;
-          if (edge.source.id === node.id) return 'var(--color-orange-500)';
-          if (edge.target.id === node.id) return 'var(--color-sky-500)';
+          if (!node) {return null;}
+          if (edge.source.id === node.id) {return 'var(--color-orange-500)';}
+          if (edge.target.id === node.id) {return 'var(--color-sky-500)';}
           return null;
         })
         .style('stroke-width', (edge) => {
-          if (!node) return null;
+          if (!node) {return null;}
           const isConnected = edge.source.id === node.id || edge.target.id === node.id;
           return isConnected ? '1.5px' : null;
         });
