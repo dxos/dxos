@@ -198,6 +198,7 @@ const MenuActions = ({
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
+        size={4}
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as Node.Action)}
@@ -213,6 +214,7 @@ const MenuActions = ({
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           iconOnly
+          size={4}
           label={t('tree-item-actions.label')}
           data-testid='navtree.treeItem.actionsLevel0'
         />
