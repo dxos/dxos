@@ -20,9 +20,9 @@ import {
   EntityKind,
   KindId,
   MetaId,
+  ObjectDatabaseId,
   TypeId,
   getSchema,
-  isStaticTypeEntity,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
@@ -99,24 +99,23 @@ export const getTypeURIFromSpecifier = (
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   }
   if (typeof input === 'object' && input !== null && KindId in input) {
-    // `Type.Type` entity:
-    //  - Static (declared via `Type.makeObject(dxn)`): URI is the typename DXN.
-    //    Static entities carry the `StaticTypeMarkerId` (stamped only by
-    //    `makeEchoTypeSchema`); persisted types never expose it. NOTE: a static
-    //    entity DOES have a random `id`, but that id is not its identity — its
-    //    URI is the typename DXN, so we must NOT key on id-presence here.
-    //  - Persisted (stored ECHO object): URI is local `echo:/<objectId>` —
-    //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
-    //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
-    if (isStaticTypeEntity(input)) {
-      // Static entities carry typename/version in `ObjectMeta` (`[MetaId].key` /
-      // `.version`), not as own properties — read them through meta.
+    // `Type.Type` entity. Both in-memory and persisted forms are now
+    // `TypeSchema` instances; they differ only by database attachment:
+    //  - In-memory (declared via `Type.makeObject(dxn)`, or pre-`db.add`): URI is
+    //    the typename DXN, read from `ObjectMeta` (`[MetaId].key` / `.version`).
+    //    The entity carries a random `id`, but that id is not its identity.
+    //  - Persisted (attached to a database — carries `[ObjectDatabaseId]`): URI is
+    //    the local `echo:/<objectId>`, matching what `Obj.make(typeEntity, ...)`
+    //    writes to `system.type` via `getSchemaURI(rebuilt)`.
+    const entity = input as { id?: string; [ObjectDatabaseId]?: unknown };
+    const isDatabaseAttached = entity[ObjectDatabaseId] != null;
+    if (!isDatabaseAttached) {
+      // In-memory: typename/version live in `ObjectMeta`, not as own properties.
       const meta = (input as { [MetaId]?: { key?: string; version?: string } })[MetaId];
       if (typeof meta?.key === 'string' && typeof meta?.version === 'string') {
         return DXN.make(meta.key, meta.version);
       }
     }
-    const entity = input as { id?: string };
     if (typeof entity.id === 'string' && ObjectId.isValid(entity.id)) {
       return EchoURI.make({ objectId: entity.id });
     }

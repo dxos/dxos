@@ -3,24 +3,26 @@
 //
 
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
-import { ObjectId } from '@dxos/keys';
+import { type ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
+import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
+import { defineHiddenProperty } from '../common/proxy/define-hidden-property';
+import { makeObject } from '../common/proxy/make-object';
+import { getProxyTarget } from '../common/proxy/proxy-utils';
 import {
   type AnyEntity,
-  type EntityKind,
+  EntityKind,
   InstancePhantomId,
   KindId,
-  MetaId,
   type ObjectMeta,
   SchemaKindId,
-  StaticTypeMarkerId,
   StaticTypeSchemaSlot,
 } from '../common/types';
-import { type JsonSchemaType } from '../JsonSchema';
+import { JsonSchemaType } from '../JsonSchema';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -28,10 +30,11 @@ import { type JsonSchemaType } from '../JsonSchema';
 export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<AnyEntity & ToMutable<T> & ExtraFields>;
 
 /**
- * Static (in-memory) `Type.Type` entity shape produced by
- * `Type.makeObject(dxn)` / `Type.makeRelation({...})`.
+ * In-memory `Type.Type` entity shape produced by `Type.makeObject(dxn)` /
+ * `Type.makeRelation({...})`. A live reactive `TypeSchema` instance —
+ * identical to a persisted `Type.Type` except for database attachment.
  *
- * NOT a `Schema.Schema`. The underlying Effect Schema lives in the hidden
+ * NOT a `Schema.Schema`. The underlying Effect Schema is cached on the hidden
  * `StaticTypeSchemaSlot` slot — retrieve it via `Type.getSchema(...)`.
  */
 // TODO(burdon): Rename EchoEntitySchema.
@@ -53,9 +56,10 @@ export interface EchoTypeSchema<
   readonly [SchemaKindId]: K;
 
   /**
-   * Entity id. Always present — stamped at construction even for static
-   * declarations — but NOT the type's identity: a static type resolves its URI
-   * to the typename DXN, not `echo:/<id>` (see `getTypeURIFromSpecifier`).
+   * Entity id. Always present — stamped at construction — but NOT the type's
+   * identity while in-memory: an unattached type resolves its URI to the typename
+   * DXN, switching to `echo:/<id>` only once attached to a database (see
+   * `getTypeURIFromSpecifier`, which discriminates by database attachment).
    */
   readonly id: ObjectId;
 
@@ -128,17 +132,55 @@ export interface EchoTypeSchema<
 //   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 /**
+ * Effect Schema that every `Type.Type` entity is an instance of: the meta-schema
+ * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. Built
+ * once and memoised. This is the materialisation vehicle for `makeObject` below
+ * — the canonical user-facing entity is `Type/type-schema.ts`'s
+ * `TypeSchema`, which carries the same shape plus UI annotations.
+ *
+ * Kept self-contained (no import of `TypeSchema`) to avoid a bootstrap cycle:
+ * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder
+ * must not depend on it.
+ */
+let _persistentEntitySchema: Schema.Schema.AnyNoContext | undefined;
+const getPersistentEntitySchema = (): Schema.Schema.AnyNoContext => {
+  if (_persistentEntitySchema) {
+    return _persistentEntitySchema;
+  }
+  const typename = 'org.dxos.type.schema';
+  const version = '0.1.0';
+  // `jsonSchema` is declared optional here (only on the materialisation vehicle —
+  // the canonical `TypeSchema` keeps it required) so the construction-time
+  // `Schema.asserts` does not force the field before it is attached. It is
+  // populated immediately after via a lazy accessor (see `makeEchoTypeSchema`),
+  // which defers self-referential `Schema.suspend(...)` resolution until first
+  // read — by then the recursive type const is no longer in its TDZ.
+  const struct = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    jsonSchema: JsonSchemaType.pipe(Schema.optional),
+    id: Schema.String,
+  });
+  const ast = SchemaAST.annotations(struct.ast, {
+    [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
+    [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
+  });
+  return (_persistentEntitySchema = Schema.make(ast));
+};
+
+/**
  * @internal
  *
- * Build a static `Type.Type` entity (the value returned by `Type.makeObject`
- * / `Type.makeRelation`). The Effect Schema describing the type is stashed
- * on `[StaticTypeSchemaSlot]` so `Type.getSchema(...)` can retrieve it
- * directly. The entity is ALSO a Schema instance at runtime as a
- * transitional back-compat affordance until the codebase is migrated off
- * `Foo.ast` / `Schema.is(Foo)` / `Schema.extend(Foo)` / `Schema.Schema.Type<typeof Foo>`.
+ * Build an in-memory `Type.Type` entity (the value returned by `Type.makeObject`
+ * / `Type.makeRelation`). The result is a LIVE reactive `TypeSchema`
+ * instance — identical in every respect to a persisted `Type.Type` except that
+ * it is not yet attached to a database. It is mutable via `Type.update`, can be
+ * passed to `db.add(...)` (which keeps the same proxy and swaps the handler),
+ * and round-trips through `jsonSchema`.
  *
- * The TS type returned (`EchoTypeSchema`) does NOT expose Schema methods —
- * the runtime affordance is purely for legacy call sites until they migrate.
+ * The source Effect Schema describing the user's type is cached on
+ * `[StaticTypeSchemaSlot]` so `Type.getSchema(...)` returns it without a
+ * jsonSchema round-trip; the cache is invalidated by the proxy set-trap when
+ * `jsonSchema` is mutated (see `typed-handler.ts`).
  */
 export const makeEchoTypeSchema = <
   Self extends Schema.Schema.Any,
@@ -151,52 +193,59 @@ export const makeEchoTypeSchema = <
   typename: string,
   version: string,
   kind: K,
-  /**
-   * Thunk that computes the entity's `jsonSchema`. Deferred so that schemas
-   * with `Schema.suspend(...)` recursion (self-referential `Ref.Ref(Self)`)
-   * don't force evaluation of the suspended branches at construction time.
-   */
   computeJsonSchema: () => JsonSchemaType,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
-  const schema = Schema.make<
+  // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
+  const sourceSchema = Schema.make<
     EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
     EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
     Schema.Schema.Context<Self>
   >(ast);
+
+  // `typename` / `version` route through `ObjectMeta` (`key` / `version`) — the
+  // canonical registry-provenance pair — not data fields. `keys` is empty for
+  // in-memory declarations until persisted.
+  const meta: ObjectMeta = { keys: [], key: typename, version };
+
+  // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
+  // lazily below (not passed here) so its computation — which may resolve
+  // self-referential `Schema.suspend(...)` branches — is deferred past module init.
+  const entity = makeObject(getPersistentEntitySchema() as Schema.Schema<any, any, never>, {} as any, meta);
+
+  const target = getProxyTarget(entity)!;
+  // Lazy, memoised `jsonSchema` accessor. Kept as a permanent accessor (never
+  // converted to a plain data property) so reads flow through the get-trap's
+  // getter branch, which returns the raw value rather than wrapping it in a
+  // child reactive proxy. The jsonSchema object is attached post-construction
+  // (bypassing the set-trap that stamps `SchemaId` on nested values), so
+  // wrapping it would fail the `SchemaId`-in-target invariant. Mutations still
+  // route through the proxy set-trap (which invalidates the cached source
+  // schema on `Type.update` / `Type.addFields` and fires reactivity); the
+  // setter here just records the new value. Computation is deferred to first
+  // read so self-referential `Schema.suspend(...)` branches resolve past
+  // module init rather than during construction.
   let memoizedJsonSchema: JsonSchemaType | undefined;
-  // Attach a frozen `ObjectMeta` eagerly so `Type.getMeta` reads it through the
-  // uniform `[MetaId]` path (no synthetic fallback). `key` / `version` are the
-  // canonical registry-provenance pair; `keys` is empty for static declarations.
-  const meta: ObjectMeta = Object.freeze({
-    keys: Object.freeze([]) as never,
-    key: typename,
-    version,
-  });
-  const entity = {
-    [KindId]: 'type' as EntityKind.Type,
-    [SchemaKindId]: kind,
-    [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
-    // Marks this as a static (in-memory) type entity so URI resolution maps it
-    // to the typename DXN rather than `echo:/<id>` (see `getTypeURIFromSpecifier`).
-    [StaticTypeMarkerId]: true,
-    [MetaId]: meta,
-    // Like every ECHO entity, a static type entity carries an `id`. It is NOT
-    // its identity — static types resolve their URI to the typename DXN (see
-    // `getTypeURIFromSpecifier`, which discriminates static vs persisted by
-    // `isInstanceOf(PersistentType, ...)`, not by id presence). The id only
-    // becomes the URI once the type is persisted into a database.
-    id: ObjectId.random(),
-    // NOTE: typename/version are intentionally NOT own properties. They live in
-    // `[MetaId]` (ObjectMeta.key/version) and are read via `Type.getTypename` /
-    // `Type.getVersion`, matching persisted `Type.Type` entities.
-    fields,
-  };
-  Object.defineProperty(entity, 'jsonSchema', {
+  Object.defineProperty(target, 'jsonSchema', {
     configurable: true,
     enumerable: true,
     get() {
       return (memoizedJsonSchema ??= computeJsonSchema());
     },
+    set(value: JsonSchemaType) {
+      memoizedJsonSchema = value;
+    },
   });
-  return Object.freeze(entity) as unknown as EchoTypeSchema<Self, {}, K, Fields>;
+  // Cache the source Effect Schema (read by `Type.getSchema` via the proxy's
+  // `[StaticTypeSchemaSlot]` get-trap; invalidated on `jsonSchema` mutation).
+  defineHiddenProperty(target, StaticTypeSchemaSlot, sourceSchema);
+  // Schema-kind brand: what kind of instance this type describes. There is no
+  // database handler to derive it for in-memory entities, so stamp it directly.
+  defineHiddenProperty(target, SchemaKindId, kind);
+  // Struct fields for introspection. Exposed as a getter (not a plain data
+  // property) so the proxy get-trap returns the raw fields object instead of
+  // wrapping it in a child reactive proxy (which would fail the SchemaId
+  // invariant — the fields object is not an ECHO entity).
+  Object.defineProperty(target, 'fields', { configurable: true, enumerable: false, get: () => fields });
+
+  return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };

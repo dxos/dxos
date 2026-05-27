@@ -13,9 +13,9 @@ import { EchoTypeKindSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
 
 /**
- * Raw struct backing {@link PersistentType}. Exposed only so `PersistentType`
+ * Raw struct backing {@link TypeSchema}. Exposed only so `TypeSchema`
  * (the TS type) can derive its data fields via `Schema.Schema.Type<typeof ...>`;
- * runtime callers should use {@link PersistentType} (the piped, branded entity).
+ * runtime callers should use {@link TypeSchema} (the piped, branded entity).
  *
  * `typename` and `version` are NOT data fields — they live in `ObjectMeta.key` /
  * `ObjectMeta.version` (the canonical registry-provenance pair, queryable via
@@ -23,7 +23,7 @@ import { JsonSchemaType } from '../JsonSchema';
  * standalone JSON-Schema export remains self-describing, but the schema-registry
  * reads/writes them through meta.
  */
-const PersistentTypeStruct = Schema.Struct({
+const TypeSchemaStruct = Schema.Struct({
   name: Schema.optional(Schema.String),
   jsonSchema: JsonSchemaType,
 });
@@ -31,7 +31,7 @@ const PersistentTypeStruct = Schema.Struct({
 /**
  * Persistent representation of a schema.
  */
-export const PersistentType = PersistentTypeStruct.pipe(
+export const TypeSchema = TypeSchemaStruct.pipe(
   LabelAnnotation.set(['name']),
   IconAnnotation.set({
     icon: 'ph--database--regular',
@@ -51,7 +51,7 @@ export const PersistentType = PersistentTypeStruct.pipe(
  * from `jsonSchema`, so a persisted instance satisfies the public `Type<A>`
  * interface without casting.
  */
-export type PersistentType = Schema.Schema.Type<typeof PersistentTypeStruct> & {
+export type TypeSchema = Schema.Schema.Type<typeof TypeSchemaStruct> & {
   /** Object identifier — injected by `EchoTypeKindSchema` and stamped at construction. */
   readonly id: string;
   /** Entity-kind discriminator (object/relation/type) carried on every entity instance. */

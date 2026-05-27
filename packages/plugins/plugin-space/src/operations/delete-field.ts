@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceO
       const typename = getTypenameFromQuery(view.query.ast);
       invariant(typename);
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
-      invariant(schema && Type.isMutable(schema), 'expected stored Type.Type for view schema');
+      invariant(schema != null && Type.getDatabase(schema) != null, 'expected stored Type.Type for view schema');
 
       const projection = new ProjectionModel({
         registry,

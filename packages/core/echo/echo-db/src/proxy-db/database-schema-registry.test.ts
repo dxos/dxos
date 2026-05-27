@@ -74,7 +74,9 @@ describe('schema registry', () => {
     // Persisted `Type.Type` carries typename/version in `ObjectMeta`, not as
     // direct fields. Read via the helpers.
     expect(Type.getTypename(echoSchema)).toEqual('com.example.type.person');
-    expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
+    // In-database entities are versioned by their automerge heads, exposed as
+    // the semver pre-release tag (`<semver>-<heads>`).
+    expect(Type.getVersion(echoSchema)).toMatch(/^0\.1\.0-[0-9a-f.]+$/);
     expect(echoSchema.jsonSchema.properties).toEqual({
       name: expect.any(Object),
     });
@@ -84,7 +86,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(Type.getTypename(echoSchema)).toEqual('com.example.type.person');
-    expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
+    expect(Type.getVersion(echoSchema)).toMatch(/^0\.1\.0-[0-9a-f.]+$/);
   });
 
   test('add new schema - preserves field order', async () => {

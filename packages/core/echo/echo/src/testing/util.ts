@@ -9,7 +9,7 @@ import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
 import {
-  PersistentType,
+  TypeSchema,
   getSchemaTypename,
   getStaticTypeSchema,
   makeObject,
@@ -19,7 +19,7 @@ import {
 import type * as Type from '../Type';
 
 /**
- * Create an in-memory `Type.Type` entity (a `PersistentType` object) for tests.
+ * Create an in-memory `Type.Type` entity (a `TypeSchema` object) for tests.
  * Accepts a raw Effect Schema. Pass `Type.getSchema(entity)` to convert a
  * `Type.Type` entity to its underlying source schema first.
  */
@@ -29,12 +29,12 @@ export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
   // typename/version are routed via ObjectMeta (the canonical registry-provenance
-  // pair); they're no longer data fields on `PersistentType`.
+  // pair); they're no longer data fields on `TypeSchema`.
   return makeObject(
-    getStaticTypeSchema(PersistentType) as any,
+    getStaticTypeSchema(TypeSchema) as any,
     { jsonSchema },
     { keys: [], key: typename, version },
-    PersistentType,
+    TypeSchema,
   ) as unknown as Type.Type;
 };
 

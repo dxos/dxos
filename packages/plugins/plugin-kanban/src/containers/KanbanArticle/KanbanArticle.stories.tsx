@@ -112,7 +112,7 @@ const DefaultComponent = () => {
 
   const handleDeleteField = useCallback(
     (fieldId: string) => {
-      if (schema && Type.isMutable(schema) && projection) {
+      if (schema && Type.getDatabase(schema) != null && projection) {
         projection.deleteFieldProjection(fieldId);
       }
     },
@@ -132,7 +132,7 @@ const DefaultComponent = () => {
           schema={schema}
           view={view}
           onQueryChanged={handleUpdateQuery}
-          onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
+          onDelete={schema && Type.getDatabase(schema) != null ? handleDeleteField : undefined}
         />
         <Syntax.Root data={{ view, schema }}>
           <Syntax.Content>

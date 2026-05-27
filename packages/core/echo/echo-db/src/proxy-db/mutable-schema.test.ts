@@ -132,7 +132,9 @@ describe('EchoSchema', () => {
     // The typename + version live in `ObjectMeta` (the canonical registry-
     // provenance pair) and are surfaced via the `Type.get*` helpers.
     expect(Type.getTypename(schema)).to.eq(Type.getTypename(TestEmpty));
-    expect(Type.getVersion(schema)).to.eq('0.1.0');
+    // In-database entities are versioned by their automerge heads, exposed as
+    // the semver pre-release tag (`<semver>-<heads>`).
+    expect(Type.getVersion(schema)).to.match(/^0\.1\.0-[0-9a-f.]+$/);
   });
 
   test('mutable schema refs', async () => {

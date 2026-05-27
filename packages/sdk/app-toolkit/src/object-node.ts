@@ -148,8 +148,8 @@ export const createObjectNode = ({
 
   // Obj.getType uses the stored type DXN to look up the schema. For database-registered
   // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
-  // PersistentType jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
-  // Fall back to a typename query which matches the PersistentType.typename field.
+  // TypeSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
+  // Fall back to a typename query which matches the TypeSchema.typename field.
   const type = Obj.getType(object) ?? db.schemaRegistry.query({ typename }).runSync()[0];
   const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
@@ -209,8 +209,10 @@ export const createObjectNode = ({
     properties: {
       label,
       icon:
-        schema && Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular'),
-      iconHue: schema && Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue,
+        type && Type.getDatabase(type) != null
+          ? 'ph--cube--regular'
+          : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular'),
+      iconHue: type && Type.getDatabase(type) != null ? 'neutral' : iconAnnotation?.hue,
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',

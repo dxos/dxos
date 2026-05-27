@@ -64,7 +64,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     }
 
     // Use the live jsonSchema reference for reactivity.
-    const change = createEchoChangeCallback(view, Type.isMutable(type) ? type : undefined);
+    const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
     return new ProjectionModel({ view, baseSchema: type.jsonSchema, change });
   }, [type, view]);
 

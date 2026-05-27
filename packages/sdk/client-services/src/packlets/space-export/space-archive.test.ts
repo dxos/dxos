@@ -460,7 +460,7 @@ describe('SpaceArchive', () => {
 
     // Regression: persisted `Type.Type` entities (e.g. dynamic schemas embedded
     // in the Bramble exemplar snapshot) carry `@type` = `dxn:org.dxos.type.schema:0.1.0`
-    // — i.e. they're instances of the PersistentType meta-schema. The previous
+    // — i.e. they're instances of the TypeSchema meta-schema. The previous
     // `objJsonToObjectStructure` hardcoded `system.kind = 'object'` for everything
     // non-relation, which made the imported document's brand wrong, dropped them
     // from `Filter.type(Type.Type)`, and emptied the Database subgraph in

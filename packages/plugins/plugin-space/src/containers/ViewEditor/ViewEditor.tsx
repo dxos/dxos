@@ -94,7 +94,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       tags={tags}
       types={types}
       onQueryChanged={handleQueryChanged}
-      onDelete={Type.isMutable(type) ? handleDelete : undefined}
+      onDelete={Type.getDatabase(type) != null ? handleDelete : undefined}
     />
   );
 };

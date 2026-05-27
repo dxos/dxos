@@ -39,9 +39,9 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     return Array.from(this._registry.values());
   }
 
-  async register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
-  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
-  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]> {
+  async register<T extends Type.AnyEntity>(input: T[]): Promise<T[]>;
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]>;
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
     // Runtime registry only stores Type entities; the JSON-schema form of
     // `RegisterSchemaInput` is handled by the database-backed registry. Reject
     // anything else explicitly so callers don't silently drop bad input.

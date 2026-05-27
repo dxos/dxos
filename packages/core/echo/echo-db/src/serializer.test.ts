@@ -226,7 +226,7 @@ describe('Serializer', () => {
 
     // Regression: `_addSchema` was spreading the schema's TypeAnnotation
     // (`{ kind, typename, version }`) into the data props of the new
-    // PersistentType instance. That leaked `kind: 'object'` into the data
+    // TypeSchema instance. That leaked `kind: 'object'` into the data
     // namespace; `Obj.toJSON` then serialized it as a top-level field. On import
     // the entity's [KindId] brand came back wrong (Object, not Type), so
     // `Filter.type(Type.Type)` and `Type.isType` skipped it, the Database
@@ -254,7 +254,7 @@ describe('Serializer', () => {
 
       // Snapshot must NOT carry `kind` as a data field — it's the entity-kind
       // brand (lives on [KindId] / SYSTEM namespace), not a data field on
-      // PersistentType. Earlier the export side was leaking it.
+      // TypeSchema. Earlier the export side was leaking it.
       // `typename` / `version` are not data fields either; they live in
       // `ObjectMeta` (the canonical registry-provenance pair) and surface
       // through `@meta.key` / `@meta.version` in the JSON snapshot.

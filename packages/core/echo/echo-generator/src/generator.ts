@@ -108,7 +108,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   private async _maybeRegisterSchema(typename: string, schema: Type.AnyEntity): Promise<Type.AnyEntity> {
-    if (Type.isMutable(schema)) {
+    if (Type.getDatabase(schema) != null) {
       const existingSchema = this._space.internal.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;

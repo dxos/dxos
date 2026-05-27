@@ -17,7 +17,7 @@ const ATTR_RELATION_SOURCE = '@relationSource';
 const ATTR_RELATION_TARGET = '@relationTarget';
 
 /**
- * Type URI of the meta-schema (`PersistentType` / `Type.Type`). Objects with this
+ * Type URI of the meta-schema (`TypeSchema` / `Type.Type`). Objects with this
  * `@type` represent persisted ECHO type definitions and must be branded
  * `system.kind = 'type'` so `Filter.type(Type.Type)` and `Type.isType` recognize
  * them after import. Anything else defaults to `'object'` (or `'relation'` when

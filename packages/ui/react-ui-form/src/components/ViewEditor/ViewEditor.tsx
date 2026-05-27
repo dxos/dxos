@@ -85,16 +85,16 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     forwardedRef,
   ) => {
     const atomRegistry = useContext(RegistryContext);
-    const schemaReadonly = !Type.isMutable(schema);
+    const schemaReadonly = Type.getDatabase(schema) == null;
     const { t } = useTranslation(translationKey);
 
     const projectionModel = useMemo(() => {
       // Use reactive and mutable version of json schema when schema is mutable.
-      const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : toJsonSchema(schema);
+      const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : toJsonSchema(schema);
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
       // Pass schema only when mutable to allow schema mutations.
-      const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
+      const change = createEchoChangeCallback(view, Type.getDatabase(schema) != null ? schema : undefined);
 
       const model = new ProjectionModel({
         registry: atomRegistry,
@@ -233,7 +233,7 @@ type FieldListProps = Pick<ViewEditorProps, 'schema' | 'view' | 'registry' | 're
 
 const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
   const atomRegistry = useContext(RegistryContext);
-  const schemaReadonly = !Type.isMutable(schema);
+  const schemaReadonly = Type.getDatabase(schema) == null;
   const { t } = useTranslation(translationKey);
 
   // Subscribe to view changes for reactivity.
@@ -241,11 +241,11 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
 
   const projectionModel = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
-    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : toJsonSchema(schema);
+    const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : toJsonSchema(schema);
 
     // Always use createEchoChangeCallback since the view is ECHO-backed.
     // Pass schema only when mutable to allow schema mutations.
-    const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
+    const change = createEchoChangeCallback(view, Type.getDatabase(schema) != null ? schema : undefined);
 
     const model = new ProjectionModel({
       registry: atomRegistry,

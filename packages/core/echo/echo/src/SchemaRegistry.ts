@@ -83,9 +83,9 @@ export interface SchemaRegistry {
    * Registers the provided schema(s).
    *
    * @returns The persisted type entities. The entity kind of each input is
-   * preserved (an object schema comes back as `Persisted<Type.AnyObj>`), so the
-   * result can be chained into `Obj.make` / `Relation.make` without casts. Each
-   * stored schema is also a `Type.Type` record, so its `Ref` targets a
+   * preserved (an object schema comes back as `Type.AnyObj`), so the result can
+   * be chained into `Obj.make` / `Relation.make` without casts. Each stored
+   * schema is also a `Type.Type` record, so its `Ref` targets a
    * `Ref(Type.Type)` field.
    *
    * The behavior of this method depends on the state of the database.
@@ -94,8 +94,8 @@ export interface SchemaRegistry {
    * If a different schema with the same name and version exists, the method throws an error.
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
-  register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
-  register(input: RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
+  register<T extends Type.AnyEntity>(input: T[]): Promise<T[]>;
+  register(input: RegisterSchemaInput[]): Promise<Type.Type[]>;
 
   query<Q extends Types.NoExcessProperties<Query, Q>>(query?: Q & Query): QueryResult.QueryResult<Type.Type>;
 }

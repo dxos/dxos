@@ -86,7 +86,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       () => ({
         selection: { enabled: true, mode: 'multiple' },
         dataEditable: true,
-        schemaEditable: schema && Type.isMutable(schema),
+        schemaEditable: schema != null && Type.getDatabase(schema) != null,
       }),
       [],
     );

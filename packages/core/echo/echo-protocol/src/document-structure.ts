@@ -276,7 +276,7 @@ export type ObjectSystem = {
    * - For `kind === 'object'` / `'relation'` instances, this is the URI of the
    *   user-defined schema the entity was created from (e.g. `dxn:type:org.example.Person:1.0.0`).
    * - For `kind === 'type'` entities (persisted Type.Type meta-instances) this
-   *   is always the URI of the `PersistentType` meta-schema itself
+   *   is always the URI of the `TypeSchema` meta-schema itself
    *   (`dxn:org.dxos.type.schema:0.1.0`). The kind that the meta-instance
    *   _describes_ (object/relation/type) lives in `data.jsonSchema.entityKind`.
    */

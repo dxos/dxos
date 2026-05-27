@@ -35,7 +35,7 @@ import {
   ObjectMetaSchema,
   ObjectVersionId,
   ParentId,
-  PersistentType,
+  TypeSchema,
   type ReactiveHandler,
   Ref,
   RefImpl,
@@ -51,6 +51,7 @@ import {
   SchemaValidator,
   SelfURIId,
   TypeId,
+  TypeIdentifierAnnotationId,
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
@@ -443,7 +444,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (jsonSchema == null) {
       return undefined;
     }
-    const rebuilt = toEffectSchema(jsonSchema);
+    // Attach the `echo:/<id>` identifier so the cached schema matches the
+    // uncached fallback in `Type.getSchema` (which annotates the rebuilt schema
+    // with the same `TypeIdentifierAnnotation`); otherwise the cached path would
+    // silently drop the URI annotation.
+    const rebuilt = toEffectSchema(jsonSchema).annotations({
+      [TypeIdentifierAnnotationId]: EchoURI.make({ objectId: target[symbolInternals].core.id }),
+    });
     target[symbolInternals].cachedStaticSlot = rebuilt;
     return rebuilt;
   }
@@ -505,7 +512,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Stored schemas surface through the database schema registry so consumers
     // see the registered Type.Type entity rather than the raw persisted object.
     const database = target[symbolInternals].database;
-    if (database && isInstanceOf(PersistentType, object)) {
+    if (database && isInstanceOf(TypeSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 

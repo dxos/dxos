@@ -98,7 +98,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const viewIndex = buildViewIndex(get, space, allSchemas);
 
         const visibleSchemas = userSchemas.filter((schema) => {
-          if (Type.isMutable(schema)) {
+          if (Type.getDatabase(schema) != null) {
             return true;
           }
           const typename = Type.getTypename(schema);
@@ -218,7 +218,8 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
         const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
-        const deletable = Type.isMutable(schema) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+        const deletable =
+          Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(createSchemaActions({ schema, space, deletable, capabilities }));
       },
@@ -251,24 +252,30 @@ const createSchemaNode = ({
   get: Atom.Context;
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
-  const iconAnnotation = !Type.isMutable(schema)
-    ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
-    : undefined;
+  const iconAnnotation =
+    Type.getDatabase(schema) == null
+      ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
+      : undefined;
   const { label, nodeId } = Match.value(schema).pipe(
-    Match.when(Type.isMutable, (mutableSchema) => {
-      const snapshot = get(AtomObj.make(mutableSchema));
-      return {
-        label: (snapshot as { name?: string }).name || ['object-name.placeholder', { ns: Type.getTypename(Type.Type) }],
-        nodeId: typename,
-      };
-    }),
+    Match.when(
+      (value: Type.AnyEntity) => Type.getDatabase(value) != null,
+      (mutableSchema) => {
+        const snapshot = get(AtomObj.make(mutableSchema));
+        return {
+          label:
+            (snapshot as { name?: string }).name || ['object-name.placeholder', { ns: Type.getTypename(Type.Type) }],
+          nodeId: typename,
+        };
+      },
+    ),
     Match.orElse(() => ({
       label: getDynamicLabel('typename.label', typename, { count: 2, defaultValue: typename }),
       nodeId: typename,
     })),
   );
-  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular');
-  const iconHue = Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue;
+  const icon =
+    Type.getDatabase(schema) != null ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular');
+  const iconHue = Type.getDatabase(schema) != null ? 'neutral' : iconAnnotation?.hue;
   return Node.make({
     id: nodeId,
     type: STATIC_SCHEMA_TYPE,
@@ -357,7 +364,7 @@ const createSchemaActions = ({
     Node.makeAction({
       id: SpaceOperation.RenameObject.meta.key,
       data: (params?: Node.InvokeProps) =>
-        Type.isMutable(schema)
+        Type.getDatabase(schema) != null
           ? Operation.invoke(SpaceOperation.RenameObject, {
               object: schema,
               caller: `${params?.caller}:${params?.parent?.id}`,
@@ -366,7 +373,7 @@ const createSchemaActions = ({
       properties: {
         label: getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
-        disabled: !Type.isMutable(schema),
+        disabled: Type.getDatabase(schema) == null,
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
       },
@@ -374,7 +381,7 @@ const createSchemaActions = ({
     Node.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
-        Type.isMutable(schema)
+        Type.getDatabase(schema) != null
           ? Operation.invoke(SpaceOperation.RemoveObjects, {
               objects: [schema],
             })

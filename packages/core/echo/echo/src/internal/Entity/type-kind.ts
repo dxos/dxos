@@ -17,7 +17,7 @@ import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
  * Type-kind schema marker — produced by {@link EchoTypeKindSchema}.
  *
  * Distinguishes meta-schemas (entities of `EntityKind.Type`, such as the
- * built-in `Type.Type` PersistentType) from object and relation types.
+ * built-in `Type.Type` TypeSchema) from object and relation types.
  */
 export type EchoTypeKindSchema<
   Self extends Schema.Schema.Any,

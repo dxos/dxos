@@ -211,8 +211,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
       case TypeEntityId: {
         // The back-reference to the type entity is metadata — return the raw
-        // value so we don't try to wrap a frozen `Type.Type` entity in a
-        // reactive proxy (which would fail the SchemaId-in-target invariant).
+        // value so we don't re-wrap an already-reactive `Type.Type` entity in
+        // another proxy (which would fail the SchemaId-in-target invariant).
         return Reflect.get(target, prop, receiver);
       }
       case StaticTypeSchemaSlot: {
@@ -225,13 +225,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         //   2. Not applicable here — persisted `Type.Type` entities are
         //      wrapped by `EchoHandler`, which exposes the slot via its own
         //      `get` trap (rebuilding from `data.jsonSchema`).
-        //   3. In-memory pre-persist `PersistentType` entities (produced by
-        //      `Type.makeObjectFromJsonSchema`) — no slot set, but they carry
-        //      a `jsonSchema` data field; rebuild from it on each read. No
-        //      cache: this path is hit a few times per object-creation, and
-        //      `Type.addFields` / `Type.updateFields` mutate `jsonSchema` in
-        //      place — a cache here would need its own invalidation hook,
-        //      which isn't worth the complexity for the access frequency.
+        //   3. In-memory `TypeSchema` entities (produced by `Type.makeObject`
+        //      / `Type.makeObjectFromJsonSchema`) — rebuilt from the `jsonSchema`
+        //      data field and CACHED on the slot. The set-trap invalidates the
+        //      cache whenever `jsonSchema` is mutated (`Type.addFields` etc.).
         const existing = Reflect.get(target, prop, receiver);
         if (existing !== undefined) {
           return existing;
@@ -240,7 +237,9 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (jsonSchema == null) {
           return undefined;
         }
-        return toEffectSchema(jsonSchema);
+        const rebuilt = toEffectSchema(jsonSchema);
+        defineHiddenProperty(target, StaticTypeSchemaSlot, rebuilt);
+        return rebuilt;
       }
     }
 
@@ -279,6 +278,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       batchEvents(() => {
         const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, prop, value);
         result = Reflect.set(target, prop, preparedValue, receiver);
+        // Invalidate the cached source Effect Schema when `jsonSchema` changes
+        // (e.g. `Type.addFields`) so `Type.getSchema` rebuilds from the new shape.
+        if (prop === 'jsonSchema') {
+          Reflect.deleteProperty(target, StaticTypeSchemaSlot);
+        }
         // Queue notification instead of emitting immediately (batched).
         if (isInitialized) {
           queueNotification(echoRoot);

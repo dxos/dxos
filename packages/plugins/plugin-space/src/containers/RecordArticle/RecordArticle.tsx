@@ -16,13 +16,13 @@ import { meta } from '#meta';
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
-  // fall back to typename query which matches PersistentType.typename.
+  // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const schema =
     Obj.getType(subject) ?? (typename && db ? db.schemaRegistry.query({ typename }).runSync()[0] : undefined);
   const icon =
-    schema && Type.isMutable(schema)
+    schema && Type.getDatabase(schema) != null
       ? 'ph--cube--regular'
       : Function.pipe(
           Option.fromNullable(schema),

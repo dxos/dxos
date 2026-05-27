@@ -42,34 +42,6 @@ export const StaticTypeSchemaSlot = '~@dxos/echo/Type.StaticSchema' as const;
 export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
 
 /**
- * Marker stamped ONLY on static (in-memory) `Type.Type` entities produced by
- * `makeEchoTypeSchema` (i.e. `Type.makeObject` / `Type.makeRelation`). Persisted
- * type entities — served through the echo-handler proxy — never carry it.
- *
- * Used to discriminate static vs persisted type entities now that static
- * entities also have a (non-identity) `id`: a static type resolves its URI to
- * the typename DXN, a persisted one to its `echo:/<id>`. NOTE: the
- * `StaticTypeSchemaSlot` cannot serve this role — the persisted proxy rebuilds
- * it lazily, so both flavours expose it.
- *
- * Stored as a string key for declaration portability (see KindId comment above).
- */
-export const StaticTypeMarkerId = '~@dxos/echo/Type.StaticMarker' as const;
-export type StaticTypeMarkerId = typeof StaticTypeMarkerId;
-
-/**
- * Whether a value is a static (in-memory) `Type.Type` entity — i.e. it carries
- * the {@link StaticTypeMarkerId}. Returns `false` for persisted type entities,
- * raw schemas, and non-object inputs.
- */
-export const isStaticTypeEntity = (value: unknown): boolean => {
-  if (value == null || typeof value !== 'object') {
-    return false;
-  }
-  return (value as { [StaticTypeMarkerId]?: boolean })[StaticTypeMarkerId] === true;
-};
-
-/**
  * Read the hidden `StaticTypeSchemaSlot` off any value that may carry one.
  * Returns `undefined` for raw schemas (no slot) and non-object inputs.
  * Single point-of-cast for the slot lookup.
