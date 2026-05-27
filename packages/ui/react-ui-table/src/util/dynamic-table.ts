@@ -40,20 +40,14 @@ export const getBaseSchema = ({
   properties?: TablePropertyDefinition[];
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
 }): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
-  if (typename && properties) {
-    const type = getSchemaFromPropertyDefinitions(typename, properties);
-    // `getSchemaFromPropertyDefinitions` is always called with a typename, so
-    // the returned Type entity always carries one (the optionality on Type.Type
-    // covers anonymous drafts which this codepath doesn't produce).
-    // Snapshot through toJsonSchema — type.jsonSchema is ECHO-backed and can't be mutated directly.
+  // Resolve a Type entity from either property definitions or a supplied schema.
+  const type = typename && properties ? getSchemaFromPropertyDefinitions(typename, properties) : schema;
+  if (type) {
+    // `toJsonSchema` returns a fresh, mutable snapshot (the entity's own jsonSchema is
+    // ECHO-backed and must be mutated via `Type.update`, not directly).
     return {
-      typename: Type.getTypename(type),
-      jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)) as Types.DeepMutable<JsonSchema.JsonSchema>,
-    };
-  } else if (schema) {
-    return {
-      typename: Type.getTypename(schema)!,
-      jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(schema)) as Types.DeepMutable<JsonSchema.JsonSchema>,
+      typename: Type.getTypename(type)!,
+      jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)),
     };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };

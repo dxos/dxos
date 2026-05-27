@@ -9,14 +9,12 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
-import type * as Types from 'effect/Types';
 
 import {
   type Database,
   Entity,
   Filter,
   Format,
-  JsonSchema,
   Obj,
   Query,
   Ref,
@@ -46,7 +44,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type ProjectionChangeCallback, ProjectionModel, createEchoChangeCallback } from '../projection';
+import { ProjectionModel, createEchoChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 type MakeProps = {
@@ -55,28 +53,11 @@ type MakeProps = {
   queryRaw?: string;
   jsonSchema: JsonSchemaType; // Base schema.
   /** Persisted `Type.Type` entity backing `jsonSchema`, when one exists; enables `Type.update` on schema edits. */
-  schema?: Type.AnyEntity;
+  type?: Type.AnyEntity;
   overrideSchema?: JsonSchemaType; // Override schema.
   fields?: string[];
   pivotFieldName?: string;
 };
-
-/**
- * Build the projection change callback. Both the view and (when present) the schema are
- * ECHO entities, so route their mutations through `Obj.update` / `Type.update`. When no
- * schema entity is available (an ad-hoc, unpersisted `jsonSchema`), mutate it directly.
- */
-const makeChangeCallback = (
-  view: View.View,
-  jsonSchema: JsonSchemaType,
-  schema?: Type.AnyEntity,
-): ProjectionChangeCallback =>
-  schema != null
-    ? createEchoChangeCallback(view, schema)
-    : {
-        projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-        schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-      };
 
 /**
  * Create view from provided schema.
@@ -85,7 +66,7 @@ export const make = ({
   query,
   queryRaw,
   jsonSchema,
-  schema,
+  type,
   overrideSchema,
   fields,
   pivotFieldName,
@@ -101,7 +82,7 @@ export const make = ({
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: makeChangeCallback(view, jsonSchema, schema),
+    change: createEchoChangeCallback(view, type),
   });
   projection.normalizeView();
   const effectSchema = toEffectSchema(jsonSchema);
@@ -157,7 +138,7 @@ export const makeWithReferences = async ({
   query,
   queryRaw,
   jsonSchema,
-  schema,
+  type,
   overrideSchema,
   fields,
   pivotFieldName,
@@ -167,7 +148,7 @@ export const makeWithReferences = async ({
     query,
     queryRaw,
     jsonSchema,
-    schema,
+    type,
     overrideSchema,
     fields,
     pivotFieldName,
@@ -176,7 +157,7 @@ export const makeWithReferences = async ({
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: makeChangeCallback(view, jsonSchema, schema),
+    change: createEchoChangeCallback(view, type),
   });
   const effectSchema = toEffectSchema(jsonSchema);
   const properties = getProperties(effectSchema.ast);
@@ -285,7 +266,7 @@ export const makeFromDatabase = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      schema: schema!,
+      type: schema!,
       registry: db.schemaRegistry,
     }),
   };
