@@ -52,6 +52,7 @@ export const translations = [
 
         'settings.data-store.label': 'Data Store',
 
+        'reset-data.label': 'Reset data (ERASES ALL DATA)',
         'open-debug-panel.label': 'Show Debug',
         'client.label': 'Client',
         'config.label': 'Config',
