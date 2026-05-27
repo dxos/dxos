@@ -236,28 +236,28 @@ export const makeFromDatabase = async ({
   ...props
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
-    const [schema] = await db.schemaRegistry.register([createDefaultSchema()]);
+    const [type] = await db.schemaRegistry.register([createDefaultSchema()]);
     // `register` returns a persisted `Type.Type` entity; its typename lives in the
     // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
-    typename = Type.getTypename(schema);
+    typename = Type.getTypename(type);
   } else {
     createInitial = 0;
   }
 
-  const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
-  const jsonSchema = schema && schema.jsonSchema;
+  const type = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
+  const jsonSchema = type && type.jsonSchema;
   invariant(jsonSchema, `Schema not found: ${typename}`);
-  // `schema` is a `Type.Type` entity (type-kind brand). The kind it *describes*
+  // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
   // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
   // `Entity.getKind` rather than the entity-level `Type.isObject` guard.
-  const effectSchema = schema && Type.getSchema(schema);
+  const effectSchema = type && Type.getSchema(type);
   invariant(
     effectSchema && Entity.getKind(effectSchema) === Entity.Kind.Object,
     `Schema is not an object schema: ${typename}`,
   );
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(Type.assertObject(schema!), {}));
+    db.add(Obj.make(Type.assertObject(type!), {}));
   });
 
   return {
@@ -266,7 +266,7 @@ export const makeFromDatabase = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      type: schema!,
+      type: type!,
       registry: db.schemaRegistry,
     }),
   };

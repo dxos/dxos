@@ -6,7 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Format, JsonSchema, Obj, Type, View } from '@dxos/echo';
+import { Format, Obj, Type, View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import {
   type JsonProp,
@@ -45,7 +45,7 @@ export type ProjectionChangeCallback = {
   /** Callback to wrap projection mutations. */
   projection: (mutate: (mutableProjection: Mutable<View.Projection>) => void) => void;
   /** Callback to wrap schema mutations. */
-  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchema.JsonSchema>) => void) => void;
+  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchemaType>) => void) => void;
 };
 
 /**
@@ -63,7 +63,11 @@ export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntit
       ? () => {
           throw new Error('Schema is not mutable');
         }
-      : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>)),
+      : (mutate) =>
+          // `Type.update`'s draft exposes `jsonSchema` as the readonly `JsonSchemaType`
+          // (its `examples` is a `readonly any[]`); cast to the deep-mutable view for the
+          // mutation callback. The change context makes it mutable at runtime.
+          Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>)),
 });
 
 /**

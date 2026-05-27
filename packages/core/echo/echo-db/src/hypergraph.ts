@@ -283,7 +283,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           throw new Error('Cross-space references are not yet supported');
         }
 
-        const feedEchoId = context.feed;
+        const feedEchoId = context.feed && EchoURI.isEchoURI(context.feed) ? context.feed : undefined;
         if (feedEchoId) {
           const feedSpaceId = EchoURI.getSpaceId(feedEchoId) ?? context.space;
           const queueId = EchoURI.getObjectId(feedEchoId);

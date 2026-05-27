@@ -5,6 +5,7 @@
 import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
@@ -14,6 +15,7 @@ import {
   Format,
   type JsonPath,
   type JsonProp,
+  type JsonSchemaType,
   Ref,
   TypeEnum,
   getPropertyMetaAnnotation,
@@ -793,7 +795,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     Type.update(mutable, (draft) => {
-      (draft.jsonSchema as any).properties!.status = { type: 'string' };
+      (draft.jsonSchema as Types.DeepMutable<JsonSchemaType>).properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 
