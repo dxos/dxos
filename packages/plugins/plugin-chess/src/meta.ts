@@ -3,9 +3,9 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
-import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
   id: DXN.make('org.dxos.plugin.chess'),

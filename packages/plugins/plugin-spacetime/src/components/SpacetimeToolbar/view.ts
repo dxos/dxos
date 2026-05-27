@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
-
 import { DXN } from '@dxos/keys';
+import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -40,7 +39,11 @@ export const createViewActions =
         );
         group.action(
           'showDebug',
-          { label: ['view.debug.label', { ns: DXN.getName(meta.id) }], checked: editorState.showDebug, icon: 'ph--bug--regular' },
+          {
+            label: ['view.debug.label', { ns: DXN.getName(meta.id) }],
+            checked: editorState.showDebug,
+            icon: 'ph--bug--regular',
+          },
           () => update({ showDebug: !editorState.showDebug }),
         );
       },

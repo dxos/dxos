@@ -5,10 +5,9 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
-
-import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 import { type Settings } from '#types';

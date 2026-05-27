@@ -15,7 +15,11 @@ import { meta } from '#meta';
 const FILESYSTEM_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 export const OpenDirectory = Operation.make({
-  meta: { key: DXN.make(`${FILESYSTEM_OPERATION}.openDirectory`), name: 'Open Folder', icon: 'ph--folder-open--regular' },
+  meta: {
+    key: DXN.make(`${FILESYSTEM_OPERATION}.openDirectory`),
+    name: 'Open Folder',
+    icon: 'ph--folder-open--regular',
+  },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Union(Schema.Void, Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) })),

@@ -50,7 +50,11 @@ export const Create = Operation.make({
 });
 
 export const CreateMarkdown = Operation.make({
-  meta: { key: DXN.make(`${MARKDOWN_OPERATION}.create`), name: 'Create Markdown Document', icon: 'ph--file-text--regular' },
+  meta: {
+    key: DXN.make(`${MARKDOWN_OPERATION}.create`),
+    name: 'Create Markdown Document',
+    icon: 'ph--file-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -80,7 +84,11 @@ export const Open = Operation.make({
 });
 
 export const ScrollToAnchor = Operation.make({
-  meta: { key: DXN.make(`${MARKDOWN_OPERATION}.scrollToAnchor`), name: 'Scroll To Anchor', icon: 'ph--anchor-simple--regular' },
+  meta: {
+    key: DXN.make(`${MARKDOWN_OPERATION}.scrollToAnchor`),
+    name: 'Scroll To Anchor',
+    icon: 'ph--anchor-simple--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),

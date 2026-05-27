@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { Database } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 export const Fibonacci = Operation.make({
   meta: {

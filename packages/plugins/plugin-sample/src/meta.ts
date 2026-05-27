@@ -8,8 +8,8 @@
 // The `iconHue` sets the color used in the navigation tree.
 
 import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
 import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
   id: DXN.make('org.dxos.plugin.sample'),

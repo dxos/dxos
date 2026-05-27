@@ -48,7 +48,11 @@ export const JoinIdentity = Operation.make({
 });
 
 export const ShareIdentity = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.shareIdentity`), name: 'Share Identity', icon: 'ph--share-network--regular' },
+  meta: {
+    key: DXN.make(`${CLIENT_OPERATION}.shareIdentity`),
+    name: 'Share Identity',
+    icon: 'ph--share-network--regular',
+  },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
@@ -78,7 +82,11 @@ export const CreateAgent = Operation.make({
 });
 
 export const CreateRecoveryCode = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.createRecoveryCode`), name: 'Create Recovery Code', icon: 'ph--key--regular' },
+  meta: {
+    key: DXN.make(`${CLIENT_OPERATION}.createRecoveryCode`),
+    name: 'Create Recovery Code',
+    icon: 'ph--key--regular',
+  },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,

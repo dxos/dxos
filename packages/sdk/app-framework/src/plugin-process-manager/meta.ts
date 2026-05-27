@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '../core';
 import { DXN } from '@dxos/keys';
+
+import { type Plugin } from '../core';
 
 export const meta: Plugin.Meta = {
   id: DXN.make('org.dxos.plugin.processManager'),

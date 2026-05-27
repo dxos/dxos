@@ -3,8 +3,8 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
 import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
 // TODO(wittjosiah): Rename plugin (package + id) from `native` to `app` to match the user-facing name.
 export const meta: Plugin.Meta = {

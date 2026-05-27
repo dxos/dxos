@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
-
 import { DXN } from '@dxos/keys';
+import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -34,7 +33,11 @@ export const createSelectionModeActions =
         for (const [mode, icon] of Object.entries(selectionModes)) {
           group.action(
             mode,
-            { label: [`selection-mode.${mode}.label`, { ns: DXN.getName(meta.id) }], checked: currentMode === mode, icon },
+            {
+              label: [`selection-mode.${mode}.label`, { ns: DXN.getName(meta.id) }],
+              checked: currentMode === mode,
+              icon,
+            },
             () => onModeChange(mode as SelectionMode),
           );
         }

@@ -132,11 +132,14 @@ export namespace DeckAction {
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${DXN.getName(meta.id)}.action.update-plank-size`, {
-    input: Schema.Struct({
-      id: Schema.String,
-      size: Schema.Number,
-    }),
-    output: Schema.Void,
-  }) {}
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(
+    `${DXN.getName(meta.id)}.action.update-plank-size`,
+    {
+      input: Schema.Struct({
+        id: Schema.String,
+        size: Schema.Number,
+      }),
+      output: Schema.Void,
+    },
+  ) {}
 }

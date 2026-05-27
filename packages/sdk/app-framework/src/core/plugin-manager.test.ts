@@ -941,7 +941,10 @@ describe('PluginManager', () => {
       const EventB = ActivationEvent.make('org.dxos.test.event-b');
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define({ id: DXN.make('org.dxos.test.concurrentPlugin'), name: 'Concurrent Plugin' }).pipe(
+      const ConcurrentPlugin = Plugin.define({
+        id: DXN.make('org.dxos.test.concurrentPlugin'),
+        name: 'Concurrent Plugin',
+      }).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
@@ -1486,7 +1489,10 @@ describe('PluginManager', () => {
     it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
       Effect.gen(function* () {
         const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
-        const SlowPlugin = Plugin.define({ id: DXN.make('org.dxos.test.slowActivation'), name: 'Slow Activation' }).pipe(
+        const SlowPlugin = Plugin.define({
+          id: DXN.make('org.dxos.test.slowActivation'),
+          name: 'Slow Activation',
+        }).pipe(
           Plugin.addModule({
             id: 'Slow',
             activatesOn: SlowEvent,
@@ -1676,7 +1682,14 @@ describe('PluginManager', () => {
     // Build a small plugin with a `dependsOn` chain. The helper keeps each test
     // focused on the dependency semantics rather than module wiring.
     const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
-      Plugin.make(Plugin.define({ id: id as unknown as DXN.DXN, name: id, dependsOn: dependsOn as unknown as DXN.DXN[] | undefined, tags }))();
+      Plugin.make(
+        Plugin.define({
+          id: id as unknown as DXN.DXN,
+          name: id,
+          dependsOn: dependsOn as unknown as DXN.DXN[] | undefined,
+          tags,
+        }),
+      )();
 
     it.effect('enable resolves the transitive closure in dependency-first order', () =>
       Effect.gen(function* () {

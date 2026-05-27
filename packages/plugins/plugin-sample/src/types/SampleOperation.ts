@@ -24,7 +24,11 @@ const SAMPLE_OPERATION = `${DXN.getName(meta.id)}.operation`;
 // - `input`: Effect/Schema defining the expected input shape.
 // - `output`: Effect/Schema defining the return shape.
 export const CreateSampleItem = Operation.make({
-  meta: { key: DXN.make(`${SAMPLE_OPERATION}.createSampleItem`), name: 'Create Sample Item', icon: 'ph--plus--regular' },
+  meta: {
+    key: DXN.make(`${SAMPLE_OPERATION}.createSampleItem`),
+    name: 'Create Sample Item',
+    icon: 'ph--plus--regular',
+  },
   input: Schema.Struct({
     name: Schema.optional(Schema.String).annotations({ description: 'Display name for the item.' }),
   }),

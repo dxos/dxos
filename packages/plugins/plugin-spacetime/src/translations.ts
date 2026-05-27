@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 import { DXN } from '@dxos/keys';
+import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Model, Scene } from '#types';

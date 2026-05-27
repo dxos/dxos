@@ -31,10 +31,13 @@ export namespace ClientAction {
     data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   });
 
-  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${DXN.getName(meta.id)}.action.create-identity`, {
-    input: ProfileSchema,
-    output: IdentitySchema,
-  }) {}
+  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(
+    `${DXN.getName(meta.id)}.action.create-identity`,
+    {
+      input: ProfileSchema,
+      output: IdentitySchema,
+    },
+  ) {}
 
   export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${DXN.getName(meta.id)}.action.join-identity`, {
     input: Schema.Struct({
@@ -43,15 +46,21 @@ export namespace ClientAction {
     output: Schema.Void,
   }) {}
 
-  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(`${DXN.getName(meta.id)}.action.share-identity`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(
+    `${DXN.getName(meta.id)}.action.share-identity`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 
-  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${DXN.getName(meta.id)}.action.recover-identity`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(
+    `${DXN.getName(meta.id)}.action.recover-identity`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 
   export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${DXN.getName(meta.id)}.action.reset-storage`, {
     input: Schema.Struct({
@@ -73,15 +82,21 @@ export namespace ClientAction {
     },
   ) {}
 
-  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${DXN.getName(meta.id)}.action.create-passkey`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(
+    `${DXN.getName(meta.id)}.action.create-passkey`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 
-  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(`${DXN.getName(meta.id)}.action.redeem-passkey`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(
+    `${DXN.getName(meta.id)}.action.redeem-passkey`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 
   export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${DXN.getName(meta.id)}.action.redeem-token`, {
     input: Schema.Struct({

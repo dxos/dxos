@@ -14,7 +14,11 @@ import { Annotation, Collection, Database, Format, Ref, DXN } from '@dxos/echo';
 import * as Support from './Support';
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: DXN.make('org.dxos.function.support.onCreateSpace'), name: 'On Create Space', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make('org.dxos.function.support.onCreateSpace'),
+    name: 'On Create Space',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,

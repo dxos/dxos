@@ -19,7 +19,11 @@ import { meta } from '#meta';
 const ASSISTANT_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: DXN.make(`${ASSISTANT_OPERATION}.onCreateSpace`), name: 'On Create Space', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make(`${ASSISTANT_OPERATION}.onCreateSpace`),
+    name: 'On Create Space',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
@@ -43,7 +47,11 @@ export const CreateChat = Operation.make({
 });
 
 export const UpdateChatName = Operation.make({
-  meta: { key: DXN.make(`${ASSISTANT_OPERATION}.updateChatName`), name: 'Update Chat Name', icon: 'ph--pencil--regular' },
+  meta: {
+    key: DXN.make(`${ASSISTANT_OPERATION}.updateChatName`),
+    name: 'Update Chat Name',
+    icon: 'ph--pencil--regular',
+  },
   services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
     chat: Chat.Chat,
@@ -52,7 +60,11 @@ export const UpdateChatName = Operation.make({
 });
 
 export const SetCurrentChat = Operation.make({
-  meta: { key: DXN.make(`${ASSISTANT_OPERATION}.setCurrentChat`), name: 'Set Current Chat', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: DXN.make(`${ASSISTANT_OPERATION}.setCurrentChat`),
+    name: 'Set Current Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     companionTo: Obj.Unknown,

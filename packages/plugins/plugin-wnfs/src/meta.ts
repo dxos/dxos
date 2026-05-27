@@ -3,9 +3,9 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { meta as fileMeta } from '@dxos/plugin-file';
 import { trim } from '@dxos/util';
-import { DXN } from '@dxos/keys';
 
 export const meta: Plugin.Meta = {
   id: DXN.make('org.dxos.plugin.wnfs'),

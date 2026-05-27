@@ -3,8 +3,8 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
-import { trim } from '@dxos/util';
 import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
   id: DXN.make('org.dxos.plugin.feed'),

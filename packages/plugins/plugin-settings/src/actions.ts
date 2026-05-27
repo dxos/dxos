@@ -19,8 +19,11 @@ export namespace SettingsAction {
     output: Schema.Void,
   }) {}
 
-  export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(`${DXN.getName(meta.id)}.openPluginRegistry`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+  export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(
+    `${DXN.getName(meta.id)}.openPluginRegistry`,
+    {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  ) {}
 }

@@ -17,7 +17,11 @@ import * as Outline from './Outline';
 const OUTLINER_OPERATION = `${DXN.getName(meta.id)}.operation`;
 
 export const CreateOutline = Operation.make({
-  meta: { key: DXN.make(`${OUTLINER_OPERATION}.createOutline`), name: 'Create Outline', icon: 'ph--list-bullets--regular' },
+  meta: {
+    key: DXN.make(`${OUTLINER_OPERATION}.createOutline`),
+    name: 'Create Outline',
+    icon: 'ph--list-bullets--regular',
+  },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
   }),

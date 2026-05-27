@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { ContentBlock } from '@dxos/types';
 import { DXN } from '@dxos/keys';
+import { ContentBlock } from '@dxos/types';
 
 const COLLABORATION_OPERATION = 'org.dxos.app-framework.collaboration.operation';
 

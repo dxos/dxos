@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Channel } from '@dxos/types';
 import { DXN } from '@dxos/keys';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -30,7 +30,11 @@ export const Create = Operation.make({
 });
 
 export const SetActive = Operation.make({
-  meta: { key: DXN.make(`${MEETING_OPERATION}.setActive`), name: 'Set Active Meeting', icon: 'ph--video-camera--regular' },
+  meta: {
+    key: DXN.make(`${MEETING_OPERATION}.setActive`),
+    name: 'Set Active Meeting',
+    icon: 'ph--video-camera--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Schema.optional(Meeting.Meeting),
@@ -56,7 +60,11 @@ export const HandlePayload = Operation.make({
 });
 
 export const Summarize = Operation.make({
-  meta: { key: DXN.make(`${MEETING_OPERATION}.summarize`), name: 'Summarize Meeting', icon: 'ph--text-align-left--regular' },
+  meta: {
+    key: DXN.make(`${MEETING_OPERATION}.summarize`),
+    name: 'Summarize Meeting',
+    icon: 'ph--text-align-left--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     meeting: Meeting.Meeting,

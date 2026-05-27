@@ -96,7 +96,11 @@ export const Select = Operation.make({
 });
 
 export const ToggleResolved = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.toggleResolved`), name: 'Toggle Resolved', icon: 'ph--check-circle--regular' },
+  meta: {
+    key: DXN.make(`${THREAD_OPERATION}.toggleResolved`),
+    name: 'Toggle Resolved',
+    icon: 'ph--check-circle--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     thread: Thread.Thread,
@@ -140,7 +144,11 @@ export const DeleteMessage = Operation.make({
  * Restore a deleted thread (inverse of Delete).
  */
 export const Restore = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.restore`), name: 'Restore Thread', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: {
+    key: DXN.make(`${THREAD_OPERATION}.restore`),
+    name: 'Restore Thread',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     thread: Thread.Thread.annotations({ description: 'The thread to restore.' }),

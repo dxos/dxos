@@ -4,8 +4,8 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { pinnedWorkspaceId } from '@dxos/app-toolkit';
-import { trim } from '@dxos/util';
 import { DXN } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
 export const REGISTRY_ID = pinnedWorkspaceId('dxos:plugin-registry');
 export const REGISTRY_KEY = 'plugin-registry';

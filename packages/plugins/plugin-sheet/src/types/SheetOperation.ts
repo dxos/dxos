@@ -49,7 +49,11 @@ export const DropAxis = Operation.make({
 });
 
 export const ScrollToAnchor = Operation.make({
-  meta: { key: DXN.make(`${SHEET_OPERATION}.scrollToAnchor`), name: 'Scroll To Anchor', icon: 'ph--anchor-simple--regular' },
+  meta: {
+    key: DXN.make(`${SHEET_OPERATION}.scrollToAnchor`),
+    name: 'Scroll To Anchor',
+    icon: 'ph--anchor-simple--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the sheet.' }),
@@ -63,7 +67,11 @@ export const ScrollToAnchor = Operation.make({
  * Restore a dropped axis (inverse of DropAxis).
  */
 export const RestoreAxis = Operation.make({
-  meta: { key: DXN.make(`${SHEET_OPERATION}.restoreAxis`), name: 'Restore Axis', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: {
+    key: DXN.make(`${SHEET_OPERATION}.restoreAxis`),
+    name: 'Restore Axis',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   input: Schema.Struct({
     model: Schema.Any.annotations({ description: 'The sheet model.' }),
     axis: Axis.annotations({ description: 'The axis type (row or col).' }),
