@@ -134,3 +134,9 @@ export const Lattice: Story = {
     variant: 'lattice',
   },
 };
+
+export const Swarm: Story = {
+  args: {
+    variant: 'swarm',
+  },
+};
