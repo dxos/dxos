@@ -14,6 +14,7 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ObjectId } from '@dxos/protocols';
 
@@ -380,6 +381,11 @@ export interface Info {
    * Parameters of the process.
    */
   readonly params: Params;
+
+  /**
+   * Space that this process is associated with.
+   */
+  readonly space: SpaceId | undefined;
 
   /**
    * State of the process.
