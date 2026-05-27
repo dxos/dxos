@@ -25,7 +25,7 @@ describe('Relations', () => {
     await testBuilder.close();
   });
 
-  test('getSource throws when source object is deleted', async () => {
+  test('getSource throws when source object is deleted', async ({ expect }) => {
     // Normal setup: all three objects in the same database.
     const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
