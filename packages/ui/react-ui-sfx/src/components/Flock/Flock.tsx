@@ -17,6 +17,8 @@ import { Vec2 } from '../../util';
 const FLOCKMATE_RADIUS = 60;
 const SEPARATION_DISTANCE = 30;
 
+export type Dimensions = { width: number; height: number };
+
 export type FlockBoid = {
   position: Vec2;
   velocity: Vec2;
@@ -29,8 +31,6 @@ export type FlockObstacle = {
   position: Vec2;
   radius: number;
 };
-
-type Dimensions = { width: number; height: number };
 
 export type FlockStartingPosition = 'Random' | 'Circle' | 'CircleRandom' | 'Sine' | 'Phyllotaxis';
 export type FlockColoring = 'Movement' | 'Grey' | 'Rainbow';
@@ -170,7 +170,6 @@ const renderObstacles = (context: CanvasRenderingContext2D, obstacles: FlockObst
 
 const tick = (
   canvas: HTMLCanvasElement,
-  offscreenCanvas: HTMLCanvasElement,
   { width, height }: Dimensions,
   boids: FlockBoid[],
   obstacles: FlockObstacle[],
@@ -178,16 +177,16 @@ const tick = (
 ) => {
   const { trail, maxVelocity, alignment, cohesion, separation } = config;
 
-  const offscreenContext = offscreenCanvas.getContext('2d')!;
-  offscreenContext.globalAlpha = trail;
-  offscreenContext.clearRect(0, 0, width, height);
-  offscreenContext.drawImage(canvas, 0, 0, width, height);
-
-  renderObstacles(offscreenContext, obstacles);
-
+  // Trail fade: paint semi-transparent black over the previous frame so older
+  // pixels darken additively toward true #000. The alternative (alpha-blitting
+  // onto a cleared buffer) stalls at α ≈ 3–4 / 255 due to integer rounding,
+  // leaving a permanent ~#0f residue over a dark page.
   const context = canvas.getContext('2d')!;
-  context.clearRect(0, 0, width, height);
-  context.drawImage(offscreenCanvas, 0, 0, width, height);
+  context.fillStyle = `rgba(0, 0, 0, ${1 - trail})`;
+  context.fillRect(0, 0, width, height);
+
+  // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
+  renderObstacles(context, obstacles);
 
   boids.forEach((b1) => {
     const forces: Record<'alignment' | 'cohesion' | 'separation' | 'avoidance', Vec2> = {
@@ -218,7 +217,6 @@ const tick = (
 
         const diff = b2.position.clone().subtract(b1.position);
         const distance = diff.length();
-
         if (distance && distance < SEPARATION_DISTANCE) {
           forces.separation.add(diff.clone().scaleTo(-1 / distance));
           forces.separation.active = true;
@@ -259,7 +257,7 @@ const tick = (
   boids.forEach((boid) => updateBoid(boid, context, { width, height }, config));
 };
 
-export const generateFlockObstacles = (dimensions: Dimensions, numObstacles: number): FlockObstacle[] => {
+const generateFlockObstacles = (dimensions: Dimensions, numObstacles: number): FlockObstacle[] => {
   const obstacles: FlockObstacle[] = [];
   for (let i = 0; i < numObstacles; i++) {
     obstacles.push({
@@ -270,7 +268,7 @@ export const generateFlockObstacles = (dimensions: Dimensions, numObstacles: num
   return obstacles;
 };
 
-export const generateFlockBoids = (
+const generateFlockBoids = (
   dimensions: Dimensions,
   config: { num: number; maxVelocity: number; startingPosition: FlockStartingPosition },
 ): FlockBoid[] => {
@@ -328,7 +326,7 @@ export const Flock = ({
   numObstacles = 0,
   coloring = 'Movement',
   radius = 2,
-  trail = 15,
+  trail = 10,
   maxVelocity = 0.5,
   alignment = 3,
   cohesion = 3,
@@ -336,10 +334,6 @@ export const Flock = ({
   avoidance = 3,
 }: FlockProps) => {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const buffer = useRef<HTMLCanvasElement>(null);
-  // Direct ResizeObserver — `react-resize-detector` was flaky in our Storybook
-  // environment (initial measurement sometimes never fired). Matches the
-  // pattern used by SVG.Root.
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [{ width, height }, setSize] = useState<Dimensions>({ width: 0, height: 0 });
   const [obstacles, setObstacles] = useState<FlockObstacle[]>([]);
@@ -379,16 +373,16 @@ export const Flock = ({
   }, [width, height, num, numObstacles, startingPosition, maxVelocity, seeds]);
 
   useEffect(() => {
-    if (!canvas.current || !buffer.current || !width || !height) {
+    if (!canvas.current || !width || !height) {
       return;
     }
 
     const interval = d3.interval(() => {
-      tick(canvas.current!, buffer.current!, { width, height }, boids, obstacles, {
+      tick(canvas.current!, { width, height }, boids, obstacles, {
         coloring,
         radius,
         maxVelocity,
-        trail: (80 + trail) / 100,
+        trail: (85 + trail) / 100,
         alignment: alignment / 100,
         cohesion: cohesion / 100,
         separation: separation / 100,
@@ -415,7 +409,6 @@ export const Flock = ({
   return (
     <div className={mx('dx-expander absolute inset-0', classNames)} ref={setContainer}>
       <canvas ref={canvas} width={width} height={height} />
-      <canvas ref={buffer} width={width} height={height} style={{ display: 'none' }} />
     </div>
   );
 };
