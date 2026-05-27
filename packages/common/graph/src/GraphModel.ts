@@ -433,7 +433,6 @@ export class ReactiveGraphModel<
 
     // Prime the atom by reading before subscribing to avoid double-fire on first mutation.
     this._registry.get(this._graphAtom);
-
     return this._registry.subscribe(this._graphAtom, () => {
       cb(this, this.graph);
     });

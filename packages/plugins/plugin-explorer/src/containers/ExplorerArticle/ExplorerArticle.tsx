@@ -36,7 +36,7 @@ import '@dxos/react-ui-graph/styles/graph.css';
 import { type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
 
-import { getNodeFillForObject } from '../../util/node-color';
+import { getNodeFillForObject } from '../../util';
 
 /** Visualization variants exposed by `ExplorerArticle`. */
 export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'swarm';
@@ -78,9 +78,12 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   const model = useGraphModel(db, filter);
 
   const builder = useMemo(() => new QueryBuilder(), []);
-  const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-    setFilter(builder.build(value).filter);
-  }, []);
+  const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
+    (value) => {
+      setFilter(builder.build(value).filter);
+    },
+    [builder],
+  );
 
   // The `variant` prop is the initial value; user can toggle via the toolbar tabs.
   const [selected, setSelected] = useState<ExplorerArticleVariant>(isVariant(variant) ? variant : 'force');
@@ -89,6 +92,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
       setSelected(variant);
     }
   }, [variant]);
+
   const handleVariantChange = useCallback((value: string) => {
     if (isVariant(value)) {
       setSelected(value);
@@ -275,35 +279,32 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     };
   }, [model, variant, modelRev]);
 
-  if (variant === 'swarm') {
-    return (
-      <div className='dx-expander relative'>
-        <Flock seeds={flockSeeds} coloring='Movement' />
-      </div>
-    );
+  switch (variant) {
+    case 'swarm':
+      return (
+        <div className='dx-expander relative'>
+          <Flock seeds={flockSeeds} coloring='Movement' />
+        </div>
+      );
+    default:
+      return (
+        <SVG.Root ref={svgRef}>
+          <SVG.Zoom extent={[1 / 2, 2]}>
+            <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+              model={model}
+              projector={projector}
+              renderNode={renderNode}
+              drag={variant === 'force'}
+              onInspect={handleInspect}
+              onSelect={handleSelect}
+            />
+          </SVG.Zoom>
+        </SVG.Root>
+      );
   }
-
-  // Force needs SVG.Zoom (drag interaction). Cluster/lattice don't, AND including the zoom
-  // wrapper makes their curve edges render incorrectly in some contexts (see iteration
-  // history in graph-cluster-projector.ts). So mount with vs. without zoom conditionally.
-  const inner = (
-    <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-      model={model}
-      projector={projector}
-      renderNode={renderNode}
-      drag={variant === 'force'}
-      onInspect={handleInspect}
-      onSelect={handleSelect}
-    />
-  );
-
-  return (
-    <SVG.Root ref={svgRef}>{variant === 'force' ? <SVG.Zoom extent={[1 / 2, 2]}>{inner}</SVG.Zoom> : inner}</SVG.Root>
-  );
 };
 
-/** Cross-variant tween duration. Matches the renderer's edge fade timing so node
- * movement and edge enter/exit complete together. */
+// Cross-variant tween duration. Matches the renderer's edge fade timing so node.
 const TWEEN_MS = 500;
 
 const createProjector = (
@@ -315,6 +316,7 @@ const createProjector = (
     case 'force':
       // Force has no `duration` — its own simulation drives motion via ticks.
       return new GraphForceProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
+
     case 'lattice':
       return new GraphLatticeProjector<SpaceGraphNode>(
         ctx,
@@ -334,6 +336,7 @@ const createProjector = (
         undefined,
         prev,
       );
+
     case 'cluster':
       return new GraphClusterProjector<SpaceGraphNode>(
         ctx,
@@ -350,6 +353,7 @@ const createProjector = (
         undefined,
         prev,
       );
+
     case 'bundle':
       return new GraphBundleProjector<SpaceGraphNode>(
         ctx,
@@ -374,6 +378,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
   switch (variant) {
     case 'swarm':
       return undefined;
+
     case 'force':
       return (group, node) => {
         const r = node.r ?? 6;
@@ -383,6 +388,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .style('cursor', 'pointer')
           .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
       };
+
     case 'lattice':
       return (group, node) => {
         const r = node.r ?? 6;
@@ -398,6 +404,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .style('cursor', 'pointer')
           .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
       };
+
     case 'cluster':
       return (group, node) => {
         const obj = node.data?.data?.object as Obj.Unknown | undefined;
@@ -417,6 +424,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           appendRadialGroupLabel(group, node, r);
         }
       };
+
     case 'bundle':
       // Bundle layout renders ONLY leaves (root/group are invisible routing anchors).
       // Every node here is a leaf — same circle + radial label shape as cluster.
