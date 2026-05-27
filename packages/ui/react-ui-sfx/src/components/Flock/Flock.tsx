@@ -4,7 +4,6 @@
 
 import * as d3 from 'd3';
 import React, { useEffect, useRef, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -314,8 +313,8 @@ export type FlockProps = ThemedClassName<{
 
 /**
  * Canvas-rendered boids flocking simulation. When `seeds` is provided, each boid starts at
- * the supplied position so callers can hand off positions from another layout. Without
- * `seeds`, boids are generated from `num` and `startingPosition`.
+ * the supplied position so callers can hand off positions from another layout.
+ * Without `seeds`, boids are generated from `num` and `startingPosition`.
  */
 export const Flock = ({
   classNames,
@@ -325,8 +324,8 @@ export const Flock = ({
   numObstacles = 0,
   coloring = 'Movement',
   radius = 2,
-  trail = 10,
-  maxVelocity = 2,
+  trail = 15,
+  maxVelocity = 0.5,
   alignment = 3,
   cohesion = 3,
   separation = 3,
@@ -334,14 +333,38 @@ export const Flock = ({
 }: FlockProps) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   const buffer = useRef<HTMLCanvasElement>(null);
-  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
+  // Direct ResizeObserver — `react-resize-detector` was flaky in our Storybook
+  // environment (initial measurement sometimes never fired). Matches the
+  // pattern used by SVG.Root.
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [{ width, height }, setSize] = useState<Dimensions>({ width: 0, height: 0 });
   const [obstacles, setObstacles] = useState<FlockObstacle[]>([]);
   const [boids, setBoids] = useState<FlockBoid[]>([]);
+
+  useEffect(() => {
+    if (!container) {
+      return;
+    }
+    const rect = container.getBoundingClientRect();
+    setSize({ width: rect.width, height: rect.height });
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+
+      const { width: w, height: h } = entry.contentRect;
+      setSize((prev) => (prev.width === w && prev.height === h ? prev : { width: w, height: h }));
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [container]);
 
   useEffect(() => {
     if (!width || !height) {
       return;
     }
+
     setObstacles(generateFlockObstacles({ width, height }, numObstacles));
     setBoids(
       seeds
@@ -392,7 +415,7 @@ export const Flock = ({
   ]);
 
   return (
-    <div ref={containerRef} className={mx('absolute inset-0', classNames)}>
+    <div className={mx('dx-expander absolute inset-0', classNames)} ref={setContainer}>
       <canvas ref={canvas} width={width} height={height} />
       <canvas ref={buffer} width={width} height={height} style={{ display: 'none' }} />
     </div>

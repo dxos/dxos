@@ -135,12 +135,8 @@ export const Lattice: Story = {
   },
 };
 
-/**
- * Flock: boids-style canvas animation seeded from the most recent layout — each node from
- * the model becomes a boid starting at its current x/y position.
- */
-export const Flock: Story = {
+export const Swarm: Story = {
   args: {
-    variant: 'flock',
+    variant: 'swarm',
   },
 };

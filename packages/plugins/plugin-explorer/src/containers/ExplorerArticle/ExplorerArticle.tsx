@@ -39,7 +39,7 @@ import { useGraphModel } from '#hooks';
 import { getNodeFillForObject } from '../../util/node-color';
 
 /** Visualization variants exposed by `ExplorerArticle`. */
-export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'flock';
+export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'swarm';
 
 const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[] = [
   {
@@ -63,9 +63,9 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     label: 'Lattice',
   },
   {
-    value: 'flock',
-    icon: 'ph--bird--regular',
-    label: 'Flock',
+    value: 'swarm',
+    icon: 'ph--fish--regular',
+    label: 'Swarm',
   },
 ];
 
@@ -107,6 +107,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     if (!dxn) {
       return;
     }
+
     const target = event.target as HTMLElement;
     target.dispatchEvent(
       new DxAnchorActivate({
@@ -148,7 +149,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
 };
 
 const isVariant = (value: unknown): value is ExplorerArticleVariant =>
-  value === 'force' || value === 'cluster' || value === 'bundle' || value === 'lattice' || value === 'flock';
+  value === 'force' || value === 'cluster' || value === 'bundle' || value === 'lattice' || value === 'swarm';
 
 type VisualizationProps = {
   variant: ExplorerArticleVariant;
@@ -181,20 +182,23 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   // layout to the constructor so existing node x/y persist across the swap, then
   // the new projector's animate() tweens to its target positions.
   useEffect(() => {
-    if (!svgRef.current) {
-      return;
+    // Snapshot the latest layout BEFORE checking svgRef. When swapping from an SVG
+    // variant to swarm, the SVG.Root unmounts during commit (so svgRef.current is
+    // null by the time this effect runs), but projectorRef still references the
+    // previous projector whose layout we want to hand to the Flock.
+    if (projectorRef.current?.layout) {
+      lastLayoutRef.current = projectorRef.current.layout as GraphLayout<SpaceGraphNode>;
     }
-    if (variant === 'flock') {
-      // Capture the latest layout before unmounting the SVG projector; the canvas-based
-      // Flock takes over rendering.
-      if (projectorRef.current?.layout) {
-        lastLayoutRef.current = projectorRef.current.layout as GraphLayout<SpaceGraphNode>;
-      }
+    if (variant === 'swarm') {
       setProjector(undefined);
       return;
     }
-    const prev = (projectorRef.current?.layout as GraphLayout<SpaceGraphNode> | undefined) ?? lastLayoutRef.current;
-    setProjector(createProjector(variant as Exclude<ExplorerArticleVariant, 'flock'>, svgRef.current, prev));
+    if (!svgRef.current) {
+      return;
+    }
+
+    const prev = lastLayoutRef.current;
+    setProjector(createProjector(variant as Exclude<ExplorerArticleVariant, 'swarm'>, svgRef.current, prev));
   }, [variant]);
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
@@ -206,6 +210,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
         onNodeHover?.(null);
         return;
       }
+
       onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
     },
     [onNodeHover],
@@ -221,6 +226,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       ) {
         return;
       }
+
       const cluster = projector as GraphClusterProjector<SpaceGraphNode> | undefined;
       cluster?.toggleCollapsed(node.id);
     },
@@ -244,6 +250,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
           y: cy + (node.y ?? 0),
         }));
       }
+
       // No prior layout — spread points around the center so the flock still has bodies.
       return Array.from({ length: count }, () => ({
         x: cx + (Math.random() - 0.5) * Math.min(width, height) * 0.5,
@@ -252,10 +259,10 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     };
   }, [model, variant]);
 
-  if (variant === 'flock') {
+  if (variant === 'swarm') {
     return (
-      <div className='relative is-full bs-full'>
-        <Flock seeds={flockSeeds} coloring='Rainbow' />
+      <div className='dx-expander relative'>
+        <Flock seeds={flockSeeds} coloring='Movement' />
       </div>
     );
   }
@@ -283,7 +290,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
 const TWEEN_MS = 500;
 
 const createProjector = (
-  variant: Exclude<ExplorerArticleVariant, 'flock'>,
+  variant: Exclude<ExplorerArticleVariant, 'swarm'>,
   ctx: SVGContext,
   prev?: GraphLayout<SpaceGraphNode>,
 ): GraphProjector<SpaceGraphNode> => {
@@ -348,7 +355,7 @@ const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefi
 
 const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGraphNode> | undefined => {
   switch (variant) {
-    case 'flock':
+    case 'swarm':
       return undefined;
     case 'force':
       return (group, node) => {
