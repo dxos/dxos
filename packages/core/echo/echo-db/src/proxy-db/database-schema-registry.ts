@@ -97,7 +97,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   public hasSchema(schema: Type.AnyEntity): boolean {
-    const schemaId = (schema as { id?: ObjectId }).id;
+    const schemaId = schema.id;
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
