@@ -23,12 +23,14 @@ const generator: ValueGenerator = {
 
 const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
-    const query = Type.isType(type) ? Query.type(type) : Query.type(type);
-    const objects = await db.query(query).run();
+    const objects = await db.query(Query.type(type)).run();
     expect(objects).to.have.length(count);
     log('objects', {
       typename: Type.getTypename(type),
-      objects: objects.map((obj: any) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
+      objects: objects.map((obj) => {
+        const { name, employer } = obj as { name?: string; employer?: { name?: string } };
+        return stripUndefined({ name, employer: employer?.name });
+      }),
     });
   }
 };

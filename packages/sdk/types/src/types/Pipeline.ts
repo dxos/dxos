@@ -9,17 +9,13 @@ import * as Schema from 'effect/Schema';
 import { DXN, Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-export const Column: Schema.Schema<Column> = Schema.Struct({
+export const Column = Schema.Struct({
   name: Schema.String,
   view: Ref.Ref(View.View),
   order: Schema.Array(Schema.String),
-}) as any;
+});
 
-export type Column = {
-  readonly name: string;
-  readonly view: Ref.Ref<View.View>;
-  readonly order: readonly string[];
-};
+export type Column = Schema.Schema.Type<typeof Column>;
 
 // TODO(wittjosiah): Move to plugin-pipeline. This isn't a common type.
 export const Pipeline = Schema.Struct({

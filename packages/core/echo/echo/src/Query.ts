@@ -12,6 +12,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
+import type * as Entity from './Entity';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
@@ -487,8 +488,16 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  *
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
+/**
+ * Instance type for a query over `type`. Falls back to `Entity.Unknown` when the
+ * type can't be narrowed — e.g. the caller passes the wide `Type.AnyEntity` — so
+ * results aren't typed as the useless bare `OfKind<...>` union that
+ * `Type.InstanceType<Type.AnyEntity>` produces.
+ */
+type QueryInstance<T extends Type$.AnyEntity> = Type$.AnyEntity extends T ? Entity.Unknown : Type$.InstanceType<T>;
+
 export const type: {
-  <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<Type$.InstanceType<T>>): Query<Type$.InstanceType<T>>;
+  <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<QueryInstance<T>>): Query<QueryInstance<T>>;
   // Brand-narrowed schema overload — only well-known unknown schemas pass.
   <S extends internal.UnknownTypeSchema<any, any>>(
     schema: S,

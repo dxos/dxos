@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 import * as Organization from './Organization';
 import * as Person from './Person';
@@ -32,10 +32,4 @@ export const Employer = Schema.Struct({
 );
 
 export type Employer = Type.InstanceType<typeof Employer>;
-// TODO(wittjosiah): Add `Relation.MakeProps`.
-export const make = (
-  props: {
-    [Relation.Source]: Type.InstanceType<typeof Person.Person>;
-    [Relation.Target]: Type.InstanceType<typeof Organization.Organization>;
-  } & Entity.Properties<Type.InstanceType<typeof Employer>>,
-) => Relation.make(Employer, props as any);
+export const make = (props: Relation.MakeProps<typeof Employer>) => Relation.make(Employer, props);
