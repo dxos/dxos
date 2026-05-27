@@ -13,7 +13,7 @@ import { GithubComponent } from './GithubComponent';
 
 const DefaultStory = () => (
   <GithubComponent.Root>
-    <div className='grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bs-full is-full'>
+    <div className='grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden h-full is-full'>
       <GithubComponent.Header />
       <GithubComponent.Content />
       <GithubComponent.StatusBar />
