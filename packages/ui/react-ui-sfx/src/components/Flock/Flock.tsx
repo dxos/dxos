@@ -165,8 +165,9 @@ const tick = (
   // Trail fade via `destination-out`: each frame multiplies every pixel's α by
   // `trail` on the GPU compositor — no pixel-buffer roundtrip, ~free per frame.
   // Canvas's round-half-to-even leaves a stall floor at low α (where x * trail
-  // rounds back to x), so we use an aggressive trail factor (default 0.80) to
-  // push that floor down to α ≈ 2/255 — visually indistinguishable from the
+  // rounds back to x), so we use an aggressive trail factor (default 0.70, max
+  // 0.80 at slider trail=20) to push that floor down to α ≈ 2/255 — visually
+  // indistinguishable from the
   // CSS background that shows through. RGB is untouched, so boid colours stay
   // intact while the alpha channel decays toward transparent.
   const context = canvas.getContext('2d')!;
