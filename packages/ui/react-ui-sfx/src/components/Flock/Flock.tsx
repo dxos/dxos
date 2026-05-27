@@ -109,7 +109,7 @@ type TickConfig = {
   avoidance: number;
   radius: number;
   coloring: FlockColoring;
-  /** Pre-computed `rgba(r, g, b, 1-trail)` string used by the fade fillRect. */
+  /** Pre-computed `rgba(0, 0, 0, 1-trail)` string used by the destination-out fade. */
   fadeStyle: string;
 };
 
@@ -163,12 +163,13 @@ const tick = (
   const { maxVelocity, alignment, cohesion, separation, fadeStyle } = config;
 
   // Trail fade via `destination-out`: each frame multiplies every pixel's α by
-  // `trail` and leaves RGB untouched. Boid color decays through alpha rather than
-  // through RGB blending, which sidesteps the rounding stall that plagues color-over-
-  // color fades — bright channels (e.g. 255) would round back to 255 every frame when
-  // blended against a light bg, leaving permanent boid-colored streaks. The canvas's
-  // CSS `background-color` shows through transparent pixels, so the visual bg is
-  // whatever the parent set on the canvas element.
+  // `trail` on the GPU compositor — no pixel-buffer roundtrip, ~free per frame.
+  // Canvas's round-half-to-even leaves a stall floor at low α (where x * trail
+  // rounds back to x), so we use an aggressive trail factor (default 0.70, max
+  // 0.80 at slider trail=20) to push that floor down to α ≈ 2/255 — visually
+  // indistinguishable from the
+  // CSS background that shows through. RGB is untouched, so boid colours stay
+  // intact while the alpha channel decays toward transparent.
   const context = canvas.getContext('2d')!;
   context.globalCompositeOperation = 'destination-out';
   context.fillStyle = fadeStyle;
@@ -339,9 +340,9 @@ export const Flock = ({
   startingPosition = 'CircleRandom',
   numObstacles = 0,
   coloring = 'Movement',
-  radius = 2,
-  trail = 15,
-  maxVelocity = 0.5,
+  radius = 3,
+  trail = 10,
+  maxVelocity = 0.8,
   alignment = 3,
   cohesion = 3,
   separation = 3,
@@ -415,10 +416,12 @@ export const Flock = ({
   }, [width, height, numObstacles]);
 
   // The trail/physics config bundled for tick; memoed so the interval effect
-  // below doesn't re-key on every parent render. fadeStyle's RGB is ignored under
-  // `destination-out`; only its alpha matters.
+  // below doesn't re-key on every parent render. fadeStyle's RGB is ignored
+  // under `destination-out`; only its alpha matters.
   const tickConfig = useMemo<TickConfig>(() => {
-    const trailFactor = (80 + trail) / 100;
+    // Map slider 0..20 → factor 0.60..0.80. Even at the max the stall sits
+    // around α=2 (≈0.8% visible) which the CSS bg masks out.
+    const trailFactor = (60 + trail) / 100;
     return {
       coloring,
       radius,
@@ -437,9 +440,9 @@ export const Flock = ({
       return;
     }
 
-    // Start the canvas transparent so the CSS background-color on the element
-    // shows through wherever the simulation hasn't drawn (or has faded back to
-    // α=0). No opaque init needed under the destination-out fade.
+    // Start transparent so the CSS background-color shows through wherever
+    // the simulation hasn't drawn (or has faded back to α=0). The fade is
+    // GPU-only (`destination-out`), so no need for willReadFrequently.
     const ctx = canvas.current.getContext('2d')!;
     ctx.clearRect(0, 0, width, height);
 
