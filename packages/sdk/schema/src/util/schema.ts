@@ -54,7 +54,7 @@ export const createDefaultSchema = () =>
     // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
   }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
 
-export const getSchema = async (dxn: DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
+export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
   if (!DXN.isDXN(dxn)) {
     return;
   }
