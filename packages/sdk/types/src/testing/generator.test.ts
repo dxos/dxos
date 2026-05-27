@@ -113,7 +113,7 @@ describe('Generator', () => {
 
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const [type] = await db.register([Message.Message]);
+    const [type] = await db.registry.register([Message.Message]);
     invariant(Type.isObject(type), 'expected object type');
     const objectGenerator = createGenerator(generator, type, { force: true });
     const object = objectGenerator.createObject();

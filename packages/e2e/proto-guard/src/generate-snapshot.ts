@@ -68,9 +68,10 @@ const seedData = async (client: Client) => {
     const TestType = Schema.Struct({
       testField: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-    const [dynamicSchema] = await space.db.register([TestType]);
+    const [dynamicSchema] = await space.db.registry.register([TestType]);
 
-    const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const object2 = space.db.add(Obj.make(dynamicSchema as any, { testField: 'Test' } as any));
 
     Type.addFields(dynamicSchema, { name: Schema.String, todo: Ref.Ref(Todo) });
     Obj.update(object2 as any, (object2: any) => {
