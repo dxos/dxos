@@ -44,7 +44,7 @@ export const getBaseSchema = ({
   const resolved =
     typename && properties
       ? getSchemaFromPropertyDefinitions(typename, properties)
-      : (type ?? (jsonSchema ? getSchemaFromJsonSchema(jsonSchema) : undefined));
+      : (type ?? (jsonSchema ? getSchemaFromJsonSchema(jsonSchema, typename) : undefined));
   if (!resolved) {
     throw new Error('invalid properties');
   }

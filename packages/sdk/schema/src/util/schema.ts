@@ -120,10 +120,20 @@ export const getSchemaFromPropertyDefinitions = (
 };
 
 /**
- * Build an in-memory, mutable `Type.Type` entity from a JSON schema.
+ * Build an in-memory, mutable `Type.Type` entity from a JSON schema. A typename is required to
+ * identify the entity; if the JSON schema does not carry one, `typename` (or a generated typename) is stamped.
  */
-export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType): Type.Type =>
-  createEchoSchema(toEffectSchema(jsonSchema));
+export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: string): Type.Type => {
+  const withTypename: JsonSchemaType = jsonSchema.typename
+    ? jsonSchema
+    : {
+        ...jsonSchema,
+        typename: typename ?? `com.example.type.${PublicKey.random().truncate()}`,
+        version: jsonSchema.version ?? '0.1.0',
+      };
+
+  return createEchoSchema(toEffectSchema(withTypename));
+};
 
 /**
  * Creates or updates echo annotations for SingleSelect options in a JSON Schema property.
