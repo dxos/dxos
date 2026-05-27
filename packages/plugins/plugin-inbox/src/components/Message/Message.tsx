@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -21,6 +23,8 @@ import {
   preview,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+
+import { InboxCapabilities } from '#types';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -46,6 +50,11 @@ type MessageContextValue = {
 };
 
 const [MessageContextProvider, useMessageContext] = createContext<MessageContextValue>('Message');
+
+// Fallback used when the optional InboxCapabilities.Settings capability is not installed
+// (e.g., in standalone storybook contexts). Keeps Message renderable without the plugin manager
+// providing settings.
+const FALLBACK_SETTINGS_ATOM = Atom.make({ loadRemoteImages: false });
 
 //
 // Root
@@ -214,6 +223,12 @@ type MessageBodyProps = ThemedClassName;
 const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode, renderMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
+  // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
+  // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
+  const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
+  const settingsAtom = settingsAtoms[0];
+  const settings = useAtomValue(settingsAtom ?? FALLBACK_SETTINGS_ATOM);
+  const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   // If we're in plain-only mode or plain view, show the first block.
   // Otherwise show enriched content (second block).
@@ -235,7 +250,18 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       exts.push(
         createMarkdownExtensions(),
         decorateMarkdown({
-          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+          skip: (node) => {
+            // Skip dxn: links and images entirely (handled by preview()).
+            if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
+              return true;
+            }
+            // When remote-image loading is disabled, suppress http(s) image rendering;
+            // the markdown source is left visible as a plain link instead.
+            if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
+              return true;
+            }
+            return false;
+          },
         }),
         preview(),
         EditorView.domEventHandlers({
@@ -252,7 +278,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       );
     }
     return exts;
-  }, [themeMode, renderMode]);
+  }, [themeMode, renderMode, loadRemoteImages]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 

@@ -27,7 +27,7 @@ export type BoxProps = PropsWithChildren<
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, title, status, open, onAction }, forwardedRef) => {
     invariant(shape.type);
-    const { icon, name, openable } = useShapeDef(shape.type) ?? { icon: 'ph--placeholder--regular' };
+    const { icon, name, openable } = useShapeDef(shape.type) ?? { icon: 'ph--circle-dashed--regular' };
     const { debug } = useEditorContext();
 
     return (

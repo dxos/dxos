@@ -345,7 +345,7 @@ export const TreeView: Story = {
             return {
               id: node.id,
               label: node.id,
-              icon: node.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              icon: node.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--circle-dashed--regular',
               parentOf,
             };
           });

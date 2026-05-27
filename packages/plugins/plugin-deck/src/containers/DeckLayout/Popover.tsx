@@ -81,7 +81,7 @@ export const PopoverContent = () => {
         Option.fromNullable,
         Option.flatMap(Annotation.IconAnnotation.get),
         Option.map(({ icon }) => icon),
-        Option.getOrElse(() => 'ph--placeholder--regular'),
+        Option.getOrElse(() => 'ph--circle-dashed--regular'),
       )
     : undefined;
 
