@@ -29,7 +29,7 @@ import type * as Type from './Type';
 /**
  * Base type for all ECHO objects.
  */
-interface BaseObj extends internal.AnyEntity, Entity.OfKind<typeof Entity.Kind.Object> {}
+interface BaseObj extends internal.AnyEntity, Entity.OfKind<typeof Entity.Kind.Object> { }
 
 /**
  * Object type with specific properties.
@@ -44,7 +44,7 @@ export type OfShape<Props> = BaseObj & Props;
  * NOTE: This is a TypeScript type only, not a schema.
  * To validate that a value is an ECHO object, use `Schema.is(Type.Obj)`.
  */
-export interface Unknown extends BaseObj {}
+export interface Unknown extends BaseObj { }
 
 /**
  * Runtime Effect schema for any ECHO object.
@@ -92,7 +92,7 @@ export const Unknown: Type.Obj<Unknown> = Schema.Struct({
  *
  * Prefer using `Obj.Unknown` when you don't need to access arbitrary properties.
  */
-export interface Any extends BaseObj, internal.AnyProperties {}
+export interface Any extends BaseObj, internal.AnyProperties { }
 
 /**
  * Base type for snapshot objects (has SnapshotKindId instead of KindId).
@@ -654,7 +654,7 @@ export const Parent: unique symbol = internal.ParentId as any;
  * @returns The parent object, or undefined if the object has no parent.
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
-  assertArgument(isObject(entity), 'Expected an object');
+  assertArgument(isObject(entity) || isSnapshot(entity), 'Expected an object');
   assumeType<internal.InternalObjectProps>(entity);
   return entity[internal.ParentId] as Unknown | undefined;
 };
