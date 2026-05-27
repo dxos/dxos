@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
-import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useType } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
@@ -132,7 +132,7 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientStory();
-    const schema = useSchema(space?.db, Type.getTypename(TestSchema.Person));
+    const schema = useType(space?.db, Type.getTypename(TestSchema.Person));
     const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;

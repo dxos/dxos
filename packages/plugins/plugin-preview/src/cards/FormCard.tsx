@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { useSchema } from '@dxos/echo-react';
+import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
@@ -26,7 +26,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * Default/fallback card for any ECHO object.
  * Renders a `Form` against the object's schema — either the static schema
  * from `Obj.getSchema` or, for runtime/mutable schemas, the reactive
- * schema looked up via `useSchema`.
+ * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
   const { t } = useTranslation(meta.id);
@@ -40,7 +40,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
   const staticType = Obj.getType(subject);
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
-  const runtimeType = useSchema(db, staticType ? undefined : typename);
+  const runtimeType = useType(db, staticType ? undefined : typename);
   const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
     const resolvedType = runtimeType ?? staticType;
     return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;

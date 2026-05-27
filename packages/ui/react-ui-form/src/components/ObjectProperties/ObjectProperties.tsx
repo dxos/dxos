@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
-import { useSchema } from '@dxos/echo-react';
+import { useType } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { URI } from '@dxos/keys';
@@ -32,9 +32,9 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
     // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
-    // useSchema queries by typename which correctly resolves both static and dynamic schemas.
+    // useType queries by typename which correctly resolves both static and dynamic schemas.
     const typename = Obj.getTypename(object) ?? undefined;
-    const typeFromRegistry = useSchema(db, typename);
+    const typeFromRegistry = useType(db, typename);
     const type = Obj.getType(object) ?? typeFromRegistry;
 
     const formSchema = useMemo(() => {

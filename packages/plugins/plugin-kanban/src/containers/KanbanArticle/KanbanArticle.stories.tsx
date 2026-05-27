@@ -22,7 +22,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useType, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -92,7 +92,7 @@ const DefaultComponent = () => {
   const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
   const view = viewRef?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space?.db, typename);
+  const schema = useType(space?.db, typename);
   const projection = useProjectionModel(schema, kanban, registry);
 
   const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);

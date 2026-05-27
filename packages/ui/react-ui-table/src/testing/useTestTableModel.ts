@@ -7,7 +7,7 @@ import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react'
 
 import { type Database, Filter, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useType } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
 import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
@@ -45,7 +45,7 @@ export const useTestTableModel = (): TestTableModel => {
   const tables = useQuery(space?.db, Filter.type(Table.Table));
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
-  const schema = useSchema(space?.db, typename);
+  const schema = useType(space?.db, typename);
   const projection = useProjectionModel(schema, table, registry);
 
   const features = useMemo(

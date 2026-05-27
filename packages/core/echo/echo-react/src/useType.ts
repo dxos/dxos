@@ -7,32 +7,32 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { type Database, type Type } from '@dxos/echo';
 
 /**
- * Subscribe to and retrieve schema changes from a space's schema registry.
+ * Subscribe to and retrieve type changes from a space's schema registry.
  */
-export const useSchema = (db?: Database.Database, typename?: string): Type.Type | undefined => {
-  const { subscribe, getSchema } = useMemo(() => {
+export const useType = (db?: Database.Database, typename?: string): Type.Type | undefined => {
+  const { subscribe, getType } = useMemo(() => {
     if (!typename || !db) {
       return {
         subscribe: () => () => {},
-        getSchema: (): Type.Type | undefined => undefined,
+        getType: (): Type.Type | undefined => undefined,
       };
     }
 
     const query = db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
-    let currentSchema: Type.Type | undefined = query.runSync()[0];
+    let currentType: Type.Type | undefined = query.runSync()[0];
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const unsubscribe = query.subscribe(() => {
-          currentSchema = query.results[0];
+          currentType = query.results[0];
           onStoreChange();
         });
 
         return unsubscribe;
       },
-      getSchema: () => currentSchema,
+      getType: () => currentType,
     };
   }, [typename, db]);
 
-  return useSyncExternalStore(subscribe, getSchema);
+  return useSyncExternalStore(subscribe, getType);
 };

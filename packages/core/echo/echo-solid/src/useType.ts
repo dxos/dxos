@@ -9,18 +9,18 @@ import { type Database, type Type } from '@dxos/echo';
 type MaybeAccessor<T> = T | Accessor<T>;
 
 /**
- * Subscribe to and retrieve schema changes from a database's schema registry.
+ * Subscribe to and retrieve type changes from a database's schema registry.
  * Accepts either values or accessors for db and typename.
  *
  * @param db - The database instance (can be reactive)
- * @param typename - The schema typename to query (can be reactive)
- * @returns An accessor that returns the current schema or undefined
+ * @param typename - The typename to query (can be reactive)
+ * @returns An accessor that returns the current type or undefined
  */
-export const useSchema = (
+export const useType = (
   db?: MaybeAccessor<Database.Database | undefined>,
   typename?: MaybeAccessor<string | undefined>,
 ): Accessor<Type.Type | undefined> => {
-  // Derive the schema query reactively
+  // Derive the type query reactively
   const query = createMemo(() => {
     const resolvedDb = typeof db === 'function' ? db() : db;
     const resolvedTypename = typeof typename === 'function' ? typename() : typename;
@@ -30,8 +30,8 @@ export const useSchema = (
     return resolvedDb.schemaRegistry.query({ typename: resolvedTypename, location: ['database', 'runtime'] });
   });
 
-  // Store the current schema in a signal
-  const [schema, setSchema] = createSignal<Type.Type | undefined>(undefined);
+  // Store the current type in a signal
+  const [type, setType] = createSignal<Type.Type | undefined>(undefined);
 
   // Subscribe to query changes
   createEffect(() => {
@@ -47,7 +47,7 @@ export const useSchema = (
       () => {
         // Access results inside the callback to ensure query is running
         const results = q.results;
-        setSchema(() => results[0]);
+        setType(() => results[0]);
       },
       { fire: true },
     );
@@ -55,5 +55,5 @@ export const useSchema = (
     onCleanup(unsubscribe);
   });
 
-  return schema;
+  return type;
 };
