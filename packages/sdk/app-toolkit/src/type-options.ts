@@ -33,12 +33,13 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
       ? db.graph.registry.types
           .filter((t) => !(t instanceof Type.RuntimeType))
           .filter((schema) => {
-            const relation = getTypeAnnotation(schema)?.kind === EntityKind.Relation;
+            const effectSchema = Type.getSchema(schema);
+            const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
             if (relation) {
               return includeSystemType;
             }
 
-            const system = SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
+            const system = SystemTypeAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
             if (system) {
               return includeSystemType;
             }

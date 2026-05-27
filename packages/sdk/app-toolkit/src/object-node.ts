@@ -149,8 +149,9 @@ export const createObjectNode = ({
   // Obj.getType uses the stored type DXN to look up the schema. For database-registered
   // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
   // TypeSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
-  // Fall back to a typename query which matches the TypeSchema.typename field.
-  const type = Obj.getType(object) ?? db.schemaRegistry.query({ typename }).runSync()[0];
+  // Fall back to a typename query against the registry which matches the TypeSchema.typename field.
+  const type =
+    Obj.getType(object) ?? db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
   const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
