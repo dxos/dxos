@@ -17,7 +17,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { TestLayout } from '../testing';
-import { Form, type FormRootProps, omitId } from './Form';
+import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -145,6 +145,8 @@ export default meta;
 
 type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
+const PersonSchema = Type.getSchema(Person);
+
 const values: Partial<Person> = {
   name: 'Alice',
   location: [40.7128, -74.006],
@@ -154,30 +156,30 @@ const values: Partial<Person> = {
   reminderAt: '09:00:00',
 };
 
-export const Default: Story<any> = {
+export const Default: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Type.getSchema(Person)),
+    schema: omitId(PersonSchema),
     values,
     autoSave: true,
   },
 };
 
-export const Readonly: Story<any> = {
+export const Readonly: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Type.getSchema(Person)),
+    schema: omitId(PersonSchema),
     values,
     readonly: true,
   },
 };
 
-export const Static: Story<any> = {
+export const Static: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Type.getSchema(Person)),
+    schema: omitId(PersonSchema),
     values,
     layout: 'static',
   },
 };
 
-export const Empty: Story<any> = {
+export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
   args: {},
 };

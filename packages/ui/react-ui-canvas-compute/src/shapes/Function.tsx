@@ -68,7 +68,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       }
 
       const [fn] = await space.db
-        .query(Filter.type(Operation.PersistentOperation, { source: Ref.make(object as any) }))
+        .query(Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }))
         .run();
       if (!fn) {
         return;

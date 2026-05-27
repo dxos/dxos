@@ -18,6 +18,7 @@ import {
   type AnyEntity,
   type AnyProperties,
   EntityKind,
+  InstancePhantomId,
   KindId,
   TypeId,
   getSchema,
@@ -271,7 +272,11 @@ export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
 export const isInstanceOf = <S>(
   schemaOrType: S extends Schema.Schema.AnyNoContext ? S : Schema.Schema.AnyNoContext | AnyEntity,
   object: any,
-): boolean => {
+): object is S extends Schema.Schema.AnyNoContext
+  ? Schema.Schema.Type<S>
+  : S extends { readonly [InstancePhantomId]?: infer A }
+    ? A
+    : unknown => {
   if (object == null) {
     return false;
   }

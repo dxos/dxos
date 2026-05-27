@@ -30,7 +30,7 @@ const types = [
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
-  schema: Type.AnyEntity;
+  type: Type.AnyEntity;
   view: View.View;
   projection: ProjectionModel;
 };
@@ -39,7 +39,7 @@ type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
-  const [schema, setSchema] = useState<Type.AnyEntity>();
+  const [type, setType] = useState<Type.AnyEntity>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 
@@ -66,14 +66,14 @@ const DefaultStory = (props: DefaultStoryProps) => {
         jsonSchema: JsonSchema.toJsonSchema(TestSchema),
       });
 
-      setSchema(testSchema);
+      setType(testSchema);
       setView(view);
     }
   }, [space]);
 
   const updateViewQuery = useCallback(
     async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
-      if (!schema || !view || !space) {
+      if (!type || !view || !space) {
         return;
       }
 
@@ -97,17 +97,14 @@ const DefaultStory = (props: DefaultStoryProps) => {
         Obj.update(view, (view) => {
           view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
         });
-        setSchema(() => newSchema);
+        setType(() => newSchema);
       } else {
         Obj.update(view, (view) => {
           view.query.ast = newQuery as Mutable<typeof newQuery>;
         });
-        // NOTE: typename is no longer mutable on persisted Type.Type entities;
-        // changing the query that targets a different typename now requires
-        // re-creating the schema rather than renaming an existing one.
       }
     },
-    [view, schema],
+    [view, type],
   );
 
   const handleDelete = useCallback(
@@ -117,22 +114,22 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
   // Expose objects on window for test access.
   useEffect(() => {
-    if (typeof window !== 'undefined' && schema && view && projectionRef.current) {
+    if (typeof window !== 'undefined' && type && view && projectionRef.current) {
       (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = {
-        schema,
+        type,
         view,
         projection: projectionRef.current,
       } satisfies ViewEditorDebugObjects;
     }
-  }, [schema, view]);
+  }, [type, view]);
 
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
   const json = useMemo(
-    () => JSON.parse(JSON.stringify({ schema, view, projection: projectionRef.current })),
-    [JSON.stringify(schema), JSON.stringify(view)],
+    () => JSON.parse(JSON.stringify({ schema: type, view, projection: projectionRef.current })),
+    [JSON.stringify(type), JSON.stringify(view)],
   );
 
-  if (!schema || !view) {
+  if (!type || !view) {
     return <div />;
   }
 
@@ -140,7 +137,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
     <TestLayout json={json}>
       <ViewEditor
         ref={projectionRef}
-        schema={schema}
+        schema={type}
         view={view}
         registry={space?.db.schemaRegistry}
         mode={props.mode}

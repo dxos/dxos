@@ -23,7 +23,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { type JsonProp, toJsonSchema } from '@dxos/echo/internal';
+import { type JsonProp } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -89,8 +89,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const { t } = useTranslation(translationKey);
 
     const projectionModel = useMemo(() => {
-      // Use reactive and mutable version of json schema when schema is mutable.
-      const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : toJsonSchema(schema);
+      const jsonSchema = schema.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
       // Pass schema only when mutable to allow schema mutations.
@@ -240,8 +239,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const [viewSnapshot] = useObject(view);
 
   const projectionModel = useMemo(() => {
-    // Use reactive and mutable version of json schema when schema is mutable.
-    const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : toJsonSchema(schema);
+    const jsonSchema = schema.jsonSchema;
 
     // Always use createEchoChangeCallback since the view is ECHO-backed.
     // Pass schema only when mutable to allow schema mutations.
