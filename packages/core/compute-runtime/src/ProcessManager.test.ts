@@ -23,7 +23,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
