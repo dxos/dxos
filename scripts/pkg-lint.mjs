@@ -106,7 +106,11 @@ for (const { name, path: pkgPath } of packages) {
       if (!importValue.startsWith('./dist/')) {
         const srcPath = join(pkgPath, importValue);
         if (!existsSync(srcPath)) {
-          addDiagnostic('error', 'import-source-missing', `import "${importPath}": file does not exist: ${importValue}`);
+          addDiagnostic(
+            'error',
+            'import-source-missing',
+            `import "${importPath}": file does not exist: ${importValue}`,
+          );
         } else {
           addDiagnostic('conventional', 'import-source-exists', `import "${importPath}": file exists`);
         }
