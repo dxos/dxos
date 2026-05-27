@@ -80,6 +80,17 @@ describe('Obj', () => {
       expect(SnapshotKindId in snapshot).toBe(true);
       expect(Entity.KindId in snapshot).toBe(false);
     });
+
+    test('getSnapshot preserves parent', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'child' });
+      Obj.setParent(child, parent);
+
+      const snapshot = Obj.getSnapshot(child);
+
+      expect(Obj.getParent(child)).toBe(parent);
+      expect(Obj.getParent(snapshot)).toBe(parent);
+    });
   });
 
   describe('snapshotOf', () => {

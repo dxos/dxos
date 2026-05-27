@@ -654,7 +654,7 @@ export const Parent: unique symbol = internal.ParentId as any;
  * @returns The parent object, or undefined if the object has no parent.
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
-  assertArgument(isObject(entity), 'Expected an object');
+  assertArgument(isObject(entity) || isSnapshot(entity), 'Expected an object');
   assumeType<internal.InternalObjectProps>(entity);
   return entity[internal.ParentId] as Unknown | undefined;
 };
