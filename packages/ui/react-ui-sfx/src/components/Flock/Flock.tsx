@@ -165,7 +165,7 @@ const renderObstacles = (context: CanvasRenderingContext2D, obstacles: FlockObst
     context.fill();
   });
 
-  context.filter = 'blur(10px)';
+  context.filter = 'blur(0)';
 };
 
 const tick = (
@@ -398,10 +398,7 @@ export const Flock = ({
     ctx.fillRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
-      const cursor =
-        cursorRepel > 0 && cursorRef.current
-          ? { position: cursorRef.current, radius: cursorRepel }
-          : null;
+      const cursor = cursorRepel > 0 && cursorRef.current ? { position: cursorRef.current, radius: cursorRepel } : null;
       tick(canvas.current!, { width, height }, boids, obstacles, cursor, {
         coloring,
         radius,
