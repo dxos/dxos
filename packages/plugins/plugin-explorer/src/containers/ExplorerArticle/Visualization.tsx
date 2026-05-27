@@ -164,8 +164,15 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
   // Memoed attributes object — SVG.Graph keys its internal renderer on
   // `props.attributes` identity, so a new object reference is what triggers
   // re-emit + repaint of edge `data-color` attributes when hover changes.
-  const attributes = useMemo(
-    () => ({
+  // Skip for the force variant: edges are constantly moving and recolouring
+  // them on each pointerenter triggers a renderer rebuild that fights the
+  // simulation tick, producing visible jitter. Static layouts (cluster,
+  // bundle, lattice) handle this cleanly.
+  const attributes = useMemo(() => {
+    if (variant === 'force') {
+      return undefined;
+    }
+    return {
       edge: (edge: GraphLayoutEdge<SpaceGraphNode, SpaceGraphEdge>) => {
         if (!hoveredId) {
           return {};
@@ -178,9 +185,8 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
         }
         return {};
       },
-    }),
-    [hoveredId],
-  );
+    };
+  }, [variant, hoveredId]);
 
   // Cluster-only: clicking a root / group node toggles its subtree open/closed.
   const handleSelect = useCallback(
