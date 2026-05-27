@@ -109,6 +109,28 @@ type TickConfig = {
   avoidance: number;
   radius: number;
   coloring: FlockColoring;
+  /** Pre-computed `rgba(r, g, b, 1-trail)` string used by the fade fillRect. */
+  fadeStyle: string;
+};
+
+/**
+ * Resolve any CSS color string to an `{ r, g, b }` triple by letting the browser
+ * normalise it (named colors, hex, rgb(), hsl()…). Returns null on unparseable input.
+ */
+const parseColorRgb = (color: string): { r: number; g: number; b: number } | null => {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  const probe = document.createElement('div');
+  probe.style.color = color;
+  document.body.appendChild(probe);
+  const computed = getComputedStyle(probe).color;
+  document.body.removeChild(probe);
+  const match = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(computed);
+  if (!match) {
+    return null;
+  }
+  return { r: +match[1], g: +match[2], b: +match[3] };
 };
 
 const updateBoid = (
@@ -158,13 +180,14 @@ const tick = (
   cursor: FlockObstacle | null,
   config: TickConfig,
 ) => {
-  const { trail, maxVelocity, alignment, cohesion, separation } = config;
+  const { maxVelocity, alignment, cohesion, separation, fadeStyle } = config;
 
-  // Trail fade: paint semi-transparent black over the canvas. GPU-only path, no
-  // pixel-buffer roundtrip. Leaves a small rounding-residue at low RGB but the
-  // canvas is initialised opaque so α stays 255 and no page background bleeds.
+  // Trail fade: paint a semi-transparent rectangle in the background color over the
+  // canvas. GPU-only path, no pixel-buffer roundtrip. Leaves a small rounding-residue
+  // near the bg color but the canvas is initialised opaque to the same color so α
+  // stays 255 and the page can't bleed through.
   const context = canvas.getContext('2d')!;
-  context.fillStyle = `rgba(0, 0, 0, ${1 - trail})`;
+  context.fillStyle = fadeStyle;
   context.fillRect(0, 0, width, height);
 
   // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
@@ -310,6 +333,12 @@ export type FlockProps = ThemedClassName<{
   avoidance?: number;
   /** Pixel radius of the invisible repel zone tracking the pointer. 0 disables. */
   cursorRepel?: number;
+  /**
+   * Canvas background CSS color. The canvas is initialised opaquely to this color
+   * and each frame's trail fade is drawn in this color (so old boid pixels decay
+   * toward it). Any color the browser can parse — hex, rgb(), named — is fine.
+   */
+  background?: string;
 }>;
 
 /**
@@ -333,6 +362,7 @@ export const Flock = ({
   separation = 3,
   avoidance = 3,
   cursorRepel = 120,
+  background = '#000',
 }: FlockProps) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   // Cursor in canvas-local coordinates, or null while the pointer is outside.
@@ -400,31 +430,34 @@ export const Flock = ({
   }, [width, height, numObstacles]);
 
   // The trail/physics config bundled for tick; memoed so the interval effect
-  // below doesn't re-key on every parent render.
-  const tickConfig = useMemo<TickConfig>(
-    () => ({
+  // below doesn't re-key on every parent render. The fade style is pre-computed
+  // from `background` and the current trail so tick doesn't reparse each frame.
+  const tickConfig = useMemo<TickConfig>(() => {
+    const trailFactor = (80 + trail) / 100;
+    const rgb = parseColorRgb(background) ?? { r: 0, g: 0, b: 0 };
+    return {
       coloring,
       radius,
       maxVelocity,
-      trail: (80 + trail) / 100,
+      trail: trailFactor,
       alignment: alignment / 100,
       cohesion: cohesion / 100,
       separation: separation / 100,
       avoidance: avoidance / 10,
-    }),
-    [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance],
-  );
+      fadeStyle: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - trailFactor})`,
+    };
+  }, [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance, background]);
 
   useEffect(() => {
     if (!canvas.current || !width || !height) {
       return;
     }
 
-    // Initialise the canvas to opaque black so the per-frame fillRect fade
-    // (rgba(0,0,0,1-trail) source-over) keeps α=255 and the page background
-    // can't bleed through asymptotic-α gaps.
+    // Initialise the canvas opaquely to the configured background so the
+    // per-frame fillRect fade keeps α=255 and the page can't bleed through
+    // asymptotic-α gaps.
     const ctx = canvas.current.getContext('2d')!;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
@@ -434,7 +467,7 @@ export const Flock = ({
     });
 
     return () => interval.stop();
-  }, [boids, obstacles, width, height, tickConfig, cursorRepel]);
+  }, [boids, obstacles, width, height, tickConfig, cursorRepel, background]);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();

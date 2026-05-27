@@ -6,6 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   CLUSTER_NODE_TYPE_GROUP,
   CLUSTER_NODE_TYPE_LEAF,
@@ -50,6 +51,11 @@ export type VisualizationProps = {
  */
 export const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   const registry = useContext(RegistryContext);
+  const { themeMode } = useThemeContext();
+  // Match the visible app background so the swarm canvas reads as continuous
+  // with the rest of the UI. Page bg comes from --color-baseSurface tokens
+  // (dark = neutral-950 ≈ #0a0a0a, light = neutral-50 ≈ #fafafa).
+  const flockBackground = themeMode === 'dark' ? '#0a0a0a' : '#fafafa';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -168,7 +174,7 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
   return (
     <div ref={containerRef} className='dx-expander relative'>
       {variant === 'swarm' ? (
-        <Flock model={flockModel} coloring='Movement' />
+        <Flock model={flockModel} coloring='Movement' background={flockBackground} />
       ) : (
         <SVG.Root ref={svgRef}>
           <SVG.Zoom extent={[1 / 2, 2]}>
