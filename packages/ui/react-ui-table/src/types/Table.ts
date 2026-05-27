@@ -37,7 +37,7 @@ const TableSchema = Schema.Struct({
 // Declared as an interface (not `type =`) so downstream emit references `Table`
 // by name rather than expanding the inferred shape — keeps consumers portable.
 export interface Table extends Type.InstanceType<typeof TableSchema> {}
-export const Table: Type.Obj<Table> = TableSchema as any;
+export const Table = TableSchema;
 
 type MakeProps = {
   name?: string;

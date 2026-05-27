@@ -56,13 +56,7 @@ const Example = Schema.Struct({
   // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
   Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
 );
-interface Example extends Obj.OfShape<{
-  readonly name?: string;
-  readonly urgent?: boolean;
-  readonly status?: 'todo' | 'in-progress' | 'done';
-  readonly description?: string;
-  readonly parent?: Ref.Ref<Example>;
-}> {}
+interface Example extends Type.InstanceType<typeof Example> {}
 
 const StoryViewEditor = ({
   view,
@@ -79,9 +73,6 @@ const StoryViewEditor = ({
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.getDatabase(schema) != null);
-      // NOTE: typename on a persisted Type.Type entity is immutable; the
-      // previous flow renamed the schema in place, which is no longer
-      // supported. Only the view's query is updated here.
       invariant(view);
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;
@@ -334,13 +325,10 @@ export const Tags: Meta<DefaultStoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(
-              storedSchema as unknown as Type.AnyObj,
-              {
-                single: random.helpers.arrayElement([...selectOptionIds, undefined]),
-                multiple: random.helpers.randomSubset(selectOptionIds),
-              } as any,
-            ),
+            Obj.make(Type.assertObject(storedSchema), {
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
+            } as any),
           );
         });
       },

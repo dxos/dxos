@@ -19,8 +19,8 @@ import { Table } from '../types';
 
 random.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
-export type TestTableModel = {
-  schema: Type.Type | undefined;
+export type TestTableModel<T extends Type.AnyObj = Type.AnyObj> = {
+  schema: T | undefined;
   table: Table.Table | undefined;
   projection: ProjectionModel | undefined;
   tableRef: RefObject<TableController | null>;
@@ -37,7 +37,7 @@ export type TestTableModel = {
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = (): TestTableModel => {
+export const useTestTableModel = <T extends Type.AnyObj = Type.AnyObj>(): TestTableModel<T> => {
   const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const db = space?.db;
@@ -45,7 +45,7 @@ export const useTestTableModel = (): TestTableModel => {
   const tables = useQuery(space?.db, Filter.type(Table.Table));
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
-  const schema = useType(space?.db, typename);
+  const schema = useType<T>(space?.db, typename);
   const projection = useProjectionModel(schema, table, registry);
 
   const features = useMemo(
@@ -69,8 +69,7 @@ export const useTestTableModel = (): TestTableModel => {
     tableRef.current?.update?.();
   }, []);
 
-  const objectSchema = schema && Type.isObject(schema) ? schema : undefined;
-  const addRow = useAddRow({ db, schema: objectSchema });
+  const addRow = useAddRow({ db, schema });
 
   const handleDeleteRows = useCallback(
     (_: number, objects: any[]) => {
