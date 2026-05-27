@@ -193,8 +193,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       setProjector(undefined);
       return;
     }
-    const prev =
-      (projectorRef.current?.layout as GraphLayout<SpaceGraphNode> | undefined) ?? lastLayoutRef.current;
+    const prev = (projectorRef.current?.layout as GraphLayout<SpaceGraphNode> | undefined) ?? lastLayoutRef.current;
     setProjector(createProjector(variant as Exclude<ExplorerArticleVariant, 'flock'>, svgRef.current, prev));
   }, [variant]);
 
