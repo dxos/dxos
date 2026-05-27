@@ -164,12 +164,14 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
   // Memoed attributes object — SVG.Graph keys its internal renderer on
   // `props.attributes` identity, so a new object reference is what triggers
   // re-emit + repaint of edge `data-color` attributes when hover changes.
-  // Skip for the force variant: edges are constantly moving and recolouring
-  // them on each pointerenter triggers a renderer rebuild that fights the
-  // simulation tick, producing visible jitter. Static layouts (cluster,
-  // bundle, lattice) handle this cleanly.
+  // Skip for variants where the highlight doesn't help:
+  //  - force: edges are constantly moving via the simulation tick and the
+  //    renderer rebuild fights it, producing jitter.
+  //  - cluster: the radial-spoke topology already makes incident edges
+  //    obvious from geometry; the colour overlay just adds noise.
+  // Bundle and lattice keep it.
   const attributes = useMemo(() => {
-    if (variant === 'force') {
+    if (variant === 'force' || variant === 'cluster') {
       return undefined;
     }
     return {
