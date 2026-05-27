@@ -173,6 +173,7 @@ const tick = (
   { width, height }: Dimensions,
   boids: FlockBoid[],
   obstacles: FlockObstacle[],
+  cursor: FlockObstacle | null,
   config: TickConfig,
 ) => {
   const { trail, maxVelocity, alignment, cohesion, separation } = config;
@@ -182,13 +183,21 @@ const tick = (
   // faster but leaves a sticky rounding band around RGB=9 — Chrome's
   // premultiplied source-over rounds up just often enough that pixels never
   // decay all the way to 0. Floor on a CPU pass guarantees monotonic decay.
+  // The context is created with willReadFrequently in the consumer so this
+  // read+write doesn't force a GPU→CPU sync per frame.
   const context = canvas.getContext('2d')!;
   const img = context.getImageData(0, 0, width, height);
   const data = img.data;
+  // 256-entry LUT so the inner loop is a Uint8Array index, not a float multiply
+  // per channel. With ~1.5M iterations at 60 Hz this matters.
+  const lut = new Uint8Array(256);
+  for (let v = 0; v < 256; v++) {
+    lut[v] = (v * trail) | 0;
+  }
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = (data[i] * trail) | 0;
-    data[i + 1] = (data[i + 1] * trail) | 0;
-    data[i + 2] = (data[i + 2] * trail) | 0;
+    data[i] = lut[data[i]];
+    data[i + 1] = lut[data[i + 1]];
+    data[i + 2] = lut[data[i + 2]];
   }
   context.putImageData(img, 0, 0);
 
@@ -205,17 +214,21 @@ const tick = (
     };
 
     let avoid = false;
-    obstacles.forEach((o) => {
+    const repel = (o: FlockObstacle) => {
       const diff = o.position.clone().subtract(b1.position);
       const distance = diff.length();
       // Guard against distance === 0: scaleTo divides by length and would
-      // poison the simulation with Infinity/NaN if a boid lands on an obstacle.
+      // poison the simulation with Infinity/NaN if a boid lands on the source.
       if (distance > 0 && distance < o.radius) {
         forces.avoidance.add(diff.clone().scaleTo(-1 / distance));
         forces.avoidance.active = true;
         avoid = true;
       }
-    });
+    };
+    obstacles.forEach(repel);
+    if (cursor) {
+      repel(cursor);
+    }
 
     if (!avoid) {
       boids.forEach((b2) => {
@@ -321,6 +334,8 @@ export type FlockProps = ThemedClassName<{
   cohesion?: number;
   separation?: number;
   avoidance?: number;
+  /** Pixel radius of the invisible repel zone tracking the pointer. 0 disables. */
+  cursorRepel?: number;
 }>;
 
 /**
@@ -342,8 +357,12 @@ export const Flock = ({
   cohesion = 3,
   separation = 3,
   avoidance = 3,
+  cursorRepel = 120,
 }: FlockProps) => {
   const canvas = useRef<HTMLCanvasElement>(null);
+  // Cursor in canvas-local coordinates, or null while the pointer is outside.
+  // Tracked via ref so mouse moves don't re-render or restart the simulation.
+  const cursorRef = useRef<Vec2 | null>(null);
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [{ width, height }, setSize] = useState<Dimensions>({ width: 0, height: 0 });
   const [obstacles, setObstacles] = useState<FlockObstacle[]>([]);
@@ -387,17 +406,24 @@ export const Flock = ({
       return;
     }
 
-    // Initialise the canvas to opaque black once. Without this, the very first
-    // pixels start at α=0 (transparent) and the per-frame source-over fillRect
-    // asymptotes to α ≈ 246/255 in 8-bit storage — letting the page background
-    // bleed ~3.5 % through. Starting opaque means fillRect maintains α=255
-    // (final.α = src.α + dest.α(1−src.α) = 1−trail + trail·1 = 1).
-    const initCtx = canvas.current.getContext('2d')!;
-    initCtx.fillStyle = '#000';
-    initCtx.fillRect(0, 0, width, height);
+    // The trail fade in tick() does getImageData + putImageData every frame.
+    // Without willReadFrequently, Chrome backs the canvas with a GPU texture and
+    // each read forces a GPU → CPU sync — single-digit ms per frame, enough to
+    // tank a 60 Hz simulation (boids visibly ~10× slower). The hint asks the
+    // browser to keep a CPU-resident copy, cutting that cost dramatically.
+    const ctx = canvas.current.getContext('2d', { willReadFrequently: true })!;
+
+    // Initialise the canvas to opaque black so the CPU-pass fade preserves
+    // α=255 forever (no page bleed through asymptotic-α gaps).
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
-      tick(canvas.current!, { width, height }, boids, obstacles, {
+      const cursor =
+        cursorRepel > 0 && cursorRef.current
+          ? { position: cursorRef.current, radius: cursorRepel }
+          : null;
+      tick(canvas.current!, { width, height }, boids, obstacles, cursor, {
         coloring,
         radius,
         maxVelocity,
@@ -423,10 +449,31 @@ export const Flock = ({
     cohesion,
     separation,
     avoidance,
+    cursorRepel,
   ]);
 
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if (cursorRef.current) {
+      cursorRef.current.x = x;
+      cursorRef.current.y = y;
+    } else {
+      cursorRef.current = new Vec2(x, y);
+    }
+  };
+  const handlePointerLeave = () => {
+    cursorRef.current = null;
+  };
+
   return (
-    <div className={mx('dx-expander absolute inset-0', classNames)} ref={setContainer}>
+    <div
+      className={mx('dx-expander absolute inset-0', classNames)}
+      ref={setContainer}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
       <canvas ref={canvas} width={width} height={height} />
     </div>
   );
