@@ -112,9 +112,10 @@ export const type: {
   // Schema-side overload restricted to the well-known unknown schemas and to
   // `Schema.Union(...)` of `Type.Type` entities (for filtering across a union
   // of ECHO types). Other raw schemas are rejected.
-  <S extends internal.UnknownTypeSchema<any, any>>(schema: S, props?: Props<Schema.Schema.Type<S>>): Filter<
-    Schema.Schema.Type<S>
-  >;
+  <S extends internal.UnknownTypeSchema<any, any>>(
+    schema: S,
+    props?: Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
   <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
     union: S,
     props?: Props<Schema.Schema.Type<S>>,
