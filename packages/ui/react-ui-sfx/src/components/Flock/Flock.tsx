@@ -178,28 +178,12 @@ const tick = (
 ) => {
   const { trail, maxVelocity, alignment, cohesion, separation } = config;
 
-  // Trail fade: multiply each RGB channel by `trail` with floor (`| 0`). Going
-  // through the canvas compositor (fillRect rgba(0,0,0,1-trail) source-over) is
-  // faster but leaves a sticky rounding band around RGB=9 — Chrome's
-  // premultiplied source-over rounds up just often enough that pixels never
-  // decay all the way to 0. Floor on a CPU pass guarantees monotonic decay.
-  // The context is created with willReadFrequently in the consumer so this
-  // read+write doesn't force a GPU→CPU sync per frame.
+  // Trail fade: paint semi-transparent black over the canvas. GPU-only path, no
+  // pixel-buffer roundtrip. Leaves a small rounding-residue at low RGB but the
+  // canvas is initialised opaque so α stays 255 and no page background bleeds.
   const context = canvas.getContext('2d')!;
-  const img = context.getImageData(0, 0, width, height);
-  const data = img.data;
-  // 256-entry LUT so the inner loop is a Uint8Array index, not a float multiply
-  // per channel. With ~1.5M iterations at 60 Hz this matters.
-  const lut = new Uint8Array(256);
-  for (let v = 0; v < 256; v++) {
-    lut[v] = (v * trail) | 0;
-  }
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = lut[data[i]];
-    data[i + 1] = lut[data[i + 1]];
-    data[i + 2] = lut[data[i + 2]];
-  }
-  context.putImageData(img, 0, 0);
+  context.fillStyle = `rgba(0, 0, 0, ${1 - trail})`;
+  context.fillRect(0, 0, width, height);
 
   // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
   renderObstacles(context, obstacles);
@@ -406,15 +390,10 @@ export const Flock = ({
       return;
     }
 
-    // The trail fade in tick() does getImageData + putImageData every frame.
-    // Without willReadFrequently, Chrome backs the canvas with a GPU texture and
-    // each read forces a GPU → CPU sync — single-digit ms per frame, enough to
-    // tank a 60 Hz simulation (boids visibly ~10× slower). The hint asks the
-    // browser to keep a CPU-resident copy, cutting that cost dramatically.
-    const ctx = canvas.current.getContext('2d', { willReadFrequently: true })!;
-
-    // Initialise the canvas to opaque black so the CPU-pass fade preserves
-    // α=255 forever (no page bleed through asymptotic-α gaps).
+    // Initialise the canvas to opaque black so the per-frame fillRect fade
+    // (rgba(0,0,0,1-trail) source-over) keeps α=255 and the page background
+    // can't bleed through asymptotic-α gaps.
+    const ctx = canvas.current.getContext('2d')!;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, width, height);
 
