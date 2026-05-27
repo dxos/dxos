@@ -123,9 +123,7 @@ const meta = {
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find(
-                (s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type)),
-              ),
+              type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type))),
             }));
           } else {
             await space.db.graph.schemaRegistry.register(types);
