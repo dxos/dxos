@@ -11,7 +11,6 @@ import { Icon, IconButton, ScrollArea, Tooltip, Treegrid } from '@dxos/react-ui'
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
-import { log } from '@dxos/log';
 
 export type ProcessTreeProps = {
   // TODO(burdon): Atom.
@@ -35,7 +34,6 @@ export const ProcessTree = React.memo(
         return bCompletedAt - aCompletedAt;
       });
 
-      log.info('ProcessTree render');
       return (
         <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expander' })} thin ref={forwardedRef}>
           <ScrollArea.Viewport>

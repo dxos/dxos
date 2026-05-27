@@ -4,7 +4,8 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
-import { Data, Equal } from 'effect';
+import * as Data from 'effect/Data';
+import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
 import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
@@ -17,7 +18,6 @@ import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -25,7 +25,6 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-import { getDebugName } from '@dxos/util';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
@@ -73,7 +72,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [branches],
     );
 
-    log.info('TracePanel render');
     return (
       <div
         {...composableProps(props, {
@@ -155,33 +153,29 @@ const getExecutionGraph = (
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
-    tapAtom('traceFeeds'),
-    Atom.map((feeds) => {
-      log.info('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
+    Atom.map((feeds) =>
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-      return AtomQuery.make(
+      AtomQuery.make(
         space.db,
         feeds.length > 0
           ? Query.type(Trace.Message).from(feeds[0])
           : (Query.select(Filter.nothing()) as Query.Query<never>),
-      );
-    }),
-    (_) => Atom.make((get) => get(get(_))),
-    tapAtom('traceMessages'),
+      ),
+    ),
+    (atom) => Atom.make((get) => get(get(atom))),
   );
 
   const activeProcesses = pipe(
     processesAtom,
+    Atom.debounce(Duration.millis(100)),
     Atom.map((processes) =>
+      // `Data.array` does structural comparison on the array elements.
       Data.array(
-        processes.filter(
-          (process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING,
-        ),
+        processes
+          .filter((process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
+          .map(Data.struct),
       ),
     ),
-    tapAtom('activeProcesses (before debounce)'),
-    debounceAtom({ delay: 100 }),
-    tapAtom('activeProcesses (after debounce)'),
   );
 
   return Atom.make((get) =>
@@ -190,7 +184,7 @@ const getExecutionGraph = (
       activeProcesses: get(activeProcesses),
       eventLimit,
     }),
-  ).pipe(tapAtom('executionGraph'));
+  );
 };
 TracePanel.displayName = 'TracePanel';
 
@@ -207,10 +201,6 @@ const ProcessTreeContainer = ({
   // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
   // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
   const processesDeferred = useDeferredValue(processes);
-  log.info('ProcessTreeContainer render', {
-    processes: getDebugName(processes),
-    processesDeferred: getDebugName(processesDeferred),
-  });
   return (
     <ProcessTree
       processes={processesDeferred}
@@ -219,53 +209,3 @@ const ProcessTreeContainer = ({
     />
   );
 };
-
-const tapAtom =
-  <A,>(label: string, ctx?: (value: A) => Record<string, any>) =>
-  (atom: Atom.Atom<A>): Atom.Atom<A> => {
-    return Atom.make((get) => {
-      log.info(label, ctx ? ctx(get(atom)) : undefined);
-      return get(atom);
-    });
-  };
-
-const debounceAtom =
-  (opts: { delay: number }) =>
-  <A,>(atom: Atom.Atom<A>): Atom.Atom<A> => {
-    let shouldWait = false,
-      updatePending = false,
-      timeoutId: ReturnType<typeof setTimeout> | undefined;
-    return Atom.make((get) => {
-      get.subscribe(atom, (value) => {
-        if (shouldWait) {
-          updatePending = true;
-          return;
-        }
-        get.setSelf(value);
-        shouldWait = true;
-        timeoutId = setTimeout(() => {
-          shouldWait = false;
-          timeoutId = undefined;
-          if (updatePending) {
-            get.setSelf(get.once(atom));
-            updatePending = false;
-          }
-        }, opts.delay);
-      });
-
-      if (shouldWait) {
-        updatePending = true;
-      } else {
-        shouldWait = true;
-        timeoutId = setTimeout(() => {
-          shouldWait = false;
-        }, opts.delay);
-      }
-
-      get.addFinalizer(() => {
-        clearTimeout(timeoutId);
-      });
-
-      return get.once(atom);
-    });
-  };
