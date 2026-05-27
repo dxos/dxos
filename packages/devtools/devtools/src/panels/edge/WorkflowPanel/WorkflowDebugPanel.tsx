@@ -10,9 +10,9 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
+import { makeFeedService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -240,7 +240,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
         },
       },
       database: Database.makeService(space.db),
-      queues: QueueService.make(space.queues),
+      feeds: makeFeedService(space.queues),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();

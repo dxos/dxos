@@ -54,10 +54,18 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Card.Content>
-      <TableComponent.Root ref={tableRef}>
-        <TableComponent.Content key={Obj.getURI(object)} model={model} presentation={presentation} schema={schema} />
-      </TableComponent.Root>
-    </Card.Content>
+    <Card.Body>
+      <Card.Row fullWidth>
+        <TableComponent.Root ref={tableRef}>
+          <TableComponent.Content
+            key={Obj.getURI(object)}
+            model={model}
+            presentation={presentation}
+            schema={schema}
+            classNames='scale-75'
+          />
+        </TableComponent.Root>
+      </Card.Row>
+    </Card.Body>
   );
 };

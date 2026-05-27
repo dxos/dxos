@@ -143,8 +143,7 @@ export default Capability.makeModule(() =>
           }, [space?.id]);
 
           if (!space) {
-            // TODO(dmaretskyi): Not really part of UX, but so we know what the error is.
-            return <span>No active space</span>;
+            return null;
           }
 
           return <TracePanel space={space} />;

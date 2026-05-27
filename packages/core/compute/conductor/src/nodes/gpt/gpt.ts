@@ -14,10 +14,8 @@ import * as Struct from 'effect/Struct';
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Database, Feed, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -123,12 +121,11 @@ export const gptNode = defineComputeNode({
       'Cannot use both history and conversation',
     );
 
-    const { queues } = yield* QueueService;
-    const historyMessages = conversation
-      ? yield* Effect.tryPromise({
-          try: () => queues.get<Message.Message>(EchoURI.parse(conversation.uri)).queryObjects(),
-          catch: (e) => e as Error,
-        })
+    const conversationFeed = conversation
+      ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
+      : undefined;
+    const historyMessages = conversationFeed
+      ? yield* Feed.runQuery(conversationFeed, Filter.type(Message.Message))
       : (history ?? []);
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
@@ -159,6 +156,7 @@ export const gptNode = defineComputeNode({
       ToolExecutionService.layerEmpty,
       Layer.succeed(Trace.TraceService, trace),
       Layer.succeed(Database.Service, yield* Database.Service),
+      Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
       Layer.succeed(Operation.Service, yield* Operation.Service),
       Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),
     );
@@ -175,8 +173,8 @@ export const gptNode = defineComputeNode({
         .pipe(Effect.provide(runDeps));
       log.info('messages', { messages });
 
-      if (conversation) {
-        yield* Effect.promise(() => queues.get<Message.Message>(EchoURI.parse(conversation.uri)).append([...messages]));
+      if (conversationFeed) {
+        yield* Feed.append(conversationFeed, [...messages]).pipe(Effect.provide(runDeps));
       }
 
       const text = messages

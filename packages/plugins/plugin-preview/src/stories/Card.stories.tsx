@@ -16,7 +16,17 @@ import { type Organization, type Person, type Pipeline, type Task } from '@dxos/
 import { translations } from '#translations';
 
 import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { DefaultStory, createExpando, createOrganization, createPerson, createProject, createTask } from './testing';
+import {
+  DefaultStory,
+  createExpando,
+  createOrganization,
+  createPerson,
+  createPersonEmpty,
+  createProject,
+  createTableEmpty,
+  createTask,
+  createUnknown,
+} from './testing';
 
 random.seed(999);
 
@@ -47,6 +57,52 @@ export const _Form: StoryObj<typeof DefaultStory<Person.Person>> = {
     Component: FormCard,
     createObject: createPerson,
     image: true,
+  },
+};
+
+export const _FormEditable: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: FormCard,
+    createObject: createPerson,
+    image: true,
+    componentProps: { readonly: false, layout: 'full' },
+  },
+};
+
+/**
+ * Empty-state variant: the subject has no resolvable schema so `FormCard` renders
+ * `<Card.Body><Card.Row><Card.Text variant='description'>No preview</Card.Text></Card.Row></Card.Body>`.
+ * Use this story to verify the empty message lands in the card's center column.
+ */
+export const _FormEmpty: StoryObj<typeof DefaultStory> = {
+  args: {
+    Component: FormCard,
+    createObject: createUnknown,
+  },
+};
+
+/**
+ * No-values variant: the subject has a valid schema (Person) but no populated
+ * fields, so `FormCard` falls through to the same empty state instead of
+ * rendering an empty scrollarea.
+ */
+export const _FormNoValues: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: FormCard,
+    createObject: createPersonEmpty,
+  },
+};
+
+/**
+ * Table-like variant: the subject has values only in form-hidden fields
+ * (`view`, `sizes` annotated `FormInputAnnotation.set(false)`). `FormCard`
+ * must consult the schema's form-input annotations — not just `Object.keys` —
+ * to recognize this case and fall through to the empty state.
+ */
+export const _FormTableEmpty: StoryObj<typeof DefaultStory<any>> = {
+  args: {
+    Component: FormCard,
+    createObject: createTableEmpty,
   },
 };
 
@@ -108,10 +164,10 @@ export const _Json = {
       <div className='flex justify-center p-16'>
         <div className='dx-card-min-width dx-card-max-width'>
           <Card.Root>
-            <Card.Toolbar>
+            <Card.Header>
               <Card.IconBlock />
               <Card.Title>JSON</Card.Title>
-            </Card.Toolbar>
+            </Card.Header>
             <JsonCard data={data} />
           </Card.Root>
         </div>

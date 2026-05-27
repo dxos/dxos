@@ -154,7 +154,7 @@ export class Binder extends Resource {
       await this._updateBindings(results);
       log('sync complete', {
         blueprints: this._registry.get(this._blueprints).length,
-        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Blueprint.getKey(bp)),
+        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
       });
     }
   }
@@ -180,7 +180,17 @@ export class Binder extends Resource {
 
     log('_updateBindings resolved', {
       resolvedBlueprints: resolvedBlueprints.length,
-      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Blueprint.getKey(bp)),
+      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
+    });
+
+    // Drop blueprints that have no registry key — they cannot be used downstream
+    // (e.g. tool/operation registration calls Blueprint.getKey which throws).
+    const keyedBlueprints = resolvedBlueprints.filter((bp) => {
+      if (Obj.getMeta(bp).key === undefined) {
+        log.warn('dropping blueprint with no meta key', { uri: Obj.getURI(bp) });
+        return false;
+      }
+      return true;
     });
 
     // Filter current state to only items still in the reduced binding set,

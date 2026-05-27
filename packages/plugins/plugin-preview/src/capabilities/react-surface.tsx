@@ -13,16 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import {
-  DynamicTypeCard,
-  ExpandoCard,
-  FormCard,
-  JsonCard,
-  OrganizationCard,
-  PersonCard,
-  ProjectCard,
-  TaskCard,
-} from '../cards';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -103,7 +94,9 @@ export default Capability.makeModule(() =>
           }
         },
         component: ({ data, role }) => {
-          return <DynamicTypeCard role={role} subject={data.subject} />;
+          // Dynamic/mutable schemas render an editable, full-layout form;
+          // FormCard handles both static and runtime schema resolution internally.
+          return <FormCard role={role} subject={data.subject} readonly={false} layout='full' />;
         },
       }),
 

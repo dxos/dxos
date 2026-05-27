@@ -51,7 +51,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     Option.fromNullable,
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
+    Option.getOrElse(() => 'ph--circle-dashed--regular'),
   );
 
   // TODO(burdon): BUG: Includes item itself.
@@ -60,9 +60,9 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   return (
     <Menu.Root>
       <Card.Root classNames={classNames}>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.Icon icon={icon} />
-          <Card.Title>{Entity.getLabel(subject)}</Card.Title>
+          <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Menu.Trigger asChild disabled={!menuItems?.length}>
             <Toolbar.IconButton
               iconOnly
@@ -72,10 +72,10 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
             />
           </Menu.Trigger>
           <Menu.Content items={menuItems} />
-        </Card.Toolbar>
-        <Card.Content>
+        </Card.Header>
+        <Card.Body>
           <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
-        </Card.Content>
+        </Card.Body>
       </Card.Root>
     </Menu.Root>
   );

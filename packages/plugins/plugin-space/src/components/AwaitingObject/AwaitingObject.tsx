@@ -74,7 +74,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
             </>
           ) : (
             <>
-              <Icon icon='ph--circle-dashed--regular' />
+              <Icon icon='ph--placeholder--regular' />
               <span>{t('object-not-found.label')}</span>
             </>
           )}

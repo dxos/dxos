@@ -58,6 +58,8 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
     return yield* Effect.async<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
+        let lastSql: string | undefined;
+        let lastParams: ReadonlyArray<unknown> | undefined;
         const message = event.data as OpfsWorkerMessage;
         try {
           switch (message[0]) {
@@ -92,6 +94,8 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
             default: {
               const [id, sql, params] = message;
               messageId = id;
+              lastSql = sql;
+              lastParams = params;
               const results: Array<any> = [];
               const begin = performance.now();
               let columns: Array<string> | undefined;
@@ -112,7 +116,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
         } catch (e: any) {
           // Logged at debug level: SQL errors are returned to the caller via postMessage,
           // and some are expected (e.g. ALTER TABLE ADD COLUMN against an already-migrated DB).
-          log('sqlite error', { error: e });
+          log('sqlite error', { error: e, sql: lastSql, params: lastParams });
           const message = 'message' in e ? e.message : String(e);
           options.port.postMessage([messageId!, message, undefined]);
         }

@@ -278,7 +278,7 @@ const createSchemaNode = ({
       nodeId: typename,
     })),
   );
-  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular');
+  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular');
   const iconHue = Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue;
   return Node.make({
     id: nodeId,

@@ -1,0 +1,340 @@
+---
+id: org.dxos.plugin.explorer
+name: ExplorerPlugin
+version: 0.1.0
+---
+
+An interactive hypergraph visualization plugin for `DXOS` Composer that reveals relationships between objects in a workspace.
+The plugin renders a live `Graph` object — backed by a `View` and a `QueryAST` query — through four switchable layout
+variants: force-directed, radial cluster, edge bundling, and lattice.
+Node colours are derived from ECHO object types; hovering a node triggers an anchor-card preview.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type QueryInput
+  fields:
+    raw?: string               # raw query string entered by the user
+    ast: QueryAST.Query        # compiled AST produced by QueryBuilder
+```
+
+```mdl
+type GraphObject
+  desc: ECHO-persistent object that describes a hypergraph visualisation session.
+  fields:
+    name?: string
+    view: Ref<View>            # schema view that defines visible fields
+    query: QueryInput
+```
+
+```mdl
+type ExplorerVariant
+  literals: force | cluster | bundle | lattice
+```
+
+## Components
+
+```mdl
+component ExplorerArticle
+  desc: |
+    Top-level article / section surface for a Graph object.
+    Renders one of four SVG layout variants and a toolbar for switching between them.
+  props:
+    role: article | section
+    subject: Ref<View>
+    attendableId?: string
+  state:
+    variant: ExplorerVariant        # active layout; default force
+    filter?: Filter.Any             # compiled from toolbar query input
+    model?: SpaceGraphModel         # live reactive graph built from db + filter
+  slots:
+    toolbar?: ReactNode             # shown only when role === article
+  actions:
+    setVariant(v: ExplorerVariant)
+    setFilter(raw: string)
+  layout: |
+    ┌────────────────────────────────┐
+    │ [toolbar slot — article only]  │
+    │  [QueryEditor] [variant tabs]  │
+    ├────────────────────────────────┤
+    │                                │
+    │   SVG canvas (force / cluster  │
+    │   / bundle / lattice)          │
+    │                                │
+    └────────────────────────────────┘
+```
+
+```mdl
+component Visualization
+  desc: |
+    Internal component that owns a single persistent SVG.Graph mount.
+    Swaps the active GraphProjector when the variant changes, seeding the
+    new projector with the previous layout so node positions tween smoothly.
+  props:
+    variant: ExplorerVariant
+    model: SpaceGraphModel
+  state:
+    projector?: GraphProjector<SpaceGraphNode>
+  actions:
+    createProjector(variant: ExplorerVariant, prev?: GraphLayout) → GraphProjector
+    createRenderNode(variant: ExplorerVariant) → RenderNode
+```
+
+## Operations
+
+```mdl
+op createGraph
+  desc: |
+    Creates a new Graph object scoped to a target space or collection.
+    Derives a ViewModel from the database for the selected typename, then
+    writes the object via SpaceOperation.AddObject.
+  input:
+    name?: string
+    typename?: string            # ECHO typename used to seed the initial view
+    target: Space | Collection
+    targetNodeId?: string
+  output: GraphObject
+  effects: [echo:write]
+  note: |
+    The typename is resolved through ViewModel.makeFromDatabase; the resulting
+    View is stored as a Ref inside the Graph object.
+```
+
+```mdl
+op buildFilter
+  desc: |
+    Compiles a raw query string into a Filter via QueryBuilder.
+    Pure — no side effects; result is passed to SpaceGraphModel.setFilter.
+  input:
+    raw: string
+  output: Filter.Any
+  errors:
+    ParseError: raw string is not valid query syntax
+```
+
+## Features
+
+```mdl
+feat F-1: Graph Object
+
+  req F-1.1: A Graph object stores a name, a View ref, and a compiled QueryAST.
+  req F-1.2:
+    when: user creates a new graph
+    then: op:createGraph derives a ViewModel from the chosen typename and writes the Graph to ECHO
+
+  req F-1.3:
+    when: Graph is persisted
+    then: it appears in the space object list and can be opened as an article
+```
+
+```mdl
+feat F-2: Live Graph Model
+
+  req F-2.1:
+    when: ExplorerArticle mounts with a valid Graph subject
+    then: SpaceGraphModel is opened against the subject's database
+
+  req F-2.2:
+    when: user types a query in the toolbar
+    then: op:buildFilter compiles the raw string; model.setFilter applied; SVG re-renders
+
+  req F-2.3:
+    when: Graph is unmounted
+    then: SpaceGraphModel is closed and all subscriptions released
+
+  req F-2.4:
+    when: an ECHO object in the database changes
+    then: SpaceGraphModel emits an update and SVG.Graph re-renders without full remount
+    tags: [reactive, collaborative]
+```
+
+```mdl
+feat F-3: Visualization Variants
+
+  req F-3.1:
+    when: variant tab is selected
+    then: Visualization swaps projector; previous node x/y seed the new projector so positions tween
+
+  req F-3.2:
+    when: variant is force
+    then: SVG.Zoom wrapper is mounted enabling pan/zoom drag interaction
+
+  req F-3.3:
+    when: variant is cluster or bundle
+    then: no SVG.Zoom wrapper; leaves grouped by typename; radial labels fade in after tween
+
+  req F-3.4:
+    when: variant is lattice
+    then: nodes rendered as small rounded rectangles sorted by typename then label
+
+  req F-3.5:
+    when: variant is cluster and user clicks a root or group node
+    then: subtree toggles collapsed/expanded via GraphClusterProjector.toggleCollapsed
+```
+
+```mdl
+feat F-4: Node Interaction
+
+  req F-4.1:
+    when: pointer enters a node
+    then: DxAnchorActivate event dispatched with the object's DXN and label, kind: card
+
+  req F-4.2:
+    when: pointer leaves a node
+    then: DxAnchorActivate cleared (onNodeHover called with null)
+
+  req F-4.3:
+    when: node has no underlying ECHO object (synthetic root / group)
+    then: no preview dispatched; node rendered in neutral colour
+```
+
+## Acceptance
+
+```mdl
+test T-1: Graph creation
+  given: user opens the object creation dialog and selects Graph
+  when: a typename is selected and the form submitted
+  then:
+    - op:createGraph runs without error
+    - new Graph object visible in space object list
+    - Graph.view references a valid View object
+```
+
+```mdl
+test T-2: Article mounts model
+  given: a Graph with a populated query
+  when: ExplorerArticle is rendered with role === article
+  then:
+    - SpaceGraphModel is opened
+    - SVG canvas renders nodes derived from the database
+    - toolbar shows QueryEditor and variant tabs
+```
+
+```mdl
+test T-3: Variant switch preserves positions
+  given: force variant is active with nodes positioned
+  when: user switches to cluster variant
+  then:
+    - projector is recreated from previous layout
+    - nodes tween from old positions to cluster target positions
+    - SVG.Zoom wrapper is absent in the new mount
+```
+
+```mdl
+test T-4: Query filter updates graph
+  given: ExplorerArticle is open with all objects visible
+  when: user types a typename filter in QueryEditor
+  then:
+    - op:buildFilter returns a Filter without error
+    - SpaceGraphModel.setFilter applied
+    - only matching nodes remain visible in the SVG
+```
+
+```mdl
+test T-5: Node hover preview
+  given: force-directed graph with at least one ECHO object node
+  when: pointer enters that node
+  then:
+    - DxAnchorActivate event fired with correct DXN
+    - kind === card
+```
+
+```mdl
+test T-6: Lattice sort order
+  given: database contains objects of two typenames A and B
+  when: lattice variant is active
+  then:
+    - all typename-A nodes appear before typename-B nodes (or vice-versa, consistent order)
+    - within each group nodes are ordered alphabetically by label
+```
+
+```mdl
+test T-7: Model closed on unmount
+  given: ExplorerArticle is mounted and SpaceGraphModel is open
+  when: component unmounts
+  then:
+    - SpaceGraphModel.close() is called
+    - no lingering ECHO subscriptions remain
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

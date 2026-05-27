@@ -56,7 +56,7 @@ export const ErrorStack = ({ error, frames: framesProp }: ErrorStackProps) => {
         const local = frame.fileName
           ? parseLocalFrame(frame.fileName, frame.lineNumber, frame.columnNumber)
           : undefined;
-        const name = frame.functionName ?? '<anonymous>';
+        const functionName = frame.functionName ?? '<anonymous>';
         return (
           <div
             key={i}
@@ -75,14 +75,15 @@ export const ErrorStack = ({ error, frames: framesProp }: ErrorStackProps) => {
               />
               <div className='absolute top-1/2 -translate-y-1/2 left-1/2 right-0 h-px bg-neutral-500' />
             </div>
+
             {local ? (
               <a href={local.href} className='truncate self-center'>
-                {name}
+                {functionName}
               </a>
             ) : (
-              <span className='text-subdued truncate self-center'>{name}</span>
+              <span className='text-subdued truncate self-center'>{functionName}</span>
             )}
-            <span className='text-xs text-subdued truncate self-center'>{local?.fileName ?? ''}</span>
+            <span className='text-xs text-subdued truncate self-center truncate'>{local?.fileName ?? ''}</span>
             <span className='text-xs text-subdued text-right self-center'>
               {local ? `${frame.lineNumber}:${frame.columnNumber}` : ''}
             </span>
@@ -103,10 +104,15 @@ const parseLocalFrame = (fileUrl: string, line?: number, col?: number): LocalFra
     if (!pathname.startsWith('/@fs/')) {
       return undefined;
     }
-    const localPath = pathname.slice(4); // /@fs/Users/... → /Users/...
+
+    const FILE_PREFIX = '/@fs';
+    const localPath = pathname.slice(FILE_PREFIX.length); // /@fs/Users/... → /Users/...
+    const PKG_PREFIX = '/packages/';
+    const i = localPath.indexOf(PKG_PREFIX);
+    const path = i === -1 ? localPath : localPath.substring(i + PKG_PREFIX.length);
     return {
       href: `vscode://file/${localPath}:${line ?? 1}:${col ?? 1}`,
-      fileName: pathname.split('/').pop() ?? localPath,
+      fileName: path,
     };
   } catch {
     return undefined;

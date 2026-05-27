@@ -22,7 +22,15 @@ export type ExtractCtx = {
 };
 
 export type ExtractResult = {
+  /** Newly constructed objects that should be `db.add`-ed by the handler. */
   created: Obj.Any[];
+  /**
+   * Existing objects that the extractor mutated in place (via `Obj.update`).
+   * The handler will NOT re-add these to the database, but will still attach a
+   * fresh `ExtractedFrom` relation so the source `Message` is recorded as
+   * provenance for the update.
+   */
+  updated?: Obj.Any[];
   relations: Relation.Unknown[];
   summary?: string;
 };

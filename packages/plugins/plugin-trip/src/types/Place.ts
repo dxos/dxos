@@ -12,7 +12,10 @@ import { Format } from '@dxos/echo/internal';
  */
 export const Place = Schema.Struct({
   name: Schema.optional(Schema.String),
-  code: Schema.optional(Schema.String),
+  code: Schema.optional(Schema.String).annotations({
+    description: 'IATA / IBNR / port / property code',
+    examples: ['LHR', 'CDG', 'LAX', 'HNL'],
+  }),
   city: Schema.optional(Schema.String),
   country: Schema.optional(Schema.String),
   geo: Format.GeoPoint.pipe(Schema.optional),

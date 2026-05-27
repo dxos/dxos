@@ -6,7 +6,7 @@ import { AiService } from '@dxos/ai';
 import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Credential, Operation, StorageService, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { FunctionInvocationService, QueueService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 
 import { meta } from '#meta';
 
@@ -30,7 +30,6 @@ export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
     Feed.FeedService,
     FunctionInvocationService,
     Operation.Service,
-    QueueService,
     StorageService.StorageService,
     Trace.TraceService,
   ].map((tag) => tag.key),

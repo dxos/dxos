@@ -8,7 +8,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Order, Query } from '@dxos/echo';
+import { Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EchoURI, SpaceId } from '@dxos/keys';
@@ -1616,6 +1616,22 @@ describe('QueryPlanner', () => {
       (step) => step._tag === 'FilterStep' && JSON.stringify(step.filter).includes('timestamp'),
     );
     expect(hasTimestampFilter).toBe(true);
+  });
+
+  test('childOf with limit: limit must not be propagated into the SelectStep', () => {
+    // Regression: when a child-of FilterStep sits between SelectStep and LimitStep, pushing
+    // the limit into the SelectStep slices candidates before the filter runs and starves the
+    // result set (e.g. wildcard select grabs 10 random objects, then child-of leaves 0).
+    const parentRef = Ref.fromURI('dxn:echo:@:01J7XKZ6E3MZRY7H9TGFR3W6CN' as any);
+    const query = Query.select(Filter.everything()).select(Filter.childOf(parentRef)).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
+    expect(selectStep).toBeDefined();
+    expect((selectStep as any).limit).toBeUndefined();
+    const hasLimitStep = plan.steps.some((step) => step._tag === 'LimitStep');
+    const orderWithLimit = plan.steps.some((step) => step._tag === 'OrderStep' && (step as any).limit === 10);
+    expect(hasLimitStep || orderWithLimit).toBe(true);
   });
 });
 

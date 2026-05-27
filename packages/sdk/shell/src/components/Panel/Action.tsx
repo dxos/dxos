@@ -41,7 +41,7 @@ const defaultActions = {
   noopAction: {
     label: 'No-op',
     description: '',
-    icon: 'ph--placeholder--regular',
+    icon: 'ph--circle-dashed--regular',
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;

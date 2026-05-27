@@ -58,16 +58,7 @@ export const bundleFunction = async (options: BundleOptions): Promise<BundleResu
     loader: {
       '.wasm': 'copy',
     },
-    external: [
-      'node:async_hooks',
-      'cloudflare:workers',
-      'functions-service:user-script',
-      'node:async_hooks',
-      'node:buffer',
-      'node:crypto',
-      'node:diagnostics_channel',
-      'node:events',
-    ],
+    external: ['node:*', 'cloudflare:workers', 'functions-service:user-script'],
     plugins: [
       httpPlugin,
       {
