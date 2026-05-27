@@ -166,6 +166,7 @@ export namespace SpaceOperation {
     }),
   });
 
+  // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
   export const RemoveObjectsOutput = Schema.Struct({
     objects: Schema.Array(Entity.Unknown).annotations({ description: 'The removed entities.' }),
     parentCollection: Type.getSchema(Collection.Collection).annotations({

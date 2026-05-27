@@ -6,17 +6,25 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
+import { type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import { Form, FormFieldLabel, type FormFieldMap, type FormRootProps, SelectField, omitId } from '@dxos/react-ui-form';
+import {
+  type ExcludeId,
+  Form,
+  FormFieldLabel,
+  type FormFieldMap,
+  type FormRootProps,
+  SelectField,
+  omitId,
+} from '@dxos/react-ui-form';
 
 import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
 
-type TriggerFormSchema = Omit<Type.InstanceType<typeof Trigger.Trigger>, 'id'>;
+type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
 
 export type TriggerEditorProps = {
   db: Database.Database;
@@ -40,14 +48,14 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
     [trigger],
   );
 
-  const triggerSchema = useMemo(() => omitId(Type.getSchema(Trigger.Trigger)), []);
+  const triggerSchema = useMemo(() => omitId(Trigger.Trigger), []);
   const defaultValues = useMemo(() => {
     const { id: _, ...values } = trigger;
     return values;
   }, [trigger]);
 
   return (
-    <Form.Root<any>
+    <Form.Root<TriggerFormSchema>
       {...formProps}
       db={db}
       schema={triggerSchema}

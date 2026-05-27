@@ -74,9 +74,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
       {functions.length > 0 && (
         <List.Root<Operation.PersistentOperation>
           items={functions}
-          isItem={Schema.is(
-            Type.getSchema(Operation.PersistentOperation) as Schema.Schema<Operation.PersistentOperation>,
-          )}
+          isItem={Schema.is(Type.getSchema(Operation.PersistentOperation))}
           getId={(func) => func.id}
         >
           {({ items }) => (

@@ -124,9 +124,9 @@ export const isEntity = (value: unknown): value is Unknown => {
  * ```
  */
 export const instanceOf: {
-  <S extends Type.AnyObj | Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
-  <S extends Type.AnyObj | Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
-} = ((...args: [schema: Type.AnyObj | Type.AnyRelation, value?: unknown]) => {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyEntity, value?: unknown]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }

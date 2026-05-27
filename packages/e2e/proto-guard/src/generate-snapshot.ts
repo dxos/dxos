@@ -73,7 +73,8 @@ const seedData = async (client: Client) => {
     const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
 
     Type.addFields(dynamicSchema, { name: Schema.String, todo: Ref.Ref(Todo) });
-    Obj.update(object2 as any, (object2: any) => {
+    // `name`/`todo` are added dynamically above via `Type.addFields`, so they are not in the static type.
+    Obj.update(object2, (object2: any) => {
       object2.name = 'Test';
       object2.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
     });

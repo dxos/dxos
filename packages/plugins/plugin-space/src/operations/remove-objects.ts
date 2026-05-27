@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
           });
         }
 
-        const db = Obj.getDatabase(entity as Obj.Unknown);
+        const db = Entity.getDatabase(entity);
         db?.remove(entity);
       }
 

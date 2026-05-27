@@ -14,8 +14,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
-      const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema as any]))) as Type.Type[];
-      const schema = schemas[0];
+      const [schema] = yield* Effect.promise(() => db.schemaRegistry.register([input.schema as Type.Type]));
       Type.update(schema, (draft) => {
         if (input.name) {
           draft.name = input.name;
@@ -30,9 +29,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
       });
 
       yield* Plugin.activate(SpaceEvents.SchemaAdded);
-      const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
+      const onTypeAdded = yield* Capability.getAll(SpaceCapabilities.OnTypeAdded);
       yield* Effect.all(
-        onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
+        onTypeAdded.map((callback) => callback({ db, type: schema, show: input.show })),
         { concurrency: 'unbounded' },
       );
 
@@ -45,7 +44,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         },
       });
 
-      return { id: schema.id!, object: schema as any };
+      return { id: schema.id, object: schema };
     }),
   ),
 );

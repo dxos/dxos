@@ -28,17 +28,15 @@ export const handler = Effect.fn(function* ({
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const echoSchema = (yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run())) as Type.Type[];
+  const echoSchema = yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run());
   const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
 
   const schemas = [
-    // Skip persisted drafts without a typename — they can't be listed by name.
-    ...echoSchema
-      .map((schema) => {
-        const meta = Type.getMeta(schema);
-        return meta.key != null ? { id: schema.id, typename: meta.key, version: meta.version ?? '' } : undefined;
-      })
-      .filter((entry): entry is { id: string; typename: string; version: string } => entry != null),
+    ...echoSchema.map((type) => ({
+      id: type.id,
+      typename: Type.getTypename(type),
+      version: Type.getVersion(type),
+    })),
     ...runtimeSchema.map((type) => {
       const schema = Type.getSchema(type as Type.AnyEntity);
       const schemaAnnotation = getTypeAnnotation(schema)!;

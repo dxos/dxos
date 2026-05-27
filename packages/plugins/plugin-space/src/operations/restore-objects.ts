@@ -25,8 +25,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreObjects> = Spa
       Obj.update(parentCollection, (parentCollection) => {
         indices.forEach((index: number, i: number) => {
           if (index !== -1) {
-            // Persisted Type entities are not held by collections, so their indices are -1 above
-            // and never reach this branch — the cast is safe for the remaining Obj entries.
             parentCollection.objects.splice(index, 0, Ref.make(restored[i] as Obj.Unknown));
           }
         });

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Annotation as EchoAnnotation } from '@dxos/echo';
+import { Annotation as EchoAnnotation, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
@@ -43,11 +43,20 @@ import { type FormLayoutProps as NaturalFormLayoutProps } from './Layout/FormLay
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
+export type ExcludeId<S extends Schema.Schema.AnyNoContext | Type.AnyEntity> = Omit<
+  S extends Type.AnyEntity ? Type.InstanceType<S> : S extends Schema.Schema.AnyNoContext ? Schema.Schema.Type<S> : never,
+  'id'
+>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
-export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
-  schema.pipe(Schema.omit('id')) as any;
+export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(
+  schemaOrType: S,
+): Schema.Schema<ExcludeId<S>, ExcludeId<S>> => {
+  const schema = Type.isType(schemaOrType)
+    ? Type.getSchema(schemaOrType)
+    : (schemaOrType as Schema.Schema.AnyNoContext);
+  return schema.pipe(Schema.omit('id')) as any;
+};
 
 /**
  * Drop fields annotated with `FormInputAnnotation.set(false)` from a schema so

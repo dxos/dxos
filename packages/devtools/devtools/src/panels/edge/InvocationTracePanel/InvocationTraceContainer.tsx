@@ -207,7 +207,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Option.getOrUndefined,
     Match.value,
     Match.not(Match.defined, () => 'unknown'),
-    Match.when(Schema.is(Type.getSchema(TraceEvent) as Schema.Schema<TraceEvent>), () => 'logs'),
+    Match.when(Schema.is(Type.getSchema(TraceEvent)), () => 'logs'),
     Match.orElse(() => 'execution-graph'),
   );
 

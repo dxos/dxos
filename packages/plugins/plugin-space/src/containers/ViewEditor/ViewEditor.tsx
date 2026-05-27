@@ -87,7 +87,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   return (
     <NaturalViewEditor
       registry={db.schemaRegistry}
-      schema={type}
+      type={type}
       view={view}
       mode='tag'
       db={db}

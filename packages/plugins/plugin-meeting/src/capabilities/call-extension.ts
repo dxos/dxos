@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
-import { Filter, type Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type CallState, type MediaState, CallsCapabilities } from '@dxos/plugin-calls';
@@ -94,7 +94,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
       input: {
         message,
-        objects: await Promise.all(objects.map((obj) => processContextObject(obj as Obj.Unknown))),
+        objects: await Promise.all(objects.filter(Obj.isObject).map((obj) => processContextObject(obj))),
       },
       function: extractionAnthropicFunction,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },

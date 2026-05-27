@@ -173,7 +173,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
         {filteredTriggers.length > 0 && (
           <List.Root<Trigger.Trigger>
             items={filteredTriggers}
-            isItem={Schema.is(Type.getSchema(Trigger.Trigger) as Schema.Schema<Trigger.Trigger>)}
+            isItem={Schema.is(Type.getSchema(Trigger.Trigger))}
             getId={(field) => field.id}
           >
             {({ items: filteredTriggers }) => (

@@ -137,7 +137,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
     <TestLayout json={json}>
       <ViewEditor
         ref={projectionRef}
-        schema={type}
+        type={type}
         view={view}
         registry={space?.db.schemaRegistry}
         mode={props.mode}

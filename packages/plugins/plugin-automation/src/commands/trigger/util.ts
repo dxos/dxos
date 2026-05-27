@@ -13,7 +13,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -33,13 +34,7 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger: (
-  trigger: Trigger.Trigger,
-  remoteStatus?: TriggerRemoteStatus,
-) => Effect.Effect<any, any, any> = Effect.fn(function* (
-  trigger: Trigger.Trigger,
-  remoteStatus?: TriggerRemoteStatus,
-): any {
+export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
   const fn = trigger.function && (yield* Database.load(trigger.function));
 
   return FormBuilder.make({
