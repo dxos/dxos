@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import { Record } from 'effect';
+import * as Record from 'effect/Record';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';

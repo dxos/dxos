@@ -4,7 +4,6 @@
 
 import React, { useCallback } from 'react';
 
-import { dbg } from '@dxos/log';
 import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
@@ -76,4 +75,4 @@ const getIconHueStyles = (iconHue?: string): string | undefined => {
   return styles?.foreground;
 };
 
-import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { getStyles, hoverableOpenControlItem } from '@dxos/ui-theme';
