@@ -44,13 +44,13 @@ describe('Relation', () => {
       });
       const snapshot = Relation.getSnapshot(rel);
 
-      // getSourceDXN - works with both.
-      expect(Relation.getSourceDXN(rel)).toBeDefined();
-      expect(Relation.getSourceDXN(snapshot)).toBeDefined();
+      // getSourceURI - works with both.
+      expect(Relation.getSourceURI(rel)).toBeDefined();
+      expect(Relation.getSourceURI(snapshot)).toBeDefined();
 
-      // getTargetDXN - works with both.
-      expect(Relation.getTargetDXN(rel)).toBeDefined();
-      expect(Relation.getTargetDXN(snapshot)).toBeDefined();
+      // getTargetURI - works with both.
+      expect(Relation.getTargetURI(rel)).toBeDefined();
+      expect(Relation.getTargetURI(snapshot)).toBeDefined();
 
       // getSource - works with both.
       expect(Relation.getSource(rel)).toBeDefined();

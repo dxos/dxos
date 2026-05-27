@@ -1,0 +1,139 @@
+{
+  "BFOS7ZGTAX26HZGL7ABYZ5WNHTTPORMUZ": {
+    "01KSFS6MM7SD981Y0A6WR1QBVP": {
+      "id": "01KSFS6MM7SD981Y0A6WR1QBVP",
+      "@type": "dxn:type:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BFOS7ZGTAX26HZGL7ABYZ5WNHTTPORMUZ:01KSFS6MM7SD981Y0A6WR1QBVP",
+      "name": "My Space"
+    }
+  },
+  "B3V76DPJAWD6VGGKXNS4WKQ24GWWSOFPB": {
+    "01KSFS6N3NJ0ZCJAHMZKW98BSY": {
+      "id": "01KSFS6N3NJ0ZCJAHMZKW98BSY",
+      "@type": "dxn:type:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:B3V76DPJAWD6VGGKXNS4WKQ24GWWSOFPB:01KSFS6N3NJ0ZCJAHMZKW98BSY",
+      "name": "first-space"
+    },
+    "01KSFS6N46RSW7NWHA1P9Z25DF": {
+      "id": "01KSFS6N46RSW7NWHA1P9Z25DF",
+      "@type": "dxn:type:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:B3V76DPJAWD6VGGKXNS4WKQ24GWWSOFPB:01KSFS6N46RSW7NWHA1P9Z25DF",
+      "array": ["one", "two", "three"],
+      "string": "hello world!",
+      "value": 100
+    },
+    "01KSFS6NKAYZRQS1A706AKAP8F": {
+      "id": "01KSFS6NKAYZRQS1A706AKAP8F",
+      "@type": "dxn:type:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:B3V76DPJAWD6VGGKXNS4WKQ24GWWSOFPB:01KSFS6NKAYZRQS1A706AKAP8F",
+      "value": [
+        1,
+        2,
+        3,
+        {
+          "/": "dxn:echo:@:01KSFS6NKFZZY1PTWW2SX21938"
+        }
+      ]
+    },
+    "01KSFS6NKFZZY1PTWW2SX21938": {
+      "id": "01KSFS6NKFZZY1PTWW2SX21938",
+      "@type": "dxn:type:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:B3V76DPJAWD6VGGKXNS4WKQ24GWWSOFPB:01KSFS6NKFZZY1PTWW2SX21938",
+      "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    }
+  },
+  "BZKI6HQOM6Q7HRGHJFDIJSICPANZ655V6": {
+    "01KSFS6P2NRFPAVKRJ7H1W7GJ4": {
+      "id": "01KSFS6P2NRFPAVKRJ7H1W7GJ4",
+      "@type": "dxn:type:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BZKI6HQOM6Q7HRGHJFDIJSICPANZ655V6:01KSFS6P2NRFPAVKRJ7H1W7GJ4",
+      "name": "second-space"
+    },
+    "01KSFS6P39RS540NVQ91XV7D35": {
+      "id": "01KSFS6P39RS540NVQ91XV7D35",
+      "@type": "dxn:type:org.dxos.type.schema:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BZKI6HQOM6Q7HRGHJFDIJSICPANZ655V6:01KSFS6P39RS540NVQ91XV7D35",
+      "jsonSchema": {
+        "$id": "dxn:echo:@:01KSFS6P39RS540NVQ91XV7D35",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "annotations": {
+          "schemaId": "dxn:echo:@:01KSFS6P39RS540NVQ91XV7D35"
+        },
+        "entityKind": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "testField": {
+            "type": "string"
+          },
+          "todo": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:type:com.example.type.todo"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          }
+        },
+        "propertyOrder": ["testField", "id", "name", "todo"],
+        "required": ["testField", "id"],
+        "type": "object",
+        "typename": "com.example.type.test",
+        "version": "0.1.0"
+      },
+      "kind": "object",
+      "typename": "com.example.type.test",
+      "version": "0.1.0"
+    },
+    "01KSFS6P3EYWYSE45VVJ5ZK1BZ": {
+      "id": "01KSFS6P3EYWYSE45VVJ5ZK1BZ",
+      "@type": "dxn:echo:@:01KSFS6P39RS540NVQ91XV7D35",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BZKI6HQOM6Q7HRGHJFDIJSICPANZ655V6:01KSFS6P3EYWYSE45VVJ5ZK1BZ",
+      "testField": "Test",
+      "name": "Test",
+      "todo": {
+        "/": "dxn:echo:@:01KSFS6P3P63PEXMH2VFDED32Y"
+      }
+    },
+    "01KSFS6P3P63PEXMH2VFDED32Y": {
+      "id": "01KSFS6P3P63PEXMH2VFDED32Y",
+      "@type": "dxn:type:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BZKI6HQOM6Q7HRGHJFDIJSICPANZ655V6:01KSFS6P3P63PEXMH2VFDED32Y",
+      "name": "Test todo"
+    }
+  }
+}

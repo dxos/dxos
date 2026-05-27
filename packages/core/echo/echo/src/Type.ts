@@ -383,6 +383,8 @@ export const getURI = (input: AnyEntity): URI.URI => {
  * entity's object id so the helper always returns a string. Any `dxn:` or
  * `echo:/` prefix is stripped — typename is a bare identifier, not a URI.
  */
+// TODO(wittjosiah): For in-database types this should return the object id once the registry
+//   has more robust options for shadowing types (so callers can disambiguate db-stored copies).
 export const getTypename = (input: AnyEntity): string => {
   // Both in-memory and in-database entities carry typename in `ObjectMeta.key`
   // — the canonical registry-provenance field. In-memory entities attach meta
