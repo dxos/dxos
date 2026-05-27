@@ -3,6 +3,7 @@
 //
 
 export * from './Chaos';
+export * from './Flock';
 export * from './Morph';
 export * from './Matrix';
 export * from './Oscilloscope';

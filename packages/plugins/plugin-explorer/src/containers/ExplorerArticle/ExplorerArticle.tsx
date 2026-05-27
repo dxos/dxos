@@ -25,6 +25,7 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
+import { Flock, type FlockSeed } from '@dxos/react-ui-sfx';
 import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
 // Side-effect import: ExplorerArticle drives `SVG.Graph` directly (previously the CSS
 // was pulled in transitively via `ForceGraph.tsx`, which we no longer use). Without it
@@ -38,7 +39,7 @@ import { useGraphModel } from '#hooks';
 import { getNodeFillForObject } from '../../util/node-color';
 
 /** Visualization variants exposed by `ExplorerArticle`. */
-export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice';
+export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'flock';
 
 const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[] = [
   {
@@ -60,6 +61,11 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     value: 'lattice',
     icon: 'ph--grid-four--regular',
     label: 'Lattice',
+  },
+  {
+    value: 'flock',
+    icon: 'ph--bird--regular',
+    label: 'Flock',
   },
 ];
 
@@ -142,7 +148,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
 };
 
 const isVariant = (value: unknown): value is ExplorerArticleVariant =>
-  value === 'force' || value === 'cluster' || value === 'bundle' || value === 'lattice';
+  value === 'force' || value === 'cluster' || value === 'bundle' || value === 'lattice' || value === 'flock';
 
 type VisualizationProps = {
   variant: ExplorerArticleVariant;
@@ -151,18 +157,25 @@ type VisualizationProps = {
 };
 
 /**
- * One persistent `<SVG.Graph>` mount for all four variants. When the variant
+ * One persistent `<SVG.Graph>` mount for all four SVG variants. When the variant
  * changes, a new projector is instantiated and seeded with the previous
  * projector's layout so node x/y survive the swap — the new projector's
  * `animate()` then tweens each node from its current position to the new
  * target, and per-frame edge generators (cluster, bundle) keep curves glued
  * to the moving endpoints.
+ *
+ * The `flock` variant is a separate canvas-based render that seeds boids from
+ * the most recent projector layout so the swap into/out of flock preserves
+ * each node's last position.
  */
 const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   const svgRef = useRef<SVGContext>(null);
   const [projector, setProjector] = useState<GraphProjector<SpaceGraphNode> | undefined>();
   const projectorRef = useRef<GraphProjector<SpaceGraphNode> | undefined>(undefined);
   projectorRef.current = projector;
+  // Snapshot of the last SVG projector layout taken just before entering flock,
+  // so the boids can start exactly where the nodes were.
+  const lastLayoutRef = useRef<GraphLayout<SpaceGraphNode> | undefined>(undefined);
 
   // Recreate the projector when the variant changes. Pass the previous projector's
   // layout to the constructor so existing node x/y persist across the swap, then
@@ -171,8 +184,18 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     if (!svgRef.current) {
       return;
     }
-    const prev = projectorRef.current?.layout as GraphLayout<SpaceGraphNode> | undefined;
-    setProjector(createProjector(variant, svgRef.current, prev));
+    if (variant === 'flock') {
+      // Capture the latest layout before unmounting the SVG projector; the canvas-based
+      // Flock takes over rendering.
+      if (projectorRef.current?.layout) {
+        lastLayoutRef.current = projectorRef.current.layout as GraphLayout<SpaceGraphNode>;
+      }
+      setProjector(undefined);
+      return;
+    }
+    const prev =
+      (projectorRef.current?.layout as GraphLayout<SpaceGraphNode> | undefined) ?? lastLayoutRef.current;
+    setProjector(createProjector(variant as Exclude<ExplorerArticleVariant, 'flock'>, svgRef.current, prev));
   }, [variant]);
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
@@ -205,6 +228,39 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     [variant, projector],
   );
 
+  // Build the boid seeds from the snapshot of the last graph layout. Graph coordinates
+  // are center-origin; the Flock canvas uses top-left origin, so translate by the
+  // container center. Fall back to a random spread inside the container when there's no
+  // prior layout (e.g. the user lands directly on flock).
+  const flockSeeds = useMemo(() => {
+    return ({ width, height }: { width: number; height: number }): FlockSeed[] => {
+      const nodes = lastLayoutRef.current?.graph.nodes;
+      const modelNodes = model?.graph.nodes ?? [];
+      const count = nodes?.length ?? modelNodes.length;
+      const cx = width / 2;
+      const cy = height / 2;
+      if (nodes && nodes.length) {
+        return nodes.map((node) => ({
+          x: cx + (node.x ?? 0),
+          y: cy + (node.y ?? 0),
+        }));
+      }
+      // No prior layout — spread points around the center so the flock still has bodies.
+      return Array.from({ length: count }, () => ({
+        x: cx + (Math.random() - 0.5) * Math.min(width, height) * 0.5,
+        y: cy + (Math.random() - 0.5) * Math.min(width, height) * 0.5,
+      }));
+    };
+  }, [model, variant]);
+
+  if (variant === 'flock') {
+    return (
+      <div className='relative is-full bs-full'>
+        <Flock seeds={flockSeeds} coloring='Rainbow' />
+      </div>
+    );
+  }
+
   // Force needs SVG.Zoom (drag interaction). Cluster/lattice don't, AND including the zoom
   // wrapper makes their curve edges render incorrectly in some contexts (see iteration
   // history in graph-cluster-projector.ts). So mount with vs. without zoom conditionally.
@@ -228,7 +284,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
 const TWEEN_MS = 500;
 
 const createProjector = (
-  variant: ExplorerArticleVariant,
+  variant: Exclude<ExplorerArticleVariant, 'flock'>,
   ctx: SVGContext,
   prev?: GraphLayout<SpaceGraphNode>,
 ): GraphProjector<SpaceGraphNode> => {
@@ -293,6 +349,8 @@ const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefi
 
 const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGraphNode> | undefined => {
   switch (variant) {
+    case 'flock':
+      return undefined;
     case 'force':
       return (group, node) => {
         const r = node.r ?? 6;
