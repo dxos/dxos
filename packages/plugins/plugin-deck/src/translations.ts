@@ -29,6 +29,7 @@ export const translations = [
         'undo-action.alt': 'Undo previous action',
         'undo-close.label': 'Dismiss',
         'error-fallback.message': 'Unable to open this object',
+        'error-fallback.copy.label': 'Copy error details',
         'plank-heading-fallback.label': 'Untitled',
         'actions-menu.label': 'Options',
         'settings.deck.label': 'Disable deck',
