@@ -79,7 +79,7 @@ export type TimelineProps = ThemedClassName<{
  * GitGraph-style timeline.
  */
 // TODO(burdon): Virtualize.
-export const Timeline = React.memo(
+export const Timeline = memo(
   composable<HTMLDivElement, TimelineProps>(
     (
       {
@@ -370,6 +370,7 @@ export const Timeline = React.memo(
     },
   ),
 );
+
 Timeline.displayName = 'Timeline';
 
 const CommitIcon = memo(({ commit }: { commit: Commit }) => {
