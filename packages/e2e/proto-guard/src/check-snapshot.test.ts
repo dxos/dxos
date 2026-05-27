@@ -16,8 +16,8 @@ describe('Load client from storage snapshot', () => {
   // `system.kind=type` brand on stored-schema objects, and pre-Option-B
   // snapshots lack it, so they are intentionally no longer loadable. This
   // becomes the new backwards-compat baseline going forward.
-  test('2026-05-27-main', { timeout: 30_000 }, async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('2026-05-27-main') ?? failUndefined();
+  test('2026-05-27', { timeout: 30_000 }, async () => {
+    const snapshot = SnapshotsRegistry.getSnapshot('2026-05-27') ?? failUndefined();
     await withSnapshot(snapshot, async (client, expectedData) => {
       expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
     });
