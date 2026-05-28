@@ -12,6 +12,8 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Registry',
         'details.label': 'Details',
+        'description.label': 'Description',
+        'preview.label': 'Preview',
         'home-page.label': 'Website',
         'source.label': 'Source',
         'resources.label': 'Resources',

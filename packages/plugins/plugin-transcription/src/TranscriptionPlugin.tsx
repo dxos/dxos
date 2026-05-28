@@ -10,6 +10,9 @@ import { BlueprintDefinition, OperationHandler, ReactSurface, TextContent, Trans
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addTextContentModule({ activate: TextContent }),
@@ -21,6 +24,9 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     id: 'transcription',
     activatesOn: AppActivationEvents.SetupAppGraph,
     activate: Transcriber,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );
