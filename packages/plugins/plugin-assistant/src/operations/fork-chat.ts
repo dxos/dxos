@@ -7,6 +7,7 @@ import * as Runtime from 'effect/Runtime';
 
 import { Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -28,6 +29,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         invariant(space, 'Space not found.');
 
         const feedServiceLayer = createFeedServiceLayer(space.queues);
+        const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
+
         const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(
           Effect.provide(feedServiceLayer),
         );
@@ -37,7 +40,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
           .filter(Obj.instanceOf(Message.Message))
           .sort((a, b) => a.created.localeCompare(b.created));
 
-        // Create a new chat with the same blueprints as the source.
+        // Create a new chat, then override its bindings with the source chat's bindings.
         const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
         const newFeed = newChat.feed.target;
         invariant(newFeed, 'New chat feed not found.');
@@ -52,9 +55,35 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
             messageId: lastMessage.id,
           };
           const linkMessage = Message.make({ sender: 'user', blocks: [linkBlock] });
-
-          const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
           yield* Effect.promise(() => Runtime.runPromise(runtime)(Feed.append(newFeed, [linkMessage])));
+        }
+
+        // Copy source chat's blueprint and object bindings to the new feed.
+        const sourceBindings = (
+          yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(Effect.provide(feedServiceLayer))
+        ).filter(Obj.instanceOf(AiContext.Binding));
+
+        if (sourceBindings.length > 0) {
+          // Reduce binding events to the final active set.
+          const blueprintRefMap = new Map<string, Ref.Ref<any>>();
+          const objectRefMap = new Map<string, Ref.Ref<any>>();
+          for (const binding of sourceBindings) {
+            binding.blueprints.added.forEach((ref: Ref.Ref<any>) => blueprintRefMap.set(ref.uri, ref));
+            binding.blueprints.removed.forEach((ref: Ref.Ref<any>) => blueprintRefMap.delete(ref.uri));
+            binding.objects.added.forEach((ref: Ref.Ref<any>) => objectRefMap.set(ref.uri, ref));
+            binding.objects.removed.forEach((ref: Ref.Ref<any>) => objectRefMap.delete(ref.uri));
+          }
+
+          yield* Effect.promise(() =>
+            Runtime.runPromise(runtime)(
+              Feed.append(newFeed, [
+                Obj.make(AiContext.Binding, {
+                  blueprints: { added: Array.from(blueprintRefMap.values()), removed: [] },
+                  objects: { added: Array.from(objectRefMap.values()), removed: [] },
+                }),
+              ]),
+            ),
+          );
         }
 
         // Navigate to the forked chat.

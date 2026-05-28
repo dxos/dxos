@@ -38,10 +38,13 @@ export class SessionLoader {
 
       // Include messages up to and including the fork point.
       const cutoffIndex = sorted.findIndex((m) => m.id === link.messageId);
-      const linked = cutoffIndex >= 0 ? sorted.slice(0, cutoffIndex + 1) : sorted;
+      if (cutoffIndex < 0) {
+        // Fork point not found; return original messages unmodified to avoid injecting unexpected history.
+        return messages;
+      }
 
       // Replace the SessionLink message with the loaded history.
-      return [...linked, ...messages.slice(1)];
+      return [...sorted.slice(0, cutoffIndex + 1), ...messages.slice(1)];
     });
   }
 }

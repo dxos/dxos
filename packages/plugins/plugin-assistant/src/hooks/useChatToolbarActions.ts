@@ -77,7 +77,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           label: ['branch-thread.menu', { ns: meta.id }],
           icon: 'ph--git-branch--regular',
           type: 'branch',
-          disabled: !chat,
+          disabled: !chat || !db,
         },
         () =>
           Effect.gen(function* () {
