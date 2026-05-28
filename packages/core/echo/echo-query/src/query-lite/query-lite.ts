@@ -457,16 +457,26 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static from(source: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  static from(...args: any[]): Query$.Any {
     const baseQuery: QueryAST.Query = {
       type: 'select',
       filter: FilterClass.everything().ast,
     };
     const wrapper = new QueryClass(baseQuery);
-    return wrapper.from(source, options);
+    return (wrapper.from as (...args: any[]) => Query$.Any)(...args);
   }
 
-  from(arg: any, _options?: { includeFeeds?: boolean }): Query$.Any {
+  from(...args: any[]): Query$.Any {
+    // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
+    if (args.length > 1 && args.every((arg) => _isScopeLike(arg))) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: args as QueryAST.Scope[] },
+      });
+    }
+
+    const [arg] = args;
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
         type: 'from',

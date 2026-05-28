@@ -145,7 +145,9 @@ const getTargetSpacesForQuery = (query: QueryAST.Query): string[] => {
   const visitor = (node: QueryAST.Query) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
       for (const scope of node.from.scopes) {
-        if (scope._tag === 'space') {
+        // A space scope without `spaceId` targets the owning space; it adds no
+        // explicit space restriction.
+        if (scope._tag === 'space' && scope.spaceId !== undefined) {
           spaces.add(scope.spaceId);
         }
       }
