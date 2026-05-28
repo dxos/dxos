@@ -586,6 +586,9 @@
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-inbox/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-ui/tsconfig.json"
     },
     {

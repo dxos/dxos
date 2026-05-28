@@ -95,6 +95,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/neutral/containers/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

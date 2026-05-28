@@ -11,21 +11,21 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
+import { Mailbox } from '@dxos/plugin-inbox';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { MessageArticle } from '@dxos/plugin-inbox/containers';
+import { InboxPlugin } from '@dxos/plugin-inbox/testing';
+import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { Booking, Segment, Trip } from '@dxos/plugin-trip';
+import { TripPlugin } from '@dxos/plugin-trip/testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType, Person } from '@dxos/types';
 
-import { type MessageExtractor } from '../../capabilities';
-import { InboxPlugin } from '../../InboxPlugin';
-import { translations } from '../../translations';
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
-import { MessageArticle } from './MessageArticle';
-
-// No-op handlers for layout operations that MessageArticle calls (e.g. Open on companion mode).
-// Mirrors the pattern in MailboxArticle.stories.tsx so the story doesn't need DeckPlugin.
+// MessageArticle calls LayoutOperation.Open/Select/UpdateCompanion from its callbacks. Provide
+// no-op handlers so the operations resolve without pulling in DeckPlugin.
 const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
@@ -43,53 +43,24 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
   Plugin.make,
 );
 
-// Story-local stand-in for plugin-trip's TripMessageExtractor. plugin-inbox cannot import
-// plugin-trip (would create a reverse dep), so we register a fake that mirrors the trip
-// extractor's match shape — body containing a flight line. The `operation` field is required
-// by the interface but unused by the dispatcher (which calls `extract` directly).
-const FakeTripExtractor: MessageExtractor.MessageExtractor = {
-  id: 'story.extractor.fake-trip',
-  description: 'Story: extract travel itinerary',
-  kinds: ['flight'],
-  match: (message) => {
-    const text = message.blocks
-      .filter((block): block is { _tag: 'text'; text: string } => block._tag === 'text')
-      .map((block) => block.text)
-      .join('\n');
-    return /Flight:\s*[A-Z]{1,3}-?\d/.test(text) ? { matched: true, confidence: 0.8 } : { matched: false };
-  },
-  operation: InboxOperation.ExtractContactFromMessage,
-  extract: () => Effect.succeed({ created: [], updated: [], relations: [] }),
-};
-
-const StoryTripExtractorPlugin = Plugin.define({
-  id: 'story.story-trip-extractor',
-  name: 'Story Trip Extractor',
-}).pipe(
-  Plugin.addModule({
-    id: 'extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, FakeTripExtractor)),
-  }),
-  Plugin.make,
-);
-
 /**
- * Seeds a personal space with a Mailbox containing one message that matches BOTH the
- * registered ContactMessageExtractor (sender has email) and the FakeTripExtractor (body
- * contains a flight line). Returns nothing — the story queries for the message at render
- * time so React picks it up after the seed lands.
+ * Seeds a personal space with a Mailbox and one message that matches BOTH registered
+ * extractors:
+ *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
+ *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block.
+ *
+ * Clicking the toolbar `Extract` items produces real Person / Booking / Segment objects in
+ * the space; `Run all` fans out across both.
  */
 const seedMessage = (space: Space) => {
-  // Body deliberately contains a flight line so the fake trip extractor matches.
   const body = [
     'Hi there,',
     '',
     'Your flight is confirmed!',
     '',
     'Flight: UA-100',
-    'From: SFO',
-    'To: LHR',
+    'From: SFO (San Francisco)',
+    'To: LHR (London Heathrow)',
     'Depart: 2026-06-01 15:30',
     'Arrive: 2026-06-02 09:30',
     'Confirmation: ABC123',
@@ -120,39 +91,51 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/containers/MessageArticle',
+  title: 'stories/stories-inbox/MessageArticle',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
+      setupEvents: [
+        AppActivationEvents.SetupSettings,
+        // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
+        // capability is contributed before MessageArticle's toolbar reads the extractor list.
+        ActivationEvents.Startup,
+      ],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Mailbox.Mailbox, MessageType.Message, Person.Person],
+          types: [
+            Feed.Feed,
+            Mailbox.Mailbox,
+            MessageType.Message,
+            Person.Person,
+            Booking.Booking,
+            Segment.Segment,
+            Trip.Trip,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                const mailbox = personalSpace.db.add(Mailbox.make());
+                personalSpace.db.add(Mailbox.make());
                 seedMessage(personalSpace);
                 await personalSpace.db.flush({ indexes: true });
-                return mailbox;
               });
             }),
         }),
         StorybookPlugin({}),
         InboxPlugin(),
+        TripPlugin(),
         PreviewPlugin(),
         MockDeckOperationsPlugin(),
-        StoryTripExtractorPlugin(),
       ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: inboxTranslations,
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -161,10 +144,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Renders MessageArticle for a single United-style flight-confirmation message. The toolbar
- * should show two `Extract…` actions (one per matching extractor) plus a `Run all (2)` entry
- * at the top — clicking each invokes ExtractMessage and the dispatcher persists Person /
- * Booking / Segment objects into the space. The avatar in the header invokes the
- * actor-targeted ExtractContact operation for comparison.
+ * Renders MessageArticle for a single United-style flight-confirmation message. The toolbar's
+ * `Extract` dropdown should list `Run all (2)`, the contact extractor (plugin-inbox), and the
+ * trip extractor (plugin-trip). Clicking each invokes ExtractMessage; the dispatcher persists
+ * Person / Booking / Segment objects with `ExtractedFrom` relations back to the message.
  */
 export const Default: Story = {};
