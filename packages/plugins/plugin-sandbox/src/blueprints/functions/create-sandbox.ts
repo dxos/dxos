@@ -27,9 +27,7 @@ export default CreateSandbox.pipe(
       const edgeUrl = client.config.values.runtime?.services?.edge?.url ?? '';
       const sandboxClient = new SandboxClient(edgeUrl);
 
-      const record = yield* Effect.promise(() =>
-        sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage }),
-      );
+      const record = yield* Effect.promise(() => sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage }));
 
       Obj.update(sandbox, (sandbox) => {
         sandbox.createdAt = record.createdAt;

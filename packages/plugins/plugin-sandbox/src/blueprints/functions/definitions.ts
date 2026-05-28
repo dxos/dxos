@@ -19,7 +19,8 @@ export const CreateSandbox = Operation.make({
   meta: {
     key: 'org.dxos.function.sandbox.create',
     name: 'CreateSandbox',
-    description: 'Creates a new sandbox environment in the current space. The sandbox is a persistent isolated container.',
+    description:
+      'Creates a new sandbox environment in the current space. The sandbox is a persistent isolated container.',
     icon: 'ph--terminal--regular',
   },
   input: Schema.Struct({

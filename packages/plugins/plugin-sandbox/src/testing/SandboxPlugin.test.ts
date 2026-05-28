@@ -32,10 +32,7 @@ describe.skip('SandboxPlugin', () => {
       Effect.gen(function* () {
         const result = yield* Operation.invoke(CreateSandbox, { name: 'test-sandbox' });
         expect(result.sandboxId).toBeTruthy();
-      }).pipe(
-        Effect.provide(TestLayer),
-        Effect.provideService(TestContextService, ctx),
-      ),
+      }).pipe(Effect.provide(TestLayer), Effect.provideService(TestContextService, ctx)),
     60_000,
   );
 
@@ -54,10 +51,7 @@ describe.skip('SandboxPlugin', () => {
         expect(result.exitCode).toBe(0);
         expect(result.success).toBe(true);
         expect(result.stdout.trim()).toBe('hello world');
-      }).pipe(
-        Effect.provide(TestLayer),
-        Effect.provideService(TestContextService, ctx),
-      ),
+      }).pipe(Effect.provide(TestLayer), Effect.provideService(TestContextService, ctx)),
     60_000,
   );
 
@@ -90,10 +84,7 @@ describe.skip('SandboxPlugin', () => {
         });
 
         expect(downloadResult.objectId).toBeTruthy();
-      }).pipe(
-        Effect.provide(TestLayer),
-        Effect.provideService(TestContextService, ctx),
-      ),
+      }).pipe(Effect.provide(TestLayer), Effect.provideService(TestContextService, ctx)),
     60_000,
   );
 });
