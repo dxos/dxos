@@ -3,13 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { Format, type Mutable } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -95,9 +93,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         });
 
         const typename = getTypenameFromQuery(query.ast);
-        const allTypes = await runAndForwardErrors(
-          Effect.sync(() => space.db.graph.registry.list().filter(Type.isType)),
-        );
+        const allTypes = space.db.graph.registry.list().filter(Type.isType);
         const newSchema = allTypes.find((t) => Type.getTypename(t) === typename);
         if (!newSchema) {
           return;
@@ -115,9 +111,6 @@ const DefaultStory = (props: DefaultStoryProps) => {
         Obj.update(view, (view) => {
           view.query.ast = newQuery as Mutable<typeof newQuery>;
         });
-        // NOTE: typename is no longer mutable on persisted Type.Type entities;
-        // changing the query that targets a different typename now requires
-        // re-creating the schema rather than renaming an existing one.
       }
     },
     [view, type],
