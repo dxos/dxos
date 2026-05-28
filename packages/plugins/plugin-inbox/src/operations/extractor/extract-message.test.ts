@@ -12,11 +12,14 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Message } from '@dxos/types';
 
-import * as MessageExtractor from '../capabilities/MessageExtractor';
-import { ExtractedFrom, InboxCapabilities } from '../types';
+import { MessageExtractor } from '../../capabilities';
+import { ExtractedFrom, InboxCapabilities, InboxOperation } from '../../types';
 import handler from './extract-message';
 
-// Stub builder for MessageExtractor instances.
+// Stub builder for MessageExtractor instances. The `operation` field is required by the
+// interface for first-class registry, but the dispatcher calls `extract` directly — stubs
+// can point all `operation` fields at the same real definition since registry traceability
+// is moot in unit tests.
 const stubExtractor = (opts: {
   id: string;
   matched: boolean;
@@ -27,7 +30,8 @@ const stubExtractor = (opts: {
   description: opts.id,
   kinds: [],
   match: () => ({ matched: opts.matched, confidence: opts.confidence }),
-  extract: opts.extract ?? (() => Effect.succeed({ created: [], relations: [] })),
+  operation: InboxOperation.ExtractContactFromMessage,
+  extract: opts.extract ?? (() => Effect.succeed({ created: [], updated: [], relations: [] })),
 });
 
 // Create a test Message object.

@@ -112,7 +112,6 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

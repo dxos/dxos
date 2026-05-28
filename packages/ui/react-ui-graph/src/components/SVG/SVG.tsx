@@ -8,6 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Graph, type GraphProps as SVGGraphProps } from '../Graph';
 import { Mesh, type MeshProps as SVGMeshProps } from '../Mesh';
+import { FPS, type FPSProps as SVGFPSProps } from './FPS';
 import { Grid, type GridProps as SVGGridProps } from './Grid';
 import { Markers, type MarkersProps as SVGMarkersProps } from './Markers';
 import { Root, type RootProps as SVGRootProps } from './Root';
@@ -22,6 +23,7 @@ type SVG = {
   Mesh: typeof Mesh;
   Zoom: typeof Zoom;
   Graph: typeof Graph;
+  FPS: typeof FPS;
 };
 
 export const SVG: SVG = {
@@ -31,6 +33,7 @@ export const SVG: SVG = {
   Mesh,
   Zoom,
   Graph,
+  FPS,
 };
 
-export type { SVGRootProps, SVGGridProps, SVGMarkersProps, SVGZoomProps, SVGGraphProps, SVGMeshProps };
+export type { SVGRootProps, SVGGridProps, SVGMarkersProps, SVGZoomProps, SVGGraphProps, SVGMeshProps, SVGFPSProps };

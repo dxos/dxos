@@ -100,6 +100,7 @@ export const translations = [
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-extract.menu': 'Extract',
 
         'message-body.placeholder': 'Enter message text...',
 

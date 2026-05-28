@@ -556,6 +556,26 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 };
 
 /**
+ * Get the icon annotation for an entity, resolved via its type-level `IconAnnotation`.
+ * Accepts both reactive entities and snapshots.
+ *
+ * Returns the full `{ icon, hue }` annotation so callers can use both the phosphor icon
+ * name and the suggested colour. Callers wanting just the icon name typically write
+ * `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
+ *
+ * Note: this is the "static" icon from the object's own schema. It does not follow
+ * `IconFromRefAnnotation` delegation — call sites needing that (e.g. app-graph node
+ * builders) should resolve the ref themselves.
+ */
+export const getIcon = (entity: AnyProperties): IconAnnotation | undefined => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return undefined;
+  }
+  return Option.getOrUndefined(IconAnnotation.get(schema));
+};
+
+/**
  * Set the description of an entity.
  * Must be called within an Obj.update or Relation.update callback.
  */
