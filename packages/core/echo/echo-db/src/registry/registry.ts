@@ -10,7 +10,7 @@ import { type Database, Entity, Query, type Filter, type QueryResult, Registry, 
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
@@ -111,7 +111,7 @@ export class RegistryImpl implements Registry.Registry {
    * Not part of the public {@link Registry.Registry} interface.
    */
   _findTypeByDXN(dxn: string): Type.AnyEntity | undefined {
-    const local = this.#typesByDXN.get(normalizeDXN(dxn));
+    const local = this.#typesByDXN.get(normalizeURI(dxn));
     if (local != null) {
       return local;
     }
@@ -120,7 +120,7 @@ export class RegistryImpl implements Registry.Registry {
       return this.#upstream._findTypeByDXN(dxn);
     }
     // Fallback: linear scan of upstream.
-    return this.#upstream?.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalizeDXN(dxn)));
+    return this.#upstream?.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalizeURI(dxn)));
   }
 
   #put(entity: Entity.Unknown): void {
@@ -134,7 +134,7 @@ export class RegistryImpl implements Registry.Registry {
       if (identifierDXN != null) {
         // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed types).
         // Index ONLY by identifier DXN to avoid overwriting static schemas that share the same typename/version.
-        this.#typesByDXN.set(normalizeDXN(identifierDXN), typeEntity);
+        this.#typesByDXN.set(normalizeURI(identifierDXN), typeEntity);
       } else {
         // Static schema (no identifier DXN): index by canonical typename DXN.
         const dxn = getTypeDXN(typeEntity);
@@ -158,7 +158,7 @@ export const findTypeByDXN = (registry: Registry.Registry, dxn: string): Type.An
     return registry._findTypeByDXN(dxn);
   }
   // Fallback: linear scan for non-RegistryImpl implementations.
-  const normalized = normalizeDXN(dxn);
+  const normalized = normalizeURI(dxn);
   return registry.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalized));
 };
 
@@ -225,7 +225,7 @@ const getTypeDXN = (type: Type.AnyEntity): string => {
  */
 const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
   const identifierDXN = getPersistedIdentifierDXN(type);
-  if (identifierDXN != null && normalizeDXN(identifierDXN) === normalizedDXN) {
+  if (identifierDXN != null && normalizeURI(identifierDXN) === normalizedDXN) {
     return true;
   }
   try {
@@ -236,12 +236,14 @@ const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
 };
 
 /**
- * Normalizes a DXN string to the canonical key form used by `#typesByDXN`.
- * Delegates to `DXN.tryMake`, which strips the legacy `dxn:type:` prefix and
- * validates the grammar. Echo identifier DXNs (`dxn:echo:@:<objectId>`), which
- * `tryMake` intentionally rejects, are passed through unchanged.
+ * Normalizes a URI string to the canonical key form used by `#typesByDXN`.
+ * Tries `DXN.tryMake` first (strips the legacy `dxn:type:` prefix and validates
+ * the type-DXN grammar); falls back to `EchoURI.tryParse` for echo identifier
+ * URIs (`dxn:echo:@:<objectId>`, normalized to canonical `echo:` form), and
+ * finally passes unrecognized strings through unchanged. Both `DXN` and `EchoURI`
+ * are branded strings, so the result is always a plain string key.
  */
-const normalizeDXN = (dxn: string): string => DXN.tryMake(dxn) ?? dxn;
+const normalizeURI = (uri: string): string => DXN.tryMake(uri) ?? EchoURI.tryParse(uri) ?? uri;
 
 /**
  * Executes a {@link Query.Query} against a {@link Registry.Registry}.
