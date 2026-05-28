@@ -266,8 +266,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this.graph.registry.add([schema]);
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.AnyEntity {
-    let schema = schemaInput;
+  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Schema.AnyNoContext;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
@@ -283,6 +283,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           version: Type.getVersion(entity),
         } satisfies TypeAnnotation);
     } else {
+      schema = schemaInput;
       meta = getTypeAnnotation(schema);
     }
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
@@ -382,14 +383,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Add reactive object.
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
-    // Schema-definition entities (produced by Type.makeObject / Type.makeObjectFromJsonSchema)
-    // are persisted as PersistentSchema ECHO objects so they replicate to other clients.
-    // The returned value is the mutable persisted type entity, not the original draft.
-    // NOTE: A PersistentSchema instance is itself `Type.isType` (it represents a type), so
-    // `_addPersistentSchema` must persist its TypeSchema object via `_addObject` directly
-    // rather than re-entering `add`, otherwise this branch recurses indefinitely.
+    // Persist type-definition drafts (Type.makeObject / makeObjectFromJsonSchema) as
+    // PersistentSchema ECHO objects so they replicate. Returns the persisted entity (not
+    // the draft), typed as the caller's `T` for ergonomics — hence the bridging cast.
     if (!isEchoObject(obj) && Type.isType(obj)) {
-      return this._addPersistentSchema(obj as unknown as Schema.Schema.AnyNoContext) as unknown as T;
+      return this._addPersistentSchema(obj) as unknown as T;
     }
 
     return this._addObject(obj, opts);
