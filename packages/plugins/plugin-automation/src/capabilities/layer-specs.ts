@@ -34,26 +34,6 @@ import { invariant } from '@dxos/invariant';
 //
 
 /**
- * Default application-affinity `RemoteFunctionExecutionService`. Space specs
- * (see {@link RemoteFunctionExecutionOverrideSpec}) can override this with a
- * space-scoped client.
- */
-const RemoteFunctionExecutionSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [ClientService],
-    provides: [RemoteFunctionExecutionService],
-  },
-  () =>
-    Layer.unwrapEffect(
-      Effect.gen(function* () {
-        const client = yield* ClientService;
-        return RemoteFunctionExecutionService.fromClient(client);
-      }),
-    ),
-);
-
-/**
  * Gathers contributed {@link Capabilities.OperationHandler} sets from the
  * {@link Capability.Service} and exposes them through the
  * {@link OperationHandlerSet.OperationHandlerProvider} tag so space-affinity
@@ -165,11 +145,14 @@ const FeedTraceSinkSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped override of {@link RemoteFunctionExecutionService}. Activated
- * only when the client's `runtime.client.edgeFeatures.agents` config is set;
- * falls back to the application-level spec otherwise.
+ * Space-scoped `RemoteFunctionExecutionService`. When edge agents are enabled
+ * (`runtime.client.edgeFeatures.agents`) functions are invoked without a space
+ * binding (the edge routes them); otherwise they are scoped to the space. The
+ * config is read inside the factory — at slice-materialisation time, once
+ * `ClientService` is available — so the owning module does not need the client
+ * at activation time and can activate on `SetupProcessManager`.
  */
-const RemoteFunctionExecutionOverrideSpec = LayerSpec.make(
+const RemoteFunctionExecutionSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [ClientService],
@@ -178,9 +161,10 @@ const RemoteFunctionExecutionOverrideSpec = LayerSpec.make(
   (context) =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        invariant(context.space, 'space context required for RemoteFunctionExecutionService override');
+        invariant(context.space, 'space context required for RemoteFunctionExecutionService');
         const client = yield* ClientService;
-        return RemoteFunctionExecutionService.fromClient(client, context.space);
+        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
+        return RemoteFunctionExecutionService.fromClient(client, edgeAgents ? undefined : context.space);
       }),
     ),
 );
@@ -210,12 +194,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
     Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
-    // Both the application-level default and the space-scoped override are always
-    // contributed. The space spec takes precedence for space contexts; the
-    // application spec serves as the fallback. The per-space factory checks the
-    // edge-agents config flag at build time via ClientService.
     Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionSpec),
-    Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionOverrideSpec),
     Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),
 );
