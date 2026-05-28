@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, Query, type Filter, type QueryResult, Registry, Type } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo-pipeline';
+import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
