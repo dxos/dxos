@@ -33,8 +33,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activate: Migrations,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
+    activatesOn: ActivationEvents.SetupProcessManager,
     activate: LayerSpecs,
   }),
   Plugin.make,

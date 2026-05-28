@@ -20,28 +20,16 @@ import { log } from '@dxos/log';
 import { LayerDependencyCycleError } from './errors';
 
 interface LayerStackOpts {
-  /**
-   * Static list of layer specs. Evaluated once at construction.
-   * Use {@link getLayers} instead when specs are contributed after construction
-   * (e.g. from `ClientReady` modules that fire after `SetupProcessManager`).
-   */
-  readonly layers?: LayerSpec.LayerSpec[];
-  /**
-   * Lazy getter for layer specs. Called each time a new {@link Slice} is
-   * created, so specs contributed after the `LayerStack` is constructed (e.g.
-   * during `ClientReady`) are visible when slices are first materialised.
-   * Takes precedence over {@link layers} when both are supplied.
-   */
-  readonly getLayers?: () => LayerSpec.LayerSpec[];
+  readonly layers: LayerSpec.LayerSpec[];
 }
 
 export class LayerStack {
   #slices: Slice[] = [];
   #semapphore = Effect.runSync(Effect.makeSemaphore(1));
-  #getLayers: () => LayerSpec.LayerSpec[];
+  #layers: LayerSpec.LayerSpec[];
 
   constructor(opts: LayerStackOpts) {
-    this.#getLayers = opts.getLayers ?? (() => opts.layers ?? []);
+    this.#layers = opts.layers;
   }
 
   getServiceResolver(): ServiceResolver.ServiceResolver {
@@ -120,7 +108,7 @@ export class LayerStack {
           affinity,
           context,
           keepAlive: affinity === 'application' || affinity === 'space',
-          layers: this.#getLayers().filter((l) => l.affinity === affinity),
+          layers: this.#layers.filter((l) => l.affinity === affinity),
         });
         const resolveAffinity = lowerAffinity(affinity);
         if (resolveAffinity) {
@@ -248,15 +236,12 @@ export class LayerStack {
 
     const hints: string[] = [];
 
-    if (
-      context.space === undefined &&
-      this.#getLayers().some((l) => l.affinity === 'space' || l.affinity === 'process')
-    ) {
+    if (context.space === undefined && this.#layers.some((l) => l.affinity === 'space' || l.affinity === 'process')) {
       hints.push('spawn environment is missing `space` (required for space/process-affinity services)');
     }
     if (
       context.conversation === undefined &&
-      this.#getLayers().some((l) => l.provides.some((p) => p.key === tagKey) && l.affinity === 'process')
+      this.#layers.some((l) => l.provides.some((p) => p.key === tagKey) && l.affinity === 'process')
     ) {
       hints.push(
         'spawn environment is missing `conversation` (set via Operation.withInvocationOptions or ProcessManager.spawn)',
@@ -276,7 +261,7 @@ export class LayerStack {
       }
     }
 
-    const providers = this.#getLayers().filter((l) => l.provides.some((p) => p.key === tagKey));
+    const providers = this.#layers.filter((l) => l.provides.some((p) => p.key === tagKey));
     if (providers.length === 0) {
       hints.push('no LayerSpec contributes this service — is the providing plugin activated on SetupProcessManager?');
     } else if (hints.length === 0) {

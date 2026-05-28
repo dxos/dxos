@@ -21,7 +21,6 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
 
 //
 // Capability Module
@@ -201,30 +200,22 @@ const TriggerDispatcherSpec = LayerSpec.make(
   () => TriggerDispatcher.layer({ timeControl: 'natural' }),
 );
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-
-    const contributions: Capability.Any[] = [
-      Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-      Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
-      Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
-      Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
-      Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
-      Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
-      Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
-      Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
-      Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
-      // Edge-mode override is conditional on runtime config, so it stays in the
-      // activation block.
-      Capability.contributes(
-        Capabilities.LayerSpec,
-        client.config.get('runtime.client.edgeFeatures.agents')
-          ? RemoteFunctionExecutionSpec
-          : RemoteFunctionExecutionOverrideSpec,
-      ),
-    ];
-
-    return contributions;
-  }),
+export default Capability.makeModule(() =>
+  Effect.succeed([
+    Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
+    Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
+    Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
+    Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
+    Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
+    // Both the application-level default and the space-scoped override are always
+    // contributed. The space spec takes precedence for space contexts; the
+    // application spec serves as the fallback. The per-space factory checks the
+    // edge-agents config flag at build time via ClientService.
+    Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionOverrideSpec),
+    Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
+  ]),
 );
