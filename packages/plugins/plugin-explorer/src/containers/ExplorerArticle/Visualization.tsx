@@ -183,6 +183,7 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
               projector={projector}
               renderNode={renderNode}
               drag={variant === 'force'}
+              highlightOnHover={variant === 'bundle'}
               onInspect={handleInspect}
               onSelect={handleSelect}
             />
