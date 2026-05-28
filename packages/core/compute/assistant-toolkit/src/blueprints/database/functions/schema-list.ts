@@ -17,7 +17,7 @@ export default SchemaList.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
       const { db } = yield* Database.Service;
-      const types = yield* db.graph.registry.listTypes();
+      const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
       return [...types]
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
         .sort((a, b) => {

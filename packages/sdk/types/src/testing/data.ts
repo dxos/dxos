@@ -527,7 +527,7 @@ export const createTestData = () => {
 
 export const seedTestData = async (space: Space) => {
   const schemas = [Person.Person, Organization.Organization, TestSchema.DocumentType];
-  space.db.graph.registry.addTypes(schemas);
+  space.db.graph.registry.add(schemas);
 
   // for (const document of TestData.documents) {
   //   const obj = space.db.add(Obj.make(Document, document));

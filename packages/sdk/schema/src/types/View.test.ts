@@ -30,7 +30,7 @@ describe('Projection', () => {
     const schema = TestSchema.Person;
     const jsonSchema = JsonSchema.toJsonSchema(schema);
     const registry = makeRegistry();
-    registry.addTypes([TestSchema.Person, TestSchema.Organization]);
+    registry.add([TestSchema.Person, TestSchema.Organization]);
 
     const view = await ViewModel.makeWithReferences({
       query: Query.select(Filter.type(schema)),

@@ -8,7 +8,7 @@ import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } fr
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Relation, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -339,8 +339,8 @@ const useSpaceCounts = (space: Space): SpaceCounts => {
   const [schemas, setSchemas] = useState(0);
   useEffect(() => {
     const { registry } = space.db.graph;
-    setSchemas(registry.types.length);
-    return registry.changed.on(() => setSchemas(registry.types.length));
+    setSchemas(registry.list().filter(Type.isType).length);
+    return registry.changed.on(() => setSchemas(registry.list().filter(Type.isType).length));
   }, [space]);
 
   const pipeline = useMulticastObservable(space.pipeline);

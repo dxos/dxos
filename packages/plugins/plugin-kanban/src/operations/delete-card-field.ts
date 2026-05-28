@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = K
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');
-      const types = yield* db.graph.registry.listTypes();
+      const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
       const schema = types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast));
       invariant(schema, 'Schema not found');
 

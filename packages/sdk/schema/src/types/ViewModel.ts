@@ -246,7 +246,7 @@ export const makeFromDatabase = async ({
     createInitial = 0;
   }
 
-  const allTypes = await runAndForwardErrors(db.graph.registry.listTypes());
+  const allTypes = await runAndForwardErrors(Effect.sync(() => db.graph.registry.list().filter(Type.isType)));
   const schema = allTypes.find((t) => Type.getTypename(t) === typename);
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);

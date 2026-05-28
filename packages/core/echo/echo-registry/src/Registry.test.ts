@@ -10,7 +10,7 @@ import { Obj, Registry, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { layer, layerWithUpstream, make } from './Registry';
+import { findTypeByDXN, layer, layerWithUpstream, make } from './Registry';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -94,33 +94,38 @@ describe('Registry', () => {
     expect(result.sort()).toEqual([1, 2]);
   });
 
-  test('addTypes and getTypeByDXN', ({ expect }) => {
+  test('add type entity and findTypeByDXN', ({ expect }) => {
     const registry = make();
-    // PersistentType is a valid AnyEntity with typename 'dxos.org.echo.schema' and version '0.1.0'.
+    // PersistentType is a valid AnyEntity with typename and version.
     const schema = Type.PersistentType;
     const typename = Type.getTypename(schema);
     const version = Type.getVersion(schema);
 
-    registry.addTypes([schema]);
+    registry.add([schema]);
 
-    // Exact DXN lookup.
-    expect(registry.getTypeByDXN(`dxn:${typename}:${version}`)).toBe(schema);
+    // Type entity is included in list().
+    expect(registry.list().filter(Type.isType)).toHaveLength(1);
+
+    // Exact DXN lookup via findTypeByDXN.
+    expect(findTypeByDXN(registry, `dxn:${typename}:${version}`)).toBe(schema);
     // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
-    expect(registry.getTypeByDXN(`dxn:type:${typename}:${version}`)).toBe(schema);
+    expect(findTypeByDXN(registry, `dxn:type:${typename}:${version}`)).toBe(schema);
     // Short-form lookup (without dxn: prefix).
-    expect(registry.getTypeByDXN(`${typename}:${version}`)).toBe(schema);
+    expect(findTypeByDXN(registry, `${typename}:${version}`)).toBe(schema);
     // Missing DXN.
-    expect(registry.getTypeByDXN('dxn:org.example.Bar:1.0.0')).toBeUndefined();
+    expect(findTypeByDXN(registry, 'dxn:org.example.Bar:1.0.0')).toBeUndefined();
   });
 
-  test('types are not surfaced in list()', ({ expect }) => {
+  test('type entities are surfaced in list()', ({ expect }) => {
     const registry = make();
-    registry.addTypes([Type.PersistentType]);
-    expect(registry.list()).toHaveLength(0);
-    expect(registry.types).toHaveLength(1);
+    const obj = makeObj({ value: 1 });
+    registry.add([obj, Type.PersistentType]);
+    // Both regular objects and type entities appear in list().
+    expect(registry.list()).toHaveLength(2);
+    expect(registry.list().filter(Type.isType)).toHaveLength(1);
   });
 
-  test('changed fires on add/remove/clear/addTypes', ({ expect }) => {
+  test('changed fires on add/remove/clear', ({ expect }) => {
     const registry = make();
     let count = 0;
     registry.changed.on(() => count++);
@@ -132,7 +137,8 @@ describe('Registry', () => {
     expect(count).toBe(2);
     registry.clear();
     expect(count).toBe(3);
-    registry.addTypes([Type.PersistentType]);
+    // Type entities also fire changed when added.
+    registry.add([Type.PersistentType]);
     expect(count).toBe(4);
   });
 });

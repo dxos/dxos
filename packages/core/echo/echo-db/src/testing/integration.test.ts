@@ -437,7 +437,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.registry.addTypes([TestSchema.Person, TestSchema.HasManager]);
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
 
       let relationId!: ObjectId;
       {
@@ -528,7 +528,10 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === 'com.example.type.test');
+        const schema = db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((t) => Type.getTypename(t) === 'com.example.type.test');
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);

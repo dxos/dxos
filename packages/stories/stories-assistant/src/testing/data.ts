@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { type Space } from '@dxos/client/echo';
 import { type Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -105,7 +107,9 @@ export const addTestData = async (space: Space): Promise<void> => {
   const objectMap = new Map<string, any>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
-    const types = await runAndForwardErrors(space.internal.db.graph.registry.listTypes());
+    const types = await runAndForwardErrors(
+      Effect.sync(() => space.internal.db.graph.registry.list().filter(Type.isType)),
+    );
     const schema = types.find((s) => Type.getTypename(s) === typename);
     invariant(schema, `Schema not found: ${typename}`);
     invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
@@ -116,7 +120,9 @@ export const addTestData = async (space: Space): Promise<void> => {
   }
 
   for (const [typename, relationships] of Object.entries(testRelationships)) {
-    const types = await runAndForwardErrors(space.internal.db.graph.registry.listTypes());
+    const types = await runAndForwardErrors(
+      Effect.sync(() => space.internal.db.graph.registry.list().filter(Type.isType)),
+    );
     const schema = types.find((s) => Type.getTypename(s) === typename);
     invariant(schema, `Schema not found: ${typename}`);
     invariant(Type.isRelation(schema), `Schema is not a relation schema: ${typename}`);

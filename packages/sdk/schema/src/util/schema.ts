@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Registry, Type } from '@dxos/echo';
+import { findTypeByDXN } from '@dxos/echo-registry';
 import {
   EchoObjectSchema,
   Format,
@@ -64,7 +65,7 @@ export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Pro
   if (!type || !version || !registry) {
     return;
   }
-  return registry.getTypeByDXN(`dxn:type:${type}:${version}`);
+  return findTypeByDXN(registry, `dxn:type:${type}:${version}`);
 };
 
 // TODO(burdon): Factor out.

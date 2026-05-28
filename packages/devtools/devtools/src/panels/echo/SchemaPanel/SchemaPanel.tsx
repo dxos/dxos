@@ -41,9 +41,9 @@ const useSchemaQuery = (space?: Space): Type.AnyEntity[] => {
       return;
     }
 
-    setSchema([...space.db.graph.registry.types]);
+    setSchema([...space.db.graph.registry.list().filter(Type.isType)]);
     return space.db.graph.registry.changed.on(() => {
-      setSchema([...space.db.graph.registry.types]);
+      setSchema([...space.db.graph.registry.list().filter(Type.isType)]);
     });
   }, [space]);
 

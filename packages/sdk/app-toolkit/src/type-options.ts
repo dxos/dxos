@@ -30,7 +30,9 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const runtimeTypenames =
     includeRuntime && db
-      ? db.graph.registry.types
+      ? db.graph.registry
+          .list()
+          .filter(Type.isType)
           .filter((t) => !(t instanceof Type.RuntimeType))
           .filter((schema) => {
             const effectSchema = Type.getSchema(schema);
@@ -51,7 +53,11 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const databaseTypenames =
     includeDatabase && db
-      ? db.graph.registry.types.filter((t) => t instanceof Type.RuntimeType).map((schema) => Type.getTypename(schema))
+      ? db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .filter((t) => t instanceof Type.RuntimeType)
+          .map((schema) => Type.getTypename(schema))
       : [];
 
   return Array.from(new Set<string>([...runtimeTypenames, ...databaseTypenames])).sort();

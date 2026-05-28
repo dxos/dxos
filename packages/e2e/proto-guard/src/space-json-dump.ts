@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 import isEqual from 'fast-deep-equal';
 import fs from 'node:fs';
@@ -81,7 +82,7 @@ export class SpacesDumper {
    */
   static checkIfSpacesMatchExpectedDataUsingQuery = async (client: Client, expected: SpacesDump): Promise<boolean> => {
     for (const space of client.spaces.get()) {
-      const types = await runAndForwardErrors(space.db.graph.registry.listTypes());
+      const types = await runAndForwardErrors(Effect.sync(() => space.db.graph.registry.list().filter(Type.isType)));
       const schemas = [...types];
       for (const schema of schemas) {
         const objects = await space.db.query(Filter.type(schema)).run();

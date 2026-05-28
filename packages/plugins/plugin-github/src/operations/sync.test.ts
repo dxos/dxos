@@ -46,7 +46,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.addTypes([
+    graph.registry.add([
       AccessToken.AccessToken,
       Integration.Integration,
       Organization.Organization,

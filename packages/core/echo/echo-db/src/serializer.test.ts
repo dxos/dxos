@@ -30,7 +30,7 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      graph.registry.addTypes([TestSchema.Task]);
+      graph.registry.add([TestSchema.Task]);
 
       const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
@@ -201,7 +201,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.registry.addTypes([TestSchema.Person]);
+        graph.registry.add([TestSchema.Person]);
         const contact = Obj.make(TestSchema.Person, { name });
         db.add(contact);
         await db.flush();
@@ -213,7 +213,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        graph.registry.addTypes([TestSchema.Person]);
+        graph.registry.add([TestSchema.Person]);
 
         await new Serializer().import(db, data);
         expect(await db.query(Query.select(Filter.everything())).run()).to.have.length(1);
@@ -280,7 +280,7 @@ describe('Serializer', () => {
         // And the registry query path — the one Composer's markdown editor
         // hits via `useLinkQuery` — must not throw `Invalid typename` from
         // `getSortKey` for any returned schema.
-        const results = db.graph.registry.types;
+        const results = db.graph.registry.list().filter(Type.isType);
         for (const schema of results) {
           expect(() => Type.getTypename(schema as any)).not.to.throw();
         }

@@ -18,7 +18,7 @@ describe('Relations', () => {
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
-    graph.registry.addTypes([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
+    graph.registry.add([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
   });
 
   afterEach(async () => {

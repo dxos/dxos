@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceO
       invariant(db);
       const typename = getTypenameFromQuery(view.query.ast);
       invariant(typename);
-      const types = yield* db.graph.registry.listTypes();
+      const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
       const schema = types.find((t) => Type.getTypename(t) === typename);
       invariant(schema);
 

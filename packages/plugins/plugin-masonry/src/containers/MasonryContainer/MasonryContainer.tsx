@@ -44,12 +44,18 @@ export const MasonryContainer = ({
       setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
-      const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+      const schema = db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .find((t) => Type.getTypename(t) === typename);
       if (schema) {
         setCardSchema(() => schema);
       }
       return db.graph.registry.changed.on(() => {
-        const updated = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+        const updated = db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((t) => Type.getTypename(t) === typename);
         if (updated) {
           setCardSchema(() => updated);
         }

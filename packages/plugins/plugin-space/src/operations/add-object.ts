@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const types = yield* db.graph.registry.listTypes();
+      const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
       const [runtimeSchema] = types.filter((t) => !(t instanceof Type.RuntimeType) && Type.getTypename(t) === typename);
       const echoViewPath =
         runtimeSchema !== undefined

@@ -63,7 +63,7 @@ describe('diff', () => {
   it('should append text to an empty document', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    graph.registry.addTypes([Text.Text]);
+    graph.registry.add([Text.Text]);
 
     const text = db.add(Text.make({ content: '' }));
     const accessor = createDocAccessor(text, ['content']);

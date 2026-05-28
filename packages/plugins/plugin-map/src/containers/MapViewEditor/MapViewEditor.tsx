@@ -33,9 +33,9 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
       return;
     }
 
-    setAllSchemata([...db.graph.registry.types]);
+    setAllSchemata([...db.graph.registry.list().filter(Type.isType)]);
     return db.graph.registry.changed.on(() => {
-      setAllSchemata([...db.graph.registry.types]);
+      setAllSchemata([...db.graph.registry.list().filter(Type.isType)]);
     });
   }, [db]);
 

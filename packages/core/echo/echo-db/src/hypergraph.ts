@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
-import { make as makeRegistry } from '@dxos/echo-registry';
+import { findTypeByDXN, make as makeRegistry } from '@dxos/echo-registry';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -44,7 +44,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   constructor() {
     this._registry = makeRegistry();
-    this._registry.addTypes([Type.PersistentType]);
+    this._registry.add([Type.PersistentType]);
   }
 
   get registry(): Registry.Registry {
@@ -181,7 +181,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         let status: string = '';
         try {
           // The registry handles both DXN-form (typename-based) and echo-form URIs.
-          const typeEntity = this._registry.getTypeByDXN(uri.toString());
+          const typeEntity = findTypeByDXN(this._registry, uri.toString());
           if (typeEntity != null) {
             status = 'resolved';
             return Type.getSchema(typeEntity);
@@ -204,7 +204,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        return this._registry.getTypeByDXN(uri.toString());
+        return findTypeByDXN(this._registry, uri.toString());
       },
     } satisfies Ref.Resolver;
   }

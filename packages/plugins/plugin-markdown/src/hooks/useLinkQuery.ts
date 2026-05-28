@@ -19,7 +19,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(db ? db.graph.registry.types : [])
+        ...(db ? db.graph.registry.list().filter(Type.isType) : [])
           .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
           .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),

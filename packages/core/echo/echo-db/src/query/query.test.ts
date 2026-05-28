@@ -1276,7 +1276,7 @@ describe('Query', () => {
 
     test('not(or) query', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.registry.addTypes([TestSchema.Person, TestSchema.Task]);
+      graph.registry.add([TestSchema.Person, TestSchema.Task]);
 
       db.add(Obj.make(TestSchema.Person, {}));
       db.add(Obj.make(TestSchema.Task, {}));
@@ -1303,7 +1303,7 @@ describe('Query', () => {
 
     test('query relation by type', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.registry.addTypes([TestSchema.Person, TestSchema.HasManager]);
+      graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
 
       const person1 = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       const person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
@@ -1720,7 +1720,7 @@ describe('Query', () => {
 
     test('full-text', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.registry.addTypes([TestSchema.Task]);
+      graph.registry.add([TestSchema.Task]);
 
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
@@ -2432,7 +2432,7 @@ describe('Query', () => {
     });
 
     test('query by typename receives updates', async () => {
-      graph.registry.addTypes([TestSchema.Person]);
+      graph.registry.add([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, {}));
       const name = 'DXOS User';
 
@@ -2475,7 +2475,7 @@ describe('Query', () => {
     });
 
     test('`instanceof` operator works', async () => {
-      graph.registry.addTypes([TestSchema.Person]);
+      graph.registry.add([TestSchema.Person]);
       const name = 'DXOS User';
       const contact = Obj.make(TestSchema.Person, { name });
       db.add(contact);

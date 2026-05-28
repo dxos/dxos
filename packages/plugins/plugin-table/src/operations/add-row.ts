@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       invariant(db);
       const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
       invariant(typename);
-      const types = yield* db.graph.registry.listTypes();
+      const types = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
       const schema = types.find((t) => Type.getTypename(t) === typename);
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);

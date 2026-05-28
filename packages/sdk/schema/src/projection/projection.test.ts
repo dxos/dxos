@@ -137,7 +137,7 @@ describe('ProjectionModel', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const registry = makeRegistry();
-    registry.addTypes([TestSchema.Organization]);
+    registry.add([TestSchema.Organization]);
 
     const typename = 'com.example.type.person';
     const schema = Schema.Struct({

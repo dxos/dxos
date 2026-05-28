@@ -19,14 +19,18 @@ export const useSchema = (db?: Database.Database, typename?: string): Type.Type 
       };
     }
 
-    let currentSchema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as Type.Type | undefined;
+    let currentSchema = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .find((t) => Type.getTypename(t) === typename) as Type.Type | undefined;
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const unsubscribe = db.graph.registry.changed.on(() => {
-          currentSchema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as
-            | Type.Type
-            | undefined;
+          currentSchema = db.graph.registry
+            .list()
+            .filter(Type.isType)
+            .find((t) => Type.getTypename(t) === typename) as Type.Type | undefined;
           onStoreChange();
         });
 
@@ -54,12 +58,18 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
       };
     }
 
-    let currentType = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as T | undefined;
+    let currentType = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .find((t) => Type.getTypename(t) === typename) as T | undefined;
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const unsubscribe = db.graph.registry.changed.on(() => {
-          currentType = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as T | undefined;
+          currentType = db.graph.registry
+            .list()
+            .filter(Type.isType)
+            .find((t) => Type.getTypename(t) === typename) as T | undefined;
           onStoreChange();
         });
 

@@ -22,6 +22,7 @@ import {
   type SchemaRegistry,
   Type,
 } from '@dxos/echo';
+import { findTypeByDXN } from '@dxos/echo-registry';
 import {
   type AnyProperties,
   MetaId,
@@ -58,7 +59,7 @@ import { type ObjectMigration } from './object-migration';
 
 /**
  * Per-database registry that wraps the shared hypergraph registry.
- * Delegates all type-lookup operations to the shared registry and provides
+ * Delegates entity storage to the shared registry and provides
  * register() for persisting new schemas as PersistentSchema ECHO objects.
  */
 class EchoDatabaseRegistry implements Registry.Registry {
@@ -77,12 +78,12 @@ class EchoDatabaseRegistry implements Registry.Registry {
     return this.#delegate.changed;
   }
 
-  get local(): readonly Obj.Unknown[] {
+  get local(): readonly Entity.Unknown[] {
     return this.#delegate.local;
   }
 
-  add(objects: readonly Obj.Unknown[]): void {
-    return this.#delegate.add(objects);
+  add(entities: readonly Entity.Unknown[]): void {
+    return this.#delegate.add(entities);
   }
 
   remove(id: string): boolean {
@@ -93,32 +94,12 @@ class EchoDatabaseRegistry implements Registry.Registry {
     return this.#delegate.clear();
   }
 
-  get(id: string): Obj.Unknown | undefined {
+  get(id: string): Entity.Unknown | undefined {
     return this.#delegate.get(id);
   }
 
-  list(): Obj.Unknown[] {
+  list(): Entity.Unknown[] {
     return this.#delegate.list();
-  }
-
-  addTypes(types: readonly Type.AnyEntity[]): void {
-    return this.#delegate.addTypes(types);
-  }
-
-  getTypeByDXN(dxn: string): Type.AnyEntity | undefined {
-    return this.#delegate.getTypeByDXN(dxn);
-  }
-
-  get types(): readonly Type.AnyEntity[] {
-    return this.#delegate.types;
-  }
-
-  listTypes() {
-    return this.#delegate.listTypes();
-  }
-
-  touch(): void {
-    return this.#delegate.touch();
   }
 
   register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
@@ -340,12 +321,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity {
     const identifierDXN = `dxn:echo:@:${schema.id}`;
-    const existing = this.graph.registry.getTypeByDXN(identifierDXN);
+    const existing = findTypeByDXN(this.graph.registry, identifierDXN);
     if (existing != null) {
       return existing;
     }
     this._registerPersistentSchema(schema);
-    return this.graph.registry.getTypeByDXN(identifierDXN)!;
+    return findTypeByDXN(this.graph.registry, identifierDXN)!;
   }
 
   private _registerPersistentSchema(schema: PersistentSchema): void {
@@ -354,13 +335,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
     this._registeredPersistentSchemaIds.add(schema.id);
     // Register the TypeSchema entity directly — no EchoSchema wrapper needed.
-    // Reactivity is handled by subscribing to core updates and calling registry.touch().
+    // Re-adding on core updates signals registry.changed without a dedicated touch() method.
     this._ctx.onDispose(
       getObjectCore(schema as any).updates.on(() => {
-        this.graph.registry.touch();
+        this.graph.registry.add([schema as unknown as Type.AnyEntity]);
       }),
     );
-    this.graph.registry.addTypes([schema as unknown as Type.AnyEntity]);
+    this.graph.registry.add([schema as unknown as Type.AnyEntity]);
   }
 
   private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.AnyEntity {
@@ -396,7 +377,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const persistentSchema = this.add(schemaToStore as any);
     this._registerPersistentSchema(persistentSchema as unknown as PersistentSchema);
-    return this.graph.registry.getTypeByDXN(typeId)!;
+    return findTypeByDXN(this.graph.registry, typeId)!;
   }
 
   @synchronized
@@ -472,8 +453,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         const identifierDXN = Type.getDXN(typeEntity);
         const inRegistry =
           typename && version
-            ? this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`) !== undefined ||
-              (identifierDXN != null && this.graph.registry.getTypeByDXN(identifierDXN.toString()) !== undefined)
+            ? findTypeByDXN(this.graph.registry, `dxn:type:${typename}:${version}`) !== undefined ||
+              (identifierDXN != null && findTypeByDXN(this.graph.registry, identifierDXN) !== undefined)
             : false;
         if (!inRegistry) {
           throw createSchemaNotRegisteredError(typeEntity);

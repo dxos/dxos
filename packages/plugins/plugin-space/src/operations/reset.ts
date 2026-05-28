@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       }
 
       log.info('reset: reading schema registry');
-      const schemas = space.db.graph.registry.types;
+      const schemas = space.db.graph.registry.list().filter(Type.isType);
 
       const feeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
@@ -97,7 +97,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       }
 
       const afterEntities = snapshotEntities(space);
-      const afterSchemas = space.db.graph.registry.types;
+      const afterSchemas = space.db.graph.registry.list().filter(Type.isType);
       const afterFeeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
         (space.internal.data.pipeline?.dataFeeds?.length ?? 0);

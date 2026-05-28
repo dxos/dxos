@@ -492,7 +492,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.addTypes([TestSchema.Task, TestSchema.Person, TestSchema.Container]);
+    graph.registry.add([TestSchema.Task, TestSchema.Person, TestSchema.Container]);
     return { db, graph };
   };
 

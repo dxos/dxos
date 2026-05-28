@@ -11,7 +11,9 @@ import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/
 const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
   Array.from(
     new Set(
-      db.graph.registry.types
+      db.graph.registry
+        .list()
+        .filter(Type.isType)
         .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
         .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false))),
     ),

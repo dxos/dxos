@@ -27,7 +27,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
         }
 
         if (range) {
-          const schema = db ? [...db.graph.registry.types] : [];
+          const schema = db ? [...db.graph.registry.list().filter(Type.isType)] : [];
           return schema.map((schema) => Type.getTypename(schema));
         }
 

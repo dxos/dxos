@@ -47,7 +47,10 @@ describe('buildViewIndex', () => {
     db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
     await db.flush();
 
-    const allSchemas = db.graph.registry.types.filter((t) => !(t instanceof Type.RuntimeType));
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !(t instanceof Type.RuntimeType));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(true);
@@ -62,7 +65,10 @@ describe('buildViewIndex', () => {
     db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
     await db.flush();
 
-    const allSchemas = db.graph.registry.types.filter((t) => !(t instanceof Type.RuntimeType));
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !(t instanceof Type.RuntimeType));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(false);
@@ -78,7 +84,10 @@ describe('buildViewIndex', () => {
     const tableView = db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
     await db.flush();
 
-    const allSchemas = db.graph.registry.types.filter((t) => !(t instanceof Type.RuntimeType));
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !(t instanceof Type.RuntimeType));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     const views = viewIndex.getViewsForTypename(Type.getTypename(TestContact));
@@ -89,7 +98,9 @@ describe('buildViewIndex', () => {
   test('returns empty index when no view schemas exist', async ({ expect }) => {
     await db.flush();
 
-    const userSchemas = db.graph.registry.types
+    const userSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
       .filter((t) => !(t instanceof Type.RuntimeType))
       .filter((schema) => !ViewAnnotation.has(schema));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, userSchemas);

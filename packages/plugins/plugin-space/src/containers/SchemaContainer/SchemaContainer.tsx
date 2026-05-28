@@ -41,12 +41,14 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
  * Subscribe to and retrieve all schemas from a space's schema registry.
  */
 export const useQuerySpaceSchemas = (space: Space): Type.AnyEntity[] => {
-  const [schemas, setSchemas] = useState<Type.AnyEntity[]>(() => [...space.db.graph.registry.types]);
+  const [schemas, setSchemas] = useState<Type.AnyEntity[]>(() => [
+    ...space.db.graph.registry.list().filter(Type.isType),
+  ]);
 
   useEffect(() => {
-    setSchemas([...space.db.graph.registry.types]);
+    setSchemas([...space.db.graph.registry.list().filter(Type.isType)]);
     return space.db.graph.registry.changed.on(() => {
-      setSchemas([...space.db.graph.registry.types]);
+      setSchemas([...space.db.graph.registry.list().filter(Type.isType)]);
     });
   }, [space]);
 

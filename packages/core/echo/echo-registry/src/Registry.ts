@@ -6,17 +6,26 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { type Obj, Registry, type SchemaRegistry, Type } from '@dxos/echo';
+import { type Entity, Registry, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
- * Stores objects in a local map and delegates unknown lookups to an optional upstream registry.
+ *
+ * All entities (objects, relations, and type-definition entities) are stored in a
+ * single `#entities` map keyed by id. Type entities are additionally indexed by
+ * their DXN string(s) in `#typesByDXN` so that {@link findTypeByDXN} can resolve
+ * them in O(1) without exposing a type-specific method on the interface.
  */
 export class RegistryImpl implements Registry.Registry {
   readonly #changed = new Event<void>();
-  readonly #objects: Map<string, Obj.Unknown> = new Map();
-  readonly #types: Map<string, Type.AnyEntity> = new Map();
+  readonly #entities: Map<string, Entity.Unknown> = new Map();
+  /**
+   * Secondary index: DXN string → Type entity.
+   * A single entity may be reachable under multiple DXN keys
+   * (e.g. both the canonical typename DXN and an identifier DXN).
+   */
+  readonly #typesByDXN: Map<string, Type.AnyEntity> = new Map();
   readonly #upstream: Registry.Registry | undefined;
 
   constructor(options: Registry.Options) {
@@ -30,95 +39,120 @@ export class RegistryImpl implements Registry.Registry {
     return this.#changed;
   }
 
-  get local(): readonly Obj.Unknown[] {
-    return Array.from(this.#objects.values());
+  get local(): readonly Entity.Unknown[] {
+    return Array.from(this.#entities.values());
   }
 
-  add(objects: readonly Obj.Unknown[]): void {
-    for (const object of objects) {
-      this.#put(object);
+  add(entities: readonly Entity.Unknown[]): void {
+    for (const entity of entities) {
+      this.#put(entity);
     }
     this.#changed.emit();
   }
 
   remove(id: string): boolean {
-    const removed = this.#objects.delete(id);
-    if (removed) {
-      this.#changed.emit();
+    const entity = this.#entities.get(id);
+    if (entity == null) {
+      return false;
     }
-    return removed;
-  }
-
-  clear(): void {
-    this.#objects.clear();
-    this.#changed.emit();
-  }
-
-  get(id: string): Obj.Unknown | undefined {
-    return this.#objects.get(id) ?? this.#upstream?.get(id);
-  }
-
-  list(): Obj.Unknown[] {
-    if (!this.#upstream) {
-      return Array.from(this.#objects.values());
-    }
-    const out = new Map<string, Obj.Unknown>();
-    for (const object of this.#upstream.list()) {
-      out.set(getId(object), object);
-    }
-    for (const [id, object] of this.#objects) {
-      out.set(id, object);
-    }
-    return Array.from(out.values());
-  }
-
-  addTypes(types: readonly Type.AnyEntity[]): void {
-    for (const schema of types) {
-      const identifierDXN = Type.getDXN(schema);
-      if (identifierDXN != null) {
-        // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed RuntimeTypes).
-        // Index ONLY by identifier DXN to avoid overwriting static schemas that share the same typename/version.
-        this.#types.set(identifierDXN.toString(), schema);
-      } else {
-        // Static schema (no identifier DXN): index by typename DXN.
-        const dxn = getTypeDXN(schema);
-        this.#types.set(dxn, schema);
+    this.#entities.delete(id);
+    // Remove any DXN index entries that pointed to this entity.
+    if (Type.isType(entity)) {
+      for (const [dxn, indexed] of this.#typesByDXN) {
+        if (indexed === entity) {
+          this.#typesByDXN.delete(dxn);
+        }
       }
     }
     this.#changed.emit();
+    return true;
   }
 
-  getTypeByDXN(dxn: string): Type.AnyEntity | undefined {
-    const local = this.#types.get(normalizeDXN(dxn));
-    if (local != null) {
-      return local;
-    }
-    return this.#upstream?.getTypeByDXN(dxn);
-  }
-
-  get types(): readonly Type.AnyEntity[] {
-    // De-duplicate: multiple keys can point to the same type instance (e.g. typename DXN + identifier DXN).
-    return Array.from(new Set(this.#types.values()));
-  }
-
-  listTypes(): Effect.Effect<readonly Type.AnyEntity[]> {
-    return Effect.sync(() => this.types);
-  }
-
-  touch(): void {
+  clear(): void {
+    this.#entities.clear();
+    this.#typesByDXN.clear();
     this.#changed.emit();
+  }
+
+  get(id: string): Entity.Unknown | undefined {
+    return this.#entities.get(id) ?? this.#upstream?.get(id);
+  }
+
+  list(): Entity.Unknown[] {
+    if (!this.#upstream) {
+      return Array.from(this.#entities.values());
+    }
+    const out = new Map<string, Entity.Unknown>();
+    for (const entity of this.#upstream.list()) {
+      out.set(getEntityId(entity), entity);
+    }
+    for (const [id, entity] of this.#entities) {
+      out.set(id, entity);
+    }
+    return Array.from(out.values());
   }
 
   register(_inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
     throw new Error('Registry is not bound to a database. Use db.registry.register() instead.');
   }
 
-  #put(object: Obj.Unknown): void {
-    const id = getId(object);
-    invariant(typeof id === 'string' && id.length > 0, 'Object must have an id');
-    this.#objects.set(id, object);
+  /**
+   * Internal DXN lookup used by {@link findTypeByDXN}.
+   * Not part of the public {@link Registry.Registry} interface.
+   */
+  _findTypeByDXN(dxn: string): Type.AnyEntity | undefined {
+    const local = this.#typesByDXN.get(normalizeDXN(dxn));
+    if (local != null) {
+      return local;
+    }
+    // Delegate to upstream if it supports fast DXN lookup.
+    if (this.#upstream instanceof RegistryImpl) {
+      return this.#upstream._findTypeByDXN(dxn);
+    }
+    // Fallback: linear scan of upstream.
+    return this.#upstream?.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalizeDXN(dxn)));
+  }
+
+  #put(entity: Entity.Unknown): void {
+    const id = getEntityId(entity);
+    this.#entities.set(id, entity);
+
+    // Index type entities by DXN(s) for fast lookup.
+    if (Type.isType(entity)) {
+      const typeEntity = entity as Type.AnyEntity;
+      const identifierDXN = Type.getDXN(typeEntity);
+      if (identifierDXN != null) {
+        // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed types).
+        // Index ONLY by identifier DXN to avoid overwriting static schemas that share the same typename/version.
+        this.#typesByDXN.set(normalizeDXN(identifierDXN), typeEntity);
+      } else {
+        // Static schema (no identifier DXN): index by canonical typename DXN.
+        const dxn = getTypeDXN(typeEntity);
+        this.#typesByDXN.set(dxn, typeEntity);
+      }
+    }
   }
 }
+
+/**
+ * Look up a type entity by its DXN string.
+ *
+ * Accepts several DXN forms:
+ *  - Full DXN:               `dxn:<typename>:<version>`
+ *  - Legacy prefixed form:   `dxn:type:<typename>:<version>`
+ *  - Short form:             `<typename>:<version>`
+ *  - Echo object DXN:        `dxn:echo:@:<objectId>`
+ *
+ * Falls back to a linear scan when the registry is not a {@link RegistryImpl}.
+ */
+export const findTypeByDXN = (registry: Registry.Registry, dxn: string): Type.AnyEntity | undefined => {
+  if (registry instanceof RegistryImpl) {
+    return registry._findTypeByDXN(dxn);
+  }
+  // Fallback: linear scan for non-RegistryImpl implementations.
+  const normalized = normalizeDXN(dxn);
+  return registry.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalized));
+};
 
 /**
  * Create a new {@link Registry.Registry}.
@@ -151,33 +185,49 @@ export const layerWithUpstream = (
     }),
   );
 
-const getId = (object: Obj.Unknown): string => {
-  const id = (object as { id?: unknown }).id;
-  invariant(typeof id === 'string', 'Object must have a string id');
+const getEntityId = (entity: Entity.Unknown): string => {
+  const id = (entity as { id?: unknown }).id;
+  invariant(typeof id === 'string', 'Entity must have a string id');
   return id;
 };
 
 /**
- * Returns the canonical DXN string key for a schema type.
- * Format: "dxn:<typename>:<version>" — matches what `getSchemaURI` writes into object documents.
+ * Returns the canonical DXN string key for a type entity.
+ * Format: `dxn:<typename>:<version>`.
  */
-const getTypeDXN = (schema: Type.AnyEntity): string => {
-  const typename = Type.getTypename(schema);
-  const version = Type.getVersion(schema);
-  invariant(typename, 'Schema type must have a typename');
-  invariant(version, 'Schema type must have a version');
+const getTypeDXN = (type: Type.AnyEntity): string => {
+  const typename = Type.getTypename(type);
+  const version = Type.getVersion(type);
+  invariant(typename, 'Type entity must have a typename');
+  invariant(version, 'Type entity must have a version');
   return `dxn:${typename}:${version}`;
 };
 
 /**
- * Normalizes a DXN string to the canonical "dxn:<typename>:<version>" form.
+ * Returns true if the type entity's canonical DXN (or identifier DXN) matches the normalized key.
+ */
+const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
+  const identifierDXN = Type.getDXN(type);
+  if (identifierDXN != null && normalizeDXN(identifierDXN) === normalizedDXN) {
+    return true;
+  }
+  try {
+    return getTypeDXN(type) === normalizedDXN;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Normalizes a DXN string to the canonical `dxn:<typename>:<version>` form.
  * Accepts:
- *  - Full DXN: "dxn:<typename>:<version>"
- *  - Legacy prefixed form: "dxn:type:<typename>:<version>" → "dxn:<typename>:<version>"
- *  - Short form without prefix: "<typename>:<version>" → "dxn:<typename>:<version>"
+ *  - Full DXN:             `dxn:<typename>:<version>`
+ *  - Legacy prefixed form: `dxn:type:<typename>:<version>` → `dxn:<typename>:<version>`
+ *  - Short form:           `<typename>:<version>` → `dxn:<typename>:<version>`
+ *  - Echo object DXN:      `dxn:echo:@:<objectId>` — returned as-is
  */
 const normalizeDXN = (dxn: string): string => {
-  // Strip legacy "dxn:type:" prefix to match the canonical "dxn:<typename>:<version>" format.
+  // Strip legacy "dxn:type:" prefix.
   if (dxn.startsWith('dxn:type:')) {
     return `dxn:${dxn.slice('dxn:type:'.length)}`;
   }

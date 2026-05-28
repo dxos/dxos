@@ -157,7 +157,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.addTypes([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,

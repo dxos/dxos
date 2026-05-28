@@ -46,15 +46,19 @@ export const useType = (
     // Set initial value immediately.
     setSchema(
       () =>
-        resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as Type.Type | undefined,
+        resolvedDb.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((t) => Type.getTypename(t) === resolvedTypename) as Type.Type | undefined,
     );
 
     const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
       setSchema(
         () =>
-          resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as
-            | Type.Type
-            | undefined,
+          resolvedDb.graph.registry
+            .list()
+            .filter(Type.isType)
+            .find((t) => Type.getTypename(t) === resolvedTypename) as Type.Type | undefined,
       );
     });
 

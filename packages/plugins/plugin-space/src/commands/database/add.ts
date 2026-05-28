@@ -84,7 +84,7 @@ const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
   const { db } = yield* Database.Service;
-  const allSchemas = yield* db.graph.registry.listTypes();
+  const allSchemas = yield* Effect.sync(() => db.graph.registry.list().filter(Type.isType));
   const schemas = allSchemas
     .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)

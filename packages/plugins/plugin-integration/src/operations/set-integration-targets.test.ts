@@ -28,7 +28,7 @@ describe('SetIntegrationTargets', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.addTypes([Integration.Integration, AccessToken.AccessToken, Expando.Expando]);
+    graph.registry.add([Integration.Integration, AccessToken.AccessToken, Expando.Expando]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'me' }));
     return { db, token };
   };
