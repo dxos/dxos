@@ -134,5 +134,22 @@ describe('util', () => {
       // Two paragraphs separated by a single empty paragraph → one blank line.
       expect(normalizeText('<p>a</p><p></p><p>b</p>')).to.equal('a\n\nb');
     });
+
+    test('strips newsletter preheader padding (invisible whitespace)', ({ expect }) => {
+      // Substack-style preheader: a real preview line followed by a line of
+      // U+00AD (soft hyphen), U+034F (combining grapheme joiner), and spaces
+      // used to push preview text out of the inbox list view.
+      const padding = '­͏     '.repeat(10);
+      expect(normalizeText(`Watch now\n\n${padding}\n\nForwarded this email?`)).to.equal(
+        'Watch now\n\nForwarded this email?',
+      );
+    });
+
+    test('blanks lines containing only zero-width characters', ({ expect }) => {
+      // ZWSP, ZWNJ, ZWJ, word joiner, BOM/ZWNBSP — all invisible padding.
+      // The blanked middle line collapses with its neighboring newlines into
+      // a single blank line between aaa and bbb.
+      expect(normalizeText('aaa\n​‌‍⁠﻿\nbbb')).to.equal('aaa\n\nbbb');
+    });
   });
 });

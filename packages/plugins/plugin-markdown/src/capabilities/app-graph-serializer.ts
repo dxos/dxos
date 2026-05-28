@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Collection, Obj } from '@dxos/echo';
+import { Collection, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { isSpace } from '@dxos/react-client/echo';
 
@@ -21,7 +21,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(AppCapabilities.AppGraphSerializer, [
       {
-        inputType: Markdown.Document.typename,
+        inputType: Type.getTypename(Markdown.Document),
         outputType: 'text/markdown',
         // Reconcile with metadata serializers.
         serialize: async (node) => {
@@ -31,7 +31,7 @@ export default Capability.makeModule(
             name:
               doc.name ||
               doc.fallbackName ||
-              translations[0]['en-US'][Markdown.Document.typename]['object-name.placeholder'],
+              translations[0]['en-US'][Type.getTypename(Markdown.Document)]['object-name.placeholder'],
             data: content.content,
             type: 'text/markdown',
           };
@@ -40,7 +40,7 @@ export default Capability.makeModule(
           const space = ancestors.find(isSpace);
           const target =
             ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
-            space?.properties[Collection.Collection.typename]?.target;
+            space?.properties[Type.getTypename(Collection.Collection)]?.target;
           if (!space || !target) {
             return;
           }

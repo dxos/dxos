@@ -17,7 +17,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -52,10 +52,11 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
+  // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
 );
-interface Example extends Schema.Schema.Type<typeof Example> {}
+interface Example extends Type.InstanceType<typeof Example> {}
 
 const StoryViewEditor = ({
   view,
@@ -64,15 +65,14 @@ const StoryViewEditor = ({
   handleDeleteColumn,
 }: {
   view?: View.View;
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Type.AnyEntity;
   db?: Database.Database;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
   const handleQueryChanged = useCallback(
     (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(Type.isMutable(schema));
-      schema.updateTypename(getTypenameFromQuery(newQuery));
+      invariant(Type.getDatabase(schema) != null);
       invariant(view);
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;
@@ -88,7 +88,7 @@ const StoryViewEditor = ({
   return (
     <ViewEditor
       registry={db?.schemaRegistry}
-      schema={schema}
+      type={schema}
       view={view}
       onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}
@@ -170,7 +170,10 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(schema),
+        });
         const table = Table.make({ view, jsonSchema });
         Obj.update(view, (view) => {
           view.projection.fields = [
@@ -218,7 +221,7 @@ export const StaticSchema: StoryObj = {
       onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: TestSchema.Person.typename,
+          typename: Type.getTypename(TestSchema.Person),
         });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
@@ -247,7 +250,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
       }),
     ),
   ),
-}).pipe(Type.object(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
@@ -259,7 +262,7 @@ export const ArrayOfObjects: StoryObj = {
       onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: ContactWithArrayOfEmails.typename,
+          typename: Type.getTypename(ContactWithArrayOfEmails),
         });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
@@ -322,7 +325,7 @@ export const Tags: Meta<DefaultStoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(storedSchema, {
+            Obj.make(Type.assertObject(storedSchema), {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
             }),

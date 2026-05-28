@@ -9,11 +9,11 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Message } from '@dxos/types';
 
-import * as MessageExtractor from '../capabilities/MessageExtractor';
+import type * as MessageExtractor from '../capabilities/MessageExtractor';
 import { meta } from '#meta';
 
 import * as Calendar from './Calendar';
@@ -52,7 +52,7 @@ export const AddMailbox = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
-    target: Schema.Union(Database.Database, Collection.Collection),
+    target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -120,7 +120,7 @@ export const GmailSend = Operation.make({
   },
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
-    message: Message.Message,
+    message: Type.getSchema(Message.Message),
     integration: Ref.Ref(Integration.Integration).annotations({
       description: 'Integration to source Gmail credentials from.',
     }),
@@ -358,6 +358,28 @@ export const ExtractContact = Operation.make({
  * actor-targeted `ExtractContact` above stays as the avatar-button entry point and commits
  * directly via SpaceOperation.AddObject (no preview interposition there by design).
  */
+/**
+ * Uniform input shape every extractor operation receives. Defined late in this file (after
+ * the other Operation.make calls) so its `Schema.Struct` call doesn't run while
+ * `capabilities/MessageExtractor.ts` is still loading via the `import type` chain — moving
+ * it earlier triggers a load-order cycle that leaves `Database.Database` undefined when
+ * the struct is constructed. Use `Type.getSchema(Message.Message)` for the same reason
+ * other ops in this file do.
+ */
+export const ExtractInputSchema = Schema.Struct({
+  db: Database.Database,
+  message: Type.getSchema(Message.Message),
+  targetTripId: Schema.optional(Schema.String),
+});
+
+/** Runtime Schema for `MessageExtractor.ExtractResult`. See ExtractInputSchema for rationale. */
+export const ExtractResultSchema = Schema.Struct({
+  created: Schema.Array(Schema.Any),
+  updated: Schema.optional(Schema.Array(Schema.Any)),
+  relations: Schema.Array(Schema.Any),
+  summary: Schema.optional(Schema.String),
+});
+
 export const ExtractContactFromMessage = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.extract-contact-from-message`,
@@ -365,8 +387,8 @@ export const ExtractContactFromMessage = Operation.make({
     icon: 'ph--user--regular',
   },
   services: [Capability.Service],
-  input: MessageExtractor.ExtractInput,
-  output: MessageExtractor.ExtractResult,
+  input: ExtractInputSchema,
+  output: ExtractResultSchema,
 });
 
 export const ExtractMessage = Operation.make({
@@ -374,7 +396,7 @@ export const ExtractMessage = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
-    message: Message.Message,
+    message: Type.getSchema(Message.Message),
     extractorId: Schema.optional(Schema.String),
     targetTripId: Schema.optional(Schema.String),
   }),

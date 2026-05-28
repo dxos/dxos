@@ -17,7 +17,7 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-export const TriggerShape = Schema.extend(
+const TriggerShapeSchema = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
@@ -25,7 +25,13 @@ export const TriggerShape = Schema.extend(
   }),
 );
 
-export interface TriggerShape extends Schema.Schema.Type<typeof TriggerShape> {}
+// TODO(wittjosiah): Try to clean up this type inference.
+export interface TriggerShape extends ComputeShape {
+  type: 'trigger';
+  functionTrigger?: Ref.Ref<Trigger.Trigger>;
+}
+
+export const TriggerShape: Schema.Schema<TriggerShape> = TriggerShapeSchema as any;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;

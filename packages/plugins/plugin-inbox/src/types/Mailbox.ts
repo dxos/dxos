@@ -43,16 +43,16 @@ export const Mailbox = Schema.Struct({
     threshold: Schema.Number.pipe(Schema.between(0, 1)),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.mailbox', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),
 );
 
-export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
+export type Mailbox = Type.InstanceType<typeof Mailbox>;
 
 /** Checks if a value is a Mailbox object. */
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);

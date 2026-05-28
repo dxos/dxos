@@ -30,18 +30,17 @@ export const AccessToken = Schema.Struct({
     })
     .pipe(Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.accessToken', '0.1.0')),
-  Schema.annotations({
-    description: 'A credential or token for accessing a service.',
-  }),
   LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
   Annotation.IconAnnotation.set({
     icon: 'ph--key--regular',
     hue: 'yellow',
   }),
   SystemTypeAnnotation.set(true),
+  Schema.annotations({
+    description: 'A credential or token for accessing a service.',
+  }),
+  Type.makeObject(DXN.make('org.dxos.type.accessToken', '0.1.0')),
 );
 
-export interface AccessToken extends Schema.Schema.Type<typeof AccessToken> {}
-
+export type AccessToken = Type.InstanceType<typeof AccessToken>;
 export const make = (props: Obj.MakeProps<typeof AccessToken>) => Obj.make(AccessToken, props);

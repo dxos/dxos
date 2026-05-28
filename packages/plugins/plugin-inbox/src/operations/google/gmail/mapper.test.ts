@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Entity } from '@dxos/echo';
+import { Entity, Type } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
@@ -67,7 +67,7 @@ describe('mapMessage', () => {
 
       // This reproduces the ParseError that QueueImpl hits during refresh:
       //   Schema.decodeUnknown rejects null for optional Ref<Person> (expects undefined).
-      const decoded = Schema.decodeUnknownEither(Message.Message)(rawData);
+      const decoded = Schema.decodeUnknownEither(Type.getSchema(Message.Message))(rawData);
       expect(decoded._tag).toBe('Left');
     }, Effect.provide(InboxResolver.Mock())),
   );

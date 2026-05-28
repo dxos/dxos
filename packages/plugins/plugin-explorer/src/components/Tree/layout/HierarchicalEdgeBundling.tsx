@@ -109,6 +109,7 @@ type BundleHierarchy = HierarchyNode<TreeNode> & {
   incoming?: Array<[BundleHierarchy, BundleHierarchy, BundleEdge]>;
   pathEl?: SVGPathElement | null;
   text?: SVGTextElement | null;
+  circle?: SVGCircleElement | null;
 };
 
 /**
@@ -256,6 +257,9 @@ const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, option
     .attr('class', [slots.node ?? '', 'dx-leaf'].filter(Boolean).join(' '))
     .attr('r', r)
     .style('fill', (d: BundleHierarchy) => getNodeFillForObject(d.data.data as Obj.Unknown | undefined))
+    .each(function (d: BundleHierarchy) {
+      d.circle = this;
+    })
     .on('pointerenter', onEnter)
     .on('pointerleave', onLeave);
 
@@ -277,19 +281,54 @@ const hover = (linksLayer: any, leaves: BundleHierarchy[], focused: BundleHierar
   const outgoing = new Set((focused.outgoing ?? []).map(([, t]) => t));
   const incoming = new Set((focused.incoming ?? []).map(([s]) => s));
 
+  // Use D3 inline styles (highest specificity) so results are visible regardless of CSS cascade.
+  // Inline styles set to `null` are removed, restoring the element's default appearance.
   (linksLayer.selectAll('path') as any)
-    .classed('dx-bundle-out', (d: any) => on && d[0] === focused)
-    .classed('dx-bundle-in', (d: any) => on && d[1] === focused)
-    .classed('dx-bundle-dim', (d: any) => on && d[0] !== focused && d[1] !== focused);
+    .style('stroke', (d: any) => {
+      if (!on) {
+        return null;
+      }
+      if (d[0] === focused) {
+        return 'var(--color-orange-500)';
+      }
+      if (d[1] === focused) {
+        return 'var(--color-sky-500)';
+      }
+      return null;
+    })
+    .style('stroke-width', (d: any) => (on && (d[0] === focused || d[1] === focused) ? '1.5px' : null))
+    .style('opacity', (d: any) => (on && d[0] !== focused && d[1] !== focused ? '0.08' : null));
 
   for (const leaf of leaves) {
-    if (!leaf.text) {
-      continue;
+    const isOut = outgoing.has(leaf);
+    const isIn = incoming.has(leaf);
+    const isConnected = isOut || isIn;
+
+    if (leaf.text) {
+      select(leaf.text)
+        .style('fill', () => {
+          if (!on) {
+            return null;
+          }
+          if (leaf === focused) {
+            return 'var(--color-neutral-900)';
+          }
+          if (isOut) {
+            return 'var(--color-orange-500)';
+          }
+          if (isIn) {
+            return 'var(--color-sky-500)';
+          }
+          return null;
+        })
+        .style('font-weight', () => (on && leaf === focused ? '600' : null));
     }
-    select(leaf.text)
-      .classed('dx-bundle-focused', on && leaf === focused)
-      .classed('dx-bundle-out-text', on && outgoing.has(leaf))
-      .classed('dx-bundle-in-text', on && incoming.has(leaf));
+    if (leaf.circle) {
+      select(leaf.circle)
+        .style('stroke', () => (on && isConnected ? 'var(--color-orange-400)' : null))
+        .style('stroke-width', () => (on && isConnected ? '2.5px' : null))
+        .style('opacity', () => (on && !isConnected && leaf !== focused ? '0.15' : null));
+    }
   }
 };
 

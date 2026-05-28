@@ -6,7 +6,7 @@
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { MessageExtractor } from '@dxos/plugin-inbox';
+import { InboxOperation } from '@dxos/plugin-inbox';
 
 import { meta } from '#meta';
 
@@ -28,6 +28,6 @@ export const ExtractTrip = Operation.make({
     icon: 'ph--airplane-takeoff--regular',
   },
   services: [Capability.Service],
-  input: MessageExtractor.ExtractInput,
-  output: MessageExtractor.ExtractResult,
+  input: InboxOperation.ExtractInputSchema,
+  output: InboxOperation.ExtractResultSchema,
 });

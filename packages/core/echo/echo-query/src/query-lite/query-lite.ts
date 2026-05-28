@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
+import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
@@ -104,10 +104,12 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static type<S extends Schema.Schema.All>(
-    schema: S | string,
-    props?: Filter$.Props<Schema.Schema.Type<S>>,
-  ): Filter$.Filter<Schema.Schema.Type<S>> {
+  static type<T extends Type$.AnyEntity>(
+    type: T,
+    props?: Filter$.Props<Type$.InstanceType<T>>,
+  ): Filter$.Filter<Type$.InstanceType<T>>;
+  static type(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
+  static type(schema: Type$.AnyEntity | string, props?: Filter$.Props<unknown>): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -167,10 +169,10 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static foreignKeys<S extends Schema.Schema.All>(
-    schema: S | string,
+  static foreignKeys<S extends Type$.AnyEntity | string>(
+    schema: S,
     keys: ForeignKey[],
-  ): Filter$.Filter<Schema.Schema.Type<S>> {
+  ): Filter$.Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> {
     assertArgument(typeof schema === 'string', 'schema');
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
@@ -419,7 +421,16 @@ class QueryClass implements Query$.Any {
     }
   }
 
-  static type(schema: Schema.Schema.All | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+  static type<S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter$.Props<Schema.Schema.Type<S>>,
+  ): Query$.Query<Schema.Schema.Type<S>>;
+  static type(type: Type$.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
+  static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
+  static type(schema: Schema.Schema.All | Type$.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+    if (typeof schema !== 'string') {
+      throw new TypeError('expected typename as the first paramter');
+    }
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema, predicates).ast,
@@ -497,7 +508,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
+  referencedBy(target?: Type$.AnyEntity | string, key?: string): Query$.Any {
     if (target !== undefined && typeof target !== 'string') {
       throw new TypeError('referencedBy requires a typename string in query-lite');
     }
@@ -510,21 +521,37 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  sourceOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  sourceOf(
+    relation?: Type$.Relation<any, any, any, any> | string,
+    predicates?: Filter$.Props<unknown> | undefined,
+  ): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
+      filter:
+        relation === undefined
+          ? undefined
+          : typeof relation === 'string'
+            ? FilterClass.type(relation, predicates).ast
+            : FilterClass.type(relation, predicates).ast,
     });
   }
 
-  targetOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  targetOf(
+    relation?: Type$.Relation<any, any, any, any> | string,
+    predicates?: Filter$.Props<unknown> | undefined,
+  ): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
+      filter:
+        relation === undefined
+          ? undefined
+          : typeof relation === 'string'
+            ? FilterClass.type(relation, predicates).ast
+            : FilterClass.type(relation, predicates).ast,
     });
   }
 

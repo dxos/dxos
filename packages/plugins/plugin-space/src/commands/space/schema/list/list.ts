@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type Key } from '@dxos/echo';
+import { type Key, Type } from '@dxos/echo';
 import { getTypeAnnotation } from '@dxos/echo/internal';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
@@ -32,12 +32,13 @@ export const handler = Effect.fn(function* ({
   const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
 
   const schemas = [
-    ...echoSchema.map((schema) => ({
-      id: schema.id,
-      typename: schema.typename,
-      version: schema.version,
+    ...echoSchema.map((type) => ({
+      id: type.id,
+      typename: Type.getTypename(type),
+      version: Type.getVersion(type),
     })),
-    ...runtimeSchema.map((schema) => {
+    ...runtimeSchema.map((type) => {
+      const schema = Type.getSchema(type);
       const schemaAnnotation = getTypeAnnotation(schema)!;
       return {
         typename: schemaAnnotation.typename,

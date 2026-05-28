@@ -119,9 +119,9 @@ export const ObjectStructure = Object.freeze({
   /**
    * @throws On invalid object structure.
    */
-  getEntityKind: (object: ObjectStructure): 'object' | 'relation' => {
+  getEntityKind: (object: ObjectStructure): 'object' | 'relation' | 'type' => {
     const kind = object.system?.kind ?? 'object';
-    invariant(kind === 'object' || kind === 'relation', 'Invalid kind');
+    invariant(kind === 'object' || kind === 'relation' || kind === 'type', 'Invalid kind');
     return kind;
   },
 
@@ -212,6 +212,19 @@ export const ObjectStructure = Object.freeze({
       data: data ?? {},
     };
   },
+
+  makeType: ({ type, keys, data }: { type: URI.URI; keys?: ForeignKey[]; data?: unknown }): ObjectStructure => {
+    return {
+      system: {
+        kind: 'type',
+        type: { '/': type },
+      },
+      meta: {
+        keys: keys ?? [],
+      },
+      data: data ?? {},
+    };
+  },
 });
 
 /**
@@ -250,12 +263,22 @@ export type ObjectMeta = {
  */
 export type ObjectSystem = {
   /**
-   * Entity kind.
+   * Entity kind. `'type'` covers persisted ECHO type definitions (instances of
+   * the `Type.Type` meta-schema); `'object'` / `'relation'` cover regular ECHO
+   * instances.
    */
-  kind?: 'object' | 'relation';
+  kind?: 'object' | 'relation' | 'type';
 
   /**
-   * Object reference ('protobuf' protocol) type.
+   * Object reference ('protobuf' protocol) type — DXN of the schema this
+   * entity instantiates.
+   *
+   * - For `kind === 'object'` / `'relation'` instances, this is the URI of the
+   *   user-defined schema the entity was created from (e.g. `dxn:type:org.example.Person:1.0.0`).
+   * - For `kind === 'type'` entities (persisted Type.Type meta-instances) this
+   *   is always the URI of the `TypeSchema` meta-schema itself
+   *   (`dxn:org.dxos.type.schema:0.1.0`). The kind that the meta-instance
+   *   _describes_ (object/relation/type) lives in `data.jsonSchema.entityKind`.
    */
   type?: EncodedReference;
 

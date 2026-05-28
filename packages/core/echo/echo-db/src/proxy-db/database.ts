@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref } from '@dxos/echo';
+import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { type AnyProperties, MetaId, type ObjectMeta, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -255,10 +255,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
-      if (schema != null) {
-        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
-          throw createSchemaNotRegisteredError(schema);
+      const type = Obj.getType(obj as unknown as Obj.Unknown);
+      if (type != null) {
+        if (!this.schemaRegistry.hasSchema(type) && !this.graph.schemaRegistry.hasSchema(type)) {
+          throw createSchemaNotRegisteredError(Type.getSchema(type));
         }
       }
 
@@ -386,10 +386,19 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 // TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
-  if (schema?.typename) {
-    return new Error(`${message} Schema: ${schema.typename}`);
+  // `typename` on a persisted `Type.Type` entity is no longer a direct field —
+  // it lives in `ObjectMeta.key`. Read it through the helper so this error
+  // path keeps surfacing a typename for both schema flavours (static
+  // `Type.Obj` constants, where `.typename` is a real field, and persisted
+  // entities, where it isn't).
+  if (schema != null) {
+    try {
+      const typename = Type.getTypename(schema);
+      return new Error(`${message} Schema: ${typename}`);
+    } catch {
+      // fall through to plain error
+    }
   }
-
   return new Error(message);
 };
 

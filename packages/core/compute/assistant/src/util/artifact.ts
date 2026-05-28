@@ -27,7 +27,7 @@ export const ArtifactId: Schema.Schema<string> & {
   resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
-  ) => Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service>;
+  ) => Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Database.Service>;
 } = class extends Schema.String.annotations({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
@@ -72,7 +72,7 @@ export const ArtifactId: Schema.Schema<string> & {
   static resolve<S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
-  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {
+  ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Database.Service> {
     const uri = ArtifactId.toEchoURI(ref);
     return Database.resolve(Ref.fromURI(uri), schema);
   }

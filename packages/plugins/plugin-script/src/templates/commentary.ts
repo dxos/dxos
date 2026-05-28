@@ -15,7 +15,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -159,7 +159,7 @@ export default Commentary.pipe(
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
           const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
           const rootCollection = yield* Database.load<Collection.Collection>(
-            properties[Collection.Collection.typename],
+            properties[Type.getTypename(Collection.Collection)],
           );
 
           log.info('rootCollection', { rootCollection });

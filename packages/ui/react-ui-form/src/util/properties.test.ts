@@ -14,9 +14,9 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       hidden: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.object(DXN.make('org.dxos.test.keywordHidden', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('org.dxos.test.keywordHidden', '0.1.0')));
 
-    const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
+    const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
     expect(names).not.toContain('hidden');
   });
@@ -28,9 +28,9 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       schema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.object(DXN.make('org.dxos.test.structHidden', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('org.dxos.test.structHidden', '0.1.0')));
 
-    const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
+    const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
     expect(names).not.toContain('schema');
   });
@@ -39,9 +39,9 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.object(DXN.make('org.dxos.test.arrayHidden', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('org.dxos.test.arrayHidden', '0.1.0')));
 
-    const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
+    const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
     expect(names).not.toContain('context');
   });
@@ -54,9 +54,9 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-    }).pipe(Type.object(DXN.make('org.dxos.test.optionalHidden', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('org.dxos.test.optionalHidden', '0.1.0')));
 
-    const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
+    const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
     expect(names).not.toContain('userId');
   });
@@ -69,9 +69,9 @@ describe('getFormProperties', () => {
       hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
         description: 'Hidden field',
       }),
-    }).pipe(Type.object(DXN.make('org.dxos.test.chainedHidden', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('org.dxos.test.chainedHidden', '0.1.0')));
 
-    const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
+    const names = getFormProperties(Type.getSchema(TestSchema).ast).map((prop) => prop.name);
     expect(names).toContain('name');
     expect(names).not.toContain('hidden');
   });

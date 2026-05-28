@@ -45,12 +45,12 @@ export const Meeting = Schema.Struct({
    */
   summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.meeting', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--note--regular',
     hue: 'rose',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.meeting', '0.1.0')),
 );
 
-export interface Meeting extends Schema.Schema.Type<typeof Meeting> {}
+export type Meeting = Type.InstanceType<typeof Meeting>;

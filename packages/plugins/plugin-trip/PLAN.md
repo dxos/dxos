@@ -82,7 +82,7 @@ import * as Organization from './Organization';
 
 /**
  * Reference to an external service or company.
- * Plain struct (not a Type.object) — embedded inline by callers.
+ * Plain struct (not a Type.makeObject) — embedded inline by callers.
  * Parallel to Actor: human label + machine identifier + optional rich link.
  */
 export const Provider = Schema.Struct({
@@ -163,7 +163,7 @@ export const Account = Schema.Struct({
   notes: Schema.optional(Schema.String),
   accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.account',
     version: '0.1.0',
   }),
@@ -505,7 +505,7 @@ import * as Schema from 'effect/Schema';
 import { Format } from '@dxos/echo/internal';
 
 /**
- * Generic location shape. Embedded inline — not an ECHO Type.object.
+ * Generic location shape. Embedded inline — not an ECHO Type.makeObject.
  * Uniform across modes so Table and Map views work without per-variant branching.
  */
 export const Place = Schema.Struct({
@@ -756,7 +756,7 @@ export const Booking = Schema.Struct({
   source: Schema.Literal('manual', 'email', 'agent', 'import').pipe(Schema.optional),
   rawPayload: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.trip.booking',
     version: '0.1.0',
   }),
@@ -802,7 +802,7 @@ export const Trip = Schema.Struct({
   endDate: Schema.optional(Schema.String),
   segments: Schema.Array(Segment.Any),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.trip',
     version: '0.1.0',
   }),
@@ -1888,7 +1888,7 @@ export const ExtractedFrom = Schema.Struct({
   extractedAt: Schema.String,
   confidence: Schema.optional(Schema.Number),
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     typename: 'org.dxos.relation.extractedFrom',
     version: '0.1.0',
     source: Obj.Unknown,
@@ -2026,7 +2026,7 @@ git commit -m "feat(plugin-inbox): declare MessageExtractor capability"
 
 - [ ] **Step 1: Add the optional field**
 
-In `Mailbox.ts`, inside the `Schema.Struct({ ... })` block (before `.pipe(Type.object(...))`):
+In `Mailbox.ts`, inside the `Schema.Struct({ ... })` block (before `.pipe(Type.makeObject(...))`):
 
 ```typescript
 extractors: Schema.optional(

@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,10 +22,10 @@ export const Create = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    channel: Channel.Channel,
+    channel: Type.getSchema(Channel.Channel),
   }),
   output: Schema.Struct({
-    object: Meeting.Meeting,
+    object: Type.getSchema(Meeting.Meeting),
   }),
 });
 
@@ -32,10 +33,10 @@ export const SetActive = Operation.make({
   meta: { key: `${MEETING_OPERATION}.set-active`, name: 'Set Active Meeting', icon: 'ph--video-camera--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    object: Schema.optional(Meeting.Meeting),
+    object: Schema.optional(Type.getSchema(Meeting.Meeting)),
   }),
   output: Schema.Struct({
-    object: Schema.optional(Meeting.Meeting),
+    object: Schema.optional(Type.getSchema(Meeting.Meeting)),
   }),
 });
 
@@ -58,7 +59,7 @@ export const Summarize = Operation.make({
   meta: { key: `${MEETING_OPERATION}.summarize`, name: 'Summarize Meeting', icon: 'ph--text-align-left--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    meeting: Meeting.Meeting,
+    meeting: Type.getSchema(Meeting.Meeting),
   }),
   output: Schema.Void,
 });

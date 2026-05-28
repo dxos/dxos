@@ -3,11 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
-import { Filter, type Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type CallState, type MediaState, CallsCapabilities } from '@dxos/plugin-calls';
@@ -80,16 +79,14 @@ export default Capability.makeModule(
 );
 
 type EntityExtractionEnricherFactoryOptions = {
-  contextTypes: Schema.Schema.AnyNoContext[];
+  contextTypes: (Type.AnyObj | Type.AnyRelation)[];
   space: Space;
 };
 
 const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   return async (message: Message.Message) => {
     const objects = await space.db
-      .query(
-        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))),
-      )
+      .query(Query.select(Filter.or(...contextTypes.map((type) => Filter.type(type)))))
       .run();
 
     log.info('context', { objects });
@@ -97,7 +94,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
       input: {
         message,
-        objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
+        objects: await Promise.all(objects.filter(Obj.isObject).map((obj) => processContextObject(obj))),
       },
       function: extractionAnthropicFunction,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -28,7 +28,7 @@ const createPerson = () =>
   });
 
 const omitId = Schema.omit<any, any, ['id']>('id');
-const personSchema = omitId(Person.Person);
+const personSchema = omitId(Type.getSchema(Person.Person));
 
 // Mock functions for testing
 const mockHandleSelect = fn();

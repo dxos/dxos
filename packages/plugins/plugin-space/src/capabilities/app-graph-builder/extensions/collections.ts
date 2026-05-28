@@ -61,7 +61,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
 
         const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Collection.Collection.typename] as any;
+        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
         if (collectionRef) {
           get(AtomObj.make(collectionRef));
         }
@@ -104,7 +104,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Collection.Collection.typename] as any;
+        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
         const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
         if (!collection) {
           return Effect.succeed([]);
@@ -181,7 +181,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           : Option.none();
       },
       actions: ({ object, nodeId }, get) => {
-        const deletable = !Obj.instanceOf(Type.PersistentType, object);
+        const deletable = !Type.isType(object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);

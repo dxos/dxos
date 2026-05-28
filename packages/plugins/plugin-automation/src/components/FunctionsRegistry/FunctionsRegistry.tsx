@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import * as OperationModule from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -75,7 +75,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
       {functions.length > 0 && (
         <List.Root<OperationModule.Operation.PersistentOperation>
           items={functions}
-          isItem={Schema.is(OperationModule.Operation.PersistentOperation)}
+          isItem={Schema.is(Type.getSchema(OperationModule.Operation.PersistentOperation))}
           getId={(func) => func.id}
         >
           {({ items }) => (

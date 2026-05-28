@@ -16,7 +16,7 @@ export const HasSubject = Schema.Struct({
   id: Obj.ID,
   completedAt: Format.DateTime,
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('org.dxos.relation.hasSubject', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
@@ -26,6 +26,5 @@ export const HasSubject = Schema.Struct({
 /**
  * @deprecated Reconcile with AnchoredTo?
  */
-export interface HasSubject extends Schema.Schema.Type<typeof HasSubject> {}
-
+export type HasSubject = Type.InstanceType<typeof HasSubject>;
 export const make = (props: Relation.MakeProps<typeof HasSubject>) => Relation.make(HasSubject, props);

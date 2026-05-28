@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -34,7 +34,7 @@ export const CreateIntegration = Operation.make({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
   }),
-  output: Integration.Integration,
+  output: Type.getSchema(Integration.Integration),
 });
 
 /**

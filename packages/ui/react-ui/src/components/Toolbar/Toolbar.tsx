@@ -298,21 +298,6 @@ const ToolbarActionIconButton = forwardRef<HTMLButtonElement, ToolbarActionIconB
 ToolbarActionIconButton.displayName = 'Toolbar.ActionIconButton';
 
 //
-// CloseIconButton
-//
-
-type ToolbarCloseIconButtonProps = { onClick?: MouseEventHandler<HTMLButtonElement>; label?: string };
-
-/** @deprecated Use `Toolbar.ActionIconButton action='close'`. */
-const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
-  ({ onClick, label }, forwardedRef) => (
-    <ToolbarActionIconButton action='close' onClick={onClick} label={label} ref={forwardedRef} />
-  ),
-);
-
-ToolbarCloseIconButton.displayName = 'Toolbar.CloseIconButton';
-
-//
 // Menu
 //
 
@@ -377,8 +362,6 @@ export const Toolbar = {
   Separator: ToolbarSeparator,
   DragHandle: ToolbarDragHandle,
   ActionIconButton: ToolbarActionIconButton,
-  /** @deprecated Use `Toolbar.ActionIconButton action='close'`. */
-  CloseIconButton: ToolbarCloseIconButton,
   Menu: ToolbarMenu,
 };
 
@@ -396,7 +379,6 @@ export type {
   ToolbarDragHandleProps,
   ToolbarActionIconButtonAction,
   ToolbarActionIconButtonProps,
-  ToolbarCloseIconButtonProps,
   ToolbarMenuItem,
   ToolbarMenuProps,
 };

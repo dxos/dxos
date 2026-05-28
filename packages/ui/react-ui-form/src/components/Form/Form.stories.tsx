@@ -21,9 +21,9 @@ import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
-}).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+export type Organization = Type.InstanceType<typeof Organization>;
 
 const Person = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -61,9 +61,9 @@ const Person = Schema.Struct({
       title: 'Identities',
     }),
   ),
-}).pipe(Type.object(DXN.make('org.dxos.type.person', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0')));
 
-export interface Person extends Schema.Schema.Type<typeof Person> {}
+export type Person = Type.InstanceType<typeof Person>;
 
 type DefaultStoryProps<T extends AnyProperties> = {
   schema?: Schema.Schema<T>;
@@ -77,7 +77,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
-
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);
@@ -145,6 +144,8 @@ export default meta;
 
 type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
+const PersonSchema = Type.getSchema(Person);
+
 const values: Partial<Person> = {
   name: 'Alice',
   location: [40.7128, -74.006],
@@ -154,30 +155,30 @@ const values: Partial<Person> = {
   reminderAt: '09:00:00',
 };
 
-export const Default: Story<ExcludeId<typeof Person>> = {
+export const Default: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(PersonSchema),
     values,
     autoSave: true,
   },
 };
 
-export const Readonly: Story<ExcludeId<typeof Person>> = {
+export const Readonly: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(PersonSchema),
     values,
     readonly: true,
   },
 };
 
-export const Static: Story<ExcludeId<typeof Person>> = {
+export const Static: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(PersonSchema),
     values,
     layout: 'static',
   },
 };
 
-export const Empty: Story<ExcludeId<typeof Person>> = {
+export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
   args: {},
 };

@@ -39,11 +39,11 @@ const Flight = Schema.Struct({
   arriveAt: Schema.optional(Format.DateTime.annotations({ title: 'Arrive' })),
   cabin: Schema.optional(Schema.Literal('economy', 'premium', 'business', 'first').annotations({ title: 'Cabin' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
-}).pipe(Type.object(DXN.make('com.example.type.flight', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.flight', '0.1.0')));
 
-export interface Flight extends Schema.Schema.Type<typeof Flight> {}
+export type Flight = Type.InstanceType<typeof Flight>;
 
-type FlightValues = Omit<Schema.Schema.Type<typeof Flight>, 'id'>;
+type FlightValues = Omit<Type.InstanceType<typeof Flight>, 'id'>;
 
 const flight = {
   airline: 'Air France',
@@ -82,9 +82,9 @@ const FLIGHT_LAYOUT_COMPACT = trim`
  * (or `Form.FieldSet layoutName="…"`) picks the variant; without a name
  * the `'default'` entry is used.
  */
-const AnnotatedFlight = Flight.annotations({}).pipe(
-  FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }),
-);
+const AnnotatedFlight = Type.getSchema(Flight)
+  .annotations({})
+  .pipe(FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }));
 
 type StoryProps = {
   schema: Schema.Schema<any>;
@@ -134,14 +134,14 @@ type Story = StoryObj<StoryProps>;
 /** Baseline: no annotation, no override — `Form.FieldSet` renders linearly (one field per row). */
 export const Linear: Story = {
   args: {
-    schema: omitId(Flight),
+    schema: omitId(Type.getSchema(Flight)),
   },
 };
 
 /** `Form.Layout` invoked directly with a `template` prop, bypassing any annotation. */
 export const TemplateProp: Story = {
   args: {
-    schema: omitId(Flight),
+    schema: omitId(Type.getSchema(Flight)),
     template: FLIGHT_LAYOUT,
   },
 };
@@ -207,7 +207,7 @@ type PlaygroundStoryProps = {
 };
 
 const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
-  const schema = useMemo(() => omitId(Flight) as unknown as Schema.Schema<any>, []);
+  const schema = useMemo(() => omitId(Type.getSchema(Flight)) as unknown as Schema.Schema<any>, []);
   const [template, setTemplate] = useState(FLIGHT_LAYOUT);
   const [lastValid, setLastValid] = useState(FLIGHT_LAYOUT);
   const [error, setError] = useState<string | undefined>();

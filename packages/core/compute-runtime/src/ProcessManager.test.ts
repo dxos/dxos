@@ -23,7 +23,8 @@ import {
   Trace,
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, type URI } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -587,7 +588,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const monitor = yield* Process.ProcessMonitorService;
       const manager = yield* ProcessManager.Service;
 
-      const conversation = 'dxn:queue:test-conversation' as URI.URI;
+      const conversation = 'dxn:queue:test-conversation' as DXN.DXN;
 
       const fiber = yield* invoker.invokeFiber(
         ParentOp,

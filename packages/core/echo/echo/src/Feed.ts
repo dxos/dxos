@@ -43,18 +43,18 @@ export const Feed = Schema.Struct({
    */
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.feed', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--rows--regular',
     hue: 'yellow',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.feed', '0.1.0')),
 );
 
 /**
  * TypeScript instance type for a Feed object.
  */
-export interface Feed extends Schema.Schema.Type<typeof Feed> {}
+export type Feed = Type.InstanceType<typeof Feed>;
 
 //
 // Types

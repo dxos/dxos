@@ -8,22 +8,22 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvents } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { ActivationEvents } from '@dxos/app-framework';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
+import { type MessageExtractor } from '#capabilities';
 import { InboxOperationHandlerSet } from '#operations';
 import { ContactMessageExtractor } from '#operations';
-import { type MessageExtractor } from '#capabilities';
 import { translations } from '#translations';
 import { InboxCapabilities, InboxOperation, Settings } from '#types';
 
+import EMAIL from '../../testing/data/flight.md?raw';
 import { Message } from './Message';
-import EMAIL from './testing/email.md?raw';
 
 type DefaultStoryProps = {
   text?: string;
@@ -161,8 +161,7 @@ const ExtractorsPlugin = Plugin.define({ id: 'story.extractors', name: 'Story Ex
   Plugin.addModule({
     id: 'contact-extractor',
     activatesOn: ActivationEvents.Startup,
-    activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
   }),
   Plugin.addModule({
     id: 'fake-trip-extractor',

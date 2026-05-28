@@ -457,5 +457,26 @@ describe('SpaceArchive', () => {
       expect(structure.system?.source).toEqual({ '/': sourceId });
       expect(structure.system?.target).toEqual({ '/': targetId });
     });
+
+    test('buildDatabaseDirectoryFromObjects flags persisted Type.Type entities as kind=type', () => {
+      const id = ObjectId.random();
+      const objects = [
+        {
+          id,
+          '@type': 'dxn:org.dxos.type.schema:0.1.0',
+          '@meta': { keys: [] },
+          name: 'Custom Type',
+          typename: 'example.type.custom',
+          version: '0.1.0',
+          jsonSchema: { $id: `echo:/${id}`, type: 'object', properties: {} },
+        },
+      ];
+      const directory = buildDatabaseDirectoryFromObjects(objects as any);
+      const structure = directory.objects![id];
+      expect(structure.system?.kind).toBe('type');
+      // Type entities aren't relations — source/target stay unset.
+      expect(structure.system?.source).toBeUndefined();
+      expect(structure.system?.target).toBeUndefined();
+    });
   });
 });

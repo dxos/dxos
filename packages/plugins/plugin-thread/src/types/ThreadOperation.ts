@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Key, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Key, Obj, Ref, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
@@ -22,7 +22,7 @@ export const OnCreateSpace = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
-    rootCollection: Collection.Collection,
+    rootCollection: Type.getSchema(Collection.Collection),
     isDefault: Schema.Boolean.pipe(Schema.optional),
   }),
   output: Schema.Void,
@@ -36,7 +36,7 @@ export const CreateChannel = Operation.make({
     name: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
-    object: Channel.Channel,
+    object: Type.getSchema(Channel.Channel),
   }),
 });
 
@@ -50,7 +50,7 @@ export const AppendChannelMessage = Operation.make({
   // operation level — the runtime can't fulfill it without a space context.
   services: [Capability.Service],
   input: Schema.Struct({
-    channel: Channel.Channel,
+    channel: Type.getSchema(Channel.Channel),
     sender: Actor.Actor,
     text: Schema.String,
   }),
@@ -69,8 +69,8 @@ export const Create = Operation.make({
 });
 
 export const DeleteOutput = Schema.Struct({
-  thread: Thread.Thread.annotations({ description: 'The deleted thread.' }),
-  anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The deleted anchor.' }),
+  thread: Type.getSchema(Thread.Thread).annotations({ description: 'The deleted thread.' }),
+  anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The deleted anchor.' }),
 }).pipe(Schema.partial);
 
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
@@ -79,9 +79,9 @@ export const Delete = Operation.make({
   meta: { key: `${THREAD_OPERATION}.delete`, name: 'Delete Thread', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    anchor: AnchoredTo.AnchoredTo,
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo),
     subject: Obj.Unknown,
-    thread: Schema.optional(Thread.Thread),
+    thread: Schema.optional(Type.getSchema(Thread.Thread)),
   }),
   output: DeleteOutput,
 });
@@ -99,7 +99,7 @@ export const ToggleResolved = Operation.make({
   meta: { key: `${THREAD_OPERATION}.toggle-resolved`, name: 'Toggle Resolved', icon: 'ph--check-circle--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    thread: Thread.Thread,
+    thread: Type.getSchema(Thread.Thread),
   }),
   output: Schema.Void,
 });
@@ -109,7 +109,7 @@ export const AddMessage = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
-    anchor: AnchoredTo.AnchoredTo,
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo),
     sender: Actor.Actor,
     text: Schema.String,
   }),
@@ -118,7 +118,7 @@ export const AddMessage = Operation.make({
 
 export const DeleteMessageOutput = Schema.partial(
   Schema.Struct({
-    message: Message.Message.annotations({ description: 'The deleted message.' }),
+    message: Type.getSchema(Message.Message).annotations({ description: 'The deleted message.' }),
     messageIndex: Schema.Number.annotations({ description: 'The index the message was at.' }),
   }),
 );
@@ -129,7 +129,7 @@ export const DeleteMessage = Operation.make({
   meta: { key: `${THREAD_OPERATION}.delete-message`, name: 'Delete Message', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    anchor: AnchoredTo.AnchoredTo,
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo),
     subject: Obj.Unknown,
     messageId: Schema.String,
   }),
@@ -143,8 +143,8 @@ export const Restore = Operation.make({
   meta: { key: `${THREAD_OPERATION}.restore`, name: 'Restore Thread', icon: 'ph--clock-counter-clockwise--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    thread: Thread.Thread.annotations({ description: 'The thread to restore.' }),
-    anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The anchor relation to restore.' }),
+    thread: Type.getSchema(Thread.Thread).annotations({ description: 'The thread to restore.' }),
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor relation to restore.' }),
   }),
   output: Schema.Void,
 });
@@ -160,8 +160,8 @@ export const RestoreMessage = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The anchor of the thread.' }),
-    message: Message.Message.annotations({ description: 'The message to restore.' }),
+    anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotations({ description: 'The anchor of the thread.' }),
+    message: Type.getSchema(Message.Message).annotations({ description: 'The message to restore.' }),
     messageIndex: Schema.Number.annotations({ description: 'The index to restore the message at.' }),
   }),
   output: Schema.Void,

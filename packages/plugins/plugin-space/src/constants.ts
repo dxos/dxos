@@ -8,5 +8,5 @@ export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
 export const IMPORT_SPACE_DIALOG = `${meta.id}.ImportSpaceDialog`;
 export const JOIN_DIALOG = `${meta.id}.JoinDialog`;
-export const OBJECT_RENAME_POPOVER = `${meta.id}.ObjectRenamePopover`;
+export const ENTITY_RENAME_POPOVER = `${meta.id}.EntityRenamePopover`;
 export const SPACE_RENAME_POPOVER = `${meta.id}.SpaceRenamePopover`;

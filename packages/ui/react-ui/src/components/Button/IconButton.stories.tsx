@@ -24,11 +24,12 @@ const DefaultStory = (props: IconButtonProps) => {
   );
 };
 
-const densities: Density[] = ['lg', 'md', 'sm'];
+const densities: Density[] = ['lg', 'md', 'sm', 'xs'];
 const densityIconSize: Record<Density, IconButtonProps['size']> = {
   lg: 5,
   md: 4,
-  sm: 3,
+  sm: 4,
+  xs: 4,
 };
 
 const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
@@ -76,16 +77,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: DensitiesStory as any,
   args: {
-    label: 'Bold',
-    icon: 'ph--text-b--regular',
+    label: 'Close',
+    icon: 'ph--x--regular',
   },
 };
 
 export const Ghost: Story = {
   render: DensitiesStory as any,
   args: {
-    label: 'Bold',
-    icon: 'ph--text-b--regular',
+    label: 'Close',
+    icon: 'ph--x--regular',
     variant: 'ghost',
   },
 };

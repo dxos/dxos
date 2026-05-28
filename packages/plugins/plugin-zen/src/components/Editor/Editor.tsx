@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Form, omitId } from '@dxos/react-ui-form';
 
@@ -15,8 +15,8 @@ export type EditorProps = {
 };
 
 export const Editor = ({ dream }: EditorProps) => {
-  const echoSchema = Obj.getSchema(dream);
-  const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
+  const type = Obj.getType(dream);
+  const schema = useMemo(() => type && omitId(Type.getSchema(type)), [type]);
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {

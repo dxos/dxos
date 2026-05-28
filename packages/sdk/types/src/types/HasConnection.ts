@@ -17,18 +17,17 @@ export const HasConnection = Schema.Struct({
     examples: ['customer', 'vendor', 'investor'],
   }),
 })
+  .annotations({
+    description: 'A relationship between two organizations.',
+  })
   .pipe(
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('org.dxos.relation.hasConnection', '0.1.0'),
       source: Organization.Organization,
       target: Organization.Organization,
     }),
-  )
-  .annotations({
-    description: 'A relationship between two organizations.',
-  });
+  );
 
 // TODO(burdon): Rename HasBusinessRelationship?
-export interface HasConnection extends Schema.Schema.Type<typeof HasConnection> {}
-
+export type HasConnection = Type.InstanceType<typeof HasConnection>;
 export const make = (props: Relation.MakeProps<typeof HasConnection>) => Relation.make(HasConnection, props);

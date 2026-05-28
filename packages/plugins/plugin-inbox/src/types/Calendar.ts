@@ -16,16 +16,16 @@ export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.calendar', '0.1.0')),
   FeedAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar--regular',
     hue: 'rose',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.makeObject(DXN.make('org.dxos.type.calendar', '0.1.0')),
 );
 
-export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}
+export type Calendar = Type.InstanceType<typeof Calendar>;
 
 /** Checks if a value is a Calendar object. */
 export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);

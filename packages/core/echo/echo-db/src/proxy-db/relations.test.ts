@@ -79,7 +79,7 @@ describe('Relations', () => {
       const db = await testBuilder.lastPeer!.openLastDatabase();
       const objects = await db.query(Query.select(Filter.everything())).run();
 
-      const manager = objects.find((obj) => Obj.instanceOf(TestSchema.EmployedBy, obj));
+      const manager = objects.find((obj) => Relation.instanceOf(TestSchema.EmployedBy, obj));
       assert(manager, 'manager not found');
 
       expect(Relation.isRelation(manager)).to.be.true;

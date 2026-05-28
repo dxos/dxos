@@ -7,7 +7,6 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
@@ -67,21 +66,6 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
     return DXN.make(objectAnnotation.typename, objectAnnotation.version);
   }
   return undefined;
-};
-
-/**
- * @param input schema or a typename string.
- * @return type identifier URI — see {@link getSchemaURI}. For a typename string,
- * always a DXN.
- */
-export const getTypeURIFromSpecifier = (input: Schema.Schema.All | string): URI.URI => {
-  if (Schema.isSchema(input)) {
-    return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
-  } else {
-    assertArgument(typeof input === 'string', 'input');
-    assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.make(input);
-  }
 };
 
 //
@@ -189,10 +173,9 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     // Try to extract typename from DXN.
     return getSchemaTypename(schema);
   } else {
-    const type = getTypeURI(obj);
-    if (!type) {
-      return undefined;
-    }
+    // `obj` may be an arbitrary value (e.g. from `isInstanceOf`); read TypeId
+    // directly so we return undefined for non-entities instead of throwing.
+    const type = (obj as any)?.[TypeId];
     // Parse the URI string to extract typename.
     if (DXN.isDXN(type)) {
       const parsed = DXN.tryMake(type);
@@ -218,67 +201,22 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
 
 /**
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
- * @returns undefined if the object doesn't have a type.
+ * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
  * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
  * @internal (use Obj.getTypeURI)
  */
-// TODO(burdon): Narrow type.
 export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
-  if (!obj) {
+  if (obj == null) {
     return undefined;
   }
-
   const type = (obj as any)[TypeId];
-  if (!type) {
+  if (type == null) {
     return undefined;
   }
-
   invariant(URI.isURI(type), 'Invalid object.');
   return type;
-};
-
-/**
- * Checks if the object is an instance of the schema.
- * Only typename is compared, the schema version is ignored.
- *
- * The following cases are considered to mean that the object is an instance of the schema:
- *  - Object was created with this exact schema.
- *  - Object was created with a different version of this schema.
- *  - Object was created with a different schema (maybe dynamic) that has the same typename.
- */
-// TODO(burdon): Can we use `Schema.is`?
-export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
-  schema: Schema,
-  object: any,
-): object is Schema.Schema.Type<Schema> => {
-  if (object == null) {
-    return false;
-  }
-
-  const schemaURI = getSchemaURI(schema);
-  if (!schemaURI) {
-    throw new Error('Schema must have an object annotation.');
-  }
-
-  const type = getTypeURI(object);
-  if (type && type === schemaURI) {
-    return true;
-  }
-
-  const typename = getTypename(object);
-  if (!typename) {
-    return false;
-  }
-
-  if (!DXN.isDXN(schemaURI)) {
-    // EchoURI-based schema URI — no typename match possible.
-    return false;
-  }
-
-  const parsed = DXN.tryMake(schemaURI);
-  return parsed != null && DXN.getName(parsed) === typename;
 };
 
 //
@@ -299,6 +237,12 @@ export type PropertyMetaAnnotation = {
 
 // TODO(wittjosiah): Align with other annotations.
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
+/**
+ * Apply property-level metadata to an Effect schema. Only accepts
+ * `Schema.Schema.Any` — apply BEFORE wrapping the schema with
+ * `Type.makeObject` / `Type.makeRelation`. To read property meta off a
+ * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
+ */
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
@@ -531,7 +475,6 @@ const IconAnnotationSchema = Schema.Struct({
    *  - 'pink'
    *  - 'rose'
    */
-
   hue: Schema.optional(Schema.String),
 });
 

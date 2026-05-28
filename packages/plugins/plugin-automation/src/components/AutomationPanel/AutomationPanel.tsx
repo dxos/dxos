@@ -14,7 +14,7 @@ import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { type ComputeEnvironment } from '@dxos/client-protocol';
 import { Operation, Script, ServiceResolver, Trigger, TriggerEvent } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { Filter, Obj, Query, Tag, Type } from '@dxos/echo';
 import { KEY_FEED_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
@@ -173,7 +173,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
         {filteredTriggers.length > 0 && (
           <List.Root<Trigger.Trigger>
             items={filteredTriggers}
-            isItem={Schema.is(Trigger.Trigger)}
+            isItem={Schema.is(Type.getSchema(Trigger.Trigger))}
             getId={(field) => field.id}
           >
             {({ items: filteredTriggers }) => (

@@ -115,13 +115,13 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object(DXN.make('example.type.roastLog', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
+  Type.makeObject(DXN.make('example.type.roastLog', '0.1.0')),
 );
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface RoastLog extends S.Schema.Type<typeof RoastLog> {}
+type RoastLog = Type.InstanceType<typeof RoastLog>;
 const makeRoastLog = (props: Obj.MakeProps<typeof RoastLog>): RoastLog => Obj.make(RoastLog, props);
 
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.
@@ -1112,7 +1112,7 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
  * then return the collection for wiring into the root.
  *
- * We register the schema via space.db.schemaRegistry.register() so that a PersistentType ECHO object
+ * We register the schema via space.db.schemaRegistry.register() so that a TypeSchema ECHO object
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
@@ -1122,9 +1122,9 @@ const addRoastLogCollection = async (
 ): Promise<Collection.Collection> => {
   const typename = 'example.type.roastLog';
 
-  // Register creates the PersistentType ECHO object in the space so the runtime can
+  // Register creates the TypeSchema ECHO object in the space so the runtime can
   // discover and render the schema without it being compiled into the app. Pass the
-  // explicit object form so `name` is stored on the PersistentType — passing a
+  // explicit object form so `name` is stored on the TypeSchema — passing a
   // Type.AnyEntity directly does not auto-derive a display name.
   await space.db.schemaRegistry.register([
     {
