@@ -9,9 +9,9 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { ActivationEvents } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

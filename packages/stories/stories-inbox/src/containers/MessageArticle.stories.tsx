@@ -8,11 +8,11 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtractor } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
@@ -28,7 +28,10 @@ import { Message as MessageType, Person } from '@dxos/types';
 
 // MessageArticle calls LayoutOperation.Open/Select/UpdateCompanion from its callbacks. Provide
 // no-op handlers so the operations resolve without pulling in DeckPlugin.
-const MockDeckOperationsPlugin = Plugin.define({ id: DXN.make('story.inbox.mockDeckOperations'), name: 'Mock Deck Ops' }).pipe(
+const MockDeckOperationsPlugin = Plugin.define({
+  id: DXN.make('story.inbox.mockDeckOperations'),
+  name: 'Mock Deck Ops',
+}).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
       Effect.succeed(
