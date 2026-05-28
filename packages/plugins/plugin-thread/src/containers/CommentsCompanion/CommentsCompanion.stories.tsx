@@ -124,7 +124,7 @@ const StoryGraphPlugin = Plugin.define({
     activate: Effect.fnUntraced(function* () {
       const capabilities = yield* Capability.Service;
       const extensions = yield* GraphBuilder.createExtension({
-        id: 'story-docs',
+        id: 'storyDocs',
         match: NodeMatcher.whenRoot,
         connector: (_, get) =>
           Effect.gen(function* () {

@@ -37,7 +37,7 @@ const MockAuthSurfacePlugin = Plugin.define({
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
-            id: 'mock-integration-auth',
+            id: 'mockIntegrationAuth',
             role: 'integration--auth',
             component: ({ data }) => (
               <div className='text-description'>
