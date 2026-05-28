@@ -79,4 +79,14 @@ export interface MessageExtractor {
   match(message: Message.Message): MatchResult;
   readonly operation: Operation.Definition<ExtractInput, ExtractResult>;
   extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError>;
+  /**
+   * Whether the dispatcher should attach an `ExtractedFrom` relation from each top-level
+   * created/updated object back to the source message.
+   *
+   * Defaults to `true`. Set to `false` for extractors whose output is already linked to the
+   * message by some other field — e.g. the contact extractor materialises `msg.sender` into
+   * a Person, and `Message.sender` already references that actor, so a separate
+   * `ExtractedFrom` edge would be redundant.
+   */
+  readonly createRelation?: boolean;
 }

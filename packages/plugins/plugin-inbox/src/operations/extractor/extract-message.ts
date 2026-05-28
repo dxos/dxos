@@ -75,15 +75,20 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       const result = yield* chosen.extract({ db, message, targetTripId });
 
       const extractedAt = new Date().toISOString();
+      // Two gates on relation creation:
+      //  1. Per-extractor opt-out via `createRelation: false` — for extractors whose output
+      //     is already linked to the message by some other field (e.g. the contact extractor
+      //     materialises `msg.sender`, which the Message schema already references).
+      //  2. Per-object: only top-level objects (no parent via `Obj.setParent`) get an edge,
+      //     so the trip extractor's Trip + Booking + Segment trio surfaces as one Trip chip,
+      //     not three.
+      const shouldRelate = chosen.createRelation !== false;
 
-      // Persist created objects. ExtractedFrom relations are only attached to TOP-LEVEL
-      // objects (those without a parent via `Obj.setParent`) so the message header surfaces
-      // one chip per user-meaningful artifact rather than one per sub-object. Example: the
-      // trip extractor emits Trip + Booking + Segment, but only the Trip is top-level — the
-      // Booking and Segment hang off the Trip and shouldn't render as their own tags.
+      // Persist created objects, then attach an ExtractedFrom relation for each top-level
+      // one when the extractor opts in.
       for (const obj of result.created) {
         db.add(obj);
-        if (Obj.getParent(obj) !== undefined) {
+        if (!shouldRelate || Obj.getParent(obj) !== undefined) {
           continue;
         }
         const rel = ExtractedFrom.make({
@@ -96,11 +101,10 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         db.add(rel);
       }
 
-      // Updated objects were mutated in place by the extractor; do NOT re-add. Apply the
-      // same top-level filter as created objects so the provenance graph stays focused on
-      // user-meaningful artifacts.
+      // Updated objects were mutated in place by the extractor; do NOT re-add. Same gates
+      // as created objects.
       for (const obj of result.updated ?? []) {
-        if (Obj.getParent(obj) !== undefined) {
+        if (!shouldRelate || Obj.getParent(obj) !== undefined) {
           continue;
         }
         const rel = ExtractedFrom.make({

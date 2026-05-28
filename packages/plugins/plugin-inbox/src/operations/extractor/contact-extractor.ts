@@ -39,7 +39,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractContactFromMes
 
 export default handler;
 
-/** Creates a Person from a message's sender, linking to an existing Organization when a matching domain is found. */
+/**
+ * Creates a Person from a message's sender, linking to an existing Organization when a
+ * matching domain is found. Does NOT attach an `ExtractedFrom` relation back to the message:
+ * `Message.sender` already references the actor, so a provenance edge would duplicate that
+ * linkage and clutter the message header with a redundant chip alongside the sender row.
+ */
 export const ContactMessageExtractor: MessageExtractor.MessageExtractor = {
   id: ID,
   description: 'Create contact from message sender',
@@ -47,4 +52,5 @@ export const ContactMessageExtractor: MessageExtractor.MessageExtractor = {
   match: matchMessage,
   operation: InboxOperation.ExtractContactFromMessage,
   extract,
+  createRelation: false,
 };
