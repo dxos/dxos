@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { getPersonalSpace, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
@@ -17,7 +17,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
@@ -178,6 +178,15 @@ export const CreateObjectDialog = ({
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
+      <Dialog.ActionBar>
+        <Dialog.Close asChild>
+          <IconButton
+            icon='ph--squares-four--regular'
+            label={t('open-plugin-registry.label')}
+            onClick={() => void operationInvoker.invokePromise(SettingsOperation.OpenPluginRegistry)}
+          />
+        </Dialog.Close>
+      </Dialog.ActionBar>
     </Dialog.Content>
   );
 };
