@@ -16,7 +16,7 @@ import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
-import * as Filter from './Filter';
+import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { type AnyProperties } from './internal/common/types';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
@@ -24,11 +24,11 @@ import { type AnyProperties } from './internal/common/types';
 import { isInstanceOf } from './internal/Entity/type-uri';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
-import * as Query from './Query';
+import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import type * as Registry from './Registry';
 import type * as SchemaRegistry from './SchemaRegistry';
-import * as Type from './Type';
+import type * as Type from './Type';
 
 /**
  * `query` API function declaration.
