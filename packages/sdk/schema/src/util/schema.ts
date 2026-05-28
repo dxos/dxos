@@ -61,12 +61,13 @@ export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Pro
     return;
   }
 
-  const type = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  if (!type || !version || !registry) {
+  if (!version || !registry) {
     return;
   }
-  return findTypeByDXN(registry, `dxn:type:${type}:${version}`);
+  // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
+  // directly rather than rebuilding a legacy `dxn:type:` string.
+  return findTypeByDXN(registry, dxn);
 };
 
 // TODO(burdon): Factor out.

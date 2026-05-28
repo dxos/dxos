@@ -408,7 +408,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
             : undefined;
         const inRegistry =
           typename && version
-            ? findTypeByDXN(this.graph.registry, `dxn:type:${typename}:${version}`) !== undefined ||
+            ? findTypeByDXN(this.graph.registry, `dxn:${typename}:${version}`) !== undefined ||
               (identifierDXN != null && findTypeByDXN(this.graph.registry, identifierDXN) !== undefined)
             : false;
         if (!inRegistry) {

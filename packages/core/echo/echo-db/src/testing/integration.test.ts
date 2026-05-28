@@ -495,7 +495,7 @@ describe('Integration tests', () => {
         const stored = db.add(LocalTestSchema);
         schemaDxn = Type.getURI(stored)!;
 
-        const object = db.add(Obj.make(Type.assertObject(stored), { field: 'test' }));
+        const object = db.add(Obj.make(stored, { field: 'test' }));
         // After fork, the schema attached to objects is the rebuilt Effect Schema (from jsonSchema),
         // not identical to the Type.Type entity returned by register. Compare URIs instead.
         expect(Type.getURI(Obj.getType(object)!)).to.eq(Type.getURI(stored));
