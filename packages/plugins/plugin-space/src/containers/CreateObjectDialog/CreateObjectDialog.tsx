@@ -5,7 +5,6 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
@@ -97,15 +96,11 @@ export const CreateObjectDialog = ({
         .map((entry) => {
           const schema = schemas?.find((s) => Type.getTypename(s) === entry.id);
           const iconAnnotation = schema ? Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined) : undefined;
-          const description = schema
-            ? SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)
-            : undefined;
           return {
             id: entry.id,
             label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
             icon: iconAnnotation?.icon,
             iconHue: iconAnnotation?.hue,
-            description,
             plugin: pluginNameByEntryId.get(entry.id),
           };
         }),

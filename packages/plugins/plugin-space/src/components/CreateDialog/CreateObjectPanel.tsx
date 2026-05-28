@@ -27,7 +27,6 @@ export type CreateObjectOption = {
   label: string;
   icon?: string;
   iconHue?: string;
-  description?: string;
   plugin?: string;
 };
 
@@ -173,11 +172,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
-              {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
-                  {[option.plugin, option.description].filter(Boolean).join(' · ')}
-                </span>
-              )}
+              {option.plugin && <span className='truncate text-description text-xs'>{option.plugin} Plugin</span>}
             </div>
           </Picker.Item>
         ))}
