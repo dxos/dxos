@@ -22,6 +22,13 @@ export class InvitationEncoder {
       decodedInvitation.type = Invitation.Type.INTERACTIVE;
       decodedInvitation.multiUse = true;
     }
+    // Proto3 does not encode default enum values on the wire, so when an invitation was
+    // serialized with `kind: DEVICE` (= 0) the field comes back as `undefined`. Restore the
+    // default explicitly so downstream consumers (`ServiceContext.getInvitationHandler`) can
+    // still dispatch by kind.
+    if (decodedInvitation.kind === undefined) {
+      decodedInvitation.kind = Invitation.Kind.DEVICE;
+    }
     return decodedInvitation;
   }
 
