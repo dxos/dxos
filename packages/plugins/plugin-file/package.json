@@ -14,6 +14,11 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
