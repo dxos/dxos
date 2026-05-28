@@ -145,7 +145,7 @@ export class EdgeIdentityRecoveryManager {
    */
   public async recoverIdentityWithToken(
     ctx: Context,
-    fields: { token: string; recoveryProof?: never } | { recoveryProof: string; token?: never },
+    fields: { token: string } | { recoveryProof: string },
   ): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
