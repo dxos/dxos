@@ -16,7 +16,7 @@ import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
-import type * as Filter from './Filter';
+import * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
 import { type AnyProperties } from './internal/common/types';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
@@ -24,11 +24,12 @@ import { type AnyProperties } from './internal/common/types';
 import { isInstanceOf } from './internal/Entity/type-uri';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
-import type * as Query from './Query';
+import * as Query from './Query';
 import type * as QueryResult from './QueryResult';
+import { type QueryAST } from '@dxos/echo-protocol';
 import type * as Registry from './Registry';
 import type * as SchemaRegistry from './SchemaRegistry';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 /**
  * `query` API function declaration.
@@ -334,4 +335,29 @@ export const registerType = (
   Service.pipe(
     Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.registry.register(input))),
     Effect.withSpan('Database.registerType'),
+  );
+
+/**
+ * Scope constant targeting the local in-process registry.
+ * Combine with a space scope to query both persisted and code-shipped schemas.
+ */
+export const LOCAL_REGISTRY_SCOPE: QueryAST.RegistryScope = { _tag: 'registry', location: 'local' };
+
+/**
+ * Builds a query for all type-schema entities scoped to both the given database and
+ * the local in-process registry. Use this when discovering available schemas —
+ * it mirrors the former `schemaRegistry.query({ location: ['database', 'runtime'] })` behaviour.
+ */
+export const schemaQuery = (db: Database): Query.Any =>
+  Query.select(Filter.type(Type.Type)).from([{ _tag: 'space' as const, spaceId: db.spaceId }, LOCAL_REGISTRY_SCOPE]);
+
+/**
+ * Runs a schema-discovery query against both the space and the local registry.
+ * Equivalent to `Database.runQuery(Filter.type(Type.Type))` but also fans in
+ * code-shipped schemas from `hypergraph.registry`.
+ */
+export const runSchemaQuery = (): Effect.Effect<Type.AnyEntity[], never, Service> =>
+  Service.pipe(
+    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.query(schemaQuery(db)).run() as Promise<Type.AnyEntity[]>)),
+    Effect.withSpan('Database.runSchemaQuery'),
   );

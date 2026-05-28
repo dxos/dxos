@@ -88,14 +88,38 @@ export class RegistryQuerySource implements QuerySource {
   }
 
   #match(filter: QueryAST.Filter): QueryResult.EntityEntry[] {
-    return this.#registry
-      .list()
-      .filter((object) => filterMatchObjectJSON(filter, Entity.toJSON(object)))
-      .map((object) => ({
-        id: (object as { id: string }).id,
-        result: object,
-        match: { rank: 1 },
-        resolution: { source: 'local' as const, time: 0 },
-      }));
+    return this.#registry.list().flatMap((object) => {
+      const json = this.#safeToJSON(object);
+      if (json === null || !filterMatchObjectJSON(filter, json)) {
+        return [];
+      }
+      return [
+        {
+          id: (object as { id: string }).id,
+          result: object,
+          match: { rank: 1 },
+          resolution: { source: 'local' as const, time: 0 },
+        },
+      ];
+    });
+  }
+
+  /**
+   * Converts an entity to its JSON representation for filter matching.
+   * Some static type entities have complex schema fields (e.g. class instances)
+   * that cannot be fully serialised to JSON Schema. In that case we fall back to
+   * a minimal representation containing only the id and @type — sufficient for
+   * type-based filter matching, which is the primary use-case for the registry.
+   */
+  #safeToJSON(object: Entity.Unknown): Entity.JSON | null {
+    try {
+      return Entity.toJSON(object);
+    } catch {
+      const typeUri = Entity.getTypeURI(object);
+      if (!typeUri) {
+        return null;
+      }
+      return { id: (object as { id: string }).id, '@type': typeUri } as Entity.JSON;
+    }
   }
 }

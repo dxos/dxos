@@ -101,7 +101,7 @@ describe('buildViewIndex', () => {
     const userSchemas = db.graph.registry
       .list()
       .filter(Type.isType)
-      .filter((t) => !(t instanceof Type.RuntimeType))
+      .filter((t) => !Type.isTypeKindSchema(t))
       .filter((schema) => !ViewAnnotation.has(schema));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, userSchemas);
 

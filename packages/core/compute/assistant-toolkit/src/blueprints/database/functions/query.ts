@@ -20,7 +20,7 @@ export default Query.pipe(
           ...text.split(' ').map((term) => EchoQuery.select(Filter.text(term, { type: 'full-text' }))),
         );
         if (typename !== undefined) {
-          const types = yield* Database.runQuery(Filter.type(Type.Type));
+          const types = yield* Database.runSchemaQuery();
           const schema = types.find((t) => Type.getTypename(t) === typename);
           if (!schema) {
             return yield* Effect.fail(new Error(`Schema ${typename} not found`));
@@ -28,7 +28,7 @@ export default Query.pipe(
           query = query.select(Filter.type(schema));
         }
       } else if (typename) {
-        const types = yield* Database.runQuery(Filter.type(Type.Type));
+        const types = yield* Database.runSchemaQuery();
         const schema = types.find((t) => Type.getTypename(t) === typename);
         if (!schema) {
           return yield* Effect.fail(new Error(`Schema ${typename} not found`));

@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { EchoURI } from '@dxos/keys';
@@ -106,7 +106,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     this._db = db;
 
-    this._schemaSubscription = db.query(Filter.type(Type.Type)).subscribe(
+    this._schemaSubscription = db.query(Database.schemaQuery(db)).subscribe(
       (query) => {
         this._schema = [...query.results] as Type.AnyEntity[];
         this.invalidate();
