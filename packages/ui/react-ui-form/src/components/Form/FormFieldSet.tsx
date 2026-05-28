@@ -43,7 +43,7 @@ export type FormFieldSetProps<T extends AnyProperties> = {
     | 'createInitialValuePath'
     | 'createFieldMap'
     | 'db'
-    | 'useSchema'
+    | 'useType'
     | 'getOptions'
     | 'onCreate'
   >;

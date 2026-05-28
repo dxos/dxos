@@ -122,14 +122,14 @@ export const Segment = Schema.Struct({
   notes: Schema.optional(Schema.String),
   details: Details,
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--ticket--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
 );
 
-export interface Segment extends Schema.Schema.Type<typeof Segment> {}
+export interface Segment extends Type.InstanceType<typeof Segment> {}
 
 /** Type guard for Segment ECHO objects. */
 export const instanceOf = (value: unknown): value is Segment => Obj.instanceOf(Segment, value);

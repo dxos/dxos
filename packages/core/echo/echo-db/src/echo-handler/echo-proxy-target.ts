@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 
 import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import type { Entity } from '@dxos/echo';
+import type { Entity, Type } from '@dxos/echo';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
@@ -76,10 +76,22 @@ export class ObjectInternals {
   subscriptions: CleanupFn[] = [];
 
   /**
-   * Schema of the root object.
-   * Only used if this is not bound to a database.
+   * `Type.AnyEntity` of the root object. Populated when a Type entity is
+   * available (e.g. created via `Obj.make(SomeType, ...)`); left undefined for
+   * objects created without a typed schema. Only used if this is not bound to a
+   * database. {@link EchoReactiveHandler.getTypeEntity} returns this directly.
    */
-  rootSchema?: Schema.Schema.AnyNoContext = undefined;
+  rootSchema?: Type.AnyEntity = undefined;
+
+  /**
+   * Memoized rebuilt Effect Schema for persisted `Type.Type` entities. Reading
+   * `[StaticTypeSchemaSlot]` off a persisted type entity goes through this
+   * cache so repeated reads share the same Schema instance.
+   *
+   * Lazily populated by the proxy's `get` trap when the slot is requested;
+   * invalidated when the entity's `jsonSchema` changes.
+   */
+  cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
 
   constructor(core: ObjectCore, database?: EchoDatabase) {
     this.core = core;

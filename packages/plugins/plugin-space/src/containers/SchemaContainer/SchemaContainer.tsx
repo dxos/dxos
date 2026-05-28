@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -29,7 +29,7 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
         >
           {schemas.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
           {schemas.map((schema) => (
-            <div key={schema.id}>{schema.typename}</div>
+            <div key={schema.id}>{Type.getTypename(schema)}</div>
           ))}
         </div>
       </Settings.Section>
@@ -40,17 +40,16 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
 /**
  * Subscribe to and retrieve all schemas from a space's schema registry.
  */
-export const useQuerySpaceSchemas = (space: Space): Type.RuntimeType[] => {
-  const [schemas, setSchemas] = useState<Type.RuntimeType[]>([]);
+export const useQuerySpaceSchemas = (space: Space): Type.Type[] => {
+  const [types, setTypes] = useState<Type.Type[]>([]);
 
   useEffect(() => {
     const query = space.db.schemaRegistry.query();
-    const initialResults = query.runSync();
-    setSchemas(initialResults);
+    setTypes(query.runSync());
 
-    const unsubscribe = query.subscribe(() => setSchemas(query.results));
+    const unsubscribe = query.subscribe(() => setTypes(query.results));
     return () => unsubscribe();
   }, [space]);
 
-  return schemas;
+  return types;
 };

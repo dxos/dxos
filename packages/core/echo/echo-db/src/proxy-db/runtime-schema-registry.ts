@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey, defaultMap } from '@dxos/util';
 
@@ -19,59 +18,75 @@ import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-quer
 const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 /**
- * Registry of `Type.RuntimeType` schemas.
+ * Registry of `Type.AnyEntity` schemas.
+ *
+ * Keyed internally by the schema's URI (today always a DXN). Maintains multiple
+ * versions per typename for backwards lookup via `getSchemaByDXN`.
  */
 export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
-  private readonly _registry = new Map<string, Type.AnyEntity[]>();
+  /** Keyed by URI (DXN today, possibly EchoURI in future). */
+  private readonly _registry = new Map<URI.URI, Type.AnyEntity>();
+  /** Secondary index by typename for `getSchemaByDXN` fallback (no-version lookups). */
+  private readonly _byTypename = new Map<string, Type.AnyEntity[]>();
   /** Emitted when schemas are registered. */
   readonly schemaChanges = new Event();
 
-  constructor(schemas: Type.AnyEntity[] = [Type.PersistentType]) {
-    schemas.forEach((schema) => {
-      const typename = Type.getTypename(schema);
-      invariant(typename, 'Not a valid ECHO schema');
-      this._registry.set(typename, [schema]);
-    });
+  constructor(schemas: Type.AnyEntity[] = [Type.Type]) {
+    schemas.forEach((schema) => this._add(schema));
   }
 
   get schemas(): Type.AnyEntity[] {
-    return Array.from(this._registry.values()).flat();
+    return Array.from(this._registry.values());
   }
 
-  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
-    input
-      // TODO(wittjosiah): This should filter out or throw on non-ECHO schemas.
-      .filter((schema): schema is Type.AnyEntity => Schema.isSchema(schema))
-      .forEach((schema) => {
-        const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
-        const version = Type.getVersion(schema) ?? raise(new TypeError('Schema has no version'));
-        const versions = defaultMap(this._registry, typename, () => []);
-        if (versions.some((schema) => Type.getVersion(schema) === version)) {
-          throw new Error(`Schema version already registered: ${typename}:${version}`);
-        }
-
-        versions.push(schema);
-      });
-
+  async register<T extends Type.AnyEntity>(input: T[]): Promise<T[]>;
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]>;
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
+    // Runtime registry only stores Type entities; the JSON-schema form of
+    // `RegisterSchemaInput` is handled by the database-backed registry. Reject
+    // anything else explicitly so callers don't silently drop bad input.
+    for (const schema of input) {
+      if (!Type.isType(schema)) {
+        throw new TypeError(
+          'RuntimeSchemaRegistry.register expects Type entities (use `Type.makeObject` / `Type.makeRelation`).',
+        );
+      }
+      this._add(schema);
+    }
     this.schemaChanges.emit();
 
     // TODO(wittjosiah): This registry only support static schemas.
     return [];
   }
 
+  private _add(schema: Type.AnyEntity): void {
+    const uri = Type.getURI(schema) ?? raise(new TypeError('Schema has no URI'));
+    if (this._registry.has(uri)) {
+      const typename = Type.getTypename(schema);
+      const version = Type.getVersion(schema);
+      throw new Error(`Schema version already registered: ${typename}:${version}`);
+    }
+    this._registry.set(uri, schema);
+
+    const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
+    invariant(typename, 'Not a valid ECHO schema');
+    const versions = defaultMap(this._byTypename, typename, () => [] as Type.AnyEntity[]);
+    versions.push(schema);
+  }
+
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     query?: Q & SchemaRegistry.Query,
-  ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
+  ): QueryResult.QueryResult<Type.Type> {
     const self = this;
     const changes = new Event();
     let unsubscribe: CleanupFn | undefined;
-    return new SchemaRegistryPreparedQueryImpl<SchemaRegistry.ExtractQueryResult<Q>>({
+    return new SchemaRegistryPreparedQueryImpl<Type.Type>({
       changes,
       getResultsSync() {
-        return filterOrderResults(self.schemas, query ?? {}) as SchemaRegistry.ExtractQueryResult<Q>[];
+        return filterOrderResults(self.schemas, query ?? {}) as Type.Type[];
       },
       async getResults() {
-        return filterOrderResults(self.schemas, query ?? {}) as SchemaRegistry.ExtractQueryResult<Q>[];
+        return filterOrderResults(self.schemas, query ?? {}) as Type.Type[];
       },
       async start() {
         if (unsubscribe) {
@@ -89,34 +104,33 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  hasSchema<S extends Type.AnyEntity>(schema: S): boolean {
-    const typename = Type.getTypename(schema);
-    const version = Type.getVersion(schema);
-    invariant(typename, 'Invalid schema');
-
-    const schemas = this._registry.get(typename);
-    return schemas?.some((schema) => Type.getVersion(schema) === version) ?? false;
+  hasSchema(schema: Type.AnyEntity): boolean {
+    const uri = Type.getURI(schema);
+    if (!uri) {
+      return false;
+    }
+    return this._registry.has(uri);
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
   getSchemaByDXN(dxn: DXN.DXN): Type.AnyEntity | undefined {
-    const type = DXN.getName(dxn);
-    const version = DXN.getVersion(dxn);
-    const allSchemas = this._registry.get(type) ?? [];
-    if (version) {
-      return allSchemas.find((s) => Type.getVersion(s) === version);
-    } else {
-      // If no version is specified, return the earliest version for backwards compatibility.
-      // TODO(dmaretskyi): Probably not correct to compare lexicographically, but it's good enough for now.
-      return allSchemas.sort((a, b) => (Type.getVersion(a) ?? '0.0.0').localeCompare(Type.getVersion(b) ?? '0.0.0'))[0];
+    // If the DXN has a version, look up directly by URI.
+    if (DXN.getVersion(dxn)) {
+      return this._registry.get(dxn);
     }
+    // No version specified — return the earliest known version for backwards compatibility.
+    const type = DXN.getName(dxn);
+    const allSchemas = this._byTypename.get(type) ?? [];
+    // TODO(dmaretskyi): Probably not correct to compare lexicographically, but it's good enough for now.
+    return allSchemas.sort((a, b) => (Type.getVersion(a) ?? '0.0.0').localeCompare(Type.getVersion(b) ?? '0.0.0'))[0];
   }
+
   /**
    * @deprecated Use getSchemaByDXN.
    */
   // TODO(wittjosiah): Remove.
   getSchema(typename: string): Type.AnyEntity | undefined {
-    return this._registry.get(typename)?.[0];
+    return this._byTypename.get(typename)?.[0];
   }
 }
 

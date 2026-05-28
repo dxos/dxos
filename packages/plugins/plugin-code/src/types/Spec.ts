@@ -17,16 +17,17 @@ export const Spec = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.spec', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: meta.icon!,
     hue: meta.iconHue,
   }),
+  Type.makeObject(DXN.make('org.dxos.type.spec', '0.1.0')),
 );
 
-export interface Spec extends Schema.Schema.Type<typeof Spec> {}
+export type Spec = Type.InstanceType<typeof Spec>;
 
-export const isSpec = (object: unknown): object is Spec => Schema.is(Spec)(object);
+export const isSpec = (object: unknown): object is Spec =>
+  Schema.is(Type.getSchema(Spec) as Schema.Schema<Spec>)(object);
 
 export const make = ({ content = DEFAULT_SPEC_CONTENT, ...props }: Partial<{ name: string; content: string }> = {}) => {
   const spec = Obj.make(Spec, { ...props, content: Ref.make(Text.make({ content })) });

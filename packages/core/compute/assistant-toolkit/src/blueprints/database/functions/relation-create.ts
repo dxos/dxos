@@ -17,7 +17,7 @@ export default RelationCreate.pipe(
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
-      invariant(Type.isRelationSchema(schema), 'Schema is not a relation schema');
+      invariant(Type.isRelation(schema), 'Schema is not a relation schema');
 
       const sourceObj = yield* Database.load(source);
       const targetObj = yield* Database.load(target);

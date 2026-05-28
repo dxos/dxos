@@ -21,14 +21,14 @@ export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.collection', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--folder--regular',
     hue: 'amber',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.collection', '0.1.0')),
 );
 
-export interface Collection extends Schema.Schema.Type<typeof Collection> {}
+export type Collection = Type.InstanceType<typeof Collection>;
 
 export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
   Obj.make(Collection, { objects: [], ...props });

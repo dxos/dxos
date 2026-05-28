@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       invariant(typename);
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
       invariant(schema);
-      const object = Obj.make(schema, data);
+      const object = Obj.make(Type.assertObject(schema), data);
       yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
     }),
   ),

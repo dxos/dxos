@@ -136,7 +136,7 @@ export const isOperationWithHandler = (value: unknown): value is WithHandler<Def
   return isOperationDefinition(value) && 'handler' in value;
 };
 
-/**a
+/**
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
@@ -169,21 +169,6 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
       return Pipeable.pipeArguments(this, arguments);
     },
   } as any;
-};
-
-/**
- * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
- * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
- * built-in implementation registered with the runtime.
- */
-export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
-  return {
-    ...op,
-    meta: {
-      ...op.meta,
-      deployedId: `intrinsic:${op.meta.key}`,
-    },
-  };
 };
 
 /**
@@ -333,14 +318,14 @@ export const PersistentOperation = Schema$.Struct({
    */
   icon: Schema$.optional(Schema$.String),
 }).pipe(
-  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
-  //  backward compatibility with existing data and avoid requiring data migration.
-  Type.object(DXN.make('org.dxos.type.function', '0.2.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
   Annotation.SystemTypeAnnotation.set(true),
+  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
+  //  backward compatibility with existing data and avoid requiring data migration.
+  Type.makeObject(DXN.make('org.dxos.type.function', '0.2.0')),
 );
-export interface PersistentOperation extends Schema$.Schema.Type<typeof PersistentOperation> {}
+export type PersistentOperation = Type.InstanceType<typeof PersistentOperation>;
 
 const FUNCTION_META_KEY = 'org.dxos.service.function';
 
@@ -573,8 +558,8 @@ export const PersistentOperation_v0_1_0 = Schema$.Struct({
   outputSchema: Schema$.optional(JsonSchema.JsonSchema),
   services: Schema$.optional(Schema$.Array(Schema$.String)),
   binding: Schema$.optional(Schema$.String),
-}).pipe(Type.object(DXN.make('org.dxos.type.function', '0.1.0')));
-export interface PersistentOperation_v0_1_0 extends Schema$.Schema.Type<typeof PersistentOperation_v0_1_0> {}
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.function', '0.1.0')));
+export type PersistentOperation_v0_1_0 = Type.InstanceType<typeof PersistentOperation_v0_1_0>;
 
 /**
  * Migration from {@link PersistentOperation_v0_1_0} (v0.1.0) to {@link PersistentOperation} (v0.2.0).

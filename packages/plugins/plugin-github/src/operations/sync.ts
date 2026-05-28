@@ -4,11 +4,10 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization, Person, Project, Task } from '@dxos/types';
@@ -90,13 +89,13 @@ type TaskSnapshot = {
 const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) });
 
 /**
- * Generic foreign-key lookup. Schema is forwarded to `Filter.foreignKeys`
+ * Generic foreign-key lookup. Type is forwarded to `Filter.foreignKeys`
  * untyped — the caller supplies the result type via the explicit `T` parameter
  * (mirrors how plugin-trello casts after `Database.runQuery`).
  */
-const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number) =>
+const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
   Effect.gen(function* () {
-    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])));
+    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(type as never, [fkFor(id)])));
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 

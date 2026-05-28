@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability, type Plugin as PluginNS } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -129,10 +129,10 @@ export default Capability.makeModule(
               const spec = get(AtomRef.make(project.spec));
               return Node.make({
                 id: project.id,
-                type: CodeProject.CodeProject.typename,
+                type: Type.getTypename(CodeProject.CodeProject),
                 data: project,
                 properties: {
-                  label: project.name ?? ['object-name.placeholder', { ns: CodeProject.CodeProject.typename }],
+                  label: project.name ?? ['object-name.placeholder', { ns: Type.getTypename(CodeProject.CodeProject) }],
                   icon: 'ph--code--regular',
                   iconHue: 'indigo',
                   role: 'branch',

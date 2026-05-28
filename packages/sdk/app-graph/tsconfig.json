@@ -46,9 +46,6 @@
       "path": "../../core/echo/echo-atom"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {

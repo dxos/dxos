@@ -1,3 +1,4 @@
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { Pipeline } from '@dxos/types';
 //
@@ -9,7 +10,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [Pipeline.Pipeline.typename]: {
+      [Type.getTypename(Pipeline.Pipeline)]: {
         'typename.label': 'Pipeline',
         'typename.label_zero': 'Pipelines',
         'typename.label_one': 'Pipeline',

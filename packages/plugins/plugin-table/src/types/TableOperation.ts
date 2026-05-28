@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database, View, DXN } from '@dxos/echo';
+import { Database, Type, View, DXN } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 
@@ -39,11 +39,11 @@ export const OnCreateSpace = Operation.make({
   output: Schema.Void,
 });
 
-export const OnSchemaAdded = Operation.make({
-  meta: { key: DXN.make(`${TABLE_OPERATION}.onSchemaAdded`), name: 'On Schema Added', icon: 'ph--table--regular' },
+export const OnTypeAdded = Operation.make({
+  meta: { key: DXN.make(`${TABLE_OPERATION}.onTypeAdded`), name: 'On Type Added', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
-    schema: Schema.Any,
+    type: Schema.Any,
     show: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
@@ -58,7 +58,7 @@ export const Create = Operation.make({
     CreateTableSchema,
   ),
   output: Schema.Struct({
-    object: Table.Table,
+    object: Type.getSchema(Table.Table),
   }),
 });
 
@@ -66,7 +66,7 @@ export const Create = Operation.make({
 export const AddRow = Operation.make({
   meta: { key: DXN.make(`${TABLE_OPERATION}.addRow`), name: 'Add Row', icon: 'ph--plus--regular' },
   input: Schema.Struct({
-    view: View.View,
+    view: Type.getSchema(View.View),
     data: Schema.Any,
   }),
   output: Schema.Void,

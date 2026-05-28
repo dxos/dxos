@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Collection, Obj } from '@dxos/echo';
+import { Collection, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { isSpace } from '@dxos/react-client/echo';
 
@@ -21,14 +21,14 @@ export default Capability.makeModule(
 
     return Capability.contributes(AppCapabilities.AppGraphSerializer, [
       {
-        inputType: Sketch.Sketch.typename,
+        inputType: Type.getTypename(Sketch.Sketch),
         outputType: 'application/tldraw',
         // Reconcile with metadata serializers.
         serialize: async (node) => {
           const sketch = node.data;
           const canvas = await sketch.canvas.load();
           return {
-            name: sketch.name || translations[0]['en-US'][Sketch.Sketch.typename]['object-name.placeholder'],
+            name: sketch.name || translations[0]['en-US'][Type.getTypename(Sketch.Sketch)]['object-name.placeholder'],
             data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
             type: 'application/tldraw',
           };
@@ -37,7 +37,7 @@ export default Capability.makeModule(
           const space = ancestors.find(isSpace);
           const target =
             ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
-            space?.properties[Collection.Collection.typename]?.target;
+            space?.properties[Type.getTypename(Collection.Collection)]?.target;
           if (!space || !target) {
             return;
           }

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Ref, DXN } from '@dxos/echo';
+import { Database, Feed, Ref, Type, DXN } from '@dxos/echo';
 import { Message, Transcript } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -23,12 +23,12 @@ export const Create = Operation.make({
     space: SpaceSchema,
   }),
   output: Schema.Struct({
-    object: Transcript.Transcript,
+    object: Type.getSchema(Transcript.Transcript),
   }),
 });
 
 export const MessageWithRangeId = Schema.extend(
-  Message.Message,
+  Type.getSchema(Message.Message),
   Schema.Struct({
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotations({
       description: 'The IDs of the messages that contain the sentences.',

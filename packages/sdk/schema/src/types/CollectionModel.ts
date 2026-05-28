@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Collection, Database, Obj, Query, Ref } from '@dxos/echo';
+import { Collection, Database, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 type AddProps = {
@@ -30,7 +30,8 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Obj.Any = objects[0];
 
-    const collectionRef: Ref.Ref<Collection.Collection> | undefined = properties[Collection.Collection.typename];
+    const collectionRef: Ref.Ref<Collection.Collection> | undefined =
+      properties[Type.getTypename(Collection.Collection)];
     if (collectionRef) {
       const collection = yield* Effect.promise(() => collectionRef.load());
       Obj.update(collection, (collection) => {
@@ -40,7 +41,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
       const newCollection = Collection.make({ objects: [objectRef] });
       const collectionRef = Ref.make(newCollection);
       Obj.update(properties, (properties) => {
-        properties[Collection.Collection.typename] = collectionRef;
+        properties[Type.getTypename(Collection.Collection)] = collectionRef;
       });
     }
   }

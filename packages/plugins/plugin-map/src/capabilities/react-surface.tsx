@@ -10,7 +10,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
+import { type Collection, Database, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
@@ -83,7 +83,7 @@ export default Capability.makeModule(() =>
           const { typename } = useFormValues('MapForm');
 
           const [schema] = db?.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).runSync() ?? [];
-          const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
+          const jsonSchema = schema && schema.jsonSchema;
 
           const coordinateProperties = useMemo(() => {
             if (!jsonSchema?.properties) {

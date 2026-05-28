@@ -11,7 +11,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { Annotation, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -140,8 +140,9 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ data, ...props }, forwardedRef) => {
   const objectMenuItems = useObjectMenuItems(data);
   const icon = Function.pipe(
-    Obj.getSchema(data),
+    Obj.getType(data),
     Option.fromNullable,
+    Option.map(Type.getSchema),
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
     Option.getOrElse(() => 'ph--circle-dashed--regular'),

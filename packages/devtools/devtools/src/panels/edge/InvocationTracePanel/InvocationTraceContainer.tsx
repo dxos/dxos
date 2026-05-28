@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
-import { type Database, type Obj } from '@dxos/echo';
+import { type Database, type Obj, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
@@ -207,7 +207,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Option.getOrUndefined,
     Match.value,
     Match.not(Match.defined, () => 'unknown'),
-    Match.when(Schema.is(TraceEvent), () => 'logs'),
+    Match.when(Schema.is(Type.getSchema(TraceEvent)), () => 'logs'),
     Match.orElse(() => 'execution-graph'),
   );
 

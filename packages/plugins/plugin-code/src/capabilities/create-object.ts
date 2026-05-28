@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -15,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Spec.Spec.typename,
+        id: Type.getTypename(Spec.Spec),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Spec.make(props);
@@ -28,7 +29,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: CodeProject.CodeProject.typename,
+        id: Type.getTypename(CodeProject.CodeProject),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const spec = Spec.make();

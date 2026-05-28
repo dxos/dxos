@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Panel } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
@@ -22,7 +22,8 @@ import { Segment, Trip } from '#types';
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;
 
 export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) => {
-  const echoSchema = Obj.getSchema(segment);
+  const type = Obj.getType(segment);
+  const echoSchema = type && Type.getSchema(type);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
 
   const handleSave = useCallback(

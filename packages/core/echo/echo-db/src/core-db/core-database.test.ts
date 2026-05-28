@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, ObjectId, PublicKey } from '@dxos/keys';
@@ -402,8 +402,8 @@ interface DocumentHandles {
 const addObjectToDoc = <T extends { id: string }>(
   docHandle: DocHandleProxy<DatabaseDirectory>,
   object: T,
-  typename: string = TestSchema.Expando.typename,
-  version: string = TestSchema.Expando.version,
+  typename: string = Type.getTypename(TestSchema.Expando),
+  version: string = Type.getVersion(TestSchema.Expando),
 ): T => {
   const data: any = { ...object };
   delete data.id;

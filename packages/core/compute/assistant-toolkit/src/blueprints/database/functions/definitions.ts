@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref, Relation, Tag } from '@dxos/echo';
+import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -103,7 +103,7 @@ export const Query = Operation.make({
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const Load = Operation.make({
   meta: {
@@ -124,7 +124,7 @@ export const Load = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ObjectCreate = Operation.make({
   meta: {
@@ -144,7 +144,7 @@ export const ObjectCreate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ObjectUpdate = Operation.make({
   meta: {
@@ -163,7 +163,7 @@ export const ObjectUpdate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ObjectDelete = Operation.make({
   meta: {
@@ -179,7 +179,7 @@ export const ObjectDelete = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const SchemaAdd = Operation.make({
   meta: {
@@ -200,7 +200,7 @@ export const SchemaAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const SchemaList = Operation.make({
   meta: {
@@ -216,7 +216,7 @@ export const SchemaList = Operation.make({
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ContextAdd = Operation.make({
   meta: {
@@ -235,7 +235,7 @@ export const ContextAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContext.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ContextRemove = Operation.make({
   meta: {
@@ -254,7 +254,7 @@ export const ContextRemove = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContext.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const RelationCreate = Operation.make({
   meta: {
@@ -276,7 +276,7 @@ export const RelationCreate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const RelationDelete = Operation.make({
   meta: {
@@ -292,7 +292,7 @@ export const RelationDelete = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const TagAdd = Operation.make({
   meta: {
@@ -301,7 +301,7 @@ export const TagAdd = Operation.make({
     icon: 'ph--tag--regular',
     description: trim`
       Adds a tag to an object.
-      Tags are objects of type ${Tag.Tag.typename}.
+      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
       You must search database for available tags, or create a new one.
     `,
   },
@@ -311,7 +311,7 @@ export const TagAdd = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const TagRemove = Operation.make({
   meta: {
@@ -320,7 +320,7 @@ export const TagRemove = Operation.make({
     icon: 'ph--tag--regular',
     description: trim`
       Removes a tag from an object.
-      Tags are objects of type ${Tag.Tag.typename}.
+      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
     `,
   },
   input: Schema.Struct({
@@ -329,4 +329,4 @@ export const TagRemove = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});

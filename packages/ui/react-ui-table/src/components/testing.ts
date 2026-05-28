@@ -17,7 +17,7 @@ export const TestSchema = Schema.Struct({
   age: Schema.optional(Schema.Number),
   active: Schema.optional(Schema.Boolean),
   netWorth: Schema.optional(Schema.Number),
-}).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
 export type TestItem = {
   name: string;

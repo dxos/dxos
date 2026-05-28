@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as EffectFunction from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Filter, Key, Query, type QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -40,30 +39,30 @@ export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistr
   const resolve = Effect.fn(function* (dxn: string) {
     const typename = DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined;
     if (!typename) {
-      return Option.none();
+      return Option.none<Type.AnyEntity>();
     }
 
     const query = registry.query({ typename, location: ['database', 'runtime'] });
-    const schemas = yield* Effect.promise(() => query.run());
-    return Array.head(schemas);
+    const types = yield* Effect.promise(() => query.run());
+    return Array.head(types) as Option.Option<Type.AnyEntity>;
   });
 
-  return resolveSchema(query, resolve).pipe(
-    Effect.map((schema) => Option.getOrUndefined(schema)),
+  return resolveType(query, resolve).pipe(
+    Effect.map((type) => Option.getOrUndefined(type)),
     runAndForwardErrors,
   );
 };
 
-const resolveSchema = (
+const resolveType = (
   query: QueryAST.Query,
-  resolve: (dxn: string) => Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>>,
-): Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>> => {
+  resolve: (dxn: string) => Effect.Effect<Option.Option<Type.AnyEntity>>,
+): Effect.Effect<Option.Option<Type.AnyEntity>> => {
   return Match.value(query).pipe(
-    Match.withReturnType<Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>>>(),
+    Match.withReturnType<Effect.Effect<Option.Option<Type.AnyEntity>>>(),
     Match.when({ type: 'select' }, ({ filter }) =>
       typenameFromFilter(filter).pipe(
         Option.map((typename) => resolve(typename)),
-        Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+        Option.getOrElse(() => Effect.succeed(Option.none<Type.AnyEntity>())),
       ),
     ),
     Match.when({ type: 'filter' }, ({ filter, selection }) => {
@@ -71,15 +70,15 @@ const resolveSchema = (
       return Option.isSome(filterResult)
         ? filterResult.pipe(
             Option.map((typename) => resolve(typename)),
-            Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+            Option.getOrElse(() => Effect.succeed(Option.none<Type.AnyEntity>())),
           )
-        : resolveSchema(selection, resolve);
+        : resolveType(selection, resolve);
     }),
     Match.when({ type: 'reference-traversal' }, ({ anchor, property }) =>
-      resolveSchema(anchor, resolve).pipe(
+      resolveType(anchor, resolve).pipe(
         Effect.map((base) =>
           base.pipe(
-            Option.map((schema) => SchemaAST.getPropertySignatures(schema.ast)),
+            Option.map((type) => SchemaAST.getPropertySignatures(Type.getSchema(type).ast)),
             Option.flatMap((properties) => Array.findFirst(properties, (p) => p.name === property)),
             Option.flatMap((property) =>
               SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(unwrapOptional(property)),
@@ -89,7 +88,7 @@ const resolveSchema = (
         ),
         Effect.flatMap(
           Option.match({
-            onNone: () => Effect.succeed(Option.none()),
+            onNone: () => Effect.succeed(Option.none<Type.AnyEntity>()),
             onSome: (typename) => resolve(DXN.make(typename)),
           }),
         ),
@@ -98,14 +97,14 @@ const resolveSchema = (
     Match.when({ type: 'relation', filter: Match.defined }, ({ filter }) =>
       typenameFromFilter(filter).pipe(
         Option.map((typename) => resolve(typename)),
-        Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+        Option.getOrElse(() => Effect.succeed(Option.none<Type.AnyEntity>())),
       ),
     ),
     Match.when({ type: 'relation-traversal' }, ({ anchor, direction }) =>
-      resolveSchema(anchor, resolve).pipe(
+      resolveType(anchor, resolve).pipe(
         Effect.map((base) =>
           base.pipe(
-            Option.map((schema) => getTypeAnnotation(schema)),
+            Option.map((type) => getTypeAnnotation(Type.getSchema(type))),
             Option.flatMap((annotation) =>
               Option.fromNullable(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
             ),
@@ -113,16 +112,16 @@ const resolveSchema = (
         ),
         Effect.flatMap(
           Option.match({
-            onNone: () => Effect.succeed(Option.none()),
+            onNone: () => Effect.succeed(Option.none<Type.AnyEntity>()),
             onSome: (typename) => resolve(typename),
           }),
         ),
       ),
     ),
-    Match.when({ type: 'options' }, ({ query }) => resolveSchema(query, resolve)),
+    Match.when({ type: 'options' }, ({ query }) => resolveType(query, resolve)),
     Match.orElse((_q) => {
       // TODO(wittjosiah): Implement other cases.
-      return Effect.succeed(Option.none());
+      return Effect.succeed(Option.none<Type.AnyEntity>());
     }),
   );
 };

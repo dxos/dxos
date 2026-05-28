@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Record } from 'effect';
 import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
 import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -175,7 +175,8 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 };
 
 const getObjectIconProps = (object: Entity.Unknown): { icon?: string; iconHue?: string } => {
-  const schema = Entity.getSchema(object);
+  const type = Entity.getType(object);
+  const schema = type ? Type.getSchema(type) : undefined;
   const annotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   return annotation ? { icon: annotation.icon, iconHue: annotation.hue } : {};
 };
@@ -183,7 +184,7 @@ const getObjectIconProps = (object: Entity.Unknown): { icon?: string; iconHue?: 
 const getWorkflowOptions = (graphs: ComputeGraph[]) => {
   return graphs.map((graph) => ({
     label: `compute-${graph.id}`,
-    value: Obj.getURI(graph).toString(),
+    value: Obj.getURI(graph),
     ...getObjectIconProps(graph),
   }));
 };
@@ -195,7 +196,7 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
     const { icon: schemaIcon, iconHue } = getObjectIconProps(fn);
     return {
       label: getLabel(fn),
-      value: Obj.getURI(fn).toString(),
+      value: Obj.getURI(fn),
       icon: fn.icon ?? schemaIcon,
       iconHue,
     };
@@ -228,7 +229,7 @@ const getFeedOptions = (feeds: Feed.Feed[]) => {
       return {
         label: Entity.getLabel(parent) ?? Entity.getTypename(parent) ?? 'Parent',
         secondaryLabel: role ?? getFeedDisplayName(feed),
-        value: Obj.getURI(feed).toString(),
+        value: Obj.getURI(feed),
         ...getObjectIconProps(displayObject),
       };
     }
@@ -236,7 +237,7 @@ const getFeedOptions = (feeds: Feed.Feed[]) => {
     return {
       label: getFeedDisplayName(feed),
       secondaryLabel: role,
-      value: Obj.getURI(feed).toString(),
+      value: Obj.getURI(feed),
       ...getObjectIconProps(displayObject),
     };
   });

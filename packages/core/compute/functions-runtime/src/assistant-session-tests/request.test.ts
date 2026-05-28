@@ -24,9 +24,9 @@ const CalendarEventSchema = Schema.Struct({
   startTime: Schema.String,
   endTime: Schema.String,
   description: Schema.String,
-}).pipe(Type.object(DXN.make('com.example.type.calendarEvent', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.calendarEvent', '0.1.0')));
 
-type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
+type CalendarEvent = Type.InstanceType<typeof CalendarEventSchema>;
 
 const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {

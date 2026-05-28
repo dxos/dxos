@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { View, DXN } from '@dxos/echo';
+import { Type, View, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -30,7 +30,7 @@ export const DeleteCardField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: View.View,
+    view: Type.getSchema(View.View),
     fieldId: Schema.String,
   }),
   output: DeleteCardFieldOutput,
@@ -58,7 +58,7 @@ export const RestoreCardField = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    view: View.View.annotations({ description: 'The view to restore the field to.' }),
+    view: Type.getSchema(View.View).annotations({ description: 'The view to restore the field to.' }),
     field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
     props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
     index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),

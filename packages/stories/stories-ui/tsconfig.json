@@ -37,9 +37,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../../plugins/plugin-client"
     },
     {

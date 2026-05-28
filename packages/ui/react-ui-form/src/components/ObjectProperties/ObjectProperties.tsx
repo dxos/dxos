@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
-import { useSchema } from '@dxos/echo-react';
+import { useType } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { URI } from '@dxos/keys';
@@ -31,20 +31,21 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
     const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-    // Obj.getSchema fails for database-registered (dynamic) schemas due to DXN mismatch;
-    // useSchema queries by typename which correctly resolves both static and dynamic schemas.
+    // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
+    // useType queries by typename which correctly resolves both static and dynamic schemas.
     const typename = Obj.getTypename(object) ?? undefined;
-    const schemaFromRegistry = useSchema(db, typename);
-    const rawSchema = Obj.getSchema(object) ?? schemaFromRegistry;
+    const typeFromRegistry = useType(db, typename);
+    const type = Obj.getType(object) ?? typeFromRegistry;
 
     const formSchema = useMemo(() => {
       return Function.pipe(
-        rawSchema,
+        type,
         Option.fromNullable,
+        Option.map((type) => Type.getSchema(type)),
         Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
         Option.getOrUndefined,
       );
-    }, [rawSchema]);
+    }, [type]);
 
     // Persist a newly-created object referenced by one of the form's ref
     // fields and return it. The calling RefField wires the new Ref into its
@@ -57,11 +58,11 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     // values)` alone (e.g. types with a required ref to a backing object) can
     // declare a `FactoryAnnotation` to take over construction.
     const handleCreate = useCallback(
-      (schema: Type.AnyEntity, values: any): Obj.Unknown => {
+      (type: Type.AnyEntity, values: any): Obj.Unknown => {
         invariant(db);
-        invariant(Type.isObjectSchema(schema));
-        const factory = Option.getOrUndefined(FactoryAnnotation.get(schema));
-        const newObject = factory ? (factory(values) as Obj.Unknown) : Obj.make(schema, values);
+        invariant(Type.isObject(type));
+        const factory = Option.getOrUndefined(FactoryAnnotation.get(Type.getSchema(type)));
+        const newObject = factory ? (factory(values) as Obj.Unknown) : Obj.make(type, values);
         return db.add(newObject) as Obj.Unknown;
       },
       [db],
@@ -69,10 +70,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 
     // TODO(wittjosiah): Use FormRootProps type.
     const handleChange = useCallback(
-      (
-        { tags, ...values }: Schema.Schema.Type<typeof formSchema>,
-        { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> },
-      ) => {
+      ({ tags, ...values }: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
         if (!isValid) {
           return;
         }

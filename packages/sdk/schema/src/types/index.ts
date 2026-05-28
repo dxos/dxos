@@ -16,6 +16,6 @@ export const DataTypes: Type.AnyEntity[] = [
   Expando.Expando,
   Feed.Feed,
   Text.Text,
-  Type.PersistentType,
+  Type.Type,
   View.View,
 ];

@@ -4,12 +4,14 @@
 
 // @import-as-namespace
 
+import * as Schema from 'effect/Schema';
+
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -53,6 +55,27 @@ export type Entity<Props> = OfKind<Kind> & Props;
 export interface Unknown extends OfKind<Kind> {}
 
 /**
+ * Effect Schema for any ECHO entity (object or relation).
+ *
+ * Kind-agnostic counterpart to `Obj.Unknown` / `Relation.Unknown` — validates
+ * the structural shape (id + properties) without constraining `[KindId]`. Used
+ * in operation input schemas that accept any entity flavour (e.g.
+ * `Schema.Array(Entity.Unknown)`).
+ *
+ * The cast bridges the runtime structural schema to the branded `Unknown` type:
+ * `[KindId]` is a symbol brand that can't be expressed in a runtime `Struct`,
+ * so the entity guarantee is carried at the type level only (same approach as
+ * `Obj.Unknown` / `Relation.Unknown`). Unlike those, this is kind-agnostic so it
+ * isn't an `UnknownTypeSchema<_, K>` (there's no single `K`) and carries no
+ * `TypeAnnotation`.
+ */
+export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
+  id: Schema.String,
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+) as unknown as Schema.Schema<Unknown>;
+
+/**
  * Snapshot of an Obj or Relation.
  * Branded with SnapshotKindId instead of KindId.
  */
@@ -86,6 +109,29 @@ export const isEntity = (value: unknown): value is Unknown => {
   }
   return (value as any)[KindId] !== undefined;
 };
+
+/**
+ * Test if a value is an instance of a given object or relation type.
+ *
+ * Kind-agnostic counterpart to `Obj.instanceOf` / `Relation.instanceOf` —
+ * use this when the caller's input type is `Type.AnyObj | Type.AnyRelation`.
+ *
+ * @example
+ * ```ts
+ * // Caller doesn't know whether `type` is object- or relation-kind.
+ * const matches = <T extends Type.AnyObj | Type.AnyRelation>(type: T, value: unknown) =>
+ *   Entity.instanceOf(type, value);
+ * ```
+ */
+export const instanceOf: {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyEntity, value?: unknown]) => {
+  if (args.length === 1) {
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
+  }
+  return internal.isInstanceOf(args[0], args[1]);
+}) as any;
 
 /**
  * Check if a value is an ECHO entity snapshot.
@@ -123,27 +169,58 @@ export type Meta = typeof Meta;
 export type JSON = internal.ObjectJSON;
 
 /**
- * Get the canonical URI of an entity (object or relation). Returns `URI.URI` —
- * today always an EchoURI, but future entity kinds may surface other URI schemes;
- * narrow with `EchoURI.parse(uri)` or `DXN.tryMake(uri)` at the point of use.
+ * Whether the entity is a type-kind entity (a `Type.Type` produced by
+ * `Type.makeObject` / `Type.makeRelation`, or a persisted schema). Type entities
+ * carry their identity (typename/version) on themselves rather than referencing a
+ * separate type, so the accessors below route them through the `Type.*` module.
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
+const isTypeEntity = (entity: unknown): boolean => internal.getEntityKindBrand(entity) === internal.EntityKind.Type;
 
 /**
- * Get the DXN of an entity's type.
+ * Any value the read accessors operate on: a reactive entity or a snapshot.
+ * Type entities (`Type.AnyEntity`) are also accepted — they're first-class
+ * entities, and `Unknown`'s kind-agnostic brand already subsumes them.
  */
-export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeURI;
+export type AnyInput = Unknown | Snapshot;
 
 /**
- * Get the schema of an entity.
- * Returns the branded ECHO schema used to create the entity.
+ * Get the canonical URI of an entity (object, relation, or type). Returns `URI.URI` —
+ * an `EchoURI` for object/relation instances and persisted types, or a typename
+ * `DXN` for static type entities; narrow with `EchoURI.parse(uri)` or
+ * `DXN.tryMake(uri)` at the point of use.
  */
-export const getSchema: (entity: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getURI = (entity: AnyInput): URI.URI =>
+  isTypeEntity(entity) ? Type.getURI(entity as Type.AnyEntity) : internal.getUri(entity as Unknown);
 
 /**
- * Get the typename of an entity's type.
+ * Get the DXN of an entity's type. For object/relation instances this is the URI
+ * of the type they were created from; for a type entity it is the URI of the
+ * meta-type ({@link Type.Type}, `dxn:org.dxos.type.schema:0.1.0`).
  */
-export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
+export const getTypeURI = (entity: AnyInput): URI.URI | undefined =>
+  isTypeEntity(entity) ? Type.getURI(Type.Type) : internal.getTypeURI(entity as Unknown);
+
+/**
+ * Get the type entity (`Type.AnyEntity`) the instance was created from.
+ *
+ * Returns `undefined` when the entity's type isn't registered in this runtime
+ * (e.g. a freshly deserialized snapshot whose type entity hasn't been wired
+ * up yet, or an entity loaded from storage before its schema is known). To
+ * get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
+ *
+ * For a type entity, returns the meta-type {@link Type.Type} (a type entity's
+ * type is "Type").
+ */
+export const getType = (entity: AnyInput): Type.AnyEntity | undefined =>
+  isTypeEntity(entity) ? Type.Type : (internal.getType(entity) as Type.AnyEntity | undefined);
+
+/**
+ * Get the typename of an entity's type. For object/relation instances this is the
+ * typename of the type they were created from; for a type entity it is the type's
+ * own typename (e.g. `com.example.type.person`).
+ */
+export const getTypename = (entity: AnyInput): string | undefined =>
+  isTypeEntity(entity) ? Type.getTypename(entity as Type.AnyEntity) : internal.getTypename(entity as Unknown);
 
 /**
  * Get the database an entity belongs to.
@@ -180,6 +257,12 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDel
  */
 export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
   internal.getLabel(entity, options);
+
+/**
+ * Set the label of an entity.
+ * Must be called within an `Entity.update` / `Obj.update` / `Relation.update` callback.
+ */
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of an entity.

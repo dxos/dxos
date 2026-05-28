@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Type } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -168,9 +168,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         let status: string = '';
         try {
           if (DXN.isDXN(uri)) {
-            const schema = this.schemaRegistry.getSchemaByDXN(uri);
-            status = schema != null ? 'resolved' : 'missing';
-            return schema;
+            const typeEntity = this.schemaRegistry.getSchemaByDXN(uri);
+            status = typeEntity != null ? 'resolved' : 'missing';
+            return typeEntity != null ? Type.getSchema(typeEntity) : undefined;
           } else if (EchoURI.isEchoURI(uri)) {
             status = 'error';
             throw new Error('Not implemented: Resolving schema stored in the database');
@@ -187,6 +187,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
             });
           }
         }
+      },
+
+      // Parallel to resolveSchema, but returns the Type.AnyEntity entity itself
+      // rather than its underlying Effect Schema. Used by `Obj.fromJSON` (queue
+      // and serializer paths) so deserialized objects stamp a TypeEntityId
+      // back-reference resolvable via `Obj.getType` / `Entity.getType`.
+      resolveType: async (uri) => {
+        if (DXN.isDXN(uri)) {
+          return this.schemaRegistry.getSchemaByDXN(uri);
+        }
+        return undefined;
       },
     } satisfies Ref.Resolver;
   }

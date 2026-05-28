@@ -1,9 +1,9 @@
 [
   {
-    "name": "2026-05-25-main",
+    "name": "2026-05-27",
     "version": 2,
-    "dataRoot": "snapshots/2026-05-25-main/snapshot",
-    "jsonDataPath": "snapshots/2026-05-25-main/expected.json",
-    "timestamp": "2026-05-25T14:39:10.172Z"
+    "dataRoot": "snapshots/2026-05-27/snapshot",
+    "jsonDataPath": "snapshots/2026-05-27/expected.json",
+    "timestamp": "2026-05-27T16:09:23.741Z"
   }
 ]

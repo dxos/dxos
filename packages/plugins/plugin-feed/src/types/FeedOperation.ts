@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref, DXN } from '@dxos/echo';
+import { Database, Ref, Type, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -27,7 +27,7 @@ export const SyncFeed = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    feed: Subscription.Subscription,
+    feed: Type.getSchema(Subscription.Subscription),
   }),
   output: Schema.Void,
 });
@@ -136,7 +136,7 @@ export const AddPostToMagazine = Operation.make({
       }),
     ),
   }),
-  output: Subscription.Post,
+  output: Type.getSchema(Subscription.Post),
   services: [Database.Service],
 });
 

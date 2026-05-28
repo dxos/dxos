@@ -15,12 +15,12 @@ import { buildViewIndex } from './shared';
 
 const TestContact = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object(DXN.make('com.example.type.contact', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
 
 const TestViewWrapper = Schema.Struct({
   name: Schema.optional(Schema.String),
   view: Ref.Ref(View.View),
-}).pipe(Type.object(DXN.make('com.example.type.viewWrapper', '0.1.0')), ViewAnnotation.set(['view']));
+}).pipe(ViewAnnotation.set(['view']), Type.makeObject(DXN.make('com.example.type.viewWrapper', '0.1.0')));
 
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;

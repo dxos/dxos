@@ -18,7 +18,7 @@ import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '.
 import { Table, type TableController } from './Table';
 
 export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
-  schema?: T;
+  type?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
   properties?: TablePropertyDefinition[];
@@ -36,7 +36,7 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
 export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
-  schema,
+  type: typeProp,
   name = 'com.example.dynamicTable', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
@@ -50,14 +50,14 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   const [dynamicTable, setDynamicTable] = useState<{ object: TableType.Table; projection: ProjectionModel }>();
 
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
-  const { jsonSchema } = useMemo(
-    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, schema }),
-    [name, properties, jsonSchemaProp, schema],
+  const { type } = useMemo(
+    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, type: typeProp }),
+    [name, properties, jsonSchemaProp, typeProp],
   );
 
   useEffect(() => {
-    setDynamicTable(makeDynamicTable({ registry, jsonSchema, properties }));
-  }, [registry, jsonSchema, properties]);
+    setDynamicTable(makeDynamicTable({ registry, type, properties }));
+  }, [registry, type, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {

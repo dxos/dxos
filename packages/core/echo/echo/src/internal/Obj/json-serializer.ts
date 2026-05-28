@@ -12,7 +12,7 @@ import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Arra
 
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
-import { getTypeURI, setTypename } from '../Annotation';
+import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   ATTR_META,
@@ -25,6 +25,7 @@ import {
   ObjectMetaSchema,
   ParentId,
   setSchema,
+  setType,
 } from '../common/types';
 import {
   ATTR_DELETED,
@@ -113,6 +114,15 @@ export const objectFromJSON = async (
   if (schema) {
     setSchema(obj, schema);
   }
+  // Resolve and stamp the source type entity, if the resolver provides one.
+  // Lets `Obj.getType` / `Entity.getType` return a stable entity for objects
+  // loaded via `Obj.fromJSON` (serializer / queue paths).
+  if (refResolver?.resolveType) {
+    const typeEntity = await refResolver.resolveType(type);
+    if (typeEntity != null) {
+      setType(obj, typeEntity);
+    }
+  }
 
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
@@ -129,7 +139,13 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
-    defineHiddenProperty(obj, KindId, EntityKind.Object);
+    // Honour the schema's TypeAnnotation kind — persisted `Type.Type` entities
+    // (e.g. dynamic schemas loaded from a snapshot import) must brand as
+    // `KindId = Type`, not Object, otherwise `Filter.type(Type.Type)` /
+    // `Type.isType` skip them and the schema registry never picks them up.
+    // Mirrors the kind resolution in `createObject` (the in-memory path).
+    const annotationKind = schema != null ? getTypeAnnotation(schema)?.kind : undefined;
+    defineHiddenProperty(obj, KindId, annotationKind === EntityKind.Type ? EntityKind.Type : EntityKind.Object);
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {

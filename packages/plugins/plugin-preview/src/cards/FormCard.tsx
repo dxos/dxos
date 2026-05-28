@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { useSchema } from '@dxos/echo-react';
+import { Obj, Type } from '@dxos/echo';
+import { useType } from '@dxos/echo-react';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, type Presentation, getFormProperties, omitId } from '@dxos/react-ui-form';
@@ -24,7 +26,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * Default/fallback card for any ECHO object.
  * Renders a `Form` against the object's schema — either the static schema
  * from `Obj.getSchema` or, for runtime/mutable schemas, the reactive
- * schema looked up via `useSchema`.
+ * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
   const { t } = useTranslation(meta.id);
@@ -35,14 +37,14 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
 
   // Try the static schema first; fall back to the runtime/database schema for
   // dynamic types whose schema isn't reachable via `Obj.getSchema` (DXN mismatch).
-  const staticSchema = Obj.getSchema(subject);
+  const staticType = Obj.getType(subject);
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
-  const runtimeSchema = useSchema(db, staticSchema ? undefined : typename);
-  const schema = useMemo(() => {
-    const resolved = runtimeSchema ?? staticSchema;
-    return resolved && omitId(resolved);
-  }, [runtimeSchema, staticSchema]);
+  const runtimeType = useType(db, staticType ? undefined : typename);
+  const schema = useMemo((): Schema.Schema.AnyNoContext | undefined => {
+    const resolvedType = runtimeType ?? staticType;
+    return resolvedType ? omitId(Type.getSchema(resolvedType)) : undefined;
+  }, [runtimeType, staticType]);
 
   // Predict whether the form would render anything visible. Without this guard,
   // readonly + compact mode produces an empty scrollarea when every form-renderable
@@ -68,7 +70,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
   }, [schema, subject, readonly]);
 
   const handleSave = useCallback(
-    (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
+    (values: AnyProperties, { changed }: FormUpdateMeta<AnyProperties>) => {
       const paths = (Object.keys(changed) as JsonPath[]).filter((path) => changed[path]);
       Obj.update(subject, () => {
         for (const path of paths) {

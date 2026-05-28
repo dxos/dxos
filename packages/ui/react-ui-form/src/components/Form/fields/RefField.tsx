@@ -6,8 +6,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { useQuery, useSchema as defaultUseSchema } from '@dxos/echo-react';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
+import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
+import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
@@ -38,7 +38,7 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
     db,
     typename
       ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
-        typename === Type.getTypename(Obj.Unknown)
+        typename === ANY_OBJECT_TYPENAME
         ? Filter.everything()
         : Filter.typename(typename)
       : Filter.nothing(),
@@ -51,7 +51,7 @@ export type RefFieldProps = FormFieldComponentProps &
   > & {
     db?: Database.Database;
     // TODO(burdon): Replace hooks with callbacks.
-    useSchema?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     /**
@@ -78,7 +78,7 @@ export const RefField = (props: RefFieldProps) => {
     createInitialValuePath,
     createFieldMap,
     db,
-    useSchema = defaultUseSchema,
+    useType = defaultUseType,
     useResults = defaultUseResults,
     getOptions = defaultGetOptions,
     onCreate,
@@ -128,7 +128,7 @@ export const RefField = (props: RefFieldProps) => {
 
   const item = handleGetValue();
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
-  const createSchema = useSchema(db, typename);
+  const createSchema = useType(db, typename);
 
   // Lift the popover open state so we can dismiss it after a successful create.
   const [open, setOpen] = useState(false);
@@ -214,7 +214,7 @@ export const RefField = (props: RefFieldProps) => {
                 // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
                 // form's validator doesn't reject required-but-hidden fields
                 // such as backing-object refs supplied by a `FactoryAnnotation`.
-                createSchema={createSchema && omitHiddenFormFields(omitId(createSchema))}
+                createSchema={createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema)))}
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}

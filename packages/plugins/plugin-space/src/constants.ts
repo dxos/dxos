@@ -10,5 +10,5 @@ export const CREATE_OBJECT_DIALOG = DXN.make(`${DXN.getName(meta.id)}.createObje
 export const CREATE_SPACE_DIALOG = DXN.make(`${DXN.getName(meta.id)}.createSpaceDialog`);
 export const IMPORT_SPACE_DIALOG = DXN.make(`${DXN.getName(meta.id)}.importSpaceDialog`);
 export const JOIN_DIALOG = DXN.make(`${DXN.getName(meta.id)}.joinDialog`);
-export const OBJECT_RENAME_POPOVER = DXN.make(`${DXN.getName(meta.id)}.objectRenamePopover`);
+export const ENTITY_RENAME_POPOVER = DXN.make(`${DXN.getName(meta.id)}.entityRenamePopover`);
 export const SPACE_RENAME_POPOVER = DXN.make(`${DXN.getName(meta.id)}.spaceRenamePopover`);

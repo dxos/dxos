@@ -10,7 +10,8 @@ import { DXN } from '@dxos/keys';
 
 import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
 import { EntityKind } from '../common/types';
-import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
+import { toJsonSchema } from '../JsonSchema';
+import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
  * Object schema type with kind marker.
@@ -27,13 +28,14 @@ export type EchoObjectSchema<
 export const EchoObjectSchema: {
   (
     dxn: DXN.DXN,
+    options?: EchoTypeOptions,
   ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoObjectSchema<Self, Fields>;
-} = (dxn) => {
+} = (dxn, options) => {
   const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  invariant(version, `Type.object requires a versioned DXN: ${dxn}`);
+  invariant(version, `Type.makeObject requires a versioned DXN: ${dxn}`);
 
   return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
@@ -57,6 +59,14 @@ export const EchoObjectSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(fields, ast, typename, version, EntityKind.Object);
+    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(
+      fields,
+      ast,
+      typename,
+      version,
+      EntityKind.Object,
+      () => toJsonSchema(Schema.make(ast)),
+      options?.id,
+    );
   };
 };

@@ -23,7 +23,7 @@ export const Fibonacci = Operation.make({
   output: Schema.Struct({
     result: Schema.String,
   }),
-}).pipe(Operation.intrinsic);
+});
 
 export const Reply = Operation.make({
   meta: {
@@ -33,7 +33,7 @@ export const Reply = Operation.make({
   },
   input: Schema.Any,
   output: Schema.Any,
-}).pipe(Operation.intrinsic);
+});
 
 export const Sleep = Operation.make({
   meta: {
@@ -48,4 +48,4 @@ export const Sleep = Operation.make({
     }),
   }),
   output: Schema.Void,
-}).pipe(Operation.intrinsic);
+});

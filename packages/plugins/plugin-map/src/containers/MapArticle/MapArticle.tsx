@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'reac
 
 import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
@@ -76,7 +76,7 @@ export const MapArticle = ({
   const [view] = useObject(object?.view);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(db, typename);
+  const schema = useType(db, typename);
   const baseFilter = useSchemaFilter(schema);
   const query = useMemo(
     () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),

@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Agent } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -32,8 +32,8 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
     }
 
     const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
-    const feedSchemas = schemas.filter((schema) => {
-      const annotation = FeedAnnotation.get(schema);
+    const feedSchemas = schemas.filter((type) => {
+      const annotation = FeedAnnotation.get(Type.getSchema(type));
       return Option.isSome(annotation) && annotation.value === true;
     });
 

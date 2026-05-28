@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -61,11 +61,11 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     );
 
     const blueprintKeys = useMemo(() => {
-      const schema = companionTo ? Obj.getSchema(companionTo) : undefined;
+      const schema = companionTo ? Obj.getType(companionTo) : undefined;
       if (!schema) {
         return [] as string[];
       }
-      return Option.getOrElse(() => [] as string[])(BlueprintsAnnotation.get(schema));
+      return Option.getOrElse(() => [] as string[])(BlueprintsAnnotation.get(Type.getSchema(schema)));
     }, [companionTo]);
     const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(

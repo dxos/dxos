@@ -11,7 +11,7 @@ import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Routine, Operation } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -27,7 +27,7 @@ export const OnCreateSpace = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
-    rootCollection: Collection.Collection,
+    rootCollection: Type.getSchema(Collection.Collection),
   }),
   output: Schema.Void,
 });
@@ -42,7 +42,7 @@ export const CreateChat = Operation.make({
     addToSpace: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({
-    object: Chat.Chat,
+    object: Type.getSchema(Chat.Chat),
   }),
 });
 
@@ -54,7 +54,7 @@ export const UpdateChatName = Operation.make({
   },
   services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
-    chat: Chat.Chat,
+    chat: Type.getSchema(Chat.Chat),
   }),
   output: Schema.Void,
 });
@@ -68,7 +68,7 @@ export const SetCurrentChat = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     companionTo: Obj.Unknown,
-    chat: Chat.Chat.pipe(Schema.optional),
+    chat: Type.getSchema(Chat.Chat).pipe(Schema.optional),
   }),
   output: Schema.Void,
 });
@@ -94,7 +94,7 @@ export const RunPromptInNewChat = Operation.make({
     background: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({
-    object: Chat.Chat,
+    object: Type.getSchema(Chat.Chat),
   }),
 });
 
@@ -137,7 +137,7 @@ export const EnsureCompanionChat = Operation.make({
     companionTo: Obj.Unknown,
   }),
   output: Schema.Struct({
-    chat: Chat.Chat,
+    chat: Type.getSchema(Chat.Chat),
     /** Whether the returned chat was already persisted in the space. */
     persisted: Schema.Boolean,
   }),

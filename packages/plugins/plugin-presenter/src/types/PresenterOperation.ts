@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Collection, DXN } from '@dxos/echo';
+import { Collection, Type, DXN } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
@@ -22,7 +22,7 @@ export const TogglePresentation = Operation.make({
     icon: 'ph--presentation--regular',
   },
   input: Schema.Struct({
-    object: Schema.Union(Markdown.Document, Collection.Collection),
+    object: Schema.Union(Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)),
     state: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,

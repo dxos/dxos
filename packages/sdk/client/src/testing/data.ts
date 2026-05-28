@@ -13,16 +13,16 @@ import { DXN, Obj, Ref, Type } from '@dxos/echo';
 export namespace TestSchema {
   export const TextV0Type = Schema.Struct({
     content: Schema.String,
-  }).pipe(Type.object(DXN.make('org.dxos.textV0', '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make('org.dxos.textV0', '0.1.0')));
 
-  export interface TextV0Type extends Schema.Schema.Type<typeof TextV0Type> {}
+  export type TextV0Type = Type.InstanceType<typeof TextV0Type>;
 
   export const DocumentType = Schema.Struct({
     title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
     content: Ref.Ref(TextV0Type),
-  }).pipe(Type.object(DXN.make('com.braneframe.document', '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make('com.braneframe.document', '0.1.0')));
 
-  export interface DocumentType extends Schema.Schema.Type<typeof DocumentType> {}
+  export type DocumentType = Type.InstanceType<typeof DocumentType>;
 
   export const ContactType = Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -34,7 +34,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(Type.object(DXN.make('com.braneframe.contact', '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make('com.braneframe.contact', '0.1.0')));
 
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
@@ -59,8 +59,8 @@ export namespace TestSchema {
         object: Schema.optional(Schema.String),
       }),
     ),
-  }).pipe(Type.object(DXN.make('com.braneframe.message', '0.1.0')));
-  export type MessageType = Schema.Schema.Type<typeof MessageType>;
+  }).pipe(Type.makeObject(DXN.make('com.braneframe.message', '0.1.0')));
+  export type MessageType = Type.InstanceType<typeof MessageType>;
 
   export const ThreadType = Schema.Struct({
     title: Schema.optional(Schema.String),
@@ -72,6 +72,6 @@ export namespace TestSchema {
         object: Schema.optional(Schema.String),
       }),
     ),
-  }).pipe(Type.object(DXN.make('com.braneframe.thread', '0.1.0')));
-  export type ThreadType = Schema.Schema.Type<typeof ThreadType>;
+  }).pipe(Type.makeObject(DXN.make('com.braneframe.thread', '0.1.0')));
+  export type ThreadType = Type.InstanceType<typeof ThreadType>;
 }

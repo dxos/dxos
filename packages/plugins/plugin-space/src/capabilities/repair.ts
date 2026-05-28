@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Collection, Obj, Ref } from '@dxos/echo';
+import { Collection, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
 import { SpaceCapabilities } from '#types';
@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
  * Remove all existing query collections from the root collection.
  */
 const removeQueryCollections = async (space: Space) => {
-  const rootCollection: Collection.Collection = await space.properties[Collection.Collection.typename]?.load();
+  const rootCollection: Collection.Collection = await space.properties[Type.getTypename(Collection.Collection)]?.load();
   if (!rootCollection) {
     return;
   }

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 export const QueryBlueprints = Operation.make({
@@ -17,7 +17,7 @@ export const QueryBlueprints = Operation.make({
     icon: 'ph--blueprint--regular',
   },
   input: Schema.Struct({}),
-  output: Schema.Array(Blueprint.Blueprint),
+  output: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
   services: [Blueprint.RegistryService],
 });
 
@@ -36,7 +36,7 @@ export const EnableBlueprints = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    enabled: Schema.Array(Blueprint.Blueprint),
+    enabled: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
     rejected: Schema.Array(
       Schema.Struct({
         key: Schema.String,

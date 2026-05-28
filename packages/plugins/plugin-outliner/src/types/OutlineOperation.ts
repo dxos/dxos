@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -26,7 +27,7 @@ export const CreateOutline = Operation.make({
     name: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
-    object: Outline.Outline,
+    object: Type.getSchema(Outline.Outline),
   }),
 });
 
