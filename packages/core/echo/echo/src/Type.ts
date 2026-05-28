@@ -728,4 +728,3 @@ export const getDXN = (input: AnyEntity): string | undefined => {
   }
   return undefined;
 };
-
