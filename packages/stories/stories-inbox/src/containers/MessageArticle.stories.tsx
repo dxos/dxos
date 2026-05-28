@@ -98,7 +98,7 @@ const seedMessage = (space: Space) => {
   // Body is intentionally >200 chars (the `SummarizeMessageExtractor.MIN_BODY_LENGTH`
   // threshold) so the summarize extractor matches and contributes to the `Run all` count.
   const body = [
-    'Hi there,',
+    'Hello,',
     '',
     'Your flight is confirmed! Please arrive at the airport at least ninety minutes before',
     'departure, and remember to check in online twenty-four hours in advance to lock in your',

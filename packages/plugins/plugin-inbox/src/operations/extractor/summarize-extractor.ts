@@ -100,11 +100,16 @@ export default handler;
  * MessageExtractor's `extract` delegates to the operation so the AiService requirement stays
  * scoped to `ExtractSummaryFromMessage`. `Operation.invoke` requires `Operation.Service`,
  * which is always available in an operation handler context (and therefore in the dispatcher
- * when it yields this Effect). Any failure — including AiService being absent from the
- * runtime layer — is surfaced as `ExtractError`.
+ * when it yields this Effect).
+ *
+ * The `spaceId` invocation option is required: `AiService.AiService` is contributed with
+ * space/process affinity (see `AssistantPlugin`), so the spawned operation process must know
+ * its owning space to materialise the service via `ServiceResolver`. Without it the runtime
+ * fails with `ServiceNotAvailable: @dxos/ai/AiService — spawn environment is missing space`.
+ * Any failure — including AiService being absent — is surfaced as `ExtractError`.
  */
 const extract = (input: MessageExtractor.ExtractInput) =>
-  Operation.invoke(InboxOperation.ExtractSummaryFromMessage, input).pipe(
+  Operation.invoke(InboxOperation.ExtractSummaryFromMessage, input, { spaceId: input.db.spaceId }).pipe(
     Effect.catchAllCause((cause) => Effect.fail(new MessageExtractor.ExtractError('Summarize failed', cause))),
   );
 
