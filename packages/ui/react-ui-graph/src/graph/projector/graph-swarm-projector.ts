@@ -6,7 +6,9 @@ import { type Timer, timer } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
-import { GraphProjector, type GraphProjectorOptions, type GraphLayoutNode } from '@dxos/react-ui-graph';
+
+import { type GraphLayoutNode } from '../types';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 
 // Boids swarming simulation rendered through the react-ui-graph SVG renderer.
 // Mirrors the canvas Swarm component's tick (alignment / cohesion / separation)
@@ -86,7 +88,7 @@ const DEFAULTS: Required<
  * NOT exert a link force — boid motion is governed purely by alignment, cohesion
  * and separation, with viewBox-wrap at the SVG bounds.
  */
-export class GrappSwarmProjector<NodeData = any> extends GraphProjector<NodeData, GraphSwarmProjectorOptions> {
+export class GraphSwarmProjector<NodeData = any> extends GraphProjector<NodeData, GraphSwarmProjectorOptions> {
   #timer?: Timer;
   /** Cursor in SVG model coordinates, or null when the pointer is outside the surface. */
   #cursor: { x: number; y: number } | null = null;

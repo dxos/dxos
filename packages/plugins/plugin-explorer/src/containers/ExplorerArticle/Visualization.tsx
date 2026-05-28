@@ -18,9 +18,11 @@ import {
   type GraphLayoutNode,
   GraphLatticeProjector,
   type GraphProjector,
+  GraphSwarmProjector,
   type RenderNode,
   SVG,
   type SVGContext,
+  type SwarmNode,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -28,7 +30,6 @@ import { mx } from '@dxos/ui-theme';
 import { type TreeNode } from '#components';
 
 import { getNodeFillForObject } from '../../util';
-import { type SwarmNode, GrappSwarmProjector } from './GraphSwarmProjector';
 import { type ExplorerArticleVariant } from './variants';
 
 export type VisualizationProps = ThemedClassName<{
@@ -79,7 +80,7 @@ export const Visualization = ({ classNames, debug = true, variant, model, onNode
   // visually lines up.
   // TODO(burdon): Factor out.
   useEffect(() => {
-    if (variant !== 'swarm' || !(projector instanceof GrappSwarmProjector)) {
+    if (variant !== 'swarm' || !(projector instanceof GraphSwarmProjector)) {
       return;
     }
 
@@ -168,7 +169,7 @@ export const Visualization = ({ classNames, debug = true, variant, model, onNode
   // its own tick — no React renders triggered by mouse moves.
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (variant !== 'swarm' || !(projector instanceof GrappSwarmProjector)) {
+      if (variant !== 'swarm' || !(projector instanceof GraphSwarmProjector)) {
         return;
       }
       const svg = svgRef.current?.svg;
@@ -189,7 +190,7 @@ export const Visualization = ({ classNames, debug = true, variant, model, onNode
   );
 
   const handlePointerLeave = useCallback(() => {
-    if (projector instanceof GrappSwarmProjector) {
+    if (projector instanceof GraphSwarmProjector) {
       projector.setCursor(null);
     }
   }, [projector]);
@@ -258,7 +259,7 @@ const createProjector = (
 
     case 'swarm':
       // Boids in SVG: a per-tick projector mirroring force's emit-positions pattern.
-      return new GrappSwarmProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
+      return new GraphSwarmProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
 
     case 'lattice':
       return new GraphLatticeProjector<SpaceGraphNode>(
