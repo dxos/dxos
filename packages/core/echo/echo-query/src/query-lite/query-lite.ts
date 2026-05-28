@@ -688,7 +688,8 @@ const _isSingleScopeLike = (value: unknown): value is QueryAST.Scope => {
     value !== null &&
     !Array.isArray(value) &&
     '_tag' in value &&
-    SCOPE_TAGS.has((value as Record<string, unknown>)['_tag'] as string)
+    typeof value._tag === 'string' &&
+    SCOPE_TAGS.has(value._tag)
   );
 };
 

@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
       function* ({ chat }) {
         log.info('updating chat name', { chat });
 
-        const feed = (yield* Database.load(chat.feed as any)) as Feed.Feed;
+        const feed = yield* Database.load(chat.feed);
         const history = yield* Feed.runQuery(feed, Filter.type(Message.Message));
 
         log.info('history', { history: history.length });

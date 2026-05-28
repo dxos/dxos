@@ -651,7 +651,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          return database._getOrRegisterPersistentSchema(schemaObject as any);
+          return database._getOrRegisterPersistentSchema(schemaObject);
         }
       }
     }
@@ -667,7 +667,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          return database._getOrRegisterPersistentSchema(schemaObject as any);
+          return database._getOrRegisterPersistentSchema(schemaObject);
         }
       }
     }
@@ -719,7 +719,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject as any);
+          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject);
           return Type.getSchema(typeEntity);
         }
       }
@@ -732,7 +732,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
-          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject as any);
+          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject);
           return Type.getSchema(typeEntity);
         }
       }

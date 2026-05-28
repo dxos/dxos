@@ -118,7 +118,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       const version = Type.getVersion(schema);
       const existingSchema = types.find(
         (t) => Type.isTypeKindSchema(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
-      ) as Type.AnyEntity | undefined;
+      );
       if (existingSchema != null) {
         return existingSchema;
       }

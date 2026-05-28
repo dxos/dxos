@@ -259,18 +259,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     // Register the TypeSchema entity directly — no EchoSchema wrapper needed.
     // Re-adding on core updates signals registry.changed without a dedicated touch() method.
     this._ctx.onDispose(
-      getObjectCore(schema as any).updates.on(() => {
-        this.graph.registry.add([schema as unknown as Type.AnyEntity]);
+      getObjectCore(schema).updates.on(() => {
+        this.graph.registry.add([schema]);
       }),
     );
-    this.graph.registry.add([schema as unknown as Type.AnyEntity]);
+    this.graph.registry.add([schema]);
   }
 
   private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.AnyEntity {
     let schema = schemaInput;
     let meta: TypeAnnotation | undefined;
-    if (Type.isType(schemaInput as any)) {
-      const entity = schemaInput as unknown as Type.AnyEntity;
+    if (Type.isType(schemaInput)) {
+      const entity = schemaInput;
       schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
       // Prefer the annotation embedded in the schema; fall back to the entity's
       // ObjectMeta-derived accessors for entities built via `makeObjectFromJsonSchema`
@@ -292,11 +292,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const schemaToStore = createPersistentObject(PersistentSchema, {
       [MetaId]: { keys: [], key: meta.typename, version: meta.version },
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    } as any);
-    const typeId = `dxn:echo:@:${(schemaToStore as any).id}`;
+    });
+    const typeId = `dxn:echo:@:${schemaToStore.id}`;
     // Update jsonSchema with the full annotated schema.
     // TypeSchema.jsonSchema is readonly in the type but writable via change context.
-    (schemaToStore as any).jsonSchema = JsonSchema.toJsonSchema(
+    schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
@@ -309,8 +309,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    const persistentSchema = this._addObject(schemaToStore as any);
-    this._registerPersistentSchema(persistentSchema as unknown as PersistentSchema);
+    const persistentSchema = this._addObject(schemaToStore);
+    this._registerPersistentSchema(persistentSchema);
     return findTypeByDXN(this.graph.registry, typeId)!;
   }
 

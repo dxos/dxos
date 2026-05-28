@@ -44,9 +44,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                 }
 
                 if (blueprints && blueprints.length > 0) {
-                  const allBlueprints = (await db
-                    .query(Filter.type(Blueprint.Blueprint))
-                    .run()) as Blueprint.Blueprint[];
+                  const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
                   const matchedBlueprints = allBlueprints.filter((blueprint) => {
                     const blueprintKey = Obj.getMeta(blueprint).key;
                     return blueprintKey !== undefined && blueprints.includes(blueprintKey);
@@ -95,8 +93,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             typeof prompt === 'string'
               ? prompt
               : yield* Effect.gen(function* () {
-                  const promptObj = yield* Effect.promise(() => prompt.load() as any);
-                  const source = yield* Effect.promise(() => (promptObj as any).instructions.source.load());
+                  const promptObj = yield* Effect.promise(() => prompt.load());
+                  const source = yield* Effect.promise(() => promptObj.instructions.source.load());
                   invariant(Obj.instanceOf(Text.Text, source), 'Prompt template source must be Text.');
                   return Template.process(source.content ?? '');
                 });

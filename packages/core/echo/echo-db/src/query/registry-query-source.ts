@@ -99,7 +99,7 @@ export class RegistryQuerySource implements QuerySource {
       }
       return [
         {
-          id: (object as { id: string }).id,
+          id: object.id,
           result: object,
           match: { rank: 1 },
           resolution: { source: 'local' as const, time: 0 },
@@ -123,7 +123,7 @@ export class RegistryQuerySource implements QuerySource {
       if (!typeUri) {
         return null;
       }
-      return { id: (object as { id: string }).id, '@type': typeUri } as Entity.JSON;
+      return { id: object.id, '@type': typeUri };
     }
   }
 }

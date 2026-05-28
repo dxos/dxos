@@ -98,7 +98,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         const allTypes = await runAndForwardErrors(
           Effect.sync(() => space.db.graph.registry.list().filter(Type.isType)),
         );
-        const newSchema = allTypes.find((t) => Type.getTypename(t) === typename) as Type.AnyEntity | undefined;
+        const newSchema = allTypes.find((t) => Type.getTypename(t) === typename);
         if (!newSchema) {
           return;
         }

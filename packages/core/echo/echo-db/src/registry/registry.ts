@@ -128,7 +128,7 @@ export class RegistryImpl implements Registry.Registry {
 
     // Index type entities by DXN(s) for fast lookup.
     if (Type.isType(entity)) {
-      const typeEntity = entity as Type.AnyEntity;
+      const typeEntity = entity;
       const identifierDXN = getPersistedIdentifierDXN(typeEntity);
       if (identifierDXN != null) {
         // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed types).
@@ -349,4 +349,4 @@ const executeQuery = (registry: Registry.Registry, ast: QueryAST.Query): Entity.
 };
 
 const matchFilter = (filter: QueryAST.Filter, entity: Entity.Unknown): boolean =>
-  filterMatchObjectJSON(filter, Entity.toJSON(entity) as any);
+  filterMatchObjectJSON(filter, Entity.toJSON(entity));

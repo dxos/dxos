@@ -6,7 +6,6 @@ import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
 import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal'; // Mutable needed for View.Projection cast
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
@@ -85,7 +84,7 @@ export const makeDynamicTable = ({
     view,
     baseSchema: jsonSchema,
     change: {
-      projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+      projection: (mutate) => Obj.update(view, (view) => mutate(view.projection)),
       schema: (mutate) => mutate(jsonSchema),
     },
   });

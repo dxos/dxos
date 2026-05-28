@@ -109,19 +109,11 @@ export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'lo
  * - `from` clause with registry scope entries → include the listed locations.
  */
 export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQueryScope => {
-  let fromNode: QueryAST.QueryFromClause | null = null;
-
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'from') {
-      fromNode = node;
-    }
-  });
-
-  if (fromNode === null) {
+  const clause = findFromClause(query);
+  if (clause === null) {
     return { included: false, locations: new Set() };
   }
 
-  const clause = fromNode as QueryAST.QueryFromClause;
   if (clause.from._tag !== 'scope') {
     return { included: false, locations: new Set() };
   }
@@ -135,4 +127,20 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
     included: true,
     locations: new Set(registryScopes.map((s) => s.location)),
   };
+};
+
+/**
+ * Finds the (last) `from` clause within a query AST.
+ * Reading the closure-assigned result through a function return boundary preserves
+ * the nullable type — a bare local would be narrowed to `null` by control-flow analysis,
+ * which cannot observe the assignment inside the `visit` callback.
+ */
+const findFromClause = (query: QueryAST.Query): QueryAST.QueryFromClause | null => {
+  let found: QueryAST.QueryFromClause | null = null;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from') {
+      found = node;
+    }
+  });
+  return found;
 };

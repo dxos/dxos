@@ -74,7 +74,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 
   // Create change callback that wraps mutations in Obj.update.
   const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection)),
     schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 
@@ -153,7 +153,7 @@ export const makeWithReferences = async ({
 
   // Create change callback that wraps mutations in Obj.update.
   const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection)),
     schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
   };
 

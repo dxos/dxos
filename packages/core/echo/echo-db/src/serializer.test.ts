@@ -278,10 +278,10 @@ describe('Serializer', () => {
         // registry (which holds the pre-seeded `Type.Type` and builder defaults),
         // so locate the round-tripped entity by typename rather than by count.
         const entities = await db.query(Filter.type(Type.Type)).run();
-        const roundTrip = entities.find((entity) => Type.getTypename(entity as any) === typename);
+        const roundTrip = entities.find((entity) => Type.getTypename(entity) === typename);
         expect(roundTrip).toBeDefined();
         expect(Type.isType(roundTrip!)).to.be.true;
-        expect(Type.getTypename(roundTrip as any)).to.eq(typename);
+        expect(Type.getTypename(roundTrip!)).to.eq(typename);
 
         // And the registry query path — the one Composer's markdown editor
         // hits via `useLinkQuery` — must not throw `Invalid typename` from

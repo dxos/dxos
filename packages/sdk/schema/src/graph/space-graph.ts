@@ -108,7 +108,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     this._schemaSubscription = db.query(Filter.type(Type.Type)).subscribe(
       (query) => {
-        this._schema = [...query.results] as Type.AnyEntity[];
+        this._schema = [...query.results];
         this.invalidate();
       },
       { fire: true },

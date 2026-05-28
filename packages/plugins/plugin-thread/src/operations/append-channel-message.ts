@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.AppendChannelMessage
         const space = client.spaces.get(db.spaceId);
         invariant(space, 'Space not found');
 
-        const feed = (yield* Database.load(channel.feed as any)) as Feed.Feed;
+        const feed = yield* Database.load(channel.feed);
         const message = Message.make({
           sender,
           blocks: [{ _tag: 'text', text }],

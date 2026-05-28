@@ -98,7 +98,12 @@ export default Capability.makeModule(() =>
 
             // Look for properties that use the LatLng format enum
             const properties = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && (value as { format?: string })?.format === Format.TypeFormat.GeoPoint) {
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                'format' in value &&
+                value.format === Format.TypeFormat.GeoPoint
+              ) {
                 acc.push(key);
               }
               return acc;

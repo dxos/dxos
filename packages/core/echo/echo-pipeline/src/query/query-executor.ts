@@ -291,10 +291,10 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
               const queueId = EchoURI.getObjectId(echoUri);
               const spaceId = EchoURI.getSpaceId(echoUri);
               if (queueId) {
-                derivedQueueIds.add(queueId as ObjectId);
+                derivedQueueIds.add(queueId);
               }
               if (spaceId) {
-                derivedSpaceIds.add(spaceId as SpaceId);
+                derivedSpaceIds.add(spaceId);
               }
             } else {
               parseFailed = true;
@@ -1667,7 +1667,7 @@ export class QueryExecutor extends Resource {
 
 const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
   const echoUri = EchoURI.tryParse(feedUri);
-  return echoUri ? (EchoURI.getSpaceId(echoUri) as SpaceId | undefined) : undefined;
+  return echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
 };
 
 const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
@@ -1677,7 +1677,7 @@ const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
   return queues
     .map((feedUri) => {
       const echoUri = EchoURI.tryParse(feedUri);
-      return echoUri ? (EchoURI.getObjectId(echoUri) as ObjectId | undefined) : undefined;
+      return echoUri ? EchoURI.getObjectId(echoUri) : undefined;
     })
     .filter((id): id is ObjectId => id !== undefined);
 };

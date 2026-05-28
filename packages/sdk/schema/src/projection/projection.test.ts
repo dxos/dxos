@@ -783,7 +783,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     Type.update(mutable, (draft) => {
-      (draft.jsonSchema as any).properties!.status = { type: 'string' };
+      draft.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 

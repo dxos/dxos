@@ -19,7 +19,7 @@ type MaybeAccessor<T> = T | Accessor<T>;
 export const useType = (
   db?: MaybeAccessor<Database.Database | undefined>,
   typename?: MaybeAccessor<string | undefined>,
-): Accessor<Type.Type | undefined> => {
+): Accessor<Type.AnyEntity | undefined> => {
   // Derive resolved values reactively.
   const resolved = createMemo(() => {
     const resolvedDb = typeof db === 'function' ? db() : db;
@@ -31,7 +31,7 @@ export const useType = (
   });
 
   // Store the current schema in a signal.
-  const [schema, setSchema] = createSignal<Type.Type | undefined>(undefined);
+  const [schema, setSchema] = createSignal<Type.AnyEntity | undefined>(undefined);
 
   // Subscribe to registry changes.
   createEffect(() => {
@@ -49,7 +49,7 @@ export const useType = (
         resolvedDb.graph.registry
           .list()
           .filter(Type.isType)
-          .find((t) => Type.getTypename(t) === resolvedTypename) as Type.Type | undefined,
+          .find((t) => Type.getTypename(t) === resolvedTypename),
     );
 
     const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
@@ -58,7 +58,7 @@ export const useType = (
           resolvedDb.graph.registry
             .list()
             .filter(Type.isType)
-            .find((t) => Type.getTypename(t) === resolvedTypename) as Type.Type | undefined,
+            .find((t) => Type.getTypename(t) === resolvedTypename),
       );
     });
 
