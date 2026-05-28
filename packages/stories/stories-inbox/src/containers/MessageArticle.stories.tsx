@@ -21,6 +21,7 @@ import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtra
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -217,6 +218,7 @@ const meta = {
         }),
         StorybookPlugin({}),
         InboxPlugin(),
+        MarkdownPlugin(),
         TripPlugin(),
         PreviewPlugin(),
         MockDeckOperationsPlugin(),
