@@ -33,7 +33,7 @@ export const handler = Effect.fn(function* ({
     .map((schema) => {
       const schemaAnnotation = getTypeAnnotation(Type.getSchema(schema));
       return {
-        id: Type.getDXN(schema)?.toString(),
+        id: Type.getURI(schema).toString(),
         typename: schemaAnnotation?.typename ?? Type.getTypename(schema) ?? '',
         version: schemaAnnotation?.version ?? Type.getVersion(schema) ?? '',
       };

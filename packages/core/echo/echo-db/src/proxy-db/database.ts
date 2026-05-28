@@ -400,7 +400,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       if (typeEntity != null) {
         const typename = Type.getTypename(typeEntity);
         const version = Type.getVersion(typeEntity);
-        const identifierDXN = Type.getDXN(typeEntity);
+        // Persisted (database-attached) types are also indexed by their identifier DXN.
+        const identifierDXN =
+          Type.getDatabase(typeEntity) != null && typeof typeEntity.id === 'string'
+            ? `dxn:echo:@:${typeEntity.id}`
+            : undefined;
         const inRegistry =
           typename && version
             ? Registry.findTypeByDXN(this.graph.registry, `dxn:type:${typename}:${version}`) !== undefined ||

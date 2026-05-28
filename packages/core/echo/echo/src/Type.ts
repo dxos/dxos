@@ -711,20 +711,3 @@ export const removeFields = (type: AnyEntity, fieldNames: string[]): void => {
     draft.jsonSchema = internal.toJsonSchema(removed);
   });
 };
-
-/**
- * Returns the identifier DXN string (`dxn:echo:@:<objectId>`) for a persisted
- * type entity (one returned by the database), or `undefined` for in-memory
- * static type declarations.
- *
- * The identifier DXN is the canonical key under which the type is indexed in
- * the graph registry (as opposed to the typename-based DXN). Callers that want
- * the human-readable typename DXN should use `Type.getURI` instead.
- */
-export const getDXN = (input: AnyEntity): string | undefined => {
-  // Only persisted Type entities (attached to a database) have an identifier DXN.
-  if (isType(input) && getDatabase(input) != null && typeof (input as any).id === 'string') {
-    return `dxn:echo:@:${(input as any).id}`;
-  }
-  return undefined;
-};

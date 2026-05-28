@@ -233,7 +233,7 @@ export class RegistryImpl implements Registry {
     // Index type entities by DXN(s) for fast lookup.
     if (Type.isType(entity)) {
       const typeEntity = entity as Type.AnyEntity;
-      const identifierDXN = Type.getDXN(typeEntity);
+      const identifierDXN = getPersistedIdentifierDXN(typeEntity);
       if (identifierDXN != null) {
         // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed types).
         // Index ONLY by identifier DXN to avoid overwriting static schemas that share the same typename/version.
@@ -302,6 +302,15 @@ const getEntityId = (entity: Entity.Unknown): string => {
 };
 
 /**
+ * Returns the identifier DXN (`dxn:echo:@:<objectId>`) under which a persisted
+ * (database-attached) type entity is indexed, or `undefined` for in-memory
+ * static type declarations. Used to avoid colliding with static schemas that
+ * share the same typename/version.
+ */
+const getPersistedIdentifierDXN = (type: Type.AnyEntity): string | undefined =>
+  Type.getDatabase(type) != null && typeof type.id === 'string' ? `dxn:echo:@:${type.id}` : undefined;
+
+/**
  * Returns the canonical DXN string key for a type entity.
  * Format: `dxn:<typename>:<version>`.
  */
@@ -317,7 +326,7 @@ const getTypeDXN = (type: Type.AnyEntity): string => {
  * Returns true if the type entity's canonical DXN (or identifier DXN) matches the normalized key.
  */
 const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
-  const identifierDXN = Type.getDXN(type);
+  const identifierDXN = getPersistedIdentifierDXN(type);
   if (identifierDXN != null && normalizeDXN(identifierDXN) === normalizedDXN) {
     return true;
   }
