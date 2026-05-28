@@ -54,8 +54,8 @@ export const Headers = ({
       ))}
 
       {tags.length > 0 && (
-        <div className='col-span-2 grid grid-cols-subgrid items-start'>
-          <div className='flex px-2 pt-1.5 text-subdued' aria-hidden='true'>
+        <div className='col-span-2 grid grid-cols-subgrid items-center'>
+          <div className='flex px-2 text-subdued' aria-hidden='true'>
             <Icon icon='ph--tag--regular' />
           </div>
           <div className='flex flex-wrap gap-1' data-testid='extracted-tags'>
