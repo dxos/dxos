@@ -44,21 +44,19 @@ export const useType = (
     const { db: resolvedDb, typename: resolvedTypename } = r;
 
     // Set initial value immediately.
-    setSchema(
-      () =>
+    setSchema(() =>
+      resolvedDb.graph.registry
+        .list()
+        .filter(Type.isType)
+        .find((t) => Type.getTypename(t) === resolvedTypename),
+    );
+
+    const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
+      setSchema(() =>
         resolvedDb.graph.registry
           .list()
           .filter(Type.isType)
           .find((t) => Type.getTypename(t) === resolvedTypename),
-    );
-
-    const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
-      setSchema(
-        () =>
-          resolvedDb.graph.registry
-            .list()
-            .filter(Type.isType)
-            .find((t) => Type.getTypename(t) === resolvedTypename),
       );
     });
 

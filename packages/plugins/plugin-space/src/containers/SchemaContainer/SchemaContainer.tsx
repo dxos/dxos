@@ -41,9 +41,7 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
  * Subscribe to and retrieve all types from a space's registry.
  */
 export const useQuerySpaceTypes = (space: Space): Type.AnyEntity[] => {
-  const [types, setTypes] = useState<Type.AnyEntity[]>(() => [
-    ...space.db.graph.registry.list().filter(Type.isType),
-  ]);
+  const [types, setTypes] = useState<Type.AnyEntity[]>(() => [...space.db.graph.registry.list().filter(Type.isType)]);
 
   useEffect(() => {
     setTypes([...space.db.graph.registry.list().filter(Type.isType)]);

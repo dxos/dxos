@@ -10,19 +10,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import {
-  type Database,
-  Entity,
-  Filter,
-  Format,
-  Obj,
-  Query,
-  Ref,
-  type Registry,
-  Scope,
-  Type,
-  View,
-} from '@dxos/echo';
+import { type Database, Entity, Filter, Format, Obj, Query, Ref, type Registry, Scope, Type, View } from '@dxos/echo';
 import {
   type JsonSchemaType,
   LabelAnnotation,

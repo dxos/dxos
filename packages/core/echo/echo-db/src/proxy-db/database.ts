@@ -9,18 +9,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import {
-  Database,
-  Entity,
-  Filter,
-  JsonSchema,
-  Obj,
-  Query,
-  QueryAST,
-  Ref,
-  type Registry,
-  Type,
-} from '@dxos/echo';
+import { Database, Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   EntityKind,

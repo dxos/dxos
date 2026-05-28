@@ -84,9 +84,7 @@ const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
   const { db } = yield* Database.Service;
-  const allTypes = yield* Database.runQuery(
-    Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
-  );
+  const allTypes = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
   const types = allTypes
     .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
