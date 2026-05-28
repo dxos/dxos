@@ -20,21 +20,21 @@ export type ResolverMap = Record<string, ResolverType<any, any>>;
 export class Resolver extends Context.Tag('PluginInbox/Resolver')<
   Resolver,
   {
-    resolve<S extends Type.AnyEntity, I>(schema: S, input: I): Effect.Effect<Type.InstanceType<S> | undefined>;
+    resolve<T extends Type.AnyEntity, I>(type: T, input: I): Effect.Effect<Type.InstanceType<T> | undefined>;
   }
 >() {}
 
-export const resolve = <S extends Type.AnyEntity, I>(schema: S, input: I) =>
+export const resolve = <T extends Type.AnyEntity, I>(type: T, input: I) =>
   Effect.flatMap(Resolver, (service) =>
-    Effect.map(service.resolve<S, I>(schema, input), (result) => result ?? undefined),
+    Effect.map(service.resolve<T, I>(type, input), (result) => result ?? undefined),
   );
 
 export const fromResolvers = (resolvers: ResolverMap) =>
   Layer.succeed(
     Resolver,
     Resolver.of({
-      resolve: (schema, input: any) => {
-        const typename = Type.getTypename(schema);
+      resolve: (type, input: any) => {
+        const typename = Type.getTypename(type);
         const resolver = resolvers[typename];
         if (resolver) {
           return resolver(input);

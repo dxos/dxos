@@ -216,19 +216,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return Reflect.get(target, prop, receiver);
       }
       case StaticTypeSchemaSlot: {
-        // Expose the source Effect Schema for `Type.Type`-shaped instances.
-        // Three populating paths converge here so callers (e.g. `Type.getSchema`,
-        // the `SchemaId` getter in `setSchemaProperties`) can read the slot
-        // uniformly regardless of how the entity was constructed:
-        //   1. Slot was set directly on the target (static `Type.Type`
-        //      entities produced by `Type.makeObject(...)` pipe).
-        //   2. Not applicable here — persisted `Type.Type` entities are
-        //      wrapped by `EchoHandler`, which exposes the slot via its own
-        //      `get` trap (rebuilding from `data.jsonSchema`).
-        //   3. In-memory `TypeSchema` entities (produced by `Type.makeObject`
-        //      / `Type.makeObjectFromJsonSchema`) — rebuilt from the `jsonSchema`
-        //      data field and CACHED on the slot. The set-trap invalidates the
-        //      cache whenever `jsonSchema` is mutated (`Type.addFields` etc.).
+        // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it on
+        // the slot; the set-trap invalidates the cache when `jsonSchema` is mutated.
         const existing = Reflect.get(target, prop, receiver);
         if (existing !== undefined) {
           return existing;

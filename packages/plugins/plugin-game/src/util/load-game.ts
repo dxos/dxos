@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, type Ref, type Type } from '@dxos/echo';
+import { Database, Obj, type Ref, Type } from '@dxos/echo';
 
 import { Game } from '../types/Game';
 
@@ -33,7 +33,7 @@ export const loadGame = <S extends Type.AnyObj>(
     const game = yield* Database.load(ref);
     const variant = yield* Database.load(game.variant);
     if (!Obj.instanceOf(variantType, variant)) {
-      const expected = (variantType as any).typename ?? 'unknown';
+      const expected = Type.getTypename(variantType) ?? 'unknown';
       const actual = Obj.getTypename(variant as Obj.Any) ?? 'unknown';
       return yield* Effect.fail(new GameVariantMismatchError(game.id, expected, actual));
     }

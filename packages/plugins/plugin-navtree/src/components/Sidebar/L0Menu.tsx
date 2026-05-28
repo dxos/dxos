@@ -327,7 +327,15 @@ export const L0Menu = ({
       <Menu.Root onAction={handleAction}>
         <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
           <div className='grid place-items-center'>
-            <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app-menu.label')} />
+            <IconButton
+              density='lg'
+              variant='ghost'
+              size={5}
+              icon='ph--list--regular'
+              iconOnly
+              square
+              label={t('app-menu.label')}
+            />
           </div>
         </Menu.Trigger>
         <Menu.Content group={parent} items={menuActions} />

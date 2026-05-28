@@ -14,11 +14,11 @@ import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
-export type SearchOptions<S extends Type.AnyEntity> = {
+export type SearchOptions<T extends Type.AnyEntity> = {
   query?: string;
   // TODO(dmaretskyi): How can we pass this through.
   context?: string;
-  types: S[];
+  types: T[];
   exaApiKey: string;
   liveCrawl?: boolean;
 };
@@ -32,8 +32,8 @@ export type SearchResult<T = unknown> = {
 };
 
 /** @deprecated Use MixedStreamParser */
-export const search = async <S extends Type.AnyEntity>(
-  options: SearchOptions<S>,
+export const search = async <T extends Type.AnyEntity>(
+  options: SearchOptions<T>,
 ): Promise<SearchResult<Entity.Unknown>> => {
   throw new Error('Not implemented');
   // assertArgument(options.query || options.context, "query or context", "query or context is required");

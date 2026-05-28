@@ -213,7 +213,7 @@ export const createObjectPipeline = <S extends Type.AnyObj>(
     return (obj: Entity.Properties<T>) => {
       const pipeline: Effect.Effect<T> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
-        return createReactiveObject(type)(withProps) as unknown as T;
+        return createReactiveObject(type)(withProps);
       });
 
       return pipeline;
@@ -222,9 +222,9 @@ export const createObjectPipeline = <S extends Type.AnyObj>(
     return (obj: Entity.Properties<T>) => {
       const pipeline: Effect.Effect<T, never, never> = Effect.gen(function* () {
         const withProps = createProps(generator, type, force)(obj);
-        const liveObj = createReactiveObject(type)(withProps) as unknown as T;
+        const liveObj = createReactiveObject(type)(withProps);
         const withRefs = yield* Effect.promise(() => createReferences(type, db)(liveObj));
-        return addToDatabase(db)(withRefs as any) as unknown as T;
+        return addToDatabase(db)(withRefs);
       });
 
       return pipeline;
@@ -248,7 +248,7 @@ export const createGenerator = <S extends Type.AnyObj>(
 
   return {
     createObject: () => Effect.runSync(pipeline({} as Entity.Properties<Type.InstanceType<S>>)),
-    createObjects: (n: number) => Effect.runSync(createArrayPipeline(n, pipeline as any)) as Type.InstanceType<S>[],
+    createObjects: (n: number) => Effect.runSync(createArrayPipeline(n, pipeline)),
   };
 };
 

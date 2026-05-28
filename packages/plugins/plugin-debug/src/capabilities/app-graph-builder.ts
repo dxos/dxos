@@ -20,6 +20,25 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
+        id: 'root',
+        match: NodeMatcher.whenRoot,
+        actions: () =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'reset-data',
+              data: () =>
+                Effect.sync(() => {
+                  window.location.href = '/reset.html#continue';
+                }),
+              properties: {
+                label: ['reset-data.label', { ns: meta.id }],
+                icon: 'ph--warning--regular',
+              },
+            }),
+          ]),
+      }),
+
+      GraphBuilder.createExtension({
         id: 'devtools',
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),
         connector: (node, get) =>

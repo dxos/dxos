@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { Surface } from '@dxos/app-framework/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
@@ -95,7 +93,7 @@ export const object: {
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S[number]> }>;
 } = (
   token: Surface.RoleToken<any>,
   schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],

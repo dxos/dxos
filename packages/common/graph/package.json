@@ -35,7 +35,6 @@
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "effect": "catalog:"
   },

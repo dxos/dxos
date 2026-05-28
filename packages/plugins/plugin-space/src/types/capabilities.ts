@@ -60,13 +60,13 @@ export namespace SpaceCapabilities {
   }) => Effect.Effect<void, Error, Operation.Service>;
   export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}.capability.on-space-created`);
 
-  export type OnSchemaAdded = (params: {
+  export type OnTypeAdded = (params: {
     db: Database.Database;
-    schema: Type.AnyEntity;
+    type: Type.AnyEntity;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnSchemaAdded = Capability.make<OnSchemaAdded>(`${meta.id}.capability.on-schema-added`);
+  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.id}.capability.on-type-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;

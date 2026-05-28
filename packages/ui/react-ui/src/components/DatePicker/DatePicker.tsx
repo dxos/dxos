@@ -6,32 +6,35 @@ import { createContext } from '@radix-ui/react-context';
 import { format as formatDate } from 'date-fns';
 import React, {
   type ComponentPropsWithoutRef,
-  PropsWithChildren,
+  type PropsWithChildren,
   type ReactNode,
   forwardRef,
   useCallback,
   useState,
 } from 'react';
-import { type DateRange } from 'react-day-picker';
 
 import { useThemeContext } from '../../hooks';
 import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
-import { Calendar } from '../Calendar';
+import { Calendar, type DateRange } from '../Calendar';
 import { Icon } from '../Icon';
 import { Popover } from '../Popover';
 
 //
-// Types & context.
+// Public API.
+//
+// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a Radix Popover,
+// preserving the previous slot-style namespace: `<DatePicker.Root>`, `<DatePicker.Trigger>`,
+// `<DatePicker.Content>`, `<DatePicker.Calendar>`. Multi-select is no longer supported (no
+// in-repo consumers); use `<Calendar.Root>` directly with custom state if needed.
 //
 
-export type DatePickerMode = 'single' | 'range' | 'multiple';
+export type DatePickerMode = 'single' | 'range';
 
 type ValueByMode = {
   single: Date | undefined;
   range: DateRange | undefined;
-  multiple: Date[] | undefined;
 };
 
 type DatePickerContextValue = {
@@ -54,6 +57,7 @@ export type DatePickerRootProps<M extends DatePickerMode = 'single'> = {
   value?: ValueByMode[M];
   defaultValue?: ValueByMode[M];
   onValueChange?: (value: ValueByMode[M]) => void;
+  /** Preserve hour/minute on the selected date(s) when picking a new day. */
   withTime?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
@@ -133,10 +137,6 @@ const formatValue = (mode: DatePickerMode, value: unknown, fmt: string): string 
       }
       return r.to ? `${formatDate(r.from, fmt)} – ${formatDate(r.to, fmt)}` : formatDate(r.from, fmt);
     }
-    case 'multiple': {
-      const arr = value as Date[];
-      return arr.length ? arr.map((date) => formatDate(date, fmt)).join(', ') : undefined;
-    }
   }
 };
 
@@ -202,10 +202,9 @@ const DatePickerContent = forwardRef<HTMLDivElement, DatePickerContentProps>(
 DatePickerContent.displayName = 'DatePickerContent';
 
 //
-// Calendar bound to context (time-of-day preservation).
+// Calendar — single or range, time-of-day preservation, auto-dismiss on completion.
 //
 
-/** Copies the hour/minute from oldDate into a fresh copy of newDate. */
 const carryTime = (oldDate: Date | undefined, newDate: Date | undefined): Date | undefined => {
   if (!newDate) {
     return newDate;
@@ -218,68 +217,46 @@ const carryTime = (oldDate: Date | undefined, newDate: Date | undefined): Date |
   return out;
 };
 
-type DatePickerCalendarProps = {
-  classNames?: ComponentPropsWithoutRef<typeof Calendar.Root>['classNames'];
-  slots?: ComponentPropsWithoutRef<typeof Calendar.Root>['slots'];
-};
+const DatePickerCalendar = ({ classNames }: { classNames?: string } = {}) => {
+  const { mode, value, setValue, withTime, onOpenChange } = useDatePickerContext('DatePickerCalendar');
 
-const DatePickerCalendar = (props: DatePickerCalendarProps) => {
-  const { mode, value, setValue, withTime } = useDatePickerContext('DatePickerCalendar');
-
-  const handleSelect = useCallback(
-    (next: ValueByMode[DatePickerMode]) => {
-      if (!withTime) {
-        setValue(next);
-        return;
-      }
-      if (mode === 'single') {
-        setValue(carryTime(value as Date | undefined, next as Date | undefined));
-      } else if (mode === 'range') {
-        const oldRange = value as DateRange | undefined;
-        const newRange = next as DateRange | undefined;
-        setValue(
-          newRange
-            ? { from: carryTime(oldRange?.from, newRange.from)!, to: carryTime(oldRange?.to, newRange.to) }
-            : undefined,
-        );
-      } else {
-        // Multiple — react-day-picker emits the full array; preserve time on existing dates by index.
-        const oldDates = (value as Date[] | undefined) ?? [];
-        const newDates = (next as Date[] | undefined) ?? [];
-        const merged = newDates.map((date, index) => carryTime(oldDates[index], date) ?? date);
-        setValue(merged);
-      }
-    },
-    [withTime, mode, value, setValue],
-  );
-
-  // Branch on mode so each Calendar render targets a single DayPickerProps union member.
   if (mode === 'single') {
+    const date = value as Date | undefined;
     return (
       <Calendar.Root
-        {...props}
         mode='single'
-        selected={value as Date | undefined}
-        onSelect={handleSelect as (date: Date | undefined) => void}
+        classNames={classNames}
+        selected={date}
+        onSelect={(next) => {
+          const merged = withTime ? carryTime(date, next) : next;
+          setValue(merged);
+          if (next !== undefined) {
+            onOpenChange(false);
+          }
+        }}
       />
     );
   }
-  if (mode === 'range') {
-    return (
-      <Calendar.Root
-        {...props}
-        mode='range'
-        selected={value as DateRange | undefined}
-        onSelect={handleSelect as (range: DateRange | undefined) => void}
-      />
-    );
-  }
+
+  const range = value as DateRange | undefined;
   return (
     <Calendar.Root
-      {...props}
-      mode='multiple'
-      selected={value as Date[] | undefined}
-      onSelect={handleSelect as (dates: Date[] | undefined) => void}
+      mode='range'
+      classNames={classNames}
+      selected={range}
+      onSelect={(next) => {
+        if (!next) {
+          setValue(undefined);
+          return;
+        }
+        const merged: DateRange = withTime
+          ? { from: carryTime(range?.from, next.from)!, to: carryTime(range?.to, next.to) }
+          : next;
+        setValue(merged);
+        if (merged.from && merged.to) {
+          onOpenChange(false);
+        }
+      }}
     />
   );
 };
@@ -288,8 +265,6 @@ DatePickerCalendar.displayName = 'DatePickerCalendar';
 
 //
 // Public namespace.
-// Time-of-day entry: compose `Input.Time` inside `DatePicker.Content` and wire it to your own state;
-// `DatePicker.Root`'s `withTime` flag preserves hour/minute when the user clicks a new date.
 //
 
 export const DatePicker = {

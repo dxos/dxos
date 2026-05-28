@@ -19,7 +19,7 @@ import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';

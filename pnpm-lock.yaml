@@ -258,6 +258,9 @@ catalogs:
     '@huggingface/transformers':
       specifier: ^3.8.1
       version: 3.8.1
+    '@internationalized/date':
+      specifier: ^3.12.1
+      version: 3.12.1
     '@ipld/car':
       specifier: ^5.3.3
       version: 5.4.1
@@ -1515,12 +1518,12 @@ catalogs:
     re-resizable:
       specifier: ^6.9.17
       version: 6.9.17
+    react-aria-components:
+      specifier: ^1.17.0
+      version: 1.17.0
     react-charts:
       specifier: beta
       version: 3.0.0-beta.57
-    react-day-picker:
-      specifier: ^9.4.0
-      version: 9.14.0
     react-drag-drop-files:
       specifier: ^2.3.8
       version: 2.3.8
@@ -3987,9 +3990,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../random
@@ -4670,9 +4670,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -4900,9 +4897,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../echo/echo-db
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol
@@ -5059,9 +5053,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.1
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -5515,9 +5506,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../echo/echo-db
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
@@ -8270,9 +8258,6 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../../core/echo/echo-atom
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -8781,9 +8766,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -11775,9 +11757,6 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../../core/echo/echo-atom
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -12922,9 +12901,6 @@ importers:
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.6)(scheduler@0.27.0)
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -14961,9 +14937,6 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../../core/echo/echo-atom
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -15709,9 +15682,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -16070,7 +16040,7 @@ importers:
         specifier: workspace:*
         version: link:../../core/echo/echo
       '@dxos/echo-db':
-        specifier: workspace:^0.8.3
+        specifier: workspace:*
         version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
@@ -16763,9 +16733,6 @@ importers:
         specifier: 'catalog:'
         version: 14.2.0
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -17653,9 +17620,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -18311,9 +18275,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -18630,6 +18591,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@internationalized/date':
+        specifier: 'catalog:'
+        version: 3.12.1
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -18738,9 +18702,9 @@ importers:
       keyborg:
         specifier: 'catalog:'
         version: 2.6.0
-      react-day-picker:
+      react-aria-components:
         specifier: 'catalog:'
-        version: 9.14.0(react@19.2.6)
+        version: 1.17.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react-error-boundary:
         specifier: 'catalog:'
         version: 4.0.13(react@19.2.6)
@@ -19139,9 +19103,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -21277,9 +21238,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -21627,9 +21585,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -24149,9 +24104,6 @@ packages:
   '@dabh/diagnostics@2.0.3':
     resolution: {integrity: sha512-hrlQOIi7hAfzsMqlGSFyVucrx38O+j6wiGOf//H2ecvIEqYN4ADBSS2iLMh5UFyDunCNniUIPk/q3riFv45xRA==}
 
-  '@date-fns/tz@1.5.0':
-    resolution: {integrity: sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg==}
-
   '@dependents/detective-less@5.0.1':
     resolution: {integrity: sha512-Y6+WUMsTFWE5jb20IFP4YGa5IrGY/+a/FbOSjDF/wz9gepU2hwCYSXRHP/vPwBvwcY3SVMASt4yXxbXNXigmZQ==}
     engines: {node: '>=18'}
@@ -25104,8 +25056,17 @@ packages:
   '@internationalized/date@3.10.0':
     resolution: {integrity: sha512-oxDR/NTEJ1k+UFVQElaNIk65E/Z83HK1z1WI3lQyhTtnNg4R5oVXaPzK3jcpKG8UHKDVuDQHzn+wsxSz8RP3aw==}
 
+  '@internationalized/date@3.12.1':
+    resolution: {integrity: sha512-6IedsVWXyq4P9Tj+TxuU8WGWM70hYLl12nbYU8jkikVpa6WXapFazPUcHUMDMoWftIDE2ILDkFFte6W2nFCkRQ==}
+
   '@internationalized/number@3.6.5':
     resolution: {integrity: sha512-6hY4Kl4HPBvtfS62asS/R22JzNNy8vi/Ssev7x6EobfCp+9QIB2hKvI2EtbdJ0VSQacxVNtqhE/NmF/NZ0gm6g==}
+
+  '@internationalized/number@3.6.6':
+    resolution: {integrity: sha512-iFgmQaXHE0vytNfpLZWOC2mEJCBRzcUxt53Xf/yCXG93lRvqas237i3r7X4RKMwO3txiyZD4mQjKAByFv6UGSQ==}
+
+  '@internationalized/string@3.2.8':
+    resolution: {integrity: sha512-NdbMQUSfXLYIQol5VyMtinm9pZDciiMfN7RtmSuSB78io1hqwJ0naYfxyW6vgxWBkzWymQa/3uLDlbfmshtCaA==}
 
   '@ioredis/commands@1.2.0':
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
@@ -28358,6 +28319,11 @@ packages:
       react-native:
         optional: true
 
+  '@react-types/shared@3.34.0':
+    resolution: {integrity: sha512-gp6xo/s2lX54AlTjOiqwDnxA7UW79BNvI9dB9pr3LZTzRKCd1ZA+ZbgKw/ReIiWuvvVw/8QFJpnqeeFyLocMcQ==}
+    peerDependencies:
+      react: ~19.2.3
+
   '@redis/bloom@1.2.0':
     resolution: {integrity: sha512-HG2DFjYKbpNmVXsa0keLHp/3leGJz1mjh09f2RLGGLQZzSHpkmZWuwJbAvo3QcRY8p80m5+ZdXZdYOSBLlp7Cg==}
     peerDependencies:
@@ -29706,10 +29672,6 @@ packages:
   '@szmarczak/http-timer@5.0.1':
     resolution: {integrity: sha512-+PmQX0PiAYPMeVYe237LJAYvOMYW1j2rH5YROyS3b4CTVJum34HfRvKvAzozHAQG0TnHNdUfY9nCeUyRAs//cw==}
     engines: {node: '>=14.16'}
-
-  '@tabby_ai/hijri-converter@1.0.5':
-    resolution: {integrity: sha512-r5bClKrcIusDoo049dSL8CawnHR6mRdDwhlQuIgZRNty68q0x8k3Lf1BtPAMxRf/GgnHBnIO4ujd3+GQdLWzxQ==}
-    engines: {node: '>=16.0.0'}
 
   '@tailwindcss/forms@0.5.11':
     resolution: {integrity: sha512-h9wegbZDPurxG22xZSoWtdzc41/OlNEUQERNqI/0fOwa2aVlWGu7C35E/x6LDyD3lgtztFSSjKZyuVM0hxhbgA==}
@@ -32425,6 +32387,9 @@ packages:
     resolution: {integrity: sha512-nPdaFdQ0h/GEigbPClz11D0v/ZJEwxmeVZGeMo3Z5StPtUTkA9o1lD6QwoirYiSDzbcwn2XcjwmCp68W1IS4TA==}
     engines: {node: '>=18'}
 
+  client-only@0.0.1:
+    resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
+
   clipboardy@3.0.0:
     resolution: {integrity: sha512-Su+uU5sr1jkUy1sGRpLKjKrvEOVXgSgiSInwa/qeID6aJ07yh+5NWc3h2QfjHjBnfX4LhtFcuAWKUsJ3r+fjbg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -33115,14 +33080,8 @@ packages:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
 
-  date-fns-jalali@4.1.0-0:
-    resolution: {integrity: sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg==}
-
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
-
-  date-fns@4.3.0:
-    resolution: {integrity: sha512-OYcL+3N/jyWbYdFGqoMAhytDgxP9pbYPUUiRCOgn4Fewaadk9l/Wam4Avciiyp2BgkpfQyBV9B+ehnVJych+eQ==}
 
   dayjs@1.11.10:
     resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
@@ -38207,6 +38166,18 @@ packages:
       react: ~19.2.3
       react-dom: ~19.2.3
 
+  react-aria-components@1.17.0:
+    resolution: {integrity: sha512-0EyisMgvsFJ2aML3crDYv2tW5vT2Ryf8PGzY/g63JjDdCbLshlwazhS8JNtPF1vkTkungJJ6sVJbKyX+YKSoFA==}
+    peerDependencies:
+      react: ~19.2.3
+      react-dom: ~19.2.3
+
+  react-aria@3.48.0:
+    resolution: {integrity: sha512-jQjd4rBEIMqecBaAKYJbVGK6EqIHLa5znVQ7jwFyK5vCyljoj6KhgtiahmcIPsG5vG5vEDLw+ba+bEWn6A2P4w==}
+    peerDependencies:
+      react: ~19.2.3
+      react-dom: ~19.2.3
+
   react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
 
@@ -38221,12 +38192,6 @@ packages:
     peerDependencies:
       react: ~19.2.3
       react-dom: ~19.2.3
-
-  react-day-picker@9.14.0:
-    resolution: {integrity: sha512-tBaoDWjPwe0M5pGrum4H0SR6Lyk+BO9oHnp9JbKpGKW2mlraNPgP9BMfsg5pWpwrssARmeqk7YBl2oXutZTaHA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      react: ~19.2.3
 
   react-docgen-typescript@2.2.2:
     resolution: {integrity: sha512-tvg2ZtOpOi6QDwsb3GZhOjDkkX0h8Z2gipvTg6OVMUyoYoURhEiRNePT8NZItTVCDh39JJHnLdfCOkzoLbFnTg==}
@@ -38404,6 +38369,11 @@ packages:
   react-router@6.30.3:
     resolution: {integrity: sha512-XRnlbKMTmktBkjCLE8/XcZFlnHvr2Ltdr1eJX4idL55/9BbORzyZEaIkBFDhFGCEWBBItsVrDxwx3gnisMitdw==}
     engines: {node: '>=14.0.0'}
+    peerDependencies:
+      react: ~19.2.3
+
+  react-stately@3.46.0:
+    resolution: {integrity: sha512-OdxhWvHgs2L4OJGIs7hnuTr5WjjMM6enhNEAMRqiekhF8+ITvA2LRwNftOZwcogaoCslGYq5S2VQTQwnm0GbCA==}
     peerDependencies:
       react: ~19.2.3
 
@@ -43975,8 +43945,6 @@ snapshots:
       enabled: 2.0.0
       kuler: 2.0.0
 
-  '@date-fns/tz@1.5.0': {}
-
   '@dependents/detective-less@5.0.1':
     dependencies:
       gonzales-pe: 4.3.0
@@ -44839,7 +44807,19 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.17
 
+  '@internationalized/date@3.12.1':
+    dependencies:
+      '@swc/helpers': 0.5.17
+
   '@internationalized/number@3.6.5':
+    dependencies:
+      '@swc/helpers': 0.5.17
+
+  '@internationalized/number@3.6.6':
+    dependencies:
+      '@swc/helpers': 0.5.17
+
+  '@internationalized/string@3.2.8':
     dependencies:
       '@swc/helpers': 0.5.17
 
@@ -48289,6 +48269,10 @@ snapshots:
       - '@types/react'
       - immer
 
+  '@react-types/shared@3.34.0(react@19.2.6)':
+    dependencies:
+      react: 19.2.6
+
   '@redis/bloom@1.2.0(@redis/client@1.5.7)':
     dependencies:
       '@redis/client': 1.5.7
@@ -49607,8 +49591,6 @@ snapshots:
   '@szmarczak/http-timer@5.0.1':
     dependencies:
       defer-to-connect: 2.0.1
-
-  '@tabby_ai/hijri-converter@1.0.5': {}
 
   '@tailwindcss/forms@0.5.11(tailwindcss@4.2.0)':
     dependencies:
@@ -52977,6 +52959,8 @@ snapshots:
       slice-ansi: 5.0.0
       string-width: 7.2.0
 
+  client-only@0.0.1: {}
+
   clipboardy@3.0.0:
     dependencies:
       arch: 2.2.0
@@ -53739,11 +53723,7 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
-  date-fns-jalali@4.1.0-0: {}
-
   date-fns@3.6.0: {}
-
-  date-fns@4.3.0: {}
 
   dayjs@1.11.10: {}
 
@@ -60105,6 +60085,31 @@ snapshots:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
+  react-aria-components@1.17.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+    dependencies:
+      '@internationalized/date': 3.12.1
+      '@react-types/shared': 3.34.0(react@19.2.6)
+      '@swc/helpers': 0.5.17
+      client-only: 0.0.1
+      react: 19.2.6
+      react-aria: 3.48.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react-dom: 19.2.6(react@19.2.6)
+      react-stately: 3.46.0(react@19.2.6)
+
+  react-aria@3.48.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+    dependencies:
+      '@internationalized/date': 3.12.1
+      '@internationalized/number': 3.6.6
+      '@internationalized/string': 3.2.8
+      '@react-types/shared': 3.34.0(react@19.2.6)
+      '@swc/helpers': 0.5.17
+      aria-hidden: 1.2.4
+      clsx: 2.1.1
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
+      react-stately: 3.46.0(react@19.2.6)
+      use-sync-external-store: 1.6.0(react@19.2.6)
+
   react-base16-styling@0.9.1:
     dependencies:
       '@babel/runtime': 7.27.1
@@ -60138,14 +60143,6 @@ snapshots:
     dependencies:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
-
-  react-day-picker@9.14.0(react@19.2.6):
-    dependencies:
-      '@date-fns/tz': 1.5.0
-      '@tabby_ai/hijri-converter': 1.0.5
-      date-fns: 4.3.0
-      date-fns-jalali: 4.1.0-0
-      react: 19.2.6
 
   react-docgen-typescript@2.2.2(typescript@6.0.3):
     dependencies:
@@ -60358,6 +60355,16 @@ snapshots:
     dependencies:
       '@remix-run/router': 1.23.2
       react: 19.2.6
+
+  react-stately@3.46.0(react@19.2.6):
+    dependencies:
+      '@internationalized/date': 3.12.1
+      '@internationalized/number': 3.6.6
+      '@internationalized/string': 3.2.8
+      '@react-types/shared': 3.34.0(react@19.2.6)
+      '@swc/helpers': 0.5.17
+      react: 19.2.6
+      use-sync-external-store: 1.6.0(react@19.2.6)
 
   react-style-singleton@2.2.3(@types/react@19.2.14)(react@19.2.6):
     dependencies:

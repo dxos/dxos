@@ -22,7 +22,7 @@ export type GameVariant = {
   /** Optional Phosphor icon name (e.g. 'ph--shield-chevron--regular'). */
   icon?: string;
   /** ECHO Type entity of the variant state object referenced by `Game.variant`. */
-  variantType: Type.AnyEntity;
+  variantType: Type.AnyObj;
   /**
    * Optional Effect Schema rendered as a form after the user picks the variant.
    * To use a `Type.Type` entity, extract its schema first via `Type.getSchema(...)`.

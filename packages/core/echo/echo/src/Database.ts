@@ -18,8 +18,10 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal/Annotation';
 import { type AnyProperties } from './internal/common/types';
+// Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
+// Database → internal/Entity → entity → JsonSchema → Ref → Database.
+import { isInstanceOf } from './internal/Entity/type-uri';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';

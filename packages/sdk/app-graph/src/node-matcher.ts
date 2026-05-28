@@ -111,9 +111,9 @@ export const whenNodeType =
  * @see {@link whenEchoTypeMatches} - Returns the node instead of data for legacy composition.
  */
 export const whenEchoType =
-  <T extends Type.AnyObj | Type.AnyRelation>(type: T): NodeMatcher<Type.InstanceType<T>> =>
+  <T extends Type.AnyEntity>(type: T): NodeMatcher<Type.InstanceType<T>> =>
   (node: Node.Node): Option.Option<Type.InstanceType<T>> =>
-    Entity.instanceOf(type, node.data) ? Option.some(node.data as Type.InstanceType<T>) : Option.none();
+    Entity.instanceOf(type, node.data) ? Option.some(node.data) : Option.none();
 
 /**
  * Matches a node whose data is any ECHO object.

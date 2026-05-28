@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
-import { type ObjectId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
@@ -28,6 +28,23 @@ import { JsonSchemaType } from '../JsonSchema';
 
 // type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
 export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<AnyEntity & ToMutable<T> & ExtraFields>;
+
+/**
+ * Options accepted by every `Type.makeObject` / `Type.makeRelation` / type-kind
+ * factory. Defaults are derived from `(typename, version)` so callers normally
+ * pass nothing.
+ */
+export type EchoTypeOptions = {
+  /**
+   * Override the entity id stamped on the in-memory `Type.Type` value.
+   *
+   * Defaults to `ObjectId.deterministic(typename, version)` — stable across processes
+   * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
+   * Pass an explicit id (typically `ObjectId.random()`) to opt out of the
+   * deterministic default.
+   */
+  id?: ObjectId;
+};
 
 /**
  * In-memory `Type.Type` entity shape produced by `Type.makeObject(dxn)` /
@@ -132,40 +149,44 @@ export interface EchoTypeSchema<
 //   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 /**
+ * Identity (typename + version) of the type meta-schema — the `Type.Type` that
+ * every ECHO type entity is itself an instance of. Shared by the materialisation
+ * vehicle ({@link persistentEntitySchema}) and `TypeSchema` so the two cannot
+ * drift on identity.
+ */
+export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
+
+/**
  * Effect Schema that every `Type.Type` entity is an instance of: the meta-schema
- * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. Built
- * once and memoised. This is the materialisation vehicle for `makeObject` below
- * — the canonical user-facing entity is `Type/type-schema.ts`'s
- * `TypeSchema`, which carries the same shape plus UI annotations.
+ * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. This is
+ * the materialisation vehicle for `makeObject` below — the canonical user-facing
+ * entity is `Type/type-schema.ts`'s `TypeSchema`, which carries the same shape
+ * plus UI annotations.
  *
  * Kept self-contained (no import of `TypeSchema`) to avoid a bootstrap cycle:
- * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder
- * must not depend on it.
+ * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder must
+ * not depend on it. `jsonSchema` is declared optional here (only on the
+ * materialisation vehicle — the canonical `TypeSchema` keeps it required) so the
+ * construction-time `Schema.asserts` does not force the field before it is
+ * attached; it is populated immediately after via a lazy accessor (see
+ * `makeEchoTypeSchema`).
  */
-let _persistentEntitySchema: Schema.Schema.AnyNoContext | undefined;
-const getPersistentEntitySchema = (): Schema.Schema.AnyNoContext => {
-  if (_persistentEntitySchema) {
-    return _persistentEntitySchema;
-  }
-  const typename = 'org.dxos.type.schema';
-  const version = '0.1.0';
-  // `jsonSchema` is declared optional here (only on the materialisation vehicle —
-  // the canonical `TypeSchema` keeps it required) so the construction-time
-  // `Schema.asserts` does not force the field before it is attached. It is
-  // populated immediately after via a lazy accessor (see `makeEchoTypeSchema`),
-  // which defers self-referential `Schema.suspend(...)` resolution until first
-  // read — by then the recursive type const is no longer in its TDZ.
+// TODO(wittjosiah): Reconcile with `TypeSchema` (`Type/type-schema.ts`).
+//   Both describe the same `org.dxos.type.schema` shape.
+const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
+  const typename = DXN.getName(TypeMetaSchemaDXN);
+  const version = DXN.getVersion(TypeMetaSchemaDXN)!;
   const struct = Schema.Struct({
     name: Schema.optional(Schema.String),
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
-    id: Schema.String,
+    id: ObjectId,
   });
   const ast = SchemaAST.annotations(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
     [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });
-  return (_persistentEntitySchema = Schema.make(ast));
-};
+  return Schema.make(ast);
+})();
 
 /**
  * @internal
@@ -194,6 +215,7 @@ export const makeEchoTypeSchema = <
   version: string,
   kind: K,
   computeJsonSchema: () => JsonSchemaType,
+  explicitId?: ObjectId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
   const sourceSchema = Schema.make<
@@ -207,23 +229,26 @@ export const makeEchoTypeSchema = <
   // in-memory declarations until persisted.
   const meta: ObjectMeta = { keys: [], key: typename, version };
 
+  // Default to a deterministic id derived from `(typename, version)` so that
+  // constructing a `Type.Type` entity never reaches `crypto.getRandomValues()`.
+  // Cloudflare workerd forbids RNG calls in global scope, and the ~hundreds of
+  // `Type.makeObject(...)` call sites across the monorepo execute at module top.
+  // `setIdOnTarget` (see `proxy/make-object.ts`) short-circuits on a pre-supplied
+  // valid id, so this also bypasses the `ObjectId.random()` path inside `makeObject`.
+  // Callers can override via `Type.makeObject(dxn, { id })` when they want a fresh
+  // random id (e.g. inside a request handler where workerd does allow RNG).
+  const id = explicitId ?? ObjectId.deterministic(typename, version);
+
   // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
-  // lazily below (not passed here) so its computation — which may resolve
-  // self-referential `Schema.suspend(...)` branches — is deferred past module init.
-  const entity = makeObject(getPersistentEntitySchema() as Schema.Schema<any, any, never>, {} as any, meta);
+  // below as a getter (not passed here as data) for two reasons; see that accessor.
+  const entity = makeObject(persistentEntitySchema, { id } as any, meta);
 
   const target = getProxyTarget(entity)!;
-  // Lazy, memoised `jsonSchema` accessor. Kept as a permanent accessor (never
-  // converted to a plain data property) so reads flow through the get-trap's
-  // getter branch, which returns the raw value rather than wrapping it in a
-  // child reactive proxy. The jsonSchema object is attached post-construction
-  // (bypassing the set-trap that stamps `SchemaId` on nested values), so
-  // wrapping it would fail the `SchemaId`-in-target invariant. Mutations still
-  // route through the proxy set-trap (which invalidates the cached source
-  // schema on `Type.update` / `Type.addFields` and fires reactivity); the
-  // setter here just records the new value. Computation is deferred to first
-  // read so self-referential `Schema.suspend(...)` branches resolve past
-  // module init rather than during construction.
+  // `jsonSchema` is always available, but computed once on first read rather than at
+  // construction: serializing the AST walks `Schema.suspend(...)` thunks, and for a
+  // self-referential type (`Schema.suspend(() => Self)`) that thunk hits `Self`'s TDZ
+  // while we're still inside its `const` initializer. A getter also lets reads return
+  // the raw object instead of a child reactive proxy.
   let memoizedJsonSchema: JsonSchemaType | undefined;
   Object.defineProperty(target, 'jsonSchema', {
     configurable: true,
@@ -241,10 +266,8 @@ export const makeEchoTypeSchema = <
   // Schema-kind brand: what kind of instance this type describes. There is no
   // database handler to derive it for in-memory entities, so stamp it directly.
   defineHiddenProperty(target, SchemaKindId, kind);
-  // Struct fields for introspection. Exposed as a getter (not a plain data
-  // property) so the proxy get-trap returns the raw fields object instead of
-  // wrapping it in a child reactive proxy (which would fail the SchemaId
-  // invariant — the fields object is not an ECHO entity).
+  // Struct fields for introspection. A getter (not a data property) so reads return
+  // the raw fields object rather than a child reactive proxy.
   Object.defineProperty(target, 'fields', { configurable: true, enumerable: false, get: () => fields });
 
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;

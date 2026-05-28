@@ -34,8 +34,7 @@ const MasonrySchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.masonry', '0.1.0')),
 );
 
-// Declared as an interface (not `type =`) so downstream emit references `Masonry`
-// by name rather than expanding the inferred shape — keeps consumers portable.
+// TODO(wittjosiah): Try to clean up this type inference.
 export interface Masonry extends Type.InstanceType<typeof MasonrySchema> {}
 export const Masonry: Type.Obj<Masonry> = MasonrySchema as any;
 

@@ -25,10 +25,12 @@ const TriggerShapeSchema = Schema.extend(
   }),
 );
 
+// TODO(wittjosiah): Try to clean up this type inference.
 export interface TriggerShape extends ComputeShape {
   type: 'trigger';
   functionTrigger?: Ref.Ref<Trigger.Trigger>;
 }
+
 export const TriggerShape: Schema.Schema<TriggerShape> = TriggerShapeSchema as any;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {

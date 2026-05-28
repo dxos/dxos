@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 
 // Type-only imports (erased at runtime — no import cycle); `internal` may depend
 // on the top-level `Obj` / `Type` API at the type level only.
@@ -82,6 +82,13 @@ export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget 
   dxn: DXN.DXN;
   source: TSource;
   target: TTarget;
+  /**
+   * Override the entity id stamped on the in-memory `Type.Type` value.
+   *
+   * Defaults to `ObjectId.deterministic(typename, version)` — stable across processes
+   * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
+   */
+  id?: ObjectId;
 };
 
 /**
@@ -102,6 +109,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
   dxn,
   source,
   target,
+  id: explicitId,
 }: EchoRelationSchemaOptions<Source, Target>) => {
   // `source` / `target` are `Type.Type` entities (slot-backed) or the branded
   // `Obj.Unknown` schema (used directly); resolve each to its Effect Schema for
@@ -159,6 +167,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
       version,
       EntityKind.Relation,
       () => toJsonSchema(Schema.make(ast)),
+      explicitId,
     );
   };
 };

@@ -7,7 +7,7 @@ import { Encoder, decode as cborXdecode } from 'cbor-x';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AsyncTask, scheduleTask } from '@dxos/async';
+import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
@@ -29,6 +29,8 @@ const DEFAULT_MESSAGE_BLOCKS_LIMIT = 50;
 const DEFAULT_SYNC_CONCURRENCY = 5;
 const DEFAULT_POLLING_INTERVAL = 5_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
+const DEFAULT_PUSH_FAILURE_BACKOFF_MS = 250;
+const MAX_PUSH_FAILURE_BACKOFF_MS = 30_000;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
 export type FeedSyncerOptions = {
@@ -100,6 +102,8 @@ export class FeedSyncer extends Resource {
   #lastFullPoll: number | null = null;
   #throttledPollScheduled = false;
   #lastRequestedPollAt: number | null = null;
+  readonly #feedStoreMutex = new Mutex();
+  #pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
 
   constructor(options: FeedSyncerOptions) {
     super();
@@ -154,7 +158,7 @@ export class FeedSyncer extends Resource {
           ),
         );
 
-        void RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect);
+        void this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(handleMessageEffect));
       }),
     );
 
@@ -246,45 +250,47 @@ export class FeedSyncer extends Resource {
       invariant(FeedProtocol.isWellKnownNamespace(feedNamespace));
     }
 
-    return RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(this, function* () {
-        const namespaceStates = yield* Effect.forEach(
-          namespaces,
-          (feedNamespace) =>
-            Effect.gen(this, function* () {
-              const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
-                spaceId,
-                feedNamespace,
-              });
-              const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({
-                spaceId,
-                feedNamespace,
-              });
-              const { blocksToPull } = yield* this.#syncClient
-                .peekPull(ctx, {
+    return this.#runSerialized(() =>
+      RuntimeProvider.runPromise(this.#runtime)(
+        Effect.gen(this, function* () {
+          const namespaceStates = yield* Effect.forEach(
+            namespaces,
+            (feedNamespace) =>
+              Effect.gen(this, function* () {
+                const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
                   spaceId,
                   feedNamespace,
-                  limit: this.#messageBlocksLimit,
-                })
-                .pipe(
-                  Effect.catchAll((cause) =>
-                    Effect.gen(this, function* () {
-                      this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
-                      return { blocksToPull: 0 };
-                    }),
-                  ),
-                );
-              return {
-                namespace: feedNamespace,
-                blocksToPull: String(blocksToPull),
-                blocksToPush: String(blocksToPush),
-                totalBlocks: String(totalBlocks),
-              };
-            }),
-          { concurrency: 'unbounded' },
-        );
-        return { namespaces: namespaceStates };
-      }),
+                });
+                const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({
+                  spaceId,
+                  feedNamespace,
+                });
+                const { blocksToPull } = yield* this.#syncClient
+                  .peekPull(ctx, {
+                    spaceId,
+                    feedNamespace,
+                    limit: this.#messageBlocksLimit,
+                  })
+                  .pipe(
+                    Effect.catchAll((cause) =>
+                      Effect.gen(this, function* () {
+                        this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
+                        return { blocksToPull: 0 };
+                      }),
+                    ),
+                  );
+                return {
+                  namespace: feedNamespace,
+                  blocksToPull: String(blocksToPull),
+                  blocksToPush: String(blocksToPush),
+                  totalBlocks: String(totalBlocks),
+                };
+              }),
+            { concurrency: 'unbounded' },
+          );
+          return { namespaces: namespaceStates };
+        }),
+      ),
     );
   }
 
@@ -311,36 +317,59 @@ export class FeedSyncer extends Resource {
       return;
     }
 
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(this, function* () {
-        let done = false;
-        let iterations = 0;
-        while (!done) {
-          done = true;
-          if (shouldPull) {
-            const pullResult = yield* this.#syncClient.pull(ctx, {
-              spaceId,
-              feedNamespace: subspaceTag,
-              limit: this.#messageBlocksLimit,
-            });
-            done &&= pullResult.done;
-          }
+    await this.#runSerialized(() =>
+      RuntimeProvider.runPromise(this.#runtime)(
+        Effect.gen(this, function* () {
+          let done = false;
+          let iterations = 0;
+          while (!done) {
+            done = true;
+            if (shouldPull) {
+              const pullResult = yield* this.#syncClient.pull(ctx, {
+                spaceId,
+                feedNamespace: subspaceTag,
+                limit: this.#messageBlocksLimit,
+              });
+              done &&= pullResult.done;
+            }
 
-          if (shouldPush) {
-            const pushResult = yield* this.#syncClient.push(ctx, {
-              spaceId,
-              feedNamespace: subspaceTag,
-              limit: this.#messageBlocksLimit,
-            });
-            done &&= pushResult.done;
+            if (shouldPush) {
+              const pushResult = yield* this.#syncClient.push(ctx, {
+                spaceId,
+                feedNamespace: subspaceTag,
+                limit: this.#messageBlocksLimit,
+              });
+              done &&= pushResult.done;
+            }
+            iterations++;
+            if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
+              throw new Error('Blocking sync exceeded max iterations.');
+            }
           }
-          iterations++;
-          if (iterations > MAX_BLOCKING_SYNC_ITERATIONS) {
-            throw new Error('Blocking sync exceeded max iterations.');
-          }
-        }
-      }),
+        }),
+      ),
     );
+  }
+
+  async #runSerialized<A>(run: () => Promise<A>): Promise<A> {
+    using _guard = await this.#feedStoreMutex.acquire('feed-sync');
+    return run();
+  }
+
+  #schedulePushRetry({ hadFailure, needsMore }: { hadFailure: boolean; needsMore: boolean }): void {
+    if (!needsMore) {
+      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+      return;
+    }
+    if (hadFailure) {
+      const delayMs = this.#pushFailureBackoffMs;
+      this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_PUSH_FAILURE_BACKOFF_MS);
+      log.info('feed sync push retry scheduled with backoff', { delayMs });
+      scheduleTask(this._ctx, () => this.#pushTask.schedule(), delayMs);
+      return;
+    }
+    this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+    this.#pushTask.schedule();
   }
 
   #resetSpacesToPoll(): void {
@@ -462,7 +491,7 @@ export class FeedSyncer extends Resource {
           Math.max(this.#pollingInterval - (Date.now() - (this.#lastFullPoll ?? 0)), 0),
         );
       }
-    }).pipe(RuntimeProvider.runPromise(this.#runtime)),
+    }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 
   readonly #pushTask = new AsyncTask(async () =>
@@ -471,7 +500,8 @@ export class FeedSyncer extends Resource {
         this.#getSpaceIds(),
         (spaceId) =>
           Effect.gen(this, function* () {
-            let doneForAllNamespaces = true;
+            let needsMorePush = false;
+            let hadPushFailure = false;
             for (const feedNamespace of this.#syncNamespaces) {
               const { done } = yield* this.#syncClient
                 .push(this._ctx, {
@@ -480,24 +510,27 @@ export class FeedSyncer extends Resource {
                   limit: this.#messageBlocksLimit,
                 })
                 .pipe(
+                  Effect.tap(() =>
+                    Effect.sync(() => {
+                      this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
+                    }),
+                  ),
                   Effect.catchAll((cause) =>
                     Effect.gen(this, function* () {
                       this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
+                      hadPushFailure = true;
                       return { done: false };
                     }),
                   ),
                 );
               if (!done) {
-                doneForAllNamespaces = false;
+                needsMorePush = true;
               }
             }
-            if (!doneForAllNamespaces) {
-              // Keep pushing until all blocks are pushed.
-              this.#pushTask.schedule();
-            }
+            this.#schedulePushRetry({ hadFailure: hadPushFailure, needsMore: needsMorePush });
           }),
         { concurrency: this.#syncConcurrency },
       );
-    }).pipe(RuntimeProvider.runPromise(this.#runtime)),
+    }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 }

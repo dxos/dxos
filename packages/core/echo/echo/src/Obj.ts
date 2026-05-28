@@ -110,7 +110,7 @@ interface BaseSnapshot extends internal.AnyEntity {
  * Snapshots are structurally identical to reactive objects but have a different brand,
  * making them distinguishable at the TypeScript level. Neither is assignable to the other.
  */
-export type Snapshot<T = Unknown> = Omit<T, Entity.KindId> & BaseSnapshot;
+export type Snapshot<T extends Unknown = Unknown> = Omit<T, Entity.KindId> & BaseSnapshot;
 
 /**
  * JSON-encoded properties for objects.
@@ -123,22 +123,29 @@ const defaultMeta: internal.ObjectMeta = {
   keys: [],
 };
 
-type MakePropsInternal<T extends Unknown> = {
-  id?: ObjectId;
-  [Meta]?: Partial<internal.ObjectMeta>;
-} & Entity.Properties<T>;
-
 // TODO(burdon): Should we allow the caller to set the id?
 /**
  * Props type for object creation with a given type. Accepts a `Type.AnyObj`
  * entity and derives the instance shape via `Type.InstanceType`. Relation-kind
  * entities are rejected at the type level — use `Relation.MakeProps` for those.
+ *
+ * When the schema is the unconstrained `Type.AnyObj` (`Obj<unknown>` — e.g. a
+ * dynamic type from `schemaRegistry.register`), the instance shape is not
+ * statically known, so data props widen to `Record<string, unknown>` and the
+ * caller can pass arbitrary fields without a cast.
  */
 export type MakeProps<S extends Type.AnyObj> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & MakePropsInternal<Type.InstanceType<S>>;
+  // When the resolved instance has no known data keys, widen to a permissive
+  // record (the `Obj<unknown>` case); otherwise use the precise property shape.
+  // `[keyof …] extends [never]` is wrapped in tuples so the check is
+  // non-distributive — a `never` instance type (e.g. when narrowing collapses
+  // the schema) stays a single branch instead of distributing to `never`.
+} & ([keyof Entity.Properties<Type.InstanceType<S>>] extends [never]
+  ? Record<string, unknown>
+  : Entity.Properties<Type.InstanceType<S>>);
 
 /**
  * Creates a new echo object of the given schema or `Type.Type`.
@@ -470,9 +477,9 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S>>;
-  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S>>;
-} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
+  <S extends Type.AnyObj>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S>>;
+  <S extends Type.AnyObj>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S>>;
+} = ((...args: [schema: Type.AnyObj, value: unknown] | [schema: Type.AnyObj]) => {
   const check = (entity: unknown) =>
     entity != null &&
     typeof entity === 'object' &&
@@ -688,7 +695,7 @@ export const Parent: unique symbol = internal.ParentId as any;
  * @returns The parent object, or undefined if the object has no parent.
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
-  assertArgument(isObject(entity), 'Expected an object');
+  assertArgument(isObject(entity) || isSnapshot(entity), 'Expected an object');
   assumeType<internal.InternalObjectProps>(entity);
   return entity[internal.ParentId] as Unknown | undefined;
 };

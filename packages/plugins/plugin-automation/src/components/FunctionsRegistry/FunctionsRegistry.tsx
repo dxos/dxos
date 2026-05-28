@@ -75,11 +75,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
       {functions.length > 0 && (
         <List.Root<OperationModule.Operation.PersistentOperation>
           items={functions}
-          isItem={Schema.is(
-            Type.getSchema(
-              OperationModule.Operation.PersistentOperation,
-            ) as Schema.Schema<OperationModule.Operation.PersistentOperation>,
-          )}
+          isItem={Schema.is(Type.getSchema(OperationModule.Operation.PersistentOperation))}
           getId={(func) => func.id}
         >
           {({ items }) => (

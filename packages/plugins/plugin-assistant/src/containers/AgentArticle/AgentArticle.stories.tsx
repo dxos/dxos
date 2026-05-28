@@ -30,9 +30,17 @@ import { AgentArticle } from './AgentArticle';
 random.seed(1);
 
 type DefaultStoryProps = {
-  spec?: TypeSpec[];
   inputs?: boolean;
 };
+
+// Hoisted out of `args` because Storybook's CSF arg traversal walks every value
+// and tries to mutate `.id` on each entry — which throws on ECHO `Type.Type`
+// entities (Type.makeObject returns an immutable proxy). Keeping the spec here
+// dodges the traversal entirely.
+const defaultSpec: TypeSpec[] = [
+  { type: Organization.Organization, count: 10 },
+  { type: Person.Person, count: 10 },
+];
 
 const DefaultStory = (_: DefaultStoryProps) => {
   const [space] = useSpaces();
@@ -49,7 +57,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withPluginManager<DefaultStoryProps>(({ args: { spec = [], inputs } }) => ({
+    withPluginManager<DefaultStoryProps>(({ args: { inputs } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -61,7 +69,7 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
 
               const factory = createObjectFactory(space.db, random as any);
-              const artifacts = yield* Effect.promise(() => factory(spec));
+              const artifacts = yield* Effect.promise(() => factory(defaultSpec));
 
               const inputQueue = space.queues.create();
               if (inputs) {
@@ -110,10 +118,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     inputs: true,
-    spec: [
-      { type: Organization.Organization, count: 10 },
-      { type: Person.Person, count: 10 },
-    ],
   },
 };
 

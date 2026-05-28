@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -21,20 +21,20 @@ import { CreateGamePanel } from './CreateGamePanel';
 // don't actually submit through a database here.
 const Card = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-});
+}).pipe(Type.makeObject(DXN.make('org.dxos.story.cards', '0.1.0')));
 
 const Dice = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   faces: Schema.optional(Schema.Number.annotations({ title: 'Number of faces' })),
-});
+}).pipe(Type.makeObject(DXN.make('org.dxos.story.dice', '0.1.0')));
 
 const dummyVariants: GameVariant[] = [
   {
     id: 'org.dxos.story.cards',
     label: 'Card game',
     icon: 'ph--cards--regular',
-    variantType: Schema.Any as any,
-    inputSchema: Card,
+    variantType: Card,
+    inputSchema: Type.getSchema(Card),
     roles: ['dealer', 'player'] as const,
     createVariant: () => Effect.sync(() => ({}) as unknown as Obj.Any),
   },
@@ -42,8 +42,8 @@ const dummyVariants: GameVariant[] = [
     id: 'org.dxos.story.dice',
     label: 'Dice game',
     icon: 'ph--dice-six--regular',
-    variantType: Schema.Any as any,
-    inputSchema: Dice,
+    variantType: Dice,
+    inputSchema: Type.getSchema(Dice),
     roles: ['rolling'] as const,
     createVariant: () => Effect.sync(() => ({}) as unknown as Obj.Any),
   },

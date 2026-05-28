@@ -7,24 +7,13 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
-import {
-  type AnyEntity,
-  type AnyProperties,
-  EntityKind,
-  KindId,
-  MetaId,
-  ObjectDatabaseId,
-  TypeId,
-  getSchema,
-} from '../common/types';
-import { getUri as getUriFromEntity } from '../Entity/api';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
@@ -77,53 +66,6 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
     return DXN.make(objectAnnotation.typename, objectAnnotation.version);
   }
   return undefined;
-};
-
-/**
- * @param input schema, `Type.Type` entity, or a typename string.
- * @return type identifier URI — see {@link getSchemaURI}.  For a typename string,
- * always a DXN.  For a persisted `Type.Type` entity, the schema-as-object's
- * local EchoURI (`echo:/<objectId>`) — kept symmetric with what
- * `Obj.make(typeEntity, ...)` writes to `system.type` via
- * `getSchemaURI(rebuilt schema)` which reads `TypeIdentifierAnnotation`.
- * For a static `Type.Type`, the URI is the typename DXN.
- */
-export const getTypeURIFromSpecifier = (
-  input:
-    | Schema.Schema.All
-    | AnyEntity
-    | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string }
-    | string,
-): URI.URI => {
-  if (Schema.isSchema(input)) {
-    return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
-  }
-  if (typeof input === 'object' && input !== null && KindId in input) {
-    // `Type.Type` entity. Both in-memory and persisted forms are now
-    // `TypeSchema` instances; they differ only by database attachment:
-    //  - In-memory (declared via `Type.makeObject(dxn)`, or pre-`db.add`): URI is
-    //    the typename DXN, read from `ObjectMeta` (`[MetaId].key` / `.version`).
-    //    The entity carries a random `id`, but that id is not its identity.
-    //  - Persisted (attached to a database — carries `[ObjectDatabaseId]`): URI is
-    //    the local `echo:/<objectId>`, matching what `Obj.make(typeEntity, ...)`
-    //    writes to `system.type` via `getSchemaURI(rebuilt)`.
-    const entity = input as { id?: string; [ObjectDatabaseId]?: unknown };
-    const isDatabaseAttached = entity[ObjectDatabaseId] != null;
-    if (!isDatabaseAttached) {
-      // In-memory: typename/version live in `ObjectMeta`, not as own properties.
-      const meta = (input as { [MetaId]?: { key?: string; version?: string } })[MetaId];
-      if (typeof meta?.key === 'string' && typeof meta?.version === 'string') {
-        return DXN.make(meta.key, meta.version);
-      }
-    }
-    if (typeof entity.id === 'string' && ObjectId.isValid(entity.id)) {
-      return EchoURI.make({ objectId: entity.id });
-    }
-    return getUriFromEntity(input as AnyEntity);
-  }
-  assertArgument(typeof input === 'string', 'input');
-  assertArgument(!input.startsWith('dxn:'), 'input');
-  return DXN.make(input);
 };
 
 //
@@ -277,52 +219,6 @@ export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
   return type;
 };
 
-/**
- * Checks if the object is an instance of the schema.
- * Only typename is compared, the schema version is ignored.
- *
- * The following cases are considered to mean that the object is an instance of the schema:
- *  - Object was created with this exact schema.
- *  - Object was created with a different version of this schema.
- *  - Object was created with a different schema (maybe dynamic) that has the same typename.
- */
-// TODO(burdon): Can we use `Schema.is`?
-export const isInstanceOf = <S>(
-  schemaOrType: S extends Schema.Schema.AnyNoContext
-    ? S
-    :
-        | Schema.Schema.AnyNoContext
-        | AnyEntity
-        | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string },
-  object: any,
-): boolean => {
-  if (object == null) {
-    return false;
-  }
-
-  const schemaURI = getTypeURIFromSpecifier(schemaOrType);
-
-  // `object` is arbitrary input — read TypeId directly (it may be missing on
-  // non-entities) rather than via `getTypeURI` which asserts the URI is set.
-  const type = (object as any)[TypeId];
-  if (URI.isURI(type) && type === schemaURI) {
-    return true;
-  }
-
-  const typename = getTypename(object);
-  if (!typename) {
-    return false;
-  }
-
-  if (!DXN.isDXN(schemaURI)) {
-    // EchoURI-based schema URI — no typename match possible.
-    return false;
-  }
-
-  const parsed = DXN.tryMake(schemaURI);
-  return parsed != null && DXN.getName(parsed) === typename;
-};
-
 //
 // PropertyMeta
 //
@@ -348,14 +244,14 @@ export type PropertyMetaAnnotation = {
  * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
  */
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
-  return <S extends Schema.Schema.Any>(input: S): S => {
-    const existingMeta = input.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
-    return input.annotations({
+  return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
+    const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
+    return self.annotations({
       [PropertyMetaAnnotationId]: {
         ...existingMeta,
         [name]: value,
       },
-    }) as unknown as S;
+    });
   };
 };
 
@@ -579,7 +475,6 @@ const IconAnnotationSchema = Schema.Struct({
    *  - 'pink'
    *  - 'rose'
    */
-
   hue: Schema.optional(Schema.String),
 });
 

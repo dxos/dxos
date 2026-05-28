@@ -26,8 +26,7 @@ const GraphSchema = Schema.Struct({
   }),
   Type.makeObject(DXN.make('org.dxos.type.graph', '0.1.0')),
 );
-// Declared as an interface (not `type =`) so downstream emit references `Graph`
-// by name rather than expanding the inferred shape — keeps consumers portable.
+// TODO(wittjosiah): Try to clean up this type inference.
 export interface Graph extends Type.InstanceType<typeof GraphSchema> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
 

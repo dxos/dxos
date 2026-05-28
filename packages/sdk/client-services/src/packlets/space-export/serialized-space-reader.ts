@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Obj } from '@dxos/echo';
+import { type Obj, Type } from '@dxos/echo';
 import { type SerializedSpace } from '@dxos/echo-db';
 import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
@@ -23,7 +23,7 @@ const ATTR_RELATION_TARGET = '@relationTarget';
  * them after import. Anything else defaults to `'object'` (or `'relation'` when
  * source/target attrs are present).
  */
-const TYPE_KIND_SCHEMA_URI = 'dxn:org.dxos.type.schema:0.1.0';
+const TYPE_KIND_SCHEMA_URI = Type.getURI(Type.Type).toString();
 
 const INTERNAL_KEYS: ReadonlySet<string> = new Set([
   'id',
@@ -85,9 +85,8 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     if (typeof relationTarget === 'string') {
       system.target = { '/': URI.make(relationTarget) };
     }
+    // TODO(wittjosiah): This is fragile, will break if the type URI changes.
   } else if (type === TYPE_KIND_SCHEMA_URI) {
-    // Persisted ECHO type definitions — instances of the meta-schema — must
-    // brand `kind = 'type'` so the database schema registry can find them.
     system.kind = 'type';
   } else {
     system.kind = 'object';

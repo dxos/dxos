@@ -99,7 +99,6 @@
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",

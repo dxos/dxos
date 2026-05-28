@@ -149,10 +149,10 @@ export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.Insta
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.AnyRelation>(
-  type: S,
-  props: NoInfer<MakeProps<S>>,
-): Type.InstanceType<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
+export const make = <T extends Type.AnyRelation>(
+  type: T,
+  props: NoInfer<MakeProps<T>>,
+): Type.InstanceType<T> & Entity.OfKind<typeof Entity.Kind.Relation> => {
   const schema = Type.getSchema(type);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation,
@@ -235,9 +235,9 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 export const getSourceURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
-  const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(EchoURI.isEchoURI(dxn));
-  return dxn;
+  const uri = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
+  invariant(EchoURI.isEchoURI(uri));
+  return uri;
 };
 
 /**
@@ -248,9 +248,9 @@ export const getSourceURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
 export const getTargetURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
-  const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(EchoURI.isEchoURI(dxn));
-  return dxn;
+  const uri = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
+  invariant(EchoURI.isEchoURI(uri));
+  return uri;
 };
 
 /**
@@ -394,8 +394,8 @@ export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = 
  * wired up yet, or a relation loaded from storage before its schema is known).
  * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (rel: unknown): Type.AnyRelation | undefined =>
-  internal.getType(rel) as Type.AnyRelation | undefined;
+export const getType = (relation: Unknown | Snapshot): Type.AnyRelation | undefined =>
+  internal.getType(relation) as Type.AnyRelation | undefined;
 
 /**
  * @returns The typename of the relation's type.

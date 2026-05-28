@@ -19,21 +19,21 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         const companionUri = Obj.getURI(companionTo);
 
         // 1. Look for an existing persisted companion chat in the space.
-        const existingChats = (yield* Effect.promise(() =>
+        const existingChats = yield* Effect.promise(() =>
           db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).run(),
-        )) as Chat.Chat[];
-        if (existingChats.length > 0) {
-          const chat = existingChats.at(-1) as Chat.Chat;
+        );
+        const existingChat = existingChats.at(-1);
+        if (existingChat) {
           // Cache the persisted chat so the graph connector can resolve it immediately
           // via the cache fallback, without waiting for AtomObj.make(ref) to hydrate.
           yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
             ...current,
-            [companionUri]: chat,
+            [companionUri]: existingChat,
           }));
           yield* Effect.promise(() =>
-            operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat }),
+            operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: existingChat }),
           );
-          return { chat, persisted: true };
+          return { chat: existingChat, persisted: true };
         }
 
         // 2. Return cached transient chat for this companion if present.
