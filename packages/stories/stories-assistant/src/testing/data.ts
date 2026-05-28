@@ -105,20 +105,20 @@ export const addTestData = async (space: Space): Promise<void> => {
 
   for (const [typename, objects] of Object.entries(testObjects)) {
     const types = space.internal.db.graph.registry.list().filter(Type.isType);
-    const schema = types.find((s) => Type.getTypename(s) === typename);
-    invariant(schema, `Schema not found: ${typename}`);
-    invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
+    const type = types.find((s) => Type.getTypename(s) === typename);
+    invariant(type, `Schema not found: ${typename}`);
+    invariant(Type.isObject(type), `Schema is not an object schema: ${typename}`);
     for (const { id, ...data } of objects) {
-      const object = space.internal.db.add(Obj.make(schema, data));
+      const object = space.internal.db.add(Obj.make(type, data));
       objectMap.set(id, object);
     }
   }
 
   for (const [typename, relationships] of Object.entries(testRelationships)) {
     const types = space.internal.db.graph.registry.list().filter(Type.isType);
-    const schema = types.find((s) => Type.getTypename(s) === typename);
-    invariant(schema, `Schema not found: ${typename}`);
-    invariant(Type.isRelation(schema), `Schema is not a relation schema: ${typename}`);
+    const type = types.find((s) => Type.getTypename(s) === typename);
+    invariant(type, `Schema not found: ${typename}`);
+    invariant(Type.isRelation(type), `Schema is not a relation schema: ${typename}`);
 
     for (const { source, target, ...data } of relationships) {
       const sourceObject = objectMap.get(source);
@@ -127,7 +127,7 @@ export const addTestData = async (space: Space): Promise<void> => {
       invariant(targetObject, `Target object not found: ${target}`);
 
       space.db.add(
-        Relation.make(schema, {
+        Relation.make(type, {
           // TODO(burdon): Test source/target types match.
           [Relation.Source]: sourceObject,
           [Relation.Target]: targetObject,

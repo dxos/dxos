@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const schemas = useQuerySpaceSchemas(space);
+  const types = useQuerySpaceTypes(space);
 
   return (
     <Settings.Viewport>
@@ -27,9 +27,9 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
             'border border-separator rounded-md',
           ])}
         >
-          {schemas.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
-          {schemas.map((schema) => (
-            <div key={schema.id}>{Type.getTypename(schema)}</div>
+          {types.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
+          {types.map((type) => (
+            <div key={type.id}>{Type.getTypename(type)}</div>
           ))}
         </div>
       </Settings.Section>
@@ -38,19 +38,19 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
 };
 
 /**
- * Subscribe to and retrieve all schemas from a space's schema registry.
+ * Subscribe to and retrieve all types from a space's registry.
  */
-export const useQuerySpaceSchemas = (space: Space): Type.AnyEntity[] => {
-  const [schemas, setSchemas] = useState<Type.AnyEntity[]>(() => [
+export const useQuerySpaceTypes = (space: Space): Type.AnyEntity[] => {
+  const [types, setTypes] = useState<Type.AnyEntity[]>(() => [
     ...space.db.graph.registry.list().filter(Type.isType),
   ]);
 
   useEffect(() => {
-    setSchemas([...space.db.graph.registry.list().filter(Type.isType)]);
+    setTypes([...space.db.graph.registry.list().filter(Type.isType)]);
     return space.db.graph.registry.changed.on(() => {
-      setSchemas([...space.db.graph.registry.list().filter(Type.isType)]);
+      setTypes([...space.db.graph.registry.list().filter(Type.isType)]);
     });
   }, [space]);
 
-  return schemas;
+  return types;
 };

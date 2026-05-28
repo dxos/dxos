@@ -213,7 +213,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const deletable =
           Type.getDatabase(schema) != null && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
-        return Effect.succeed(createSchemaActions({ schema, space, deletable, capabilities }));
+        return Effect.succeed(createSchemaActions({ type: schema, space, deletable, capabilities }));
       },
     }),
   ]);
@@ -291,17 +291,17 @@ const createSchemaNode = ({
 
 /** Builds schema actions (add view, rename, delete, snapshot). */
 const createSchemaActions = ({
-  schema,
+  type,
   space,
   deletable,
   capabilities,
 }: {
-  schema: Type.AnyEntity;
+  type: Type.AnyEntity;
   space: Space;
   deletable: boolean;
   capabilities: CapabilityManager.CapabilityManager;
 }) => {
-  const typename = Type.getTypename(schema);
+  const typename = Type.getTypename(type);
   const createEntry = capabilities
     .getAll(SpaceCapabilities.CreateObjectEntry)
     .find((entry: SpaceCapabilities.CreateObjectEntry) => entry.id === typename);
@@ -346,7 +346,7 @@ const createSchemaActions = ({
         Operation.invoke(SpaceOperation.OpenCreateObject, {
           target: space.db,
           views: true,
-          initialFormValues: { typename: Type.getTypename(schema) },
+          initialFormValues: { typename: Type.getTypename(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,
@@ -358,16 +358,16 @@ const createSchemaActions = ({
     Node.makeAction({
       id: SpaceOperation.RenameObject.meta.key,
       data: (params?: Node.InvokeProps) =>
-        Type.getDatabase(schema) != null
+        Type.getDatabase(type) != null
           ? Operation.invoke(SpaceOperation.RenameObject, {
-              object: schema,
+              object: type,
               caller: `${params?.caller}:${params?.parent?.id}`,
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
         label: getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
-        disabled: Type.getDatabase(schema) == null,
+        disabled: Type.getDatabase(type) == null,
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
       },
@@ -375,9 +375,9 @@ const createSchemaActions = ({
     Node.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
-        Type.getDatabase(schema) != null
+        Type.getDatabase(type) != null
           ? Operation.invoke(SpaceOperation.RemoveObjects, {
-              objects: [schema],
+              objects: [type],
             })
           : Effect.succeed(undefined),
       properties: {
@@ -393,11 +393,11 @@ const createSchemaActions = ({
       data: Effect.fnUntraced(function* () {
         const result = yield* Operation.invoke(SpaceOperation.Snapshot, {
           db: space.db,
-          query: Query.select(Filter.type(schema)).ast,
+          query: Query.select(Filter.type(type)).ast,
         });
         if (result.snapshot) {
           yield* Effect.tryPromise(() =>
-            downloadBlob(result.snapshot, createFilename({ parts: [space.id, Type.getTypename(schema)], ext: 'json' })),
+            downloadBlob(result.snapshot, createFilename({ parts: [space.id, Type.getTypename(type)], ext: 'json' })),
           );
         }
       }),

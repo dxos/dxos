@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
         },
       });
 
-      return { id: type.id!, object: type };
+      return { id: type.id, object: type };
     }),
   ),
 );

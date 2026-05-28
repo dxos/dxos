@@ -80,13 +80,10 @@ const meta = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(
-              storedSchema as unknown as Type.AnyObj,
-              {
-                single: random.helpers.arrayElement([...selectOptionIds, undefined]),
-                multiple: random.helpers.randomSubset(selectOptionIds),
-              } as any,
-            ),
+            Obj.make(Type.assertObject(storedSchema), {
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
+            }),
           );
         });
       },
