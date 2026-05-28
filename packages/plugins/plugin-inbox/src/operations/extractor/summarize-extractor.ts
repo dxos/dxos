@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
-import { Markdown } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { MessageExtractor } from '../../capabilities';
