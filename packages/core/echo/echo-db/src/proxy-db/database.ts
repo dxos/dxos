@@ -17,7 +17,6 @@ import {
   Obj,
   Query,
   QueryAST,
-  type QueryResult,
   Ref,
   Registry,
   Type,
@@ -57,62 +56,6 @@ import {
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
 import { type ObjectMigration } from './object-migration';
-
-/**
- * Per-database registry that wraps the shared hypergraph registry.
- * Delegates entity storage and queries to the shared registry. Schemas are
- * persisted via `db.add(schemaEntity)`, not through the registry.
- */
-class EchoDatabaseRegistry implements Registry.Registry {
-  readonly #db: EchoDatabaseImpl;
-
-  constructor(db: EchoDatabaseImpl) {
-    this.#db = db;
-  }
-
-  /** Lazily resolved so construction doesn't race with graph initialisation. */
-  get #delegate(): Registry.Registry {
-    return this.#db.graph.registry;
-  }
-
-  get changed() {
-    return this.#delegate.changed;
-  }
-
-  get local(): readonly Entity.Unknown[] {
-    return this.#delegate.local;
-  }
-
-  add(entities: readonly Entity.Unknown[]): void {
-    return this.#delegate.add(entities);
-  }
-
-  remove(id: string): boolean {
-    return this.#delegate.remove(id);
-  }
-
-  clear(): void {
-    return this.#delegate.clear();
-  }
-
-  get(id: string): Entity.Unknown | undefined {
-    return this.#delegate.get(id);
-  }
-
-  list(): Entity.Unknown[] {
-    return this.#delegate.list();
-  }
-
-  declare query: Database.QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
-    // Delegate as a method call so `this` is bound to the underlying registry.
-    return this.#delegate.query(query as any);
-  }
-}
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
@@ -213,7 +156,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
   private readonly _registeredPersistentSchemaIds = new Set<string>();
-  private readonly _dbRegistry: EchoDatabaseRegistry;
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -230,7 +172,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._coreDatabase.saveStateChanged;
-    this._dbRegistry = new EchoDatabaseRegistry(this);
   }
 
   [inspect.custom]() {
@@ -260,8 +201,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
+  // `db.registry` is literally the shared hypergraph registry — queries with a
+  // registry target pull from it directly. Getter (not eager field) so it resolves
+  // lazily after graph initialisation.
   get registry(): Registry.Registry {
-    return this._dbRegistry;
+    return this.graph.registry;
   }
 
   @synchronized

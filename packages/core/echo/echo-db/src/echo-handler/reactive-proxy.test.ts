@@ -4,7 +4,7 @@
 
 import { describe } from 'vitest';
 
-import { Obj, Registry, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type TestSchema } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
@@ -40,15 +40,9 @@ describe('Echo reactive proxy', () => {
       },
       createObjectFn: async (props = {}) => {
         const object = Obj.make(schema, props as any) as TestSchema.Example;
-        if (
-          Registry.findTypeByDXN(
-            db.graph.registry,
-            'dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema),
-          ) === undefined
-        ) {
-          db.graph.registry.add([schema]);
-        }
-
+        // `registry.add` is idempotent (replaces by entity id), so re-adding the same
+        // schema across invocations is a harmless no-op — no presence check needed.
+        db.graph.registry.add([schema]);
         return db.add(object) as TestSchema.Example;
       },
     };
