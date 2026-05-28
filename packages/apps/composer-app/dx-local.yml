@@ -4,8 +4,6 @@ runtime:
   client:
     # devtoolsProxy: wss://192.168.50.25:8080/host
     # disableP2pReplication: true
-    edgeFeatures:
-      subductionReplicator: true
 
   services:
     agentHosting:
