@@ -376,6 +376,9 @@ export const ExtractResultSchema = Schema.Struct({
   created: Schema.Array(Schema.Any),
   updated: Schema.optional(Schema.Array(Schema.Any)),
   relations: Schema.Array(Schema.Any),
+  tags: Schema.optional(
+    Schema.Array(Schema.Struct({ label: Schema.String, hue: Schema.optional(Schema.String) })),
+  ),
   summary: Schema.optional(Schema.String),
 });
 

@@ -8,10 +8,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -20,13 +19,13 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { HasSubject, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { useArticleKeyboardNavigation } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, type Mailbox } from '#types';
+import { InboxCapabilities, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -60,8 +59,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const sortDescending = useAtomState(true);
   const menuActions = useMailboxActions({ db, mailbox: subject, sortDescending: sortDescending.atom });
 
-  // Build message-to-tags map from HasSubject relations incrementally.
-  const messageTagsMap = useMessageTagsMap(db, feed);
+  // Build message-to-tags map by inverting the unified `mailbox.tags` map.
+  const messageTagsMap = useMemo(() => Mailbox.buildMessageTagsIndex(mailbox), [mailbox.tags]);
   const tags = useTags(db);
 
   // Filter.
@@ -94,36 +93,6 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [filteredMessages, sortDescending.value],
   );
 
-  // Merge tags into mailbox labels.
-  const mergedLabels = useMemo(() => {
-    const labels = { ...mailbox.labels };
-    for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
-      for (const tag of messageTags) {
-        labels[tag.id] = tag.label;
-      }
-    }
-    return labels;
-  }, [messageTagsMap, mailbox.labels]);
-
-  // Update message properties to include tag IDs in labels array.
-  const messagesWithTags = useMemo(() => {
-    return sortedMessages.map((message) => {
-      const messageTags = messageTagsMap[message.id] ?? [];
-      const tagIds = [...new Set(messageTags.map((tag) => tag.id))]; // Deduplicate tag IDs
-      const existingLabels = Array.isArray(message.properties?.labels) ? message.properties.labels : [];
-      // Deduplicate existing labels and filter out tag IDs that are already present.
-      const uniqueExistingLabels = [...new Set(existingLabels)];
-      const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
-      const finalLabels = [...uniqueExistingLabels, ...newTagIds];
-      return {
-        ...message,
-        properties: {
-          ...message.properties,
-          labels: finalLabels,
-        },
-      };
-    });
-  }, [sortedMessages, messageTagsMap]);
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.
@@ -251,9 +220,9 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
         ) : (
           <MessageStack
             id={id}
-            messages={messagesWithTags}
+            messages={sortedMessages}
             currentId={currentId}
-            labels={mergedLabels}
+            tags={messageTagsMap}
             threads={settings.threads}
             onAction={handleAction}
           />
@@ -277,68 +246,6 @@ const useTags = (db: Database.Database | undefined): Tag.Map => {
       }, {}),
     [tags],
   );
-};
-
-/**
- * Hook that builds an object mapping message IDs to tags from HasSubject relations.
- */
-const useMessageTagsMap = (
-  db: Database.Database | undefined,
-  feed: Feed.Feed | undefined,
-): Record<string, Tag.Tag[]> => {
-  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
-
-  const hasSubjectRelations = useQuery(
-    db,
-    feed ? Query.select(Filter.type(HasSubject.HasSubject)).from(feed) : Query.select(Filter.nothing()),
-  );
-
-  useEffect(() => {
-    const map: Record<string, Tag.Tag[]> = {};
-    for (const relation of hasSubjectRelations) {
-      try {
-        const source = Relation.getSource(relation);
-        if (!Obj.instanceOf(Tag.Tag, source)) {
-          continue;
-        }
-
-        // Try to get message ID from target URI (echo URI with objectId).
-        const targetURI = Relation.getTargetURI(relation);
-        const targetEchoId = EchoURI.tryParse(targetURI);
-        let messageId: string | undefined;
-
-        if (targetEchoId) {
-          messageId = EchoURI.getObjectId(targetEchoId);
-        } else {
-          // Fallback: try to resolve target object.
-          try {
-            const target = Relation.getTarget(relation);
-            if (Obj.instanceOf(Message.Message, target)) {
-              messageId = target.id;
-            }
-          } catch {
-            // Target not resolved, skip this relation.
-          }
-        }
-
-        if (messageId) {
-          if (!map[messageId]) {
-            map[messageId] = [];
-          }
-          // Prevent duplicates.
-          if (!map[messageId].some((tag) => tag.id === source.id)) {
-            map[messageId].push(source);
-          }
-        }
-      } catch {
-        // Skip relations with unresolved source or target.
-      }
-    }
-
-    setMessageTagsMap(map);
-  }, [hasSubjectRelations]);
-
-  return messageTagsMap;
 };
 
 type UseMailboxActionsProps = {

@@ -168,7 +168,12 @@ const extractFromMessage = (
           existing.details.seat = candidate.seat;
         }
       });
-      return { created: [], updated: [existing], relations: [] };
+      return {
+        created: [],
+        updated: [existing],
+        relations: [],
+        tags: [{ label: 'trip', hue: 'sky' }],
+      };
     }
 
     // No prior segment — create a Trip + Booking + flight Segment trio. The Trip is the
@@ -207,7 +212,14 @@ const extractFromMessage = (
     // the message header surfaces the Trip itself rather than a chip per sub-artifact.
     Obj.setParent(booking, trip);
 
-    return { created: [trip, booking, segment], updated: [], relations: [] };
+    return {
+      created: [trip, booking, segment],
+      updated: [],
+      relations: [],
+      // Surface the message as "trip-tagged" so it's discoverable from MailboxArticle tile
+      // chips alongside the standalone Trip relation in MessageHeader.
+      tags: [{ label: 'trip', hue: 'sky' }],
+    };
   });
 
 const tripNameFor = (candidate: Candidate): string => {

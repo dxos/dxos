@@ -48,6 +48,13 @@ export interface ExtractResult {
   readonly created: ReadonlyArray<Obj.Any>;
   readonly updated?: ReadonlyArray<Obj.Any>;
   readonly relations: ReadonlyArray<Relation.Unknown>;
+  /**
+   * Tags to apply to the source message after extraction completes. The dispatcher
+   * find-or-creates each entry in the owning Mailbox's `tags` map and pushes a `Ref` to the
+   * message into the entry's `messages` array. Idempotent — duplicate tags on the same
+   * message are no-ops.
+   */
+  readonly tags?: ReadonlyArray<{ label: string; hue?: string }>;
   readonly summary?: string;
 }
 

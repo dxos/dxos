@@ -201,11 +201,18 @@ export const ExtractTripWithPlay: Story = {
     const tripRow = await waitFor(() => canvas.queryByText(/SFO/i));
     expect(tripRow).toBeInTheDocument();
 
-    // The row's AnchorIconButton should be enabled (has a DXN → opens card preview on click
-    // via DxAnchorActivate). We don't assert the preview card itself here because the deck
-    // plugin's anchor preview surface isn't wired up in this story.
-    const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO|trip/i }));
+    // The Trip row's AnchorIconButton should be enabled (has a DXN → opens card preview on
+    // click via DxAnchorActivate). Use the trip's full label as the query so we don't also
+    // match the (separate) `trip` tag chip below.
+    const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO/i }));
     expect(tripButton).toBeInTheDocument();
     expect(tripButton).not.toBeDisabled();
+
+    // The dispatcher also applies the trip extractor's `tags: [{ label: 'trip' }]` to the
+    // source message — covers task #15 (Mailbox.tags map) + task #17 (chip rendering in
+    // MessageHeader). The chip uses a 'tag' icon and the literal label; the button is
+    // disabled (tag rows have no DXN, so the AnchorIconButton has no value to navigate to).
+    const tagButton = await waitFor(() => canvas.queryByRole('button', { name: /^trip$/i }));
+    expect(tagButton).toBeInTheDocument();
   },
 };

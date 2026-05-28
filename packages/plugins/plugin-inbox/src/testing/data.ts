@@ -14,14 +14,13 @@ import { Mailbox } from '#types';
 
 import { Builder } from './builder';
 
-export const LABELS: Mailbox.Labels = {
-  [ObjectId.random().toString()]: 'important',
-  [ObjectId.random().toString()]: 'investor',
-  [ObjectId.random().toString()]: 'team',
-  [ObjectId.random().toString()]: 'eng',
-  [ObjectId.random().toString()]: 'work',
-  [ObjectId.random().toString()]: 'personal',
-};
+/** Fixture tag dictionary — keys are stable across runs so builder can reference them. */
+export const LABELS: Mailbox.Tags = Object.fromEntries(
+  (['important', 'investor', 'team', 'eng', 'work', 'personal'] as const).map((label) => [
+    ObjectId.random().toString(),
+    { label, source: 'user', messages: [] },
+  ]),
+);
 
 /**
  * Initializes a mailbox with linked messages in the given space.

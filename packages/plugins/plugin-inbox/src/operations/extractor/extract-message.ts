@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { ExtractedFrom, InboxCapabilities, InboxOperation } from '../../types';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
 
 class NoMatchingExtractorError extends Error {
   readonly _tag = 'NoMatchingExtractorError';
@@ -120,6 +120,20 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       // Persist additional relations from the extractor.
       for (const rel of result.relations) {
         db.add(rel);
+      }
+
+      // Apply tags to the source message. The Mailbox containing this message owns the
+      // tag map; find it by scanning the space (single-mailbox spaces resolve trivially;
+      // multi-mailbox lookups pick the first match — we don't currently have a back-ref
+      // from Message to its enclosing feed/mailbox).
+      if (result.tags && result.tags.length > 0) {
+        const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
+        const mailbox = mailboxes[0];
+        if (mailbox) {
+          for (const tag of result.tags) {
+            Mailbox.applyTag(mailbox, tag, message);
+          }
+        }
       }
 
       return {
