@@ -3,13 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import {
   Card,
   Popover,
@@ -75,16 +73,7 @@ export const PopoverContent = () => {
   const isObjectPopover = Obj.isObject(popoverSubject);
   const objectMenuItems = useObjectMenuItems(popoverSubject);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
-  const icon = isObjectPopover
-    ? Function.pipe(
-        Obj.getType(popoverSubject),
-        Option.fromNullable,
-        Option.map(Type.getSchema),
-        Option.flatMap(Annotation.IconAnnotation.get),
-        Option.map(({ icon }) => icon),
-        Option.getOrElse(() => 'ph--circle-dashed--regular'),
-      )
-    : undefined;
+  const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
 
   const handleClose = useCallback(() => {
     setOpen(false);

@@ -182,8 +182,16 @@ export default InboxOperation.GoogleMailSync.pipe(
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
   Obj.update(mailbox, (mailbox) => {
+    const tags = (mailbox.tags ??= {});
     labels.forEach((labelItem) => {
-      (mailbox.labels ??= {})[labelItem.id] = labelItem.name;
+      // Preserve any existing inverse-index (messages already tagged with this Gmail label
+      // shouldn't be dropped when the label dictionary re-syncs).
+      const existing = tags[labelItem.id];
+      tags[labelItem.id] = {
+        label: labelItem.name,
+        source: 'provider',
+        messages: existing?.messages ?? [],
+      };
     });
   });
   return labels.length;
@@ -295,11 +303,27 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),
     Stream.mapEffect((batch) =>
       Effect.gen(function* () {
-        const messages = Chunk.toArray(batch);
+        const mapped = Chunk.toArray(batch);
+        const messages = mapped.map((m) => m.message);
         log('appending batch to feed', {
           count: messages.length,
         });
         yield* Feed.append(feed, messages);
+
+        // Apply provider-label tags. `syncLabels` populated `mailbox.tags[gmailLabelId]`
+        // with the label dictionary; here we add each just-appended message to the
+        // `messages` inverse-index of every label Gmail assigned to it.
+        Obj.update(mailbox, (mailbox) => {
+          const tags = (mailbox.tags ??= {});
+          for (const { message, labelIds } of mapped) {
+            for (const labelId of labelIds) {
+              const entry = (tags[labelId] ??= { label: labelId, source: 'provider', messages: [] });
+              if (!entry.messages.some((ref) => Ref.isRef(ref) && ref.target?.id === message.id)) {
+                entry.messages = [...entry.messages, Ref.make(message)];
+              }
+            }
+          }
+        });
 
         const extractorsConfig = mailbox.extractors;
         if (extractorsConfig && extractorsConfig.enabled.length > 0) {

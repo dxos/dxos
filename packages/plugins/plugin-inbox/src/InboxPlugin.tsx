@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -19,8 +21,9 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
+import { ContactMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Calendar, InboxEvents, Mailbox } from '#types';
+import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -32,7 +35,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
+    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message, ExtractedFrom.ExtractedFrom],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -44,6 +47,11 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupIntegrationProviders,
     activate: IntegrationProvider,
+  }),
+  Plugin.addModule({
+    id: 'contact-extractor',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
   }),
   Plugin.make,
 );

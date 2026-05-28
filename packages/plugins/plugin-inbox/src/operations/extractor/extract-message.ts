@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Relation } from '@dxos/echo';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { ExtractedFrom, InboxCapabilities, InboxOperation } from '../types';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
 
 class NoMatchingExtractorError extends Error {
   readonly _tag = 'NoMatchingExtractorError';
@@ -18,6 +18,15 @@ class NoMatchingExtractorError extends Error {
   }
 }
 
+/**
+ * Generic dispatcher for the MessageExtractor capability. Resolves the registered extractors,
+ * picks one (by `extractorId` when supplied, otherwise the highest-confidence `match()` over
+ * the message), runs its `extract()` Effect, and persists the result: newly-created objects
+ * are `db.add`-ed, updated objects are left in place, and every created/updated object gets
+ * an `ExtractedFrom` relation back to the source message for provenance (carrying the
+ * extractor id, timestamp, and confidence). Additional relations returned by the extractor
+ * are persisted verbatim. Fails with `NoMatchingExtractorError` when no extractor matches.
+ */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = InboxOperation.ExtractMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, message, extractorId, targetTripId }) {
@@ -63,13 +72,25 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
 
       log.info('extract message', { extractorId: chosen.id, confidence: chosenConfidence });
 
-      const result = yield* chosen.extract({ database: db, targetTripId }, message);
+      const result = yield* chosen.extract({ db, message, targetTripId });
 
       const extractedAt = new Date().toISOString();
+      // Two gates on relation creation:
+      //  1. Per-extractor opt-out via `createRelation: false` — for extractors whose output
+      //     is already linked to the message by some other field (e.g. the contact extractor
+      //     materialises `msg.sender`, which the Message schema already references).
+      //  2. Per-object: only top-level objects (no parent via `Obj.setParent`) get an edge,
+      //     so the trip extractor's Trip + Booking + Segment trio surfaces as one Trip chip,
+      //     not three.
+      const shouldRelate = chosen.createRelation !== false;
 
-      // Persist created objects and their ExtractedFrom relations.
+      // Persist created objects, then attach an ExtractedFrom relation for each top-level
+      // one when the extractor opts in.
       for (const obj of result.created) {
         db.add(obj);
+        if (!shouldRelate || Obj.getParent(obj) !== undefined) {
+          continue;
+        }
         const rel = ExtractedFrom.make({
           [Relation.Source]: obj,
           [Relation.Target]: message,
@@ -80,9 +101,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         db.add(rel);
       }
 
-      // Updated objects were mutated in place by the extractor; do NOT re-add,
-      // but record provenance for the contributing message.
+      // Updated objects were mutated in place by the extractor; do NOT re-add. Same gates
+      // as created objects.
       for (const obj of result.updated ?? []) {
+        if (!shouldRelate || Obj.getParent(obj) !== undefined) {
+          continue;
+        }
         const rel = ExtractedFrom.make({
           [Relation.Source]: obj,
           [Relation.Target]: message,
@@ -96,6 +120,33 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       // Persist additional relations from the extractor.
       for (const rel of result.relations) {
         db.add(rel);
+      }
+
+      // Apply tags to the source message. The Mailbox containing this message owns the
+      // tag map; resolve the owning mailbox by querying each mailbox's feed for the
+      // message id (feed-stored Messages are immutable so the back-ref is the feed query).
+      // Falls back to the first mailbox in the space for environments where the message
+      // hasn't yet been appended to any feed (e.g. unit tests).
+      if (result.tags && result.tags.length > 0) {
+        const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
+        const owningMailbox = yield* Effect.promise(async () => {
+          for (const candidate of mailboxes) {
+            const feed = await candidate.feed?.tryLoad();
+            if (!feed) {
+              continue;
+            }
+            const found = await db.query(Query.select(Filter.id(message.id)).from(feed)).run();
+            if (found.length > 0) {
+              return candidate;
+            }
+          }
+          return mailboxes[0];
+        });
+        if (owningMailbox) {
+          for (const tag of result.tags) {
+            Mailbox.applyTag(owningMailbox, tag, message);
+          }
+        }
       }
 
       return {

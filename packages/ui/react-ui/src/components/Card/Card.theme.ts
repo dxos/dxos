@@ -74,13 +74,6 @@ const section: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const sectionTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__section-title col-start-2 col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);
 
-const iconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
-  mx(
-    'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
-    padding && '[&>*]:p-1',
-    ...etc,
-  );
-
 export const cardTheme: Theme<CardStyleProps> = {
   root,
   header,
@@ -97,5 +90,4 @@ export const cardTheme: Theme<CardStyleProps> = {
   'action-label': actionLabel,
   link,
   'link-label': linkLabel,
-  'icon-block': iconBlock,
 };
