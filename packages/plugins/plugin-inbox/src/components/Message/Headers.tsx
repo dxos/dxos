@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useEffect, useReducer } from 'react';
 
-import { Annotation, Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconBlock, Tag } from '@dxos/react-ui';
@@ -19,6 +18,8 @@ import { UserIconButton } from '../UserIconButton';
 
 /** Names recognised by the react-ui `Tag` `palette` prop, sourced from the ui-theme catalogue. */
 const VALID_HUES: ReadonlySet<Hue> = new Set<Hue>([palette.neutral.hue, ...palette.hues.map((s) => s.hue)]);
+
+const paletteOf = (hue: string | undefined): Hue => (hue && VALID_HUES.has(hue as Hue) ? (hue as Hue) : 'neutral');
 
 export const Headers = ({
   message,
@@ -79,7 +80,7 @@ export const Headers = ({
 
 const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
   const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
-  const icon = iconForObject(object);
+  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EchoURI.tryParse(Obj.getURI(object).toString());
 
   return (
@@ -89,20 +90,3 @@ const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
     </div>
   );
 };
-
-/**
- * Resolve the phosphor icon from the object's type-level `IconAnnotation` (set on the
- * schema via `Annotation.IconAnnotation.set({ icon, hue })`). Falls back to a generic
- * cube glyph when the object's type isn't registered in the runtime or the annotation
- * is absent.
- */
-const iconForObject = (object: Obj.Any): string => {
-  const type = Obj.getType(object);
-  if (!type) {
-    return 'ph--cube--regular';
-  }
-  const schema = Type.getSchema(type);
-  return Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined)?.icon ?? 'ph--cube--regular';
-};
-
-const paletteOf = (hue: string | undefined): Hue => (hue && VALID_HUES.has(hue as Hue) ? (hue as Hue) : 'neutral');

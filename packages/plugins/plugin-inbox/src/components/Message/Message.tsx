@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { type EchoURI } from '@dxos/keys';
-import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Icon, IconBlock, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
@@ -180,17 +180,12 @@ type MessageHeaderProps = ThemedClassName<{
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
-
-  // Outer 2D grid: `[2rem icon | 1fr content]`. Each row sets `grid-cols-subgrid col-span-2`
-  // so the icon column aligns across rows (envelope, sender avatar, empty-spacer for chips).
-  // Headers renders its own two subgrid rows — the sender row used to live here but
-  // now belongs alongside the chips it relates to.
   return (
     <div className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 mb-2 border-b border-subdued-separator'>
       <div className='col-span-2 grid grid-cols-subgrid'>
-        <div className='flex px-2 pt-1.5 text-subdued'>
+        <IconBlock classNames='text-subdued' aria-hidden='true'>
           <Icon icon='ph--envelope-open--regular' />
-        </div>
+        </IconBlock>
         <div className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
           <div className='whitespace-nowrap text-sm text-description'>

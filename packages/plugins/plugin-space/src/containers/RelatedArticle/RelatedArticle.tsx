@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Entity, Obj, Type } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import { Card, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -46,14 +44,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
   const { t } = useTranslation(meta.id);
   const data = useMemo(() => ({ subject }), [subject]);
-  const icon = Function.pipe(
-    Entity.getType(subject),
-    Option.fromNullable,
-    Option.map(Type.getSchema),
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--circle-dashed--regular'),
-  );
+  const icon = Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
   // TODO(burdon): BUG: Includes item itself.
   const menuItems = useObjectMenuItems(subject);
