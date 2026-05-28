@@ -173,8 +173,11 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
-              {option.description && <span className='truncate text-description text-xs'>{option.description}</span>}
-              {option.plugin && <span className='truncate text-subdued text-xs'>{option.plugin}</span>}
+              {(option.plugin || option.description) && (
+                <span className='truncate text-description text-xs'>
+                  {[option.plugin, option.description].filter(Boolean).join(' · ')}
+                </span>
+              )}
             </div>
           </Picker.Item>
         ))}
