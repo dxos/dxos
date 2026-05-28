@@ -92,14 +92,14 @@ const DefaultComponent = () => {
   const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
   const view = viewRef?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useType(space?.db, typename);
-  const projection = useProjectionModel(schema, kanban, registry);
+  const type = useType(space?.db, typename);
+  const projection = useProjectionModel(type, kanban, registry);
 
   const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
-      invariant(schema);
+      invariant(type);
       invariant(view);
       // NOTE: persisted Type.Type typename is immutable; only the view's
       // query is updated here.
@@ -107,19 +107,19 @@ const DefaultComponent = () => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [view, schema],
+    [view, type],
   );
 
   const handleDeleteField = useCallback(
     (fieldId: string) => {
-      if (schema && Type.getDatabase(schema) != null && projection) {
+      if (type && Type.getDatabase(type) != null && projection) {
         projection.deleteFieldProjection(fieldId);
       }
     },
-    [schema, projection],
+    [type, projection],
   );
 
-  if (!schema || !view) {
+  if (!type || !view) {
     return null;
   }
 
@@ -128,13 +128,13 @@ const DefaultComponent = () => {
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
-          registry={undefined}
-          schema={schema}
+          registry={space?.db.graph.registry}
+          type={type}
           view={view}
           onQueryChanged={handleUpdateQuery}
-          onDelete={schema && Type.getDatabase(schema) != null ? handleDeleteField : undefined}
+          onDelete={type && Type.getDatabase(type) != null ? handleDeleteField : undefined}
         />
-        <Syntax.Root data={{ view, schema }}>
+        <Syntax.Root data={{ view, schema: Type.getSchema(type) }}>
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>

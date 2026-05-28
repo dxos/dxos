@@ -9,8 +9,7 @@ import { DXN, Filter, JsonSchema, Migration, Obj, Query, Ref, Type, View } from 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ViewModel } from '@dxos/schema';
 
-import { Kanban } from './Kanban';
-import { KanbanV1 } from './Kanban';
+import { Kanban, KanbanV1 } from './Kanban';
 
 const TestCardSchema = Schema.Struct({ id: Schema.String }).pipe(
   Type.makeObject(DXN.make('com.example.type.testCard', '0.1.0')),

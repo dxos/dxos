@@ -56,13 +56,7 @@ const Example = Schema.Struct({
   // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
   Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
 );
-interface Example extends Obj.OfShape<{
-  readonly name?: string;
-  readonly urgent?: boolean;
-  readonly status?: 'todo' | 'in-progress' | 'done';
-  readonly description?: string;
-  readonly parent?: Ref.Ref<Example>;
-}> {}
+interface Example extends Type.InstanceType<typeof Example> {}
 
 const StoryViewEditor = ({
   view,
@@ -96,8 +90,8 @@ const StoryViewEditor = ({
 
   return (
     <ViewEditor
-      registry={undefined}
-      schema={schema}
+      registry={db?.graph.registry}
+      type={schema}
       view={view}
       onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}
@@ -334,13 +328,10 @@ export const Tags: Meta<DefaultStoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(
-              storedSchema as unknown as Type.AnyObj,
-              {
-                single: random.helpers.arrayElement([...selectOptionIds, undefined]),
-                multiple: random.helpers.randomSubset(selectOptionIds),
-              } as any,
-            ),
+            Obj.make(Type.assertObject(storedSchema), {
+              single: random.helpers.arrayElement([...selectOptionIds, undefined]),
+              multiple: random.helpers.randomSubset(selectOptionIds),
+            }),
           );
         });
       },

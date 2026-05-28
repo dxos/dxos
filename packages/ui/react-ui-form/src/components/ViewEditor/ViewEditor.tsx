@@ -22,7 +22,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { type JsonProp, toJsonSchema } from '@dxos/echo/internal';
+import { type JsonProp } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -51,7 +51,7 @@ import {
 
 export type ViewEditorProps = ThemedClassName<
   {
-    schema: Type.AnyEntity;
+    type: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
     registry?: Registry.Registry;
@@ -69,7 +69,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   (
     {
       classNames,
-      schema,
+      type,
       view,
       mode = 'schema',
       registry,
@@ -84,16 +84,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     forwardedRef,
   ) => {
     const atomRegistry = useContext(RegistryContext);
-    const schemaReadonly = Type.getDatabase(schema) == null;
+    const schemaReadonly = Type.getDatabase(type) == null;
     const { t } = useTranslation(translationKey);
 
     const projectionModel = useMemo(() => {
-      // Use reactive and mutable version of json schema when schema is mutable.
-      const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : toJsonSchema(schema);
+      const jsonSchema = type.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
-      // Pass schema only when mutable to allow schema mutations.
-      const change = createEchoChangeCallback(view, Type.getDatabase(schema) != null ? schema : undefined);
+      // Pass type only when mutable to allow schema mutations.
+      const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
 
       const model = new ProjectionModel({
         registry: atomRegistry,
@@ -103,7 +102,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       });
 
       return model;
-    }, [atomRegistry, schema, view]);
+    }, [atomRegistry, type, view]);
 
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
 
@@ -215,7 +214,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
           <FormFieldLabel label={t('fields.label')} asChild />
           <FieldList
-            schema={schema}
+            type={type}
             view={view}
             registry={registry}
             readonly={readonly}
@@ -228,23 +227,22 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   },
 );
 
-type FieldListProps = Pick<ViewEditorProps, 'schema' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
+type FieldListProps = Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
 
-const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
+const FieldList = ({ type, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
   const atomRegistry = useContext(RegistryContext);
-  const schemaReadonly = Type.getDatabase(schema) == null;
+  const schemaReadonly = Type.getDatabase(type) == null;
   const { t } = useTranslation(translationKey);
 
   // Subscribe to view changes for reactivity.
   const [viewSnapshot] = useObject(view);
 
   const projectionModel = useMemo(() => {
-    // Use reactive and mutable version of json schema when schema is mutable.
-    const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : toJsonSchema(schema);
+    const jsonSchema = type.jsonSchema;
 
     // Always use createEchoChangeCallback since the view is ECHO-backed.
-    // Pass schema only when mutable to allow schema mutations.
-    const change = createEchoChangeCallback(view, Type.getDatabase(schema) != null ? schema : undefined);
+    // Pass type only when mutable to allow schema mutations.
+    const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
 
     const model = new ProjectionModel({
       registry: atomRegistry,
@@ -254,7 +252,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     });
 
     return model;
-  }, [atomRegistry, schema, view]);
+  }, [atomRegistry, type, view]);
 
   const [expandedField, setExpandedField] = useState<View.FieldType['id']>();
 

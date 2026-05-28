@@ -9,14 +9,12 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
-import type * as Types from 'effect/Types';
 
 import {
   type Database,
   Entity,
   Filter,
   Format,
-  JsonSchema,
   Obj,
   Query,
   Ref,
@@ -47,14 +45,17 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type ProjectionChangeCallback, ProjectionModel } from '../projection';
+import { ProjectionModel, createEchoChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
+  // TODO(wittjosiah): Revisit this and try to unify this. Maybe always expect Type.AnyEntity since it can be created from JsonSchema anyways.
   jsonSchema: JsonSchemaType; // Base schema.
+  /** Persisted `Type.Type` entity backing `jsonSchema`, when one exists; enables `Type.update` on schema edits. */
+  type?: Type.AnyEntity;
   overrideSchema?: JsonSchemaType; // Override schema.
   fields?: string[];
   pivotFieldName?: string;
@@ -63,7 +64,15 @@ type MakeProps = {
 /**
  * Create view from provided schema.
  */
-export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivotFieldName }: MakeProps): View.View => {
+export const make = ({
+  query,
+  queryRaw,
+  jsonSchema,
+  type,
+  overrideSchema,
+  fields,
+  pivotFieldName,
+}: MakeProps): View.View => {
   const view = Obj.make(View.View, {
     query: { raw: queryRaw, ast: query.ast },
     projection: {
@@ -72,20 +81,14 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
-  // Create change callback that wraps mutations in Obj.update.
-  const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection)),
-    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-  };
-
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: changeCallback,
+    change: createEchoChangeCallback(view, type),
   });
   projection.normalizeView();
-  const schema = toEffectSchema(jsonSchema);
-  const properties = getProperties(schema.ast);
+  const effectSchema = toEffectSchema(jsonSchema);
+  const properties = getProperties(effectSchema.ast);
   for (const property of properties) {
     const name = property.name.toString() as JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
@@ -137,6 +140,7 @@ export const makeWithReferences = async ({
   query,
   queryRaw,
   jsonSchema,
+  type,
   overrideSchema,
   fields,
   pivotFieldName,
@@ -146,24 +150,19 @@ export const makeWithReferences = async ({
     query,
     queryRaw,
     jsonSchema,
+    type,
     overrideSchema,
     fields,
     pivotFieldName,
   });
 
-  // Create change callback that wraps mutations in Obj.update.
-  const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection)),
-    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-  };
-
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: changeCallback,
+    change: createEchoChangeCallback(view, type),
   });
-  const schema = toEffectSchema(jsonSchema);
-  const properties = getProperties(schema.ast);
+  const effectSchema = toEffectSchema(jsonSchema);
+  const properties = getProperties(effectSchema.ast);
   for (const property of properties) {
     const name = property.name.toString() as JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
@@ -239,29 +238,26 @@ export const makeFromDatabase = async ({
   ...props
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
-    const schema = db.add(createDefaultSchema());
+    const type = db.add(createDefaultSchema());
     // `db.add` returns a persisted `Type.Type` entity; its typename lives in the
     // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
-    typename = Type.getTypename(schema);
+    typename = Type.getTypename(type);
   } else {
     createInitial = 0;
   }
 
   const allTypes = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
-  const schema = allTypes.find((t) => Type.getTypename(t) === typename);
-  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
-  invariant(jsonSchema, `Schema not found: ${typename}`);
-  // `schema` is a `Type.Type` entity (type-kind brand). The kind it *describes*
+  const type = allTypes.find((t) => Type.getTypename(t) === typename);
+  invariant(type, `Type not found: ${typename}`);
+  // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
   // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
   // `Entity.getKind` rather than the entity-level `Type.isObject` guard.
-  const effectSchema = schema && Type.getSchema(schema);
-  invariant(
-    effectSchema && Entity.getKind(effectSchema) === Entity.Kind.Object,
-    `Schema is not an object schema: ${typename}`,
-  );
+  const effectSchema = Type.getSchema(type);
+  invariant(Entity.getKind(effectSchema) === Entity.Kind.Object, `Schema is not an object schema: ${typename}`);
+  const jsonSchema = type.jsonSchema;
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(Type.assertObject(schema!), {}));
+    db.add(Obj.make(Type.assertObject(type), {}));
   });
 
   return {
@@ -270,6 +266,7 @@ export const makeFromDatabase = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
+      type,
       registry: db.graph.registry,
     }),
   };

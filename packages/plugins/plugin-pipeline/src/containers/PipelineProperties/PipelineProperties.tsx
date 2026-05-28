@@ -216,9 +216,9 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                           ref={projectionRef}
                           mode='tag'
                           readonly
-                          schema={type}
+                          type={type}
                           view={column.view.target}
-                          registry={undefined}
+                          registry={db?.graph.registry}
                           db={db}
                           tags={tags}
                           types={types}

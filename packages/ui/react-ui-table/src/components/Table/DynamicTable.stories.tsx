@@ -132,13 +132,13 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientStory();
-    const schema = useType(space?.db, Type.getTypename(TestSchema.Person));
-    const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
-    if (!schema) {
+    const type = useType(space?.db, Type.getTypename(TestSchema.Person));
+    const objects = useQuery(space?.db, type ? Filter.type(type) : Filter.nothing());
+    if (!type) {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable schema={schema} rows={objects} />;
+    return <DynamicTable type={type} rows={objects} />;
   },
   decorators: [
     withClientProvider({

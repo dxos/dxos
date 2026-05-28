@@ -68,7 +68,7 @@ export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(
  * the picker's inline create form, where a `FactoryAnnotation` typically
  * supplies the hidden values (e.g. a backing-object Ref) outside the form.
  */
-export const omitHiddenFormFields = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema.AnyNoContext => {
+export const omitHiddenFormFields = <S extends Schema.Schema.AnyNoContext>(schema: S): S => {
   const properties = SchemaAST.getPropertySignatures(schema.ast);
   const hidden = properties
     .filter((prop) => Option.getOrElse(EchoAnnotation.FormInputAnnotation.getFromAst(prop.type), () => true) === false)
