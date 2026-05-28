@@ -242,14 +242,14 @@ export const registry: Record<NodeType, Executable> = {
           if (isInstanceOf(View.View, container)) {
             const schemaTypename = getTypenameFromQuery(container.query.ast);
             const types = yield* Database.runQuery(Filter.type(Type.Type));
-            const schema = types.find((t) => Type.getTypename(t) === schemaTypename);
-            invariant(schema, `Schema not found: ${schemaTypename}`);
-            invariant(Type.isObject(schema), `Schema is not an object schema: ${schemaTypename}`);
+            const type = types.find((t) => Type.getTypename(t) === schemaTypename);
+            invariant(type, `Schema not found: ${schemaTypename}`);
+            invariant(Type.isObject(type), `Schema is not an object schema: ${schemaTypename}`);
 
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item as any;
               // TODO(dmaretskyi): Forbid type on create.
-              db.add(Obj.make(schema, rest));
+              db.add(Obj.make(type, rest));
             }
             yield* Effect.promise(() => db.flush());
           } else {
