@@ -27,7 +27,7 @@ import { mx } from '@dxos/ui-theme';
 import { InboxCapabilities } from '#types';
 
 import { formatDateTime } from '../../util';
-import { ExtractedTags } from './ExtractedTags';
+import { Headers } from './Headers';
 import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
 //
@@ -183,7 +183,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
   // Outer 2D grid: `[2rem icon | 1fr content]`. Each row sets `grid-cols-subgrid col-span-2`
   // so the icon column aligns across rows (envelope, sender avatar, empty-spacer for chips).
-  // ExtractedTags renders its own two subgrid rows — the sender row used to live here but
+  // Headers renders its own two subgrid rows — the sender row used to live here but
   // now belongs alongside the chips it relates to.
   return (
     <div className='grid grid-cols-[2rem_1fr] gap-x-1 p-1 mb-2 border-b border-subdued-separator'>
@@ -199,7 +199,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         </div>
       </div>
 
-      <ExtractedTags message={message} sender={sender} onContactCreate={onContactCreate} />
+      <Headers message={message} sender={sender} onContactCreate={onContactCreate} />
     </div>
   );
 };

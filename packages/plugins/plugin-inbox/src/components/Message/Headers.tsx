@@ -20,25 +20,7 @@ import { UserIconButton } from '../UserIconButton';
 /** Names recognised by the react-ui `Tag` `palette` prop, sourced from the ui-theme catalogue. */
 const VALID_HUES: ReadonlySet<Hue> = new Set<Hue>([palette.neutral.hue, ...palette.hues.map((s) => s.hue)]);
 
-/**
- * Renders the related-entity rows below the subject row in `MessageHeader`. Three kinds of
- * subgrid rows under MessageHeader's outer `[2rem icon | 1fr content]` grid:
- *
- *   - **Sender row** — `UserIconButton` (avatar) + sender name. Moved here from
- *     `MessageHeader` so all "things related to this message" are owned by one component.
- *   - **Per-relation rows** (task #16) — one row per ECHO object the message produced
- *     (Trip, Person, …). Sourced from `ExtractedFrom` relations whose Target is the
- *     message. Each row has the object's type-level icon in the icon column and the
- *     object's label in the content column. Clicking the icon opens a card preview via
- *     `DxAnchorActivate` (deck plugin handler).
- *   - **Tags row** (task #15) — single horizontal `flex` of `Tag` components in the
- *     content column. Covers both Gmail-synced provider labels and user-applied tags.
- *     The icon column is left empty so the row aligns with the rest of the subgrid.
- *
- * The tags row is omitted when no tags are applied; the per-relation rows are likewise
- * omitted when no extractions exist.
- */
-export const ExtractedTags = ({
+export const Headers = ({
   message,
   sender,
   onContactCreate,
