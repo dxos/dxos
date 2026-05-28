@@ -14,8 +14,19 @@ import { arrayToBuffer } from '@dxos/util';
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
 export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
+  // Shallow-copy the credential and override the proof fields that are not part of the signing
+  // payload. The assertion is normalized below; clone its subject so the normalization does not
+  // mutate the caller's credential (which would silently strip `multiUse: false` and other
+  // explicit-default fields from the in-memory object).
+  const originalAssertion = (credential.subject as any)?.assertion;
   const copy = {
     ...credential,
+    subject: originalAssertion
+      ? {
+          ...credential.subject,
+          assertion: { ...originalAssertion },
+        }
+      : credential.subject,
     proof: {
       ...credential.proof,
       value: new Uint8Array(),
@@ -27,13 +38,25 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   }
   delete copy.id; // ID is not part of the signature payload.
 
-  // Normalize empty repeated fields in the assertion to avoid proto3 serialization asymmetry.
-  // Proto3 does not encode empty repeated fields, but the codec may restore them as [] after deserialization,
-  // causing a signature mismatch if the original signing payload did not include the field.
+  // Normalize proto3-default fields in the assertion to avoid serialization asymmetry.
+  // Proto3 does not encode default-valued fields (`0` for numbers/enums, `""` for strings,
+  // `false` for booleans, `[]` for repeated), so the deserialized credential is missing those
+  // fields. If the signer included them with default values, the signing-time canonical bytes
+  // would not match the verifying-time bytes and verification would fail.
+  // Strip these shapes so signer and verifier produce identical canonical payloads regardless
+  // of whether the field was explicitly set to its default before encoding.
   const assertion = (copy.subject as any)?.assertion;
   if (assertion) {
     for (const key of Object.keys(assertion)) {
-      if (Array.isArray(assertion[key]) && assertion[key].length === 0) {
+      const value = assertion[key];
+      if (
+        (Array.isArray(value) && value.length === 0) ||
+        value === 0 ||
+        value === '' ||
+        value === false ||
+        value === null ||
+        value === undefined
+      ) {
         delete assertion[key];
       }
     }
