@@ -81,9 +81,15 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           await invokePromise(LayoutOperation.UpdateDialog, { state: false });
           return;
         }
-        // No inline token: either no Account for this email or production env
-        // mailed the link out-of-band. Show the same "check your email" UI in
-        // both cases so the response stays enumeration-safe.
+        if (result.noAccount) {
+          // No Account for this email — submit to the waitlist and show the
+          // "you're on the list" confirmation so the user knows what happened.
+          await joinWaitlist({ hubUrl, email });
+          setState(WelcomeState.WAITLIST_SUBMITTED);
+          return;
+        }
+
+        // Magic link sent out-of-band. Show "check your email" UI.
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
         log.catch(err);
