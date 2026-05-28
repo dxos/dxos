@@ -67,16 +67,14 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
       });
 
       // Persist what the finalizer needs to complete registration after the redirect reload.
-      yield* Effect.sync(() => {
-        try {
-          localStorage.setItem(
-            oauthRecoveryPendingKey(accessTokenId),
-            JSON.stringify({ purpose: 'register', code: data.code, hubUrl: data.hubUrl }),
-          );
-        } catch (error) {
-          log.warn('failed to persist OAuth recovery registration snapshot', { error });
-        }
-      });
+      yield* Effect.try(() =>
+        localStorage.setItem(
+          oauthRecoveryPendingKey(accessTokenId),
+          JSON.stringify({ purpose: 'register', code: data.code, hubUrl: data.hubUrl }),
+        ),
+      ).pipe(
+        Effect.catchAll((error) => Effect.sync(() => log.warn('failed to persist OAuth recovery registration snapshot', { error }))),
+      );
 
       log.info('registering OAuth recovery (redirect flow)', { provider, accessTokenId });
 
