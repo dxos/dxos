@@ -136,7 +136,7 @@ export const isOperationWithHandler = (value: unknown): value is WithHandler<Def
   return isOperationDefinition(value) && 'handler' in value;
 };
 
-/**a
+/**
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
@@ -169,21 +169,6 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
       return Pipeable.pipeArguments(this, arguments);
     },
   } as any;
-};
-
-/**
- * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
- * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
- * built-in implementation registered with the runtime.
- */
-export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
-  return {
-    ...op,
-    meta: {
-      ...op.meta,
-      deployedId: `intrinsic:${op.meta.key}`,
-    },
-  };
 };
 
 /**
