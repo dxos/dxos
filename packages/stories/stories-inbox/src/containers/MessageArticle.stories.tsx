@@ -79,21 +79,30 @@ const ImportantExtractorPlugin = Plugin.define({
 );
 
 /**
- * Seeds a personal space with a Mailbox and one message that matches THREE extractors:
+ * Seeds a personal space with a Mailbox and one message that matches FOUR extractors:
  *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
  *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block;
  *    creates Trip + Booking + Segment AND tags the message `travel`.
+ *  - `SummarizeMessageExtractor` (plugin-inbox) — body exceeds the 200-char threshold so
+ *    summarize matches. The story runtime has no `AiService` provider (no AssistantPlugin),
+ *    so summarize fails gracefully with `ExtractError` and produces no Document — but the
+ *    extractor still appears in the toolbar.
  *  - `ImportantMessageExtractor` (story-local, defined above) — always matches; tags
  *    the message `important` and produces no objects.
  *
  * Clicking the toolbar `Extract` items produces real Person / Trip / Booking / Segment
- * objects in the space; tags land in `mailbox.tags`. `Run all` fans out across all three.
+ * objects in the space; tags land in `mailbox.tags`. `Run all` fans out across all four;
+ * summarize's failure is logged and ignored by the dispatcher.
  */
 const seedMessage = (space: Space) => {
+  // Body is intentionally >200 chars (the `SummarizeMessageExtractor.MIN_BODY_LENGTH`
+  // threshold) so the summarize extractor matches and contributes to the `Run all` count.
   const body = [
     'Hi there,',
     '',
-    'Your flight is confirmed!',
+    'Your flight is confirmed! Please arrive at the airport at least ninety minutes before',
+    'departure, and remember to check in online twenty-four hours in advance to lock in your',
+    'seat assignment and skip the bag-drop queue.',
     '',
     'Flight: UA-100',
     'From: SFO (San Francisco)',
@@ -184,10 +193,12 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Renders MessageArticle for a single United-style flight-confirmation message. The toolbar's
- * `Extract` dropdown should list `Run all (2)`, the contact extractor (plugin-inbox), and the
- * trip extractor (plugin-trip). Clicking each invokes ExtractMessage; the dispatcher persists
- * Trip / Person / Booking / Segment objects with `ExtractedFrom` relations back to the message,
- * which surface as clickable tags in the MessageHeader.
+ * `Extract` dropdown should list `Run all (4)`, the contact extractor (plugin-inbox), the
+ * trip extractor (plugin-trip), the summarize extractor (plugin-inbox; fails without an
+ * AiService provider), and the story-local `important` extractor. Clicking each invokes
+ * ExtractMessage; the dispatcher persists Trip / Person / Booking / Segment objects with
+ * `ExtractedFrom` relations back to the message, which surface as clickable tags in the
+ * MessageHeader.
  */
 export const Default: Story = {};
 
@@ -228,9 +239,11 @@ export const ExtractTripWithPlay: Story = {
     const extractTrigger = await waitFor(() => canvas.queryByRole('button', { name: /extract/i }));
     await userEvent.click(extractTrigger as HTMLElement);
 
-    // Click the `Run all` entry so all three matching extractors fire (contact + trip + the
-    // story-local "important"). Each extractor's `tags` lands in `mailbox.tags`; the trip
-    // extractor additionally persists Trip + Booking + Segment + ExtractedFrom.
+    // Click the `Run all` entry so every matching extractor fires (contact + trip + summarize
+    // + the story-local "important"). Summarize fails silently because the story runtime
+    // doesn't provide an `AiService`; the others succeed. Each extractor's `tags` lands in
+    // `mailbox.tags`; the trip extractor additionally persists Trip + Booking + Segment +
+    // ExtractedFrom.
     const runAllItem = await waitFor(() => body.queryByText(/run all/i));
     await userEvent.click(runAllItem as HTMLElement);
 
