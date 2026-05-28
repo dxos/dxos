@@ -14,8 +14,9 @@ import { Booking, Segment } from '../../types';
  * Heuristic v1 extractor for travel-booking confirmation emails. Recognises
  * United-style flight confirmations: a sender on a united.com domain or a
  * subject mentioning a flight/booking confirmation, with a plain-text body
- * of the form
+ * of the form:
  *
+ * ```text
  *   Flight: AF-1
  *   From: SFO (San Francisco)
  *   To: LHR (London Heathrow)
@@ -23,6 +24,7 @@ import { Booking, Segment } from '../../types';
  *   Arrive: 2026-06-02 09:30
  *   Confirmation: ABC123
  *   Gate: 21B
+ * ```
  *
  * Create-or-update: existing flight segments in `ctx.database` are looked up
  * by `(number, departAt date)`. A match is mutated in place (returned in

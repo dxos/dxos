@@ -68,14 +68,18 @@ const stripWhitespace = (str: string): string => {
   return (
     str
       .trim()
-      // Blank out setext-underline / horizontal-rule lines (entirely `=` or `-`).
-      .replace(/^[ \t\u00A0]*[=-]+[ \t\u00A0]*$/gm, '')
+      // Convert setext-underline / horizontal-rule lines (3+ `=` or `-`) to a markdown HR.
+      .replace(/^[ \t\u00A0]*[=-]{3,}[ \t\u00A0]*$/gm, '---')
+      // Replace old-school sign-off dash with horizontal rule.
+      .replace(/\\--/g, '---')
+      // Blank out lines that contain no word character (e.g., junk separators like `*****`,
+      // `,,,,`). Empty lines are preserved as paragraph breaks; the `---` HR we just inserted
+      // is exempted so it survives.
+      .replace(/^(?!---$)[^\w\n]*$/gm, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
       // Trim trailing whitespace from every line.
       .replace(/[ \t\u00A0]+$/gm, '')
-      // Replace old-school sign-off dash with horizontal rule.
-      .replace(/\\--/g, '---')
   );
 };
 
