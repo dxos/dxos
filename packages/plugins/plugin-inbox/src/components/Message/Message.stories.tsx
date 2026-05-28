@@ -20,7 +20,7 @@ import { InboxOperationHandlerSet } from '#operations';
 import { ContactMessageExtractor } from '#operations';
 import { type MessageExtractor } from '#capabilities';
 import { translations } from '#translations';
-import { InboxCapabilities, Settings } from '#types';
+import { InboxCapabilities, InboxOperation, Settings } from '#types';
 
 import { Message } from './Message';
 import EMAIL from './testing/email.md?raw';
@@ -134,9 +134,11 @@ export const TrackingPixel: Story = {
 
 // Fake "travel" extractor scoped to the story so we can demonstrate the multi-matcher case
 // (and the `Run all` action) without taking a reverse dependency on plugin-trip. Matches any
-// message whose body mentions a flight number, mirroring TravelMessageExtractor's heuristic.
-const FakeTravelExtractor: MessageExtractor.MessageExtractor = {
-  id: 'story.extractor.fake-travel',
+// message whose body mentions a flight number, mirroring TripMessageExtractor's heuristic.
+// The `operation` field is required by the interface for first-class registry, but the
+// dispatcher uses `extract` directly so pointing it at any real definition is fine here.
+const FakeTripExtractor: MessageExtractor.MessageExtractor = {
+  id: 'story.extractor.fake-trip',
   description: 'Story: extract travel itinerary',
   kinds: ['flight'],
   match: (message) => {
@@ -146,11 +148,12 @@ const FakeTravelExtractor: MessageExtractor.MessageExtractor = {
       .join('\n');
     return /Flight:\s*[A-Z]{1,3}-?\d/.test(text) ? { matched: true, confidence: 0.8 } : { matched: false };
   },
+  operation: InboxOperation.ExtractContactFromMessage,
   extract: () => Effect.succeed({ created: [], updated: [], relations: [] }),
 };
 
 // Wires the extractor toolbar end-to-end: contributes ContactMessageExtractor (always matches)
-// and a story-local FakeTravelExtractor (matches flight-confirmation bodies) so MessageArticle's
+// and a story-local FakeTripExtractor (matches flight-confirmation bodies) so MessageArticle's
 // toolbar shows multiple "Extract…" actions plus the synthetic "Run all" entry. Also registers
 // the InboxOperationHandlerSet so clicks resolve through a real OperationInvoker (provided by
 // ProcessManagerPlugin in corePlugins).
@@ -162,9 +165,9 @@ const ExtractorsPlugin = Plugin.define({ id: 'story.extractors', name: 'Story Ex
       Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
   }),
   Plugin.addModule({
-    id: 'fake-travel-extractor',
+    id: 'fake-trip-extractor',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, FakeTravelExtractor)),
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, FakeTripExtractor)),
   }),
   Plugin.addModule({
     id: 'operation-handlers',

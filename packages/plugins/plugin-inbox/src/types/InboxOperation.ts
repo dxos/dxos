@@ -13,6 +13,7 @@ import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Message } from '@dxos/types';
 
+import * as MessageExtractor from '../capabilities/MessageExtractor';
 import { meta } from '#meta';
 
 import * as Calendar from './Calendar';
@@ -348,6 +349,24 @@ export const ExtractContact = Operation.make({
     actor: Actor.Actor,
   }),
   output: Schema.Void,
+});
+
+/**
+ * Operation form of the contact extractor — runs against a full Message and returns
+ * Person/Organization proposals via the shared ExtractResult shape, without touching the
+ * database. The dispatcher (ExtractMessage) is responsible for db.add + ExtractedFrom. The
+ * actor-targeted `ExtractContact` above stays as the avatar-button entry point and commits
+ * directly via SpaceOperation.AddObject (no preview interposition there by design).
+ */
+export const ExtractContactFromMessage = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.extract-contact-from-message`,
+    name: 'Extract Contact from Message',
+    icon: 'ph--user--regular',
+  },
+  services: [Capability.Service],
+  input: MessageExtractor.ExtractInput,
+  output: MessageExtractor.ExtractResult,
 });
 
 export const ExtractMessage = Operation.make({
