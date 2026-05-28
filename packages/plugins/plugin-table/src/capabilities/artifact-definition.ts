@@ -13,7 +13,6 @@ import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/ap
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
 import { Filter, Obj, Query, Type, View } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
@@ -71,9 +70,7 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first.
-            const types = await runAndForwardErrors(
-              Effect.sync(() => extensions.space.db.graph.registry.list().filter(Type.isType)),
-            );
+            const types = await extensions.space.db.query(Filter.type(Type.Type)).run();
             const schema = types.find((t) => Type.getTypename(t) === typename);
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
@@ -83,7 +80,7 @@ export default Capability.makeModule(() =>
               db: extensions.space.db,
               typename,
             });
-            const table = Table.make({ name: name ?? schema.typename, view, jsonSchema });
+            const table = Table.make({ name: name ?? Type.getTypename(schema), view, jsonSchema });
 
             const { error } = await extensions.invoke(SpaceOperation.AddObject, {
               target: extensions.space,
@@ -142,10 +139,11 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const types = await runAndForwardErrors(
-              Effect.sync(() => space.db.graph.registry.list().filter(Type.isType)),
-            );
+            const types = await space.db.query(Filter.type(Type.Type)).run();
             const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
             return ToolResult.Success(schema);
           },
         }),
@@ -172,10 +170,11 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const types = await runAndForwardErrors(
-              Effect.sync(() => space.db.graph.registry.list().filter(Type.isType)),
-            );
+            const types = await space.db.query(Filter.type(Type.Type)).run();
             const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
             const { objects: rows } = await space.db.query(Filter.type(schema)).run();
             return ToolResult.Success(rows);
           },
@@ -202,10 +201,11 @@ export default Capability.makeModule(() =>
               .first()) as View.View;
             // Get schema for validation.
             const typename = view.query.typename;
-            const types = await runAndForwardErrors(
-              Effect.sync(() => space.db.graph.registry.list().filter(Type.isType)),
-            );
+            const types = await space.db.query(Filter.type(Type.Type)).run();
             const schema = types.find((t) => Type.getTypename(t) === typename);
+            if (!schema) {
+              return ToolResult.Error(`Schema not found: ${typename}`);
+            }
 
             const table = await view.presentation.load();
             invariant(Obj.instanceOf(TableView, table));
