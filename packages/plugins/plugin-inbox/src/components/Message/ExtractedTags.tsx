@@ -6,80 +6,84 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useRef } from 'react';
 
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { DxAnchorActivate, Tag } from '@dxos/react-ui';
-import { type ChromaticPalette, type NeutralPalette } from '@dxos/ui-types';
+import { EchoURI } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { type Message } from '@dxos/types';
+import { DxAnchorActivate, Tag } from '@dxos/react-ui';
+import { type Hue, palette } from '@dxos/ui-theme';
+import { type Actor, type Message } from '@dxos/types';
 
 import { useExtractedObjects } from '../../hooks';
 import { Mailbox } from '../../types';
+import { UserIconButton } from '../UserIconButton';
 
-const PALETTES: ReadonlySet<ChromaticPalette | NeutralPalette> = new Set([
-  'red',
-  'orange',
-  'amber',
-  'yellow',
-  'lime',
-  'green',
-  'emerald',
-  'teal',
-  'cyan',
-  'sky',
-  'blue',
-  'indigo',
-  'violet',
-  'purple',
-  'fuchsia',
-  'pink',
-  'rose',
-  'neutral',
-]);
+/** Names recognised by the react-ui `Tag` `palette` prop, sourced from the ui-theme catalogue. */
+const VALID_HUES: ReadonlySet<Hue> = new Set<Hue>([palette.neutral.hue, ...palette.hues.map((s) => s.hue)]);
 
 /**
- * Single horizontal chip row below the sender row in `MessageHeader`. Merges both sources
- * into the same row so the header reads as one continuous list of related entities:
+ * Renders the related-entity rows below the subject row in `MessageHeader`. Two subgrid
+ * rows under MessageHeader's outer `[2rem icon | 1fr content]` grid:
  *
- *   - **Extracted relations** (task #16): one chip per ECHO object the message produced —
- *     Trip, Booking, etc. Sourced from `ExtractedFrom` relations whose Target is the
- *     message. Each chip is wrapped in a button so clicking opens a card preview via
- *     `DxAnchorActivate` (deck plugin handler). Colour comes from the type's
- *     `IconAnnotation.hue`.
- *   - **Applied tags** (task #15): one chip per entry in the owning `Mailbox.tags` whose
- *     `messages` array includes a Ref to this message. Covers both Gmail-synced provider
- *     labels and user-applied tags. Colour comes from the tag entry's `hue` field.
+ *   - **Sender row** — the avatar icon-button (`UserIconButton`) in the icon column and
+ *     the sender name in the content column. Moved here from `MessageHeader` so all
+ *     "things related to this message" are owned by one component.
+ *   - **Chips row** — a single horizontal `flex` of `Tag` components in the content
+ *     column. Merges two sources:
+ *       1. *Extracted relations* (task #16): chips for ECHO objects the message produced.
+ *          Each wraps a `<button>` so clicking opens a card preview via `DxAnchorActivate`.
+ *       2. *Applied tags* (task #15): chips for entries in `Mailbox.tags` whose `messages`
+ *          array includes a Ref to this message.
  *
- * Both render as `Tag` components from `@dxos/react-ui` (chromatic palette + chip styling),
- * so the row reads as one visual unit regardless of source.
+ * The chips row is omitted when there are no extracted objects AND no applied tags.
  */
-export const ExtractedTags = ({ message }: { message: Message.Message }) => {
+export const ExtractedTags = ({
+  message,
+  sender,
+  onContactCreate,
+}: {
+  message: Message.Message;
+  sender?: EchoURI.EchoURI;
+  onContactCreate?: (actor: Actor.Actor) => void;
+}) => {
   const space = getSpace(message);
   const db = space?.db;
   const objects = useExtractedObjects(db, message);
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   // Compute inline (no useMemo) so ECHO's reactive proxy registers our reads against the
-  // mailbox's `tags` field and re-renders on mutation. `useMemo` would freeze the access at
-  // first render and miss subsequent `applyTag` writes.
+  // mailbox's `tags` field and re-renders on mutation.
   const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
 
-  if (objects.length === 0 && tags.length === 0) {
-    return null;
-  }
+  const hasChips = objects.length > 0 || tags.length > 0;
 
   return (
-    <div className='flex flex-wrap gap-1' data-testid='extracted-tags'>
-      {objects.map((object) => (
-        <ExtractedObjectTag key={Obj.getURI(object).toString()} object={object} />
-      ))}
-      {tags.map((tag) => (
-        <Tag
-          key={tag.id}
-          palette={paletteOf(tag.hue)}
-          data-testid={`message-tag-${tag.id}`}
-        >
-          {tag.label}
-        </Tag>
-      ))}
-    </div>
+    <>
+      <div className='col-span-2 grid grid-cols-subgrid items-center'>
+        <UserIconButton
+          title={message.sender.name}
+          value={sender}
+          onContactCreate={() => onContactCreate?.(message.sender)}
+        />
+        <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
+      </div>
+      {hasChips && (
+        <div className='col-span-2 grid grid-cols-subgrid items-start'>
+          <span />
+          <div className='flex flex-wrap gap-1' data-testid='extracted-tags'>
+            {objects.map((object) => (
+              <ExtractedObjectTag key={Obj.getURI(object).toString()} object={object} />
+            ))}
+            {tags.map((tag) => (
+              <Tag
+                key={tag.id}
+                palette={paletteOf(tag.hue)}
+                data-testid={`message-tag-${tag.id}`}
+              >
+                {tag.label}
+              </Tag>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -109,11 +113,7 @@ const ExtractedObjectTag = ({ object }: { object: Obj.Any }) => {
   );
 };
 
-/**
- * Resolve a react-ui palette from an object's type-level `IconAnnotation` (the `hue` field).
- * Falls back to `neutral` when the type isn't registered or the annotation is absent.
- */
-const paletteOfObject = (object: Obj.Any): ChromaticPalette | NeutralPalette => {
+const paletteOfObject = (object: Obj.Any): Hue => {
   const type = Obj.getType(object);
   if (!type) {
     return 'neutral';
@@ -123,5 +123,5 @@ const paletteOfObject = (object: Obj.Any): ChromaticPalette | NeutralPalette => 
   return paletteOf(hue);
 };
 
-const paletteOf = (hue: string | undefined): ChromaticPalette | NeutralPalette =>
-  hue && PALETTES.has(hue as ChromaticPalette) ? (hue as ChromaticPalette) : 'neutral';
+const paletteOf = (hue: string | undefined): Hue =>
+  hue && VALID_HUES.has(hue as Hue) ? (hue as Hue) : 'neutral';

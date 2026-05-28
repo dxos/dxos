@@ -27,7 +27,6 @@ import { mx } from '@dxos/ui-theme';
 import { InboxCapabilities } from '#types';
 
 import { formatDateTime } from '../../util';
-import { UserIconButton } from '../UserIconButton';
 import { ExtractedTags } from './ExtractedTags';
 import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
@@ -182,9 +181,13 @@ type MessageHeaderProps = ThemedClassName<{
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
+  // Outer 2D grid: `[2rem icon | 1fr content]`. Each row sets `grid-cols-subgrid col-span-2`
+  // so the icon column aligns across rows (envelope, sender avatar, empty-spacer for chips).
+  // ExtractedTags renders its own two subgrid rows — the sender row used to live here but
+  // now belongs alongside the chips it relates to.
   return (
-    <div className='flex flex-col p-1 mb-2 border-b border-subdued-separator'>
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+    <div className='grid grid-cols-[2rem_1fr] gap-y-2 gap-x-1 p-1 mb-2 border-b border-subdued-separator'>
+      <div className='col-span-2 grid grid-cols-subgrid'>
         <div className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
@@ -197,18 +200,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       </div>
 
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <div>
-        <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-          <UserIconButton
-            title={message.sender.name}
-            value={sender}
-            onContactCreate={() => onContactCreate?.(message.sender)}
-          />
-          <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
-        </div>
-      </div>
-
-      <ExtractedTags message={message} />
+      <ExtractedTags message={message} sender={sender} onContactCreate={onContactCreate} />
     </div>
   );
 };
