@@ -28,10 +28,11 @@ import { mx } from '@dxos/ui-theme';
 import { type TreeNode } from '#components';
 
 import { getNodeFillForObject } from '../../util';
-import { type FlockNode, GraphFlockProjector } from './GraphFlockProjector';
+import { type SwarmNode, GrappSwarmProjector } from './GraphSwarmProjector';
 import { type ExplorerArticleVariant } from './variants';
 
 export type VisualizationProps = ThemedClassName<{
+  debug?: boolean;
   variant: ExplorerArticleVariant;
   model: SpaceGraphModel;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
@@ -39,15 +40,8 @@ export type VisualizationProps = ThemedClassName<{
 
 /**
  * Renders the active visualization variant.
- *
- * One `<SVG.Graph>` instance is kept mounted; only the projector swaps when the
- * variant changes. Each new projector receives the previous layout so node x/y
- * survive the swap and the projector's `animate()` tweens to the new target. The
- * `swarm` variant uses `GraphFlockProjector`, which runs the boids tick directly
- * on `GraphLayoutNode` x/y so the existing renderer's fast-path picks it up
- * exactly like the force layout.
  */
-export const Visualization = ({ classNames, variant, model, onNodeHover }: VisualizationProps) => {
+export const Visualization = ({ classNames, debug = true, variant, model, onNodeHover }: VisualizationProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const svgRef = useRef<SVGContext>(null);
@@ -79,20 +73,23 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
 
   // Per-tick polyline-points update for boid trails. The base GraphRenderer only writes
   // transform + edge `d` on `applyPositions`, so we listen to the same emit and rewrite
-  // each `polyline.dx-flock-tail`'s `points` in local node-group coords (head at 0,0,
+  // each `polyline.dx-swarm-tail`'s `points` in local node-group coords (head at 0,0,
   // history deltas trailing behind). Runs after the renderer's listener — by then the
   // node group's transform already points at the new head, so the local-coord polyline
   // visually lines up.
+  // TODO(burdon): Factor out.
   useEffect(() => {
-    if (variant !== 'swarm' || !(projector instanceof GraphFlockProjector)) {
+    if (variant !== 'swarm' || !(projector instanceof GrappSwarmProjector)) {
       return;
     }
+
     const updateTails = () => {
       const svg = svgRef.current?.svg;
       const root = svg?.querySelector('g.dx-graph') as SVGGElement | null;
       if (!root) {
         return;
       }
+
       // Edge opacity: 30% in swarm so trails + heads dominate over routing edges. Set
       // on the `dx-edges` group (inheritable) so we don't fight per-edge enter/exit.
       const edgesGroup = root.querySelector<SVGGElement>('g.dx-edges');
@@ -105,11 +102,11 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
       // gradient's vector and the path's `d` to the current frame.
       const nodeGroups = root.querySelectorAll<SVGGElement>('g.dx-node');
       nodeGroups.forEach((group) => {
-        const node = (group as any).__data__ as FlockNode | undefined;
+        const node = (group as any).__data__ as SwarmNode | undefined;
         if (!node) {
           return;
         }
-        const path = group.querySelector('path.dx-flock-tail') as SVGPathElement | null;
+        const path = group.querySelector('path.dx-swarm-tail') as SVGPathElement | null;
         const grad = group.querySelector('linearGradient') as SVGLinearGradientElement | null;
         if (!path || !grad) {
           return;
@@ -119,6 +116,7 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
           path.setAttribute('d', '');
           return;
         }
+
         const hx = node.x ?? 0;
         const hy = node.y ?? 0;
         // Build local-space points head → most-recent → … → oldest (history is push-at-end
@@ -138,6 +136,7 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
         grad.setAttribute('y2', String(oldest.y - hy));
       });
     };
+
     updateTails();
     const cleanupListener = projector.updated.on(updateTails);
     return () => {
@@ -169,7 +168,7 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
   // its own tick — no React renders triggered by mouse moves.
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (variant !== 'swarm' || !(projector instanceof GraphFlockProjector)) {
+      if (variant !== 'swarm' || !(projector instanceof GrappSwarmProjector)) {
         return;
       }
       const svg = svgRef.current?.svg;
@@ -188,8 +187,9 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
     },
     [variant, projector],
   );
+
   const handlePointerLeave = useCallback(() => {
-    if (projector instanceof GraphFlockProjector) {
+    if (projector instanceof GrappSwarmProjector) {
       projector.setCursor(null);
     }
   }, [projector]);
@@ -230,7 +230,7 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
             onSelect={handleSelect}
           />
         </SVG.Zoom>
-        {variant === 'swarm' && <SVG.FPS />}
+        {debug && <SVG.FPS />}
       </SVG.Root>
     </div>
   );
@@ -258,7 +258,7 @@ const createProjector = (
 
     case 'swarm':
       // Boids in SVG: a per-tick projector mirroring force's emit-positions pattern.
-      return new GraphFlockProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
+      return new GrappSwarmProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
 
     case 'lattice':
       return new GraphLatticeProjector<SpaceGraphNode>(
@@ -331,7 +331,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
         const strokeWidth = Math.max(1, r * 0.6);
         // Gradient id must be unique document-wide. node.id is the DXN, which contains
         // characters (`:`, `/`, etc.) that aren't valid in NCName-style ids, so sanitize.
-        const gradId = `dx-flock-grad-${String(node.id).replace(/[^\w-]/g, '_')}`;
+        const gradId = `dx-swarm-grad-${String(node.id).replace(/[^\w-]/g, '_')}`;
         const grad = group
           .append('defs')
           .append('linearGradient')
@@ -349,7 +349,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
         // Path first so the head circle sits on top.
         group
           .append('path')
-          .classed('dx-flock-tail', true)
+          .classed('dx-swarm-tail', true)
           .attr('fill', 'none')
           .attr('stroke', `url(#${gradId})`)
           .attr('stroke-width', strokeWidth)

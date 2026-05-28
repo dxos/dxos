@@ -95,40 +95,24 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-/**
- * Default force-directed view (the production layout).
- */
 export const Force: Story = {
   args: {
     variant: 'force',
   },
 };
 
-/**
- * Radial cluster: every object on the perimeter, grouped by its schema, all under a single database root.
- * Inspired by https://observablehq.com/@d3/radial-cluster.
- */
 export const Cluster: Story = {
   args: {
     variant: 'cluster',
   },
 };
 
-/**
- * Hierarchical edge bundling: same hierarchy as `cluster`, with bundled curves
- * routed through the lowest common ancestor for every relation / ref in the space.
- * Inspired by https://observablehq.com/@d3/hierarchical-edge-bundling.
- */
 export const Bundle: Story = {
   args: {
     variant: 'bundle',
   },
 };
 
-/**
- * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
- * objects of the same type cluster together. Each cell is colored by its typename.
- */
 export const Lattice: Story = {
   args: {
     variant: 'lattice',

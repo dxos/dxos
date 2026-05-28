@@ -8,19 +8,19 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { GraphProjector, type GraphProjectorOptions, type GraphLayoutNode } from '@dxos/react-ui-graph';
 
-// Boids flocking simulation rendered through the react-ui-graph SVG renderer.
-// Mirrors the canvas Flock component's tick (alignment / cohesion / separation)
+// Boids swarming simulation rendered through the react-ui-graph SVG renderer.
+// Mirrors the canvas Swarm component's tick (alignment / cohesion / separation)
 // but mutates `x/y` on `GraphLayoutNode` instances directly and emits 'positions'
 // each frame so `GraphRenderer.applyPositions` can fast-path SVG transforms,
 // exactly like `GraphForceProjector`.
 //
 // https://en.wikipedia.org/wiki/Boids
 
-const FLOCKMATE_RADIUS = 60;
+const SWARMMATE_RADIUS = 60;
 const SEPARATION_DISTANCE = 30;
 
 /** Per-frame state stored on a layout node by the projector. */
-export type FlockNode = GraphLayoutNode & {
+export type SwarmNode = GraphLayoutNode & {
   vx?: number;
   vy?: number;
   ax?: number;
@@ -34,18 +34,18 @@ export type FlockNode = GraphLayoutNode & {
   history?: Array<{ x: number; y: number }>;
 };
 
-export type GraphFlockProjectorOptions = GraphProjectorOptions & {
+export type GraphSwarmProjectorOptions = GraphProjectorOptions & {
   /** Initial spread (px) of new boids around the origin. */
   spawnRadius?: number;
   /** Hard cap on per-tick velocity. */
   maxVelocity?: number;
-  /** Per-force weights — match Flock's normalisation (divided by 100 on apply). */
+  /** Per-force weights — match Swarm's normalisation (divided by 100 on apply). */
   alignment?: number;
   cohesion?: number;
   separation?: number;
   /** Pixel radius (in SVG model coords) of the invisible repel zone tracking the pointer. 0 disables. */
   cursorRepel?: number;
-  /** Avoidance force weight (divided by 10 on apply, matching canvas Flock). */
+  /** Avoidance force weight (divided by 10 on apply, matching canvas Swarm). */
   avoidance?: number;
   /**
    * Number of previous positions retained per boid (one per simulation tick). The visible
@@ -58,7 +58,7 @@ export type GraphFlockProjectorOptions = GraphProjectorOptions & {
 
 const DEFAULTS: Required<
   Pick<
-    GraphFlockProjectorOptions,
+    GraphSwarmProjectorOptions,
     | 'spawnRadius'
     | 'maxVelocity'
     | 'alignment'
@@ -86,7 +86,7 @@ const DEFAULTS: Required<
  * NOT exert a link force — boid motion is governed purely by alignment, cohesion
  * and separation, with viewBox-wrap at the SVG bounds.
  */
-export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData, GraphFlockProjectorOptions> {
+export class GrappSwarmProjector<NodeData = any> extends GraphProjector<NodeData, GraphSwarmProjectorOptions> {
   #timer?: Timer;
   /** Cursor in SVG model coordinates, or null when the pointer is outside the surface. */
   #cursor: { x: number; y: number } | null = null;
@@ -138,7 +138,7 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
   private initializeNodes(): void {
     const spawnRadius = this.#opt('spawnRadius');
     const maxVelocity = this.#opt('maxVelocity');
-    for (const node of this.layout.graph.nodes as FlockNode[]) {
+    for (const node of this.layout.graph.nodes as SwarmNode[]) {
       if (!node.initialized) {
         const theta = Math.random() * 2 * Math.PI;
         const r = Math.random() * spawnRadius;
@@ -181,7 +181,7 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
   }
 
   /**
-   * One simulation step. Modeled on `tick` in Flock.tsx, but operating in the
+   * One simulation step. Modeled on `tick` in Swarm.tsx, but operating in the
    * SVG centered-origin coordinate space and writing to `node.x/y` directly so
    * the existing `GraphRenderer.applyPositions` reads them unchanged.
    */
@@ -196,9 +196,9 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
     const halfW = width / 2;
     const halfH = height / 2;
 
-    const nodes = this.layout.graph.nodes as FlockNode[];
+    const nodes = this.layout.graph.nodes as SwarmNode[];
     const maxVelocity = this.#opt('maxVelocity');
-    // Match Flock's force normalisation so weight semantics line up across variants.
+    // Match Swarm's force normalisation so weight semantics line up across variants.
     const alignmentW = this.#opt('alignment') / 100;
     const cohesionW = this.#opt('cohesion') / 100;
     const separationW = this.#opt('separation') / 100;
@@ -224,8 +224,8 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
       let avoidActive = false;
 
       // Cursor repulsion: when the cursor is within the repel zone, push the boid
-      // directly away. Mirrors the canvas Flock's `repel` (treats the cursor as a
-      // FlockObstacle with radius = cursorRepel).
+      // directly away. Mirrors the canvas Swarm's `repel` (treats the cursor as a
+      // SwarmObstacle with radius = cursorRepel).
       if (cursor) {
         const dx = cursor.x - (b1.x ?? 0);
         const dy = cursor.y - (b1.y ?? 0);
@@ -239,7 +239,7 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
         }
       }
 
-      // Mirror the canvas variant: while a boid is being avoided, ignore flockmate
+      // Mirror the canvas variant: while a boid is being avoided, ignore swarmmate
       // forces so it commits fully to escaping the cursor.
       if (!avoidActive) {
         for (const b2 of nodes) {
@@ -261,7 +261,7 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
             sepY += (-dy / dist) * (1 / dist);
             sepActive = true;
           }
-          if (dist < FLOCKMATE_RADIUS) {
+          if (dist < SWARMMATE_RADIUS) {
             cohX += dx;
             cohY += dy;
             cohActive = true;
@@ -331,7 +331,7 @@ export class GraphFlockProjector<NodeData = any> extends GraphProjector<NodeData
       let y = (b.y ?? 0) + vy;
       // Wrap at the centered viewBox edges so boids leaving one side reappear on the opposite.
       // On wrap we clear the trail so the line doesn't streak across the canvas (matches
-      // the canvas Flock's wrap-aware trail rendering, but simpler).
+      // the canvas Swarm's wrap-aware trail rendering, but simpler).
       let wrapped = false;
       if (x > halfW) {
         x -= width;
