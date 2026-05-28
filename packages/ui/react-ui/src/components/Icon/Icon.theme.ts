@@ -31,11 +31,7 @@ const root: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
  * Static slot sized to `--dx-rail-item` so a wrapped `Icon` lines up with an `IconButton iconOnly`.
  */
 const block: ComponentFunction<IconBlockStyleProps> = ({ padding }, ...etc) =>
-  mx(
-    'grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
-    padding && '[&>*]:p-1',
-    ...etc,
-  );
+  mx('grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center', padding && '[&>*]:p-1', ...etc);
 
 export const iconTheme: Theme<IconStyleProps & IconBlockStyleProps> = {
   root,

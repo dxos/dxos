@@ -119,10 +119,7 @@ export const make = (props: MailboxProps = {}) => {
  * Finds an existing user tag entry by case-insensitive label match.
  * Returns the `[tagId, entry]` tuple, or `undefined` when no match.
  */
-const findUserTagByLabel = (
-  mailbox: Mailbox,
-  label: string,
-): [string, Tag] | undefined => {
+const findUserTagByLabel = (mailbox: Mailbox, label: string): [string, Tag] | undefined => {
   const lowered = label.toLowerCase();
   for (const [id, entry] of Object.entries(mailbox.tags ?? {})) {
     if (entry.source !== 'provider' && entry.label.toLowerCase() === lowered) {
@@ -167,8 +164,8 @@ export const applyTag = (
   const tagId = existing?.[0] ?? ObjectId.random().toString();
   // Build the Ref outside `Obj.update` so we don't capture mid-transaction state.
   const ref = Ref.make(message);
-  Obj.update(mailbox, (m) => {
-    const tags = (m.tags ??= {});
+  Obj.update(mailbox, (mailbox) => {
+    const tags = (mailbox.tags ??= {});
     const entry = tags[tagId];
     if (!entry) {
       tags[tagId] = { label, ...(hue ? { hue } : {}), source: 'user', messages: [ref] };
@@ -183,13 +180,31 @@ export const applyTag = (
 
 /** Removes a message from a tag's inverse index. No-op when not present. */
 export const removeTag = (mailbox: Mailbox, tagId: string, message: Message.Message): void => {
-  Obj.update(mailbox, (m) => {
-    const entry = m.tags?.[tagId];
+  Obj.update(mailbox, (mailbox) => {
+    const entry = mailbox.tags?.[tagId];
     if (!entry) {
       return;
     }
-    entry.messages = entry.messages.filter((ref) => !Ref.isRef(ref) || ref.target?.id !== message.id);
+    entry.messages = entry.messages.filter((ref) => !Ref.isRef(ref) || !refTargetsMessageId(ref, message.id));
   });
+};
+
+/**
+ * Resolves a `Ref<Message>` to its message id without requiring the target to be loaded.
+ * Prefers the (cheap) loaded target id when present, otherwise decodes the ref's URI —
+ * mirrors the lookup `refTargetsMessageId` uses so all three call sites (`includesMessage`,
+ * `removeTag`, `buildMessageTagsIndex`) agree.
+ */
+const messageIdFromRef = (ref: Ref.Ref<Message.Message>): string | undefined => {
+  if (ref.target?.id) {
+    return ref.target.id;
+  }
+  try {
+    const parsed = EchoURI.tryParse(ref.uri.toString());
+    return parsed ? EchoURI.getObjectId(parsed) : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 /**
@@ -206,7 +221,7 @@ export const buildMessageTagsIndex = (mailbox: Mailbox): Record<string, Array<{ 
       if (!Ref.isRef(ref)) {
         continue;
       }
-      const messageId = ref.target?.id;
+      const messageId = messageIdFromRef(ref);
       if (!messageId) {
         continue;
       }

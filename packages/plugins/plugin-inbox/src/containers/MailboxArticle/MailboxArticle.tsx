@@ -60,7 +60,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const menuActions = useMailboxActions({ db, mailbox: subject, sortDescending: sortDescending.atom });
 
   // Build message-to-tags map by inverting the unified `mailbox.tags` map.
-  const messageTagsMap = useMemo(() => Mailbox.buildMessageTagsIndex(mailbox), [mailbox.tags]);
+  // NOT memoized: `Mailbox.applyTag`/`removeTag` mutate nested data under `mailbox.tags`,
+  // which a `[mailbox.tags]` dependency wouldn't observe — same ECHO reactivity pitfall
+  // documented in `ExtractedTags.tsx`.
+  const messageTagsMap = Mailbox.buildMessageTagsIndex(mailbox);
   const tags = useTags(db);
 
   // Filter.
@@ -92,7 +95,6 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     () => [...filteredMessages].sort(sortByCreated('created', sortDescending.value)),
     [filteredMessages, sortDescending.value],
   );
-
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.

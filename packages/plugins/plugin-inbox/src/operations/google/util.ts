@@ -79,10 +79,11 @@ const stripWhitespace = (str: string): string => {
       .replace(/^[ \t\u00A0]*[=-]{3,}[ \t\u00A0]*$/gm, '---')
       // Replace old-school sign-off dash with horizontal rule.
       .replace(/\\--/g, '---')
-      // Blank out lines that contain no word character (e.g., junk separators like `*****`,
-      // `,,,,`). Empty lines are preserved as paragraph breaks; the `---` HR we just inserted
+      // Blank out lines that contain no letter or digit (e.g., junk separators like `*****`,
+      // `,,,,`). Uses Unicode property escapes so non-Latin scripts (Cyrillic, CJK, etc.) are
+      // preserved. Empty lines are preserved as paragraph breaks; the `---` HR we just inserted
       // is exempted so it survives.
-      .replace(/^(?!---$)[^\w\n]*$/gm, '')
+      .replace(/^(?!---$)[^\p{L}\p{N}\n]*$/gmu, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
       // Trim trailing whitespace from every line.

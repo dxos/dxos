@@ -8,7 +8,6 @@ import DOMPurify from 'dompurify';
 import React, {
   CSSProperties,
   MouseEventHandler,
-  type PropsWithChildren,
   type ReactNode,
   forwardRef,
   useId,

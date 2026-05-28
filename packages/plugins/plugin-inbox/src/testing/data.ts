@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObjectId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 
 import { Mailbox } from '#types';
@@ -17,7 +16,7 @@ import { Builder } from './builder';
 /** Fixture tag dictionary — keys are stable across runs so builder can reference them. */
 export const LABELS: Mailbox.Tags = Object.fromEntries(
   (['important', 'investor', 'team', 'eng', 'work', 'personal'] as const).map((label) => [
-    ObjectId.random().toString(),
+    `fixture-tag-${label}`,
     { label, source: 'user', messages: [] },
   ]),
 );

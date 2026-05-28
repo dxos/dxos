@@ -4,8 +4,8 @@ If you are unable to see the message below, [click here to view](https://links.c
 
 [![Flying Blue logo](https://img.static-fb.com/images/meta/IDname/FB23-0800b9?w=338&h=70)](https://links.content.service-flyingblue.com/ctt?ms=MjgyMzIyNzQS1&kn=28&r=LTEwOTI1MTg1NjI5S0&b=0&j=MjkzMTY5NDkzMQS2&mt=1&rt=0)
 
-RICHARD BURDON
-XXXXXX2760
+TEST USER
+XXXXXX0000
 
 Flying Blue booking confirmation
 
@@ -15,7 +15,7 @@ Thank you for your booking.
 
 This document confirms the creation of your electronic ticket, it is not a ticket.
 
-Your reservation reference number: XXP873
+Your reservation reference number: TEST123
 
 You can consult the [My bookings](http://links.airfranceklm.mkt9476.com/ctt?m=28232274&r=LTEwOTI1MTg1NjI5S0&b=0&j=MjkzMTY5NDkzMQS2&k=MMB_URL&kx=1&kt=12&kd=https://wwws.airfrance.us/c/hbZFbANdT9KZa3J3bx1c3A) section at any time to see your reservation details and find useful information to help your trip go as smoothly as possible.
 
@@ -49,7 +49,7 @@ Wednesday, May 6: 09h35 - 11h15
 
 Passenger details
 
-Richard Burdon
+Test User
 
 Passenger name(s) should match the passport name(s).
 

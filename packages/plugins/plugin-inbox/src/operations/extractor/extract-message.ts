@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
@@ -123,15 +123,28 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       }
 
       // Apply tags to the source message. The Mailbox containing this message owns the
-      // tag map; find it by scanning the space (single-mailbox spaces resolve trivially;
-      // multi-mailbox lookups pick the first match — we don't currently have a back-ref
-      // from Message to its enclosing feed/mailbox).
+      // tag map; resolve the owning mailbox by querying each mailbox's feed for the
+      // message id (feed-stored Messages are immutable so the back-ref is the feed query).
+      // Falls back to the first mailbox in the space for environments where the message
+      // hasn't yet been appended to any feed (e.g. unit tests).
       if (result.tags && result.tags.length > 0) {
         const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
-        const mailbox = mailboxes[0];
-        if (mailbox) {
+        const owningMailbox = yield* Effect.promise(async () => {
+          for (const candidate of mailboxes) {
+            const feed = await candidate.feed?.tryLoad();
+            if (!feed) {
+              continue;
+            }
+            const found = await db.query(Query.select(Filter.id(message.id)).from(feed)).run();
+            if (found.length > 0) {
+              return candidate;
+            }
+          }
+          return mailboxes[0];
+        });
+        if (owningMailbox) {
           for (const tag of result.tags) {
-            Mailbox.applyTag(mailbox, tag, message);
+            Mailbox.applyTag(owningMailbox, tag, message);
           }
         }
       }

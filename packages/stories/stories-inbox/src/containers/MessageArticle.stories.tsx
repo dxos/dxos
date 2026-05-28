@@ -234,21 +234,31 @@ export const ExtractTripWithPlay: Story = {
     const runAllItem = await waitFor(() => body.queryByText(/run all/i));
     await userEvent.click(runAllItem as HTMLElement);
 
+    // Scope all chip assertions to the MessageHeader so we don't accidentally match strings
+    // from the seeded message body (e.g. `From: SFO`). The header contains both the per-object
+    // `extracted-tag-<id>` rows (Trip) and the `extracted-tags` chip row (travel/important).
+    const header = await waitFor(() => canvas.queryByTestId('message-header'));
+    void expect(header).toBeInTheDocument();
+    const headerScope = within(header as HTMLElement);
+
     // Trip object chip — sourced from `ExtractedFrom` relation (task #16). The chip is a
     // `Tag` from react-ui wrapping a button (clickable → opens card preview via
     // `DxAnchorActivate`). Label includes the SFO/LHR route from `tripNameFor(candidate)`.
-    const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO/i }));
+    const tripButton = await waitFor(() => headerScope.queryByRole('button', { name: /SFO/i }));
     void expect(tripButton).toBeInTheDocument();
     void expect(tripButton).not.toBeDisabled();
 
     // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` — applied via
-    // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target).
-    const travelTag = await waitFor(() => canvas.queryByText(/^travel$/i));
+    // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target). Scope to the
+    // `extracted-tags` container so we hit the chip and not any other UI matching /travel/.
+    const tagsRow = await waitFor(() => headerScope.queryByTestId('extracted-tags'));
+    const tagsScope = within(tagsRow as HTMLElement);
+    const travelTag = await waitFor(() => tagsScope.queryByText(/^travel$/i));
     void expect(travelTag).toBeInTheDocument();
 
     // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
     // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
-    const importantTag = await waitFor(() => canvas.queryByText(/^important$/i));
+    const importantTag = await waitFor(() => tagsScope.queryByText(/^important$/i));
     void expect(importantTag).toBeInTheDocument();
   },
 };

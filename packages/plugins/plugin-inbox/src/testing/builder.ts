@@ -10,7 +10,6 @@ import { random } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { Actor, Event, Message, Person } from '@dxos/types';
 
-
 //
 // Types
 //

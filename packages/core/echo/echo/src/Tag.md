@@ -1,12 +1,13 @@
 # Tag
 
-`Tag` is the ECHO type for labelling other objects. The schema is tiny — `{ label, hue? }` — but the *attachment pattern* varies by use case. This doc covers what's available and which pattern to use.
+`Tag` is the ECHO type for labelling other objects. The schema is tiny — `{ label, hue? }` — but the _attachment pattern_ varies by use case. This doc covers what's available and which pattern to use.
 
 ## What `Tag` is
 
 Definition: [`Tag.ts`](./src/Tag.ts) — `Schema.Struct({ label: String, hue?: String })` with DXN `org.dxos.type.tag@0.1.0`. Carries the `SystemTypeAnnotation` so it's treated as a built-in type by the ECHO runtime.
 
 Helpers on the same module:
+
 - `Tag.make(props)` — constructor.
 - `Tag.Map` — `Record<string, Tag>` alias used by call-site indexes.
 - `Tag.createTagList(tags)` — `Map → Tag[]`, sorted by label.
@@ -23,19 +24,21 @@ Three ways an object can carry tags. Pick the one that matches your storage shap
 
 ### 1. `Obj.getMeta(obj).tags` — DXN refs on the object's metadata
 
-The canonical user-tagging path. Each tag lives as a standalone `Tag` object in the space; the *target* object holds an array of DXN refs to those tags inside its metadata bag. The form layer's [`ObjectProperties`](../../ui/react-ui-form/src/components/ObjectProperties) writes these via the `pinnedTags` control.
+The canonical user-tagging path. Each tag lives as a standalone `Tag` object in the space; the _target_ object holds an array of DXN refs to those tags inside its metadata bag. The form layer's [`ObjectProperties`](../../ui/react-ui-form/src/components/ObjectProperties) writes these via the `pinnedTags` control.
 
 Use when: the target object is mutable. Tags can be added/removed cheaply by editing the metadata.
 
 ```ts
 const tag = Obj.make(Tag.Tag, { label: 'important', hue: 'amber' });
 db.add(tag);
-Obj.update(target, (t) => { Obj.getMeta(t).tags = [tag.dxn]; });
+Obj.update(target, (t) => {
+  Obj.getMeta(t).tags = [tag.dxn];
+});
 ```
 
 ### 2. Container-owned tag map — inverse index on the parent
 
-For containers that hold immutable-in-feed objects (mailboxes hold messages, magazines hold posts), the children can't carry tag refs because they're immutable. Instead, the container holds an inverted `tagId → Ref<child>[]` map. Tag *definitions* live in the same map alongside the assignments.
+For containers that hold immutable-in-feed objects (mailboxes hold messages, magazines hold posts), the children can't carry tag refs because they're immutable. Instead, the container holds an inverted `tagId → Ref<child>[]` map. Tag _definitions_ live in the same map alongside the assignments.
 
 Use when: the children are append-only feed records, OR you need a fast "all objects tagged X" query without scanning each child.
 
@@ -52,12 +55,13 @@ Mailbox.tags: Record<TagId, {
 
 Tag-id strategy depends on origin:
 
-| source | tag id | rationale |
-| --- | --- | --- |
-| provider-synced (e.g. Gmail labels) | external id (Gmail's `Label_123`) | preserves re-sync idempotence — same external id → same map entry, no duplicates |
-| user-applied | random `ObjectId` | stable across renames; case-insensitive label dedupe via `findTagByLabel` at create time |
+| source                              | tag id                            | rationale                                                                                |
+| ----------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
+| provider-synced (e.g. Gmail labels) | external id (Gmail's `Label_123`) | preserves re-sync idempotence — same external id → same map entry, no duplicates         |
+| user-applied                        | random `ObjectId`                 | stable across renames; case-insensitive label dedupe via `findTagByLabel` at create time |
 
 Trade-offs considered and rejected:
+
 - Slug from label (`kebab-case(label)`) — natural dedupe but renaming a tag breaks references that point at the old key.
 - ObjectId for everything — uniform but Gmail re-syncs would duplicate provider tags every run unless you also dedupe by label, which loses the external id.
 

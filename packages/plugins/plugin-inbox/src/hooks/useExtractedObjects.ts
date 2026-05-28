@@ -17,8 +17,5 @@ import { ExtractedFrom } from '../types';
  * existing extractions are deleted.
  */
 export const useExtractedObjects = (db: Database.Database | undefined, message: Message.Message): Obj.Any[] => {
-  return useQuery(
-    db,
-    Query.select(Filter.id(message.id)).targetOf(ExtractedFrom.ExtractedFrom).source(),
-  ) as Obj.Any[];
+  return useQuery(db, Query.select(Filter.id(message.id)).targetOf(ExtractedFrom.ExtractedFrom).source()) as Obj.Any[];
 };

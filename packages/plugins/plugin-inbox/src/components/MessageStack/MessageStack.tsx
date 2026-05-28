@@ -11,7 +11,6 @@ import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/r
 import { type Message } from '@dxos/types';
 import { getHashStyles } from '@dxos/ui-theme';
 
-
 import { GoogleMail } from '../../apis';
 import { getMessageProps } from '../../util';
 

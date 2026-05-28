@@ -179,8 +179,7 @@ const validHues: ReadonlySet<Hue> = new Set<Hue>([neutral.hue, ...styles.map((s)
  * values from user-authored data (e.g. ECHO objects, plugin settings) that need to be
  * forwarded to a hue-keyed prop like `Tag`'s `palette`.
  */
-export const toHue = (hue: string | undefined): Hue =>
-  hue && validHues.has(hue as Hue) ? (hue as Hue) : 'neutral';
+export const toHue = (hue: string | undefined): Hue => (hue && validHues.has(hue as Hue) ? (hue as Hue) : 'neutral');
 
 // TODO(burdon): Rename getClassNames.
 export const getStyles = (hue: string): ColorStyles => {

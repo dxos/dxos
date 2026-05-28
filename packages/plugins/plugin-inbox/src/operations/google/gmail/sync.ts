@@ -313,8 +313,8 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
         // Apply provider-label tags. `syncLabels` populated `mailbox.tags[gmailLabelId]`
         // with the label dictionary; here we add each just-appended message to the
         // `messages` inverse-index of every label Gmail assigned to it.
-        Obj.update(mailbox, (m) => {
-          const tags = (m.tags ??= {});
+        Obj.update(mailbox, (mailbox) => {
+          const tags = (mailbox.tags ??= {});
           for (const { message, labelIds } of mapped) {
             for (const labelId of labelIds) {
               const entry = (tags[labelId] ??= { label: labelId, source: 'provider', messages: [] });

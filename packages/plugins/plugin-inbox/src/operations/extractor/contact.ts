@@ -23,18 +23,18 @@ export const buildContactFromActor = (
   db: Database.Database,
 ): Effect.Effect<Person.Person | undefined> =>
   Effect.gen(function* () {
-    const email = actor.email;
+    const email = actor.email?.trim().toLowerCase();
     if (!email) {
-      log.warn('email is required for contact extraction', { actor });
+      log.warn('email is required for contact extraction');
       return undefined;
     }
 
     const existingContacts = yield* Effect.promise(() => db.query(Filter.type(Person.Person)).run());
     const existingContact = existingContacts.find((contact) =>
-      contact.emails?.some((contactEmail) => contactEmail.value === email),
+      contact.emails?.some((contactEmail) => contactEmail.value?.trim().toLowerCase() === email),
     );
     if (existingContact) {
-      log.info('contact already exists', { email, existingContact });
+      log.info('contact already exists for sender email');
       return undefined;
     }
 

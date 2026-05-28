@@ -169,7 +169,7 @@ class ImageWidget extends WidgetType {
  * They add no visual value, so hide them once their natural dimensions are known.
  */
 const collapseIfTrackingPixel = (img: HTMLImageElement) => {
-  if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
+  if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
     collapseLine(img);
   }
 };

@@ -24,7 +24,7 @@ const RUN_ALL_ID = 'run-all';
  * Returns menu items for each registered MessageExtractor that matches the given message.
  * Clicking an item invokes the ExtractMessage operation with that extractor's id. When two
  * or more extractors match, a synthetic "Run all" item is prepended that invokes every
- * matching extractor in sequence and logs aggregated success/failure.
+ * matching extractor in parallel and logs aggregated results.
  */
 export const useExtractorActions = (message: Message.Message): ExtractorMenuItem[] => {
   const extractors = useCapabilities(InboxCapabilities.MessageExtractor);

@@ -18,10 +18,11 @@ export type UserIconButtonProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Reconcile with Avatar if space member.
-export const UserIconButton = ({ value, title, onContactCreate }: UserIconButtonProps) => {
+export const UserIconButton = ({ classNames, value, title, onContactCreate }: UserIconButtonProps) => {
   const { t } = useTranslation(meta.id);
   return (
     <AnchorIconButton
+      classNames={classNames}
       value={value}
       title={title}
       onClick={onContactCreate}
