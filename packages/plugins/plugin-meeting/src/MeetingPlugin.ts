@@ -17,6 +17,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Meeting, MeetingCapabilities } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 const SettingsReady = AppActivationEvents.createSettingsEvent(MeetingCapabilities.Settings.identifier);
 
@@ -42,6 +45,9 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(SettingsReady, StateReady),
     activate: CallExtension,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

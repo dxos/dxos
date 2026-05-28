@@ -10,6 +10,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { TicTacToe } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const TicTacToePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'game-variant',
@@ -19,6 +22,9 @@ export const TicTacToePlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [TicTacToe.State] }),
   AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 
