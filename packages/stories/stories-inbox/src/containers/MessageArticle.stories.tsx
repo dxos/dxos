@@ -239,13 +239,21 @@ export const ExtractTripWithPlay: Story = {
     const extractTrigger = await waitFor(() => canvas.queryByRole('button', { name: /extract/i }));
     await userEvent.click(extractTrigger as HTMLElement);
 
-    // Click the `Run all` entry so every matching extractor fires (contact + trip + summarize
-    // + the story-local "important"). Summarize fails silently because the story runtime
-    // doesn't provide an `AiService`; the others succeed. Each extractor's `tags` lands in
-    // `mailbox.tags`; the trip extractor additionally persists Trip + Booking + Segment +
-    // ExtractedFrom.
-    const runAllItem = await waitFor(() => body.queryByText(/run all/i));
+    // Assert the summarize extractor is registered and matches the seeded body. The dropdown
+    // entry uses the extractor's `description` text. If the body falls below the 200-char
+    // threshold or the InboxPlugin's Startup module stops contributing the extractor, this
+    // assertion fails before "Run all" even fires — so the test catches a missing wire-up
+    // rather than passing for the wrong reason on the trip-only assertions below.
+    const summarizeItem = await waitFor(() => body.queryByText(/summarize a long email body/i));
+    void expect(summarizeItem).toBeInTheDocument();
+
+    // The `Run all (N)` label includes the count of matching extractors. With contact + trip
+    // + summarize + important all matching, the label must read "Run all (4)".
+    const runAllItem = await waitFor(() => body.queryByText(/run all \(4\)/i));
     await userEvent.click(runAllItem as HTMLElement);
+    // Each extractor's `tags` lands in `mailbox.tags`; the trip extractor additionally
+    // persists Trip + Booking + Segment + ExtractedFrom. Summarize fails silently because the
+    // story runtime doesn't provide an `AiService`; the others succeed.
 
     // Scope all chip assertions to the MessageHeader so we don't accidentally match strings
     // from the seeded message body (e.g. `From: SFO`). The header contains both the per-object
