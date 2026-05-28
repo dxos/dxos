@@ -11,7 +11,13 @@ import { Operation } from '@dxos/compute';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { MessageExtractor } from '../../capabilities';
+// Import directly from the granular capability module rather than the `../../capabilities`
+// barrel. The barrel re-exports `Capability.lazy(() => import('./app-graph-builder'))`
+// entries; esbuild eagerly traces the dynamic-import paths during module-structure linting,
+// which would pull `@dxos/react-ui-attention` → `@dxos/react-ui` into the operations graph
+// and trip the "operations must stay UI-free" guard. Importing the namespace directly
+// keeps the trace tight to MessageExtractor.ts.
+import * as MessageExtractor from '../../capabilities/MessageExtractor';
 import { InboxOperation } from '../../types';
 
 /**
