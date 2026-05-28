@@ -272,10 +272,14 @@ describe('Serializer', () => {
         await new Serializer().import(db, data);
 
         // The reconstituted Type.Type entity must brand `KindId = Type`.
+        // `Filter.type(Type.Type)` fans into both the DB and the in-process
+        // registry (which holds the pre-seeded `Type.Type` and builder defaults),
+        // so locate the round-tripped entity by typename rather than by count.
         const entities = await db.query(Filter.type(Type.Type)).run();
-        expect(entities.length).to.eq(1);
-        expect(Type.isType(entities[0])).to.be.true;
-        expect(Type.getTypename(entities[0] as any)).to.eq(typename);
+        const roundTrip = entities.find((entity) => Type.getTypename(entity as any) === typename);
+        expect(roundTrip).toBeDefined();
+        expect(Type.isType(roundTrip!)).to.be.true;
+        expect(Type.getTypename(roundTrip as any)).to.eq(typename);
 
         // And the registry query path — the one Composer's markdown editor
         // hits via `useLinkQuery` — must not throw `Invalid typename` from

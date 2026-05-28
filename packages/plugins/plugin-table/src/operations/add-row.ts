@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       invariant(db);
       const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
       invariant(typename);
-      const types = yield* Effect.promise(() => db.query(Database.schemaQuery(db)).run());
+      const types = yield* Effect.promise(() => db.query(Filter.type(Type.Type)).run());
       const schema = types.find((t) => Type.getTypename(t) === typename);
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);

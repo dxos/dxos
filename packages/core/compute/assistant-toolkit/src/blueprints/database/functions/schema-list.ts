@@ -16,7 +16,7 @@ const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 export default SchemaList.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
-      const types = yield* Database.runSchemaQuery();
+      const types = yield* Database.runQuery(Filter.type(Type.Type));
       return [...types]
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
         .sort((a, b) => {

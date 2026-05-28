@@ -12,7 +12,7 @@ import * as String from 'effect/String';
 import type * as Types from 'effect/Types';
 
 import {
-  Database,
+  type Database,
   Entity,
   Filter,
   Format,
@@ -246,7 +246,7 @@ export const makeFromDatabase = async ({
     createInitial = 0;
   }
 
-  const allTypes = await db.query(Database.schemaQuery(db)).run();
+  const allTypes = await db.query(Filter.type(Type.Type)).run();
   const schema = allTypes.find((t) => Type.getTypename(t) === typename);
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);

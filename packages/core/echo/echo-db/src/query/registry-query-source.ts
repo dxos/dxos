@@ -12,6 +12,27 @@ import { type QuerySource } from './graph-query-context';
 import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util';
 
 /**
+ * Returns true if the filter constrains by typename (i.e. an object filter with a
+ * non-null `typename`). The registry holds type-schema entities, so it only
+ * contributes to queries that might actually match them — not to constraint-free
+ * everything/id/text queries.
+ */
+const filterHasTypeFilter = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'object':
+      return filter.typename != null;
+    case 'and':
+    case 'or':
+      return filter.filters.some(filterHasTypeFilter);
+    default:
+      // A top-level `not` (e.g. `not(or(type(A), type(B)))`) inverts the selection
+      // into "everything except these types" — a user-data query the registry must
+      // not contribute to. Treat it like everything/id/text: DB-only.
+      return false;
+  }
+};
+
+/**
  * QuerySource backed by the in-process registry.
  *
  * Included in the query fan-out when:
@@ -84,7 +105,14 @@ export class RegistryQuerySource implements QuerySource {
       return false;
     }
     const simple = isSimpleSelectionQuery(query);
-    return simple !== null && !simple.hasQueues;
+    if (!simple || simple.hasQueues) {
+      return false;
+    }
+    // Only contribute for type-filter queries.  The registry holds meta-data entities
+    // (type schemas and similar), not arbitrary user-data objects.  Queries like
+    // Filter.everything(), Filter.id(), and Filter.text() are user-data queries
+    // and should only see objects stored in the database.
+    return filterHasTypeFilter(simple.filter);
   }
 
   #match(filter: QueryAST.Filter): QueryResult.EntityEntry[] {

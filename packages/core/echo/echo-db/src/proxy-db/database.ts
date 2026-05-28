@@ -264,15 +264,21 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     if (this._preloadSchemaOnOpen) {
-      const schemas = await this.query(Filter.type(PersistentSchema)).run();
+      // Scope to this space only — registry entities don't have automerge cores
+      // and must not be passed to _registerPersistentSchema during bootstrap.
+      const schemas = await this._coreDatabase.graph
+        .query(Query.select(Filter.type(PersistentSchema)).from(this))
+        .run();
       schemas.forEach((schema) => this._registerPersistentSchema(schema));
     }
 
     if (this._reactiveSchemaQuery) {
-      const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe((query) => {
-        const newSchemas = query.results.filter((schema) => !this._registeredPersistentSchemaIds.has(schema.id));
-        newSchemas.forEach((schema) => this._registerPersistentSchema(schema));
-      });
+      const unsubscribe = this._coreDatabase.graph
+        .query(Query.select(Filter.type(PersistentSchema)).from(this))
+        .subscribe((query) => {
+          const newSchemas = query.results.filter((schema) => !this._registeredPersistentSchemaIds.has(schema.id));
+          newSchemas.forEach((schema) => this._registerPersistentSchema(schema));
+        });
       this._ctx.onDispose(unsubscribe);
     }
   }
@@ -420,7 +426,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     query = Filter.is(query) ? Query.select(query) : query;
 
     if (!isQueryScoped(query.ast)) {
-      query = query.from(this);
+      // Fan out to both the owning space and the in-process registry by default.
+      // Callers that need space-only results (e.g. bootstrap in _open()) must
+      // supply an explicit .from() scope so this branch is not taken.
+      query = query.from([
+        { _tag: 'space' as const, spaceId: this.spaceId },
+        { _tag: 'registry' as const, location: 'local' as const },
+      ]);
     }
 
     return this._coreDatabase.graph.query(query);

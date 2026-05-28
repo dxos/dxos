@@ -10,7 +10,6 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import {
   Collection,
-  Database,
   Dataset,
   type Entity,
   Feed,
@@ -2532,18 +2531,24 @@ describe('Query', () => {
       expect(values).toEqual([1, 2]);
     });
 
-    test('db.query() auto-scopes to space and excludes graph.registry objects', async ({ expect }) => {
-      // Registry-only object.
+    test('db.query(Filter.type) includes both registry and db objects; Filter.everything() excludes registry', async ({ expect }) => {
+      // Object in the registry (not persisted to DB).
       graph.registry.add([Obj.make(TestSchema.Expando, { value: 42 })]);
 
-      // DB-only object.
+      // Object persisted to the DB.
       db.add(Obj.make(TestSchema.Expando, { value: 99 }));
       await db.flush();
 
-      // db.query() implicitly adds .from(db) with only a space scope — registry excluded.
-      const dbResults = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      expect(dbResults).toHaveLength(1);
-      expect((dbResults[0] as any).value).toBe(99);
+      // Filter.type queries fan in both the space and the registry — both objects appear.
+      const typeResults = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(typeResults).toHaveLength(2);
+      const typeValues = typeResults.map((r) => (r as any).value).sort((a: number, b: number) => a - b);
+      expect(typeValues).toEqual([42, 99]);
+
+      // Filter.everything() is a user-data query and must NOT include registry entities.
+      const allResults = await db.query(Query.select(Filter.everything())).run();
+      expect(allResults).toHaveLength(1);
+      expect((allResults[0] as any).value).toBe(99);
     });
 
     test('subscription with registry scope re-fires when graph.registry changes', async ({ expect }) => {
@@ -2561,7 +2566,7 @@ describe('Query', () => {
       expect(query.results).toHaveLength(1);
     });
 
-    test('Database.schemaQuery returns Type.Type entities from both registry and db', async ({ expect }) => {
+    test('db.query(Filter.type(Type.Type)) returns type entities from both registry and db', async ({ expect }) => {
       // Register one type statically in the in-process registry.
       graph.registry.add([TestSchema.Person]);
 
@@ -2569,9 +2574,10 @@ describe('Query', () => {
       await db.registry.register([TestSchema.Task]);
       await db.flush();
 
-      // Database.schemaQuery builds a pre-scoped query that fans in both the
-      // space (persisted DB types) and the local registry (static types).
-      const results = await db.query(Database.schemaQuery(db)).run();
+      // db.query() now fans in both the owning space and the local registry by
+      // default, so a plain Filter.type(Type.Type) returns both persisted and
+      // static type-schema entities.
+      const results = await db.query(Filter.type(Type.Type)).run();
 
       const typenames = results.map((t) => Type.getTypename(t));
       expect(typenames).toContain(Type.getTypename(TestSchema.Person));

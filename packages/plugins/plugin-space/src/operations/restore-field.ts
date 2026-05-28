@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 
@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreField> = Space
       invariant(db);
       const typename = getTypenameFromQuery(view.query.ast);
       invariant(typename);
-      const types = yield* Effect.promise(() => db.query(Database.schemaQuery(db)).run());
+      const types = yield* Effect.promise(() => db.query(Filter.type(Type.Type)).run());
       const schema = types.find((t) => Type.getTypename(t) === typename);
       invariant(schema);
 
