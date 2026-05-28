@@ -37,15 +37,6 @@ export const Arrangement = Schema.Struct({
 
 export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
-/**
- * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
- */
-export const KanbanV1 = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
-  arrangement: Arrangement,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.kanban', '0.1.0')));
-
 //
 // Mirrors the canonical DXOS pattern (see `Trigger.Spec` in
 // `@dxos/functions/src/types/Trigger.ts` and `Sequence.Source` in
