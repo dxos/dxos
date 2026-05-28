@@ -15,10 +15,10 @@ import { meta } from '#meta';
 
 import { FileAction } from './types';
 
-const FILE_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: DXN.make(`${FILE_OPERATION}.create`), name: 'Create File', icon: 'ph--file--regular' },
+  meta: { key: makeKey('create'), name: 'Create File', icon: 'ph--file--regular' },
   services: [Capability.Service],
   input: Schema.extend(FileAction.CreateFileSchema, Schema.Struct({ db: Database.Database })),
   output: Schema.Struct({
@@ -28,7 +28,7 @@ export const Create = Operation.make({
 
 export const Read = Operation.make({
   meta: {
-    key: DXN.make(`${FILE_OPERATION}.read`),
+    key: makeKey('read'),
     name: 'Read File',
     description:
       'Reads the contents of a file and returns them as a File content block (data URL for inline files, original URL for external files).',

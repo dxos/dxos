@@ -16,11 +16,11 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const ASSISTANT_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const OnCreateSpace = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.onCreateSpace`),
+    key: makeKey('onCreateSpace'),
     name: 'On Create Space',
     icon: 'ph--chat-text--regular',
   },
@@ -33,7 +33,7 @@ export const OnCreateSpace = Operation.make({
 });
 
 export const CreateChat = Operation.make({
-  meta: { key: DXN.make(`${ASSISTANT_OPERATION}.createChat`), name: 'Create Chat', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('createChat'), name: 'Create Chat', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -48,7 +48,7 @@ export const CreateChat = Operation.make({
 
 export const UpdateChatName = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.updateChatName`),
+    key: makeKey('updateChatName'),
     name: 'Update Chat Name',
     icon: 'ph--pencil--regular',
   },
@@ -61,7 +61,7 @@ export const UpdateChatName = Operation.make({
 
 export const SetCurrentChat = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.setCurrentChat`),
+    key: makeKey('setCurrentChat'),
     name: 'Set Current Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -75,7 +75,7 @@ export const SetCurrentChat = Operation.make({
 
 export const RunPromptInNewChat = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.runPromptInNewChat`),
+    key: makeKey('runPromptInNewChat'),
     name: 'Run Prompt In New Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -106,7 +106,7 @@ const NavigationTargetSchema = Schema.Struct({
 
 export const ResolveNavigationTargets = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.resolveNavigationTargets`),
+    key: makeKey('resolveNavigationTargets'),
     name: 'Resolve navigation targets',
     description:
       'Resolve navigation targets within the application. The returned paths can be used with the Open operation. Without a query, returns pages that can be navigated to.',
@@ -127,7 +127,7 @@ export const ResolveNavigationTargets = Operation.make({
 
 export const EnsureCompanionChat = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.ensureCompanionChat`),
+    key: makeKey('ensureCompanionChat'),
     name: 'Ensure Companion Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -151,7 +151,7 @@ export const BlueprintForm = Schema.Struct({
 
 export const ToggleTracePanelDebug = Operation.make({
   meta: {
-    key: DXN.make(`${ASSISTANT_OPERATION}.toggleTracePanelDebug`),
+    key: makeKey('toggleTracePanelDebug'),
     name: 'Toggle trace panel debug',
     description: 'Toggle trace panel between commit graph and raw span tree JSON.',
     icon: 'ph--bug--regular',

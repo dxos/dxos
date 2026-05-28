@@ -12,9 +12,11 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+
 export const Start = Operation.make({
   meta: {
-    key: DXN.make(`${DXN.getName(meta.id)}.operation.startWelcomeTour`),
+    key: makeKey('startWelcomeTour'),
     name: 'Start welcome tour',
     icon: 'ph--question--regular',
   },

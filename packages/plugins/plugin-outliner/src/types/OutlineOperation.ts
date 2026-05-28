@@ -15,11 +15,11 @@ import { meta } from '#meta';
 
 import * as Outline from './Outline';
 
-const OUTLINER_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const CreateOutline = Operation.make({
   meta: {
-    key: DXN.make(`${OUTLINER_OPERATION}.createOutline`),
+    key: makeKey('createOutline'),
     name: 'Create Outline',
     icon: 'ph--list-bullets--regular',
   },
@@ -32,7 +32,7 @@ export const CreateOutline = Operation.make({
 });
 
 export const QuickJournalEntry = Operation.make({
-  meta: { key: DXN.make(`${OUTLINER_OPERATION}.quickEntry`), name: 'Quick Journal Entry', icon: 'ph--pencil--regular' },
+  meta: { key: makeKey('quickEntry'), name: 'Quick Journal Entry', icon: 'ph--pencil--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     text: Schema.String,

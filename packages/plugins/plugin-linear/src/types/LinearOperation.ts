@@ -12,7 +12,7 @@ import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/pl
 
 import { meta } from '#meta';
 
-const LINEAR_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 /**
  * Discovery only — list Linear teams reachable from the integration's token.
@@ -22,7 +22,7 @@ const LINEAR_OPERATION = `${DXN.getName(meta.id)}.operation`;
  */
 export const GetLinearTeams = Operation.make({
   meta: {
-    key: DXN.make(`${LINEAR_OPERATION}.getLinearTeams`),
+    key: makeKey('getLinearTeams'),
     name: 'Get Linear Teams',
     description: 'List Linear teams reachable from an integration without materializing local objects.',
     icon: 'ph--users--regular',
@@ -54,7 +54,7 @@ export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
  */
 export const SyncLinearTeams = Operation.make({
   meta: {
-    key: DXN.make(`${LINEAR_OPERATION}.syncLinearTeams`),
+    key: makeKey('syncLinearTeams'),
     name: 'Sync Linear Teams',
     description: 'Reconcile selected Linear teams — projects and issues.',
     icon: 'ph--arrows-clockwise--regular',

@@ -11,10 +11,10 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const SEARCH_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const OpenSearch = Operation.make({
-  meta: { key: DXN.make(`${SEARCH_OPERATION}.openSearch`), name: 'Open Search', icon: 'ph--magnifying-glass--regular' },
+  meta: { key: makeKey('openSearch'), name: 'Open Search', icon: 'ph--magnifying-glass--regular' },
   input: Schema.Void,
   output: Schema.Void,
 });

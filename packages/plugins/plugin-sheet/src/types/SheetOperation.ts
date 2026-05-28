@@ -12,13 +12,13 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const SHEET_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
 const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 
 export const InsertAxis = Operation.make({
-  meta: { key: DXN.make(`${SHEET_OPERATION}.axisInsert`), name: 'Insert Axis', icon: 'ph--plus--regular' },
+  meta: { key: makeKey('axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -39,7 +39,7 @@ export const DropAxisOutput = Schema.Struct({
 export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
 export const DropAxis = Operation.make({
-  meta: { key: DXN.make(`${SHEET_OPERATION}.axisDrop`), name: 'Drop Axis', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('axisDrop'), name: 'Drop Axis', icon: 'ph--trash--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -50,7 +50,7 @@ export const DropAxis = Operation.make({
 
 export const ScrollToAnchor = Operation.make({
   meta: {
-    key: DXN.make(`${SHEET_OPERATION}.scrollToAnchor`),
+    key: makeKey('scrollToAnchor'),
     name: 'Scroll To Anchor',
     icon: 'ph--anchor-simple--regular',
   },
@@ -68,7 +68,7 @@ export const ScrollToAnchor = Operation.make({
  */
 export const RestoreAxis = Operation.make({
   meta: {
-    key: DXN.make(`${SHEET_OPERATION}.restoreAxis`),
+    key: makeKey('restoreAxis'),
     name: 'Restore Axis',
     icon: 'ph--clock-counter-clockwise--regular',
   },

@@ -14,10 +14,10 @@ import { Message, Transcript } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const TRANSCRIPT_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: DXN.make(`${TRANSCRIPT_OPERATION}.create`), name: 'Create Transcript', icon: 'ph--microphone--regular' },
+  meta: { key: makeKey('create'), name: 'Create Transcript', icon: 'ph--microphone--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     space: SpaceSchema,

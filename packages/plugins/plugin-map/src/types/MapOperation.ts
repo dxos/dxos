@@ -12,10 +12,10 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const MAP_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const Toggle = Operation.make({
-  meta: { key: DXN.make(`${MAP_OPERATION}.toggle`), name: 'Toggle Map', icon: 'ph--compass--regular' },
+  meta: { key: makeKey('toggle'), name: 'Toggle Map', icon: 'ph--compass--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,

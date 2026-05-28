@@ -19,11 +19,11 @@ import { meta } from '#meta';
 import { TriggerTemplate } from './schema';
 export { _EchoURIReference };
 
-const AUTOMATION_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const CreateTriggerFromTemplate = Operation.make({
   meta: {
-    key: DXN.make(`${AUTOMATION_OPERATION}.createTriggerFromTemplate`),
+    key: makeKey('createTriggerFromTemplate'),
     name: 'Create Trigger From Template',
     icon: 'ph--lightning--regular',
   },

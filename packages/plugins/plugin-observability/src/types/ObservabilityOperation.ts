@@ -12,11 +12,11 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const OBSERVABILITY_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const Toggle = Operation.make({
   meta: {
-    key: DXN.make(`${OBSERVABILITY_OPERATION}.toggle`),
+    key: makeKey('toggle'),
     name: 'Toggle Observability',
     description: 'Toggle observability on or off.',
     icon: 'ph--eye--regular',
@@ -30,7 +30,7 @@ export const Toggle = Operation.make({
 
 export const SendEvent = Operation.make({
   meta: {
-    key: DXN.make(`${OBSERVABILITY_OPERATION}.sendEvent`),
+    key: makeKey('sendEvent'),
     name: 'Send Event',
     description: 'Send an observability event.',
     icon: 'ph--broadcast--regular',

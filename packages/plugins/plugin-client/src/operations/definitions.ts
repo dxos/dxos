@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const CLIENT_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 const IdentitySchema = Schema.Struct({
   identityKey: Schema.instanceOf(PublicKey),
@@ -32,14 +32,14 @@ const ProfileSchema = Schema.Struct({
 });
 
 export const CreateIdentity = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.createIdentity`), name: 'Create Identity', icon: 'ph--user--regular' },
+  meta: { key: makeKey('createIdentity'), name: 'Create Identity', icon: 'ph--user--regular' },
   services: [Capability.Service],
   input: ProfileSchema,
   output: IdentitySchema,
 });
 
 export const JoinIdentity = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.joinIdentity`), name: 'Join Identity', icon: 'ph--sign-in--regular' },
+  meta: { key: makeKey('joinIdentity'), name: 'Join Identity', icon: 'ph--sign-in--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     invitationCode: Schema.optional(Schema.String),
@@ -49,7 +49,7 @@ export const JoinIdentity = Operation.make({
 
 export const ShareIdentity = Operation.make({
   meta: {
-    key: DXN.make(`${CLIENT_OPERATION}.shareIdentity`),
+    key: makeKey('shareIdentity'),
     name: 'Share Identity',
     icon: 'ph--share-network--regular',
   },
@@ -59,14 +59,14 @@ export const ShareIdentity = Operation.make({
 });
 
 export const RecoverIdentity = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.recoverIdentity`), name: 'Recover Identity', icon: 'ph--key--regular' },
+  meta: { key: makeKey('recoverIdentity'), name: 'Recover Identity', icon: 'ph--key--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const ResetStorage = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.resetStorage`), name: 'Reset Storage', icon: 'ph--warning--regular' },
+  meta: { key: makeKey('resetStorage'), name: 'Reset Storage', icon: 'ph--warning--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     mode: Schema.optional(Schema.String),
@@ -75,7 +75,7 @@ export const ResetStorage = Operation.make({
 });
 
 export const CreateAgent = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.createAgent`), name: 'Create Agent', icon: 'ph--brain--regular' },
+  meta: { key: makeKey('createAgent'), name: 'Create Agent', icon: 'ph--brain--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
@@ -83,7 +83,7 @@ export const CreateAgent = Operation.make({
 
 export const CreateRecoveryCode = Operation.make({
   meta: {
-    key: DXN.make(`${CLIENT_OPERATION}.createRecoveryCode`),
+    key: makeKey('createRecoveryCode'),
     name: 'Create Recovery Code',
     icon: 'ph--key--regular',
   },
@@ -93,21 +93,21 @@ export const CreateRecoveryCode = Operation.make({
 });
 
 export const CreatePasskey = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.createPasskey`), name: 'Create Passkey', icon: 'ph--key--regular' },
+  meta: { key: makeKey('createPasskey'), name: 'Create Passkey', icon: 'ph--key--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const RedeemPasskey = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.redeemPasskey`), name: 'Redeem Passkey', icon: 'ph--key--regular' },
+  meta: { key: makeKey('redeemPasskey'), name: 'Redeem Passkey', icon: 'ph--key--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
 });
 
 export const RedeemToken = Operation.make({
-  meta: { key: DXN.make(`${CLIENT_OPERATION}.redeemToken`), name: 'Redeem Token', icon: 'ph--lock--regular' },
+  meta: { key: makeKey('redeemToken'), name: 'Redeem Token', icon: 'ph--lock--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     token: Schema.String,

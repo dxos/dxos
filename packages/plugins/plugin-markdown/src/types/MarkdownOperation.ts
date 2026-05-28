@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 import * as Markdown from './Markdown';
 
-const MARKDOWN_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 const Edit = Schema.Struct({
   oldString: Schema.String.annotations({
@@ -51,7 +51,7 @@ export const Create = Operation.make({
 
 export const CreateMarkdown = Operation.make({
   meta: {
-    key: DXN.make(`${MARKDOWN_OPERATION}.create`),
+    key: makeKey('create'),
     name: 'Create Markdown Document',
     icon: 'ph--file-text--regular',
   },
@@ -85,7 +85,7 @@ export const Open = Operation.make({
 
 export const ScrollToAnchor = Operation.make({
   meta: {
-    key: DXN.make(`${MARKDOWN_OPERATION}.scrollToAnchor`),
+    key: makeKey('scrollToAnchor'),
     name: 'Scroll To Anchor',
     icon: 'ph--anchor-simple--regular',
   },
@@ -100,7 +100,7 @@ export const ScrollToAnchor = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const SetViewMode = Operation.make({
-  meta: { key: DXN.make(`${MARKDOWN_OPERATION}.setViewMode`), name: 'Set View Mode', icon: 'ph--layout--regular' },
+  meta: { key: makeKey('setViewMode'), name: 'Set View Mode', icon: 'ph--layout--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     id: Schema.String,

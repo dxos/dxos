@@ -12,11 +12,11 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const FILESYSTEM_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const OpenDirectory = Operation.make({
   meta: {
-    key: DXN.make(`${FILESYSTEM_OPERATION}.openDirectory`),
+    key: makeKey('openDirectory'),
     name: 'Open Folder',
     icon: 'ph--folder-open--regular',
   },
@@ -26,7 +26,7 @@ export const OpenDirectory = Operation.make({
 });
 
 export const CloseDirectory = Operation.make({
-  meta: { key: DXN.make(`${FILESYSTEM_OPERATION}.closeDirectory`), name: 'Close Folder', icon: 'ph--folder--regular' },
+  meta: { key: makeKey('closeDirectory'), name: 'Close Folder', icon: 'ph--folder--regular' },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
@@ -34,7 +34,7 @@ export const CloseDirectory = Operation.make({
 
 export const RefreshDirectory = Operation.make({
   meta: {
-    key: DXN.make(`${FILESYSTEM_OPERATION}.refreshDirectory`),
+    key: makeKey('refreshDirectory'),
     name: 'Refresh Folder',
     icon: 'ph--arrows-clockwise--regular',
   },

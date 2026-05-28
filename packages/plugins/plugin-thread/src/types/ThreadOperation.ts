@@ -15,10 +15,10 @@ import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const THREAD_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.onCreateSpace`), name: 'On Create Space', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
@@ -29,7 +29,7 @@ export const OnCreateSpace = Operation.make({
 });
 
 export const CreateChannel = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.createChannel`), name: 'Create Channel', icon: 'ph--hash--regular' },
+  meta: { key: makeKey('createChannel'), name: 'Create Channel', icon: 'ph--hash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     spaceId: Key.SpaceId,
@@ -42,7 +42,7 @@ export const CreateChannel = Operation.make({
 
 export const AppendChannelMessage = Operation.make({
   meta: {
-    key: DXN.make(`${THREAD_OPERATION}.appendChannelMessage`),
+    key: makeKey('appendChannelMessage'),
     name: 'Append Channel Message',
     icon: 'ph--chat-text--regular',
   },
@@ -58,7 +58,7 @@ export const AppendChannelMessage = Operation.make({
 });
 
 export const Create = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.create`), name: 'Create Thread', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('create'), name: 'Create Thread', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -76,7 +76,7 @@ export const DeleteOutput = Schema.Struct({
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
 export const Delete = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.delete`), name: 'Delete Thread', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('delete'), name: 'Delete Thread', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -87,7 +87,7 @@ export const Delete = Operation.make({
 });
 
 export const Select = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.select`), name: 'Select Thread', icon: 'ph--check--regular' },
+  meta: { key: makeKey('select'), name: 'Select Thread', icon: 'ph--check--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     current: Schema.String,
@@ -97,7 +97,7 @@ export const Select = Operation.make({
 
 export const ToggleResolved = Operation.make({
   meta: {
-    key: DXN.make(`${THREAD_OPERATION}.toggleResolved`),
+    key: makeKey('toggleResolved'),
     name: 'Toggle Resolved',
     icon: 'ph--check-circle--regular',
   },
@@ -109,7 +109,7 @@ export const ToggleResolved = Operation.make({
 });
 
 export const AddMessage = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.addMessage`), name: 'Add Message', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('addMessage'), name: 'Add Message', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
@@ -130,7 +130,7 @@ export const DeleteMessageOutput = Schema.partial(
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
 export const DeleteMessage = Operation.make({
-  meta: { key: DXN.make(`${THREAD_OPERATION}.deleteMessage`), name: 'Delete Message', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('deleteMessage'), name: 'Delete Message', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -145,7 +145,7 @@ export const DeleteMessage = Operation.make({
  */
 export const Restore = Operation.make({
   meta: {
-    key: DXN.make(`${THREAD_OPERATION}.restore`),
+    key: makeKey('restore'),
     name: 'Restore Thread',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -162,7 +162,7 @@ export const Restore = Operation.make({
  */
 export const RestoreMessage = Operation.make({
   meta: {
-    key: DXN.make(`${THREAD_OPERATION}.restoreMessage`),
+    key: makeKey('restoreMessage'),
     name: 'Restore Message',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -177,7 +177,7 @@ export const RestoreMessage = Operation.make({
 
 export const RespondToThread = Operation.make({
   meta: {
-    key: DXN.make(`${THREAD_OPERATION}.respondToThread`),
+    key: makeKey('respondToThread'),
     name: 'Respond to Thread',
     description: 'Runs one comment-thread agent turn against the given thread + subject.',
   },
@@ -191,7 +191,7 @@ export const RespondToThread = Operation.make({
 
 export const SetAgentConfig = Operation.make({
   meta: {
-    key: DXN.make(`${THREAD_OPERATION}.setAgentConfig`),
+    key: makeKey('setAgentConfig'),
     name: 'Set Agent Config',
     description: 'Updates thread.agent. Undefined config disables the agent.',
   },

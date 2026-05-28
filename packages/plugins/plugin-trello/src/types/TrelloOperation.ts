@@ -12,7 +12,7 @@ import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/pl
 
 import { meta } from '#meta';
 
-const TRELLO_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 /**
  * Discovery only — list Trello boards reachable from the integration's token.
@@ -23,7 +23,7 @@ const TRELLO_OPERATION = `${DXN.getName(meta.id)}.operation`;
  */
 export const GetTrelloBoards = Operation.make({
   meta: {
-    key: DXN.make(`${TRELLO_OPERATION}.getTrelloBoards`),
+    key: makeKey('getTrelloBoards'),
     name: 'Get Trello Boards',
     description: 'List Trello boards reachable from an integration without materializing local Kanbans.',
     icon: 'ph--kanban--regular',
@@ -46,7 +46,7 @@ export const GetTrelloBoards = Operation.make({
  */
 export const SyncTrelloBoard = Operation.make({
   meta: {
-    key: DXN.make(`${TRELLO_OPERATION}.syncTrelloBoard`),
+    key: makeKey('syncTrelloBoard'),
     name: 'Sync Trello Board',
     description: 'Reconcile cards for currently-selected Trello targets in an Integration.',
     icon: 'ph--arrows-clockwise--regular',

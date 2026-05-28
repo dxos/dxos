@@ -14,10 +14,10 @@ import { meta } from '#meta';
 
 import * as Sketch from './Sketch';
 
-const SKETCH_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: DXN.make(`${SKETCH_OPERATION}.create`), name: 'Create Sketch', icon: 'ph--pencil-simple--regular' },
+  meta: { key: makeKey('create'), name: 'Create Sketch', icon: 'ph--pencil-simple--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     schema: Schema.optional(Schema.String),

@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 import { templates } from '../templates';
 
-const SCRIPT_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const ScriptProps = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -29,7 +29,7 @@ export const NotebookProps = Schema.Struct({
 });
 
 export const CreateScript = Operation.make({
-  meta: { key: DXN.make(`${SCRIPT_OPERATION}.createScript`), name: 'Create Script', icon: 'ph--code--regular' },
+  meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular' },
   input: Schema.extend(
     ScriptProps,
     Schema.Struct({

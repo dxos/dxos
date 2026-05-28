@@ -16,10 +16,10 @@ import { meta } from '#meta';
 
 import * as Meeting from './Meeting';
 
-const MEETING_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: DXN.make(`${MEETING_OPERATION}.create`), name: 'Create Meeting', icon: 'ph--video-camera--regular' },
+  meta: { key: makeKey('create'), name: 'Create Meeting', icon: 'ph--video-camera--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -32,7 +32,7 @@ export const Create = Operation.make({
 
 export const SetActive = Operation.make({
   meta: {
-    key: DXN.make(`${MEETING_OPERATION}.setActive`),
+    key: makeKey('setActive'),
     name: 'Set Active Meeting',
     icon: 'ph--video-camera--regular',
   },
@@ -47,7 +47,7 @@ export const SetActive = Operation.make({
 
 export const HandlePayload = Operation.make({
   meta: {
-    key: DXN.make(`${MEETING_OPERATION}.handlePayload`),
+    key: makeKey('handlePayload'),
     name: 'Handle Meeting Payload',
     icon: 'ph--arrows-clockwise--regular',
   },
@@ -62,7 +62,7 @@ export const HandlePayload = Operation.make({
 
 export const Summarize = Operation.make({
   meta: {
-    key: DXN.make(`${MEETING_OPERATION}.summarize`),
+    key: makeKey('summarize'),
     name: 'Summarize Meeting',
     icon: 'ph--text-align-left--regular',
   },

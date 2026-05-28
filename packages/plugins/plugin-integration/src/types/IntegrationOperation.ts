@@ -14,14 +14,14 @@ import { meta } from '#meta';
 
 import * as Integration from './Integration';
 
-const INTEGRATION_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 /**
  * Generic create operation: produces an empty Integration bound to the given AccessToken.
  */
 export const CreateIntegration = Operation.make({
   meta: {
-    key: DXN.make(`${INTEGRATION_OPERATION}.createIntegration`),
+    key: makeKey('createIntegration'),
     name: 'Create Integration',
     description: 'Creates a new Integration bound to an existing AccessToken.',
     icon: 'ph--plugs-connected--regular',
@@ -42,7 +42,7 @@ export const CreateIntegration = Operation.make({
  */
 export const SetIntegrationTargets = Operation.make({
   meta: {
-    key: DXN.make(`${INTEGRATION_OPERATION}.setIntegrationTargets`),
+    key: makeKey('setIntegrationTargets'),
     name: 'Set Integration Targets',
     description: "Reconciles an Integration's targets to match the chosen selection.",
     icon: 'ph--sliders--regular',

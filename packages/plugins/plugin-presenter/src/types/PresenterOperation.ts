@@ -12,12 +12,12 @@ import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
 
-const PRESENTER_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 // TODO(wittjosiah): This appears to be unused.
 export const TogglePresentation = Operation.make({
   meta: {
-    key: DXN.make(`${PRESENTER_OPERATION}.togglePresentation`),
+    key: makeKey('togglePresentation'),
     name: 'Toggle Presentation',
     icon: 'ph--presentation--regular',
   },

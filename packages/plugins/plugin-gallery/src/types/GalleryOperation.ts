@@ -13,11 +13,11 @@ import { meta } from '#meta';
 
 import * as Gallery from './Gallery';
 
-const GALLERY_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 export const DescribeImage = Operation.make({
   meta: {
-    key: DXN.make(`${GALLERY_OPERATION}.describeImage`),
+    key: makeKey('describeImage'),
     name: 'Describe Image',
     description: 'Generate a textual description for an image at the given index in a Gallery.',
     icon: 'ph--image--regular',

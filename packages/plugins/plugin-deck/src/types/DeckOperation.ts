@@ -12,6 +12,8 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotations({ description: 'Open the companion plank.' }),
@@ -25,7 +27,7 @@ export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
 
 export const Adjust = Operation.make({
   meta: {
-    key: DXN.make(`${DXN.getName(meta.id)}.operation.adjust`),
+    key: makeKey('adjust'),
     name: 'Adjust',
     description: 'Adjust the layout of a plank.',
     icon: 'ph--layout--regular',
@@ -40,7 +42,7 @@ export const Adjust = Operation.make({
 
 export const UpdatePlankSize = Operation.make({
   meta: {
-    key: DXN.make(`${DXN.getName(meta.id)}.operation.updatePlankSize`),
+    key: makeKey('updatePlankSize'),
     name: 'Update Plank Size',
     description: 'Update the size of a plank.',
     icon: 'ph--arrows-out--regular',

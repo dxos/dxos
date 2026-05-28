@@ -11,7 +11,7 @@ import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/pl
 
 import { meta } from '#meta';
 
-const BLUESKY_OPERATION = `${DXN.getName(meta.id)}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 /**
  * Discovery — list the available Bluesky sync targets for the integration's
@@ -23,7 +23,7 @@ const BLUESKY_OPERATION = `${DXN.getName(meta.id)}.operation`;
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
-    key: DXN.make(`${BLUESKY_OPERATION}.getBlueskyTargets`),
+    key: makeKey('getBlueskyTargets'),
     name: 'Get Bluesky Targets',
     description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
@@ -43,7 +43,7 @@ export const GetBlueskyTargets = Operation.make({
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
-    key: DXN.make(`${BLUESKY_OPERATION}.syncBlueskyTargets`),
+    key: makeKey('syncBlueskyTargets'),
     name: 'Sync Bluesky',
     description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
     icon: 'ph--arrows-clockwise--regular',
