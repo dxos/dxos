@@ -308,6 +308,14 @@ export const ExtractTripWithPlay: Story = {
     void expect(header).toBeInTheDocument();
     const headerScope = within(header as HTMLElement);
 
+    // Trip object chip — sourced from `ExtractedFrom` relation. With the Flying Blue body
+    // the trip extractor uses its FB-format fallback to recognise the first segment
+    // (JFK → CDG, flight AF0003). The chip label includes the JFK/CDG route via
+    // `tripNameFor(candidate)`.
+    const tripButton = await waitFor(() => headerScope.queryByRole('button', { name: /JFK|CDG/i }));
+    void expect(tripButton).toBeInTheDocument();
+    void expect(tripButton).not.toBeDisabled();
+
     // Summary Document chip — sourced from the `ExtractedFrom` relation the dispatcher
     // attaches when SummarizeMessageExtractor returns a `Markdown.Document`. The chip's
     // label comes from `doc.name`, which the extractor sets to `${subject} (summary)`.
@@ -318,10 +326,16 @@ export const ExtractTripWithPlay: Story = {
     void expect(summaryButton).toBeInTheDocument();
     void expect(summaryButton).not.toBeDisabled();
 
-    // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
-    // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
+    // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` — applied via
+    // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target). Scope to the
+    // `extracted-tags` container so we hit the chip and not any other UI matching /travel/.
     const tagsRow = await waitFor(() => headerScope.queryByTestId('extracted-tags'));
     const tagsScope = within(tagsRow as HTMLElement);
+    const travelTag = await waitFor(() => tagsScope.queryByText(/^travel$/i));
+    void expect(travelTag).toBeInTheDocument();
+
+    // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
+    // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
     const importantTag = await waitFor(() => tagsScope.queryByText(/^important$/i));
     void expect(importantTag).toBeInTheDocument();
   },
