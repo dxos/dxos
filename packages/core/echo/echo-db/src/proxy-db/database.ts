@@ -264,21 +264,17 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     if (this._preloadSchemaOnOpen) {
-      // Scope to this space only — registry entities don't have automerge cores
-      // and must not be passed to _registerPersistentSchema during bootstrap.
-      const schemas = await this._coreDatabase.graph
-        .query(Query.select(Filter.type(PersistentSchema)).from(this))
-        .run();
+      // db.query() defaults to this space only, so the registry (whose entities have
+      // no automerge cores) is never passed to _registerPersistentSchema here.
+      const schemas = await this.query(Filter.type(PersistentSchema)).run();
       schemas.forEach((schema) => this._registerPersistentSchema(schema));
     }
 
     if (this._reactiveSchemaQuery) {
-      const unsubscribe = this._coreDatabase.graph
-        .query(Query.select(Filter.type(PersistentSchema)).from(this))
-        .subscribe((query) => {
-          const newSchemas = query.results.filter((schema) => !this._registeredPersistentSchemaIds.has(schema.id));
-          newSchemas.forEach((schema) => this._registerPersistentSchema(schema));
-        });
+      const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe((query) => {
+        const newSchemas = query.results.filter((schema) => !this._registeredPersistentSchemaIds.has(schema.id));
+        newSchemas.forEach((schema) => this._registerPersistentSchema(schema));
+      });
       this._ctx.onDispose(unsubscribe);
     }
   }
@@ -426,13 +422,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     query = Filter.is(query) ? Query.select(query) : query;
 
     if (!isQueryScoped(query.ast)) {
-      // Fan out to both the owning space and the in-process registry by default.
-      // Callers that need space-only results (e.g. bootstrap in _open()) must
-      // supply an explicit .from() scope so this branch is not taken.
-      query = query.from([
-        { _tag: 'space' as const, spaceId: this.spaceId },
-        { _tag: 'registry' as const, location: 'local' as const },
-      ]);
+      // Default to the owning space only. The in-process registry is opt-in:
+      // callers add `Scope.registry()` (e.g. `.from(Scope.space(), Scope.registry())`)
+      // when they want to fan a query into code-shipped types/objects too.
+      query = query.from(this);
     }
 
     return this._coreDatabase.graph.query(query);

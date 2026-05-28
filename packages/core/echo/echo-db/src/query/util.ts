@@ -14,7 +14,9 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
   const visitor = (node: QueryAST.Query) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
       for (const scope of node.from.scopes) {
-        if (scope._tag === 'space') {
+        // A space scope without `spaceId` targets the owning space; it adds no
+        // explicit space restriction (resolved by the executing database).
+        if (scope._tag === 'space' && scope.spaceId !== undefined) {
           spaces.add(SpaceId.make(scope.spaceId));
         }
       }
@@ -99,7 +101,10 @@ export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'lo
 /**
  * Determines whether a query targets the in-process or remote registry.
  *
- * - No `from` clause → include local registry by default.
+ * The registry is opt-in: a query only includes it when its `from` clause carries an
+ * explicit registry scope (`Scope.registry(...)`).
+ *
+ * - No `from` clause → excluded (owning-space query; registry not consulted).
  * - `from` clause with no registry scope entries → excluded.
  * - `from` clause with registry scope entries → include the listed locations.
  */
@@ -113,7 +118,7 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
   });
 
   if (fromNode === null) {
-    return { included: true, locations: new Set(['local']) };
+    return { included: false, locations: new Set() };
   }
 
   const clause = fromNode as QueryAST.QueryFromClause;

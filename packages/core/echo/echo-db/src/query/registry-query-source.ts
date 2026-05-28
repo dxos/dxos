@@ -12,32 +12,12 @@ import { type QuerySource } from './graph-query-context';
 import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util';
 
 /**
- * Returns true if the filter constrains by typename (i.e. an object filter with a
- * non-null `typename`). The registry holds type-schema entities, so it only
- * contributes to queries that might actually match them — not to constraint-free
- * everything/id/text queries.
- */
-const filterHasTypeFilter = (filter: QueryAST.Filter): boolean => {
-  switch (filter.type) {
-    case 'object':
-      return filter.typename != null;
-    case 'and':
-    case 'or':
-      return filter.filters.some(filterHasTypeFilter);
-    default:
-      // A top-level `not` (e.g. `not(or(type(A), type(B)))`) inverts the selection
-      // into "everything except these types" — a user-data query the registry must
-      // not contribute to. Treat it like everything/id/text: DB-only.
-      return false;
-  }
-};
-
-/**
  * QuerySource backed by the in-process registry.
  *
- * Included in the query fan-out when:
- * - The query has no explicit `from()` clause (defaults to local registry + all spaces), or
- * - The query's from clause contains `{ _tag: 'registry', location: 'local' }`.
+ * The registry is opt-in: it only contributes to a query whose `from` clause carries
+ * an explicit local registry scope — i.e. `.from(Scope.registry())` or
+ * `.from(Scope.space(), Scope.registry())`. Plain `db.query(...)` (owning space only)
+ * never consults it.
  */
 export class RegistryQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
@@ -108,11 +88,7 @@ export class RegistryQuerySource implements QuerySource {
     if (!simple || simple.hasQueues) {
       return false;
     }
-    // Only contribute for type-filter queries.  The registry holds meta-data entities
-    // (type schemas and similar), not arbitrary user-data objects.  Queries like
-    // Filter.everything(), Filter.id(), and Filter.text() are user-data queries
-    // and should only see objects stored in the database.
-    return filterHasTypeFilter(simple.filter);
+    return true;
   }
 
   #match(filter: QueryAST.Filter): QueryResult.EntityEntry[] {

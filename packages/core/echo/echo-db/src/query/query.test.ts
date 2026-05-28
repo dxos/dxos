@@ -20,6 +20,7 @@ import {
   Query,
   Ref,
   Relation,
+  Scope,
   Type,
   View,
 } from '@dxos/echo';
@@ -684,11 +685,8 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
-              {
-                _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`,
-              },
+              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`),
             ]),
           )
           .run();
@@ -701,11 +699,8 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
-              {
-                _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`,
-              },
+              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`),
             ]),
           )
           .run();
@@ -718,15 +713,9 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
-              {
-                _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`,
-              },
-              {
-                _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`,
-              },
+              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`),
+              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`),
             ]),
           )
           .run();
@@ -2491,47 +2480,40 @@ describe('Query', () => {
   });
 
   describe('RegistryQuerySource', () => {
-    /**
-     * Scope constant targeting the local in-process registry.
-     * Use `.from(REGISTRY_SCOPE)` to include registry objects in a query.
-     * Use `.from([SPACE_SCOPE, REGISTRY_SCOPE])` to combine DB + registry.
-     * Without an explicit registry scope, db.query() / graph.query() only returns DB objects.
-     */
-    const REGISTRY_SCOPE = { _tag: 'registry' as const, location: 'local' as const };
-
     let db: EchoDatabase, graph: Hypergraph.Hypergraph;
 
     beforeEach(async () => {
       ({ db, graph } = await builder.createDatabase());
     });
 
-    test('query with registry scope returns objects from graph.registry', async ({ expect }) => {
+    test('query scoped to the registry returns objects from graph.registry', async ({ expect }) => {
       // Add an object only to the in-memory registry — NOT to any database.
       const registryObj = Obj.make(TestSchema.Expando, { value: 42 });
       graph.registry.add([registryObj]);
 
       // Query scoped to registry only fans in registry objects.
-      const results = await db.query(Query.select(Filter.type(TestSchema.Expando)).from(REGISTRY_SCOPE)).run();
+      const results = await db.query(Query.select(Filter.type(TestSchema.Expando)).from(Scope.registry())).run();
       expect(results).toHaveLength(1);
       expect((results[0] as any).value).toBe(42);
     });
 
-    test('query with registry + space scope coalesces registry and db objects', async ({ expect }) => {
+    test('query scoped to space + registry coalesces registry and db objects', async ({ expect }) => {
       // One object in the registry, one in the database.
       graph.registry.add([Obj.make(TestSchema.Expando, { value: 1 })]);
 
       db.add(Obj.make(TestSchema.Expando, { value: 2 }));
       await db.flush();
 
-      // Scoped to both the space and registry returns both.
-      const spacePlusRegistryScope = [{ _tag: 'space' as const, spaceId: db.spaceId }, REGISTRY_SCOPE];
-      const results = await db.query(Query.select(Filter.type(TestSchema.Expando)).from(spacePlusRegistryScope)).run();
+      // Scoped to both the owning space and registry returns both.
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).from(Scope.space(), Scope.registry()))
+        .run();
       expect(results).toHaveLength(2);
       const values = results.map((r) => (r as any).value).sort();
       expect(values).toEqual([1, 2]);
     });
 
-    test('db.query(Filter.type) includes both registry and db objects; Filter.everything() excludes registry', async ({ expect }) => {
+    test('registry is opt-in: plain db.query() excludes registry objects', async ({ expect }) => {
       // Object in the registry (not persisted to DB).
       graph.registry.add([Obj.make(TestSchema.Expando, { value: 42 })]);
 
@@ -2539,20 +2521,21 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { value: 99 }));
       await db.flush();
 
-      // Filter.type queries fan in both the space and the registry — both objects appear.
-      const typeResults = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      expect(typeResults).toHaveLength(2);
-      const typeValues = typeResults.map((r) => (r as any).value).sort((a: number, b: number) => a - b);
-      expect(typeValues).toEqual([42, 99]);
+      // Plain db.query() targets the owning space only — registry excluded.
+      const dbResults = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(dbResults).toHaveLength(1);
+      expect((dbResults[0] as any).value).toBe(99);
 
-      // Filter.everything() is a user-data query and must NOT include registry entities.
-      const allResults = await db.query(Query.select(Filter.everything())).run();
-      expect(allResults).toHaveLength(1);
-      expect((allResults[0] as any).value).toBe(99);
+      // Opting into the registry scope fans in both.
+      const bothResults = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).from(Scope.space(), Scope.registry()))
+        .run();
+      const values = bothResults.map((r) => (r as any).value).sort((a: number, b: number) => a - b);
+      expect(values).toEqual([42, 99]);
     });
 
     test('subscription with registry scope re-fires when graph.registry changes', async ({ expect }) => {
-      const query = db.query(Query.select(Filter.type(TestSchema.Expando)).from(REGISTRY_SCOPE));
+      const query = db.query(Query.select(Filter.type(TestSchema.Expando)).from(Scope.registry()));
 
       const trigger = new Trigger<void>();
       const unsub = query.subscribe(() => {
@@ -2566,7 +2549,7 @@ describe('Query', () => {
       expect(query.results).toHaveLength(1);
     });
 
-    test('db.query(Filter.type(Type.Type)) returns type entities from both registry and db', async ({ expect }) => {
+    test('Filter.type(Type.Type) scoped to space + registry returns types from both', async ({ expect }) => {
       // Register one type statically in the in-process registry.
       graph.registry.add([TestSchema.Person]);
 
@@ -2574,10 +2557,8 @@ describe('Query', () => {
       await db.registry.register([TestSchema.Task]);
       await db.flush();
 
-      // db.query() now fans in both the owning space and the local registry by
-      // default, so a plain Filter.type(Type.Type) returns both persisted and
-      // static type-schema entities.
-      const results = await db.query(Filter.type(Type.Type)).run();
+      // Scoping to space + registry fans in both persisted and code-shipped types.
+      const results = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
 
       const typenames = results.map((t) => Type.getTypename(t));
       expect(typenames).toContain(Type.getTypename(TestSchema.Person));

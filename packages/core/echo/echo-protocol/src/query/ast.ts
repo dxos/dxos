@@ -447,11 +447,14 @@ export const QueryOptions = Schema.Struct({
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 /**
- * Selects from a specific space (automerge documents).
+ * Selects from a space (automerge documents).
+ * When `spaceId` is omitted, targets the owning space — i.e. the space of whichever
+ * database executes the query. This lets callers reference "this space" without
+ * having to look up its id.
  * When `includeAllFeeds` is true, also selects from all feeds belonging to that space.
  */
 export const SpaceScope = Schema.TaggedStruct('space', {
-  spaceId: Schema.String,
+  spaceId: Schema.optional(Schema.String),
   includeAllFeeds: Schema.optional(Schema.Boolean),
 });
 export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}

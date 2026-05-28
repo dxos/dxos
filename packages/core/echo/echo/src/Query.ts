@@ -201,7 +201,18 @@ export interface Query<T> {
   'from'(query: Any): Query<T>;
 
   /**
-   * Query from a raw scope specification.
+   * Query from one or more raw scopes.
+   *
+   * Use the {@link Scope} constructors rather than raw tagged objects:
+   *
+   * ```ts
+   * Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
+   * ```
+   */
+  'from'(...scopes: QueryAST.Scope[]): Query<T>;
+
+  /**
+   * Query from a raw scope or array of scopes.
    */
   'from'(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
 
@@ -328,19 +339,48 @@ class QueryClass implements Any {
   }
 
   from(
-    arg:
-      | Database.Database
-      | Database.Database[]
-      | Feed.Feed
-      | Feed.Feed[]
-      | Collection.Collection
-      | View.View
-      | Any
-      | QueryAST.Scope
+    ...args:
+      | [
+          (
+            | Database.Database
+            | Database.Database[]
+            | Feed.Feed
+            | Feed.Feed[]
+            | Collection.Collection
+            | View.View
+            | Any
+            | QueryAST.Scope
+            | QueryAST.Scope[]
+            | 'all-accessible-spaces'
+          ),
+          { includeFeeds?: boolean }?,
+        ]
       | QueryAST.Scope[]
-      | 'all-accessible-spaces',
-    options?: { includeFeeds?: boolean },
   ): Any {
+    // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
+    if (args.length > 1 && args.every(_isRawScope)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: args as QueryAST.Scope[] },
+      });
+    }
+
+    const [arg, options] = args as [
+      (
+        | Database.Database
+        | Database.Database[]
+        | Feed.Feed
+        | Feed.Feed[]
+        | Collection.Collection
+        | View.View
+        | Any
+        | QueryAST.Scope
+        | QueryAST.Scope[]
+        | 'all-accessible-spaces'
+      ),
+      { includeFeeds?: boolean }?,
+    ];
     if (arg == null) {
       throw new TypeError(
         'Query.from() requires a valid data source argument (database, feed, query, scope, or "all-accessible-spaces").',
@@ -546,23 +586,28 @@ export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
  * @returns Query scoped to the given source.
  */
 export const from = (
-  source:
-    | Database.Database
-    | Database.Database[]
-    | Feed.Feed
-    | Feed.Feed[]
-    | Any
-    | QueryAST.Scope
+  ...args:
+    | [
+        (
+          | Database.Database
+          | Database.Database[]
+          | Feed.Feed
+          | Feed.Feed[]
+          | Any
+          | QueryAST.Scope
+          | QueryAST.Scope[]
+          | 'all-accessible-spaces'
+        ),
+        { includeFeeds?: boolean }?,
+      ]
     | QueryAST.Scope[]
-    | 'all-accessible-spaces',
-  options?: { includeFeeds?: boolean },
 ): Any => {
   const baseQuery: QueryAST.Query = {
     type: 'select',
     filter: Filter.everything().ast,
   };
   const wrapper = new QueryClass(baseQuery);
-  return wrapper.from(source as any, options);
+  return (wrapper.from as (...args: unknown[]) => Any)(...args);
 };
 
 const SCOPE_TAGS = new Set<string>(['space', 'feed', 'registry']);
