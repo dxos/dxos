@@ -5,14 +5,7 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, {
-  CSSProperties,
-  MouseEventHandler,
-  type ReactNode,
-  forwardRef,
-  useId,
-  useMemo,
-} from 'react';
+import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
 
 import { iconSize } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
