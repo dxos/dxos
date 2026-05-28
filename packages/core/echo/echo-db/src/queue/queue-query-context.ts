@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type QueryResult } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
+import { filterMatchObjectJSON } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

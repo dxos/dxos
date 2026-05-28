@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
-import { findTypeByDXN, make as makeRegistry } from '@dxos/echo-registry';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -43,7 +42,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   constructor() {
-    this._registry = makeRegistry();
+    this._registry = Registry.make();
     this._registry.add([Type.Type]);
   }
 
@@ -181,7 +180,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         let status: string = '';
         try {
           // The registry handles both DXN-form (typename-based) and echo-form URIs.
-          const typeEntity = findTypeByDXN(this._registry, uri.toString());
+          const typeEntity = Registry.findTypeByDXN(this._registry, uri.toString());
           if (typeEntity != null) {
             status = 'resolved';
             return Type.getSchema(typeEntity);
@@ -204,7 +203,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        return findTypeByDXN(this._registry, uri.toString());
+        return Registry.findTypeByDXN(this._registry, uri.toString());
       },
     } satisfies Ref.Resolver;
   }

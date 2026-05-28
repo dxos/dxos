@@ -5,8 +5,10 @@
 import * as semver from 'semver';
 
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+
+import { ATTR_META } from '../common';
+import { type ObjectJSON } from '../Entity';
 
 export type MatchedObject = {
   id: ObjectId;

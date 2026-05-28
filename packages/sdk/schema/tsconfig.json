@@ -57,9 +57,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/echo-registry"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {

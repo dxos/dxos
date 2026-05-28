@@ -4,8 +4,7 @@
 
 import { describe } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
-import { findTypeByDXN } from '@dxos/echo-registry';
+import { Obj, Registry, Type } from '@dxos/echo';
 import { type TestSchema } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
@@ -42,7 +41,7 @@ describe('Echo reactive proxy', () => {
       createObjectFn: async (props = {}) => {
         const object = Obj.make(schema, props as any) as TestSchema.Example;
         if (
-          findTypeByDXN(db.graph.registry, 'dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema)) ===
+          Registry.findTypeByDXN(db.graph.registry, 'dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema)) ===
           undefined
         ) {
           db.graph.registry.add([schema]);

@@ -8,7 +8,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Entity, Obj, Registry, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
   EncodedReference,
@@ -16,7 +16,6 @@ import {
   PROPERTY_ID,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { findTypeByDXN } from '@dxos/echo-registry';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -634,7 +633,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typeURI = EncodedReference.toURI(typeRef);
     const registry = target[symbolInternals].database.graph.registry;
     // Look up by the raw typeURI string — the registry normalises DXN forms.
-    const fromRegistry = findTypeByDXN(registry, typeURI);
+    const fromRegistry = Registry.findTypeByDXN(registry, typeURI);
     if (fromRegistry != null) {
       return fromRegistry;
     }
@@ -645,7 +644,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoRefMatch) {
       const echoId = echoRefMatch[1];
       if (echoId != null) {
-        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
+        const found = Registry.findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
         if (found != null) {
           return found;
         }
@@ -661,7 +660,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoUri) {
       const echoId = EchoURI.getObjectId(echoUri);
       if (echoId != null) {
-        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
+        const found = Registry.findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
         if (found != null) {
           return found;
         }
@@ -706,7 +705,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const fromRegistry = findTypeByDXN(database.graph.registry, typeURI);
+    const fromRegistry = Registry.findTypeByDXN(database.graph.registry, typeURI);
     if (fromRegistry != null) {
       return Type.getSchema(fromRegistry);
     }

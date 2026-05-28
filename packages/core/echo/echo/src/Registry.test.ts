@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Obj, Registry, Type } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { findTypeByDXN, layer, layerWithUpstream, make } from './Registry';
+import * as Obj from './Obj';
+import * as Registry from './Registry';
+import * as Type from './Type';
+import { TestSchema } from './testing';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -20,7 +21,7 @@ const makeObj = (props: { key?: string; version?: string; value: number }) =>
 
 describe('Registry', () => {
   test('add/get/remove/list', ({ expect }) => {
-    const registry = make();
+    const registry = Registry.make();
     const a = makeObj({ key: 'org.example.type.a', version: '1.0.0', value: 1 });
     const b = makeObj({ key: 'org.example.type.b', version: '2.0.0', value: 2 });
 
@@ -38,8 +39,8 @@ describe('Registry', () => {
     const upstreamObj = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 100 });
     const localObj = makeObj({ key: 'org.example.type.bar', version: '1.0.0', value: 200 });
 
-    const upstream = make({ initial: [upstreamObj] });
-    const local = make({ upstream, initial: [localObj] });
+    const upstream = Registry.make({ initial: [upstreamObj] });
+    const local = Registry.make({ upstream, initial: [localObj] });
 
     expect(local.get(upstreamObj.id)).toBe(upstreamObj);
     expect(local.get(localObj.id)).toBe(localObj);
@@ -59,8 +60,8 @@ describe('Registry', () => {
       value: 999,
     });
 
-    const upstream = make({ initial: [original] });
-    const local = make({ upstream, initial: [override] });
+    const upstream = Registry.make({ initial: [original] });
+    const local = Registry.make({ upstream, initial: [override] });
 
     expect((local.get(original.id) as any).value).toBe(999);
     expect(local.list()).toHaveLength(1);
@@ -74,7 +75,7 @@ describe('Registry', () => {
       return registry.list();
     });
 
-    const result = await runAndForwardErrors(program.pipe(Effect.provide(layer({ initial: [obj] }))));
+    const result = await runAndForwardErrors(program.pipe(Effect.provide(Registry.layer({ initial: [obj] }))));
     expect(result).toHaveLength(1);
     expect((result[0] as any).value).toBe(42);
   });
@@ -88,14 +89,14 @@ describe('Registry', () => {
       return registry.list().map((o) => (o as any).value);
     });
 
-    const stack = Layer.provide(layerWithUpstream({ initial: [localObj] }), layer({ initial: [upstreamObj] }));
+    const stack = Layer.provide(Registry.layerWithUpstream({ initial: [localObj] }), Registry.layer({ initial: [upstreamObj] }));
 
     const result = await runAndForwardErrors(program.pipe(Effect.provide(stack)));
     expect(result.sort()).toEqual([1, 2]);
   });
 
   test('add type entity and findTypeByDXN', ({ expect }) => {
-    const registry = make();
+    const registry = Registry.make();
     // Type.Type is a valid AnyEntity with typename and version.
     const schema = Type.Type;
     const typename = Type.getTypename(schema);
@@ -107,17 +108,17 @@ describe('Registry', () => {
     expect(registry.list().filter(Type.isType)).toHaveLength(1);
 
     // Exact DXN lookup via findTypeByDXN.
-    expect(findTypeByDXN(registry, `dxn:${typename}:${version}`)).toBe(schema);
+    expect(Registry.findTypeByDXN(registry, `dxn:${typename}:${version}`)).toBe(schema);
     // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
-    expect(findTypeByDXN(registry, `dxn:type:${typename}:${version}`)).toBe(schema);
+    expect(Registry.findTypeByDXN(registry, `dxn:type:${typename}:${version}`)).toBe(schema);
     // Short-form lookup (without dxn: prefix).
-    expect(findTypeByDXN(registry, `${typename}:${version}`)).toBe(schema);
+    expect(Registry.findTypeByDXN(registry, `${typename}:${version}`)).toBe(schema);
     // Missing DXN.
-    expect(findTypeByDXN(registry, 'dxn:org.example.Bar:1.0.0')).toBeUndefined();
+    expect(Registry.findTypeByDXN(registry, 'dxn:org.example.Bar:1.0.0')).toBeUndefined();
   });
 
   test('type entities are surfaced in list()', ({ expect }) => {
-    const registry = make();
+    const registry = Registry.make();
     const obj = makeObj({ value: 1 });
     registry.add([obj, Type.Type]);
     // Both regular objects and type entities appear in list().
@@ -126,7 +127,7 @@ describe('Registry', () => {
   });
 
   test('changed fires on add/remove/clear', ({ expect }) => {
-    const registry = make();
+    const registry = Registry.make();
     let count = 0;
     registry.changed.on(() => count++);
 
