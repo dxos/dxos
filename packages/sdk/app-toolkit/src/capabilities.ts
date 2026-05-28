@@ -126,6 +126,31 @@ export namespace AppCapabilities {
   );
 
   /**
+   * A static asset bundled with a plugin's published package, exposed for
+   * other plugins to read.
+   *
+   * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
+   * and contribute it via this capability on
+   * {@link AppActivationEvents.SetupPluginAssets}. Consumers read all
+   * contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+   */
+  export type PluginAsset = Readonly<{
+    /** Owning plugin id (matches `Plugin.Meta.id`). */
+    pluginId: string;
+    /** Path within the plugin package — typically equal to `Plugin.Meta.spec`. */
+    path: string;
+    /** Raw text content. */
+    content: string;
+    /** Optional MIME type (e.g. `text/markdown`, `application/x-mdl`). */
+    mimeType?: string;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.plugin-asset');
+
+  /**
    * @deprecated Resolve {@link AiService.AiService} through the process manager
    * runtime (via {@link Capabilities.ProcessManagerRuntime} or a
    * {@link ServiceResolver}) instead of pulling this layer directly. The

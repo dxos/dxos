@@ -4,11 +4,8 @@
 
 import type { Model } from '#types';
 
-// @ts-expect-error Vite raw import.
 import firetruckObj from '../../assets/models/firetruck.obj?raw';
-// @ts-expect-error Vite raw import.
 import raceObj from '../../assets/models/race.obj?raw';
-// @ts-expect-error Vite raw import.
 import taxiObj from '../../assets/models/taxi.obj?raw';
 
 /** Bundled OBJ data for preset models. */
