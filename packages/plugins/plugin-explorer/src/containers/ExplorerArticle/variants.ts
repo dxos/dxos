@@ -14,12 +14,12 @@ export const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: str
   {
     value: 'cluster',
     icon: 'ph--asterisk-simple--regular',
-    label: 'Radial cluster',
+    label: 'Radial',
   },
   {
     value: 'bundle',
     icon: 'ph--circles-three-plus--regular',
-    label: 'Edge bundling',
+    label: 'Connections',
   },
   {
     value: 'lattice',

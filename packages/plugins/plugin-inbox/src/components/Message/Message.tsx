@@ -4,11 +4,13 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { type EchoURI } from '@dxos/keys';
-import { Icon, IconBlock, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Filter, Obj } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { Icon, IconBlock, Tag, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
@@ -22,12 +24,14 @@ import {
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { mx, toHue } from '@dxos/ui-theme';
 
-import { InboxCapabilities } from '#types';
+import { InboxCapabilities, Mailbox } from '#types';
 
+import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
-import { Headers } from './Headers';
+import { AnchorIconButton } from '../AnchorIconButton';
+import { UserIconButton } from '../UserIconButton';
 import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
 //
@@ -180,10 +184,25 @@ type MessageHeaderProps = ThemedClassName<{
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
+  const space = getSpace(message);
+  const db = space?.db;
+  const objects = useExtractedObjects(db, message);
+  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
+  // `useQuery` only fires when the matching set changes, not when nested fields mutate.
+  // Subscribe directly to each mailbox so a tag-only extractor run (no created objects,
+  // no relation, just a `mailbox.tags` mutation) still re-renders the tags row.
+  const [, bump] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => {
+    const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [mailboxes]);
+  const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+
   return (
     <div className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 mb-2 border-b border-subdued-separator'>
+      {/* Subject row. */}
       <div className='col-span-2 grid grid-cols-subgrid'>
-        <IconBlock classNames='text-subdued' aria-hidden='true'>
+        <IconBlock classNames='text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </IconBlock>
         <div className='flex flex-col gap-1 overflow-hidden'>
@@ -194,12 +213,55 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         </div>
       </div>
 
-      <Headers message={message} sender={sender} onContactCreate={onContactCreate} />
+      {/* Sender row. */}
+      {/* TODO(burdon): List other To/CC/BCC. */}
+      <div className='col-span-2 grid grid-cols-subgrid items-center'>
+        <UserIconButton
+          title={message.sender.name}
+          value={sender}
+          onContactCreate={() => onContactCreate?.(message.sender)}
+        />
+        <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
+      </div>
+
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <ExtractedObjectRow key={Obj.getURI(object).toString()} object={object} />
+      ))}
+
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      {tags.length > 0 && (
+        <div className='col-span-2 grid grid-cols-subgrid items-center'>
+          <IconBlock classNames='text-subdued'>
+            <Icon icon='ph--tag--regular' />
+          </IconBlock>
+          <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
+            {tags.map((tag) => (
+              <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
+                {tag.label}
+              </Tag>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 MessageHeader.displayName = MESSAGE_HEADER_NAME;
+
+const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
+  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
+  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
+  const echoUri = EchoURI.tryParse(Obj.getURI(object).toString());
+
+  return (
+    <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>
+      <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
+      <h3 className='truncate text-primary-text'>{label}</h3>
+    </div>
+  );
+};
 
 //
 // Content

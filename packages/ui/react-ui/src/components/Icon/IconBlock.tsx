@@ -4,8 +4,7 @@
 
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
-import { mx } from '@dxos/ui-theme';
-
+import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 export type IconBlockProps = ThemedClassName<
@@ -23,19 +22,16 @@ export type IconBlockProps = ThemedClassName<
  *
  * The `padding` flag mirrors the inset that `IconButton` applies, so a wrapped child element
  * (e.g., a drag handle, a menu trigger) lands in the same visible box as a bare icon would.
+ *
+ * Defaults `aria-hidden='true'` — the slot wraps decorative chrome by default. Pass
+ * `aria-hidden={false}` when the slot's contents convey meaning that isn't already labelled
+ * elsewhere in the row.
  */
 export const IconBlock = forwardRef<HTMLDivElement, IconBlockProps>(
   ({ classNames, children, padding, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     return (
-      <div
-        {...props}
-        className={mx(
-          'grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
-          padding && '[&>*]:p-1',
-          classNames,
-        )}
-        ref={forwardedRef}
-      >
+      <div aria-hidden='true' {...props} className={tx('icon.block', { padding }, classNames)} ref={forwardedRef}>
         {children}
       </div>
     );

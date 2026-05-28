@@ -107,6 +107,7 @@ export const PopoverContent = () => {
         side={state.popoverSide}
         sticky='always'
         hideWhenDetached
+        onOpenAutoFocus={(event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
       >
@@ -121,6 +122,8 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
+                  {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
+                  <Card.DragHandle />
                   <Card.IconBlock padding>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -128,6 +131,7 @@ export const PopoverContent = () => {
                     <Menu.Trigger asChild disabled={!objectMenuItems.length}>
                       <Toolbar.IconButton
                         variant='ghost'
+                        density='sm'
                         icon='ph--dots-three-vertical--regular'
                         iconOnly
                         label='Actions'

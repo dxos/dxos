@@ -9,7 +9,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 const meta: Meta = {
-  title: 'plugins/plugin-explorer/containers/ExplorerArticle/experimental',
+  title: 'ui/react-ui-graph/experimental',
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',

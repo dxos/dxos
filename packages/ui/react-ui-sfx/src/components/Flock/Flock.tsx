@@ -101,7 +101,8 @@ const coloringFunction: Record<FlockColoring, (boid: FlockBoid) => string> = {
 };
 
 type TickConfig = {
-  trail: number;
+  /** Number of recent positions kept per boid; the rendered trail length, in frames. */
+  trailLength: number;
   maxVelocity: number;
   alignment: number;
   cohesion: number;
@@ -109,15 +110,13 @@ type TickConfig = {
   avoidance: number;
   radius: number;
   coloring: FlockColoring;
-  /** Pre-computed `rgba(0, 0, 0, 1-trail)` string used by the destination-out fade. */
-  fadeStyle: string;
 };
 
-const updateBoid = (
+/** Integrate position + wrap on canvas edges + record into the trail ring buffer. */
+const stepBoid = (
   b: FlockBoid,
-  context: CanvasRenderingContext2D,
   { width, height }: Dimensions,
-  { radius, coloring, maxVelocity }: Pick<TickConfig, 'radius' | 'coloring' | 'maxVelocity'>,
+  { maxVelocity, trailLength }: Pick<TickConfig, 'maxVelocity' | 'trailLength'>,
 ) => {
   b.position.add(b.velocity.add(b.acceleration!).truncate(maxVelocity));
 
@@ -133,9 +132,81 @@ const updateBoid = (
     b.position.x += width;
   }
 
+  const trail = b.trail ?? (b.trail = []);
+  trail.unshift({ x: b.position.x, y: b.position.y });
+  if (trail.length > trailLength) {
+    trail.length = trailLength;
+  }
+};
+
+/**
+ * Render a boid as a tapered, faded polyline + a solid head. Three stroke passes
+ * cover ~thirds of the trail with decreasing lineWidth (head fatter than tail) and
+ * decreasing alpha (head opaque, tail faint). This is ~10× cheaper than drawing
+ * each trail position as its own arc, and gives a continuous curve instead of a
+ * dotted streak when boids move fast.
+ *
+ * Wrap-aware: boids wrap on canvas edges, so consecutive trail positions can be
+ * up to (width, height) apart. Any segment that jumps further than half the
+ * canvas in either axis is treated as a wrap and broken into a fresh sub-path —
+ * otherwise the line would streak across the entire canvas.
+ */
+const renderBoid = (
+  b: FlockBoid,
+  context: CanvasRenderingContext2D,
+  { width, height }: Dimensions,
+  { radius, coloring }: Pick<TickConfig, 'radius' | 'coloring'>,
+) => {
+  const trail = b.trail ?? [];
+  if (trail.length === 0) {
+    return;
+  }
+  const color = coloringFunction[coloring](b);
+
+  // Trail body — drawn first so the head sits on top.
+  if (trail.length >= 2) {
+    context.strokeStyle = color;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    const tl = trail.length;
+    const last = tl - 1;
+    // Clamp to valid indices so small trails (e.g. tl=2 during the initial transient)
+    // don't index past `tl - 1`. Skipped passes fall out below via `pass.to <= pass.from`.
+    const mid1 = Math.min(last, Math.max(0, Math.floor(tl * 0.33)));
+    const mid2 = Math.min(last, Math.max(mid1, Math.floor(tl * 0.66)));
+    const passes: Array<{ from: number; to: number; width: number; alpha: number }> = [
+      { from: 0, to: mid1, width: radius * 1.5, alpha: 0.7 },
+      { from: mid1, to: mid2, width: radius, alpha: 0.4 },
+      { from: mid2, to: last, width: radius * 0.5, alpha: 0.15 },
+    ];
+    for (const pass of passes) {
+      if (pass.to <= pass.from) {
+        continue;
+      }
+      context.lineWidth = pass.width;
+      context.globalAlpha = pass.alpha;
+      context.beginPath();
+      context.moveTo(trail[pass.from].x, trail[pass.from].y);
+      for (let i = pass.from + 1; i <= pass.to; i++) {
+        const dx = Math.abs(trail[i].x - trail[i - 1].x);
+        const dy = Math.abs(trail[i].y - trail[i - 1].y);
+        if (dx > width / 2 || dy > height / 2) {
+          // Edge-wrap detected — start a fresh sub-path at this position so we
+          // don't draw a line across the entire canvas to the wrapped point.
+          context.moveTo(trail[i].x, trail[i].y);
+        } else {
+          context.lineTo(trail[i].x, trail[i].y);
+        }
+      }
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+  }
+
+  // Head — full-radius arc on top of the trail.
+  context.fillStyle = color;
   context.beginPath();
-  context.fillStyle = coloringFunction[coloring](b);
-  context.arc(b.position.x, b.position.y, radius, 0, 2 * Math.PI);
+  context.arc(trail[0].x, trail[0].y, radius, 0, 2 * Math.PI);
   context.fill();
 };
 
@@ -160,23 +231,16 @@ const tick = (
   cursor: FlockObstacle | null,
   config: TickConfig,
 ) => {
-  const { maxVelocity, alignment, cohesion, separation, fadeStyle } = config;
+  const { maxVelocity, alignment, cohesion, separation } = config;
 
-  // Trail fade via `destination-out`: each frame multiplies every pixel's α by
-  // `trail` on the GPU compositor — no pixel-buffer roundtrip, ~free per frame.
-  // Canvas's round-half-to-even leaves a stall floor at low α (where x * trail
-  // rounds back to x), so we use an aggressive trail factor (default 0.70, max
-  // 0.80 at slider trail=20) to push that floor down to α ≈ 2/255 — visually
-  // indistinguishable from the
-  // CSS background that shows through. RGB is untouched, so boid colours stay
-  // intact while the alpha channel decays toward transparent.
+  // Render-from-history approach: clear the canvas each frame and redraw each boid's
+  // trail from its in-memory position ring buffer. Avoids u8 alpha/RGB rounding
+  // stalls (which manifested as faint residual dots on dark backgrounds in the
+  // earlier accumulating-canvas approach).
   const context = canvas.getContext('2d')!;
-  context.globalCompositeOperation = 'destination-out';
-  context.fillStyle = fadeStyle;
-  context.fillRect(0, 0, width, height);
-  context.globalCompositeOperation = 'source-over';
+  context.clearRect(0, 0, width, height);
 
-  // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
+  // Obstacles re-paint every frame on the cleared canvas.
   renderObstacles(context, obstacles);
 
   // Calculate forces.
@@ -250,7 +314,8 @@ const tick = (
     }
   });
 
-  boids.forEach((boid) => updateBoid(boid, context, { width, height }, config));
+  boids.forEach((boid) => stepBoid(boid, { width, height }, config));
+  boids.forEach((boid) => renderBoid(boid, context, { width, height }, config));
 };
 
 const generateFlockObstacles = (dimensions: Dimensions, numObstacles: number): FlockObstacle[] => {
@@ -310,7 +375,11 @@ export type FlockProps = ThemedClassName<{
   coloring?: FlockColoring;
   /** Per-boid render radius in pixels. */
   radius?: number;
-  /** Vapor trail factor, 0..20. */
+  /**
+   * Number of recent positions kept per boid; the rendered trail length, in frames.
+   * One position is recorded per simulation tick, so e.g. `trail={30}` is roughly a
+   * 0.5-second tail at 60 fps. Clamped to `Math.max(1, Math.round(trail))`.
+   */
   trail?: number;
   maxVelocity?: number;
   alignment?: number;
@@ -383,10 +452,18 @@ export const Flock = ({
 
   // Track the model's boid array via subscribe → setBoids. Per-tick position
   // mutations don't emit on the atom (by design), so this only fires on
-  // `model.setBoids(...)` and the initial sync.
+  // `model.setBoids(...)` and the initial sync. Reset each boid's renderer-owned
+  // trail so a `setBoids` that reuses boid identities doesn't carry stale
+  // segments from the previous scene into the next.
   useEffect(() => {
-    setBoids(model.boids);
-    return model.subscribe(() => setBoids(model.boids));
+    const sync = () => {
+      for (const boid of model.boids) {
+        boid.trail = [];
+      }
+      setBoids(model.boids);
+    };
+    sync();
+    return model.subscribe(sync);
   }, [model]);
 
   // Populate the model once the container dimensions are known and the model is
@@ -416,22 +493,19 @@ export const Flock = ({
   }, [width, height, numObstacles]);
 
   // The trail/physics config bundled for tick; memoed so the interval effect
-  // below doesn't re-key on every parent render. fadeStyle's RGB is ignored
-  // under `destination-out`; only its alpha matters.
+  // below doesn't re-key on every parent render.
   const tickConfig = useMemo<TickConfig>(() => {
-    // Map slider 0..20 → factor 0.60..0.80. Even at the max the stall sits
-    // around α=2 (≈0.8% visible) which the CSS bg masks out.
-    const trailFactor = (60 + trail) / 100;
     return {
       coloring,
       radius,
       maxVelocity,
-      trail: trailFactor,
+      // `trail` is now the literal number of recent positions kept and rendered per
+      // boid (one position per frame). At 60fps a value of 30 → ~0.5s visible tail.
+      trailLength: Math.max(1, Math.round(trail)),
       alignment: alignment / 100,
       cohesion: cohesion / 100,
       separation: separation / 100,
       avoidance: avoidance / 10,
-      fadeStyle: `rgba(0, 0, 0, ${1 - trailFactor})`,
     };
   }, [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance]);
 

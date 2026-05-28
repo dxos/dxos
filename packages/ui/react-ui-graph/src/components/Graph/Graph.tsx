@@ -27,7 +27,7 @@ export type GraphController = {
 };
 
 export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any> = ThemedClassName<
-  Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes' | 'renderNode'> & {
+  Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes' | 'renderNode' | 'highlightOnHover'> & {
     model?: GraphModel.ReactiveGraphModel<Node, Edge>;
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
@@ -95,6 +95,7 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
     props.subgraphs,
     props.attributes,
     props.renderNode,
+    props.highlightOnHover,
   ]);
 
   // External API.
