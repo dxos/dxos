@@ -14,8 +14,12 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/neutral/capabilities/node.mjs",
       "default": "./dist/lib/neutral/capabilities/index.mjs"
     },
     "#capabilities/node": {

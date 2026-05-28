@@ -18,8 +18,7 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Operation.PersistentOperation, Trigger.Trigger, Trace.Message] }),
   Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
+    activatesOn: ActivationEvents.SetupProcessManager,
     activate: LayerSpecs,
   }),
   Plugin.addModule({
