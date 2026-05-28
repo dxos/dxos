@@ -59,9 +59,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         }
 
         // Copy source chat's blueprint and object bindings to the new feed.
-        const sourceBindings = (
-          yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(Effect.provide(feedServiceLayer))
-        ).filter(Obj.instanceOf(AiContext.Binding));
+        const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
+          Effect.provide(feedServiceLayer),
+        )).filter(Obj.instanceOf(AiContext.Binding));
 
         if (sourceBindings.length > 0) {
           // Reduce binding events to the final active set.
