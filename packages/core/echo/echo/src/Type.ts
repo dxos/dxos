@@ -109,6 +109,12 @@ export type AnyObj = Obj<unknown>;
  * NOT a `Schema.Schema`. Use `Type.InstanceType<typeof Foo>` for the instance
  * type and `Type.getSchema(Foo)` to obtain the underlying Effect Schema.
  *
+ * The entity's id defaults to `ObjectId.deterministic(typename, version)` so
+ * constructing a type never reaches `crypto.getRandomValues()` — required for
+ * Cloudflare workerd, which forbids RNG calls in global (module-evaluation)
+ * scope. Pass `{ id }` to override (e.g. with `ObjectId.random()` from a
+ * request handler).
+ *
  * @example
  * ```ts
  * const Person = Schema.Struct({
@@ -117,7 +123,10 @@ export type AnyObj = Obj<unknown>;
  * ```
  */
 export const makeObject: {
-  (dxn: DXN.DXN): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
+  (
+    dxn: DXN.DXN,
+    options?: { id?: ObjectId },
+  ): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
 } = internal.EchoObjectSchema as any;
 
 //
@@ -272,6 +281,11 @@ export const makeRelation: {
     dxn: DXN.DXN;
     source: Obj<SourceInstance, any> | internal.UnknownTypeSchema<SourceInstance, typeof EntityModule.Kind.Object>;
     target: Obj<TargetInstance, any> | internal.UnknownTypeSchema<TargetInstance, typeof EntityModule.Kind.Object>;
+    /**
+     * Override the entity id. Defaults to `ObjectId.deterministic(typename, version)`;
+     * see `Type.makeObject` for the workerd motivation.
+     */
+    id?: ObjectId;
   }): <Self extends Schema.Schema.Any>(
     self: Self,
   ) => Relation<
