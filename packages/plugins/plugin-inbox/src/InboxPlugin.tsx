@@ -23,7 +23,7 @@ import {
 import { meta } from '#meta';
 import { ContactMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Calendar, InboxCapabilities, InboxEvents, Mailbox } from '#types';
+import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -35,7 +35,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
+    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message, ExtractedFrom.ExtractedFrom],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

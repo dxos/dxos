@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
+import { ExtractedFrom, Mailbox } from '@dxos/plugin-inbox';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
@@ -111,6 +111,7 @@ const meta = {
             Mailbox.Mailbox,
             MessageType.Message,
             Person.Person,
+            ExtractedFrom.ExtractedFrom,
             Booking.Booking,
             Segment.Segment,
             Trip.Trip,
