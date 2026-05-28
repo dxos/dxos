@@ -173,15 +173,17 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 
 /**
  * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
- * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
- * built-in implementation registered with the runtime.
+ * deployed as a user function. The `dxn:<key>` deployedId routes invocations to the built-in
+ * implementation registered with the runtime; the EDGE function service detects the `dxn:`
+ * scheme via `DXN.isDXN` and dispatches to its intrinsic handler instead of looking up a
+ * deployed worker.
  */
 export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
   return {
     ...op,
     meta: {
       ...op.meta,
-      deployedId: `intrinsic:${op.meta.key}`,
+      deployedId: `dxn:${op.meta.key}`,
     },
   };
 };
@@ -224,27 +226,27 @@ export const withHandler: {
   opOrHandler: Def | Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
   handler?: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
 ): WithHandler<Def> => {
-  // If called with just handler (piped usage).
-  if (handler === undefined) {
-    const handlerFn = opOrHandler as Handler<
-      Definition.Input<Def>,
-      Definition.Output<Def>,
-      E,
-      Definition.Services<Def> | Service
-    >;
-    return ((op: Def) => ({
-      ...op,
-      handler: handlerFn,
-    })) as any;
-  }
+    // If called with just handler (piped usage).
+    if (handler === undefined) {
+      const handlerFn = opOrHandler as Handler<
+        Definition.Input<Def>,
+        Definition.Output<Def>,
+        E,
+        Definition.Services<Def> | Service
+      >;
+      return ((op: Def) => ({
+        ...op,
+        handler: handlerFn,
+      })) as any;
+    }
 
-  // If called with both op and handler (direct usage).
-  const op = opOrHandler as Def;
-  return {
-    ...op,
-    handler,
-  } as any;
-};
+    // If called with both op and handler (direct usage).
+    const op = opOrHandler as Def;
+    return {
+      ...op,
+      handler,
+    } as any;
+  };
 
 /**
  * Helper to make the handler type opaque.
@@ -494,7 +496,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() { }
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.
