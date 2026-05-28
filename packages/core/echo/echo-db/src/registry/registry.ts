@@ -10,14 +10,14 @@ import { type Database, Entity, Query, type Filter, type QueryResult, Registry, 
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI } from '@dxos/keys';
+import { DXN, EchoURI, URI } from '@dxos/keys';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
  *
  * All entities (objects, relations, and type-definition entities) are stored in a
  * single `#entities` map keyed by id. Type entities are additionally indexed by
- * their DXN string(s) in `#typesByDXN` so that {@link findTypeByDXN} can resolve
+ * their DXN string(s) in `#typesByURI` so that {@link findTypeByDXN} can resolve
  * them in O(1) without exposing a type-specific method on the interface.
  */
 export class RegistryImpl implements Registry.Registry {
@@ -28,7 +28,7 @@ export class RegistryImpl implements Registry.Registry {
    * A single entity may be reachable under multiple DXN keys
    * (e.g. both the canonical typename DXN and an identifier DXN).
    */
-  readonly #typesByDXN: Map<string, Type.AnyEntity> = new Map();
+  readonly #typesByURI: Map<URI.URI, Type.AnyEntity> = new Map();
   readonly #upstream: Registry.Registry | undefined;
 
   constructor(options: Registry.Options) {
@@ -61,9 +61,9 @@ export class RegistryImpl implements Registry.Registry {
     this.#entities.delete(id);
     // Remove any DXN index entries that pointed to this entity.
     if (Type.isType(entity)) {
-      for (const [dxn, indexed] of this.#typesByDXN) {
+      for (const [dxn, indexed] of this.#typesByURI) {
         if (indexed === entity) {
-          this.#typesByDXN.delete(dxn);
+          this.#typesByURI.delete(dxn);
         }
       }
     }
@@ -73,7 +73,7 @@ export class RegistryImpl implements Registry.Registry {
 
   clear(): void {
     this.#entities.clear();
-    this.#typesByDXN.clear();
+    this.#typesByURI.clear();
     this.#changed.emit();
   }
 
@@ -111,7 +111,7 @@ export class RegistryImpl implements Registry.Registry {
    * Not part of the public {@link Registry.Registry} interface.
    */
   _findTypeByDXN(dxn: string): Type.AnyEntity | undefined {
-    const local = this.#typesByDXN.get(normalizeURI(dxn));
+    const local = this.#typesByURI.get(normalizeURI(dxn));
     if (local != null) {
       return local;
     }
@@ -134,11 +134,11 @@ export class RegistryImpl implements Registry.Registry {
       if (identifierDXN != null) {
         // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed types).
         // Index ONLY by identifier DXN to avoid overwriting static schemas that share the same typename/version.
-        this.#typesByDXN.set(normalizeURI(identifierDXN), typeEntity);
+        this.#typesByURI.set(normalizeURI(identifierDXN), typeEntity);
       } else {
         // Static schema (no identifier DXN): index by canonical typename DXN.
         const dxn = getTypeDXN(typeEntity);
-        this.#typesByDXN.set(dxn, typeEntity);
+        this.#typesByURI.set(dxn, typeEntity);
       }
     }
   }
@@ -212,12 +212,12 @@ const getPersistedIdentifierDXN = (type: Type.AnyEntity): string | undefined =>
  * Returns the canonical DXN string key for a type entity.
  * Format: `dxn:<typename>:<version>`.
  */
-const getTypeDXN = (type: Type.AnyEntity): string => {
+const getTypeDXN = (type: Type.AnyEntity): DXN.DXN => {
   const typename = Type.getTypename(type);
   const version = Type.getVersion(type);
   invariant(typename, 'Type entity must have a typename');
   invariant(version, 'Type entity must have a version');
-  return `dxn:${typename}:${version}`;
+  return DXN.make(typename, version);
 };
 
 /**
@@ -236,14 +236,14 @@ const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
 };
 
 /**
- * Normalizes a URI string to the canonical key form used by `#typesByDXN`.
+ * Normalizes a URI string to the canonical key form used by `#typesByURI`.
  * Tries `DXN.tryMake` first (strips the legacy `dxn:type:` prefix and validates
  * the type-DXN grammar); falls back to `EchoURI.tryParse` for echo identifier
  * URIs (`dxn:echo:@:<objectId>`, normalized to canonical `echo:` form), and
  * finally passes unrecognized strings through unchanged. Both `DXN` and `EchoURI`
- * are branded strings, so the result is always a plain string key.
+ * are branded URIs, so the result is always a {@link URI.URI} key.
  */
-const normalizeURI = (uri: string): string => DXN.tryMake(uri) ?? EchoURI.tryParse(uri) ?? uri;
+const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EchoURI.tryParse(uri) ?? URI.make(uri);
 
 /**
  * Executes a {@link Query.Query} against a {@link Registry.Registry}.
