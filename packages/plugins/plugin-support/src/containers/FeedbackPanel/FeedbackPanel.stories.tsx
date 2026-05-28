@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { DXN } from '@dxos/keys';
 import { type Observability } from '@dxos/observability';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ObservabilityCapabilities } from '@dxos/plugin-observability';

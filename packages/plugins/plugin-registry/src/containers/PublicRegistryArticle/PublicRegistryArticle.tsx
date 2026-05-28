@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Registry, Plugin, UrlLoader } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';

@@ -7,7 +7,6 @@ import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { DXN } from '@dxos/keys';
 import {
   ActivationEvent,
   ActivationEvents,
@@ -28,6 +27,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
