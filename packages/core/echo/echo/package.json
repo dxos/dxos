@@ -135,7 +135,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -144,7 +143,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
