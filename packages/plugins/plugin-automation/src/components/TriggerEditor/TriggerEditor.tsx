@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Record } from 'effect';
 import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
 import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
