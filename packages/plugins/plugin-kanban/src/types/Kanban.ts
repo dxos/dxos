@@ -37,20 +37,6 @@ export const Arrangement = Schema.Struct({
 
 export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
-/**
- * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
- */
-const KanbanV1Schema = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
-  arrangement: Arrangement,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.kanban', '0.1.0')));
-// TODO(wittjosiah): Try to clean up this type inference.
-export interface KanbanV1 extends Type.InstanceType<typeof KanbanV1Schema> {}
-export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
-
-//
-// v2 — `spec` is a discriminated union of how items are sourced.
 //
 // Mirrors the canonical DXOS pattern (see `Trigger.Spec` in
 // `@dxos/functions/src/types/Trigger.ts` and `Sequence.Source` in

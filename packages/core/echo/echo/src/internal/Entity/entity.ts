@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
-import { type ObjectId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
@@ -132,6 +132,14 @@ export interface EchoTypeSchema<
 //   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 /**
+ * Identity (typename + version) of the type meta-schema — the `Type.Type` that
+ * every ECHO type entity is itself an instance of. Shared by the materialisation
+ * vehicle ({@link persistentEntitySchema}) and `TypeSchema` so the two cannot
+ * drift on identity.
+ */
+export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
+
+/**
  * Effect Schema that every `Type.Type` entity is an instance of: the meta-schema
  * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. This is
  * the materialisation vehicle for `makeObject` below — the canonical user-facing
@@ -139,20 +147,22 @@ export interface EchoTypeSchema<
  * plus UI annotations.
  *
  * Kept self-contained (no import of `TypeSchema`) to avoid a bootstrap cycle:
- * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder
- * must not depend on it. `jsonSchema` is declared optional here (only on the
+ * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder must
+ * not depend on it. `jsonSchema` is declared optional here (only on the
  * materialisation vehicle — the canonical `TypeSchema` keeps it required) so the
  * construction-time `Schema.asserts` does not force the field before it is
  * attached; it is populated immediately after via a lazy accessor (see
  * `makeEchoTypeSchema`).
  */
+// TODO(wittjosiah): Reconcile with `TypeSchema` (`Type/type-schema.ts`).
+//   Both describe the same `org.dxos.type.schema` shape.
 const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
-  const typename = 'org.dxos.type.schema';
-  const version = '0.1.0';
+  const typename = DXN.getName(TypeMetaSchemaDXN);
+  const version = DXN.getVersion(TypeMetaSchemaDXN)!;
   const struct = Schema.Struct({
     name: Schema.optional(Schema.String),
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
-    id: Schema.String,
+    id: ObjectId,
   });
   const ast = SchemaAST.annotations(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
@@ -203,7 +213,7 @@ export const makeEchoTypeSchema = <
 
   // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
   // below as a getter (not passed here as data) for two reasons; see that accessor.
-  const entity = makeObject(persistentEntitySchema as Schema.Schema<any, any, never>, {} as any, meta);
+  const entity = makeObject(persistentEntitySchema, {} as any, meta);
 
   const target = getProxyTarget(entity)!;
   // `jsonSchema` is always available, but computed once on first read rather than at

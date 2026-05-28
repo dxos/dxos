@@ -4,12 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
-
-import { IconAnnotation } from '../Annotation';
-import { LabelAnnotation } from '../Annotation';
+import { IconAnnotation, LabelAnnotation } from '../Annotation';
 import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
-import { EchoTypeKindSchema } from '../Entity';
+import { EchoTypeKindSchema, TypeMetaSchemaDXN } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
 
 /**
@@ -37,7 +34,7 @@ export const TypeSchema = TypeSchemaStruct.pipe(
     icon: 'ph--database--regular',
     hue: 'green',
   }),
-  EchoTypeKindSchema(DXN.make('org.dxos.type.schema', '0.1.0')),
+  EchoTypeKindSchema(TypeMetaSchemaDXN),
 );
 
 /**

@@ -68,10 +68,6 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
   return undefined;
 };
 
-// `getTypeURIFromSpecifier` lives in `../Entity/type-uri.ts`: it resolves
-// entities (not just schemas) and so must depend on `Entity/api`. Keeping it
-// out of this module keeps `Annotation` free of any `Entity` import.
-
 //
 // TypeAnnotation
 //
@@ -222,9 +218,6 @@ export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
   invariant(URI.isURI(type), 'Invalid object.');
   return type;
 };
-
-// `isInstanceOf` lives in `../Entity/type-uri.ts` alongside
-// `getTypeURIFromSpecifier` for the same reason — it operates on entities.
 
 //
 // PropertyMeta
@@ -482,7 +475,6 @@ const IconAnnotationSchema = Schema.Struct({
    *  - 'pink'
    *  - 'rose'
    */
-
   hue: Schema.optional(Schema.String),
 });
 

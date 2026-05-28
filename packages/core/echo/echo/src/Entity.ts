@@ -177,11 +177,11 @@ export type JSON = internal.ObjectJSON;
 const isTypeEntity = (entity: unknown): boolean => internal.getEntityKindBrand(entity) === internal.EntityKind.Type;
 
 /**
- * Any value the read accessors operate on: a reactive entity, a snapshot, or a
- * type entity (`Type.AnyEntity`). Type entities are accepted because they are
- * first-class entities — `getURI`, `getTypename`, etc. work on them too.
+ * Any value the read accessors operate on: a reactive entity or a snapshot.
+ * Type entities (`Type.AnyEntity`) are also accepted — they're first-class
+ * entities, and `Unknown`'s kind-agnostic brand already subsumes them.
  */
-export type AnyInput = Unknown | Snapshot | Type.AnyEntity;
+export type AnyInput = Unknown | Snapshot;
 
 /**
  * Get the canonical URI of an entity (object, relation, or type). Returns `URI.URI` —

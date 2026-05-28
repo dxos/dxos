@@ -39,11 +39,11 @@ export const OnCreateSpace = Operation.make({
   output: Schema.Void,
 });
 
-export const OnSchemaAdded = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.on-schema-added`, name: 'On Schema Added', icon: 'ph--table--regular' },
+export const OnTypeAdded = Operation.make({
+  meta: { key: `${TABLE_OPERATION}.on-type-added`, name: 'On Type Added', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
-    schema: Schema.Any,
+    type: Schema.Any,
     show: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,

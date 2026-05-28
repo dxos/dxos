@@ -401,11 +401,11 @@ export namespace SpaceOperation {
     name: Schema.optional(Schema.String),
   });
 
-  export const AddSchema = Operation.make({
+  export const AddType = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-schema`,
-      name: 'Add Schema',
-      description: 'Add a schema to the space.',
+      key: `${SPACE_OPERATION}.add-type`,
+      name: 'Add Type',
+      description: 'Add a type to the space.',
       icon: 'ph--code--regular',
     },
     services: [Capability.Service, Plugin.Service],
@@ -414,8 +414,8 @@ export namespace SpaceOperation {
       name: Schema.optional(Schema.String),
       typename: Schema.optional(Schema.String),
       version: Schema.optional(Schema.String),
-      // TODO(wittjosiah): Schema for schema?
-      schema: Schema.Any,
+      // TODO(wittjosiah): Schema for type?
+      type: Schema.Any,
       show: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({

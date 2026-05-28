@@ -545,11 +545,6 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
 }
 
 /**
- * The kind of ECHO entity a `Type.Type` describes — object or relation.
- */
-export type TypeKind = 'object' | 'relation';
-
-/**
  * Instance type produced by a Type entity.
  *
  * Accepts ONLY {@link AnyEntity} inputs — `Type.Obj`, `Type.Relation`, or

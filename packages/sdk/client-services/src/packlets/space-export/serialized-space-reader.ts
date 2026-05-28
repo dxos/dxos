@@ -85,9 +85,8 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     if (typeof relationTarget === 'string') {
       system.target = { '/': URI.make(relationTarget) };
     }
+    // TODO(wittjosiah): This is fragile, will break if the type URI changes.
   } else if (type === TYPE_KIND_SCHEMA_URI) {
-    // Persisted ECHO type definitions — instances of the meta-schema — must
-    // brand `kind = 'type'` so the database schema registry can find them.
     system.kind = 'type';
   } else {
     system.kind = 'object';

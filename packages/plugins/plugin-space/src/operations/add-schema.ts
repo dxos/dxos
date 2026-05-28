@@ -10,12 +10,12 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { SpaceEvents, SpaceCapabilities } from '../types';
 import { SpaceOperation } from './definitions';
 
-const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOperation.AddSchema.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
-      const [schema] = yield* Effect.promise(() => db.schemaRegistry.register([input.schema as Type.Type]));
-      Type.update(schema, (draft) => {
+      const [type] = yield* Effect.promise(() => db.schemaRegistry.register([input.type as Type.Type]));
+      Type.update(type, (draft) => {
         if (input.name) {
           draft.name = input.name;
         }
@@ -28,23 +28,23 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         }
       });
 
-      yield* Plugin.activate(SpaceEvents.SchemaAdded);
+      yield* Plugin.activate(SpaceEvents.TypeAdded);
       const onTypeAdded = yield* Capability.getAll(SpaceCapabilities.OnTypeAdded);
       yield* Effect.all(
-        onTypeAdded.map((callback) => callback({ db, type: schema, show: input.show })),
+        onTypeAdded.map((callback) => callback({ db, type, show: input.show })),
         { concurrency: 'unbounded' },
       );
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.schema.add',
+        name: 'space.type.add',
         properties: {
           spaceId: db.spaceId,
-          objectId: schema.id,
-          typename: Type.getTypename(schema),
+          objectId: type.id,
+          typename: Type.getTypename(type),
         },
       });
 
-      return { id: schema.id, object: schema };
+      return { id: type.id, object: type };
     }),
   ),
 );
