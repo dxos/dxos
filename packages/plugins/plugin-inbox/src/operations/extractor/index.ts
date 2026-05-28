@@ -3,3 +3,4 @@
 //
 
 export * from './contact-extractor';
+export * from './summarize-extractor';

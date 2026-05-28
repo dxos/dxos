@@ -391,6 +391,22 @@ export const ExtractContactFromMessage = Operation.make({
   output: ExtractResultSchema,
 });
 
+/**
+ * Operation form of the summarize extractor — runs against a full Message and returns a
+ * Markdown.Document containing an AI-generated summary of the message body. The dispatcher
+ * (`ExtractMessage`) is responsible for `db.add` + `ExtractedFrom`.
+ */
+export const ExtractSummaryFromMessage = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.extract-summary-from-message`,
+    name: 'Extract Summary from Message',
+    icon: 'ph--text-aa--regular',
+  },
+  services: [Capability.Service, AiService.AiService],
+  input: ExtractInputSchema,
+  output: ExtractResultSchema,
+});
+
 export const ExtractMessage = Operation.make({
   meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
   services: [Capability.Service],

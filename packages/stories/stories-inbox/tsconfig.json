@@ -25,6 +25,9 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -35,6 +38,9 @@
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
     },
     {
       "path": "../../plugins/plugin-preview"
@@ -53,6 +59,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
