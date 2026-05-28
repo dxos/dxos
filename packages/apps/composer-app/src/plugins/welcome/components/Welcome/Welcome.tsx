@@ -24,7 +24,7 @@ export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
 type Tab = 'login' | 'signup';
-type LoginMethod = 'passkey' | 'email';
+type LoginMethod = 'passkey' | 'email' | 'atmosphere';
 type SignupMode = 'code' | 'waitlist';
 type SignupStep = 'collect' | 'auth';
 
@@ -62,6 +62,8 @@ export const Welcome = ({
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [waitlistEmail, setWaitlistEmail] = useState('');
+  // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
+  const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
 
@@ -140,6 +142,40 @@ export const Welcome = ({
       setPending(false);
     }
   }, [waitlistEmail, onJoinWaitlist]);
+
+  // Wrap the OAuth flows so `pending` is set for their full duration. The OAuth popup flow is async
+  // and `pending` drives `submitDisabled`, so this keeps the Continue button disabled while the
+  // popup is open — preventing a second click from opening a duplicate popup (which clobbers the
+  // first and trips "OAuth popup closed before completing").
+  const handleCreateAccountWithOAuth = useCallback(
+    async (args: { code: string; provider: string; loginHint?: string }) => {
+      if (pending) {
+        return;
+      }
+      setPending(true);
+      try {
+        await onCreateAccountWithOAuth?.(args);
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, onCreateAccountWithOAuth],
+  );
+
+  const handleRecoverWithOAuth = useCallback(
+    async (provider: string, loginHint?: string) => {
+      if (pending) {
+        return;
+      }
+      setPending(true);
+      try {
+        await onRecoverWithOAuth?.(provider, loginHint);
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, onRecoverWithOAuth],
+  );
 
   const handleCodeKeyDown = useCallback(
     (ev: KeyboardEvent<HTMLInputElement>) => {
@@ -234,7 +270,7 @@ export const Welcome = ({
                 onEmailKeyDown={handleEmailKeyDown}
                 onJoinIdentity={onJoinIdentity}
                 onRecoverIdentity={onRecoverIdentity}
-                onRecoverWithOAuth={onRecoverWithOAuth}
+                onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
               />
             )}
 
@@ -308,13 +344,34 @@ export const Welcome = ({
                 {onCreateAccountWithOAuth && (
                   <>
                     <OrDivider>{t('or-divider.label')}</OrDivider>
-                    <CompoundRow
-                      icon='ph--cloud--regular'
-                      disabled={pending}
-                      onClick={() => onCreateAccountWithOAuth({ code, provider: ATMOSPHERE_PROVIDER })}
-                    >
-                      {t('atmosphere-account-button.label')}
-                    </CompoundRow>
+                    <div className='flex flex-col gap-2'>
+                      <p className='text-sm text-description'>{t('atmosphere-account-button.label')}</p>
+                      <InlineForm
+                        inputProps={{
+                          placeholder: t('atmosphere-handle-input.placeholder'),
+                          value: atmosphereHandle,
+                          onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+                          onKeyDown: (ev) => {
+                            if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                              void handleCreateAccountWithOAuth({
+                                code,
+                                provider: ATMOSPHERE_PROVIDER,
+                                loginHint: atmosphereHandle,
+                              });
+                            }
+                          },
+                        }}
+                        submitLabel={t('continue-button.label')}
+                        submitDisabled={!atmosphereHandle || pending}
+                        onSubmit={() =>
+                          handleCreateAccountWithOAuth({
+                            code,
+                            provider: ATMOSPHERE_PROVIDER,
+                            loginHint: atmosphereHandle,
+                          })
+                        }
+                      />
+                    </div>
                   </>
                 )}
                 <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
@@ -426,7 +483,7 @@ type LoginTabProps = {
   onEmailKeyDown: (ev: KeyboardEvent<HTMLInputElement>) => void;
   onJoinIdentity?: () => unknown;
   onRecoverIdentity?: () => unknown;
-  onRecoverWithOAuth?: (provider: string) => unknown;
+  onRecoverWithOAuth?: (provider: string, loginHint?: string) => unknown;
 };
 
 /**
@@ -456,6 +513,8 @@ const LoginTab = ({
   onRecoverIdentity,
   onRecoverWithOAuth,
 }: LoginTabProps) => {
+  const [atmosphereHandle, setAtmosphereHandle] = useState('');
+
   type MoreOption = {
     key: string;
     icon: string;
@@ -484,8 +543,19 @@ const LoginTab = ({
       onClick: () => setPrimary('email'),
     });
   }
+  // Atmosphere: second in the list (after the other primary-swap option), swaps to primary like
+  // email/passkey do so only one form is shown at a time.
+  if (primary !== 'atmosphere' && onRecoverWithOAuth) {
+    moreOptions.push({
+      key: 'atmosphere',
+      icon: 'ph--cloud--regular',
+      label: t('login-atmosphere.label'),
+      description: t('login-atmosphere.description'),
+      onClick: () => setPrimary('atmosphere'),
+    });
+  }
   // Device + recovery: always direct-invoke (open their own dialogs) rather than
-  // swapping to primary like passkey/email.
+  // swapping to primary like passkey/email/atmosphere.
   // TODO(wittjosiah): Integrate the device-invitation and recovery-code flows into
   //   this Welcome layout (so they render as primary forms here instead of opening
   //   separate dialogs). Their UI is some of the oldest in Composer and should be
@@ -506,17 +576,6 @@ const LoginTab = ({
       label: t('login-recovery.label'),
       description: t('login-recovery.description'),
       onClick: () => onRecoverIdentity(),
-    });
-  }
-  // Atmosphere/atproto OAuth recovery: completes an OAuth flow to recover an existing identity
-  // without a stored recovery code.
-  if (onRecoverWithOAuth) {
-    moreOptions.push({
-      key: 'atmosphere',
-      icon: 'ph--cloud--regular',
-      label: t('login-atmosphere.label'),
-      description: t('login-atmosphere.description'),
-      onClick: () => onRecoverWithOAuth(ATMOSPHERE_PROVIDER),
     });
   }
 
@@ -546,6 +605,27 @@ const LoginTab = ({
           onSubmit={onSendSignInLink}
           validation={emailError ? t('email-error.message') : null}
         />
+      )}
+      {primary === 'atmosphere' && onRecoverWithOAuth && (
+        <div className='flex flex-col gap-2'>
+          <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
+          <InlineForm
+            inputProps={{
+              autoFocus: true,
+              placeholder: t('atmosphere-handle-input.placeholder'),
+              value: atmosphereHandle,
+              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+              onKeyDown: (ev) => {
+                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                  void onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle);
+                }
+              },
+            }}
+            submitLabel={t('continue-button.label')}
+            submitDisabled={!atmosphereHandle || pending}
+            onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
+          />
+        </div>
       )}
 
       {moreOptions.length > 0 && (
