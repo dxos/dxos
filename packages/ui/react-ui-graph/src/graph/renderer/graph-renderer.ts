@@ -642,6 +642,12 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
     .each(function (node) {
       const groupSel = select(this);
       const shape = groupSel.select<SVGGraphicsElement>('circle, rect');
+      // Hidden nodes (e.g. cluster-collapsed leaves) are kept invisible via the
+      // group's `opacity` attribute — set by `updateNode`. style.opacity would
+      // override that attribute, so leave hidden nodes alone.
+      if (node.hidden) {
+        return;
+      }
       if (!on) {
         groupSel.style('opacity', null);
         shape.style('stroke', null).style('stroke-width', null);
