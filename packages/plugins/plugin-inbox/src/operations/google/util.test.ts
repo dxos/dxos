@@ -33,10 +33,23 @@ describe('util', () => {
     expect(markdown).to.equal('test');
   });
 
-  test('blanks setext underlines and horizontal rules', ({ expect }) => {
-    expect(normalizeText('Heading\n===\n\nbody')).to.equal('Heading\n\nbody');
-    expect(normalizeText('Title\n---\n\nbody')).to.equal('Title\n\nbody');
-    expect(normalizeText('above\n\n---\n\nbelow')).to.equal('above\n\nbelow');
+  test('converts setext underlines / horizontal rules to markdown HR', ({ expect }) => {
+    expect(normalizeText('Heading\n===\n\nbody')).to.equal('Heading\n---\n\nbody');
+    expect(normalizeText('Title\n---\n\nbody')).to.equal('Title\n---\n\nbody');
+    expect(normalizeText('above\n\n---\n\nbelow')).to.equal('above\n\n---\n\nbelow');
+    // Mixed and longer runs (3+) also normalize to `---`.
+    expect(normalizeText('above\n\n=====\n\nbelow')).to.equal('above\n\n---\n\nbelow');
+    expect(normalizeText('above\n\n-=-=-\n\nbelow')).to.equal('above\n\n---\n\nbelow');
+    // Fewer than 3 characters → not an HR; removed by the no-word-char rule instead.
+    expect(normalizeText('above\n\n--\n\nbelow')).to.equal('above\n\nbelow');
+  });
+
+  test('removes lines without word characters', ({ expect }) => {
+    // Junk separator lines collapse; paragraphs remain separated by one blank line.
+    expect(normalizeText('above\n\n****\n\nbelow')).to.equal('above\n\nbelow');
+    expect(normalizeText('above\n,,,,\n~~~~\nbelow')).to.equal('above\n\nbelow');
+    // The `---` HR we insert is preserved through the no-word-char pass.
+    expect(normalizeText('above\n\n---\n\n***\n\nbelow')).to.equal('above\n\n---\n\nbelow');
   });
 
   test('trims trailing whitespace from each line', ({ expect }) => {

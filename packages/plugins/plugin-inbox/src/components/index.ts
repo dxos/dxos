@@ -3,6 +3,7 @@
 //
 
 export * from './Actor';
+export * from './AnchorIconButton';
 
 export * from './DateComponent';
 export * from './EditMessage';

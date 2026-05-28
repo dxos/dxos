@@ -1005,6 +1005,11 @@
         },
         {
           "type": "json",
+          "path": "packages/stories/stories-inbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/stories/stories-ui/package.json",
           "jsonpath": "$.version"
         },

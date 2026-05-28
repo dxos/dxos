@@ -4,13 +4,16 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
+export * from './extractor';
+
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
   () => import('./classify-email'),
   () => import('./draft-email-and-open'),
   () => import('./draft-email'),
-  () => import('./extract-contact'),
-  () => import('./extract-message'),
+  () => import('./extractor/contact-extractor'),
+  () => import('./extractor/extract-contact'),
+  () => import('./extractor/extract-message'),
   () => import('./google/calendar/list'),
   () => import('./google/calendar/sync'),
   () => import('./google/people/list-groups'),

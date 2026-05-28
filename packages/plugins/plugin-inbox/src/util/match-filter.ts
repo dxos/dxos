@@ -2,8 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Filter, Obj, type Tag } from '@dxos/echo';
+import { type Filter, Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
+
+/** Minimal shape we need from a tag entry — covers both ECHO `Tag.Tag` and the inverted-index entries `buildMessageTagsIndex` emits. */
+type TagEntry = { readonly id: string };
 
 /**
  * Evaluate a parsed Filter AST against a Message client-side.
@@ -11,11 +14,11 @@ import { type Message } from '@dxos/types';
  * Feed/queue queries don't yet support text-search and complex filter combinations,
  * so the mailbox UI fetches all messages from the feed and applies the user filter here.
  */
-export const matchesFilter = (filter: Filter.Any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+export const matchesFilter = (filter: Filter.Any, message: Message.Message, tags: TagEntry[]): boolean => {
   return matchesAst(filter.ast, message, tags);
 };
 
-const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+const matchesAst = (ast: any, message: Message.Message, tags: TagEntry[]): boolean => {
   if (!ast || typeof ast !== 'object') {
     return false;
   }
@@ -61,7 +64,7 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
   }
 };
 
-const matchesPredicate = (ast: any, value: any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+const matchesPredicate = (ast: any, value: any, message: Message.Message, tags: TagEntry[]): boolean => {
   switch (ast?.type) {
     case 'compare': {
       switch (ast.operator) {

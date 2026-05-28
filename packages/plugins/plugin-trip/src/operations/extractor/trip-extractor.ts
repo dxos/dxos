@@ -4,18 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Filter, Obj, type Database } from '@dxos/echo';
 import { type MessageExtractor } from '@dxos/plugin-inbox';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { Booking, Segment } from '../../types';
+import { Booking, Segment, Trip, TripOperation } from '../../types';
 
 /**
  * Heuristic v1 extractor for travel-booking confirmation emails. Recognises
  * United-style flight confirmations: a sender on a united.com domain or a
  * subject mentioning a flight/booking confirmation, with a plain-text body
- * of the form
+ * of the form:
  *
+ * ```text
  *   Flight: AF-1
  *   From: SFO (San Francisco)
  *   To: LHR (London Heathrow)
@@ -23,13 +25,14 @@ import { Booking, Segment } from '../../types';
  *   Arrive: 2026-06-02 09:30
  *   Confirmation: ABC123
  *   Gate: 21B
+ * ```
  *
  * Create-or-update: existing flight segments in `ctx.database` are looked up
  * by `(number, departAt date)`. A match is mutated in place (returned in
  * `updated`) and a fresh `Booking` is NOT emitted; otherwise a new `Booking`
  * + `Segment` pair is created.
  */
-export const ID = 'org.dxos.plugin.trip.extractor.travel';
+export const ID = 'org.dxos.plugin.trip.extractor.trip';
 
 const UNITED_DOMAIN_REGEX = /@(?:[\w-]+\.)?united\.(?:com|co\.uk)$/i;
 const CONFIRMATION_SUBJECT_REGEX = /(?:flight|booking)\s+confirmation/i;
@@ -126,7 +129,7 @@ const isSameFlight = (segment: Segment.Segment, candidate: Candidate): boolean =
 };
 
 const extractFromMessage = (
-  ctx: MessageExtractor.ExtractCtx,
+  db: Database.Database,
   message: Message.Message,
 ): Effect.Effect<MessageExtractor.ExtractResult, never> =>
   Effect.gen(function* () {
@@ -140,7 +143,7 @@ const extractFromMessage = (
     }
 
     // Try to find an existing segment matching the same (number, depart-date) pair.
-    const existing = yield* findExistingFlight(ctx, candidate);
+    const existing = yield* findExistingFlight(db, candidate);
     if (existing && existing.details._tag === 'flight') {
       Obj.update(existing, (existing) => {
         if (existing.details._tag !== 'flight') {
@@ -165,10 +168,17 @@ const extractFromMessage = (
           existing.details.seat = candidate.seat;
         }
       });
-      return { created: [], updated: [existing], relations: [] };
+      return {
+        created: [],
+        updated: [existing],
+        relations: [],
+        tags: [{ label: 'travel', hue: 'sky' }],
+      };
     }
 
-    // No prior segment — create a Booking + flight Segment pair.
+    // No prior segment — create a Trip + Booking + flight Segment trio. The Trip is the
+    // top-level container surfaced as a tag on the source message; Booking + Segment hang
+    // off the Trip.
     const booking = Booking.make({
       provider: { name: 'Air France', domain: 'united.com' },
       confirmationCode: candidate.confirmationCode,
@@ -191,17 +201,43 @@ const extractFromMessage = (
       },
     });
 
-    return { created: [booking, segment], updated: [], relations: [] };
+    const trip = Trip.make({
+      name: tripNameFor(candidate),
+      start: candidate.departAt,
+      end: candidate.arriveAt,
+    });
+    Trip.addSegment(trip, segment);
+    // Anchor the Booking under the Trip so the dispatcher treats it as a child object — only
+    // top-level objects (no parent) get an `ExtractedFrom` relation back to the message, so
+    // the message header surfaces the Trip itself rather than a chip per sub-artifact.
+    Obj.setParent(booking, trip);
+
+    return {
+      created: [trip, booking, segment],
+      updated: [],
+      relations: [],
+      // Surface the message as "trip-tagged" so it's discoverable from MailboxArticle tile
+      // chips alongside the standalone Trip relation in MessageHeader.
+      tags: [{ label: 'travel', hue: 'sky' }],
+    };
   });
 
+const tripNameFor = (candidate: Candidate): string => {
+  const origin = candidate.origin?.code ?? '?';
+  const destination = candidate.destination?.code ?? '?';
+  const flight = candidate.number ?? '';
+  return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
+};
+
 const findExistingFlight = (
-  ctx: MessageExtractor.ExtractCtx,
+  db: Database.Database,
   candidate: Candidate,
 ): Effect.Effect<Segment.Segment | undefined, never> => {
-  if (!candidate.number || !candidate.departAt || !ctx.database) {
+  if (!candidate.number || !candidate.departAt) {
     return Effect.succeed(undefined);
   }
-  return Effect.promise(() => ctx.database.query(Filter.type(Segment.Segment)).run()).pipe(
+
+  return Effect.promise(() => db.query(Filter.type(Segment.Segment)).run()).pipe(
     Effect.map((segments) => segments.find((segment) => isSameFlight(segment, candidate))),
     // If the query rejects (e.g. Segment type not registered, db closed), recover to
     // undefined rather than letting an unhandled rejection bubble up through the
@@ -210,11 +246,29 @@ const findExistingFlight = (
   );
 };
 
+const extract = ({
+  db,
+  message,
+}: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
+  extractFromMessage(db, message);
+
+/**
+ * Operation handler for the travel extractor — wraps the inline `extract` so the extractor
+ * is also a first-class registered operation. Returns ExtractResult without touching the
+ * database; the ExtractMessage dispatcher persists.
+ */
+const handler: Operation.WithHandler<typeof TripOperation.ExtractTrip> = TripOperation.ExtractTrip.pipe(
+  Operation.withHandler(extract),
+);
+
+export default handler;
+
 /** Heuristic v1 extractor — recognises United-style flight confirmations. */
-export const TravelMessageExtractor: MessageExtractor.MessageExtractor = {
+export const TripMessageExtractor: MessageExtractor.MessageExtractor = {
   id: ID,
   description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
   kinds: ['flight'],
   match: matchMessage,
-  extract: extractFromMessage,
+  operation: TripOperation.ExtractTrip,
+  extract,
 };

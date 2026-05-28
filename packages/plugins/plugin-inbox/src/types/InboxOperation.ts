@@ -350,6 +350,47 @@ export const ExtractContact = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Operation form of the contact extractor — runs against a full Message and returns
+ * Person/Organization proposals via the shared ExtractResult shape, without touching the
+ * database. The dispatcher (ExtractMessage) is responsible for db.add + ExtractedFrom. The
+ * actor-targeted `ExtractContact` above stays as the avatar-button entry point and commits
+ * directly via SpaceOperation.AddObject (no preview interposition there by design).
+ */
+/**
+ * Uniform input shape every extractor operation receives. Defined late in this file (after
+ * the other Operation.make calls) so its `Schema.Struct` call doesn't run while
+ * `capabilities/MessageExtractor.ts` is still loading via the `import type` chain — moving
+ * it earlier triggers a load-order cycle that leaves `Database.Database` undefined when
+ * the struct is constructed. Use `Type.getSchema(Message.Message)` for the same reason
+ * other ops in this file do.
+ */
+export const ExtractInputSchema = Schema.Struct({
+  db: Database.Database,
+  message: Type.getSchema(Message.Message),
+  targetTripId: Schema.optional(Schema.String),
+});
+
+/** Runtime Schema for `MessageExtractor.ExtractResult`. See ExtractInputSchema for rationale. */
+export const ExtractResultSchema = Schema.Struct({
+  created: Schema.Array(Schema.Any),
+  updated: Schema.optional(Schema.Array(Schema.Any)),
+  relations: Schema.Array(Schema.Any),
+  tags: Schema.optional(Schema.Array(Schema.Struct({ label: Schema.String, hue: Schema.optional(Schema.String) }))),
+  summary: Schema.optional(Schema.String),
+});
+
+export const ExtractContactFromMessage = Operation.make({
+  meta: {
+    key: `${INBOX_OPERATION}.extract-contact-from-message`,
+    name: 'Extract Contact from Message',
+    icon: 'ph--user--regular',
+  },
+  services: [Capability.Service],
+  input: ExtractInputSchema,
+  output: ExtractResultSchema,
+});
+
 export const ExtractMessage = Operation.make({
   meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
   services: [Capability.Service],

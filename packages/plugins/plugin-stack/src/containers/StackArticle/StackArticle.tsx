@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, type Collection, Obj, type Ref, Type } from '@dxos/echo';
+import { type Collection, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -58,10 +58,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   const collectionObjects = useAtomValue(collectionObjectsFamily(collection));
   const items = collectionObjects.map((object: Obj.Unknown) => {
-    const type = Obj.getType(object);
-    const iconAnnotation = type
-      ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)))
-      : undefined;
+    const iconAnnotation = Obj.getIcon(object);
     const metadata: StackSectionMetadata = { icon: iconAnnotation?.icon };
     const view = {
       // ...stack.sections[object.id],

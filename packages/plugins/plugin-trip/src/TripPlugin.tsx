@@ -2,12 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
+import { InboxCapabilities } from '@dxos/plugin-inbox';
 
-import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
 import { Booking, Segment, Trip } from '#types';
 
@@ -20,11 +24,17 @@ export const TripPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
+  Plugin.addModule({
+    id: 'trip-extractor',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, TripMessageExtractor)),
   }),
   Plugin.make,
 );
