@@ -439,6 +439,9 @@
       "path": "packages/plugins/plugin-sample/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sandbox/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-script/tsconfig.json"
     },
     {
