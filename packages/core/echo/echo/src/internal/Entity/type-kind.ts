@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
 import { EntityKind } from '../common/types';
 import { toJsonSchema } from '../JsonSchema';
-import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
+import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
  * Type-kind schema marker — produced by {@link EchoTypeKindSchema}.
@@ -34,10 +34,11 @@ export type EchoTypeKindSchema<
 export const EchoTypeKindSchema: {
   (
     dxn: DXN.DXN,
+    options?: EchoTypeOptions,
   ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoTypeKindSchema<Self, Fields>;
-} = (dxn) => {
+} = (dxn, options) => {
   const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
   invariant(version, `Type-kind schemas require a versioned DXN: ${dxn}`);
@@ -60,8 +61,14 @@ export const EchoTypeKindSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Type, Fields>(fields, ast, typename, version, EntityKind.Type, () =>
-      toJsonSchema(Schema.make(ast)),
+    return makeEchoTypeSchema<Self, EntityKind.Type, Fields>(
+      fields,
+      ast,
+      typename,
+      version,
+      EntityKind.Type,
+      () => toJsonSchema(Schema.make(ast)),
+      options?.id,
     );
   };
 };
