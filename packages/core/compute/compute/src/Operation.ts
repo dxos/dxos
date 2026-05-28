@@ -173,15 +173,17 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 
 /**
  * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
- * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
- * built-in implementation registered with the runtime.
+ * deployed as a user function. The `dxn:<key>` deployedId routes invocations to the built-in
+ * implementation registered with the runtime; the EDGE function service detects the `dxn:`
+ * scheme via `DXN.isDXN` and dispatches to its intrinsic handler instead of looking up a
+ * deployed worker.
  */
 export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
   return {
     ...op,
     meta: {
       ...op.meta,
-      deployedId: `intrinsic:${op.meta.key}`,
+      deployedId: `dxn:${op.meta.key}`,
     },
   };
 };
