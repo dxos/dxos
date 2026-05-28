@@ -300,9 +300,7 @@ export const layer = (options: Options = {}): Layer.Layer<Service> => Layer.sync
  * const stack = Layer.provide(localLayer, upstreamLayer);
  * ```
  */
-export const layerWithUpstream = (
-  options: Omit<Options, 'upstream'> = {},
-): Layer.Layer<Service, never, Service> =>
+export const layerWithUpstream = (options: Omit<Options, 'upstream'> = {}): Layer.Layer<Service, never, Service> =>
   Layer.effect(
     Service,
     Effect.gen(function* () {

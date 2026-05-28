@@ -5,8 +5,8 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Registry, type QueryResult } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
+import { filterMatchObjectJSON } from '@dxos/echo/internal';
 
 import { type QuerySource } from './graph-query-context';
 import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util';

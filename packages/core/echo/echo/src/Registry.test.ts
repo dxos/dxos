@@ -10,8 +10,8 @@ import { runAndForwardErrors } from '@dxos/effect';
 
 import * as Obj from './Obj';
 import * as Registry from './Registry';
-import * as Type from './Type';
 import { TestSchema } from './testing';
+import * as Type from './Type';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -89,7 +89,10 @@ describe('Registry', () => {
       return registry.list().map((o) => (o as any).value);
     });
 
-    const stack = Layer.provide(Registry.layerWithUpstream({ initial: [localObj] }), Registry.layer({ initial: [upstreamObj] }));
+    const stack = Layer.provide(
+      Registry.layerWithUpstream({ initial: [localObj] }),
+      Registry.layer({ initial: [upstreamObj] }),
+    );
 
     const result = await runAndForwardErrors(program.pipe(Effect.provide(stack)));
     expect(result.sort()).toEqual([1, 2]);
