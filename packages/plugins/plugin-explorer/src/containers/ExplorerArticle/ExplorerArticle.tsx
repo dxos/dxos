@@ -10,9 +10,6 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-// Side-effect import: Visualization drives `SVG.Graph` directly. Without the CSS the
-// `g.dx-edge path` rules — including `fill: none` — never reach the bundle and SVG
-// defaults (stroke: none, fill: black) make every edge invisible.
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type TreeNode } from '#components';
@@ -25,11 +22,6 @@ export type { ExplorerArticleVariant } from './variants';
 
 export type ExplorerArticleProps = AppSurface.ObjectArticleProps<View.View>;
 
-/**
- * Thin wrapper: owns the query editor, the variant toggle, and the DxAnchor preview
- * dispatch. The actual rendering — SVG projector swaps and the swarm canvas — lives in
- * `Visualization`.
- */
 export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps) => {
   const [view] = useObject(subject);
   const [filter, setFilter] = useState<Filter.Any>();

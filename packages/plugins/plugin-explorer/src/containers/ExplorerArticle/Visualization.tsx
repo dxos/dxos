@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { curveCatmullRom, line as d3Line } from 'd3';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
-  CLUSTER_NODE_TYPE_GROUP,
   CLUSTER_NODE_TYPE_LEAF,
   CLUSTER_NODE_TYPE_ROOT,
   GraphBundleProjector,
@@ -18,11 +17,16 @@ import {
   type GraphLayoutNode,
   GraphLatticeProjector,
   type GraphProjector,
+  GraphSwarmProjector,
+  type ModelPoint,
   type RenderNode,
   SVG,
   type SVGContext,
+  type SwarmNode,
+  appendRadialGroupLabel,
+  appendRadialLeafLabel,
+  appendRootLabel,
 } from '@dxos/react-ui-graph';
-import { Flock, type FlockBoid, FlockModel, Vec2 } from '@dxos/react-ui-sfx';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
@@ -32,6 +36,7 @@ import { getNodeFillForObject } from '../../util';
 import { type ExplorerArticleVariant } from './variants';
 
 export type VisualizationProps = ThemedClassName<{
+  debug?: boolean;
   variant: ExplorerArticleVariant;
   model: SpaceGraphModel;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
@@ -39,120 +44,56 @@ export type VisualizationProps = ThemedClassName<{
 
 /**
  * Renders the active visualization variant.
- *
- * For SVG variants (force, cluster, bundle, lattice), one `<SVG.Graph>` instance is
- * kept mounted; only the projector swaps. Each new projector receives the previous
- * layout so node x/y survive the swap and the projector's `animate()` tweens to the
- * new target.
- *
- * The `swarm` variant is canvas-based and uses a `FlockModel`. On entry, boids are
- * seeded from `model.graph.nodes` with positions taken from the latest SVG layout
- * (matched by node id). On exit, the boids' current positions are written back to
- * `lastLayoutRef` so the next SVG projector starts from where the swarm left off.
  */
-export const Visualization = ({ classNames, variant, model, onNodeHover }: VisualizationProps) => {
-  const registry = useContext(RegistryContext);
-  const { themeMode } = useThemeContext();
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  // Read the container's effective background so the swarm canvas matches whatever
-  // surface the visualization sits on (bg-base-surface by default, but the consumer
-  // can override via `classNames`). Recomputed on theme toggle. Defaults to the
-  // baseSurface token values used to be hardcoded here, in case the container is
-  // unmounted when the swarm enters.
-  const [flockBackground, setFlockBackground] = useState<string>(themeMode === 'dark' ? '#0a0a0a' : '#fafafa');
-  useEffect(() => {
-    if (containerRef.current) {
-      const bg = getComputedStyle(containerRef.current).backgroundColor;
-      // Skip transparent fallback — Flock needs an opaque color for the trail-fade.
-      if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-        setFlockBackground(bg);
-      }
-    }
-  }, [themeMode, classNames]);
-
+export const Visualization = ({ classNames, debug = true, variant, model, onNodeHover }: VisualizationProps) => {
   const svgRef = useRef<SVGContext>(null);
   const [projector, setProjector] = useState<GraphProjector<SpaceGraphNode> | undefined>();
   const projectorRef = useRef<GraphProjector<SpaceGraphNode> | undefined>(undefined);
   projectorRef.current = projector;
 
-  // Latest layout we hand to the next SVG projector as `prev` — captured both when
-  // leaving an SVG variant (live projector.layout) and when leaving swarm (boid
-  // positions translated back to center-origin).
+  // Latest layout we hand to the next SVG projector as `prev`. Captured from the live
+  // projector when the variant changes so node x/y survive the swap.
   const lastLayoutRef = useRef<GraphLayout<SpaceGraphNode> | undefined>(undefined);
-
-  // Reactive source of truth for the boid array used by the swarm view.
-  const flockModel = useMemo(() => new FlockModel(registry), [registry]);
 
   // Subscribe to the graph atom — keeps it alive across child unmounts (effect-atom
   // disposes atoms with no subscribers) and triggers re-renders when query results land.
-  const [modelRev, setModelRev] = useState(0);
-  useEffect(() => model?.subscribe(() => setModelRev((r) => r + 1)), [model]);
+  useEffect(() => model?.subscribe(() => undefined), [model]);
 
-  // Track the visualization container size so we can translate between canvas
-  // (top-left origin) and graph (center origin) coordinates when entering or
-  // leaving swarm.
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) {
-      return;
-    }
-
-    const rect = el.getBoundingClientRect();
-    setSize({ width: rect.width, height: rect.height });
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) {
-        return;
-      }
-      const { width, height } = entry.contentRect;
-      setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
-    });
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // Recreate the projector when the variant changes. Two transitions need special handling:
-  //  - leaving an SVG variant: snapshot live projector.layout into lastLayoutRef.
-  //  - leaving swarm: convert current boid positions (canvas-coord) back into a
-  //    center-origin layout in lastLayoutRef so the next projector animates from
-  //    where the boids ended up.
+  // Recreate the projector when the variant changes; snapshot the live layout first so
+  // the next projector animates from where the previous one left off.
   useEffect(() => {
     if (projectorRef.current?.layout) {
       lastLayoutRef.current = projectorRef.current.layout as GraphLayout<SpaceGraphNode>;
-    } else if (flockModel.boids.length > 0 && size.width > 0 && size.height > 0) {
-      lastLayoutRef.current = boidsToLayout(flockModel.boids, size, lastLayoutRef.current);
     }
-
-    if (variant === 'swarm') {
-      setProjector(undefined);
-      return;
-    }
-
     if (!svgRef.current) {
       return;
     }
 
-    setProjector(createProjector(variant, svgRef.current, lastLayoutRef.current));
-  }, [variant, flockModel, size.width, size.height]);
-
-  // Seed the flock with boids derived from current graph nodes whenever we enter
-  // swarm (or model data lands while in swarm). Positions are reused from the last
-  // SVG layout where the id matches; otherwise a small random spread around center.
-  useEffect(() => {
-    if (variant !== 'swarm' || !size.width || !size.height) {
-      return;
-    }
-    const nodes = model?.graph.nodes ?? [];
-    if (nodes.length === 0) {
-      return;
-    }
-    flockModel.setBoids(seedBoidsFromNodes(nodes, lastLayoutRef.current, size, flockModel));
-  }, [variant, flockModel, model, modelRev, size.width, size.height]);
+    setProjector(createProjector(svgRef.current, variant, lastLayoutRef.current));
+  }, [variant]);
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
+
+  // Per-tick swarm tail update. Receives the dx-node `<g>` after its transform is set,
+  // so the polyline points + gradient axis can live in node-local coordinates.
+  const applyNode = useMemo(() => (variant === 'swarm' ? applyNodeSwarm : undefined), [variant]);
+
+  // Cursor avoidance for the SVG swarm. The Graph component hands us pre-transformed
+  // SVG model coordinates — same space the boids live in.
+  const handlePointerMove = useCallback(
+    (point: ModelPoint) => {
+      if (projector instanceof GraphSwarmProjector) {
+        projector.setCursor(point.x, point.y);
+      }
+    },
+    [projector],
+  );
+
+  const handlePointerLeave = useCallback(() => {
+    if (projector instanceof GraphSwarmProjector) {
+      projector.setCursor(null);
+    }
+  }, [projector]);
 
   const handleInspect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode> | null, event: MouseEvent) => {
@@ -166,125 +107,94 @@ export const Visualization = ({ classNames, variant, model, onNodeHover }: Visua
     [onNodeHover],
   );
 
-  // Cluster-only: clicking a root / group node toggles its subtree open/closed.
-  const handleSelect = useCallback(
-    (node: GraphLayoutNode<SpaceGraphNode>) => {
-      if (
-        variant !== 'cluster' ||
-        !node ||
-        (node.type !== CLUSTER_NODE_TYPE_ROOT && node.type !== CLUSTER_NODE_TYPE_GROUP)
-      ) {
-        return;
-      }
-
-      const cluster = projector as GraphClusterProjector<SpaceGraphNode> | undefined;
-      cluster?.toggleCollapsed(node.id);
-    },
-    [variant, projector],
-  );
+  // Only attach pointer handlers when the SVG swarm is active — other variants don't
+  // need them and we want to avoid the per-move CTM math when it'd be a no-op.
+  const swarmPointerProps =
+    variant === 'swarm' ? { onPointerMove: handlePointerMove, onPointerLeave: handlePointerLeave } : undefined;
 
   return (
-    <div ref={containerRef} className={mx('dx-expander relative', classNames)}>
-      {variant === 'swarm' ? (
-        <Flock model={flockModel} coloring='Movement' background={flockBackground} trail={30} />
-      ) : (
-        <SVG.Root ref={svgRef}>
-          <SVG.Zoom extent={[1 / 2, 2]}>
-            <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-              model={model}
-              projector={projector}
-              renderNode={renderNode}
-              drag={variant === 'force'}
-              highlightOnHover={variant === 'bundle'}
-              onInspect={handleInspect}
-              onSelect={handleSelect}
-            />
-          </SVG.Zoom>
-        </SVG.Root>
-      )}
+    <div className={mx('dx-expander relative', classNames)}>
+      <SVG.Root ref={svgRef}>
+        <SVG.Zoom extent={[1 / 2, 2]}>
+          <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+            model={model}
+            projector={projector}
+            renderNode={renderNode}
+            applyNode={applyNode}
+            edgeOpacity={variant === 'swarm' ? 0.3 : undefined}
+            drag={variant === 'force'}
+            highlightOnHover={variant === 'bundle'}
+            onInspect={handleInspect}
+            {...swarmPointerProps}
+          />
+        </SVG.Zoom>
+        {debug && <SVG.FPS />}
+      </SVG.Root>
     </div>
   );
-};
-
-/**
- * Build the boid set for entering swarm. For each model node, take the position from
- * `lastLayout` (id-matched), or a random spread around center if the id isn't there.
- * Position reuse keeps in-flight transitions visually continuous.
- */
-const seedBoidsFromNodes = (
-  nodes: readonly SpaceGraphNode[],
-  lastLayout: GraphLayout<SpaceGraphNode> | undefined,
-  { width, height }: { width: number; height: number },
-  flockModel: FlockModel,
-): FlockBoid[] => {
-  const cx = width / 2;
-  const cy = height / 2;
-  const spread = Math.min(width, height) * 0.5;
-  const snapshot = new Map((lastLayout?.graph.nodes ?? []).map((n) => [n.id, n] as const));
-  return nodes.map((node) => {
-    const prev = snapshot.get(node.id);
-    const px = prev?.x ?? (Math.random() - 0.5) * spread;
-    const py = prev?.y ?? (Math.random() - 0.5) * spread;
-    // Preserve existing boid velocity/colour if we already have one for this id —
-    // keeps mid-air boids moving smoothly when the model emits multiple times.
-    const existing = flockModel.findBoid(node.id);
-    return {
-      id: node.id,
-      position: new Vec2(cx + px, cy + py),
-      velocity: existing?.velocity ?? new Vec2(),
-      color: existing?.color,
-      last: existing?.last ?? [],
-    };
-  });
-};
-
-/**
- * Translate canvas-coord boid positions back into a center-origin layout that the
- * next SVG projector can consume as `prev`. Matches nodes from `prevLayout` by id so
- * label / data references are preserved; falls back to creating fresh layout nodes
- * for boids whose ids aren't present in the prior layout.
- */
-const boidsToLayout = (
-  boids: readonly FlockBoid[],
-  { width, height }: { width: number; height: number },
-  prevLayout: GraphLayout<SpaceGraphNode> | undefined,
-): GraphLayout<SpaceGraphNode> => {
-  const cx = width / 2;
-  const cy = height / 2;
-  const previousById = new Map((prevLayout?.graph.nodes ?? []).map((n) => [n.id, n] as const));
-  const nodes: GraphLayoutNode<SpaceGraphNode>[] = boids
-    .filter((b) => b.id !== undefined)
-    .map((boid) => {
-      const id = boid.id!;
-      const prev = previousById.get(id);
-      return {
-        ...(prev ?? { id }),
-        x: boid.position.x - cx,
-        y: boid.position.y - cy,
-      };
-    });
-  return {
-    graph: {
-      nodes,
-      // Edges aren't represented in the swarm — keep whatever the previous layout had so
-      // the next projector still has a topology to bind to via mergeData.
-      edges: prevLayout?.graph.edges ?? [],
-    },
-  };
 };
 
 /** Cross-variant tween duration. Matches the renderer's edge fade timing so node movement and edge enter/exit complete together. */
 const TWEEN_MS = 500;
 
+/** Fade-in duration applied to labels after the layout tween completes. */
+const LABEL_FADE_MS = 200;
+
+/**
+ * Catmull-Rom curve generator (α=0.5, "centripetal") for swarm boid trails.
+ * Passes through every point and avoids the looping/overshoot artifacts a plain
+ * cardinal spline produces when consecutive history samples land close together.
+ */
+const swarmTrailLine = d3Line<[number, number]>().curve(curveCatmullRom.alpha(0.5));
+
+/**
+ * Per-tick swarm tail update. The dx-node `<g>` transform has just been written, so we work
+ * in node-local coordinates: head at (0,0), history deltas trailing behind. The single
+ * `<path>` is stroked with a per-boid `<linearGradient>` whose endpoints we sync to the
+ * tail axis so the fade tracks the direction of travel.
+ */
+const applyNodeSwarm = (group: SVGGElement, node: GraphLayoutNode<SpaceGraphNode>): void => {
+  const swarm = node as SwarmNode;
+  const path = group.querySelector('path.dx-swarm-tail') as SVGPathElement | null;
+  const grad = group.querySelector('linearGradient') as SVGLinearGradientElement | null;
+  if (!path || !grad) {
+    return;
+  }
+  const history = swarm.history ?? [];
+  if (history.length === 0) {
+    path.setAttribute('d', '');
+    return;
+  }
+
+  const hx = swarm.x ?? 0;
+  const hy = swarm.y ?? 0;
+  // Build local-space points head → most-recent → … → oldest (history is push-at-end so
+  // we walk it backwards), then run them through a Catmull-Rom curve generator so the
+  // trail reads as a smooth arc rather than a polyline. The gradient axis below is still
+  // head → oldest, so the fade stays aligned with travel direction.
+  const points: Array<[number, number]> = [[0, 0]];
+  for (let i = history.length - 1; i >= 0; i--) {
+    points.push([history[i].x - hx, history[i].y - hy]);
+  }
+  path.setAttribute('d', swarmTrailLine(points) ?? '');
+  const oldest = history[0];
+  grad.setAttribute('x2', String(oldest.x - hx));
+  grad.setAttribute('y2', String(oldest.y - hy));
+};
+
 const createProjector = (
-  variant: Exclude<ExplorerArticleVariant, 'swarm'>,
   ctx: SVGContext,
+  variant: ExplorerArticleVariant,
   prev?: GraphLayout<SpaceGraphNode>,
 ): GraphProjector<SpaceGraphNode> => {
   switch (variant) {
     case 'force':
       // Force has no `duration` — its own simulation drives motion via ticks.
       return new GraphForceProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
+
+    case 'swarm':
+      // Swarm in SVG: a per-tick projector mirroring force's emit-positions pattern.
+      return new GraphSwarmProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
 
     case 'lattice':
       return new GraphLatticeProjector<SpaceGraphNode>(
@@ -336,18 +246,8 @@ const createProjector = (
   }
 };
 
-/** Group leaves by typename so same-type leaves cluster together — used by both the
- * cluster (visible structural nodes) and bundle (invisible routing anchors) projectors. */
-const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefined => {
-  const obj = node.data?.data?.object;
-  return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
-};
-
 const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGraphNode> | undefined => {
   switch (variant) {
-    case 'swarm':
-      return undefined;
-
     case 'force':
       return (group, node) => {
         const r = node.r ?? 6;
@@ -356,6 +256,46 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .attr('r', r)
           .style('cursor', 'pointer')
           .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
+      };
+
+    case 'swarm':
+      // Match the force variant's shape so identity-by-id transitions read continuously.
+      // The tail is a SINGLE `<path>` traced through head + history points; its stroke
+      // uses a per-boid `<linearGradient>` that fades head → tail. Done this way (rather
+      // than as N overlapping `<line>` segments) so coincident segment endpoints don't
+      // compound their alpha and read as a striped trail.
+      return (group, node) => {
+        const fill = getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined);
+        const r = node.r ?? 6;
+        const strokeWidth = Math.max(1, r * 0.6);
+        // Gradient id must be unique document-wide. node.id is the DXN, which contains
+        // characters (`:`, `/`, etc.) that aren't valid in NCName-style ids, so sanitize.
+        const gradId = `dx-swarm-grad-${String(node.id).replace(/[^\w-]/g, '_')}`;
+        const grad = group
+          .append('defs')
+          .append('linearGradient')
+          .attr('id', gradId)
+          // userSpaceOnUse so x1/y1/x2/y2 are interpreted in the dx-node's local coord space
+          // (head at 0,0). The applyNode hook overwrites them per tick to align with the
+          // path's head → tail axis.
+          .attr('gradientUnits', 'userSpaceOnUse')
+          .attr('x1', 0)
+          .attr('y1', 0)
+          .attr('x2', 0)
+          .attr('y2', 0);
+        grad.append('stop').attr('offset', 0).attr('stop-color', fill).attr('stop-opacity', 0.7);
+        grad.append('stop').attr('offset', 1).attr('stop-color', fill).attr('stop-opacity', 0);
+        // Path first so the head circle sits on top.
+        group
+          .append('path')
+          .classed('dx-swarm-tail', true)
+          .attr('fill', 'none')
+          .attr('stroke', `url(#${gradId})`)
+          .attr('stroke-width', strokeWidth)
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-linejoin', 'round')
+          .attr('pointer-events', 'none');
+        group.append('circle').attr('r', r).style('cursor', 'pointer').style('fill', fill);
       };
 
     case 'lattice':
@@ -385,12 +325,20 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .attr('r', r)
           .style('cursor', 'pointer')
           .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
+        const labelOptions = { delay: TWEEN_MS, duration: LABEL_FADE_MS };
         if (node.type === CLUSTER_NODE_TYPE_LEAF) {
-          appendRadialLeafLabel(group, node, obj, r);
+          const text = labelForLeaf(node, obj);
+          if (text) {
+            appendRadialLeafLabel(group, node, text, r, labelOptions);
+          }
         } else if (node.type === CLUSTER_NODE_TYPE_ROOT) {
-          appendRootLabel(group, node, r);
-        } else if (node.type === CLUSTER_NODE_TYPE_GROUP) {
-          appendRadialGroupLabel(group, node, r);
+          if (node.label) {
+            appendRootLabel(group, node.label, r, labelOptions);
+          }
+        } else {
+          if (node.label) {
+            appendRadialGroupLabel(group, node, node.label, r, labelOptions);
+          }
         }
       };
 
@@ -404,103 +352,21 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .attr('r', r)
           .style('cursor', 'pointer')
           .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
-        appendRadialLeafLabel(group, node, obj, r);
+        const text = labelForLeaf(node, obj);
+        if (text) {
+          appendRadialLeafLabel(group, node, text, r, { delay: TWEEN_MS, duration: LABEL_FADE_MS });
+        }
       };
   }
 };
 
-/** Fade-in duration applied to labels after the layout tween completes. */
-const LABEL_FADE_MS = 200;
-
 /**
- * Append a radial leaf label outside the ring, oriented outward. Compute orientation
- * from the TARGET position (tx/ty) — at enter time node.x/y is still at the previous
- * projector's coordinates, so using current x/y would orient the label by the
- * pre-transition layout (wrong) and the rotation wouldn't update during the tween.
+ * Group leaves by typename so same-type leaves cluster together — used by both the
+ * cluster (visible structural nodes) and bundle (invisible routing anchors) projectors.
  */
-const appendRadialLeafLabel = (
-  group: Parameters<RenderNode<SpaceGraphNode>>[0],
-  node: GraphLayoutNode<SpaceGraphNode>,
-  obj: Obj.Unknown | undefined,
-  r: number,
-): void => {
-  const label = (obj && Obj.getLabel(obj)) ?? node.data?.data?.label ?? node.id;
-  if (!label) {
-    return;
-  }
-
-  const targetX = (node as any).tx ?? node.x ?? 0;
-  const targetY = (node as any).ty ?? node.y ?? 0;
-  const angleDeg = (Math.atan2(targetY, targetX) * 180) / Math.PI;
-  const flipped = angleDeg > 90 || angleDeg < -90;
-  group
-    .append('text')
-    .classed('dx-cluster-label', true)
-    .attr('dy', '0.32em')
-    .attr('transform', `rotate(${flipped ? angleDeg + 180 : angleDeg})`)
-    .attr('x', flipped ? -(r + 4) : r + 4)
-    .attr('text-anchor', flipped ? 'end' : 'start')
-    .attr('opacity', 0)
-    .style('cursor', 'pointer')
-    .text(label)
-    .transition()
-    .delay(TWEEN_MS)
-    .duration(LABEL_FADE_MS)
-    .attr('opacity', 1);
-};
-
-const appendRadialGroupLabel = (
-  group: Parameters<RenderNode<SpaceGraphNode>>[0],
-  node: GraphLayoutNode<SpaceGraphNode>,
-  r: number,
-): void => {
-  if (!node.label) {
-    return;
-  }
-
-  const targetX = (node as any).tx ?? node.x ?? 0;
-  const targetY = (node as any).ty ?? node.y ?? 0;
-  const angleDeg = (Math.atan2(targetY, targetX) * 180) / Math.PI;
-  const flipped = angleDeg > 90 || angleDeg < -90;
-  group
-    .append('text')
-    .classed('dx-cluster-label', true)
-    .classed('dx-cluster-label-group', true)
-    .attr('dy', '0.32em')
-    .attr('transform', `rotate(${flipped ? angleDeg + 180 : angleDeg})`)
-    .attr('x', flipped ? r + 4 : -(r + 4))
-    .attr('text-anchor', flipped ? 'start' : 'end')
-    .attr('opacity', 0)
-    .style('pointer-events', 'none')
-    .text(node.label)
-    .transition()
-    .delay(TWEEN_MS)
-    .duration(LABEL_FADE_MS)
-    .attr('opacity', 1);
-};
-
-const appendRootLabel = (
-  group: Parameters<RenderNode<SpaceGraphNode>>[0],
-  node: GraphLayoutNode<SpaceGraphNode>,
-  r: number,
-): void => {
-  if (!node.label) {
-    return;
-  }
-
-  group
-    .append('text')
-    .classed('dx-cluster-label', true)
-    .classed('dx-cluster-label-root', true)
-    .attr('text-anchor', 'middle')
-    .attr('y', -(r + 6))
-    .attr('opacity', 0)
-    .style('pointer-events', 'none')
-    .text(node.label)
-    .transition()
-    .delay(TWEEN_MS)
-    .duration(LABEL_FADE_MS)
-    .attr('opacity', 1);
+const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefined => {
+  const obj = node.data?.data?.object;
+  return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
 };
 
 /** Drop the package prefix from a typename for display: `org.dxos.type.Person` → `Person`. */
@@ -508,3 +374,7 @@ const shortTypename = (typename: string): string => {
   const last = typename.split('.').pop() ?? typename;
   return last.charAt(0).toUpperCase() + last.slice(1);
 };
+
+/** Resolve a leaf's display label from its ECHO object, falling back to node-level metadata. */
+const labelForLeaf = (node: GraphLayoutNode<SpaceGraphNode>, obj: Obj.Unknown | undefined): string | undefined =>
+  (obj && Obj.getLabel(obj)) ?? node.data?.data?.label ?? node.id;

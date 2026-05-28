@@ -7,9 +7,10 @@ const PLUGIN_SPEC_SUBJECT_BRAND = '@dxos/plugin-code/plugin-spec';
 /**
  * Subject attached to the per-plugin `spec` graph node. Carries the MDL
  * content resolved from `Plugin.Meta.spec` (the relative path inside the
- * plugin's package) plus the bundled file contents loaded via Vite's eager
- * `import.meta.glob`, so the spec surface can render it via {@link SpecView}
- * without any ECHO binding.
+ * plugin's package) plus the file contents contributed via
+ * {@link AppCapabilities.PluginAsset} by each plugin's
+ * `addPluginAssetModule`, so the spec surface can render it via
+ * {@link SpecView} without any ECHO binding.
  */
 export type PluginSpecSubject = {
   readonly __brand: typeof PLUGIN_SPEC_SUBJECT_BRAND;

@@ -30,6 +30,23 @@ import { JsonSchemaType } from '../JsonSchema';
 export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<AnyEntity & ToMutable<T> & ExtraFields>;
 
 /**
+ * Options accepted by every `Type.makeObject` / `Type.makeRelation` / type-kind
+ * factory. Defaults are derived from `(typename, version)` so callers normally
+ * pass nothing.
+ */
+export type EchoTypeOptions = {
+  /**
+   * Override the entity id stamped on the in-memory `Type.Type` value.
+   *
+   * Defaults to `ObjectId.deterministic(typename, version)` — stable across processes
+   * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
+   * Pass an explicit id (typically `ObjectId.random()`) to opt out of the
+   * deterministic default.
+   */
+  id?: ObjectId;
+};
+
+/**
  * In-memory `Type.Type` entity shape produced by `Type.makeObject(dxn)` /
  * `Type.makeRelation({...})`. A live reactive `TypeSchema` instance —
  * identical to a persisted `Type.Type` except for database attachment.
@@ -198,6 +215,7 @@ export const makeEchoTypeSchema = <
   version: string,
   kind: K,
   computeJsonSchema: () => JsonSchemaType,
+  explicitId?: ObjectId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
   const sourceSchema = Schema.make<
@@ -211,9 +229,19 @@ export const makeEchoTypeSchema = <
   // in-memory declarations until persisted.
   const meta: ObjectMeta = { keys: [], key: typename, version };
 
+  // Default to a deterministic id derived from `(typename, version)` so that
+  // constructing a `Type.Type` entity never reaches `crypto.getRandomValues()`.
+  // Cloudflare workerd forbids RNG calls in global scope, and the ~hundreds of
+  // `Type.makeObject(...)` call sites across the monorepo execute at module top.
+  // `setIdOnTarget` (see `proxy/make-object.ts`) short-circuits on a pre-supplied
+  // valid id, so this also bypasses the `ObjectId.random()` path inside `makeObject`.
+  // Callers can override via `Type.makeObject(dxn, { id })` when they want a fresh
+  // random id (e.g. inside a request handler where workerd does allow RNG).
+  const id = explicitId ?? ObjectId.deterministic(typename, version);
+
   // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
   // below as a getter (not passed here as data) for two reasons; see that accessor.
-  const entity = makeObject(persistentEntitySchema, {} as any, meta);
+  const entity = makeObject(persistentEntitySchema, { id } as any, meta);
 
   const target = getProxyTarget(entity)!;
   // `jsonSchema` is always available, but computed once on first read rather than at

@@ -13,6 +13,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { type DebugPluginOptions } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
@@ -29,6 +32,9 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
     id: 'setup-devtools',
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.sync(() => setupDevtools()),
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

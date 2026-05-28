@@ -122,11 +122,19 @@ export const useMessageActions = ({
         () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
       );
 
-    for (const item of extractorActions) {
-      builder = builder.action(
-        `extract-${item.id}`,
-        { label: item.label, icon: 'ph--magic-wand--regular' },
-        item.onSelect,
+    if (extractorActions.length > 0) {
+      builder = builder.group(
+        'extract',
+        {
+          label: ['message-toolbar-extract.menu', { ns: meta.id }],
+          icon: 'ph--magic-wand--regular',
+          variant: 'dropdownMenu',
+        },
+        (group) => {
+          for (const item of extractorActions) {
+            group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+          }
+        },
       );
     }
 

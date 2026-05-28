@@ -76,6 +76,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
@@ -101,7 +102,8 @@
   "files": [
     "assets",
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
@@ -120,7 +122,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",

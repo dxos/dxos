@@ -439,6 +439,9 @@
       "path": "packages/plugins/plugin-sample/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sandbox/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-script/tsconfig.json"
     },
     {
@@ -584,6 +587,9 @@
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-ui/tsconfig.json"

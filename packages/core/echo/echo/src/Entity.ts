@@ -270,6 +270,13 @@ export const setLabel = (entity: Mutable<Unknown>, label: string): void => inter
 export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
 /**
+ * Get the icon annotation for an entity (object or relation), resolved via its type-level
+ * `IconAnnotation`. Returns the full `{ icon, hue }` annotation so callers can use both
+ * the phosphor icon name and the suggested colour.
+ */
+export const getIcon = (entity: Unknown | Snapshot): internal.IconAnnotation | undefined => internal.getIcon(entity);
+
+/**
  * Convert an entity to its JSON representation.
  */
 export const toJSON = (entity: Unknown | Snapshot): JSON => internal.objectToJSON(entity);

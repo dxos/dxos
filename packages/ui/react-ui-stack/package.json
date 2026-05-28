@@ -64,7 +64,6 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

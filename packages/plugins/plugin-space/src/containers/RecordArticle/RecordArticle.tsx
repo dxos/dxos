@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -24,13 +22,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
   const icon =
     schema && Type.getDatabase(schema) != null
       ? 'ph--cube--regular'
-      : Function.pipe(
-          Option.fromNullable(schema),
-          Option.map(Type.getSchema),
-          Option.flatMap(Annotation.IconAnnotation.get),
-          Option.map(({ icon }) => icon),
-          Option.getOrElse(() => 'ph--circle-dashed--regular'),
-        );
+      : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
 
   return (
     <Panel.Root role={role}>
