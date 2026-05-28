@@ -69,13 +69,12 @@ export const makeTypeJsonSchemaAnnotation = (options: {
   assertArgument(!!options.relationSource === (options.kind === EntityKind.Relation), 'relationSource');
   assertArgument(!!options.relationTarget === (options.kind === EntityKind.Relation), 'relationTarget');
 
-  const obj = {
-    // TODO(dmaretskyi): Should this include the version?
-    $id: options.identifier ?? DXN.fromTypename(options.typename).toString(),
+  const obj: Record<string, unknown> = {
+    $id: options.identifier ?? DXN.make(options.typename, options.version),
     entityKind: options.kind,
     version: options.version,
     typename: options.typename,
-  } as any;
+  };
   if (options.kind === EntityKind.Relation) {
     obj.relationSource = { $ref: options.relationSource };
     obj.relationTarget = { $ref: options.relationTarget };

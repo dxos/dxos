@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Annotation, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -30,10 +30,7 @@ import { ObjectProperties } from './ObjectProperties';
 const Author = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.author',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.test.author', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'blue' }),
 );
@@ -43,10 +40,7 @@ const Article = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
   authors: Schema.Array(Ref.Ref(Author)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.article',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.test.article', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'green' }),
 );
@@ -60,7 +54,7 @@ type Article = Schema.Schema.Type<typeof Article>;
 // backing object and links it at create time. `cursor` is an optional hidden
 // field included to exercise the same path for non-required hidden fields.
 //
-const NoteBacking = Schema.Struct({}).pipe(Type.object({ typename: 'org.dxos.test.note-backing', version: '0.1.0' }));
+const NoteBacking = Schema.Struct({}).pipe(Type.object(DXN.make('org.dxos.test.noteBacking', '0.1.0')));
 type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
 
 const Note = Schema.Struct({
@@ -68,10 +62,7 @@ const Note = Schema.Struct({
   cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   backing: Ref.Ref(NoteBacking).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.note',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.test.note', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'amber' }),
   FactoryAnnotation.set(((values: any) =>
@@ -83,10 +74,7 @@ const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   notes: Schema.Array(Ref.Ref(Note)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.test.notebook',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.test.notebook', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'amber' }),
 );

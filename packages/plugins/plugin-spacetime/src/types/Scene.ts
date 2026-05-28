@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 import * as Model from './Model';
@@ -15,10 +15,7 @@ export const Scene = Schema.Struct({
   name: Schema.optional(Schema.String),
   objects: Ref.Ref(Model.Object).pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.spacetime.scene',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.spacetime.scene', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--cube--regular',
     hue: 'teal',

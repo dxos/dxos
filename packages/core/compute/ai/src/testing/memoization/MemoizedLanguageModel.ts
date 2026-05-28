@@ -34,6 +34,15 @@ const DISABLE_CLOSEST_MATCH_SEARCH = false;
 const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
+/**
+ * NEVER redact ObjectIds, EchoURIs, or DXNs in this module. Memoized prompts
+ * must match the exact strings the LLM is asked to reason about — collapsing
+ * ids to a placeholder hides real mismatches and produces false hits. Test
+ * determinism comes from `ObjectId.dangerouslyDisableRandomness()` (test PRNG
+ * with a fixed seed); when memos drift, fix the upstream id generation or
+ * regenerate with `ALLOW_LLM_GENERATION=1`, do not normalize here.
+ */
+
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
   deepMapValues(prompt, (value, recurse) => {
     if (typeof value === 'string') {

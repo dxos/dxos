@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -13,29 +13,21 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  getSchemaDXN,
+  getTypeIdentifierAnnotation,
+  getSchemaURI,
 } from '@dxos/echo/internal';
+import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
-const TestEmpty = Schema.Struct({}).pipe(
-  Type.object({
-    typename: 'com.example.type.empty',
-    version: '0.1.0',
-  }),
-);
+const TestEmpty = Schema.Struct({}).pipe(Type.object(DXN.make('com.example.type.empty', '0.1.0')));
 
 interface TestEmpty extends Schema.Schema.Type<typeof TestEmpty> {}
 
 const TestWithRefs = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
   schemaArray: Schema.optional(Schema.Array(Ref(EchoSchema))),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.test',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
 
 interface TestWithRefs extends Schema.Schema.Type<typeof TestWithRefs> {}
 
@@ -56,7 +48,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, {}));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
@@ -68,7 +60,7 @@ describe('EchoSchema', () => {
         typename: 'com.example.type.test',
         version: '0.1.0',
       } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
+      [TypeIdentifierAnnotationId]: `echo:/${instanceWithSchemaRef.schema?.target?.id}`,
     });
     expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 
@@ -81,7 +73,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema) }));
     expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
@@ -92,7 +84,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schemaArray: [] }));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
@@ -131,17 +123,26 @@ describe('EchoSchema', () => {
     expect(queried[0].id).to.eq(object.id);
   });
 
-  test('getSchemaDXN', async () => {
+  test('getSchemaURI returns the schema-as-object EchoURI for stored schemas', async ({ expect }) => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
+    const uri = getSchemaURI(schema)!;
+    // Stored schemas resolve to their schema-as-object EchoURI (echo:/<id>) so the
+    // schema rides along with loaded objects as a strong dependency.
+    expect(uri).to.match(/^echo:\//);
+    // The typename + version still live on the schema metadata.
+    expect(schema.typename).to.eq(TestEmpty.typename);
+    expect(schema.version).to.eq('0.1.0');
   });
 
-  test('getSchemaDXN on schema with updated typename', async () => {
+  test('getSchemaURI tracks the schema EchoURI even after typename update', async ({ expect }) => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
+    const before = getSchemaURI(schema)!;
     schema.updateTypename('com.example.type.updated');
-    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
+    const after = getSchemaURI(schema)!;
+    expect(after).to.eq(before);
+    expect(schema.typename).to.eq('com.example.type.updated');
   });
 
   test('mutable schema refs', async () => {
@@ -149,12 +150,12 @@ describe('EchoSchema', () => {
 
     const OrgSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }).pipe(Type.object({ typename: 'com.example.type.org', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.make('com.example.type.org', '0.1.0')));
 
     const ContactSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       org: Schema.optional(Ref(OrgSchema)),
-    }).pipe(Type.object({ typename: 'com.example.type.contact', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.make('com.example.type.contact', '0.1.0')));
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
@@ -163,11 +164,12 @@ describe('EchoSchema', () => {
     expect(contact.org?.target?.id).to.eq(org.id);
   });
 
-  test('schema id stays as echo DXN after update', async () => {
+  test('schema id stays as echo URI after update', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('com.example.type.updated');
-    expect(getSchemaDXN(schema)?.kind).to.eq(DXN.kind.ECHO);
+    // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
+    expect(getTypeIdentifierAnnotation(schema)).to.match(/^echo:\//);
   });
 
   const setupTest = async () => {

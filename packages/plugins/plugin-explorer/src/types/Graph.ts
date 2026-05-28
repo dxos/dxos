@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Filter, Obj, Query, QueryAST, Ref, Type, View } from '@dxos/echo';
+import { DXN, Annotation, Filter, Obj, Query, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -18,10 +18,7 @@ const GraphSchema = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.graph',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.graph', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({

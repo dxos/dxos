@@ -15,6 +15,7 @@ import { Feed } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
+import { URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -49,11 +50,11 @@ describe('Streaming pipelines', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime();
-        runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
-        runtime.registerGraph('dxn:compute:stream-sum', streamSum());
+        runtime.registerNode(URI.make('dxn:test:sum-aggregator'), sumAggregator);
+        runtime.registerGraph(URI.make('dxn:compute:stream-sum'), streamSum());
 
         const { result } = yield* runtime
-          .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
+          .runGraph(URI.make('dxn:compute:stream-sum'), ValueBag.make({ stream: Effect.succeed(Stream.range(1, 10)) }))
           .pipe(Effect.flatMap(ValueBag.unwrap));
 
         expect(result).toEqual(55);
@@ -68,15 +69,15 @@ describe('Streaming pipelines', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime();
-        runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
-        runtime.registerGraph('dxn:compute:stream-sum', streamSum());
+        runtime.registerNode(URI.make('dxn:test:sum-aggregator'), sumAggregator);
+        runtime.registerGraph(URI.make('dxn:compute:stream-sum'), streamSum());
 
         const delayedStream = Stream.range(1, 10).pipe(
           Stream.mapEffect((n) => Effect.succeed(n).pipe(Effect.delay('50 millis'))),
         );
 
         const { result } = yield* runtime
-          .runGraph('dxn:compute:stream-sum', ValueBag.make({ stream: Effect.succeed(delayedStream) }))
+          .runGraph(URI.make('dxn:compute:stream-sum'), ValueBag.make({ stream: Effect.succeed(delayedStream) }))
           .pipe(Effect.flatMap(ValueBag.unwrap));
 
         expect(result).toEqual(55);
@@ -112,7 +113,7 @@ const streamSum = () => {
   const model = ComputeGraphModel.create();
   model.builder
     .createNode({ id: 'stream-sum-INPUT', type: NODE_INPUT })
-    .createNode({ id: 'stream-sum-AGGREGATOR', type: 'dxn:test:sum-aggregator' })
+    .createNode({ id: 'stream-sum-AGGREGATOR', type: URI.make('dxn:test:sum-aggregator') })
     .createNode({ id: 'stream-sum-OUTPUT', type: NODE_OUTPUT })
     .createEdge({ node: 'stream-sum-INPUT', property: 'stream' }, { node: 'stream-sum-AGGREGATOR', property: 'stream' })
     .createEdge(

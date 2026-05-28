@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
-import { getSchemaDXN } from '../../Annotation';
+import { getSchemaURI } from '../../Annotation';
 import { ObjectDeletedId, ParentId, SchemaId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
@@ -404,7 +404,7 @@ const toJSON = (target: ProxyTarget): any => {
  * Recursively set AST on all potential proxy targets.
  */
 const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
-  const schemaType = getSchemaDXN(schema);
+  const schemaType = getSchemaURI(schema);
   if (schemaType != null) {
     defineHiddenProperty(obj, TypeId, schemaType);
   }

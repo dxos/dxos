@@ -26,8 +26,12 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * from `Obj.getSchema` or, for runtime/mutable schemas, the reactive
  * schema looked up via `useSchema`.
  */
-export const FormCard = ({ subject, projection, readonly = true, layout = 'compact' }: FormCardProps) => {
+export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
   const { t } = useTranslation(meta.id);
+  // Readonly cards default to the `static` presentation — plain DOM, undefined values
+  // omitted — which reads as a preview rather than a form. Editable cards keep the
+  // `compact` form layout. Callers can override either via the explicit `layout` prop.
+  const resolvedLayout: Presentation = layout ?? (readonly ? 'static' : 'compact');
 
   // Try the static schema first; fall back to the runtime/database schema for
   // dynamic types whose schema isn't reachable via `Obj.getSchema` (DXN mismatch).
@@ -94,7 +98,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
         projection={projection}
         values={subject}
         readonly={readonly}
-        layout={layout}
+        layout={resolvedLayout}
         autoSave
         onSave={handleSave}
       >

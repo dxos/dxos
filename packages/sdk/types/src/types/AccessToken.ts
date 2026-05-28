@@ -6,22 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
-
-/** @deprecated Use AccessToken instead. */
-export const LegacyAccessToken = Schema.Struct({
-  source: Schema.String,
-  token: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.access-token',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
 
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({
@@ -44,10 +30,7 @@ export const AccessToken = Schema.Struct({
     })
     .pipe(Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.accessToken',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.accessToken', '0.1.0')),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),

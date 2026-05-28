@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
     Operation.withHandler(
       Effect.fnUntraced(function* ({ db, companionTo }) {
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-        const companionDXN = Obj.getDXN(companionTo).toString();
+        const companionUri = Obj.getURI(companionTo);
 
         // 1. Look for an existing persisted companion chat in the space.
         const existingChats = yield* Effect.promise(() =>
@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
           // via the cache fallback, without waiting for AtomObj.make(ref) to hydrate.
           yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
             ...current,
-            [companionDXN]: chat,
+            [companionUri]: chat,
           }));
           yield* Effect.promise(() =>
             operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat }),
@@ -38,7 +38,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
 
         // 2. Return cached transient chat for this companion if present.
         const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.CompanionChatCache);
-        const cached = cache[companionDXN] as Chat.Chat | undefined;
+        const cached = cache[companionUri] as Chat.Chat | undefined;
         if (cached) {
           return { chat: cached, persisted: false };
         }
@@ -53,7 +53,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         const chat = data.object;
         yield* Capabilities.updateAtomValue(AssistantCapabilities.CompanionChatCache, (current) => ({
           ...current,
-          [companionDXN]: chat,
+          [companionUri]: chat,
         }));
         return { chat, persisted: false };
       }),

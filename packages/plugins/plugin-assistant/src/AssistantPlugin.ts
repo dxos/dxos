@@ -39,6 +39,8 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { AssistantEvents, AssistantOperation } from '#types';
 
+const StateReady = AppActivationEvents.createStateEvent(meta.id);
+
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -78,6 +80,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [StateReady],
     activate: AssistantState,
   }),
   Plugin.addModule({
@@ -123,6 +126,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       DeckEvents.StateReady,
+      StateReady,
     ),
     activate: CompanionChatProvisioner,
   }),

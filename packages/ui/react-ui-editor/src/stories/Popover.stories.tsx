@@ -81,7 +81,7 @@ const LinkStory = (args: DefaultStoryProps) => {
             label: object.name,
             icon: 'ph--user--regular',
             onSelect: ({ view, head }) => {
-              const link = `[${object.name}](${Obj.getDXN(object)})`;
+              const link = `[${object.name}](${Obj.getURI(object)})`;
               if (text?.startsWith('@')) {
                 insertAtLineStart(view, head, `!${link}\n`);
               } else {

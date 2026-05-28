@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId, URI } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -24,20 +24,25 @@ const _escapeLikePrefix = (prefix: string) => {
 
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
-  objectId: Schema.String,
+  objectId: ObjectId,
+  /** Empty string for non-queue objects. */
   queueId: Schema.String,
   /** Queue subspace namespace (e.g. 'data', 'trace'). Empty string for non-queue objects. */
   queueNamespace: Schema.String,
-  spaceId: Schema.String,
+  spaceId: SpaceId,
   documentId: Schema.String,
   entityKind: Schema.String,
-  /** The versioned DXN of the type of the object. */
-  typeDXN: Schema.String,
+  /**
+   * Type identifier URI for the object — typename DXN for non-stored schemas,
+   * schema-as-object EchoURI for stored (dynamic) schemas. Mirrors the value
+   * written into the object's `system.type`.
+   */
+  typeDXN: URI.Schema,
   deleted: Schema.Boolean,
-  source: Schema.NullOr(Schema.String),
-  target: Schema.NullOr(Schema.String),
+  source: Schema.NullOr(EchoURI.Schema),
+  target: Schema.NullOr(EchoURI.Schema),
   /** Parent object id (nullable). */
-  parent: Schema.NullOr(Schema.String),
+  parent: Schema.NullOr(EchoURI.Schema),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -125,15 +130,17 @@ export class ObjectMetaIndex implements Index {
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const parsedType = DXN.tryParse(query.typeDXN)?.asTypeDXN();
+        const parsedDxn = DXN.isDXN(query.typeDXN) ? query.typeDXN : undefined;
+        const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+        // Legacy backward-compat: old snapshots stored `dxn:type:<nsid>` before the DXN refactor stripped the `type:` segment.
+        const legacyTypeDXN = parsedDxn ? (`dxn:type:${parsedDxn.slice(4)}` as typeof parsedDxn) : undefined;
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
-        const rows =
-          parsedType && parsedType.version === undefined
-            ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
-                query.typeDXN
-              } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\')`
-            : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${query.typeDXN}`;
+        const rows = hasNoVersion
+          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
+              query.typeDXN
+            } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\' ${legacyTypeDXN ? sql`OR typeDXN = ${legacyTypeDXN}` : sql``})`
+          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${query.typeDXN} ${legacyTypeDXN ? sql`OR typeDXN = ${legacyTypeDXN}` : sql``})`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -203,10 +210,16 @@ export class ObjectMetaIndex implements Index {
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
         const typeWhere = sql.or(
           typeDxns.map((typeDXN) => {
-            const parsedType = DXN.tryParse(typeDXN)?.asTypeDXN();
-            return parsedType && parsedType.version === undefined
-              ? sql.or([sql`typeDXN = ${typeDXN}`, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
+            const parsedDxn = DXN.isDXN(typeDXN) ? typeDXN : undefined;
+            const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+            // Legacy backward-compat: old snapshots stored `dxn:type:<nsid>` before the DXN refactor.
+            const legacyTypeDXN = parsedDxn ? (`dxn:type:${parsedDxn.slice(4)}` as typeof parsedDxn) : undefined;
+            const exactMatch = legacyTypeDXN
+              ? sql.or([sql`typeDXN = ${typeDXN}`, sql`typeDXN = ${legacyTypeDXN}`])
               : sql`typeDXN = ${typeDXN}`;
+            return hasNoVersion
+              ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
+              : exactMatch;
           }),
         );
         const rows = inverted
@@ -282,7 +295,9 @@ export class ObjectMetaIndex implements Index {
 
               // Extract metadata.
               const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
-              const typeDXN = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
+              // Normalize legacy `dxn:type:<nsid>` → `dxn:<nsid>` at index time for forward compat.
+              const rawTypeDXN = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
+              const typeDXN = (DXN.tryMake(rawTypeDXN) ?? rawTypeDXN) as typeof rawTypeDXN;
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
@@ -465,7 +480,7 @@ export class ObjectMetaIndex implements Index {
    * Matches both:
    * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
    * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
-   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueDxn`).
+   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueUri`).
    */
   queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
     (query: {
@@ -478,7 +493,8 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const parentDxns = query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString());
+        const parentDzns = query.parentIds.map((id) => EchoURI.make({ objectId: id }));
+        const parentDxns = parentDzns;
         const rows =
           yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
 

@@ -64,7 +64,7 @@ export default defineFunction({
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        try: () => space.queues.queryQueue(DXN.tryMake(queueId)!),
         catch: (e: any) => e,
       });
       const backfill = objects.length === 0;
@@ -94,7 +94,7 @@ export default defineFunction({
             .toReversed();
           if (queueMessages.length > 0) {
             yield* Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
+              try: () => space.queues.insertIntoQueue(DXN.tryMake(queueId)!, queueMessages),
               catch: (e: any) => e,
             });
             yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);

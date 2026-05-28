@@ -14,9 +14,9 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
+import { Ref, getSchemaURI, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
+import { DXN, type ObjectId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -484,16 +484,16 @@ describe('Integration tests', () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using peer = await builder.createPeer();
 
-      let rootUrl: string, schemaDXN: string;
+      let rootUrl: string, schemaDxn: URI.URI;
       {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+        }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
-        schemaDXN = DXN.fromLocalObjectId(stored.id).toString();
+        schemaDxn = getSchemaURI(stored)!;
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
@@ -514,7 +514,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const objects = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDXN)))).run();
+        const objects = await db.query(Query.select(Filter.typeURI(schemaDxn))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
           typename: 'com.example.type.test',
@@ -541,14 +541,14 @@ describe('Integration tests', () => {
   test('dynamic schema is eagerly loaded with objects', async () => {
     await using peer = await builder.createPeer();
 
-    let typeDXN!: DXN;
+    let typeURI!: URI.URI;
     {
       await using db = await peer.createDatabase(PublicKey.random(), {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
-      typeDXN = getSchemaDXN(schema)!;
+      typeURI = getSchemaURI(schema)!;
       db.add(makeObject(schema, { name: 'Bob' }));
       await db.flush();
     }
@@ -559,7 +559,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [obj] = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
+      const [obj] = await db.query(Query.select(Filter.typeURI(typeURI))).run();
       expect(Obj.getSchema(obj)).toBeDefined();
       expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);
     }

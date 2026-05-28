@@ -40,7 +40,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id]);
 
   useEffect(() => {
-    if (objects.findIndex((object) => Obj.getDXN(object).toString() === id) > -1) {
+    if (objects.findIndex((object) => Obj.getURI(object) === id) > -1) {
       setFound(true);
       if (layout.active.includes(id)) {
         setOpen(false);
@@ -74,7 +74,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
             </>
           ) : (
             <>
-              <Icon icon='ph--circle-dashed--regular' />
+              <Icon icon='ph--placeholder--regular' />
               <span>{t('object-not-found.label')}</span>
             </>
           )}

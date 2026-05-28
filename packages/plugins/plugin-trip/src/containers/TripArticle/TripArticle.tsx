@@ -39,7 +39,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const [snapshot] = useObject(reactiveSubject);
   const trip = (snapshot ?? subject) as Trip.Trip;
 
-  const id = attendableId ?? Obj.getDXN(subject).toString();
+  const id = attendableId ?? Obj.getURI(subject);
   const currentId = useSelected(id, 'single');
 
   // Resolve segment refs to live objects (filtered to currently loaded).

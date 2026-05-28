@@ -42,8 +42,8 @@ describe('Obj', () => {
       const snapshot = Obj.getSnapshot(obj);
 
       // getDXN - works with both.
-      expect(Obj.getDXN(obj)).toBeDefined();
-      expect(Obj.getDXN(snapshot)).toBeDefined();
+      expect(Obj.getURI(obj)).toBeDefined();
+      expect(Obj.getURI(snapshot)).toBeDefined();
 
       // getTypename - works with both.
       expect(Obj.getTypename(obj)).toBe('com.example.type.person');
@@ -79,6 +79,17 @@ describe('Obj', () => {
       expect(SnapshotKindId in obj).toBe(false);
       expect(SnapshotKindId in snapshot).toBe(true);
       expect(Entity.KindId in snapshot).toBe(false);
+    });
+
+    test('getSnapshot preserves parent', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'child' });
+      Obj.setParent(child, parent);
+
+      const snapshot = Obj.getSnapshot(child);
+
+      expect(Obj.getParent(child)).toBe(parent);
+      expect(Obj.getParent(snapshot)).toBe(parent);
     });
   });
 
@@ -490,7 +501,7 @@ describe('Obj', () => {
       Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
-      expect(target.employer?.dxn.toString()).toBe(Ref.make(orgB).dxn.toString());
+      expect(target.employer?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
       expect(target.address?.city).toBe('Portland');
     });
 
@@ -513,7 +524,7 @@ describe('Obj', () => {
       Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
-      expect(target.tasks?.map((r) => r.dxn.toString())).toEqual(source.tasks?.map((r) => r.dxn.toString()));
+      expect(target.tasks?.map((r) => r.uri)).toEqual(source.tasks?.map((r) => r.uri));
     });
 
     test('respects include option', () => {

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import { QueryExecutor } from '../query/query-executor';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint';
@@ -23,11 +23,11 @@ const makeObjectSet = (...ids: ObjectId[]) => new Set<ObjectId>(ids);
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 
-const PERSON_DXN = 'dxn:type:com.example.type.person:0.1.0';
-const ORG_DXN = 'dxn:type:com.example.type.organization:0.1.0';
+const PERSON_DXN = 'dxn:com.example.type.person:0.1.0';
+const ORG_DXN = 'dxn:com.example.type.organization:0.1.0';
 
 // Stable queue DXN mirroring query-planner.test.ts.
-const QUEUE_DXN = DXN.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E').toString();
+const QUEUE_DXN = EchoURI.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 const QUEUE_ID = ObjectId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
 
@@ -177,7 +177,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     );
     expect(
       executor.matchesHint(
-        makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('dxn:type:com.example.unrelated:0.1.0') }),
+        makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('dxn:com.example.unrelated:0.1.0') }),
       ),
     ).toBe(false);
   });
@@ -199,7 +199,7 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
     // Even a completely disjoint hint should match for non-simple queries.
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
-      typenames: makeTypeSet('dxn:type:totally.unrelated:0.1.0'),
+      typenames: makeTypeSet('dxn:totally.unrelated:0.1.0'),
     });
     expect(executor.matchesHint(hint)).toBe(true);
   });
@@ -219,7 +219,7 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
     });
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
-      typenames: makeTypeSet('dxn:type:unrelated:0.1.0'),
+      typenames: makeTypeSet('dxn:unrelated:0.1.0'),
     });
     expect(executor.matchesHint(hint)).toBe(true);
   });

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -25,13 +25,7 @@ export const Task = Schema.Struct({
   done: Schema.Boolean.annotations({
     description: 'Whether the task has been completed.',
   }),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.Task',
-    version: '0.1.0',
-  }),
-  LabelAnnotation.set(['title']),
-);
+}).pipe(Type.object(DXN.make('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
 
 export interface Task extends Schema.Schema.Type<typeof Task> {}
 

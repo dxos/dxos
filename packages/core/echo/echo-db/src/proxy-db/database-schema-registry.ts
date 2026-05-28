@@ -19,7 +19,7 @@ import {
   makeTypeJsonSchemaAnnotation,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, type ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 
@@ -120,7 +120,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         };
 
     const getSortKey = (entry: Entry) =>
-      compositeKey(Type.getTypename(entry.schema), Type.getVersion(entry.schema), String(Type.getDXN(entry.schema)));
+      compositeKey(Type.getTypename(entry.schema), Type.getVersion(entry.schema), String(Type.getURI(entry.schema)));
 
     const filterOrderResults = (schemas: Entry[]) => {
       log('Filtering schemas', { schemas, query });
@@ -383,13 +383,17 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       ...meta,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
-    const typeId = `dxn:echo:@:${schemaToStore.id}`;
+    // The schema's $id is the typename DXN — universal across stored and non-stored
+    // schemas. The schema-as-object's storage EchoURI is tracked separately on
+    // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
+    const typeDxn = DXN.make(meta.typename, meta.version);
+    const storageEchoId = EchoURI.make({ objectId: schemaToStore.id });
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
-        [TypeIdentifierAnnotationId]: typeId,
+        [TypeIdentifierAnnotationId]: storageEchoId,
         [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
-          identifier: typeId,
+          identifier: typeDxn,
           kind: meta.kind,
           typename: meta.typename,
           version: meta.version,
@@ -452,7 +456,10 @@ const getObjectIdFromSchema = (schema: Schema.Schema.AnyNoContext): ObjectId | u
     return undefined;
   }
 
-  const dxn = DXN.parse(echoIdentifier);
-  invariant(dxn.isLocalObjectId());
-  return dxn.parts[1];
+  const echoUri = EchoURI.tryParse(echoIdentifier);
+  if (!echoUri) {
+    return undefined;
+  }
+  invariant(EchoURI.isLocal(echoUri));
+  return EchoURI.getObjectId(echoUri);
 };

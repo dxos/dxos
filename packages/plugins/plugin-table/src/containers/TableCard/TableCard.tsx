@@ -55,14 +55,17 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   return (
     <Card.Body>
-      <TableComponent.Root ref={tableRef}>
-        <TableComponent.Content
-          key={Obj.getDXN(object).toString()}
-          model={model}
-          presentation={presentation}
-          schema={schema}
-        />
-      </TableComponent.Root>
+      <Card.Row fullWidth>
+        <TableComponent.Root ref={tableRef}>
+          <TableComponent.Content
+            key={Obj.getURI(object)}
+            model={model}
+            presentation={presentation}
+            schema={schema}
+            classNames='scale-75'
+          />
+        </TableComponent.Root>
+      </Card.Row>
     </Card.Body>
   );
 };

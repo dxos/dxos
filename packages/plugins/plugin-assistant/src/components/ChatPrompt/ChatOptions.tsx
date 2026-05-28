@@ -409,7 +409,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   iconClassNames={styles?.foreground}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
+                  onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
                 />
               );
             })

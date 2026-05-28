@@ -248,7 +248,7 @@ export class Builder {
       for (let index = 0; index < linkCount; index++) {
         const fullName = random.person.fullName();
         const obj = space.db.add(Person.make({ fullName }));
-        const dxn = Ref.make(obj).dxn.toString();
+        const dxn = Ref.make(obj).uri;
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
       }

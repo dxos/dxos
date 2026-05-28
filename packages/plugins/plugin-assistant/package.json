@@ -57,7 +57,7 @@
       "source": {
         "workerd": "./src/AssistantPlugin.workerd.ts",
         "node": "./src/AssistantPlugin.node.ts",
-        "default": "./src/AssistantPlugin.tsx"
+        "default": "./src/AssistantPlugin.ts"
       },
       "types": "./dist/types/src/AssistantPlugin.d.ts",
       "workerd": "./dist/lib/neutral/AssistantPlugin.workerd.mjs",

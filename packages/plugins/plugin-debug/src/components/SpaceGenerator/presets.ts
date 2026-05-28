@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { EchoURI } from '@dxos/keys';
 import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -71,9 +72,9 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagDXN = Obj.getDXN(tag).toString();
+          const tagUri = Obj.getURI(tag);
           Obj.update(doc, (doc) => {
-            Obj.getMeta(doc).tags = [tagDXN];
+            Obj.getMeta(doc).tags = [tagUri];
           });
 
           // space.db.add(
@@ -85,7 +86,7 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDXN] }, fullName: 'Rich', organization: Ref.make(org) }),
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagUri] }, fullName: 'Rich', organization: Ref.make(org) }),
           );
           space.db.add(
             Obj.make(Person.Person, {
@@ -120,15 +121,15 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const feedDXN = Feed.getQueueDxn(mailboxFeed)?.toString();
-        invariant(feedDXN, 'Mailbox feed missing DXN');
+        const queueDxn = Feed.getQueueUri(mailboxFeed);
+        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
-        const tagDXN = Obj.getDXN(tag).toString();
+        const tagUri = Obj.getURI(tag);
 
         const objects = range(n, () => {
-          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDXN));
-          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDXN));
-          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDXN));
+          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
+          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
+          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagUri));
 
           space.db.add(
             Trigger.make({
@@ -179,7 +180,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).from({
-              feeds: [feedDXN],
+              feeds: [queueDxn],
             }),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
@@ -587,7 +588,7 @@ export const generator = () => ({
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+                value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -774,7 +775,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+      value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

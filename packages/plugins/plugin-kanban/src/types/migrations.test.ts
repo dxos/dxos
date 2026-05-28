@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Migration, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Migration, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ViewModel } from '@dxos/schema';
 
@@ -13,7 +13,7 @@ import { Kanban } from './Kanban';
 import { KanbanV1 } from './Kanban';
 
 const TestCardSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object({ typename: 'com.example/TestCard', version: '0.1.0' }),
+  Type.object(DXN.make('com.example.type.testCard', '0.1.0')),
 );
 
 /**
@@ -75,7 +75,7 @@ describe('Kanban migration v1 → v2', () => {
     expect(migrated.arrangement.order).toEqual(['todo']);
     expect(migrated.spec.kind).toBe('view');
     if (migrated.spec.kind === 'view') {
-      expect(migrated.spec.view.dxn.toString()).toBe(Ref.make(view).dxn.toString());
+      expect(migrated.spec.view.uri).toBe(Ref.make(view).uri);
     }
     expect(Type.getVersion(Obj.getSchema(migrated)!)).toBe('0.2.0');
   });

@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, type ObjectId } from '@dxos/keys';
+import { EchoURI, type ObjectId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -67,8 +67,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
   // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
   //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
   internal.EchoRelationSchema({
-    typename: 'org.dxos.schema.anyRelation',
-    version: '0.0.0',
+    dxn: DXN.make('org.dxos.schema.anyRelation', '0.0.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),
@@ -169,8 +168,8 @@ export const make = <S extends Type.AnyRelation>(
     delete props[internal.MetaId];
   }
 
-  const sourceDXN = internal.getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
-  const targetDXN = internal.getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
+  const sourceDXN = internal.getObjectEchoUri(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = internal.getObjectEchoUri(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
   (props as any)[internal.RelationSourceDXNId] = sourceDXN;
   (props as any)[internal.RelationTargetDXNId] = targetDXN;
@@ -203,29 +202,29 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 };
 
 /**
- * @returns Relation source DXN.
+ * @returns Relation source URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
+export const getSourceURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
-  const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(dxn instanceof DXN);
-  return dxn;
+  const uri = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
+  invariant(EchoURI.isEchoURI(uri));
+  return uri;
 };
 
 /**
- * @returns Relation target DXN.
+ * @returns Relation target URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
+export const getTargetURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
-  const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(dxn instanceof DXN);
-  return dxn;
+  const uri = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
+  invariant(EchoURI.isEchoURI(uri));
+  return uri;
 };
 
 /**
@@ -350,15 +349,16 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the DXN of the relation.
- * Accepts both reactive relations and snapshots.
+ * Get the canonical URI of the relation. Returns `URI.URI` — today always an EchoURI,
+ * but future entity kinds may surface other URI schemes; narrow with `EchoURI.parse(uri)`
+ * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
+export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
 
 /**
  * @returns The DXN of the relation's type.
  */
-export const getTypeDXN = internal.getTypeDXN;
+export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeURI;
 
 /**
  * Get the schema of the relation.

@@ -86,6 +86,9 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../ui/react-ui-sfx"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {

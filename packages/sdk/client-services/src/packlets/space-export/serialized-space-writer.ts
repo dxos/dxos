@@ -10,7 +10,7 @@ import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-db';
 import { type EchoHost } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
-import { DXN, type IdentityDid, type SpaceId } from '@dxos/keys';
+import { DXN, type IdentityDid, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -186,16 +186,16 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
       continue;
     }
 
-    const typeDXN = DXN.tryParse(obj[ATTR_TYPE] as string);
-    if (typeDXN?.asTypeDXN()?.type !== FEED_TYPENAME) {
+    const typeDxn = obj[ATTR_TYPE];
+    const typeDxnNsid = DXN.isDXN(typeDxn) ? DXN.getName(typeDxn) : undefined;
+    if (typeDxnNsid !== FEED_TYPENAME) {
       continue;
     }
 
     const namespace = (obj as any).namespace === 'trace' ? 'trace' : 'data';
-    const queueDXN = new DXN(DXN.kind.QUEUE, [namespace, spaceId, obj.id]);
 
     try {
-      const messages = await collectQueueMessages(echoHost, queueDXN);
+      const messages = await collectQueueMessages(echoHost, spaceId, obj.id, namespace);
       if (messages.length > 0) {
         feeds.push({
           feedObjectId: obj.id,
@@ -211,21 +211,23 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
   return feeds;
 };
 
-const collectQueueMessages = async (echoHost: EchoHost, queueDXN: DXN): Promise<Obj.JSON[]> => {
-  const parts = queueDXN.asQueueDXN();
-  invariant(parts, 'Expected a queue DXN');
-
-  const namespace =
-    parts.subspaceTag === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
+const collectQueueMessages = async (
+  echoHost: EchoHost,
+  spaceId: SpaceId,
+  queueId: ObjectId,
+  namespace: string,
+): Promise<Obj.JSON[]> => {
+  const queuesNamespace =
+    namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
 
   const messages: Obj.JSON[] = [];
   let cursor: string | undefined;
   while (true) {
     const result = await echoHost.queuesService.queryQueue({
       query: {
-        spaceId: parts.spaceId,
-        queueIds: [parts.queueId],
-        queuesNamespace: namespace,
+        spaceId,
+        queueIds: [queueId],
+        queuesNamespace,
         after: cursor,
       },
     });

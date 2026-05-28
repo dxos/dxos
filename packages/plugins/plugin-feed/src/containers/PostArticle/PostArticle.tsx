@@ -49,14 +49,14 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // from re-firing on every render.
   const requestedContentFor = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const dxnString = Obj.getDXN(post).toString();
-    if (requestedContentFor.current === dxnString) {
+    const postUri = Obj.getURI(post);
+    if (requestedContentFor.current === postUri) {
       return;
     }
     if (!post.link || fetchedText) {
       return;
     }
-    requestedContentFor.current = dxnString;
+    requestedContentFor.current = postUri;
     void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(subject) }).catch((err) =>
       log.catch(err, { postLink: post.link }),
     );
@@ -67,12 +67,11 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // the meta line updates as soon as the feed object is loaded into the space.
   const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
   const feedName = useMemo(() => {
-    const dxn = post.source?.dxn.toString();
+    const dxn = post.source?.uri;
     if (!dxn) {
       return undefined;
     }
-
-    return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
+    return allFeeds.find((feed) => Obj.getURI(feed) === dxn)?.name;
   }, [post.source, allFeeds]);
 
   const archived = Boolean(userState.archived);

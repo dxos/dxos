@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -18,6 +18,7 @@ import {
   unwrapOptional,
 } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN, EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -37,7 +38,7 @@ export const evalQuery = (queryString: string): Query.Any => {
 
 export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
-    const typename = DXN.parse(dxn).asTypeDXN()?.type;
+    const typename = DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined;
     if (!typename) {
       return Option.none();
     }
@@ -89,7 +90,7 @@ const resolveSchema = (
         Effect.flatMap(
           Option.match({
             onNone: () => Effect.succeed(Option.none()),
-            onSome: (typename) => resolve(DXN.fromTypename(typename).toString()),
+            onSome: (typename) => resolve(DXN.make(typename)),
           }),
         ),
       ),
@@ -148,13 +149,13 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       }
       const result = Option.fromNullable(from.scope.feeds).pipe(
         Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedDXN) => Option.fromNullable(DXN.tryParse(String(feedDXN)))),
-        Option.flatMap((parsed) => {
-          const q = parsed.asQueueDXN();
-          if (!q || !Key.ObjectId.isValid(q.queueId)) {
+        Option.flatMap((feedRef) => Option.fromNullable(EchoURI.tryParse(String(feedRef)))),
+        Option.flatMap((echoUri) => {
+          const queueId = EchoURI.getObjectId(echoUri);
+          if (!queueId || !Key.ObjectId.isValid(queueId)) {
             return Option.none();
           }
-          return Option.fromNullable(space?.queues.get(parsed));
+          return Option.fromNullable(space?.queues.get(echoUri));
         }),
       );
       // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN

@@ -44,7 +44,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   ...props
 }: UseTableModelProps<T>): TableModel<T> | undefined => {
   const registry = useContext(RegistryContext);
-  const selected = useSelected(object && Obj.getDXN(object).toString(), 'multi');
+  const selected = useSelected(object && Obj.getURI(object), 'multi');
   const initialSelection = useMemo(() => selected, [object]);
 
   const [model, setModel] = useState<TableModel<T>>();

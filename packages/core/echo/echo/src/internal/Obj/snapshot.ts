@@ -10,12 +10,13 @@ import {
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
+  ParentId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
   SchemaId,
-  SelfDXNId,
+  SelfURIId,
   SnapshotKindId,
   TypeId,
 } from '../common/types';
@@ -83,11 +84,14 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   // Type introspection symbols.
   copySymbolProperty(source, snapshot, TypeId);
   copySymbolProperty(source, snapshot, SchemaId);
-  copySymbolProperty(source, snapshot, SelfDXNId);
+  copySymbolProperty(source, snapshot, SelfURIId);
 
   // Database reference (required for Obj.getDatabase to work on snapshots).
   copySymbolProperty(source, snapshot, ObjectDatabaseId);
   copySymbolProperty(source, snapshot, ObjectDeletedId);
+
+  // Parent reference (required for Obj.getParent to work on snapshots).
+  copySymbolProperty(source, snapshot, ParentId);
 
   // Metadata symbol. Copy arrays so the snapshot is not affected by mutations to the live meta's keys/tags.
   copySymbolProperty(source, snapshot, MetaId, (meta: any) => ({

@@ -31,7 +31,7 @@ export const RoutineList = ({ subject }: RoutineListProps) => {
         <div key={i}>
           <IconButton
             icon='ph--magic-wand--regular'
-            label={Obj.getLabel(prompt) ?? Obj.getDXN(prompt).toString()}
+            label={Obj.getLabel(prompt) ?? Obj.getURI(prompt)}
             onClick={() => {
               void invokePromise(AssistantOperation.RunPromptInNewChat, {
                 db,

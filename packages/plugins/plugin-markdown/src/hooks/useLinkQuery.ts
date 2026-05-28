@@ -50,7 +50,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
               label,
               icon,
               onSelect: ({ view, head }) => {
-                const link = `[${label}](${Obj.getDXN(object)})`;
+                const link = `[${label}](${Obj.getURI(object)})`;
                 // "@@" inserts a block embed on its own line instead of an inline link.
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
@@ -70,7 +70,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
           const doc = Markdown.make({ name: name || undefined });
           db?.add(doc);
           const label = name || t('object-name.placeholder', { ns: Markdown.Document.typename });
-          const link = `[${label}](${Obj.getDXN(doc)})`;
+          const link = `[${label}](${Obj.getURI(doc)})`;
           if (query?.startsWith('@')) {
             insertAtLineStart(view, head, `!${link}\n`);
           } else {

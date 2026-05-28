@@ -12,6 +12,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { EchoURI } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -161,12 +162,12 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const mailboxDXN = Obj.getDXN(mailbox).toString();
+          const mailboxUri = Obj.getURI(mailbox);
           const messageId = get(selectedId(node.id));
           const message = messageId
             ? get(AtomQuery.make<Message.Message>(db, Query.select(Filter.id(messageId))))[0]
             : undefined;
-          const draft = message && DraftMessage.belongsTo(message, mailboxDXN) ? message : undefined;
+          const draft = message && DraftMessage.belongsTo(message, mailboxUri) ? message : undefined;
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
@@ -266,7 +267,7 @@ export default Capability.makeModule(
             }
 
             const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
-            const mailboxDXN = Obj.getDXN(mailbox).toString();
+            const mailboxUri = Obj.getURI(mailbox);
 
             // TODO(wittjosiah): This is awkward, clean it up.
             let message: Message.Message | undefined;
@@ -277,7 +278,7 @@ export default Capability.makeModule(
             }
             if (!message) {
               const fromDb = get(AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId))))[0];
-              if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDXN)) {
+              if (fromDb && DraftMessage.belongsTo(fromDb, mailboxUri)) {
                 message = fromDb;
               }
             }
@@ -335,7 +336,9 @@ export default Capability.makeModule(
           }
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
-            integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === mailbox.id),
+            integration.targets.some(
+              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === mailbox.id,
+            ),
           );
           if (!integration) {
             return Effect.succeed([]);
@@ -368,7 +371,9 @@ export default Capability.makeModule(
           }
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
-            integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === calendar.id),
+            integration.targets.some(
+              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === calendar.id,
+            ),
           );
           if (!integration) {
             return Effect.succeed([]);

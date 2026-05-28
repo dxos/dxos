@@ -112,7 +112,7 @@ export const getCollectionGraphNodePartials = ({
   db: Database.Database;
   collection: Collection.Collection;
 }) => {
-  const id = Obj.getDXN(collection).toString();
+  const id = Obj.getURI(collection);
   let cached = collectionPartialsCache.get(id);
   if (!cached) {
     cached = buildCollectionPartials(collection, db);
@@ -178,23 +178,23 @@ export const createObjectNode = ({
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDXN = Obj.getDXN(parentCollection).toString();
-    onRearrange = rearrangeCache.get(collectionDXN);
+    const collectionUri = Obj.getURI(parentCollection);
+    onRearrange = rearrangeCache.get(collectionUri);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
         Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionDXN, onRearrange);
+      rearrangeCache.set(collectionUri, onRearrange);
     }
   }
 
-  const objectDXN = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectDXN);
+  const objectUri = Obj.getURI(object);
+  let blockInstruction = blockInstructionCache.get(objectUri);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectDXN, blockInstruction);
+    blockInstructionCache.set(objectUri, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;

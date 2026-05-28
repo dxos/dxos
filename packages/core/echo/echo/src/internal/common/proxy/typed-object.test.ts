@@ -6,6 +6,8 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { EchoObjectSchema } from '../../Entity';
 import { getSchema } from '../types';
 import { makeObject } from './make-object';
@@ -13,12 +15,7 @@ import { change } from './reactive';
 
 const Organization = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  EchoObjectSchema({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
 interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
@@ -30,13 +27,7 @@ const Contact = Schema.Struct(
     key: Schema.String,
     value: Schema.Any,
   },
-).pipe(
-  Schema.partial,
-  EchoObjectSchema({
-    typename: 'com.example.type.person',
-    version: '0.1.0',
-  }),
-);
+).pipe(Schema.partial, EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
 interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
@@ -98,12 +89,7 @@ describe('EchoObjectSchema class DSL', () => {
     {
       const Test2 = Schema.Struct({
         meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-      }).pipe(
-        EchoObjectSchema({
-          typename: 'org.dxos.type.functionTrigger',
-          version: '0.1.0',
-        }),
-      );
+      }).pipe(EchoObjectSchema(DXN.make('org.dxos.type.functionTrigger', '0.1.0')));
 
       const object = makeObject(Test2, {});
       change(object, (o) => {

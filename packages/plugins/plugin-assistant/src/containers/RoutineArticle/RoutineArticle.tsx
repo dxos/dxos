@@ -91,7 +91,7 @@ const usePromptHandler = (routine: Routine.Routine) => {
   const data = useMemo<Operation.Definition.Input<typeof AgentPrompt> | undefined>(() => {
     if (db && routine) {
       return {
-        prompt: db.makeRef(Obj.getDXN(routine)),
+        prompt: db.makeRef(Obj.getURI(routine)),
         input: {},
       };
     }

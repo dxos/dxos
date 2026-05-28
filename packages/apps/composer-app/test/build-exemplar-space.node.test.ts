@@ -40,9 +40,21 @@ import { describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Collection, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import {
+  Annotation,
+  Collection,
+  DXN,
+  EchoURI,
+  Feed,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  Type,
+  View,
+} from '@dxos/echo';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
@@ -103,7 +115,7 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object({ typename: 'example.type.roastLog', version: '0.1.0' }),
+  Type.object(DXN.make('example.type.roastLog', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
 );
@@ -277,7 +289,7 @@ const makeCollection = (space: Space, name: string, objects: Ref.Ref<Obj.Unknown
   space.db.add(Obj.make(Collection.Collection, { name, objects }));
 
 const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[]) => {
-  const dxn = Feed.getQueueDxn(feed);
+  const dxn = Feed.getQueueUri(feed);
   if (!dxn) {
     throw new Error('Feed has no DXN — has the space been flushed?');
   }
@@ -868,8 +880,8 @@ const makeNotes = (
   project: Project.Project,
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
-  // Use space-relative DXNs so links remain valid when the snapshot is imported into a new space.
-  const localDxn = (obj: Obj.Unknown) => DXN.fromLocalObjectId(obj.id).toString();
+  // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
+  const localDxn = (obj: Obj.Unknown) => EchoURI.make({ objectId: obj.id });
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 

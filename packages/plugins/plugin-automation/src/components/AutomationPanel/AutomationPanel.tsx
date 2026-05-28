@@ -334,7 +334,7 @@ const getWebhookUrl = (client: Client, trigger: Trigger.Trigger) => {
 const getFunctionName = (functions: Operation.PersistentOperation[], trigger: Trigger.Trigger) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
-  const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
+  const shortId = trigger.function && `${trigger.function.uri.slice(0, 16)}…`;
   const functionObject = functions.find((fn) => fn === trigger.function?.target);
   return functionObject?.name ?? shortId;
 };

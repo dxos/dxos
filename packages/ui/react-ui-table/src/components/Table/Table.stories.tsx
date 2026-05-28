@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
@@ -52,7 +52,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object({ typename: `com.example.type.${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  Type.object(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -247,12 +247,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
       }),
     ),
   ),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.contactWithArrayOfEmails',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
@@ -294,7 +289,7 @@ export const Tags: Meta<DefaultStoryProps> = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'com.example.type.single-select';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },

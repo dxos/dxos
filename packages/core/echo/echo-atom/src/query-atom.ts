@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 
-import { DXN, Database, type Entity, type Filter, Query, type QueryResult } from '@dxos/echo';
+import { Database, type Entity, type Filter, Key, Query, type QueryResult } from '@dxos/echo';
 import { WeakDictionary } from '@dxos/util';
 
 /**
@@ -68,9 +68,9 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
   if (Database.isDatabase(queryable)) {
     return queryable.spaceId;
   }
-  // Queue or similar: use dxn if it's a DXN instance.
-  if ('dxn' in queryable && queryable.dxn instanceof DXN) {
-    return queryable.dxn.toString();
+  // Queue or similar: use uri if it's a URI (EchoURI or DXN).
+  if ('uri' in queryable && Key.URI.isURI(queryable.uri)) {
+    return queryable.uri;
   }
   // Fallback: use id if it's a string.
   if ('id' in queryable && typeof queryable.id === 'string') {

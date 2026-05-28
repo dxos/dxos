@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, QueryAST, Type } from '@dxos/echo';
+import { DXN, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
 
 /**
@@ -29,7 +29,7 @@ export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
   // TODO(dmaretskyi): Change to a reference.
-  queue: DXN.Schema,
+  queue: EchoURI.Schema,
 });
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 
@@ -138,13 +138,7 @@ const TriggerSchema = Schema.Struct({
    * }
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trigger',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.trigger', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
 export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;

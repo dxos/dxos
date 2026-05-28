@@ -97,7 +97,7 @@ export const loadContentEntries = async (
   subscription: Subscription.Subscription,
 ): Promise<Map<string, Subscription.PostContent>> => {
   const echoFeed = subscription.contentFeed?.target;
-  if (!echoFeed || !EchoFeed.getQueueDxn(echoFeed)) {
+  if (!echoFeed || !EchoFeed.getQueueUri(echoFeed)) {
     return new Map();
   }
   const items = await EchoFeed.runQuery(echoFeed, Filter.type(Subscription.PostContent)).pipe(

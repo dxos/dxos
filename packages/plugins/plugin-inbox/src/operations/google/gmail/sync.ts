@@ -17,6 +17,7 @@ import { Capability } from '@dxos/app-framework';
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { Message } from '@dxos/types';
@@ -47,7 +48,9 @@ const STREAMING_CONFIG = {
 } as const;
 
 const readMailboxTargetOptions = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) => {
-  const match = (integration.targets ?? []).find((target) => target.object?.dxn?.asEchoDXN()?.echoId === mailbox.id);
+  const match = (integration.targets ?? []).find(
+    (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === mailbox.id,
+  );
   const raw = match?.options;
   if (!raw || typeof raw !== 'object') {
     return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };
@@ -87,7 +90,7 @@ const syncSingleMailbox = (input: {
   Effect.gen(function* () {
     const { integration, mailboxRef, userId, defaultLabel, defaultAfter, restrictedMode } = input;
 
-    log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after: defaultAfter, restrictedMode });
+    log('syncing gmail', { mailbox: mailboxRef.uri, userId, after: defaultAfter, restrictedMode });
     const mailbox = yield* Database.load(mailboxRef);
     const targetOptions = readMailboxTargetOptions(integration, mailbox);
     const after =

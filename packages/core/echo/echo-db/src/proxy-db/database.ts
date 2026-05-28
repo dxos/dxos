@@ -11,7 +11,7 @@ import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref } from '@dxos/
 import { type AnyProperties, MetaId, type ObjectMeta, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -213,8 +213,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
-  makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
-    const ref = Ref.fromDXN(dxn);
+  makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
+    const ref = Ref.fromURI(uri);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;
   }
@@ -292,7 +292,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
       const objects = await this._coreDatabase.graph
-        .query(Query.select(Filter.typeDXN(migration.fromType)).from(this))
+        .query(Query.select(Filter.typeURI(migration.fromType)).from(this))
         .run();
       log.verbose('migrate', {
         from: migration.fromType,
@@ -319,8 +319,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           type: migration.toType,
           meta: metaPatch as any,
         });
-        const postMigrationType = Obj.getTypeDXN(object);
-        invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
+        const postMigrationType = Obj.getTypeURI(object);
+        invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
 
         if (migration.onMigration) {
           await migration.onMigration({ before, object, db: this });

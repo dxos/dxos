@@ -96,11 +96,11 @@ describe('Agent', () => {
         const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
-        const documentDXN = Obj.getDXN(document);
+        const documentUri = Obj.getURI(document);
         yield* session
           .createRequest({
             system: SYSTEM,
-            prompt: `Please add the document ${documentDXN} as an artifact named "My Test Document" to this agent.`,
+            prompt: `Please add the document ${documentUri} as an artifact named "My Test Document" to this agent.`,
           })
           .pipe(Effect.provide(session.makeToolExecutionServices()));
 

@@ -72,7 +72,7 @@ export default Capability.makeModule(() =>
             const documentInfo = documents.map((doc) => {
               invariant(Obj.instanceOf(Markdown.Document, doc));
               return {
-                id: Obj.getDXN(doc).toString(),
+                id: Obj.getURI(doc),
                 name: doc.name || doc.fallbackName || 'Unnamed Document',
                 // TODO(ZaymonFC): Include updatedAt?
               };
@@ -90,12 +90,12 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ id }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            const document = await extensions.space.db.query(Filter.id(ArtifactId.toDXN(id).toString())).first();
+            const document = await extensions.space.db.query(Filter.id(ArtifactId.toEchoURI(id).toString())).first();
             assertArgument(Obj.instanceOf(Markdown.Document, document), 'document', 'Invalid type');
 
             const { content } = await document.content?.load();
             return ToolResult.Success({
-              id: Obj.getDXN(document).toString(),
+              id: Obj.getURI(document),
               name: document.name || document.fallbackName || 'Unnamed Document',
               content,
             });

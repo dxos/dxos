@@ -4,7 +4,7 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import { Graph, GraphModel } from '@dxos/graph';
-import { DXN, ObjectId } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
@@ -66,7 +66,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     // Create local intermediate node for the subgraph.
     const targetId = isComputeGraph(target.node)
       ? this.createNode({
-          type: DXN.parse(target.node.graph.id!).toString(),
+          type: target.node.graph.id!,
           subgraph: Ref.make(target.node),
         }).id
       : typeof target.node === 'string'

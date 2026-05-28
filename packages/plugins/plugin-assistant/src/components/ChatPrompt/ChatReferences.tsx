@@ -25,7 +25,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
   return (
     <ul className={mx('flex', classNames)}>
       {objects.map((obj) => {
-        const dxn = Obj.getDXN(obj);
+        const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
         const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Option.fromNullable(Obj.getSchema(obj)).pipe(
@@ -34,7 +34,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
         );
         const styles = hue ? getStyles(hue) : undefined;
         return (
-          <li key={dxn.toString()} className='dx-tag py-0 ps-2 flex items-center gap-1' data-hue='neutral'>
+          <li key={uri.toString()} className='dx-tag py-0 ps-2 flex items-center gap-1' data-hue='neutral'>
             <Icon icon={icon} size={4} classNames={styles?.foreground} />
             {toLocalizedString(label, t)}
             <IconButton
@@ -44,7 +44,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
               label={t('remove-object.label')}
               classNames='p-0 hover:bg-transparent'
               size={3}
-              onClick={() => onUpdateObject?.(dxn, false)}
+              onClick={() => onUpdateObject?.(uri, false)}
             />
           </li>
         );

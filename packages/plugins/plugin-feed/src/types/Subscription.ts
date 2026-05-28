@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
 
@@ -99,10 +99,7 @@ export const Subscription = Schema.Struct({
     }),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.subscription.feed',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
   LabelAnnotation.set(['name', 'url']),
   Annotation.IconAnnotation.set({
     icon: 'ph--rss--regular',
@@ -150,12 +147,7 @@ export const PostContent = Schema.Struct({
   text: Schema.String,
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.subscription.post-content',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
 
 export interface PostContent extends Schema.Schema.Type<typeof PostContent> {}
 
@@ -184,10 +176,7 @@ export const Post = Schema.Struct({
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.subscription.post',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--article--regular',

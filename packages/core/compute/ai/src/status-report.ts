@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Type } from '@dxos/echo';
+import { DXN, Annotation, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
 /**
@@ -21,10 +21,5 @@ export const AgentStatus = Schema.Struct({
     Annotation.GeneratorAnnotation.set('date.iso8601'),
   ),
   message: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.agentStatus',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.agentStatus', '0.1.0')));
 export interface AgentStatus extends Schema.Schema.Type<typeof AgentStatus> {}
