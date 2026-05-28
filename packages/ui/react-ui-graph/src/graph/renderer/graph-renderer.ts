@@ -633,7 +633,7 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
       } else if (edge.target.id === focusedId) {
         path.style('stroke', 'var(--color-sky-500)').style('stroke-width', '1.5px').style('opacity', null);
       } else {
-        path.style('stroke', null).style('stroke-width', null).style('opacity', '0.08');
+        path.style('stroke', null).style('stroke-width', null).style('opacity', '0.8');
       }
     });
 
@@ -655,7 +655,7 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
         groupSel.style('opacity', null);
         shape.style('stroke', 'var(--color-orange-400)').style('stroke-width', '2.5px');
       } else {
-        groupSel.style('opacity', '0.5');
+        groupSel.style('opacity', '0.4');
         shape.style('stroke', null).style('stroke-width', null);
       }
     });

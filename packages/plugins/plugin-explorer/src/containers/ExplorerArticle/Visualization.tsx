@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   CLUSTER_NODE_TYPE_GROUP,
   CLUSTER_NODE_TYPE_LEAF,
@@ -24,17 +24,18 @@ import {
 } from '@dxos/react-ui-graph';
 import { Flock, type FlockBoid, FlockModel, Vec2 } from '@dxos/react-ui-sfx';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { type TreeNode } from '#components';
 
 import { getNodeFillForObject } from '../../util';
 import { type ExplorerArticleVariant } from './variants';
 
-export type VisualizationProps = {
+export type VisualizationProps = ThemedClassName<{
   variant: ExplorerArticleVariant;
   model: SpaceGraphModel;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
-};
+}>;
 
 /**
  * Renders the active visualization variant.
@@ -49,15 +50,26 @@ export type VisualizationProps = {
  * (matched by node id). On exit, the boids' current positions are written back to
  * `lastLayoutRef` so the next SVG projector starts from where the swarm left off.
  */
-export const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
+export const Visualization = ({ classNames, variant, model, onNodeHover }: VisualizationProps) => {
   const registry = useContext(RegistryContext);
   const { themeMode } = useThemeContext();
-  // Match the visible app background so the swarm canvas reads as continuous
-  // with the rest of the UI. Page bg comes from --color-baseSurface tokens
-  // (dark = neutral-950 ≈ #0a0a0a, light = neutral-50 ≈ #fafafa).
-  const flockBackground = themeMode === 'dark' ? '#0a0a0a' : '#fafafa';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  // Read the container's effective background so the swarm canvas matches whatever
+  // surface the visualization sits on (bg-base-surface by default, but the consumer
+  // can override via `classNames`). Recomputed on theme toggle. Defaults to the
+  // baseSurface token values used to be hardcoded here, in case the container is
+  // unmounted when the swarm enters.
+  const [flockBackground, setFlockBackground] = useState<string>(themeMode === 'dark' ? '#0a0a0a' : '#fafafa');
+  useEffect(() => {
+    if (containerRef.current) {
+      const bg = getComputedStyle(containerRef.current).backgroundColor;
+      // Skip transparent fallback — Flock needs an opaque color for the trail-fade.
+      if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+        setFlockBackground(bg);
+      }
+    }
+  }, [themeMode, classNames]);
 
   const svgRef = useRef<SVGContext>(null);
   const [projector, setProjector] = useState<GraphProjector<SpaceGraphNode> | undefined>();
@@ -172,9 +184,9 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
   );
 
   return (
-    <div ref={containerRef} className='dx-expander relative'>
+    <div ref={containerRef} className={mx('dx-expander relative', classNames)}>
       {variant === 'swarm' ? (
-        <Flock model={flockModel} coloring='Movement' background={flockBackground} />
+        <Flock model={flockModel} coloring='Movement' background={flockBackground} trail={30} />
       ) : (
         <SVG.Root ref={svgRef}>
           <SVG.Zoom extent={[1 / 2, 2]}>
@@ -429,7 +441,7 @@ const appendRadialLeafLabel = (
     .attr('x', flipped ? -(r + 4) : r + 4)
     .attr('text-anchor', flipped ? 'end' : 'start')
     .attr('opacity', 0)
-    .style('pointer-events', 'none')
+    .style('cursor', 'pointer')
     .text(label)
     .transition()
     .delay(TWEEN_MS)

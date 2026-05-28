@@ -12,6 +12,12 @@ export type DxAnchorActivateProps = {
   title?: string;
   side?: 'top' | 'right' | 'bottom' | 'left';
   props?: Record<string, unknown>;
+  /**
+   * Set to `false` to close any open popover. When omitted (or `true`), the event opens a
+   * popover anchored to `trigger`. `dxn` / `label` / `trigger` may be placeholders when
+   * `state` is `false` — the close path ignores them.
+   */
+  state?: boolean;
 };
 
 /**
@@ -25,6 +31,7 @@ export class DxAnchorActivate extends Event {
   public readonly title?: string;
   public readonly side?: 'top' | 'right' | 'bottom' | 'left';
   public readonly props?: Record<string, unknown>;
+  public readonly state?: boolean;
 
   constructor(props: DxAnchorActivateProps) {
     super(DX_ANCHOR_ACTIVATE);
@@ -35,5 +42,6 @@ export class DxAnchorActivate extends Event {
     this.title = props.title;
     this.side = props.side;
     this.props = props.props;
+    this.state = props.state;
   }
 }

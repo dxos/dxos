@@ -45,8 +45,23 @@ export default Capability.makeModule(
       title: titleProp,
       side,
       props,
+      state,
     }: DxAnchorActivate) => {
       const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+
+      // Explicit close: callers pass `state: false` on pointer-leave to dismiss
+      // the popover. Operation schema requires anchor + kind, so use placeholders;
+      // they're overwritten in ephemeral state but only `state` is read by the UI.
+      if (state === false) {
+        await invokePromise(LayoutOperation.UpdatePopover, {
+          variant: 'virtual',
+          anchor: trigger,
+          kind: 'base',
+          state: false,
+        });
+        return;
+      }
+
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Capabilities.AtomRegistry);
       // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
