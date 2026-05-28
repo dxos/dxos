@@ -85,7 +85,16 @@ export interface MessageExtractor {
   readonly kinds: readonly string[];
   match(message: Message.Message): MatchResult;
   readonly operation: Operation.Definition<ExtractInput, ExtractResult>;
-  extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError>;
+  /**
+   * R includes `Operation.Service` so AI-backed extractors (e.g. summarize) can delegate the
+   * heavy lifting to a dedicated operation via `Operation.invoke(...)` — that operation
+   * declares the services it needs (e.g. `AiService.AiService`) so per-extractor service
+   * requirements stay out of the dispatcher's operation declaration. `Operation.Service` is
+   * auto-available in any operation handler context, so the dispatcher's `yield*` propagates
+   * cleanly. Extractors that don't invoke nested operations still satisfy this signature
+   * because `never` is assignable to `Operation.Service` in the covariant R position.
+   */
+  extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError, Operation.Service>;
   /**
    * Whether the dispatcher should attach an `ExtractedFrom` relation from each top-level
    * created/updated object back to the source message.
