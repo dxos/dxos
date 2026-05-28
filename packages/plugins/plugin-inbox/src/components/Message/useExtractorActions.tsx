@@ -18,9 +18,13 @@ export type ExtractorMenuItem = {
   onSelect: () => void;
 };
 
+const RUN_ALL_ID = 'run-all';
+
 /**
  * Returns menu items for each registered MessageExtractor that matches the given message.
- * Clicking an item invokes the ExtractMessage operation with that extractor's id.
+ * Clicking an item invokes the ExtractMessage operation with that extractor's id. When two
+ * or more extractors match, a synthetic "Run all" item is prepended that invokes every
+ * matching extractor in parallel and logs aggregated results.
  */
 export const useExtractorActions = (message: Message.Message): ExtractorMenuItem[] => {
   const extractors = useCapabilities(InboxCapabilities.MessageExtractor);
@@ -32,34 +36,53 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
       return [];
     }
 
-    return extractors
-      .filter((extractor) => {
-        // Guard against extractor implementations that throw during match —
-        // one bad extractor must not break the entire message toolbar.
-        try {
-          return extractor.match(message).matched;
-        } catch (err) {
-          log.warn('extractor match failed', { err, extractorId: extractor.id });
-          return false;
-        }
-      })
-      .map((extractor) => ({
-        id: extractor.id,
-        label: extractor.description,
-        onSelect: () => {
-          const space = getSpace(message);
-          if (!space) {
-            return;
-          }
+    const matching = extractors.filter((extractor) => {
+      // Guard against extractor implementations that throw during match — one bad extractor
+      // must not break the entire message toolbar.
+      try {
+        return extractor.match(message).matched;
+      } catch (err) {
+        log.warn('extractor match failed', { err, extractorId: extractor.id });
+        return false;
+      }
+    });
 
-          void invoker
-            .invokePromise(InboxOperation.ExtractMessage, {
-              db: space.db,
-              message,
-              extractorId: extractor.id,
-            })
-            .catch((err) => log.warn('extract message failed', { err, extractorId: extractor.id }));
-        },
-      }));
+    const runOne = (extractorId: string) => {
+      const space = getSpace(message);
+      if (!space) {
+        return Promise.resolve();
+      }
+      return invoker
+        .invokePromise(InboxOperation.ExtractMessage, { db: space.db, message, extractorId })
+        .catch((err) => log.warn('extract message failed', { err, extractorId }));
+    };
+
+    const perExtractor: ExtractorMenuItem[] = matching.map((extractor) => ({
+      id: extractor.id,
+      label: extractor.description,
+      onSelect: () => {
+        void runOne(extractor.id);
+      },
+    }));
+
+    if (matching.length < 2) {
+      return perExtractor;
+    }
+
+    const runAll: ExtractorMenuItem = {
+      id: RUN_ALL_ID,
+      label: `Run all (${matching.length})`,
+      onSelect: () => {
+        void Promise.all(matching.map((extractor) => runOne(extractor.id))).then((results) => {
+          log.info('extract message: run all complete', {
+            total: matching.length,
+            ids: matching.map((extractor) => extractor.id),
+            results,
+          });
+        });
+      },
+    };
+
+    return [runAll, ...perExtractor];
   }, [extractors, invoker, message]);
 };

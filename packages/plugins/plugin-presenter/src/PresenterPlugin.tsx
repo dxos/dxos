@@ -9,6 +9,9 @@ import { AppGraphBuilder, PresenterSettings, ReactSurface } from '#capabilities'
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
 
@@ -17,6 +20,9 @@ export const PresenterPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSettingsModule({ activate: PresenterSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 

@@ -37,10 +37,16 @@ const decodeHtmlEntities = (text: string | undefined): string | undefined => {
   return result;
 };
 
+/** Result of mapping a Gmail message. `labelIds` is propagated separately so the caller can
+ * apply tags via `mailbox.tags[labelId].messages` after appending to the feed — feed-stored
+ * Messages are immutable, so per-message tag membership has to live on the (mutable) Mailbox.
+ */
+export type MappedMessage = { message: Message.Message; labelIds: readonly string[] };
+
 /**
  * Maps Gmail message to ECHO message object.
  */
-export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<Message.Message | null, never, Resolver> =
+export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<MappedMessage | null, never, Resolver> =
   Effect.fnUntraced(function* (message) {
     const created = new Date(parseInt(message.internalDate)).toISOString();
 
@@ -60,7 +66,7 @@ export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<Message.
     // Normalize text.
     const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
 
-    return Obj.make(Message.Message, {
+    const echoMessage = Obj.make(Message.Message, {
       [Obj.Meta]: {
         keys: [{ id: message.id, source: 'gmail.com' }],
       },
@@ -73,7 +79,6 @@ export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<Message.
         threadId: message.threadId,
         snippet: decodeHtmlEntities(message.snippet),
         subject: decodeHtmlEntities(message.payload.headers.find(({ name }) => name === 'Subject')?.value),
-        labels: message.labelIds,
         messageId: message.payload.headers.find(({ name }) => name === 'Message-ID')?.value,
         references: message.payload.headers.find(({ name }) => name === 'References')?.value,
         to: message.payload.headers.find(({ name }) => name === 'To')?.value,
@@ -87,4 +92,6 @@ export const mapMessage: (message: GoogleMail.Message) => Effect.Effect<Message.
         },
       ],
     });
+
+    return { message: echoMessage, labelIds: message.labelIds ?? [] };
   });

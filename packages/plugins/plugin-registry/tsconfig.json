@@ -66,6 +66,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {

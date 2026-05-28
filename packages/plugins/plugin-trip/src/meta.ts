@@ -21,7 +21,7 @@ export const meta: Plugin.Meta = {
     configuration.
 
     Phase 2 adds inbox integration via a generic MessageExtractor contract in
-    plugin-inbox. plugin-trip registers a TravelMessageExtractor that matches
+    plugin-inbox. plugin-trip registers a TripMessageExtractor that matches
     flight and hotel confirmation emails, parses them into Booking and Segment
     objects, and appends them to the relevant Trip in the user's space. The
     extractor runs in three modes: manually from a message action menu,

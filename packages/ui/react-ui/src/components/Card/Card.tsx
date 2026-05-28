@@ -5,15 +5,7 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, {
-  CSSProperties,
-  MouseEventHandler,
-  type PropsWithChildren,
-  type ReactNode,
-  forwardRef,
-  useId,
-  useMemo,
-} from 'react';
+import React, { CSSProperties, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
 
 import { iconSize } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
@@ -23,7 +15,7 @@ import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Column } from '../Column';
-import { Icon, type IconProps } from '../Icon';
+import { Icon, IconBlock, type IconBlockProps, type IconProps } from '../Icon';
 import { Image } from '../Image';
 import {
   Toolbar,
@@ -185,17 +177,9 @@ CardIcon.displayName = CARD_ICON_NAME;
 
 const CARD_ICON_BLOCK_NAME = 'Card.IconBlock';
 
-const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ padding?: boolean }>>>(
-  ({ classNames, children, padding, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-
-    return (
-      <div {...props} className={tx('card.icon-block', { padding }, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+const CardIconBlock = forwardRef<HTMLDivElement, IconBlockProps>((props, forwardedRef) => {
+  return <IconBlock {...props} ref={forwardedRef} />;
+});
 
 CardIconBlock.displayName = CARD_ICON_BLOCK_NAME;
 

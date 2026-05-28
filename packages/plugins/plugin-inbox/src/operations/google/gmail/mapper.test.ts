@@ -40,7 +40,7 @@ describe('mapMessage', () => {
       const result = yield* mapMessage(makeGmailMessage());
       expect(result).toBeDefined();
 
-      const json = Entity.toJSON(result!) as any;
+      const json = Entity.toJSON(result!.message) as any;
 
       // When no contact is resolved, the contact key should be absent from the serialized sender.
       // Having an explicit `contact: undefined` causes protobuf (google.protobuf.Struct)
@@ -55,7 +55,7 @@ describe('mapMessage', () => {
       const result = yield* mapMessage(makeGmailMessage());
       expect(result).toBeDefined();
 
-      const json = Entity.toJSON(result!) as any;
+      const json = Entity.toJSON(result!.message) as any;
 
       // Simulate protobuf round-trip: undefined values in google.protobuf.Struct become null.
       if (json.sender.contact === undefined) {
@@ -90,7 +90,7 @@ describe('mapMessage', () => {
         },
       });
       expect(result).toBeDefined();
-      const properties = result!.properties;
+      const properties = result!.message.properties;
       if (properties === undefined) {
         throw new Error('expected message properties');
       }

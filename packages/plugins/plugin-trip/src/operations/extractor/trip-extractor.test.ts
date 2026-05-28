@@ -9,21 +9,21 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { Booking, Segment } from '../../types';
+import { Booking, Segment, Trip } from '../../types';
 import gateChangeRaw from './testing/files/gate-change.txt?raw';
 import genericConfirmationRaw from './testing/files/generic-booking-confirmation.txt?raw';
 import unitedConfirmationRaw from './testing/files/united-confirmation.txt?raw';
 import unrelatedRaw from './testing/files/unrelated.txt?raw';
 import { parseFixtureMessage } from './testing/load-fixture';
-import { ID, TravelMessageExtractor } from './TravelMessageExtractor';
+import { ID, TripMessageExtractor } from './trip-extractor';
 
-describe('TravelMessageExtractor', () => {
+describe('TripMessageExtractor', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    const result = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment] });
+    const result = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment, Trip.Trip] });
     db = result.db;
   });
 
@@ -32,47 +32,52 @@ describe('TravelMessageExtractor', () => {
   });
 
   test('id and kinds', ({ expect }) => {
-    expect(TravelMessageExtractor.id).toBe(ID);
-    expect(TravelMessageExtractor.kinds).toContain('flight');
+    expect(TripMessageExtractor.id).toBe(ID);
+    expect(TripMessageExtractor.kinds).toContain('flight');
   });
 
   test('match — United sender domain', ({ expect }) => {
-    const result = TravelMessageExtractor.match(parseFixtureMessage(unitedConfirmationRaw));
+    const result = TripMessageExtractor.match(parseFixtureMessage(unitedConfirmationRaw));
     expect(result.matched).toBe(true);
     expect(result.confidence ?? 0).toBeGreaterThan(0.5);
   });
 
   test('match — subject-only fallback', ({ expect }) => {
-    const result = TravelMessageExtractor.match(parseFixtureMessage(genericConfirmationRaw));
+    const result = TripMessageExtractor.match(parseFixtureMessage(genericConfirmationRaw));
     expect(result.matched).toBe(true);
   });
 
   test('match — unrelated message rejected', ({ expect }) => {
-    const result = TravelMessageExtractor.match(parseFixtureMessage(unrelatedRaw));
+    const result = TripMessageExtractor.match(parseFixtureMessage(unrelatedRaw));
     expect(result.matched).toBe(false);
   });
 
   test('extract — subject-only generic confirmation emits no objects', async ({ expect }) => {
     // Match succeeds on the "booking confirmation" subject keyword, but the body lacks any
     // flight identity. Without a number + departAt the extractor should not invent a Booking.
-    const result = await TravelMessageExtractor.extract(
-      { database: db },
-      parseFixtureMessage(genericConfirmationRaw),
-    ).pipe(runAndForwardErrors);
+    const result = await TripMessageExtractor.extract({
+      db,
+      message: parseFixtureMessage(genericConfirmationRaw),
+    }).pipe(runAndForwardErrors);
 
     expect(result.created).toEqual([]);
     expect(result.updated).toEqual([]);
   });
 
-  test('extract — first email creates Booking + flight Segment', async ({ expect }) => {
+  test('extract — first email creates Trip + Booking + flight Segment', async ({ expect }) => {
     const message = parseFixtureMessage(unitedConfirmationRaw);
-    const result = await TravelMessageExtractor.extract({ database: db }, message).pipe(runAndForwardErrors);
+    const result = await TripMessageExtractor.extract({ db, message }).pipe(runAndForwardErrors);
 
-    expect(result.created).toHaveLength(2);
+    expect(result.created).toHaveLength(3);
     expect(result.updated).toEqual([]);
 
+    const trip = result.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
     const booking = result.created.find((obj) => Obj.instanceOf(Booking.Booking, obj)) as Booking.Booking;
     const segment = result.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
+
+    expect(trip.name).toContain('SFO');
+    expect(trip.name).toContain('LHR');
+    expect(trip.segments).toHaveLength(1);
 
     expect(booking.confirmationCode).toBe('ABC123');
     expect(booking.source).toBe('email');
@@ -98,11 +103,11 @@ describe('TravelMessageExtractor', () => {
   }) => {
     // Email 1: original confirmation. Persist the resulting segment into the db so the
     // second extract() call can find it via the (number, departAt-date) key.
-    const first = await TravelMessageExtractor.extract(
-      { database: db },
-      parseFixtureMessage(unitedConfirmationRaw),
-    ).pipe(runAndForwardErrors);
-    expect(first.created).toHaveLength(2);
+    const first = await TripMessageExtractor.extract({
+      db,
+      message: parseFixtureMessage(unitedConfirmationRaw),
+    }).pipe(runAndForwardErrors);
+    expect(first.created).toHaveLength(3);
     const firstSegment = first.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
     for (const obj of first.created) {
       db.add(obj);
@@ -117,9 +122,10 @@ describe('TravelMessageExtractor', () => {
     expect(firstSegment.details.terminalFrom).toBeUndefined();
 
     // Email 2: gate change for the same flight. Same number + departAt-date as email 1.
-    const second = await TravelMessageExtractor.extract({ database: db }, parseFixtureMessage(gateChangeRaw)).pipe(
-      runAndForwardErrors,
-    );
+    const second = await TripMessageExtractor.extract({
+      db,
+      message: parseFixtureMessage(gateChangeRaw),
+    }).pipe(runAndForwardErrors);
 
     expect(second.created).toEqual([]);
     expect(second.updated).toHaveLength(1);

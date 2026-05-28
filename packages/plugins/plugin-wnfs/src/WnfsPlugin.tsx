@@ -13,6 +13,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { WnfsCapabilities } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -38,6 +41,9 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
     id: 'url-resolver',
     activatesOn: ClientEvents.ClientReady,
     activate: UrlResolver,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );
