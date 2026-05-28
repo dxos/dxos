@@ -10,11 +10,12 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
-import { ClientCapabilities } from '../types';
 import { CompleteOAuthRegistration } from './definitions';
+import { createEdgeHttpClient } from './shared';
 
 /**
  * Maps OAuth provider to the value stored as `AccessToken.source`. atproto accounts are portable —
@@ -58,20 +59,17 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
       invariant(identity, 'Cannot complete OAuth registration without a local identity.');
       const identityKey = identity.identityKey.toHex();
 
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-      invariant(edgeUrl, 'Edge URL not configured.');
+      const edgeClient = createEdgeHttpClient(client);
 
       const personalSpace = getPersonalSpace(client);
       invariant(personalSpace, 'Personal space not found.');
       const spaceKey = personalSpace.key.toHex();
 
-      const httpEndpoint = toHttpUrl(edgeUrl);
-
       log.info('completing OAuth registration', { identityKey, spaceKey });
 
       const result = yield* Effect.tryPromise({
         try: () =>
-          completeRegistration(httpEndpoint, {
+          completeRegistration(edgeClient.baseUrl, {
             registrationToken: data.registrationToken,
             identityKey,
             spaceKey,
@@ -106,14 +104,11 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 
 export default handler;
 
-/** Convert a ws(s):// edge URL to http(s):// for HTTP API calls. */
-const toHttpUrl = (url: string): string => url.replace(/^wss?:/, (match) => (match === 'wss:' ? 'https:' : 'http:'));
-
 const completeRegistration = async (
-  endpoint: string,
+  baseUrl: string,
   request: { registrationToken: string; identityKey: string; spaceKey: string },
 ): Promise<CompleteRegistrationResult> => {
-  const response = await fetch(`${endpoint.replace(/\/$/, '')}/oauth/registration/complete`, {
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/oauth/registration/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

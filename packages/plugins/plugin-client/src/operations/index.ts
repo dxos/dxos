@@ -7,7 +7,6 @@ import { OperationHandlerSet } from '@dxos/compute';
 export * as ClientOperation from './definitions';
 
 export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./complete-oauth-registration'),
   () => import('./create-agent'),
   () => import('./create-identity'),
   () => import('./create-passkey'),

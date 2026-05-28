@@ -9,15 +9,15 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
+
+import { redeemAccountInvitation } from '../credentials';
+import { WelcomeOperation } from '../operations';
 import {
-  ClientCapabilities,
-  ClientOperation,
   OAUTH_RECOVERY_REDIRECT_PATH,
   type OAuthRecoveryPendingSnapshot,
   oauthRecoveryPendingKey,
-} from '@dxos/plugin-client';
-
-import { redeemAccountInvitation } from '../credentials';
+} from '../operations/shared';
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 30_000;
 
@@ -176,7 +176,7 @@ const finalizeRedirect = async (
     invariant(identity, 'identity should exist after create');
 
     // Route the stashed OAuth refresh token to the personal space + write the IdentityRecovery row.
-    const completeResult = await invokePromise(ClientOperation.CompleteOAuthRegistration, {
+    const completeResult = await invokePromise(WelcomeOperation.CompleteOAuthRegistration, {
       registrationToken: params.registrationToken,
     });
     if (completeResult.error) {

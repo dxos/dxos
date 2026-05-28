@@ -106,23 +106,3 @@ export const RedeemToken = Operation.make({
   output: Schema.Void,
 });
 
-/**
- * Phase 2 of OAuth-first recovery registration. Requires an existing local identity. Serializes
- * the personal-space genesis credential and submits it with the phase-1 `registrationToken` so
- * kms-service routes the stashed OAuth refresh token to the personal space and writes the
- * IdentityRecovery row.
- */
-export const CompleteOAuthRegistration = Operation.make({
-  meta: {
-    key: `${CLIENT_OPERATION}.complete-oauth-registration`,
-    name: 'Complete OAuth Registration',
-    icon: 'ph--cloud--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    registrationToken: Schema.String,
-  }),
-  output: Schema.Struct({
-    email: Schema.optional(Schema.String),
-  }),
-});
