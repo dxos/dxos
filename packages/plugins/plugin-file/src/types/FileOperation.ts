@@ -30,7 +30,8 @@ export const Read = Operation.make({
   meta: {
     key: `${FILE_OPERATION}.read`,
     name: 'Read File',
-    description: 'Reads the contents of a file and returns them as a File content block (data URL for inline files, original URL for external files).',
+    description:
+      'Reads the contents of a file and returns them as a File content block (data URL for inline files, original URL for external files).',
     icon: 'ph--file-arrow-down--regular',
   },
   input: Schema.Struct({
