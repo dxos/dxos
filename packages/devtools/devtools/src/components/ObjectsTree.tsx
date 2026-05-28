@@ -281,7 +281,7 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Obj.getIcon(entity) ?? {
+    const { icon, hue } = Entity.getIcon(entity) ?? {
       icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,
       hue: undefined,
     };
