@@ -78,17 +78,20 @@ const CalendarShell = ({
   classNames,
   className,
   isDisabled,
+  forwardedRef,
   children,
 }: {
   classNames?: ClassNameValue;
   className?: string;
   isDisabled?: boolean;
+  forwardedRef?: React.Ref<HTMLDivElement>;
   children: ReactNode;
 }) => {
   const { tx } = useThemeContext();
   return (
     <I18nProvider locale='en-US'>
       <div
+        ref={forwardedRef}
         className={tx('calendar.root', {}, classNames, className) ?? undefined}
         aria-disabled={isDisabled || undefined}
       >
@@ -129,7 +132,7 @@ const CalendarGridContent = () => {
   );
 };
 
-const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, _forwardedRef) => {
+const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwardedRef) => {
   const { classNames, className, isDisabled, minValue, maxValue, defaultMonth } = props;
   const defaultFocused = toCalendarDate(defaultMonth) ?? undefined;
 
@@ -158,7 +161,12 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, _forw
       },
     };
     return (
-      <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled}>
+      <CalendarShell
+        classNames={classNames}
+        className={className}
+        isDisabled={isDisabled}
+        forwardedRef={forwardedRef}
+      >
         <RACRangeCalendar {...racProps}>
           <CalendarChrome />
           <CalendarGridContent />
@@ -176,7 +184,12 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, _forw
     onChange: (next) => props.onSelect?.(fromCalendarDate(next)),
   };
   return (
-    <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled}>
+    <CalendarShell
+      classNames={classNames}
+      className={className}
+      isDisabled={isDisabled}
+      forwardedRef={forwardedRef}
+    >
       <RACCalendar {...racProps}>
         <CalendarChrome />
         <CalendarGridContent />

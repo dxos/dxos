@@ -11,7 +11,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Tooltip, useThemeContext } from '@dxos/react-ui';
+import { Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -77,9 +77,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
-  const { themeMode } = useThemeContext();
-  console.log('themeMode', { themeMode });
-
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);

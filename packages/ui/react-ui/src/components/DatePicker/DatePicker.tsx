@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { CalendarDate, parseDate } from '@internationalized/date';
 import { createContext } from '@radix-ui/react-context';
 import { format as formatDate } from 'date-fns';
 import React, {
@@ -218,7 +217,7 @@ const carryTime = (oldDate: Date | undefined, newDate: Date | undefined): Date |
   return out;
 };
 
-const DatePickerCalendar = (_props: { classNames?: string }) => {
+const DatePickerCalendar = ({ classNames }: { classNames?: string } = {}) => {
   const { mode, value, setValue, withTime, onOpenChange } = useDatePickerContext('DatePickerCalendar');
 
   if (mode === 'single') {
@@ -226,6 +225,7 @@ const DatePickerCalendar = (_props: { classNames?: string }) => {
     return (
       <Calendar.Root
         mode='single'
+        classNames={classNames}
         selected={date}
         onSelect={(next) => {
           const merged = withTime ? carryTime(date, next) : next;
@@ -242,6 +242,7 @@ const DatePickerCalendar = (_props: { classNames?: string }) => {
   return (
     <Calendar.Root
       mode='range'
+      classNames={classNames}
       selected={range}
       onSelect={(next) => {
         if (!next) {
@@ -276,6 +277,3 @@ export const DatePicker = {
 export { useDatePickerContext };
 
 export type { ValueByMode };
-
-// Re-export for convenience.
-export { CalendarDate, parseDate };

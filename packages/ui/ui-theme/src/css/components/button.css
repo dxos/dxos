@@ -84,7 +84,7 @@
     @apply min-h-[1.75rem] px-2;
   }
   .dx-button[data-density='xs'] {
-    @apply min-h-[1.5rem] px-1.5 text-xs;
+    @apply min-h-[1.5rem] px-1 text-xs;
   }
   .dx-button[data-density='xs'].aspect-square {
     @apply size-6 px-0;

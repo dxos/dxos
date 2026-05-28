@@ -321,8 +321,8 @@ TextInput.displayName = 'Input.TextInput';
 //   - Date     `YYYY-MM-DD`
 //   - Time     `HH:mm`
 //   - DateTime `YYYY-MM-DDTHH:mm`
-// `Date` and `DateTime` accept an optional `iconSide` to render a calendar trigger that opens
-// a popover-mounted DatePicker.
+// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
+// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
 //
 
 const Time = SegmentedTime;

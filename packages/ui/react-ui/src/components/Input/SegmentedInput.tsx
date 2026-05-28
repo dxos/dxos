@@ -141,8 +141,8 @@ const useFieldChrome = ({
   const { tx } = useThemeContext();
   const density = useDensityContext(densityProp);
   const elevation = useElevationContext(elevationProp);
-  const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-  return { tx, density, elevation, validationValence };
+  const { id: contextId, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+  return { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId };
 };
 
 /**
@@ -154,24 +154,30 @@ const PickerWrapper = ({
   pickerValue,
   onPickerChange,
   withTime,
+  disabled = false,
   children,
   calendar,
 }: {
   pickerValue: Date | undefined;
   onPickerChange: (next: Date | undefined) => void;
   withTime: boolean;
+  disabled?: boolean;
   children: React.ReactNode;
   calendar: React.ReactNode;
 }) => {
   const [open, setOpen] = useState(false);
-  const openPicker = useCallback(() => setOpen(true), []);
-  useInputTrigger(openPicker);
+  const openPicker = useCallback(() => {
+    if (!disabled) {
+      setOpen(true);
+    }
+  }, [disabled]);
+  useInputTrigger(disabled ? undefined : openPicker);
   return (
     <DatePicker.Root
       mode='single'
       withTime={withTime}
       value={pickerValue}
-      onValueChange={onPickerChange}
+      onValueChange={disabled ? undefined : onPickerChange}
       open={open}
       onOpenChange={setOpen}
     >
@@ -205,7 +211,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     },
     forwardedRef,
   ) => {
-    const { tx, density, elevation, validationValence } = useFieldChrome({
+    const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
       __inputScope,
       density: densityProp,
       elevation: elevationProp,
@@ -233,7 +239,11 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
       <DateField {...fieldProps}>
         <DateInput
           ref={forwardedRef}
-          {...(id ? { id } : {})}
+          {...((id ?? contextId) ? { id: id ?? contextId } : {})}
+          {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
+          {...(validationValence === 'error' && errorMessageId
+            ? { 'aria-invalid': true, 'aria-errormessage': errorMessageId }
+            : {})}
           data-density={density}
           className={tx(
             'input.input',
@@ -253,6 +263,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
           pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
           onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
           withTime={false}
+          disabled={disabled}
           calendar={<DatePicker.Calendar />}
         >
           {field}
@@ -288,7 +299,7 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     },
     forwardedRef,
   ) => {
-    const { tx, density, elevation, validationValence } = useFieldChrome({
+    const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
       __inputScope,
       density: densityProp,
       elevation: elevationProp,
@@ -361,7 +372,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     },
     forwardedRef,
   ) => {
-    const { tx, density, elevation, validationValence } = useFieldChrome({
+    const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
       __inputScope,
       density: densityProp,
       elevation: elevationProp,
@@ -390,7 +401,11 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
       <DateField {...fieldProps}>
         <DateInput
           ref={forwardedRef}
-          {...(id ? { id } : {})}
+          {...((id ?? contextId) ? { id: id ?? contextId } : {})}
+          {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
+          {...(validationValence === 'error' && errorMessageId
+            ? { 'aria-invalid': true, 'aria-errormessage': errorMessageId }
+            : {})}
           data-density={density}
           className={tx(
             'input.input',
@@ -426,6 +441,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
             )
           }
           withTime
+          disabled={disabled}
           calendar={<DatePicker.Calendar />}
         >
           {field}
