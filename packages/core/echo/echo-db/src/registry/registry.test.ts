@@ -113,8 +113,8 @@ describe('Registry', () => {
     expect(findTypeByDXN(registry, `dxn:${typename}:${version}`)).toBe(schema);
     // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
     expect(findTypeByDXN(registry, `dxn:type:${typename}:${version}`)).toBe(schema);
-    // Short-form lookup (without dxn: prefix).
-    expect(findTypeByDXN(registry, `${typename}:${version}`)).toBe(schema);
+    // Short-form (without dxn: prefix) is not a valid DXN and does not resolve.
+    expect(findTypeByDXN(registry, `${typename}:${version}`)).toBeUndefined();
     // Missing DXN.
     expect(findTypeByDXN(registry, 'dxn:org.example.Bar:1.0.0')).toBeUndefined();
   });

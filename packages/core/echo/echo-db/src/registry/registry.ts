@@ -10,6 +10,7 @@ import { type Database, Entity, Query, type Filter, type QueryResult, Registry, 
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
@@ -146,11 +147,9 @@ export class RegistryImpl implements Registry.Registry {
 /**
  * Look up a type entity by its DXN string.
  *
- * Accepts several DXN forms:
- *  - Full DXN:               `dxn:<typename>:<version>`
- *  - Legacy prefixed form:   `dxn:type:<typename>:<version>`
- *  - Short form:             `<typename>:<version>`
- *  - Echo object DXN:        `dxn:echo:@:<objectId>`
+ * Accepts the canonical `dxn:<typename>:<version>` form, the legacy
+ * `dxn:type:<typename>:<version>` form, and echo identifier DXNs
+ * (`dxn:echo:@:<objectId>`).
  *
  * Falls back to a linear scan when the registry is not a {@link RegistryImpl}.
  */
@@ -237,24 +236,12 @@ const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
 };
 
 /**
- * Normalizes a DXN string to the canonical `dxn:<typename>:<version>` form.
- * Accepts:
- *  - Full DXN:             `dxn:<typename>:<version>`
- *  - Legacy prefixed form: `dxn:type:<typename>:<version>` → `dxn:<typename>:<version>`
- *  - Short form:           `<typename>:<version>` → `dxn:<typename>:<version>`
- *  - Echo object DXN:      `dxn:echo:@:<objectId>` — returned as-is
+ * Normalizes a DXN string to the canonical key form used by `#typesByDXN`.
+ * Delegates to `DXN.tryMake`, which strips the legacy `dxn:type:` prefix and
+ * validates the grammar. Echo identifier DXNs (`dxn:echo:@:<objectId>`), which
+ * `tryMake` intentionally rejects, are passed through unchanged.
  */
-const normalizeDXN = (dxn: string): string => {
-  // Strip legacy "dxn:type:" prefix.
-  if (dxn.startsWith('dxn:type:')) {
-    return `dxn:${dxn.slice('dxn:type:'.length)}`;
-  }
-  if (dxn.startsWith('dxn:')) {
-    return dxn;
-  }
-  // Legacy short form: "typename:version" — prefix with "dxn:".
-  return `dxn:${dxn}`;
-};
+const normalizeDXN = (dxn: string): string => DXN.tryMake(dxn) ?? dxn;
 
 /**
  * Executes a {@link Query.Query} against a {@link Registry.Registry}.
