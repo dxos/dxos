@@ -77,7 +77,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
-
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);

@@ -3,7 +3,7 @@
 //
 
 import { format as formatDate } from 'date-fns';
-import React, { type ChangeEvent, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
 import { Input } from '@dxos/react-ui';
@@ -16,10 +16,10 @@ import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComp
  * - `Format.Date`     -> `YYYY-MM-DD`.
  * - `Format.Time`     -> `HH:mm:ss`.
  *
- * Native input value shapes:
- * - `<input type='datetime-local'>` -> `YYYY-MM-DDTHH:mm` in local time.
- * - `<input type='date'>`           -> `YYYY-MM-DD`.
- * - `<input type='time'>`           -> `HH:mm`.
+ * Segmented input value shapes (react-aria-components-backed):
+ * - `Input.DateTime` -> `YYYY-MM-DDTHH:mm` in local time.
+ * - `Input.Date`     -> `YYYY-MM-DD`.
+ * - `Input.Time`     -> `HH:mm`.
  */
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone. */
@@ -48,24 +48,16 @@ export const DateField = ({
   type,
   format,
   readonly,
-  placeholder,
+  placeholder: _placeholder,
   onValueChange,
-  onBlur,
+  onBlur: _onBlur,
   ...props
 }: FormFieldComponentProps<string>) => {
-  const handleDateOnlyChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => onValueChange(type, event.target.value),
-    [type, onValueChange],
-  );
-
-  const handleTimeChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => onValueChange(type, event.target.value),
-    [type, onValueChange],
-  );
+  const handleSimpleChange = useCallback((next: string) => onValueChange(type, next), [type, onValueChange]);
 
   const handleDateTimeChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const iso = localDateTimeToIso(event.target.value);
+    (next: string) => {
+      const iso = localDateTimeToIso(next);
       onValueChange(type, iso as string);
     },
     [type, onValueChange],
@@ -77,34 +69,24 @@ export const DateField = ({
         switch (format) {
           case Format.TypeFormat.Date:
             return (
-              <Input.Date
-                disabled={!!readonly}
-                placeholder={placeholder}
-                value={value ?? ''}
-                onChange={handleDateOnlyChange}
-                onBlur={onBlur}
-              />
+              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+                <Input.Date disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />
+                <Input.TriggerIcon />
+              </div>
             );
           case Format.TypeFormat.Time:
-            return (
-              <Input.Time
-                disabled={!!readonly}
-                placeholder={placeholder}
-                value={value ?? ''}
-                onChange={handleTimeChange}
-                onBlur={onBlur}
-              />
-            );
+            return <Input.Time disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />;
           case Format.TypeFormat.DateTime:
           default:
             return (
-              <Input.DateTime
-                disabled={!!readonly}
-                placeholder={placeholder}
-                value={isoToLocalDateTime(value)}
-                onChange={handleDateTimeChange}
-                onBlur={onBlur}
-              />
+              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+                <Input.DateTime
+                  disabled={!!readonly}
+                  value={isoToLocalDateTime(value)}
+                  onValueChange={handleDateTimeChange}
+                />
+                <Input.TriggerIcon />
+              </div>
             );
         }
       }}

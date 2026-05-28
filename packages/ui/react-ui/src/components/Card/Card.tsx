@@ -70,7 +70,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
     return (
       <Column.Root
         asChild
-        gutter={density === 'lg' ? 'lg' : density === 'sm' ? 'sm' : 'md'}
+        gutter={density === 'lg' ? 'lg' : density === 'sm' || density === 'xs' ? 'sm' : 'md'}
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
       >

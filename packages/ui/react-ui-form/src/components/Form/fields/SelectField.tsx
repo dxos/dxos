@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
@@ -74,5 +75,3 @@ const getIconHueStyles = (iconHue?: string): string | undefined => {
 
   return styles?.foreground;
 };
-
-import { getStyles } from '@dxos/ui-theme';
