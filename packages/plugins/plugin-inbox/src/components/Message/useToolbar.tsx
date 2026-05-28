@@ -128,6 +128,7 @@ export const useMessageActions = ({
         {
           label: ['message-toolbar-extract.menu', { ns: meta.id }],
           icon: 'ph--magic-wand--regular',
+          variant: 'dropdownMenu',
         },
         (group) => {
           for (const item of extractorActions) {
