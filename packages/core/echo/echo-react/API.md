@@ -166,6 +166,6 @@ interface ObjectPropUpdateCallback<T> {
 
 ### useType signature
 
-| Signature                 | Input                                                 | Return                        |
-| ------------------------- | ----------------------------------------------------- | ----------------------------- |
-| `useType(db?, typename?)` | `Database.Database \| undefined, string \| undefined` | `Type.Type \| undefined`      |
+| Signature                 | Input                                                 | Return                   |
+| ------------------------- | ----------------------------------------------------- | ------------------------ |
+| `useType(db?, typename?)` | `Database.Database \| undefined, string \| undefined` | `Type.Type \| undefined` |

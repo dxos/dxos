@@ -138,10 +138,13 @@ export type MakeProps<S extends Type.AnyObj> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & (S extends Type.Obj<infer A, any>
-  ? unknown extends A
-    ? Record<string, unknown>
-    : Entity.Properties<Type.InstanceType<S>>
+  // When the resolved instance has no known data keys, widen to a permissive
+  // record (the `Obj<unknown>` case); otherwise use the precise property shape.
+  // `[keyof …] extends [never]` is wrapped in tuples so the check is
+  // non-distributive — a `never` instance type (e.g. when narrowing collapses
+  // the schema) stays a single branch instead of distributing to `never`.
+} & ([keyof Entity.Properties<Type.InstanceType<S>>] extends [never]
+  ? Record<string, unknown>
   : Entity.Properties<Type.InstanceType<S>>);
 
 /**

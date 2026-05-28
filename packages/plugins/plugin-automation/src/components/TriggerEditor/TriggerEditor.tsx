@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -175,7 +175,8 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 };
 
 const getObjectIconProps = (object: Entity.Unknown): { icon?: string; iconHue?: string } => {
-  const schema = Entity.getSchema(object);
+  const type = Entity.getType(object);
+  const schema = type ? Type.getSchema(type) : undefined;
   const annotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   return annotation ? { icon: annotation.icon, iconHue: annotation.hue } : {};
 };

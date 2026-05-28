@@ -44,7 +44,11 @@ import { type FormLayoutProps as NaturalFormLayoutProps } from './Layout/FormLay
 
 // TODO(burdon): Reconcile with @dxos/echo.
 export type ExcludeId<S extends Schema.Schema.AnyNoContext | Type.AnyEntity> = Omit<
-  S extends Type.AnyEntity ? Type.InstanceType<S> : S extends Schema.Schema.AnyNoContext ? Schema.Schema.Type<S> : never,
+  S extends Type.AnyEntity
+    ? Type.InstanceType<S>
+    : S extends Schema.Schema.AnyNoContext
+      ? Schema.Schema.Type<S>
+      : never,
   'id'
 >;
 

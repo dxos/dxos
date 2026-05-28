@@ -39,7 +39,7 @@ export const createGenerator = <S extends Type.AnyObj>(
     const view = await findViewByTypename(views, typename);
     const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
+      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
     }
 
     // Create objects.
