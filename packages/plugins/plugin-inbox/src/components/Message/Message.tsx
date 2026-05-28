@@ -28,6 +28,7 @@ import { InboxCapabilities } from '#types';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
+import { ExtractedTags } from './ExtractedTags';
 import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
 //
@@ -206,6 +207,8 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
           <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
         </div>
       </div>
+
+      <ExtractedTags message={message} />
     </div>
   );
 };

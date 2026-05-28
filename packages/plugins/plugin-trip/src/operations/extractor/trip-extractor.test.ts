@@ -9,7 +9,7 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { Booking, Segment } from '../../types';
+import { Booking, Segment, Trip } from '../../types';
 import gateChangeRaw from './testing/files/gate-change.txt?raw';
 import genericConfirmationRaw from './testing/files/generic-booking-confirmation.txt?raw';
 import unitedConfirmationRaw from './testing/files/united-confirmation.txt?raw';
@@ -23,7 +23,7 @@ describe('TripMessageExtractor', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    const result = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment] });
+    const result = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment, Trip.Trip] });
     db = result.db;
   });
 
@@ -64,15 +64,20 @@ describe('TripMessageExtractor', () => {
     expect(result.updated).toEqual([]);
   });
 
-  test('extract — first email creates Booking + flight Segment', async ({ expect }) => {
+  test('extract — first email creates Trip + Booking + flight Segment', async ({ expect }) => {
     const message = parseFixtureMessage(unitedConfirmationRaw);
     const result = await TripMessageExtractor.extract({ db, message }).pipe(runAndForwardErrors);
 
-    expect(result.created).toHaveLength(2);
+    expect(result.created).toHaveLength(3);
     expect(result.updated).toEqual([]);
 
+    const trip = result.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
     const booking = result.created.find((obj) => Obj.instanceOf(Booking.Booking, obj)) as Booking.Booking;
     const segment = result.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
+
+    expect(trip.name).toContain('SFO');
+    expect(trip.name).toContain('LHR');
+    expect(trip.segments).toHaveLength(1);
 
     expect(booking.confirmationCode).toBe('ABC123');
     expect(booking.source).toBe('email');
@@ -102,7 +107,7 @@ describe('TripMessageExtractor', () => {
       db,
       message: parseFixtureMessage(unitedConfirmationRaw),
     }).pipe(runAndForwardErrors);
-    expect(first.created).toHaveLength(2);
+    expect(first.created).toHaveLength(3);
     const firstSegment = first.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
     for (const obj of first.created) {
       db.add(obj);

@@ -9,7 +9,7 @@ import { Filter, Obj, type Database } from '@dxos/echo';
 import { type MessageExtractor } from '@dxos/plugin-inbox';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { Booking, Segment, TripOperation } from '../../types';
+import { Booking, Segment, Trip, TripOperation } from '../../types';
 
 /**
  * Heuristic v1 extractor for travel-booking confirmation emails. Recognises
@@ -171,7 +171,9 @@ const extractFromMessage = (
       return { created: [], updated: [existing], relations: [] };
     }
 
-    // No prior segment — create a Booking + flight Segment pair.
+    // No prior segment — create a Trip + Booking + flight Segment trio. The Trip is the
+    // top-level container surfaced as a tag on the source message; Booking + Segment hang
+    // off the Trip.
     const booking = Booking.make({
       provider: { name: 'Air France', domain: 'united.com' },
       confirmationCode: candidate.confirmationCode,
@@ -194,8 +196,22 @@ const extractFromMessage = (
       },
     });
 
-    return { created: [booking, segment], updated: [], relations: [] };
+    const trip = Trip.make({
+      name: tripNameFor(candidate),
+      start: candidate.departAt,
+      end: candidate.arriveAt,
+    });
+    Trip.addSegment(trip, segment);
+
+    return { created: [trip, booking, segment], updated: [], relations: [] };
   });
+
+const tripNameFor = (candidate: Candidate): string => {
+  const origin = candidate.origin?.code ?? '?';
+  const destination = candidate.destination?.code ?? '?';
+  const flight = candidate.number ?? '';
+  return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
+};
 
 const findExistingFlight = (
   db: Database.Database,

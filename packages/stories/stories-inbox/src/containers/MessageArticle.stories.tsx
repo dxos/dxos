@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -148,6 +149,65 @@ type Story = StoryObj<typeof meta>;
  * Renders MessageArticle for a single United-style flight-confirmation message. The toolbar's
  * `Extract` dropdown should list `Run all (2)`, the contact extractor (plugin-inbox), and the
  * trip extractor (plugin-trip). Clicking each invokes ExtractMessage; the dispatcher persists
- * Person / Booking / Segment objects with `ExtractedFrom` relations back to the message.
+ * Trip / Person / Booking / Segment objects with `ExtractedFrom` relations back to the message,
+ * which surface as clickable tags in the MessageHeader.
  */
 export const Default: Story = {};
+
+/**
+ * End-to-end play function: opens the toolbar `Extract` dropdown, runs the trip extractor,
+ * and asserts that a Trip tag shows up in the MessageHeader. Hovering the tag opens a preview
+ * card whose drag-handle is disabled.
+ *
+ * The flow exercises: dispatcher invocation → per-extractor operation → db.add(Trip) +
+ * ExtractedFrom relation → `useExtractedObjects` reactive query → ExtractedTag render.
+ */
+export const ExtractTripWithPlay: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    const waitFor = async <T,>(
+      probe: () => T | Promise<T>,
+      predicate: (value: T) => boolean = (value) => Boolean(value),
+      { timeout = 15_000, interval = 100 }: { timeout?: number; interval?: number } = {},
+    ): Promise<T> => {
+      const deadline = Date.now() + timeout;
+      let last: T | undefined;
+      while (Date.now() < deadline) {
+        last = await probe();
+        if (predicate(last)) {
+          return last;
+        }
+        await new Promise((resolve) => setTimeout(resolve, interval));
+      }
+      throw new Error(`timed out waiting (last=${String(last)})`);
+    };
+
+    // Wait for the seeded message to render.
+    await waitFor(() => canvas.queryByText(/Your flight confirmation/i));
+
+    // Open the toolbar Extract dropdown.
+    const extractTrigger = await waitFor(() => canvas.queryByRole('button', { name: /extract/i }));
+    await userEvent.click(extractTrigger as HTMLElement);
+
+    // Click the trip extractor entry (label comes from `TripMessageExtractor.description`).
+    const tripItem = await waitFor(() => body.queryByText(/airline booking confirmations/i));
+    await userEvent.click(tripItem as HTMLElement);
+
+    // The dispatcher persists Trip + Booking + Segment + ExtractedFrom relations; the
+    // `useExtractedObjects` hook then reactively surfaces the Trip in the header.
+    const tripTag = await waitFor(
+      () => canvas.queryByRole('button', { name: /SFO/i }),
+      (value) => Boolean(value),
+    );
+    expect(tripTag).toBeInTheDocument();
+
+    // Hover the tag — preview card with disabled drag handle should appear.
+    await userEvent.hover(tripTag as HTMLElement);
+    const previewDragHandle = await waitFor(() =>
+      body.queryByLabelText(/Drag handle \(disabled in preview\)/i),
+    );
+    expect(previewDragHandle).toBeDisabled();
+  },
+};
