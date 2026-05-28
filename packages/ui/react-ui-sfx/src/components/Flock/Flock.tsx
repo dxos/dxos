@@ -172,12 +172,15 @@ const renderBoid = (
     context.lineCap = 'round';
     context.lineJoin = 'round';
     const tl = trail.length;
-    const mid1 = Math.max(1, Math.floor(tl * 0.33));
-    const mid2 = Math.max(mid1 + 1, Math.floor(tl * 0.66));
+    const last = tl - 1;
+    // Clamp to valid indices so small trails (e.g. tl=2 during the initial transient)
+    // don't index past `tl - 1`. Skipped passes fall out below via `pass.to <= pass.from`.
+    const mid1 = Math.min(last, Math.max(0, Math.floor(tl * 0.33)));
+    const mid2 = Math.min(last, Math.max(mid1, Math.floor(tl * 0.66)));
     const passes: Array<{ from: number; to: number; width: number; alpha: number }> = [
       { from: 0, to: mid1, width: radius * 1.5, alpha: 0.7 },
       { from: mid1, to: mid2, width: radius, alpha: 0.4 },
-      { from: mid2, to: tl - 1, width: radius * 0.5, alpha: 0.15 },
+      { from: mid2, to: last, width: radius * 0.5, alpha: 0.15 },
     ];
     for (const pass of passes) {
       if (pass.to <= pass.from) {
