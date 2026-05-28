@@ -18,7 +18,7 @@ import {
   Query,
   QueryAST,
   Ref,
-  Registry,
+  type Registry,
   Type,
 } from '@dxos/echo';
 import {
@@ -55,6 +55,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
+import { findTypeByDXN } from '../registry';
 import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
@@ -242,12 +243,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity {
     const identifierDXN = `dxn:echo:@:${schema.id}`;
-    const existing = Registry.findTypeByDXN(this.graph.registry, identifierDXN);
+    const existing = findTypeByDXN(this.graph.registry, identifierDXN);
     if (existing != null) {
       return existing;
     }
     this._registerPersistentSchema(schema);
-    return Registry.findTypeByDXN(this.graph.registry, identifierDXN)!;
+    return findTypeByDXN(this.graph.registry, identifierDXN)!;
   }
 
   private _registerPersistentSchema(schema: PersistentSchema): void {
@@ -310,7 +311,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const persistentSchema = this._addObject(schemaToStore as any);
     this._registerPersistentSchema(persistentSchema as unknown as PersistentSchema);
-    return Registry.findTypeByDXN(this.graph.registry, typeId)!;
+    return findTypeByDXN(this.graph.registry, typeId)!;
   }
 
   @synchronized
@@ -407,8 +408,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
             : undefined;
         const inRegistry =
           typename && version
-            ? Registry.findTypeByDXN(this.graph.registry, `dxn:type:${typename}:${version}`) !== undefined ||
-              (identifierDXN != null && Registry.findTypeByDXN(this.graph.registry, identifierDXN) !== undefined)
+            ? findTypeByDXN(this.graph.registry, `dxn:type:${typename}:${version}`) !== undefined ||
+              (identifierDXN != null && findTypeByDXN(this.graph.registry, identifierDXN) !== undefined)
             : false;
         if (!inRegistry) {
           throw createSchemaNotRegisteredError(typeEntity);

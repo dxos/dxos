@@ -4,13 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Filter, Ref, Type } from '@dxos/echo';
 import { ObjectStructure } from '@dxos/echo-protocol';
+import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
-import * as Filter from '../../Filter';
-import * as Ref from '../../Ref';
-import { TestSchema } from '../../testing';
-import * as Type from '../../Type';
 import { type MatchedObject, filterMatchObject } from './filter-match';
 
 describe('filterMatch', () => {

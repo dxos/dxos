@@ -8,7 +8,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { Entity, Obj, Registry, Type } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
   EncodedReference,
@@ -79,6 +79,7 @@ import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { findTypeByDXN } from '../registry';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
@@ -633,7 +634,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typeURI = EncodedReference.toURI(typeRef);
     const registry = target[symbolInternals].database.graph.registry;
     // Look up by the raw typeURI string — the registry normalises DXN forms.
-    const fromRegistry = Registry.findTypeByDXN(registry, typeURI);
+    const fromRegistry = findTypeByDXN(registry, typeURI);
     if (fromRegistry != null) {
       return fromRegistry;
     }
@@ -644,7 +645,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoRefMatch) {
       const echoId = echoRefMatch[1];
       if (echoId != null) {
-        const found = Registry.findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
+        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
         if (found != null) {
           return found;
         }
@@ -660,7 +661,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoUri) {
       const echoId = EchoURI.getObjectId(echoUri);
       if (echoId != null) {
-        const found = Registry.findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
+        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
         if (found != null) {
           return found;
         }
@@ -705,7 +706,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const fromRegistry = Registry.findTypeByDXN(database.graph.registry, typeURI);
+    const fromRegistry = findTypeByDXN(database.graph.registry, typeURI);
     if (fromRegistry != null) {
       return Type.getSchema(fromRegistry);
     }
