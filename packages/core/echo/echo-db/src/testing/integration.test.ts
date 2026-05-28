@@ -554,7 +554,7 @@ describe('Integration tests', () => {
       });
       const schema = db.add(TestSchema.Person);
       typeURI = Type.getURI(schema)!;
-      db.add(Obj.make(schema as unknown as Type.AnyObj, { name: 'Bob' } as any));
+      db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush();
     }
 

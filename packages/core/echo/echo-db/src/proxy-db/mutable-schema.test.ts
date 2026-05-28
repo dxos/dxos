@@ -94,7 +94,7 @@ describe('EchoSchema', () => {
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
     const schema = db.add(TestEmpty);
-    const object: Obj.Any = Obj.make(schema as Type.AnyObj, {});
+    const object: Obj.Any = Obj.make(schema, {});
     Type.addFields(schema, { field1: Schema.String });
     Obj.update(object, (object) => {
       object.field1 = 'works';
@@ -151,11 +151,9 @@ describe('EchoSchema', () => {
 
     const orgSchema = db.add(OrgSchema);
     const contactSchema = db.add(ContactSchema);
-    const org = db.add(Obj.make(orgSchema as unknown as Type.AnyObj, { name: 'DXOS' } as any));
-    const contact = db.add(
-      Obj.make(contactSchema as unknown as Type.AnyObj, { name: 'Bot', org: Ref.make(org) } as any),
-    );
-    expect((contact as any).org?.target?.id).to.eq(org.id);
+    const org = db.add(Obj.make(orgSchema, { name: 'DXOS' }));
+    const contact = db.add(Obj.make(contactSchema, { name: 'Bot', org: Ref.make(org) }));
+    expect(contact.org?.target?.id).to.eq(org.id);
   });
 
   test('schema id stays as echo URI for stored schemas', async () => {

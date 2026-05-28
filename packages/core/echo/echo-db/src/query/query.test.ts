@@ -2454,10 +2454,10 @@ describe('Query', () => {
 
     test('query mutable schema objects', async () => {
       const schema = db.add(TestSchema.Person);
-      const contact = db.add(Obj.make(schema as Type.AnyObj, {}));
+      const contact = db.add(Obj.make(schema, {}));
 
       // NOTE: Must use `Filter.type` with the stored Type.Type entity since matching is done by the object id of the schema entity.
-      const query = db.query(Query.type(schema as Type.AnyObj));
+      const query = db.query(Query.type(schema));
       const result = await query.run();
       expect(result).to.have.length(1);
       expect(result[0]).to.eq(contact);
