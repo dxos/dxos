@@ -11,7 +11,8 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { getSchemaURI } from '../../Annotation';
-import { ObjectDeletedId, ParentId, SchemaId, TypeId } from '../types';
+import { toEffectSchema } from '../../JsonSchema/json-schema';
+import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createPropertyDeleteError } from './errors';
@@ -208,6 +209,27 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // Uses target as both the context key and event target for non-database objects.
         return (callback: (obj: any) => void) => executeChange(target, target, receiver, callback);
       }
+      case TypeEntityId: {
+        // The back-reference to the type entity is metadata — return the raw
+        // value so we don't re-wrap an already-reactive `Type.Type` entity in
+        // another proxy (which would fail the SchemaId-in-target invariant).
+        return Reflect.get(target, prop, receiver);
+      }
+      case StaticTypeSchemaSlot: {
+        // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it on
+        // the slot; the set-trap invalidates the cache when `jsonSchema` is mutated.
+        const existing = Reflect.get(target, prop, receiver);
+        if (existing !== undefined) {
+          return existing;
+        }
+        const jsonSchema = (target as any).jsonSchema;
+        if (jsonSchema == null) {
+          return undefined;
+        }
+        const rebuilt = toEffectSchema(jsonSchema);
+        defineHiddenProperty(target, StaticTypeSchemaSlot, rebuilt);
+        return rebuilt;
+      }
     }
 
     // Handle getter properties.
@@ -245,6 +267,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       batchEvents(() => {
         const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, prop, value);
         result = Reflect.set(target, prop, preparedValue, receiver);
+        // Invalidate the cached source Effect Schema when `jsonSchema` changes
+        // (e.g. `Type.addFields`) so `Type.getSchema` rebuilds from the new shape.
+        if (prop === 'jsonSchema') {
+          Reflect.deleteProperty(target, StaticTypeSchemaSlot);
+        }
         // Queue notification instead of emitting immediately (batched).
         if (isInitialized) {
           queueNotification(echoRoot);
@@ -401,15 +428,48 @@ const toJSON = (target: ProxyTarget): any => {
 };
 
 /**
+ * Pointer to a `Type.Type` entity, stamped as the back-reference (`TypeEntityId`)
+ * on instances and read by the `SchemaId` getter installed below.
+ *
+ * Structural shape (not `Type.AnyEntity`) because `internal/common/proxy/`
+ * can't import the top-level `Type` module without a cycle. Every kind of
+ * `Type.Type` entity satisfies this shape:
+ *   - Static (`Type.makeObject(dxn)` pipe) — slot set directly on the object.
+ *   - Persisted (echo-handler-wrapped) — slot exposed via that handler's
+ *     `get` trap (rebuilds from `data.jsonSchema`).
+ *   - In-memory pre-persist (`Type.makeObjectFromJsonSchema`) — slot exposed
+ *     via the `case StaticTypeSchemaSlot:` arm in this file's `get` trap.
+ */
+export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext };
+
+/**
  * Recursively set AST on all potential proxy targets.
  */
-const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeSource?: TypeSource) => {
   const schemaType = getSchemaURI(schema);
   if (schemaType != null) {
     defineHiddenProperty(obj, TypeId, schemaType);
   }
 
-  defineHiddenProperty(obj, SchemaId, schema);
+  if (typeSource != null) {
+    // Keep a back-reference to the type entity so `Obj.getType` /
+    // `Relation.getType` / `Entity.getType` can return it.
+    defineHiddenProperty(obj, TypeEntityId, typeSource);
+
+    // Install `SchemaId` as a getter that reads through the entity's static
+    // schema slot. The three entity shapes (static / persisted / in-memory
+    // pre-persist) each populate the slot via their own get-trap path, so
+    // `Type.update` / `Type.addFields` mutations propagate into validation
+    // for objects created via `Obj.make(typeEntity, ...)` without this file
+    // having to rebuild from `jsonSchema` itself.
+    Object.defineProperty(obj, SchemaId, {
+      get: () => typeSource[StaticTypeSchemaSlot] ?? schema,
+      enumerable: false,
+      configurable: true,
+    });
+  } else {
+    defineHiddenProperty(obj, SchemaId, schema);
+  }
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
       const elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);
@@ -420,7 +480,7 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
   }
 };
 
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
@@ -429,7 +489,7 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   SchemaValidator.validateSchema(schema);
   const _ = Schema.asserts(schema)(target);
   makeArraysReactive(target);
-  setSchemaProperties(target, schema);
+  setSchemaProperties(target, schema, typeSource);
 };
 
 const makeArraysReactive = (target: any) => {

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
@@ -149,9 +149,12 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
     const viewObjects = get(AtomQuery.make(space.db, filter));
 
     for (const viewObject of viewObjects) {
-      const holderSchema = Obj.getSchema(viewObject);
-      const path = holderSchema
-        ? ViewAnnotation.get(holderSchema).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
+      if (!Obj.isObject(viewObject)) {
+        continue;
+      }
+      const holderType = Obj.getType(viewObject);
+      const path = holderType
+        ? ViewAnnotation.get(Type.getSchema(holderType)).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
         : ([] as EchoViewRefPath);
 
       if (path.length === 0) {

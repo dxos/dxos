@@ -9,6 +9,10 @@ import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+// Type-only imports (erased at runtime — no import cycle); `internal` may depend
+// on the top-level `Obj` / `Type` API at the type level only.
+import type * as Obj from '../../Obj';
+import type * as Type from '../../Type';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
@@ -25,6 +29,8 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
 } from '../common/types';
 
 export {
@@ -36,6 +42,7 @@ export {
   RelationTargetId,
 };
 
+import { toJsonSchema } from '../JsonSchema';
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
@@ -57,58 +64,67 @@ export type RelationSourceTargetRefs<Source = any, Target = any> = {
 export type RelationSource<R> = R extends RelationSourceTargetRefs<infer Source, infer _Target> ? Source : never;
 export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source, infer Target> ? Target : never;
 
-export type EchoRelationSchemaOptions<
-  TSource extends Schema.Schema.AnyNoContext,
-  TTarget extends Schema.Schema.AnyNoContext,
-> = {
+/**
+ * Accepted relation endpoint: an object-kind `Type.Type` entity (slot-backed)
+ * or the branded `Obj.Unknown` schema. Source/target are constrained to these
+ * — relations only connect object-kind entities.
+ */
+export type RelationEndpoint = Type.AnyObj | UnknownTypeSchema<any, EntityKind.Object>;
+
+/**
+ * Resolves a relation endpoint to the instance type it describes — the source /
+ * target instance recorded on the relation's `RelationSourceTargetRefs`.
+ */
+export type RelationEndpointInstance<S> =
+  S extends UnknownTypeSchema<infer A, any> ? A : S extends Type.AnyObj ? Type.InstanceType<S> : unknown;
+
+export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget extends RelationEndpoint> = {
   dxn: DXN.DXN;
   source: TSource;
   target: TTarget;
 };
 
 /**
- * Relation schema type with kind marker.
+ * Relation schema type with kind marker. `SourceInstance` / `TargetInstance`
+ * are the resolved endpoint instance types (see {@link RelationEndpointInstance}).
  */
 export type EchoRelationSchema<
   Self extends Schema.Schema.Any,
-  Source extends Schema.Schema.AnyNoContext,
-  Target extends Schema.Schema.AnyNoContext,
+  SourceInstance extends Obj.Unknown,
+  TargetInstance extends Obj.Unknown,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
-> = EchoTypeSchema<
-  Self,
-  RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>,
-  EntityKind.Relation,
-  Fields
->;
+> = EchoTypeSchema<Self, RelationSourceTargetRefs<SourceInstance, TargetInstance>, EntityKind.Relation, Fields>;
 
 /**
  * Schema for Relation entity types.
  */
-export const EchoRelationSchema = <
-  Source extends Schema.Schema.AnyNoContext,
-  Target extends Schema.Schema.AnyNoContext,
->({
+export const EchoRelationSchema = <Source extends RelationEndpoint, Target extends RelationEndpoint>({
   dxn,
   source,
   target,
 }: EchoRelationSchemaOptions<Source, Target>) => {
-  assertArgument(Schema.isSchema(source), 'source');
-  assertArgument(Schema.isSchema(target), 'target');
+  // `source` / `target` are `Type.Type` entities (slot-backed) or the branded
+  // `Obj.Unknown` schema (used directly); resolve each to its Effect Schema for
+  // the schema-side machinery (DXN ref + entity-kind checks).
+  const sourceSchema = source != null ? (getStaticTypeSchema(source) ?? source) : source;
+  const targetSchema = target != null ? (getStaticTypeSchema(target) ?? target) : target;
+  assertArgument(Schema.isSchema(sourceSchema), 'source');
+  assertArgument(Schema.isSchema(targetSchema), 'target');
   const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  invariant(version, `Type.relation requires a versioned DXN: ${dxn}`);
-  const sourceDXN = getDXNForRelationSchemaRef(source);
-  const targetDXN = getDXNForRelationSchemaRef(target);
-  if (getEntityKind(source) !== EntityKind.Object) {
+  invariant(version, `Type.makeRelation requires a versioned DXN: ${dxn}`);
+  const sourceDXN = getDXNForRelationSchemaRef(sourceSchema);
+  const targetDXN = getDXNForRelationSchemaRef(targetSchema);
+  if (getEntityKind(sourceSchema) !== EntityKind.Object) {
     raise(new Error('Source schema must be an echo object schema.'));
   }
-  if (getEntityKind(target) !== EntityKind.Object) {
+  if (getEntityKind(targetSchema) !== EntityKind.Object) {
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
   return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
-  ): EchoRelationSchema<Self, Source, Target, Fields> => {
+  ): EchoRelationSchema<Self, RelationEndpointInstance<Source>, RelationEndpointInstance<Target>, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // Extract fields from the schema if available (Struct schemas have .fields).
@@ -136,11 +152,18 @@ export const EchoRelationSchema = <
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Relation, Fields>(fields, ast, typename, version, EntityKind.Relation);
+    return makeEchoTypeSchema<Self, EntityKind.Relation, Fields>(
+      fields,
+      ast,
+      typename,
+      version,
+      EntityKind.Relation,
+      () => toJsonSchema(Schema.make(ast)),
+    );
   };
 };
 
-const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
+export const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {

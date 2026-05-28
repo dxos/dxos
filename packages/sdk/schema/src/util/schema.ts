@@ -4,10 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, type SchemaRegistry, Type } from '@dxos/echo';
+import { type SchemaRegistry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
-  type EchoSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
@@ -16,6 +15,7 @@ import {
   type SelectOption,
   TypeEnum,
   formatToType,
+  toEffectSchema,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -52,7 +52,8 @@ export const createDefaultSchema = () =>
     description: Schema.optional(Schema.String).annotations({
       title: 'Description',
     }),
-  }).pipe(Type.object(DXN.make(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')));
+    // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
 
 export const getSchema = async (
   dxn: DXN.DXN,
@@ -74,7 +75,7 @@ export const getSchema = async (
 export const getSchemaFromPropertyDefinitions = (
   typename: string,
   properties: SchemaPropertyDefinition[],
-): EchoSchema => {
+): Type.Type => {
   // TODO(burdon): Move to echo-schema.
   const typeToSchema: Record<TypeEnum, Schema.Any> = {
     [TypeEnum.String]: Schema.String.pipe(Schema.optional),
@@ -90,11 +91,12 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
+  // EchoObjectSchema wraps a static Type.Obj entity; unwrap to the source schema for createEchoSchema.
   const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
-  const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
+  const schema = createEchoSchema(Type.getSchema(typeSchema));
 
-  // Wrap schema modifications in Obj.update since the persistent schema is an ECHO object.
-  Obj.update(schema.persistentSchema as unknown as Obj.Unknown, () => {
+  // Wrap schema modifications in Type.update so they run inside the schema's change context.
+  Type.update(schema, () => {
     for (const prop of properties) {
       const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
       if (prop.config?.options) {
@@ -115,6 +117,22 @@ export const getSchemaFromPropertyDefinitions = (
   });
 
   return schema;
+};
+
+/**
+ * Build an in-memory, mutable `Type.Type` entity from a JSON schema. A typename is required to
+ * identify the entity; if the JSON schema does not carry one, `typename` (or a generated typename) is stamped.
+ */
+export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: string): Type.Type => {
+  const withTypename: JsonSchemaType = jsonSchema.typename
+    ? jsonSchema
+    : {
+        ...jsonSchema,
+        typename: typename ?? `com.example.type.${PublicKey.random().truncate()}`,
+        version: jsonSchema.version ?? '0.1.0',
+      };
+
+  return createEchoSchema(toEffectSchema(withTypename));
 };
 
 /**

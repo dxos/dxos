@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
 import { LayerSpec, ServiceNotAvailableError } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
+import { Database, EchoURI, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 
 //
@@ -72,7 +72,7 @@ const AiContextSpec = LayerSpec.make(
             }),
           );
         }
-        const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
+        const feed = yield* Database.resolve(EchoURI.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
         const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return { binder };

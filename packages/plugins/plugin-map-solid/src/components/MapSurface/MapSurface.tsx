@@ -7,7 +7,7 @@ import { customElement, noShadowDOM } from 'solid-element';
 import { Show, createMemo, createSignal } from 'solid-js';
 
 import { Filter, Obj } from '@dxos/echo';
-import { useObject, useQuery, useSchema } from '@dxos/echo-solid';
+import { useObject, useQuery, useType } from '@dxos/echo-solid';
 import { type Map as MapType } from '@dxos/plugin-map';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
@@ -34,7 +34,7 @@ const MapSurface = (props: MapSurfaceProps) => {
   const [type, setType] = createSignal<'map' | 'globe'>('map');
 
   const db = createMemo(() => (map ? Obj.getDatabase(map) : undefined));
-  const schema = useSchema(db, typename);
+  const schema = useType(db, typename);
   const filter = createMemo(() => {
     const s = schema();
     return s ? Filter.type(s) : Filter.nothing();

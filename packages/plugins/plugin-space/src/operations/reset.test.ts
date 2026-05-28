@@ -8,7 +8,7 @@ import { describe, onTestFinished, test } from 'vitest';
 import { Capability } from '@dxos/app-framework';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
@@ -26,14 +26,14 @@ describe('SpaceOperation.Reset', () => {
     const space = await createSpaceWithObjects(3);
 
     const beforeAll = await space.db.query(Filter.everything()).run();
-    const beforeUser = beforeAll.filter((object) => Obj.getTypename(object) === TestSchema.Expando.typename);
+    const beforeUser = beforeAll.filter((object) => Obj.getTypename(object) === Type.getTypename(TestSchema.Expando));
     expect(beforeUser).toHaveLength(3);
 
     await invokeReset(space);
     await space.db.flush();
 
     const afterAll = await space.db.query(Filter.everything()).run();
-    const afterUser = afterAll.filter((object) => Obj.getTypename(object) === TestSchema.Expando.typename);
+    const afterUser = afterAll.filter((object) => Obj.getTypename(object) === Type.getTypename(TestSchema.Expando));
     expect(afterUser, `expected no user objects after reset, got ${afterAll.length} total entities`).toHaveLength(0);
   });
 
@@ -85,7 +85,9 @@ describe('SpaceOperation.Reset', () => {
     const afterEntities = await space.db.query(Filter.everything()).run();
     const afterRelations = afterEntities.filter(Relation.isRelation);
     expect(afterRelations, `expected no relations after reset, got ${afterRelations.length}`).toHaveLength(0);
-    const afterPersons = afterEntities.filter((object) => Obj.getTypename(object) === TestSchema.Person.typename);
+    const afterPersons = afterEntities.filter(
+      (object) => Obj.getTypename(object) === Type.getTypename(TestSchema.Person),
+    );
     expect(afterPersons, `expected no person objects after reset, got ${afterPersons.length}`).toHaveLength(0);
   });
 
@@ -106,7 +108,7 @@ describe('SpaceOperation.Reset', () => {
     const afterSchemas = space.db.schemaRegistry.query().runSync();
     expect(
       afterSchemas,
-      `expected no schemas after reset, got ${afterSchemas.map((s) => s.typename).join(', ')}`,
+      `expected no schemas after reset, got ${afterSchemas.map((s) => Type.getTypename(s)).join(', ')}`,
     ).toHaveLength(0);
   });
 });

@@ -7,8 +7,11 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import { createEchoSchema } from '../../testing';
+import * as Type from '../../Type';
+import { EntityKind } from '../common/types';
 import { EchoObjectSchema } from '../Entity';
-import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
+import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema, getTypeAnnotation } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -21,7 +24,7 @@ type TestObject = Schema.Schema.Type<typeof TestObject>;
 
 const TestEchoSchema = TestObject.pipe(EchoObjectSchema(DXN.make('org.dxos.type.test', '0.1.0')));
 
-type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;
+type TestEchoSchema = Type.InstanceType<typeof TestEchoSchema>;
 
 describe('annotations', () => {
   describe('Typename', () => {
@@ -129,14 +132,34 @@ describe('annotations', () => {
     });
 
     test('should return label from echo object', ({ expect }) => {
-      const obj: TestEchoSchema = {
+      const obj = {
         id: 'test',
         name: 'Primary Name',
         fallbackName: 'Fallback Name',
         other: 'Other',
-      };
+      } as unknown as TestEchoSchema;
 
-      expect(getLabelWithSchema(TestEchoSchema, obj)).toEqual('Primary Name');
+      expect(getLabelWithSchema(Type.getSchema(TestEchoSchema), obj)).toEqual('Primary Name');
+    });
+  });
+
+  // `getTypeAnnotation` reads annotations from an Effect Schema. To read off a
+  // `Type.Type` entity (static or persisted), unwrap with `Type.getSchema(entity)`
+  // first — that handles both the static `StaticTypeSchemaSlot` case and the
+  // persisted `jsonSchema` rebuild case.
+  describe('getTypeAnnotation via Type.getSchema(entity)', () => {
+    test('returns TypeAnnotation for a static Type.Obj entity', ({ expect }) => {
+      const annotation = getTypeAnnotation(Type.getSchema(TestEchoSchema));
+      expect(annotation).toBeDefined();
+      expect(annotation?.kind).toBe(EntityKind.Object);
+      expect(annotation?.typename).toBe('org.dxos.type.test');
+    });
+
+    test('returns TypeAnnotation for a persisted Type.Type entity', ({ expect }) => {
+      const persisted = createEchoSchema(Type.getSchema(TestEchoSchema));
+      const annotation = getTypeAnnotation(Type.getSchema(persisted));
+      expect(annotation).toBeDefined();
+      expect(annotation?.typename).toBe('org.dxos.type.test');
     });
   });
 });

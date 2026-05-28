@@ -11,6 +11,7 @@ import { CreateEpochRequest } from '@dxos/client/halo';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaURI } from '@dxos/echo/internal';
+import * as Type from '@dxos/echo/Type';
 import { invariant } from '@dxos/invariant';
 import { EchoURI, ObjectId } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
@@ -66,14 +67,15 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
+    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ type: Type.AnyEntity; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
     }
 
-    const { schema, props } = await migrate(objectStructure);
+    const { type, props } = await migrate(objectStructure);
+    const schema = Type.getSchema(type);
 
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
@@ -103,8 +105,9 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
-    const core = await this._createObject({ schema, props });
+  async addObject(type: Type.AnyEntity, props: any): Promise<string> {
+    const resolved = Type.getSchema(type);
+    const core = await this._createObject({ schema: resolved, props });
     return core.id;
   }
 

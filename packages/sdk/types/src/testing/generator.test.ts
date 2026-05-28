@@ -4,8 +4,9 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type Database, Query } from '@dxos/echo';
+import { type Database, Query, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -25,8 +26,11 @@ const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
     const objects = await db.query(Query.type(type)).run();
     expect(objects).to.have.length(count);
     log('objects', {
-      typename: type.typename,
-      objects: objects.map((obj) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
+      typename: Type.getTypename(type),
+      objects: objects.map((obj) => {
+        const { name, employer } = obj as { name?: string; employer?: { name?: string } };
+        return stripUndefined({ name, employer: employer?.name });
+      }),
     });
   }
 };
@@ -111,8 +115,9 @@ describe('Generator', () => {
 
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const schema = (await db.schemaRegistry.register([Message.Message]))[0];
-    const objectGenerator = createGenerator(generator, schema, { force: true });
+    const [type] = await db.schemaRegistry.register([Message.Message]);
+    invariant(Type.isObject(type), 'expected object type');
+    const objectGenerator = createGenerator(generator, type, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;
   });

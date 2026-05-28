@@ -18,15 +18,16 @@ const GraphSchema = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.graph', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--graph--regular',
     hue: 'green',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.graph', '0.1.0')),
 );
-export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
+// TODO(wittjosiah): Try to clean up this type inference.
+export interface Graph extends Type.InstanceType<typeof GraphSchema> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {

@@ -7,8 +7,11 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
+import { isInstanceOf } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
+import { EchoURI, ObjectId } from '@dxos/keys';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -191,7 +194,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(Message.Message),
+      messages: Schema.Array(Type.getSchema(Message.Message)),
     }),
   }),
 
@@ -200,7 +203,7 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const feed = yield* Database.resolve(id as any, Feed.Feed).pipe(Effect.orDie);
+        const feed = yield* Database.resolve(EchoURI.parse(id), Feed.Feed).pipe(Effect.orDie);
         const messages = yield* Feed.runQuery(feed, Filter.everything());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
@@ -216,13 +219,47 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        const feed = yield* Database.resolve(id as any, Feed.Feed).pipe(Effect.orDie);
-        const mappedItems = items.map((item: any) => ({
-          ...item,
-          id: item.id ?? ObjectId.random(),
-        }));
-        yield* Feed.append(feed, mappedItems);
-        return {};
+        // Legacy `dxn:queue:` URIs identify a feed/queue; everything else is an ECHO container.
+        if (typeof id === 'string' && id.startsWith('dxn:queue:')) {
+          const mappedItems = items.map((item: any) => ({
+            ...item,
+            id: item.id ?? ObjectId.random(),
+          }));
+          const feed = yield* Database.resolve(EchoURI.parse(id), Feed.Feed).pipe(Effect.orDie);
+          yield* Feed.append(feed, mappedItems);
+          return {};
+        } else {
+          const echoUri = EchoURI.parse(id);
+          const echoId = EchoURI.getObjectId(echoUri);
+          const spaceId = EchoURI.getSpaceId(echoUri);
+          invariant(echoId, 'Object ID missing from EchoURI');
+          const { db } = yield* Database.Service;
+          if (spaceId != null) {
+            invariant(db.spaceId === spaceId, 'Space mismatch');
+          }
+
+          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
+          if (isInstanceOf(View.View, container)) {
+            const schema = yield* Effect.promise(async () =>
+              db.schemaRegistry
+                .query({
+                  typename: getTypenameFromQuery(container.query.ast),
+                })
+                .first(),
+            );
+
+            for (const item of items) {
+              const { id: _id, '@type': _type, ...rest } = item as any;
+              // TODO(dmaretskyi): Forbid type on create.
+              db.add(Obj.make(Type.assertObject(schema), rest));
+            }
+            yield* Effect.promise(() => db.flush());
+          } else {
+            throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
+          }
+
+          return {};
+        }
       }),
     ),
   }),

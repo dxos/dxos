@@ -26,14 +26,16 @@ import { EchoObjectSchema } from '../Entity';
 import { Email, FormatAnnotation, TypeFormat } from '../Format';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';
-import { PersistentSchema } from '../Type';
+import { TypeSchema } from '../Type';
 import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
-    const Test = Schema.Struct({ name: Schema.String }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    const Test = Schema.Struct({ name: Schema.String }).pipe(
+      Type.makeObject(DXN.make('com.example.type.test', '0.1.0')),
+    );
     const jsonSchema = toJsonSchema(Test);
     expect(jsonSchema.$id).toEqual('dxn:com.example.type.test:0.1.0');
     expect(jsonSchema.version).toEqual('0.1.0');
@@ -43,7 +45,7 @@ describe('effect-to-json', () => {
     const meta = { maxLength: 0 };
     const Test = Schema.Struct({
       name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const jsonSchema = toJsonSchema(Test);
     expect(getNormalizedEchoAnnotations(jsonSchema.properties!.name!)!.meta![EXAMPLE_NAMESPACE]).to.deep.eq(meta);
   });
@@ -51,10 +53,10 @@ describe('effect-to-json', () => {
   test('reference annotation', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.testNested', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
     const Test = Schema.Struct({
       name: Ref(Nested),
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const jsonSchema = toJsonSchema(Test);
     // log.info('schema', { jsonSchema });
     const nested = jsonSchema.properties!.name;
@@ -66,10 +68,10 @@ describe('effect-to-json', () => {
   test.skip('reference annotation with lookup property', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.testNested', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
     const Test = Schema.Struct({
       name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const jsonSchema = toJsonSchema(Test);
     const effectSchema = toEffectSchema(jsonSchema);
 
@@ -80,10 +82,10 @@ describe('effect-to-json', () => {
   test('array of references', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.testNested', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
     const Test = Schema.Struct({
       name: Schema.Array(Ref(Nested)),
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
     const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation((jsonSchema.properties!.name as any).items);
@@ -92,10 +94,10 @@ describe('effect-to-json', () => {
   test('optional references', () => {
     const Nested = Schema.Struct({
       name: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.testNested', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.testNested', '0.1.0')));
     const Test = Schema.Struct({
       name: Schema.optional(Ref(Nested)),
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const jsonSchema = toJsonSchema(Test);
     expectReferenceAnnotation(jsonSchema.properties!.name);
   });
@@ -113,7 +115,7 @@ describe('effect-to-json', () => {
       email: Schema.String.pipe(FormatAnnotation.set(TypeFormat.Email)).annotations({
         description: 'Email address',
       }),
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).to.deep.eq({
@@ -159,12 +161,12 @@ describe('effect-to-json', () => {
   test('reference property by ref', () => {
     const Organization = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
     const Contact = Schema.Struct({
       name: Schema.String,
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     // log.info('Contact', { ast: Contact.ast });
 
@@ -211,21 +213,21 @@ describe('effect-to-json', () => {
   test('add reference property', () => {
     const Organization = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
     const Contact = Schema.Struct({
       name: Schema.String,
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const jsonSchema = toJsonSchema(Contact);
-    setSchemaProperty(jsonSchema, 'organization' as JsonProp, createSchemaReference(Organization.typename));
+    setSchemaProperty(jsonSchema, 'organization' as JsonProp, createSchemaReference(Type.getTypename(Organization)));
     const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'organization' as JsonProp) ?? {}) ?? {};
-    expect(typename).to.eq(Organization.typename);
+    expect(typename).to.eq(Type.getTypename(Organization));
   });
 
-  test('serialize circular schema (PersistentSchema)', () => {
-    const jsonSchema = toJsonSchema(PersistentSchema);
+  test('serialize circular schema (TypeSchema)', () => {
+    const jsonSchema = toJsonSchema(TypeSchema);
     expect(Object.keys(jsonSchema.properties!).length).toBeGreaterThan(0);
 
     // TODO(dmaretskyi): Currently unable to deserialize.
@@ -309,7 +311,7 @@ describe('effect-to-json', () => {
     const Organization = Schema.Struct({
       id: ObjectId,
       name: Schema.String,
-    }).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')), LabelAnnotation.set(['name']));
+    }).pipe(LabelAnnotation.set(['name']), EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
     const jsonSchema = toJsonSchema(Organization);
     expect(jsonSchema).toEqual({
@@ -413,7 +415,7 @@ describe('json-to-effect', () => {
     test(`deserialized equals original ${partial ? 'with partial' : ''}`, () => {
       const Organization = Schema.Struct({
         field: Schema.String,
-      }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
       const fields = {
         string: Schema.String,
@@ -430,7 +432,7 @@ describe('json-to-effect', () => {
       } as const;
 
       const Test = (partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields)).pipe(
-        Type.object(DXN.make('com.example.type.test', '0.1.0')),
+        Type.makeObject(DXN.make('com.example.type.test', '0.1.0')),
       );
 
       const jsonSchema = toJsonSchema(Test);
@@ -438,11 +440,12 @@ describe('json-to-effect', () => {
 
       const schema = toEffectSchema(jsonSchema);
 
-      expect(() => expect(schema.ast).to.deep.eq(Test.ast)).to.throw();
-      expect(() => expect(prepareAstForCompare(Test.ast)).to.deep.eq(Test.ast)).to.throw();
-      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(Test.ast))).to.throw();
+      const testAst = Type.getSchema(Test).ast;
+      expect(() => expect(schema.ast).to.deep.eq(testAst)).to.throw();
+      expect(() => expect(prepareAstForCompare(testAst)).to.deep.eq(testAst)).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(testAst))).to.throw();
       // log.info('', { original: prepareAstForCompare(Schema.ast), deserialized: prepareAstForCompare(schema.ast) });
-      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(Test.ast));
+      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(testAst));
 
       // TODO(dmaretskyi): Fix.
       // expect(
@@ -513,7 +516,7 @@ describe('json-to-effect', () => {
     const schema = TestSchema.HasManager;
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
-    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(Type.getSchema(schema).ast));
   });
 
   test('generator annotation', () => {
@@ -648,7 +651,7 @@ describe('json-to-effect', () => {
       name: Schema.String,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
     const input = Schema.Struct({
-      contact: Contact,
+      contact: Type.getSchema(Contact),
     });
     const jsonSchema = toJsonSchema(input);
     expect(jsonSchema).toMatchInlineSnapshot(`
@@ -764,8 +767,8 @@ describe('reference', () => {
     const deserializedSchema = toEffectSchema(jsonSchema);
     const refAst = getReferenceAst(deserializedSchema.ast);
     expect(refAst).toEqual({
-      typename: TestSchema.Person.typename,
-      version: TestSchema.Person.version,
+      typename: Type.getTypename(TestSchema.Person),
+      version: Type.getVersion(TestSchema.Person),
     });
   });
 });

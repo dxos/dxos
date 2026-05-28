@@ -5,11 +5,10 @@
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
-import { Annotation, Filter, JsonSchema, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -39,7 +38,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   const view = column.view.target;
   const db = view && Obj.getDatabase(view);
   const { Item } = usePipeline(PIPELINE_COLUMN_NAME);
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
+  const [type, setType] = useState<Type.AnyEntity>();
   const query = useMemo(() => {
     if (!view) {
       return Query.select(Filter.nothing());
@@ -55,20 +54,19 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       return;
     }
 
-    const schema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
-    setSchema(() => schema);
+    const type = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
+    setType(() => type);
   }, [db, query]);
 
   const projectionModel = useMemo(() => {
-    if (!schema || !view) {
+    if (!type || !view) {
       return undefined;
     }
 
-    // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
-    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
-    const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
-    return new ProjectionModel({ view, baseSchema: jsonSchema, change });
-  }, [schema, view]);
+    // Use the live jsonSchema reference for reactivity.
+    const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
+    return new ProjectionModel({ view, baseSchema: type.jsonSchema, change });
+  }, [type, view]);
 
   const PipelineTile = useMemo(() => {
     return forwardRef<HTMLDivElement, Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'>>(
@@ -122,8 +120,9 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
     const icon = Function.pipe(
-      Obj.getSchema(data),
+      Obj.getType(data),
       Option.fromNullable,
+      Option.map(Type.getSchema),
       Option.flatMap(Annotation.IconAnnotation.get),
       Option.map(({ icon }) => icon),
       Option.getOrElse(() => 'ph--circle-dashed--regular'),

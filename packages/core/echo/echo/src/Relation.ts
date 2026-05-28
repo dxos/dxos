@@ -18,7 +18,7 @@ import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
 import * as Obj from './Obj';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 export type Endpoints<Source, Target> = {
   [Source]: Source;
@@ -59,23 +59,20 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
  * ```
  */
 // TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
-export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  // TODO(dmaretskyi): Clean this up.
-  // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
-  //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
-  internal.EchoRelationSchema({
-    dxn: DXN.make('org.dxos.schema.anyRelation', '0.0.0'),
-    source: Obj.Unknown,
-    target: Obj.Unknown,
+  Schema.annotations({
+    [internal.TypeAnnotationId]: {
+      kind: Entity.Kind.Relation,
+      typename: 'org.dxos.schema.anyRelation',
+      version: '0.0.0',
+      sourceSchema: DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION),
+      targetSchema: DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION),
+    },
   }),
-  (schema) =>
-    Object.assign(schema, {
-      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
-    }) as unknown as Type.Relation<Unknown, Obj.Any, Obj.Any>,
-);
+) as unknown as internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation>;
 
 /**
  * Relation type with specific source and target types.
@@ -128,7 +125,7 @@ export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
 /**
  * Internal props type for relation instance creation.
  */
-type MakePropsInternal<T extends Unknown> = {
+type MakePropsInternal<T extends Endpoints<any, any>> = {
   id?: ObjectId;
   [Meta]?: internal.ObjectMeta;
   [Source]: T[Source];
@@ -136,10 +133,12 @@ type MakePropsInternal<T extends Unknown> = {
 } & Entity.Properties<T>;
 
 /**
- * Props type for relation creation with a given schema.
- * Takes a schema type (created with Type.Relation) and extracts the props type.
+ * Props type for relation creation with a given schema. Accepts a `Type.AnyRelation`
+ * entity (created with `Type.makeRelation`) and derives the props shape via
+ * `Type.InstanceType`. Object-kind entities are rejected at the type level —
+ * use `Obj.MakeProps` for those.
  */
-export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Schema.Type<S>>;
+export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.InstanceType<S>>;
 
 /**
  * Creates new relation.
@@ -150,10 +149,11 @@ export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Sch
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.AnyRelation>(
-  schema: S,
-  props: NoInfer<MakeProps<S>>,
-): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
+export const make = <T extends Type.AnyRelation>(
+  type: T,
+  props: NoInfer<MakeProps<T>>,
+): Type.InstanceType<T> & Entity.OfKind<typeof Entity.Kind.Relation> => {
+  const schema = Type.getSchema(type);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation,
     'schema',
@@ -174,8 +174,34 @@ export const make = <S extends Type.AnyRelation>(
   (props as any)[internal.RelationSourceDXNId] = sourceDXN;
   (props as any)[internal.RelationTargetDXNId] = targetDXN;
 
-  return internal.makeObject<Schema.Schema.Type<S>>(schema, props as any, meta);
+  // Pass the type entity through as `typeSource` so the resulting instance
+  // carries a back-reference resolvable via `Relation.getType` / `Entity.getType`.
+  return internal.makeObject(schema as any, props as any, meta, type as any) as any;
 };
+
+/**
+ * Test if a value is an instance of a given relation type.
+ *
+ * Mirrors `Obj.instanceOf` but only accepts `Type.AnyRelation` — use
+ * `Obj.instanceOf` for objects and `Type.isType` for `Type.Type` entities.
+ *
+ * @example
+ * ```ts
+ * const isEmployedBy = Relation.instanceOf(EmployedBy);
+ * if (isEmployedBy(relation)) {
+ *   // relation is EmployedBy
+ * }
+ * ```
+ */
+export const instanceOf: {
+  <S extends Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyRelation, value?: unknown]) => {
+  if (args.length === 1) {
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
+  }
+  return internal.isInstanceOf(args[0], args[1]);
+}) as any;
 
 /**
  * Type guard for relations.
@@ -361,10 +387,15 @@ export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(e
 export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeURI;
 
 /**
- * Get the schema of the relation.
- * Returns the branded ECHO schema used to create the relation.
+ * Get the type entity (`Type.AnyRelation`) the relation was created from.
+ *
+ * Returns `undefined` when the relation's type isn't registered in this
+ * runtime (e.g. a freshly deserialized snapshot whose type entity hasn't been
+ * wired up yet, or a relation loaded from storage before its schema is known).
+ * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getSchema: (rel: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getType = (relation: Unknown | Snapshot): Type.AnyRelation | undefined =>
+  internal.getType(relation) as Type.AnyRelation | undefined;
 
 /**
  * @returns The typename of the relation's type.

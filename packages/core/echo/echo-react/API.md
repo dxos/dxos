@@ -7,7 +7,7 @@ import {
   useObject, // Subscribe to a single Echo object or Ref
   useObjects, // Subscribe to multiple Refs
   useQuery, // Reactive query subscription
-  useSchema, // Schema registry subscription
+  useType, // Type (schema registry) subscription
 } from '@dxos/echo-react';
 ```
 
@@ -105,12 +105,12 @@ const tasks = useQuery(space.db, Filter.type(Task, { completed: false }));
 
 ---
 
-## useSchema
+## useType
 
-Subscribe to schema changes from a database's schema registry.
+Subscribe to type changes from a database's schema registry.
 
 ```ts
-const schema = useSchema(space.db, 'com.example.type.task');
+const type = useType(space.db, 'com.example.type.task');
 ```
 
 ### Notes
@@ -164,8 +164,8 @@ interface ObjectPropUpdateCallback<T> {
 | `useQuery(resource, query)`  | `Database.Queryable \| undefined, Query`  | `Entity[]` |
 | `useQuery(resource, filter)` | `Database.Queryable \| undefined, Filter` | `Entity[]` |
 
-### useSchema signature
+### useType signature
 
-| Signature                   | Input                                                 | Return                        |
-| --------------------------- | ----------------------------------------------------- | ----------------------------- |
-| `useSchema(db?, typename?)` | `Database.Database \| undefined, string \| undefined` | `Type.AnyEntity \| undefined` |
+| Signature                 | Input                                                 | Return                   |
+| ------------------------- | ----------------------------------------------------- | ------------------------ |
+| `useType(db?, typename?)` | `Database.Database \| undefined, string \| undefined` | `Type.Type \| undefined` |

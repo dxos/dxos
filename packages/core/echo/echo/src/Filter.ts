@@ -16,6 +16,8 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Type$ from './Type';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -100,13 +102,32 @@ export const id = (...ids: ObjectId[]): Any => {
 
 /**
  * Filter by type.
+ *
+ * Accepts a `Type.Type` entity (the value produced by `Type.makeObject` /
+ * `Type.makeRelation`), a `Schema.Union` of such entities (for filtering across a
+ * union of ECHO types), or a non-qualified typename string.
  */
-export const type = <S extends Schema.Schema.All>(
-  schema: S | string,
-  props?: Props<Schema.Schema.Type<S>>,
-): Filter<Schema.Schema.Type<S>> => {
-  if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
-    const typenames = schema.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
+export const type: {
+  <T extends Type$.AnyEntity>(type: T, props?: Props<Type$.InstanceType<T>>): Filter<Type$.InstanceType<T>>;
+  // Schema-side overload restricted to the well-known unknown schemas and to
+  // `Schema.Union(...)` of `Type.Type` entities (for filtering across a union
+  // of ECHO types). Other raw schemas are rejected.
+  <S extends internal.UnknownTypeSchema<any, any>>(
+    schema: S,
+    props?: Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
+  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+    union: S,
+    props?: Props<Schema.Schema.Type<S>>,
+  ): Filter<Schema.Schema.Type<S>>;
+  (schema: string, props?: Props<unknown>): Filter<any>;
+  // Passthrough overload for callers that hold a `Type.AnyEntity | string` union
+  // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
+  // typed overloads above still win for monomorphic inputs.
+  (input: Type$.AnyEntity | string, props?: Props<unknown>): Filter<unknown>;
+} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | string, props?: Props<unknown>): any => {
+  if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
+    const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({
       type: 'or',
       filters: typenames.map((typename) => ({
@@ -117,7 +138,7 @@ export const type = <S extends Schema.Schema.All>(
     });
   }
 
-  const uri = internal.getTypeURIFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(input);
   return new FilterClass({
     type: 'object',
     typename: uri,
@@ -224,10 +245,10 @@ export const text = (
 /**
  * Filter by foreign keys.
  */
-export const foreignKeys = <S extends Schema.Schema.All>(
-  schema: S | string,
+export const foreignKeys = <S extends Type$.AnyEntity | string>(
+  schema: S,
   keys: ForeignKey[],
-): Filter<Schema.Schema.Type<S>> => {
+): Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> => {
   const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',

@@ -17,13 +17,20 @@ import { DXN, EchoURI, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
+import type * as Type from '../../Type';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
 } from '../Annotation';
-import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../common/types';
+import {
+  ANY_OBJECT_TYPENAME,
+  ANY_OBJECT_VERSION,
+  EntityKind,
+  EntityKindSchema,
+  getStaticTypeSchema,
+} from '../common/types';
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
@@ -81,11 +88,22 @@ export type JsonSchemaOptions = {
 //  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
 // TODO(wittjosiah): This is mutable because its a pojo, perhaps should be left as readonly at type level though?
 export const toJsonSchema = (
-  schema: Schema.Schema.All,
+  schema: Schema.Schema.All | Type.AnyEntity,
   options: JsonSchemaOptions = {},
 ): Types.DeepMutable<JsonSchemaType> => {
+  // Allow passing a `Type.Type` entity — use its hidden source schema (or its
+  // already-built jsonSchema as a fallback).
+  const slot = getStaticTypeSchema(schema);
+  if (slot != null) {
+    schema = slot;
+  } else if (!Schema.isSchema(schema)) {
+    const entityJsonSchema = (schema as { jsonSchema?: JsonSchemaType }).jsonSchema;
+    if (entityJsonSchema != null) {
+      return entityJsonSchema as Types.DeepMutable<JsonSchemaType>;
+    }
+  }
   assertArgument(Schema.isSchema(schema), 'schema');
-  let jsonSchema = _toJsonSchemaAST(schema.ast);
+  let jsonSchema = _toJsonSchemaAST((schema as Schema.Schema.All).ast);
   if (options.strict) {
     // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
     jsonSchema = removeProperties(jsonSchema, (key, value) => {

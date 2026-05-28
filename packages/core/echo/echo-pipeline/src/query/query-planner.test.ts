@@ -1622,7 +1622,7 @@ describe('QueryPlanner', () => {
     // Regression: when a child-of FilterStep sits between SelectStep and LimitStep, pushing
     // the limit into the SelectStep slices candidates before the filter runs and starves the
     // result set (e.g. wildcard select grabs 10 random objects, then child-of leaves 0).
-    const parentRef = Ref.fromURI('dxn:echo:@:01J7XKZ6E3MZRY7H9TGFR3W6CN' as any);
+    const parentRef = Ref.fromURI(EchoURI.parse('dxn:echo:@:01J7XKZ6E3MZRY7H9TGFR3W6CN'));
     const query = Query.select(Filter.everything()).select(Filter.childOf(parentRef)).limit(10);
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));

@@ -16,9 +16,9 @@ export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(Type.object(DXN.make('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
+}).pipe(SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')));
 
-export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}
+export type JournalEntry = Type.InstanceType<typeof JournalEntry>;
 
 export const Journal = Schema.Struct({
   id: Schema.String,
@@ -26,14 +26,14 @@ export const Journal = Schema.Struct({
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.journal', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar-check--regular',
     hue: 'indigo',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.journal', '0.1.0')),
 );
 
-export interface Journal extends Schema.Schema.Type<typeof Journal> {}
+export type Journal = Type.InstanceType<typeof Journal>;
 
 export const make = ({ name, entries }: Partial<Obj.MakeProps<typeof Journal>> = {}): Journal => {
   const today = getDateString(new Date());

@@ -63,7 +63,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
         repo: Schema.String,
         status: Schema.String,
         priority: Schema.Number,
-      }).pipe(Type.object(DXN.make('com.example.type.project', '0.1.0'))),
+      }).pipe(Type.makeObject(DXN.make('com.example.type.project', '0.1.0'))),
 
     createData: () => ({
       title: random.commerce.productName(),

@@ -4,47 +4,47 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceEvents, SpaceCapabilities } from '../types';
 import { SpaceOperation } from './definitions';
 
-const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOperation.AddSchema.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
-      const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
-      const schema = schemas[0];
-      Obj.update(schema.persistentSchema, (obj) => {
+      const [type] = yield* Effect.promise(() => db.schemaRegistry.register([input.type as Type.Type]));
+      Type.update(type, (draft) => {
         if (input.name) {
-          obj.name = input.name;
+          draft.name = input.name;
         }
+        const meta = Type.getMeta(draft);
         if (input.typename) {
-          obj.typename = input.typename;
+          meta.key = input.typename;
         }
         if (input.version) {
-          obj.version = input.version;
+          meta.version = input.version;
         }
       });
 
-      yield* Plugin.activate(SpaceEvents.SchemaAdded);
-      const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
+      yield* Plugin.activate(SpaceEvents.TypeAdded);
+      const onTypeAdded = yield* Capability.getAll(SpaceCapabilities.OnTypeAdded);
       yield* Effect.all(
-        onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
+        onTypeAdded.map((callback) => callback({ db, type, show: input.show })),
         { concurrency: 'unbounded' },
       );
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.schema.add',
+        name: 'space.type.add',
         properties: {
           spaceId: db.spaceId,
-          objectId: schema.id,
-          typename: schema.typename,
+          objectId: type.id,
+          typename: Type.getTypename(type),
         },
       });
 
-      return { id: schema.id, object: schema.persistentSchema, schema };
+      return { id: type.id, object: type };
     }),
   ),
 );

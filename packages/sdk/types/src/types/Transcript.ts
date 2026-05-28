@@ -24,15 +24,15 @@ export const Transcript = Schema.Struct({
    */
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.transcript', '0.1.0')),
   SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--subtitles--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.transcript', '0.1.0')),
 );
 
-export type Transcript = Schema.Schema.Type<typeof Transcript>;
+export type Transcript = Type.InstanceType<typeof Transcript>;
 
 // TODO(burdon): Do these need to be kept in sync with EDGE?
 

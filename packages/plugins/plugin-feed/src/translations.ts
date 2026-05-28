@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
@@ -12,7 +13,7 @@ export const translations = [
   ...formTranslations,
   {
     'en-US': {
-      [Subscription.Subscription.typename]: {
+      [Type.getTypename(Subscription.Subscription)]: {
         'typename.label': 'Feed',
         'typename.label_zero': 'Feeds',
         'typename.label_one': 'Feed',
@@ -23,14 +24,14 @@ export const translations = [
         'delete-object.label': 'Delete feed',
         'object-deleted.label': 'Feed deleted',
       },
-      [Subscription.Post.typename]: {
+      [Type.getTypename(Subscription.Post)]: {
         'typename.label': 'Post',
         'typename.label_zero': 'Posts',
         'typename.label_one': 'Post',
         'typename.label_other': 'Posts',
         'post-title.placeholder': 'Untitled',
       },
-      [Magazine.Magazine.typename]: {
+      [Type.getTypename(Magazine.Magazine)]: {
         'typename.label': 'Magazine',
         'typename.label_zero': 'Magazines',
         'typename.label_one': 'Magazine',

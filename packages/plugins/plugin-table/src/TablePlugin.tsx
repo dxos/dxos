@@ -38,12 +38,12 @@ export const TablePlugin = Plugin.define(meta).pipe(
       ),
   }),
   Plugin.addModule({
-    id: 'on-schema-added',
-    activatesOn: SpaceEvents.SchemaAdded,
+    id: 'on-type-added',
+    activatesOn: SpaceEvents.TypeAdded,
     activate: () =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
-          Operation.invoke(TableOperation.OnSchemaAdded, { db, schema, show }),
+        Capability.contributes(SpaceCapabilities.OnTypeAdded, ({ db, type, show }) =>
+          Operation.invoke(TableOperation.OnTypeAdded, { db, type, show }),
         ),
       ),
   }),

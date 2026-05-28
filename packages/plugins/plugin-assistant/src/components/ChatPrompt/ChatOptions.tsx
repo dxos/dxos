@@ -392,7 +392,8 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Option.fromNullable(Obj.getSchema(object)).pipe(
+              const { icon, hue } = Option.fromNullable(Obj.getType(object)).pipe(
+                Option.map(Type.getSchema),
                 Option.flatMap(Annotation.IconAnnotation.get),
                 Option.getOrElse(() => ({
                   icon: 'ph--cube--regular',

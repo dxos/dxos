@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { type Entity, Obj, Ref, Relation } from '@dxos/echo';
+import { Entity, Obj, Ref, Relation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
 import { loadRefTarget } from './ref-utils';
@@ -130,7 +130,12 @@ export function make<T extends Entity.Unknown>(
 
   // At this point, objOrRef is definitely T (not a Ref).
   const obj = objOrRef as T;
-  assertArgument(Obj.isObject(obj) || Relation.isRelation(obj), 'obj', 'Object must be a reactive object');
+  // Accept any kind of entity (Obj, Relation, or persisted Type) — the
+  // reactive subscription only needs `[KindId]` to be set; the proxy machinery
+  // is kind-agnostic. Narrowing to Obj/Relation here used to throw for type
+  // entities returned by the schema registry (e.g. persisted RoastLog), which
+  // broke the schema-node connector in plugin-space.
+  assertArgument(Entity.isEntity(obj), 'obj', 'Object must be a reactive object');
 
   // TODO(dmaretskyi): Fix echo types during review.
   return objectFamily(obj as any);

@@ -6,7 +6,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Obj } from '@dxos/echo';
+import { Collection, Entity, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -16,35 +16,38 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
-      const objects = input.objects as Obj.Unknown[];
+      const entities = input.objects;
 
-      const space = getSpace(objects[0]);
-      invariant(space && objects.every((obj) => Obj.isObject(obj) && getSpace(obj) === space));
+      const space = getSpace(entities[0] as Obj.Unknown);
+      invariant(
+        space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
+      );
 
       const parentCollection: Collection.Collection =
-        input.target ?? space.properties[Collection.Collection.typename]?.target;
+        input.target ?? space.properties[Type.getTypename(Collection.Collection)]?.target;
 
-      const indices = objects.map((obj) =>
+      // Type entities (persisted schemas) live outside collections — `findIndex` will
+      // return -1 for them and the splice/active-tracking branches are skipped.
+      const indices = entities.map((entity) =>
         Obj.instanceOf(Collection.Collection, parentCollection)
-          ? parentCollection.objects.findIndex((ref) => ref.target === obj)
+          ? parentCollection.objects.findIndex((ref) => ref.target === entity)
           : -1,
       );
 
-      const wasActive = objects
-        .filter(Obj.isObject)
-        .map((object) => layout.active.find((graphId) => graphId.endsWith(object.id)))
+      const wasActive = entities
+        .map((entity) => layout.active.find((graphId) => graphId.endsWith(entity.id)))
         .filter(isNonNullable);
 
-      for (const obj of objects) {
-        const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
+      for (const entity of entities) {
+        const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
         if (index !== -1) {
           Obj.update(parentCollection, (parentCollection) => {
             parentCollection.objects.splice(index, 1);
           });
         }
 
-        const db = Obj.getDatabase(obj);
-        db?.remove(obj);
+        const db = Entity.getDatabase(entity);
+        db?.remove(entity);
       }
 
       if (wasActive.length > 0) {
@@ -52,7 +55,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       }
 
       return {
-        objects,
+        objects: entities,
         parentCollection,
         indices,
         wasActive,

@@ -131,8 +131,8 @@ const TableLike = Schema.Struct({
     Schema.mutable,
     Annotation.FormInputAnnotation.set(false),
   ),
-}).pipe(Type.object(DXN.make('org.dxos.test.table-like', '0.1.0')));
-type TableLike = Schema.Schema.Type<typeof TableLike>;
+}).pipe(Type.makeObject(DXN.make('org.dxos.test.table-like', '0.1.0')));
+type TableLike = Type.InstanceType<typeof TableLike>;
 
 /**
  * Table-like object with values only in form-hidden fields (`view`, `sizes`).

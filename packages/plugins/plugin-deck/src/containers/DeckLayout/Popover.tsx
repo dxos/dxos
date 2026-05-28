@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import {
   Card,
   Popover,
@@ -77,8 +77,9 @@ export const PopoverContent = () => {
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover
     ? Function.pipe(
-        Obj.getSchema(popoverSubject),
+        Obj.getType(popoverSubject),
         Option.fromNullable,
+        Option.map(Type.getSchema),
         Option.flatMap(Annotation.IconAnnotation.get),
         Option.map(({ icon }) => icon),
         Option.getOrElse(() => 'ph--circle-dashed--regular'),

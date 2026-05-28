@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag, type Type } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   const [columns, updateColumns] = useObject(pipeline, 'columns');
   const column = useMemo(() => columns.find((column) => column.view.uri === expandedId), [columns, expandedId]);
   const [view, updateView] = useObject(column?.view);
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
+  const [type, setType] = useState<Type.AnyEntity>();
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
@@ -55,11 +55,11 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       return;
     }
 
-    const foundSchema = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
-    if (foundSchema && foundSchema !== schema) {
-      setSchema(() => foundSchema);
+    const foundType = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
+    if (foundType && foundType !== type) {
+      setType(() => foundType);
     }
-  }, [db, view, schema]);
+  }, [db, view, type]);
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) =>
@@ -80,22 +80,22 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newSchema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
-      if (!newSchema) {
+      const newType = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
+      if (!newType) {
         return;
       }
 
       const newView = ViewModel.make({
         query,
-        jsonSchema: JsonSchema.toJsonSchema(newSchema),
+        jsonSchema: newType.jsonSchema,
       });
       updateView((view) => {
         view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 
-      setSchema(() => newSchema);
+      setType(() => newType);
     },
-    [db, view, updateView, schema],
+    [db, view, updateView, type],
   );
 
   const handleColumnValuesChanged = useCallback(
@@ -204,18 +204,20 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                           <Form.FieldSet />
                         </Form.Content>
                       </Form.Root>
-                      <ViewEditor
-                        ref={projectionRef}
-                        mode='tag'
-                        readonly
-                        schema={schema}
-                        view={column.view.target}
-                        registry={db?.schemaRegistry}
-                        db={db}
-                        tags={tags}
-                        types={types}
-                        onQueryChanged={handleQueryChanged}
-                      />
+                      {type && (
+                        <ViewEditor
+                          ref={projectionRef}
+                          mode='tag'
+                          readonly
+                          type={type}
+                          view={column.view.target}
+                          registry={db?.schemaRegistry}
+                          db={db}
+                          tags={tags}
+                          types={types}
+                          onQueryChanged={handleQueryChanged}
+                        />
+                      )}
                     </div>
                   )}
                 </List.Item>

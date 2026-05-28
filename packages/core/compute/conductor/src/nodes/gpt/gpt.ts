@@ -14,7 +14,7 @@ import * as Struct from 'effect/Struct';
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Operation, OperationRegistry, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -60,7 +60,7 @@ export const GptInput = Schema.Struct({
    * History messages.
    * Cannot be used together with `conversation`.
    */
-  history: Schema.optional(Schema.Array(Message.Message)),
+  history: Schema.optional(Schema.Array(Type.getSchema(Message.Message))),
 
   /**
    * Tools to use.
@@ -74,7 +74,7 @@ export const GptOutput = Schema.Struct({
   /**
    * Messages emitted by the model.
    */
-  messages: Schema.Array(Message.Message),
+  messages: Schema.Array(Type.getSchema(Message.Message)),
 
   /**
    * Artifact emitted by the model.

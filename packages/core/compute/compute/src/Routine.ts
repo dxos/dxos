@@ -32,16 +32,15 @@ export const Routine = Schema.Struct({
   // TODO(burdon): Change to map?
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.routine', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--scroll--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.routine', '0.1.0')),
 );
 
-export interface Routine extends Schema.Schema.Type<typeof Routine> {}
-
+export type Routine = Type.InstanceType<typeof Routine>;
 export type MakeOptions = {
   name?: string;
   description?: string;

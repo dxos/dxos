@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -25,7 +25,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Subscription.Subscription.typename,
+        id: Type.getTypename(Subscription.Subscription),
         inputSchema: Subscription.CreateSubscriptionSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -44,7 +44,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Magazine.Magazine.typename,
+        id: Type.getTypename(Magazine.Magazine),
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {

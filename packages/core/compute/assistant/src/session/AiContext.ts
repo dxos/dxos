@@ -33,10 +33,9 @@ export const Binding = Schema.Struct({
     added: Schema.Array(Ref.Ref(Obj.Unknown)),
     removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
-}).pipe(Type.object(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
 
-export interface Binding extends Schema.Schema.Type<typeof Binding> {}
-
+export type Binding = Type.InstanceType<typeof Binding>;
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
   objects: Ref.Ref<Obj.Unknown>[];
@@ -154,7 +153,7 @@ export class Binder extends Resource {
       await this._updateBindings(results);
       log('sync complete', {
         blueprints: this._registry.get(this._blueprints).length,
-        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
+        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Blueprint.getKey(bp)),
       });
     }
   }
@@ -199,13 +198,13 @@ export class Binder extends Resource {
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
       const uri = Obj.getURI(obj);
-      return uri != null && reducedBlueprintDxns.has(uri);
+      return uri != null && reducedBlueprintDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const uri = Obj.getURI(obj);
       return uri != null && reducedObjectDxns.has(uri);
     });
-    const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
+    const mergedBlueprints = this._mergeInto(filteredBlueprints, keyedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._blueprints, mergedBlueprints);
@@ -408,7 +407,7 @@ export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
       yield* Effect.promise(() => binder.bind({ blueprints, objects }));
     });
 
-  static findObjects = <T extends Type.AnyEntity>(type: T): Effect.Effect<Schema.Schema.Type<T>[], never, Service> => {
+  static findObjects = <T extends Type.AnyObj>(type: T): Effect.Effect<Type.InstanceType<T>[], never, Service> => {
     return Effect.gen(function* () {
       const { binder } = yield* Service;
       return binder.getObjects().filter(Obj.instanceOf(type));

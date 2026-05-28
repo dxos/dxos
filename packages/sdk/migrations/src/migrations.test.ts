@@ -26,7 +26,7 @@ Migrations.define('test', [
       const objects = await space.db.query(Filter.props<any>({ namespace: 'test' })).run();
       for (const object of objects) {
         await builder.migrateObject(object.id, ({ data }) => ({
-          schema: TestSchema.Expando,
+          type: TestSchema.Expando,
           props: { namespace: data.namespace, count: 2 },
         }));
       }
@@ -39,7 +39,7 @@ Migrations.define('test', [
       const objects = await space.db.query(Filter.props<any>({ namespace: 'test' })).run();
       for (const object of objects) {
         await builder.migrateObject(object.id, ({ data }) => ({
-          schema: TestSchema.Expando,
+          type: TestSchema.Expando,
           props: { namespace: data.namespace, count: data.count * 3 },
         }));
       }

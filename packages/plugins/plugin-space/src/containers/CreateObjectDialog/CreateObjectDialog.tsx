@@ -94,7 +94,8 @@ export const CreateObjectDialog = ({
       createObjectEntries
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => {
-          const schema = schemas?.find((s) => Type.getTypename(s) === entry.id);
+          const type = schemas?.find((s) => Type.getTypename(s) === entry.id);
+          const schema = type && Type.getSchema(type);
           const iconAnnotation = schema ? Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined) : undefined;
           return {
             id: entry.id,

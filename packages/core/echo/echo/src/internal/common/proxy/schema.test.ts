@@ -6,16 +6,33 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { createEchoSchema } from '../../../testing';
+import * as Type from '../../../Type';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
 import { EchoObjectSchema } from '../../Entity';
 
-// TODO(dmaretskyi): Comment.
+// Test-local: introspect a Type.Type entity's properties via its rebuilt Effect
+// Schema, filter the implicit `id` field, and unwrap `T | undefined` optionality.
+const getProperties = (type: Type.Type): SchemaAST.PropertySignature[] => {
+  const ast = Type.getSchema(type).ast;
+  invariant(SchemaAST.isTypeLiteral(ast));
+  return [...ast.propertySignatures]
+    .filter((p) => p.name !== 'id')
+    .map((p) => {
+      if (!SchemaAST.isUnion(p.type)) {
+        return p;
+      }
+      const nonUndefined = p.type.types.find((t) => !SchemaAST.isUndefinedKeyword(t))!;
+      return { ...p, type: nonUndefined } as SchemaAST.PropertySignature;
+    });
+};
+
 const EmptySchemaType = Schema.Struct({}).pipe(EchoObjectSchema(DXN.make('com.example.type.empty', '0.1.0')));
 
-interface EmptySchemaType extends Schema.Schema.Type<typeof EmptySchemaType> {}
+type EmptySchemaType = Type.InstanceType<typeof EmptySchemaType>;
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
@@ -24,8 +41,8 @@ describe('dynamic schema', () => {
       field2: Schema.Boolean,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
-    const registered = createEchoSchema(TestSchema);
-    expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
+    const registered = createEchoSchema(Type.getSchema(TestSchema));
+    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', SchemaAST.stringKeyword],
       ['field2', SchemaAST.booleanKeyword],
     ]);
@@ -36,21 +53,21 @@ describe('dynamic schema', () => {
       field1: Schema.String,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
-    const registered = createEchoSchema(TestSchema);
-    registered.addFields({ field2: Schema.Boolean });
-    expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
+    const registered = createEchoSchema(Type.getSchema(TestSchema));
+    Type.addFields(registered, { field2: Schema.Boolean });
+    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', SchemaAST.stringKeyword],
       ['field2', SchemaAST.booleanKeyword],
     ]);
   });
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
-    const registered = createEchoSchema(EmptySchemaType);
-    registered.addFields({ field1: Schema.String });
-    registered.addFields({ field2: Schema.Boolean });
-    registered.addFields({ field3: Schema.Number });
-    registered.updateFields({ field4: Schema.Boolean, field2: Schema.String });
-    expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
+    const registered = createEchoSchema(Type.getSchema(EmptySchemaType));
+    Type.addFields(registered, { field1: Schema.String });
+    Type.addFields(registered, { field2: Schema.Boolean });
+    Type.addFields(registered, { field3: Schema.Number });
+    Type.updateFields(registered, { field4: Schema.Boolean, field2: Schema.String });
+    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', SchemaAST.stringKeyword],
       ['field2', SchemaAST.stringKeyword],
       ['field3', SchemaAST.numberKeyword],
@@ -59,12 +76,12 @@ describe('dynamic schema', () => {
   });
 
   test('removeColumns', async () => {
-    const registered = createEchoSchema(EmptySchemaType);
-    registered.addFields({ field1: Schema.String });
-    registered.addFields({ field2: Schema.Boolean });
-    registered.addFields({ field3: Schema.Number });
-    registered.removeFields(['field2']);
-    expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
+    const registered = createEchoSchema(Type.getSchema(EmptySchemaType));
+    Type.addFields(registered, { field1: Schema.String });
+    Type.addFields(registered, { field2: Schema.Boolean });
+    Type.addFields(registered, { field3: Schema.Number });
+    Type.removeFields(registered, ['field2']);
+    expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', SchemaAST.stringKeyword],
       ['field3', SchemaAST.numberKeyword],
     ]);
@@ -73,60 +90,18 @@ describe('dynamic schema', () => {
   test('schema manipulations preserve annotations', async () => {
     const metaNamespace = 'dxos.test';
     const metaInfo = { maxLength: 10 };
-    const registered = createEchoSchema(EmptySchemaType);
-    registered.addFields({
+    const registered = createEchoSchema(Type.getSchema(EmptySchemaType));
+    Type.addFields(registered, {
       field1: Schema.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
       field2: Schema.String,
     });
-    registered.addFields({ field3: Schema.String });
-    registered.updateFields({ field3: Schema.Boolean });
-    registered.removeFields(['field2']);
-    expect(getTypeAnnotation(registered)).to.deep.contain({
+    Type.addFields(registered, { field3: Schema.String });
+    Type.updateFields(registered, { field3: Schema.Boolean });
+    Type.removeFields(registered, ['field2']);
+    expect(getTypeAnnotation(Type.getSchema(registered))).to.deep.contain({
       typename: 'com.example.type.empty',
       version: '0.1.0',
     });
-    expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
-  });
-
-  test('updates typename', async ({ expect }) => {
-    // Create schema with some fields and annotations.
-    const registered = createEchoSchema(EmptySchemaType);
-    const originalVersion = registered.persistentSchema.version;
-    registered.addFields({
-      name: Schema.String.pipe(PropertyMeta('test', { maxLength: 10 })),
-      age: Schema.Number,
-    });
-
-    // First update.
-    const newTypename1 = 'com.example.type.individual';
-    registered.updateTypename(newTypename1);
-
-    // Basic typename update checks.
-    expect(registered.typename).toBe(newTypename1);
-    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename1}:${originalVersion}`);
-    expect(registered.jsonSchema.typename).toBe(newTypename1);
-
-    // Version preservation check.
-    expect(registered.persistentSchema.version).toBe(originalVersion);
-
-    // Field preservation check.
-    const properties = registered.getProperties();
-    expect(properties).toHaveLength(2);
-    expect(properties[0].name).toBe('name');
-
-    // Annotation preservation check.
-    const nameMeta = getPropertyMetaAnnotation(properties[0], 'test');
-    expect(nameMeta).toEqual({ maxLength: 10 });
-
-    // Second update to ensure multiple updates work.
-    const newTypename2 = 'com.example.type.person';
-    registered.updateTypename(newTypename2);
-    expect(registered.typename).toBe(newTypename2);
-    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename2}:${originalVersion}`);
-    expect(registered.jsonSchema.typename).toBe(newTypename2);
-    expect(getTypeAnnotation(registered)).to.deep.contain({
-      typename: 'com.example.type.person',
-      version: '0.1.0',
-    });
+    expect(getPropertyMetaAnnotation(getProperties(registered)[0], metaNamespace)).to.deep.eq(metaInfo);
   });
 });

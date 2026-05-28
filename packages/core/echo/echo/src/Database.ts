@@ -19,8 +19,10 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal/Annotation';
 import { type AnyProperties } from './internal/common/types';
+// Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
+// Database → internal/Entity → entity → JsonSchema → Ref → Database.
+import { isInstanceOf } from './internal/Entity/type-uri';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
@@ -206,11 +208,11 @@ export const resolve: {
   <S extends Type.AnyEntity>(
     ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
   ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
@@ -227,7 +229,9 @@ export const resolve: {
     if (!object) {
       return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
     }
-    invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
+    // `isInstanceOf` uses a conditional generic that TS can't resolve through
+    // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
+    invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'))) as any;
 
@@ -323,7 +327,7 @@ export const runQueryFirst: {
  */
 export const registerSchema = (
   input: SchemaRegistry.RegisterSchemaInput[],
-): Effect.Effect<Type.RuntimeType[], never, Service> =>
+): Effect.Effect<Type.Type[], never, Service> =>
   Service.pipe(
     Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
     Effect.withSpan('Database.registerSchema'),
@@ -335,7 +339,7 @@ export const registerSchema = (
 // TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.
 export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
   schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, Service> =>
+): Effect.Effect<QueryResult.QueryResult<Type.Type>, never, Service> =>
   Service.pipe(
     Effect.map(({ db }) => db.schemaRegistry.query(schemaQueryOptions)),
     Effect.withSpan('Database.schemaQuery'),
@@ -346,7 +350,7 @@ export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Qu
  */
 export const runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
   schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
+): Effect.Effect<Type.Type[], never, Service> =>
   schemaQuery(schemaQueryOptions).pipe(
     Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
   );

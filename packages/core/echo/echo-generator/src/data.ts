@@ -38,13 +38,13 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = Schema.Struct({
     title: Schema.String.annotations({ description: 'title of the document' }),
     content: Schema.String,
-  }).pipe(Type.object(DXN.make(TestSchemaType.document, '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.document, '0.1.0')));
 
   const organization = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the company or organization' }),
     website: Schema.optional(Schema.String.annotations({ description: 'public website URL' })),
     description: Schema.String.annotations({ description: 'short summary of the company' }),
-  }).pipe(Type.object(DXN.make(TestSchemaType.organization, '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.organization, '0.1.0')));
 
   const contact = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the person' }),
@@ -52,7 +52,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     org: Schema.optional(Ref.Ref(organization)),
     lat: Schema.optional(Schema.Number),
     lng: Schema.optional(Schema.Number),
-  }).pipe(Type.object(DXN.make(TestSchemaType.contact, '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.contact, '0.1.0')));
 
   const project = Schema.Struct({
     name: Schema.String.annotations({ description: 'name of the project' }),
@@ -63,7 +63,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     priority: Schema.Number,
     active: Schema.Boolean,
     org: Schema.optional(Ref.Ref(organization)),
-  }).pipe(Type.object(DXN.make(TestSchemaType.project, '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make(TestSchemaType.project, '0.1.0')));
 
   return {
     [TestSchemaType.document]: document,

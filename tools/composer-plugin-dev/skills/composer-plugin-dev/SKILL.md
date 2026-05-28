@@ -44,7 +44,7 @@ Each topic below links to a focused reference file under `references/`. Read the
 
 ### Data
 
-8. **[ECHO types & schemas](references/types-schema.md)** — `Type.object({ typename, version })`, `LabelAnnotation`, `Annotation.IconAnnotation`, namespace re-export (`export * as Foo from './Foo'`), `make()` factory using `Obj.make()`, `FormInputAnnotation`.
+8. **[ECHO types & schemas](references/types-schema.md)** — `Type.makeObject({ typename, version })`, `LabelAnnotation`, `Annotation.IconAnnotation`, namespace re-export (`export * as Foo from './Foo'`), `make()` factory using `Obj.make()`, `FormInputAnnotation`.
 9. **[Translations](references/translations.md)** — keyed by **typename** (object labels) **and** `meta.id` (plugin-scoped strings). `useTranslation(meta.id)` in components.
 
 ### Behavior — keep it out of the UI

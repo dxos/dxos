@@ -18,6 +18,7 @@ import {
   SchemaId,
   SelfURIId,
   SnapshotKindId,
+  TypeEntityId,
   TypeId,
 } from '../common/types';
 
@@ -84,6 +85,7 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   // Type introspection symbols.
   copySymbolProperty(source, snapshot, TypeId);
   copySymbolProperty(source, snapshot, SchemaId);
+  copySymbolProperty(source, snapshot, TypeEntityId);
   copySymbolProperty(source, snapshot, SelfURIId);
 
   // Database reference (required for Obj.getDatabase to work on snapshots).

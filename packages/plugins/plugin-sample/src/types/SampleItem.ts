@@ -38,10 +38,6 @@ export const SampleItem = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-  // `Type.object` registers this schema as an ECHO type with a globally unique typename.
-  // The typename is used for storage, queries, and cross-plugin type resolution.
-  Type.object(DXN.make('org.dxos.type.sample', '0.1.0')),
-
   // `LabelAnnotation` tells the framework which field(s) to use as the display label.
   // The navigation tree, search results, and breadcrumbs all use this.
   LabelAnnotation.set(['name']),
@@ -52,11 +48,14 @@ export const SampleItem = Schema.Struct({
     icon: 'ph--book-open--regular',
     hue: 'cyan',
   }),
+  // `Type.makeObject` registers this schema as an ECHO type with a globally unique typename.
+  // The typename is used for storage, queries, and cross-plugin type resolution.
+  Type.makeObject(DXN.make('org.dxos.type.sample', '0.1.0')),
 );
 
 // The interface provides the TypeScript instance type for use in type positions.
 // By convention, the namespace has `.SampleItem` as the type and the schema as the value.
-export interface SampleItem extends Schema.Schema.Type<typeof SampleItem> {}
+export type SampleItem = Type.InstanceType<typeof SampleItem>;
 
 // Factory function for creating instances. `Obj.make` creates an ECHO-compatible
 // reactive object that can be stored in a space's database.

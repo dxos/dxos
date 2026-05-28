@@ -63,8 +63,7 @@ export const Template = Schema.Struct({
   inputs: Schema.optional(Schema.Array(Input)),
 });
 
-export interface Template extends Schema.Schema.Type<typeof Template> {}
-
+export type Template = Schema.Schema.Type<typeof Template>;
 export type MakeProps = Partial<{ id: string; source: string; inputs: Input[] }>;
 
 export const make = ({ id, source, inputs = [] }: MakeProps = {}): Template => ({

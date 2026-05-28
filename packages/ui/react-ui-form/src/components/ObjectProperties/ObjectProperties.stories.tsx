@@ -30,21 +30,21 @@ import { ObjectProperties } from './ObjectProperties';
 const Author = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.object(DXN.make('org.dxos.test.author', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'blue' }),
+  Type.makeObject(DXN.make('org.dxos.test.author', '0.1.0')),
 );
-type Author = Schema.Schema.Type<typeof Author>;
+type Author = Type.InstanceType<typeof Author>;
 
 const Article = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
   authors: Schema.Array(Ref.Ref(Author)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.test.article', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'green' }),
+  Type.makeObject(DXN.make('org.dxos.test.article', '0.1.0')),
 );
-type Article = Schema.Schema.Type<typeof Article>;
+type Article = Type.InstanceType<typeof Article>;
 
 //
 // `Note` mirrors the `Subscription.Feed` shape: a required `Ref` field
@@ -54,31 +54,31 @@ type Article = Schema.Schema.Type<typeof Article>;
 // backing object and links it at create time. `cursor` is an optional hidden
 // field included to exercise the same path for non-required hidden fields.
 //
-const NoteBacking = Schema.Struct({}).pipe(Type.object(DXN.make('org.dxos.test.noteBacking', '0.1.0')));
-type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
+const NoteBacking = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.test.noteBacking', '0.1.0')));
+type NoteBacking = Type.InstanceType<typeof NoteBacking>;
 
 const Note = Schema.Struct({
   title: Schema.String,
   cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   backing: Ref.Ref(NoteBacking).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.test.note', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'amber' }),
   FactoryAnnotation.set(((values: any) =>
     Obj.make(Note, { ...values, backing: Ref.make(Obj.make(NoteBacking, {})) })) as FactoryFn),
+  Type.makeObject(DXN.make('org.dxos.test.note', '0.1.0')),
 );
-type Note = Schema.Schema.Type<typeof Note>;
+type Note = Type.InstanceType<typeof Note>;
 
 const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   notes: Schema.Array(Ref.Ref(Note)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.test.notebook', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'amber' }),
+  Type.makeObject(DXN.make('org.dxos.test.notebook', '0.1.0')),
 );
-type Notebook = Schema.Schema.Type<typeof Notebook>;
+type Notebook = Type.InstanceType<typeof Notebook>;
 
 //
 // Stories.

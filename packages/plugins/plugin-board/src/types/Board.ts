@@ -16,15 +16,15 @@ export const Board = Schema.Struct({
   items: Ref.Ref(Obj.Unknown).pipe(Schema.Array, FormInputAnnotation.set(false)),
   layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.board', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--squares-four--regular',
     hue: 'green',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.board', '0.1.0')),
 );
 
-export interface Board extends Schema.Schema.Type<typeof Board> {}
+export type Board = Type.InstanceType<typeof Board>;
 
 export const makeBoard = (props: Partial<Obj.MakeProps<typeof Board>> = {}) =>
   Obj.make(Board, {
