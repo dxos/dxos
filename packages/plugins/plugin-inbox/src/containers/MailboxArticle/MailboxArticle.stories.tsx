@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
@@ -26,7 +27,7 @@ import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
-const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
+const MockDeckOperationsPlugin = Plugin.define({ id: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'), name: 'Mock Deck Ops' }).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
       Effect.succeed(

@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -32,7 +33,7 @@ const DefaultStory = () => {
     random.helpers.multiple(
       () =>
         PluginNS.define({
-          id: `org.dxos.plugin.plugin-${random.string.uuid()}`,
+          id: DXN.make('org.dxos.plugin.test'),
           name: `${random.commerce.productName()}`,
           description: random.lorem.sentences(Math.ceil(Math.random() * 3)),
           tags: random.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),

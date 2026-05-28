@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import { DXN } from '@dxos/keys';
 import {
   ActivationEvent,
   ActivationEvents,
@@ -265,7 +266,7 @@ type StoryPluginOptions = {
 };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: 'com.example.plugin.testing',
+  id: DXN.make('com.example.plugin.testing'),
   name: 'Testing',
 }).pipe(
   Plugin.addModule({

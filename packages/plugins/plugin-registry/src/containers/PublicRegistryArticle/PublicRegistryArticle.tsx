@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Registry, Plugin, UrlLoader } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
@@ -32,7 +33,7 @@ const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
     meta: {
-      id: plugin.id,
+      id: DXN.make(plugin.id),
       name: plugin.name,
       description: plugin.description,
       homePage: plugin.homePage,

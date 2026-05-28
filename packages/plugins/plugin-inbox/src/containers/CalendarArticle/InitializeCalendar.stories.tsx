@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
@@ -27,7 +28,7 @@ import { InitializeCalendar } from './InitializeCalendar';
 // Contributes a stub `integration--auth` surface so stories can exercise the
 // empty-state path that delegates to an installed integration plugin without
 // pulling in `@dxos/plugin-integration`.
-const MockAuthSurfacePlugin = Plugin.define({ id: 'story.mock-auth-surface', name: 'Mock Auth Surface' }).pipe(
+const MockAuthSurfacePlugin = Plugin.define({ id: DXN.make('org.dxos.plugin.inbox.story.mockAuthSurface'), name: 'Mock Auth Surface' }).pipe(
   AppPlugin.addSurfaceModule({
     activate: () =>
       Effect.succeed(

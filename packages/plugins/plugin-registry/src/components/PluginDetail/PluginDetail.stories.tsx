@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -29,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     plugin: Plugin.define({
-      id: 'com.example.plugin.test',
+      id: DXN.make('com.example.plugin.test'),
       name: 'Test Plugin',
       author: 'DXOS',
       description: random.lorem.paragraphs(2),

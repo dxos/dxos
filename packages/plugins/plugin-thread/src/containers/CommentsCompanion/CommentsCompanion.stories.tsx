@@ -12,6 +12,7 @@ import React, { useEffect, useMemo } from 'react';
 import { AiModelResolver } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapability } from '@dxos/app-framework/ui';
 import {
@@ -115,7 +116,7 @@ const aiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
  * (no network) or `StoryLiveAgentPlugin` (real Anthropic via DXOS edge),
  * selected per-story via the `liveAgent` arg.
  */
-const StoryGraphPlugin = Plugin.define({ id: 'story-graph', name: 'Story Graph' }).pipe(
+const StoryGraphPlugin = Plugin.define({ id: DXN.make('org.dxos.plugin.thread.story.storyGraph'), name: 'Story Graph' }).pipe(
   AppPlugin.addAppGraphModule({
     activate: Effect.fnUntraced(function* () {
       const capabilities = yield* Capability.Service;
@@ -163,7 +164,7 @@ const StoryGraphPlugin = Plugin.define({ id: 'story-graph', name: 'Story Graph' 
  * Loaded BEFORE ThreadPlugin so its `AgentRunner` contribution wins over
  * ThreadPlugin's default LLM-backed runner.
  */
-const StoryStubAgentPlugin = Plugin.define({ id: 'story-stub-agent', name: 'Story Stub Agent' }).pipe(
+const StoryStubAgentPlugin = Plugin.define({ id: DXN.make('org.dxos.plugin.thread.story.storyStubAgent'), name: 'Story Stub Agent' }).pipe(
   Plugin.addModule({
     id: 'story-stub-agent.runner',
     activatesOn: ActivationEvents.Startup,
@@ -177,7 +178,7 @@ const StoryStubAgentPlugin = Plugin.define({ id: 'story-stub-agent', name: 'Stor
  * ThreadPlugin's default `AgentRunner` routes through Anthropic via the DXOS
  * edge. Used by the WithLiveAgent variant.
  */
-const StoryLiveAgentPlugin = Plugin.define({ id: 'story-live-agent', name: 'Story Live Agent' }).pipe(
+const StoryLiveAgentPlugin = Plugin.define({ id: DXN.make('org.dxos.plugin.thread.story.storyLiveAgent'), name: 'Story Live Agent' }).pipe(
   Plugin.addModule({
     id: 'story-live-agent.ai-service',
     activatesOn: ActivationEvents.Startup,

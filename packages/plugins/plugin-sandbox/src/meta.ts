@@ -3,10 +3,11 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.sandbox',
+  id: DXN.make('org.dxos.plugin.sandbox'),
   name: 'Sandbox',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
