@@ -335,4 +335,3 @@ export const registerType = (
     Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.registry.register(input))),
     Effect.withSpan('Database.registerType'),
   );
-
