@@ -83,16 +83,15 @@ export class SpacesDumper {
       const types = await space.db
         .query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
         .run();
-      const schemas = [...types];
-      for (const schema of schemas) {
-        const objects = await space.db.query(Filter.type(schema)).run();
-        const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, schema);
+      for (const type of types) {
+        const objects = await space.db.query(Filter.type(type)).run();
+        const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, type);
         const actualIds = objects.map((obj) => obj.id).sort();
         const expectedIds = expectedObjects.map((obj) => obj.id).sort();
         if (!isEqual(actualIds, expectedIds)) {
           log.warn('object ids mismatch', {
             spaceId: space.id,
-            schema: Type.getURI(schema)?.toString(),
+            schema: Type.getURI(type)?.toString(),
             actualIds,
             expectedIds,
           });

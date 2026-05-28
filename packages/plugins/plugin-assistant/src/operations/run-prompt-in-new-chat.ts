@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                 const bindingProps: Parameters<AiContext.Binder['bind']>[0] = {};
 
                 if (objects && objects.length > 0) {
-                  bindingProps.objects = objects.map((obj: any) => Ref.make(obj));
+                  bindingProps.objects = objects.map((obj) => Ref.make(obj));
                 }
 
                 if (blueprints && blueprints.length > 0) {

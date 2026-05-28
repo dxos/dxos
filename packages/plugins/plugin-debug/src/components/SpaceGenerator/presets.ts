@@ -179,7 +179,7 @@ export const generator = () => ({
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).from(Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queueDxn)}:${EchoURI.getObjectId(queueDxn)}`)),
+            ).from(Scope.feed(Obj.getURI(mailboxFeed))),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
           const contactsView = ViewModel.make({
