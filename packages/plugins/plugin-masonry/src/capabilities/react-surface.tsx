@@ -24,8 +24,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, [Masonry.Masonry, View.View]),
         ),
         component: ({ data, role }) => {
-          const subject = data.subject;
-          const view = Obj.instanceOf(View.View, subject) ? subject : subject.view;
+          const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view;
           return <MasonryContainer view={view} role={role} />;
         },
       }),
