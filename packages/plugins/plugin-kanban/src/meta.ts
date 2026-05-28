@@ -3,7 +3,7 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
+import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
