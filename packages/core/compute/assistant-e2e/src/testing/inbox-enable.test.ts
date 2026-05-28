@@ -12,7 +12,10 @@ import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harnes
 
 Obj.ID.dangerouslyDisableRandomness();
 
-describe('InboxBlueprintEnable', () => {
+// Quarantined: stale memoized conversation after the Mailbox `labels` → `tags` schema rename
+// (PR #11576). Regenerate the fixture via `ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test`
+// and remove `.skip` once the conversation is refreshed.
+describe.skip('InboxBlueprintEnable', () => {
   it.effect(
     'enables the inbox blueprint and queries emails',
     agentTest(

@@ -21,7 +21,7 @@ import {
   ReactSurface,
 } from '#capabilities';
 import { meta } from '#meta';
-import { ContactMessageExtractor } from '#operations';
+import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { translations } from '#translations';
 import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
 
@@ -52,6 +52,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     id: 'contact-extractor',
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
+  }),
+  Plugin.addModule({
+    id: 'summarize-extractor',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, SummarizeMessageExtractor)),
   }),
   Plugin.make,
 );
