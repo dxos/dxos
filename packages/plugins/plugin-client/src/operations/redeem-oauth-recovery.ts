@@ -7,18 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
-import { invariant } from '@dxos/invariant';
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
+import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient } from '../constants';
 import { ClientCapabilities } from '../types';
 import { RedeemOAuthRecovery } from './definitions';
 
-/** Scopes requested during atproto OAuth recovery. `transition:generic` gives the full
- * offline-access token needed to identify the user and store credentials in the space. */
-const ATPROTO_SCOPES = ['atproto', 'transition:generic', 'transition:email'];
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
@@ -36,11 +32,8 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-      invariant(edgeUrl, 'Edge URL not configured.');
-
       const provider = data.provider as OAuthProvider;
-      const edgeClient = new EdgeHttpClient(edgeUrl);
+      const edgeClient = createEdgeHttpClient(client);
       // Placeholder; the recovery flow does not register a refresh cron under this id. Kept as a
       // valid ObjectId/ULID to satisfy InitiateOAuthFlowRequest validation.
       const accessTokenId = ObjectId.random();
@@ -51,7 +44,7 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
         provider,
         spaceId: SpaceId.random(),
         accessTokenId,
-        scopes: ATPROTO_SCOPES,
+        scopes: [...ATPROTO_OAUTH_SCOPES],
         purpose: 'recovery',
         // atproto requires a login hint (handle or DID) to resolve the user's PDS/auth server.
         ...(data.loginHint ? { loginHint: data.loginHint } : {}),

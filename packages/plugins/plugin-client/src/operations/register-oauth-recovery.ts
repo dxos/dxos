@@ -7,19 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
-import { invariant } from '@dxos/invariant';
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
-import { oauthRecoveryPendingKey } from '../constants';
+import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient, oauthRecoveryPendingKey } from '../constants';
 import { ClientCapabilities } from '../types';
 import { RegisterOAuthRecovery } from './definitions';
 
-/** Scopes requested during atproto OAuth registration. `transition:generic` gives the full
- * offline-access token that can be used for space operations after registration. */
-const ATPROTO_SCOPES = ['atproto', 'transition:generic', 'transition:email'];
 
 /**
  * Phase 1 of OAuth-first recovery registration (redirect flow).
@@ -36,11 +31,8 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
-      const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-      invariant(edgeUrl, 'Edge URL not configured.');
-
       const provider = data.provider as OAuthProvider;
-      const edgeClient = new EdgeHttpClient(edgeUrl);
+      const edgeClient = createEdgeHttpClient(client);
       // accessTokenId doubles as: (a) the cron id in SpaceSecretsObject (≤26 chars for the
       // scheduled-run storage key) and (b) the ECHO id of the AccessToken object the recovery
       // finalizer creates in the personal space. ULIDs satisfy both — they are exactly 26 chars
@@ -54,7 +46,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
         provider,
         spaceId: SpaceId.random(),
         accessTokenId,
-        scopes: ATPROTO_SCOPES,
+        scopes: [...ATPROTO_OAUTH_SCOPES],
         purpose: 'register',
         registerRecovery: true,
         // atproto requires a login hint (handle or DID) to resolve the user's PDS/auth server.
