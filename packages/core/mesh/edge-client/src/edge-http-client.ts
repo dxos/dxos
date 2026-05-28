@@ -20,6 +20,8 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EDGE_CLIENT_TAG_HEADER,
+  type CompleteOAuthRegistrationRequest,
+  type CompleteOAuthRegistrationResponse,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeFailure,
@@ -338,6 +340,14 @@ export class EdgeHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<InitiateOAuthFlowResponse> {
     return this._call(ctx, new URL('/oauth/initiate', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  public async completeOAuthRegistration(
+    ctx: Context,
+    body: CompleteOAuthRegistrationRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<CompleteOAuthRegistrationResponse> {
+    return this._call(ctx, new URL('/oauth/registration/complete', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //

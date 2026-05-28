@@ -363,6 +363,26 @@ export type OAuthFlowResult =
   | { success: true; accessToken: string; accessTokenId: string; recoveryProof?: string }
   | { success: false; reason: string };
 
+/**
+ * Phase 2 of OAuth-first recovery registration. Submitted after a local identity exists; routes the
+ * stashed OAuth refresh token into the personal space and writes the IdentityRecovery row.
+ */
+export type CompleteOAuthRegistrationRequest = {
+  registrationToken: string;
+  identityKey: string;
+  spaceKey: string;
+};
+
+export type CompleteOAuthRegistrationResponse = {
+  email?: string;
+  provider: OAuthProvider;
+  accessTokenId: string;
+  accessToken: string;
+  expiresInSeconds: number;
+  scopes: string[];
+  identifier: string;
+};
+
 export enum EdgeWebsocketProtocol {
   V0 = 'edge-ws-v0',
   /**

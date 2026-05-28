@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { Context as DxContext } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -25,16 +26,6 @@ import { createEdgeHttpClient } from './shared';
 const SOURCE_BY_PROVIDER: Record<string, string> = {
   [OAuthProvider.GOOGLE]: 'google.com',
   [OAuthProvider.ATPROTO]: 'atproto.local',
-};
-
-type CompleteRegistrationResult = {
-  email?: string;
-  provider: OAuthProvider;
-  accessTokenId: string;
-  accessToken: string;
-  expiresInSeconds: number;
-  scopes: string[];
-  identifier: string;
 };
 
 /**
@@ -69,7 +60,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 
       const result = yield* Effect.tryPromise({
         try: () =>
-          completeRegistration(edgeClient.baseUrl, {
+          edgeClient.completeOAuthRegistration(DxContext.default(), {
             registrationToken: data.registrationToken,
             identityKey,
             spaceKey,
@@ -103,24 +94,3 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 );
 
 export default handler;
-
-const completeRegistration = async (
-  baseUrl: string,
-  request: { registrationToken: string; identityKey: string; spaceKey: string },
-): Promise<CompleteRegistrationResult> => {
-  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/oauth/registration/complete`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-  });
-  // EdgeResponse.failure shape: { success: false, message: string, error?: { message? } } — the
-  // human-readable reason is at top-level `message`; `error` is only populated when an Error was
-  // thrown. Read both so we surface labeled `reason` strings returned via explicit failure().
-  const envelope = (await response.json()) as
-    | { success: true; data: CompleteRegistrationResult }
-    | { success: false; message?: string; error?: { message?: string } };
-  if (!envelope.success) {
-    throw new Error(envelope.message ?? envelope.error?.message ?? 'OAuth registration completion failed');
-  }
-  return envelope.data;
-};

@@ -109,11 +109,11 @@ export default Capability.makeModule(
       yield* Effect.forkDaemon(
         Effect.gen(function* () {
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
-          const { invokePromise } = yield* Capability.waitFor(Capabilities.OperationInvoker);
-          yield* Effect.tryPromise(() => finalizeRedirect(client, invokePromise, params)).pipe(
+          const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
+          yield* finalizeRedirect(client, invoker, params).pipe(
             Effect.catchAll((error) => Effect.sync(() => log.warn('oauth recovery finalize failed', { error }))),
+            Effect.ensuring(Effect.sync(() => deleteSnapshot(params.accessTokenId))),
           );
-          deleteSnapshot(params.accessTokenId);
         }),
       );
     }
@@ -121,14 +121,12 @@ export default Capability.makeModule(
   }),
 );
 
-const finalizeRedirect = async (
+const finalizeRedirect = Effect.fnUntraced(function* (
   client: Client,
-  invokePromise: Capabilities.OperationInvoker['invokePromise'],
+  invoker: Capabilities.OperationInvoker,
   params: RedirectParams,
-): Promise<void> => {
-  const closeDialog = async () => {
-    await invokePromise(LayoutOperation.UpdateDialog, { state: false }).catch(() => {});
-  };
+) {
+  const closeDialog = invoker.invoke(LayoutOperation.UpdateDialog, { state: false }).pipe(Effect.ignore);
 
   // Pre-identity failure from kms-service (e.g. duplicate OAuth registration). Surface a toast and
   // bail BEFORE attempting identity creation, so a re-registration doesn't leave a dangling local
@@ -147,13 +145,15 @@ const finalizeRedirect = async (
           ? 'This account is not registered for recovery. Please sign up first.'
           : `Could not complete OAuth recovery: ${params.error}`;
     log.warn('oauth recovery redirect: kms-service reported error', { error: params.error });
-    await invokePromise(LayoutOperation.AddToast, {
-      id: `oauth-recovery-error-${params.error}`,
-      title,
-      description,
-      icon: 'ph--warning-circle--regular',
-      duration: 10_000,
-    }).catch(() => {});
+    yield* invoker
+      .invoke(LayoutOperation.AddToast, {
+        id: `oauth-recovery-error-${params.error}`,
+        title,
+        description,
+        icon: 'ph--warning-circle--regular',
+        duration: 10_000,
+      })
+      .pipe(Effect.ignore);
     return;
   }
 
@@ -167,49 +167,45 @@ const finalizeRedirect = async (
     // Create the local identity now that the user has authenticated (OAuth-first ordering).
     let identity = client.halo.identity.get();
     if (!identity) {
-      const created = await invokePromise(ClientOperation.CreateIdentity, {});
-      if (created.error) {
-        throw created.error;
-      }
+      yield* invoker.invoke(ClientOperation.CreateIdentity, {});
       identity = client.halo.identity.get();
     }
     invariant(identity, 'identity should exist after create');
 
     // Route the stashed OAuth refresh token to the personal space + write the IdentityRecovery row.
-    const completeResult = await invokePromise(WelcomeOperation.CompleteOAuthRegistration, {
+    const completeResult = yield* invoker.invoke(WelcomeOperation.CompleteOAuthRegistration, {
       registrationToken: params.registrationToken,
     });
-    if (completeResult.error) {
-      throw completeResult.error;
-    }
     // Re-derive the verified email server-side from the registrationToken — it is never carried in
     // the redirect URL.
-    const email = completeResult.data?.email;
+    const email = completeResult?.email;
     invariant(email, 'OAuth provider did not return a verified email');
 
     // Redeem the invitation code with the verified email to mint the hub Account.
-    const result = await redeemAccountInvitation({
-      hubUrl: snapshot.hubUrl,
-      email,
-      identityKey: identity.identityKey.toHex(),
-      code: snapshot.code.replace(/-/g, '').toUpperCase(),
-    });
+    const result = yield* Effect.tryPromise(() =>
+      redeemAccountInvitation({
+        hubUrl: snapshot.hubUrl,
+        email,
+        identityKey: identity.identityKey.toHex(),
+        code: snapshot.code.replace(/-/g, '').toUpperCase(),
+      }),
+    );
     if ('accountId' in result) {
       log.info('account created', { accountId: result.accountId });
     }
-    void invokePromise(ClientOperation.CreateAgent);
-    await closeDialog();
+    yield* invoker.schedule(ClientOperation.CreateAgent);
+    yield* closeDialog;
     return;
   }
 
   if (params.recoveryProof) {
     const identityService = client.services.services.IdentityService;
     invariant(identityService, 'IdentityService not available');
-    await identityService.recoverIdentity(
-      { recoveryProof: params.recoveryProof },
-      { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
+    const recoveryProof = params.recoveryProof;
+    yield* Effect.tryPromise(() =>
+      identityService.recoverIdentity({ recoveryProof }, { timeout: RECOVER_IDENTITY_RPC_TIMEOUT }),
     );
-    void invokePromise(ClientOperation.CreateAgent);
-    await closeDialog();
+    yield* invoker.schedule(ClientOperation.CreateAgent);
+    yield* closeDialog;
   }
-};
+});
