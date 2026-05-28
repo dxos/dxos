@@ -37,6 +37,10 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
+    // Monotonic activation token: each invocation captures its own sequence; only the
+    // most recent activation is allowed to commit popover state. Prevents a slow
+    // open (async lookup) from clobbering a later close that fires while it's in flight.
+    let activationSequence = 0;
     const handleAnchorActivate = async ({
       dxn,
       label,
@@ -47,6 +51,7 @@ export default Capability.makeModule(
       props,
       state,
     }: DxAnchorActivate) => {
+      const sequence = ++activationSequence;
       const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
       // Explicit close: callers pass `state: false` on pointer-leave to dismiss
@@ -76,6 +81,11 @@ export default Capability.makeModule(
       }
       const result = await handlePreviewLookup(client, space, { dxn, label });
       if (!result) {
+        return;
+      }
+      // A newer activation (open or close) arrived while the lookup was in flight; bail
+      // out so we don't clobber the latest state.
+      if (sequence !== activationSequence) {
         return;
       }
 

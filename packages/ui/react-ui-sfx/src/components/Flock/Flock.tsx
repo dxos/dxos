@@ -140,24 +140,21 @@ const stepBoid = (
 };
 
 /**
- * Wrap-aware. Boids wrap on canvas edges, so consecutive trail positions can be
- * arbitrarily far apart — left edge to right edge — and lineTo'ing across that gap
- * would paint a streak across the whole canvas. Any segment longer than this is
- * treated as a wrap and broken into a fresh sub-path. Threshold is generous: max
- * physical velocity is < 1px/frame, so anything > a few pixels is a wrap.
- */
-const WRAP_GAP_SQ = 100 * 100;
-
-/**
  * Render a boid as a tapered, faded polyline + a solid head. Three stroke passes
  * cover ~thirds of the trail with decreasing lineWidth (head fatter than tail) and
  * decreasing alpha (head opaque, tail faint). This is ~10× cheaper than drawing
  * each trail position as its own arc, and gives a continuous curve instead of a
  * dotted streak when boids move fast.
+ *
+ * Wrap-aware: boids wrap on canvas edges, so consecutive trail positions can be
+ * up to (width, height) apart. Any segment that jumps further than half the
+ * canvas in either axis is treated as a wrap and broken into a fresh sub-path —
+ * otherwise the line would streak across the entire canvas.
  */
 const renderBoid = (
   b: FlockBoid,
   context: CanvasRenderingContext2D,
+  { width, height }: Dimensions,
   { radius, coloring }: Pick<TickConfig, 'radius' | 'coloring'>,
 ) => {
   const trail = b.trail ?? [];
@@ -191,9 +188,9 @@ const renderBoid = (
       context.beginPath();
       context.moveTo(trail[pass.from].x, trail[pass.from].y);
       for (let i = pass.from + 1; i <= pass.to; i++) {
-        const dx = trail[i].x - trail[i - 1].x;
-        const dy = trail[i].y - trail[i - 1].y;
-        if (dx * dx + dy * dy > WRAP_GAP_SQ) {
+        const dx = Math.abs(trail[i].x - trail[i - 1].x);
+        const dy = Math.abs(trail[i].y - trail[i - 1].y);
+        if (dx > width / 2 || dy > height / 2) {
           // Edge-wrap detected — start a fresh sub-path at this position so we
           // don't draw a line across the entire canvas to the wrapped point.
           context.moveTo(trail[i].x, trail[i].y);
@@ -318,7 +315,7 @@ const tick = (
   });
 
   boids.forEach((boid) => stepBoid(boid, { width, height }, config));
-  boids.forEach((boid) => renderBoid(boid, context, config));
+  boids.forEach((boid) => renderBoid(boid, context, { width, height }, config));
 };
 
 const generateFlockObstacles = (dimensions: Dimensions, numObstacles: number): FlockObstacle[] => {
@@ -378,7 +375,11 @@ export type FlockProps = ThemedClassName<{
   coloring?: FlockColoring;
   /** Per-boid render radius in pixels. */
   radius?: number;
-  /** Vapor trail factor, 0..20. */
+  /**
+   * Number of recent positions kept per boid; the rendered trail length, in frames.
+   * One position is recorded per simulation tick, so e.g. `trail={30}` is roughly a
+   * 0.5-second tail at 60 fps. Clamped to `Math.max(1, Math.round(trail))`.
+   */
   trail?: number;
   maxVelocity?: number;
   alignment?: number;
@@ -451,10 +452,18 @@ export const Flock = ({
 
   // Track the model's boid array via subscribe → setBoids. Per-tick position
   // mutations don't emit on the atom (by design), so this only fires on
-  // `model.setBoids(...)` and the initial sync.
+  // `model.setBoids(...)` and the initial sync. Reset each boid's renderer-owned
+  // trail so a `setBoids` that reuses boid identities doesn't carry stale
+  // segments from the previous scene into the next.
   useEffect(() => {
-    setBoids(model.boids);
-    return model.subscribe(() => setBoids(model.boids));
+    const sync = () => {
+      for (const boid of model.boids) {
+        boid.trail = [];
+      }
+      setBoids(model.boids);
+    };
+    sync();
+    return model.subscribe(sync);
   }, [model]);
 
   // Populate the model once the container dimensions are known and the model is
