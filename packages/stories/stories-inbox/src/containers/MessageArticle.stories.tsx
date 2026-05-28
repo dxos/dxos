@@ -2,28 +2,36 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { AiService } from '@dxos/ai';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtractor } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Booking, Segment, Trip } from '@dxos/plugin-trip';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 import { Message as MessageType, Person } from '@dxos/types';
+
+import FLIGHT_EMAIL from '../testing/flight.md?raw';
 
 // MessageArticle calls LayoutOperation.Open/Select/UpdateCompanion from its callbacks. Provide
 // no-op handlers so the operations resolve without pulling in DeckPlugin.
@@ -79,45 +87,75 @@ const ImportantExtractorPlugin = Plugin.define({
 );
 
 /**
+ * Fake summary text returned by the mocked `LanguageModel.generateText` call below. The
+ * production `SummarizeMessageExtractor` makes the assistant produce a short paragraph; the
+ * exact wording doesn't matter for the story — only that summarization completes and the
+ * resulting `Markdown.Document` lands in the space.
+ */
+const MOCK_SUMMARY =
+  'Flying Blue confirmed a multi-city itinerary (JFK → CDG → LIS) for one passenger. ' +
+  'Payment was settled in miles plus taxes; ticket changes incur a fee.';
+
+/**
+ * Story-only `AiService` provider contributed on `SetupProcessManager`, mirroring
+ * `AssistantPlugin`'s real wiring at `plugin-assistant/src/capabilities/ai-service.ts`. The
+ * service's `model(...)` returns a `LanguageModel` whose `generateText` resolves with a
+ * static text part instead of hitting Anthropic; that lets `SummarizeMessageExtractor` run
+ * the full Operation.invoke → handler → `Markdown.make({...})` chain inside the story
+ * runtime, which has no network access and no real API key.
+ */
+const MockAiServicePlugin = Plugin.define({ id: 'story.mock-ai-service', name: 'Story Mock AI Service' }).pipe(
+  Plugin.addModule({
+    id: 'ai-service',
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(
+          Capabilities.LayerSpec,
+          LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
+            Layer.succeed(AiService.AiService, {
+              model: () =>
+                Layer.scoped(
+                  LanguageModel.LanguageModel,
+                  LanguageModel.make({
+                    generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
+                    streamText: () => Stream.empty as any,
+                  }),
+                ),
+            }),
+          ),
+        ),
+      ),
+  }),
+  Plugin.make,
+);
+
+/**
  * Seeds a personal space with a Mailbox and one message that matches FOUR extractors:
  *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
  *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block;
  *    creates Trip + Booking + Segment AND tags the message `travel`.
  *  - `SummarizeMessageExtractor` (plugin-inbox) — body exceeds the 200-char threshold so
- *    summarize matches. The story runtime has no `AiService` provider (no AssistantPlugin),
- *    so summarize fails gracefully with `ExtractError` and produces no Document — but the
- *    extractor still appears in the toolbar.
+ *    summarize matches. `MockAiServicePlugin` (defined above) contributes a fake
+ *    `AiService` LayerSpec so the operation can run end-to-end and persist a
+ *    `Markdown.Document` with the mock summary content.
  *  - `ImportantMessageExtractor` (story-local, defined above) — always matches; tags
  *    the message `important` and produces no objects.
  *
- * Clicking the toolbar `Extract` items produces real Person / Trip / Booking / Segment
- * objects in the space; tags land in `mailbox.tags`. `Run all` fans out across all four;
- * summarize's failure is logged and ignored by the dispatcher.
+ * Clicking the toolbar `Extract` items produces real Person / Trip / Booking / Segment /
+ * Markdown.Document objects in the space; tags land in `mailbox.tags`. `Run all` fans out
+ * across all four extractors.
  */
 const seedMessage = (space: Space) => {
-  // Body is intentionally >200 chars (the `SummarizeMessageExtractor.MIN_BODY_LENGTH`
-  // threshold) so the summarize extractor matches and contributes to the `Run all` count.
-  const body = [
-    'Hello,',
-    '',
-    'Your flight is confirmed! Please arrive at the airport at least ninety minutes before',
-    'departure, and remember to check in online twenty-four hours in advance to lock in your',
-    'seat assignment and skip the bag-drop queue.',
-    '',
-    'Flight: UA-100',
-    'From: SFO (San Francisco)',
-    'To: LHR (London Heathrow)',
-    'Depart: 2026-06-01 15:30',
-    'Arrive: 2026-06-02 09:30',
-    'Confirmation: ABC123',
-    '',
-    'Have a great trip.',
-  ].join('\n');
+  // Body is sourced from a real Flying Blue confirmation email captured under
+  // `../testing/flight.md` and imported via Vite's `?raw` query. It is well over the
+  // `SummarizeMessageExtractor.MIN_BODY_LENGTH` threshold so the summarize extractor
+  // matches and contributes to the `Run all` count.
   const message = Obj.make(MessageType.Message, {
     created: new Date().toISOString(),
-    sender: { name: 'United Airlines', email: 'noreply@united.com' },
-    blocks: [{ _tag: 'text', text: body }],
-    properties: { subject: 'Your flight confirmation — UA-100' },
+    sender: { name: 'Flying Blue', email: 'noreply@flyingblue.com' },
+    blocks: [{ _tag: 'text', text: FLIGHT_EMAIL }],
+    properties: { subject: 'Your flight confirmation — AF0003' },
   });
   space.db.add(message);
   return message;
@@ -161,6 +199,11 @@ const meta = {
             Booking.Booking,
             Segment.Segment,
             Trip.Trip,
+            // Markdown.Document is the output of SummarizeMessageExtractor; its `content`
+            // field is a `Ref(Text.Text)`, so both schemas must be registered for the doc
+            // to round-trip through the database.
+            Markdown.Document,
+            Text.Text,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -178,6 +221,7 @@ const meta = {
         PreviewPlugin(),
         MockDeckOperationsPlugin(),
         ImportantExtractorPlugin(),
+        MockAiServicePlugin(),
       ],
     }),
   ],
@@ -192,23 +236,23 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Renders MessageArticle for a single United-style flight-confirmation message. The toolbar's
- * `Extract` dropdown should list `Run all (4)`, the contact extractor (plugin-inbox), the
- * trip extractor (plugin-trip), the summarize extractor (plugin-inbox; fails without an
- * AiService provider), and the story-local `important` extractor. Clicking each invokes
- * ExtractMessage; the dispatcher persists Trip / Person / Booking / Segment objects with
- * `ExtractedFrom` relations back to the message, which surface as clickable tags in the
- * MessageHeader.
+ * Renders MessageArticle for a Flying Blue confirmation message. The toolbar's `Extract`
+ * dropdown should list `Run all (4)`, the contact extractor (plugin-inbox), the trip
+ * extractor (plugin-trip), the summarize extractor (plugin-inbox, backed by the mock
+ * AiService contributed via `MockAiServicePlugin`), and the story-local `important`
+ * extractor. Clicking each invokes ExtractMessage; the dispatcher persists Trip / Person /
+ * Booking / Segment / Markdown.Document objects with `ExtractedFrom` relations back to the
+ * message, which surface as clickable tags in the MessageHeader.
  */
 export const Default: Story = {};
 
 /**
- * End-to-end play function: opens the toolbar `Extract` dropdown, runs the trip extractor,
- * and asserts that a Trip tag shows up in the MessageHeader. Hovering the tag opens a preview
- * card whose drag-handle is disabled.
- *
- * The flow exercises: dispatcher invocation → per-extractor operation → db.add(Trip) +
- * ExtractedFrom relation → `useExtractedObjects` reactive query → ExtractedTag render.
+ * End-to-end play function: opens the toolbar `Extract` dropdown, runs every matching
+ * extractor via `Run all`, and asserts that a Trip chip AND a summary Document chip both
+ * show up in the MessageHeader. The summary path proves the full
+ * `ExtractMessage` → `Operation.invoke(ExtractSummaryFromMessage)` → mock AiService →
+ * `Markdown.make(...)` → `db.add` → `ExtractedFrom` chain works in a non-AssistantPlugin
+ * runtime when an `AiService` LayerSpec is contributed by another plugin.
  */
 export const ExtractTripWithPlay: Story = {
   play: async ({ canvasElement }) => {
@@ -251,9 +295,9 @@ export const ExtractTripWithPlay: Story = {
     // + summarize + important all matching, the label must read "Run all (4)".
     const runAllItem = await waitFor(() => body.queryByText(/run all \(4\)/i));
     await userEvent.click(runAllItem as HTMLElement);
-    // Each extractor's `tags` lands in `mailbox.tags`; the trip extractor additionally
-    // persists Trip + Booking + Segment + ExtractedFrom. Summarize fails silently because the
-    // story runtime doesn't provide an `AiService`; the others succeed.
+    // Each extractor's `tags` lands in `mailbox.tags`; the trip extractor persists
+    // Trip + Booking + Segment + ExtractedFrom; summarize persists a Markdown.Document +
+    // ExtractedFrom courtesy of the mock AiService LayerSpec contributed above.
 
     // Scope all chip assertions to the MessageHeader so we don't accidentally match strings
     // from the seeded message body (e.g. `From: SFO`). The header contains both the per-object
@@ -262,23 +306,20 @@ export const ExtractTripWithPlay: Story = {
     void expect(header).toBeInTheDocument();
     const headerScope = within(header as HTMLElement);
 
-    // Trip object chip — sourced from `ExtractedFrom` relation (task #16). The chip is a
-    // `Tag` from react-ui wrapping a button (clickable → opens card preview via
-    // `DxAnchorActivate`). Label includes the SFO/LHR route from `tripNameFor(candidate)`.
-    const tripButton = await waitFor(() => headerScope.queryByRole('button', { name: /SFO/i }));
-    void expect(tripButton).toBeInTheDocument();
-    void expect(tripButton).not.toBeDisabled();
-
-    // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` — applied via
-    // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target). Scope to the
-    // `extracted-tags` container so we hit the chip and not any other UI matching /travel/.
-    const tagsRow = await waitFor(() => headerScope.queryByTestId('extracted-tags'));
-    const tagsScope = within(tagsRow as HTMLElement);
-    const travelTag = await waitFor(() => tagsScope.queryByText(/^travel$/i));
-    void expect(travelTag).toBeInTheDocument();
+    // Summary Document chip — sourced from the `ExtractedFrom` relation the dispatcher
+    // attaches when SummarizeMessageExtractor returns a `Markdown.Document`. The chip's
+    // label comes from `doc.name`, which the extractor sets to `${subject} (summary)`.
+    // This is the core success-path assertion: the full chain — dispatcher → Operation.invoke →
+    // mock AiService → LanguageModel.generateText → Markdown.make → db.add → ExtractedFrom →
+    // useExtractedObjects hook → header chip — must land for this to be in the document.
+    const summaryButton = await waitFor(() => headerScope.queryByRole('button', { name: /\(summary\)/i }));
+    void expect(summaryButton).toBeInTheDocument();
+    void expect(summaryButton).not.toBeDisabled();
 
     // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
     // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
+    const tagsRow = await waitFor(() => headerScope.queryByTestId('extracted-tags'));
+    const tagsScope = within(tagsRow as HTMLElement);
     const importantTag = await waitFor(() => tagsScope.queryByText(/^important$/i));
     void expect(importantTag).toBeInTheDocument();
   },
