@@ -18,36 +18,6 @@ import { ContentBlock, Message } from '@dxos/types';
 
 import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor';
 
-const MOCK_SUMMARY = 'A mock summary of the email body in two short sentences.';
-
-const LONG_BODY =
-  'The product team plans the next release in four parts: scoping, prototyping, ' +
-  'review, and rollout. Each phase has owners assigned from engineering and design. ' +
-  'Status updates are expected by end of week so stakeholders can plan ahead. ' +
-  'Please confirm receipt and respond with availability.';
-
-// Build a fake AiService whose `model(...)` returns a LanguageModel layer that always responds
-// with `MOCK_SUMMARY`, so the operation handler's `yield* LanguageModel.generateText(...)`
-// resolves to a deterministic value without hitting any real provider.
-const mockAiServiceLayer = Layer.succeed(AiService.AiService, {
-  model: () =>
-    Layer.scoped(
-      LanguageModel.LanguageModel,
-      LanguageModel.make({
-        generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
-        streamText: () => Stream.empty as any,
-      }),
-    ),
-});
-
-const makeMessage = (text: string, subject = 'Quarterly planning') =>
-  Obj.make(Message.Message, {
-    created: new Date().toISOString(),
-    sender: { email: 'planner@example.com' },
-    properties: { subject },
-    blocks: [ContentBlock.Text.make({ text })],
-  });
-
 describe('SummarizeMessageExtractor', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
@@ -102,3 +72,33 @@ describe('SummarizeMessageExtractor', () => {
     expect(text?.content).toBe(MOCK_SUMMARY);
   });
 });
+
+const MOCK_SUMMARY = 'A mock summary of the email body in two short sentences.';
+
+const LONG_BODY =
+  'The product team plans the next release in four parts: scoping, prototyping, ' +
+  'review, and rollout. Each phase has owners assigned from engineering and design. ' +
+  'Status updates are expected by end of week so stakeholders can plan ahead. ' +
+  'Please confirm receipt and respond with availability.';
+
+// Fake AiService whose `model(...)` returns a LanguageModel layer that always responds with
+// `MOCK_SUMMARY`, so the operation handler's `yield* LanguageModel.generateText(...)`
+// resolves to a deterministic value without hitting any real provider.
+const mockAiServiceLayer = Layer.succeed(AiService.AiService, {
+  model: () =>
+    Layer.scoped(
+      LanguageModel.LanguageModel,
+      LanguageModel.make({
+        generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
+        streamText: () => Stream.empty as any,
+      }),
+    ),
+});
+
+const makeMessage = (text: string, subject = 'Quarterly planning') =>
+  Obj.make(Message.Message, {
+    created: new Date().toISOString(),
+    sender: { email: 'planner@example.com' },
+    properties: { subject },
+    blocks: [ContentBlock.Text.make({ text })],
+  });
