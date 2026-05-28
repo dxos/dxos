@@ -248,7 +248,10 @@ export class LayerStack {
 
     const hints: string[] = [];
 
-    if (context.space === undefined && this.#getLayers().some((l) => l.affinity === 'space' || l.affinity === 'process')) {
+    if (
+      context.space === undefined &&
+      this.#getLayers().some((l) => l.affinity === 'space' || l.affinity === 'process')
+    ) {
       hints.push('spawn environment is missing `space` (required for space/process-affinity services)');
     }
     if (
