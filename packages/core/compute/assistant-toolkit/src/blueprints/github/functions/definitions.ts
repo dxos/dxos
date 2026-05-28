@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 export const FetchPrs = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.github.fetch-prs'),
+    key: DXN.make('org.dxos.function.github.fetchPrs'),
     name: 'Fetch PRs',
     description: 'Fetches PRs from GitHub.',
     icon: 'ph--github-logo--regular',

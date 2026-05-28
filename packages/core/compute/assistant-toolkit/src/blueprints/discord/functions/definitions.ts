@@ -37,7 +37,7 @@ export const TimeRange = Object.assign(TimeRangeSchema, {
 
 export const FetchMessages = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.fetch-discord-messages'),
+    key: DXN.make('org.dxos.function.discord.fetchDiscordMessages'),
     name: 'Sync Discord messages',
     icon: 'ph--hash--regular',
   },

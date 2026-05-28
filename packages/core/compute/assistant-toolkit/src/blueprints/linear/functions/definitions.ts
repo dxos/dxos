@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 export const SyncIssues = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.linear.sync-issues'),
+    key: DXN.make('org.dxos.function.linear.syncIssues'),
     name: 'Linear',
     description: 'Sync issues from Linear.',
     icon: 'ph--arrows-clockwise--regular',

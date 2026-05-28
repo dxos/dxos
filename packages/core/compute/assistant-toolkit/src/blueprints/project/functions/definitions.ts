@@ -53,7 +53,7 @@ export const Qualifier = Operation.make({
 
 export const GetContext = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agent.get-context'),
+    key: DXN.make('org.dxos.function.agent.getContext'),
     name: 'Get Agent Context',
     description: 'Get the context of an agent.',
     icon: 'ph--info--regular',
@@ -77,7 +77,7 @@ export const GetContext = Operation.make({
 
 export const AddArtifact = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.agent.add-artifact'),
+    key: DXN.make('org.dxos.function.agent.addArtifact'),
     name: 'Add artifact',
     description: 'Adds a new artifact.',
     icon: 'ph--plus--regular',

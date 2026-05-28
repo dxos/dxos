@@ -18,7 +18,7 @@ const SimpleTask = Plan.Task.omit('chat');
 
 export const UpdateTasks = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.planning.update-tasks'), // TODO(burdon): Are hyphens allowed?
+    key: DXN.make('org.dxos.function.planning.updateTasks'), // TODO(burdon): Are hyphens allowed?
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',
