@@ -8,6 +8,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import {
+  BlueprintDefinition,
   CreateObject,
   FileUploader,
   InlineBackend,
@@ -21,6 +22,7 @@ import { translations } from '#translations';
 import { File } from '#types';
 
 export const FilePlugin = Plugin.define(meta).pipe(
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [File.File] }),
