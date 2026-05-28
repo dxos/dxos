@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ServiceResolver } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -15,7 +16,7 @@ import { AssistantPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

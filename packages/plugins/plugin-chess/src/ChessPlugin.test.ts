@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -15,7 +16,7 @@ import { ChessPlugin } from '#plugin';
 import { meta } from './meta';
 import { ChessOperation } from './types';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
 
 describe('ChessPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

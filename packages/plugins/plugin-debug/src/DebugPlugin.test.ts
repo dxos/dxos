@@ -5,13 +5,14 @@
 import { describe, test } from 'vitest';
 
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { DebugPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
 
 describe('DebugPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

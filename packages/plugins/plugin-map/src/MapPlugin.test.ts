@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -13,7 +14,7 @@ import { MapPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${meta.id}.module.${name}`;
+const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
 
 describe('MapPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
