@@ -21,7 +21,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
-import { mapAst, runAndForwardErrors } from '@dxos/effect';
+import { mapAst } from '@dxos/effect';
 import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
@@ -46,8 +46,7 @@ export type RelatedSchema = {
  * @returns
  */
 export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
-  // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = await runAndForwardErrors(Effect.sync(() => db.graph.registry.list().filter(Type.isType)));
+  const allSchemas = await db.query(Filter.type(Type.Type)).run();
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas

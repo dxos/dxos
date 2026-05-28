@@ -50,7 +50,7 @@ describe('buildViewIndex', () => {
     const allSchemas = db.graph.registry
       .list()
       .filter(Type.isType)
-      .filter((t) => !(t instanceof Type.RuntimeType));
+      .filter((t) => !Type.isTypeKindSchema(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(true);
@@ -68,7 +68,7 @@ describe('buildViewIndex', () => {
     const allSchemas = db.graph.registry
       .list()
       .filter(Type.isType)
-      .filter((t) => !(t instanceof Type.RuntimeType));
+      .filter((t) => !Type.isTypeKindSchema(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(false);
@@ -87,7 +87,7 @@ describe('buildViewIndex', () => {
     const allSchemas = db.graph.registry
       .list()
       .filter(Type.isType)
-      .filter((t) => !(t instanceof Type.RuntimeType));
+      .filter((t) => !Type.isTypeKindSchema(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     const views = viewIndex.getViewsForTypename(Type.getTypename(TestContact));

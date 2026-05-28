@@ -346,8 +346,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.AnyEntity {
     let schema = schemaInput;
-    if (schema instanceof Type.RuntimeType) {
-      schema = schema.snapshot.annotations({ [TypeIdentifierAnnotationId]: undefined });
+    if (Type.isType(schema as any)) {
+      schema = Type.getSchema(schema as any).annotations({ [TypeIdentifierAnnotationId]: undefined });
     }
 
     const meta = getTypeAnnotation(schema);

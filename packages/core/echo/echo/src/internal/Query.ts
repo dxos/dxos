@@ -145,7 +145,7 @@ export const prettyQuery = (query: QueryAST.Query): string => {
               : `{ space: ${JSON.stringify(scope.spaceId)} }`;
           }
           if (scope._tag === 'feed') {
-            return `{ feed: ${String(scope.feedUri)} }`;
+            return `{ feed: ${JSON.stringify(String(scope.feedUri))} }`;
           }
           return `{ registry: ${JSON.stringify(scope.location)} }`;
         });

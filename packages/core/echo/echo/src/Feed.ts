@@ -122,25 +122,6 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  */
 export const getQueueUri = (feed: Feed): EchoURI.EchoURI | undefined => EchoURI.tryParse(Obj.getURI(feed));
 
-/**
- * Returns the feed object's queue DXN string when the feed is stored in a space.
- * Returns `undefined` when the feed is not stored in a space yet.
- *
- * Used internally by the feed service layer.
- */
-export const getQueueDxn = (feed: Feed): string | undefined => {
-  const echoUri = EchoURI.tryParse(Obj.getURI(feed));
-  if (!echoUri) {
-    return undefined;
-  }
-  const spaceId = EchoURI.getSpaceId(echoUri);
-  const objectId = EchoURI.getObjectId(echoUri);
-  if (!spaceId || !objectId) {
-    return undefined;
-  }
-  return `dxn:queue:${feed.namespace ?? 'data'}:${spaceId}:${objectId}`;
-};
-
 //
 // Service
 //

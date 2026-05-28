@@ -96,8 +96,8 @@ describe('Registry', () => {
 
   test('add type entity and findTypeByDXN', ({ expect }) => {
     const registry = make();
-    // PersistentType is a valid AnyEntity with typename and version.
-    const schema = Type.PersistentType;
+    // Type.Type is a valid AnyEntity with typename and version.
+    const schema = Type.Type;
     const typename = Type.getTypename(schema);
     const version = Type.getVersion(schema);
 
@@ -119,7 +119,7 @@ describe('Registry', () => {
   test('type entities are surfaced in list()', ({ expect }) => {
     const registry = make();
     const obj = makeObj({ value: 1 });
-    registry.add([obj, Type.PersistentType]);
+    registry.add([obj, Type.Type]);
     // Both regular objects and type entities appear in list().
     expect(registry.list()).toHaveLength(2);
     expect(registry.list().filter(Type.isType)).toHaveLength(1);
@@ -138,7 +138,7 @@ describe('Registry', () => {
     registry.clear();
     expect(count).toBe(3);
     // Type entities also fire changed when added.
-    registry.add([Type.PersistentType]);
+    registry.add([Type.Type]);
     expect(count).toBe(4);
   });
 });

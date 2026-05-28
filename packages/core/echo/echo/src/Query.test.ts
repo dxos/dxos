@@ -571,7 +571,7 @@ describe('query api', () => {
         { uri: feedDxn },
       )) as Feed.Feed;
 
-      const expectedQueueDXN = Feed.getQueueDxn(feed);
+      const expectedQueueUri = Feed.getQueueUri(feed);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -579,7 +579,7 @@ describe('query api', () => {
         type: 'from',
         from: {
           _tag: 'scope',
-          scopes: [{ _tag: 'feed', feedUri: expectedQueueDXN?.toString() }],
+          scopes: [{ _tag: 'feed', feedUri: expectedQueueUri?.toString() }],
         },
         query: {
           type: 'select',

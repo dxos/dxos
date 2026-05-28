@@ -36,7 +36,7 @@ import {
   ObjectMetaSchema,
   ObjectVersionId,
   ParentId,
-  TypeSchema as PersistentSchema,
+  TypeSchema,
   type ReactiveHandler,
   Ref,
   RefImpl,
@@ -513,7 +513,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Stored schemas surface through the database schema registry so consumers
     // see the registered Type.Type entity rather than the raw persisted object.
     const database = target[symbolInternals].database;
-    if (database && isInstanceOf(PersistentSchema, object)) {
+    if (database && isInstanceOf(TypeSchema, object)) {
       return database._getOrRegisterPersistentSchema(object);
     }
 
@@ -650,7 +650,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return found;
         }
         const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
           return database._getOrRegisterPersistentSchema(schemaObject as any);
         }
       }
@@ -666,7 +666,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return found;
         }
         const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
           return database._getOrRegisterPersistentSchema(schemaObject as any);
         }
       }
@@ -718,7 +718,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const echoId = echoRefMatch[1];
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
           const typeEntity = database._getOrRegisterPersistentSchema(schemaObject as any);
           return Type.getSchema(typeEntity);
         }
@@ -731,7 +731,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const echoId = EchoURI.getObjectId(echoUri);
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
-        if (schemaObject != null && isInstanceOf(PersistentSchema, schemaObject)) {
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
           const typeEntity = database._getOrRegisterPersistentSchema(schemaObject as any);
           return Type.getSchema(typeEntity);
         }

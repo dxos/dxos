@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { useSchema } from '@dxos/react-client/echo';
+import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
@@ -25,7 +25,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const db = Obj.getDatabase(object);
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(db, typename);
+  const currentSchema = useType(db, typename);
   const [allSchemata, setAllSchemata] = useState<Type.AnyEntity[]>([]);
 
   useEffect(() => {

@@ -328,10 +328,10 @@ export const runQueryFirst: {
 /**
  * Persists schemas in the database so they replicate to other clients.
  */
-export const registerSchema = (
+export const registerType = (
   input: SchemaRegistry.RegisterSchemaInput[],
 ): Effect.Effect<Type.AnyEntity[], never, Service> =>
   Service.pipe(
     Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.registry.register(input))),
-    Effect.withSpan('Database.registerSchema'),
+    Effect.withSpan('Database.registerType'),
   );

@@ -34,8 +34,8 @@ export const handler = Effect.fn(function* ({
       const schemaAnnotation = getTypeAnnotation(Type.getSchema(schema));
       return {
         id: Type.getDXN(schema)?.toString(),
-        typename: schemaAnnotation?.typename ?? '',
-        version: schemaAnnotation?.version ?? '',
+        typename: schemaAnnotation?.typename ?? Type.getTypename(schema) ?? '',
+        version: schemaAnnotation?.version ?? Type.getVersion(schema) ?? '',
       };
     })
     .filter(createTypenameFilter(Option.getOrUndefined(typename)));

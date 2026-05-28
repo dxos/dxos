@@ -1123,17 +1123,8 @@ const addRoastLogCollection = async (
   const typename = 'example.type.roastLog';
 
   // Register creates the TypeSchema ECHO object in the space so the runtime can
-  // discover and render the schema without it being compiled into the app. Pass the
-  // explicit object form so `name` is stored on the TypeSchema — passing a
-  // Type.AnyEntity directly does not auto-derive a display name.
-  await space.db.registry.register([
-    {
-      typename,
-      version: '0.1.0',
-      jsonSchema: JsonSchema.toJsonSchema(RoastLog) as JsonSchema.JsonSchema,
-      name: 'Roast Log',
-    },
-  ]);
+  // discover and render the schema without it being compiled into the app.
+  await space.db.registry.register([RoastLog]);
 
   const entries = makeRoastLogs(people);
   entries.forEach((entry) => space.db.add(entry));

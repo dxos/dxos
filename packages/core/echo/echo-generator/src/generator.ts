@@ -111,13 +111,14 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyEntity> {
-    if (schema instanceof Type.RuntimeType) {
+    if (Type.isTypeKindSchema(schema)) {
       const types = await runAndForwardErrors(
         Effect.sync(() => this._space.internal.db.graph.registry.list().filter(Type.isType)),
       );
-      const existingSchema = types.find((t) => t instanceof Type.RuntimeType && Type.getTypename(t) === typename) as
-        | Type.AnyEntity
-        | undefined;
+      const version = Type.getVersion(schema);
+      const existingSchema = types.find(
+        (t) => Type.isTypeKindSchema(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
+      ) as Type.AnyEntity | undefined;
       if (existingSchema != null) {
         return existingSchema;
       }
@@ -127,7 +128,10 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       const allTypes = await runAndForwardErrors(
         Effect.sync(() => this._space.internal.db.graph.registry.list().filter(Type.isType)),
       );
-      const existingSchema = [...allTypes].find((s) => Type.getTypename(s) === typename);
+      const version = Type.getVersion(schema);
+      const existingSchema = [...allTypes].find(
+        (s) => Type.getTypename(s) === typename && Type.getVersion(s) === version,
+      );
       if (existingSchema != null) {
         return existingSchema;
       }

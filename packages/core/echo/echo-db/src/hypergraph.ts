@@ -44,7 +44,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   constructor() {
     this._registry = makeRegistry();
-    this._registry.add([Type.PersistentType]);
+    this._registry.add([Type.Type]);
   }
 
   get registry(): Registry.Registry {

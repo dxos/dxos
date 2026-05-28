@@ -61,6 +61,8 @@ export class RegistryQuerySource implements QuerySource {
 
   update(query: QueryAST.Query): void {
     if (!this.#isValidSourceForQuery(query)) {
+      void this.#ctx?.dispose().catch(() => {});
+      this.#ctx = undefined;
       this.#query = undefined;
       return;
     }
