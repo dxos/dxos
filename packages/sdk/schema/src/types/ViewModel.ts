@@ -21,6 +21,7 @@ import {
   Query,
   Ref,
   type Registry,
+  Scope,
   Type,
   View,
 } from '@dxos/echo';
@@ -246,7 +247,7 @@ export const makeFromDatabase = async ({
     createInitial = 0;
   }
 
-  const allTypes = await db.query(Filter.type(Type.Type)).run();
+  const allTypes = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
   const schema = allTypes.find((t) => Type.getTypename(t) === typename);
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);

@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   ReferenceAnnotationId,
@@ -46,7 +46,7 @@ export type RelatedSchema = {
  * @returns
  */
 export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
-  const allSchemas = await db.query(Filter.type(Type.Type)).run();
+  const allSchemas = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas

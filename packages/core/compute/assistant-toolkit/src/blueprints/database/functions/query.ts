@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Entity, Filter, Obj, Query as EchoQuery, Type } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Query as EchoQuery, Scope, Type } from '@dxos/echo';
 
 import { Query } from './definitions';
 
@@ -20,7 +20,9 @@ export default Query.pipe(
           ...text.split(' ').map((term) => EchoQuery.select(Filter.text(term, { type: 'full-text' }))),
         );
         if (typename !== undefined) {
-          const types = yield* Database.runQuery(Filter.type(Type.Type));
+          const types = yield* Database.runQuery(
+            EchoQuery.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+          );
           const schema = types.find((t) => Type.getTypename(t) === typename);
           if (!schema) {
             return yield* Effect.fail(new Error(`Schema ${typename} not found`));
@@ -28,7 +30,9 @@ export default Query.pipe(
           query = query.select(Filter.type(schema));
         }
       } else if (typename) {
-        const types = yield* Database.runQuery(Filter.type(Type.Type));
+        const types = yield* Database.runQuery(
+          EchoQuery.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+        );
         const schema = types.find((t) => Type.getTypename(t) === typename);
         if (!schema) {
           return yield* Effect.fail(new Error(`Schema ${typename} not found`));

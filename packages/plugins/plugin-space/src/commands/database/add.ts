@@ -16,7 +16,7 @@ import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cl
 import { SpaceProperties } from '@dxos/client/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Type } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 
 import { SpaceCapabilities } from '#types';
@@ -84,7 +84,9 @@ const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
   const { db } = yield* Database.Service;
-  const allSchemas = yield* Database.runQuery(Filter.type(Type.Type));
+  const allSchemas = yield* Database.runQuery(
+    Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+  );
   const schemas = allSchemas
     .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)

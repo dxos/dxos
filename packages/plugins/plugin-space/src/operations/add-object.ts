@@ -5,7 +5,7 @@ import * as Option from 'effect/Option';
 
 import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Type } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
@@ -36,7 +36,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const types = yield* Effect.promise(() => db.query(Filter.type(Type.Type)).run());
+      const types = yield* Effect.promise(() =>
+        db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run(),
+      );
       const [runtimeSchema] = types.filter((t) => !Type.isTypeKindSchema(t) && Type.getTypename(t) === typename);
       const echoViewPath =
         runtimeSchema !== undefined

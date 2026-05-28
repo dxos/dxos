@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Routine, Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, Filter, JsonSchema, Type, View } from '@dxos/echo';
+import { Database, Feed, Filter, JsonSchema, Query, Scope, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
 
@@ -16,7 +16,9 @@ const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 export default SchemaList.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
-      const types = yield* Database.runQuery(Filter.type(Type.Type));
+      const types = yield* Database.runQuery(
+        Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+      );
       return [...types]
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
         .sort((a, b) => {
