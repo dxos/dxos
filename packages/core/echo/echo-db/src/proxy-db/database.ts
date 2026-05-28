@@ -11,7 +11,7 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
   Database,
-  type Entity,
+  Entity,
   Filter,
   JsonSchema,
   Obj,
@@ -395,7 +395,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const typeEntity = Obj.getType(obj as unknown as Obj.Unknown);
+      const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
         const typename = Type.getTypename(typeEntity);
         const version = Type.getVersion(typeEntity);
