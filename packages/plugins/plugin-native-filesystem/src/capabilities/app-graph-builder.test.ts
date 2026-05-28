@@ -57,10 +57,10 @@ describe('native filesystem app graph builder', () => {
 
     expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace')).map((node) => node.id)).toEqual([
       qualifyId(Node.RootId, 'workspace', 'archive'),
-      qualifyId(Node.RootId, 'workspace', 'top-note'),
+      qualifyId(Node.RootId, 'workspace', 'topNote'),
     ]);
     expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace', 'archive')).map((node) => node.id)).toEqual([
-      qualifyId(Node.RootId, 'workspace', 'archive', 'nested-note'),
+      qualifyId(Node.RootId, 'workspace', 'archive', 'nestedNote'),
     ]);
   });
 

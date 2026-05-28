@@ -26,7 +26,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
     Effect.all([
       // Create app menu actions.
       GraphBuilder.createExtension({
-        id: 'app-menu',
+        id: 'appMenu',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed(
@@ -45,7 +45,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create user account node.
       GraphBuilder.createExtension({
-        id: 'user-account',
+        id: 'userAccount',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -127,7 +127,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create space actions.
       GraphBuilder.createExtension({
-        id: 'space-actions',
+        id: 'spaceActions',
         match: NodeMatcher.whenNodeType('space'),
         actions: () =>
           Effect.succeed(
