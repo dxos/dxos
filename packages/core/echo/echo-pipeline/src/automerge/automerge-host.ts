@@ -251,6 +251,12 @@ export class AutomergeHost extends Resource {
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
+      // Replicators (e.g. `EchoEdgeSubductionReplicator`) call this from
+      // their reconnect path; we forward to `_sharePolicyChangedTask`
+      // which calls `_repo.shareConfigChanged()` on the next microtask.
+      // Reuses the existing debounce so a burst of per-space reconnects
+      // collapses into one `shareConfigChanged` pass.
+      kickShareConfigChanged: () => this._sharePolicyChangedTask?.schedule(),
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
@@ -884,6 +890,24 @@ export class AutomergeHost extends Resource {
     );
     await this._repo.flush(loadedDocuments);
     if (!this.isOpen) {
+      return;
+    }
+
+    // When the caller asked for a scoped flush, do NOT block on the global
+    // `_inFlightAfterSaveCount` drain or `_onHeadsChangedTask.runBlocking()`.
+    // Both are repo-wide and observe concurrent saves from background
+    // subduction sync activity on unrelated documents — each
+    // `subduction.addCommitsBatch(...)` triggers an `_afterSave` callback
+    // that re-arms `_inFlightAfterSaveCount` and `_onHeadsChangedTask`. With
+    // the post-`shareConfigChanged` bulk-sync this happens continuously on
+    // every WS reconnect across all entries, so the scoped flush ends up
+    // waiting for the entire bulk-sync to drain (~30s rust per-request
+    // timeout × N) and `DataSpaceManager.createSpace` wedges on
+    // `createSpaceRoot` for every space after the second.
+    //
+    // The unscoped form retains the strict semantics — callers that want
+    // "all repo state observed" still pay the global drain.
+    if (documentIds !== undefined) {
       return;
     }
 

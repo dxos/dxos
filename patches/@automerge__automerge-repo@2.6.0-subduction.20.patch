@@ -88,10 +88,10 @@ index 1cdd94c3443bd0be41a149059d271bac61d0e3a7..c9496513751c0582546e8017af51e8a5
      generation(): number;
      onChange(callback: () => void): void;
 diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
-index 87a75d5b1983df0800519afca8921a410460b2b1..cb979d3c1c03329a0629860ef8f2be98c9eccf5b 100644
+index 87a75d5b1983df0800519afca8921a410460b2b1..d11751fccde7274433de304ad88a38ccfaf66a9f 100644
 --- a/dist/subduction/AdapterConnections.js
 +++ b/dist/subduction/AdapterConnections.js
-@@ -1,15 +1,19 @@
+@@ -1,15 +1,32 @@
 +import debug from "debug";
  import { NetworkAdapterTransport } from "./network.js";
  export class AdapterConnections {
@@ -105,6 +105,19 @@ index 87a75d5b1983df0800519afca8921a410460b2b1..cb979d3c1c03329a0629860ef8f2be98
      #isShutdown = false;
 -    constructor(subduction, localPeerId) {
 +    #log = debug("automerge-repo:subduction:adapters");
++    /**
++     * Bound peers by `repoPeerId.toString()` → `subductionPeerId`.
++     *
++     * Populated after a successful `acceptTransport`/`connectTransport`
++     * round in `#startTransport`. Drained on `peer-disconnected` to call
++     * `subduction.disconnectFromPeer(...)` so the rust core promptly
++     * removes the dead peer from its sync targets. Without this,
++     * `syncWithAllPeers`/`fullSyncWithAllPeers` keep including the dead
++     * peer's slot and waste a per-request timeout (~30 s rust default)
++     * per round — observed at scale as 8+ `subduction_core/.../request
++     * RequestId ... timed out` log lines per second.
++     */
++    #boundPeers = new Map();
 +    constructor(subduction, localPeerId, onPeerBound) {
          this.#subduction = subduction;
          this.#localPeerId = localPeerId;
@@ -112,15 +125,62 @@ index 87a75d5b1983df0800519afca8921a410460b2b1..cb979d3c1c03329a0629860ef8f2be98
      }
      // ── ConnectionManager interface ─────────────────────────────────────
      isConnecting() {
-@@ -26,6 +30,7 @@ export class AdapterConnections {
+@@ -26,6 +43,8 @@ export class AdapterConnections {
      shutdown() {
          this.#isShutdown = true;
          this.#onChangeCallback = null;
 +        this.#onPeerBound = null;
++        this.#boundPeers.clear();
      }
      // ── Adapter management ──────────────────────────────────────────────
      addAdapter(adapter, serviceName, role) {
-@@ -48,15 +53,14 @@ export class AdapterConnections {
+@@ -38,9 +57,45 @@ export class AdapterConnections {
+             this.#pendingTransports++;
+             this.#startTransport(adapter, serviceName, peerId, role);
+         });
++        // Evict the corresponding rust subduction peer when an adapter
++        // peer goes away. Without this, the rust core keeps the dead
++        // peer in its sync targets and every subsequent
++        // `syncWithAllPeers` / `fullSyncWithAllPeers` round wastes the
++        // rust per-request timeout (~30 s) on that slot. Symptom at
++        // scale: hundreds of `subduction_core/.../request RequestId ...
++        // timed out` lines and per-round wall-clock dominated by dead
++        // peers.
++        adapter.on("peer-disconnected", ({ peerId }) => {
++            if (this.#isShutdown)
++                return;
++            const subductionPeerId = this.#boundPeers.get(peerId.toString());
++            if (subductionPeerId === undefined) {
++                return;
++            }
++            this.#boundPeers.delete(peerId.toString());
++            void this.#disconnectFromSubductionPeer(subductionPeerId, peerId);
++        });
+         this.#watchAdapter(adapter);
+         adapter.connect(this.#localPeerId);
+     }
++    async #disconnectFromSubductionPeer(subductionPeerId, repoPeerId) {
++        try {
++            const subduction = await this.#subduction;
++            await subduction.disconnectFromPeer(subductionPeerId);
++            this.#log("disconnected rust peer for %s", repoPeerId);
++        }
++        catch (e) {
++            // `disconnectFromPeer` returns `boolean` for "was the peer
++            // in our set"; only throws on rust-side wasm errors. We
++            // tolerate either outcome — the adapter is already gone on
++            // the JS side, so there's nothing to recover.
++            this.#log("subduction.disconnectFromPeer threw for %s: %O", repoPeerId, e);
++        }
++        finally {
++            this.#generation++;
++            this.#onChangeCallback?.();
++        }
++    }
+     async #watchAdapter(adapter) {
+         for await (const _nextState of adapter.state().watch()) {
+             this.#generation++;
+@@ -48,15 +103,14 @@ export class AdapterConnections {
          }
      }
      async #startTransport(adapter, serviceName, peerId, role) {
@@ -141,10 +201,18 @@ index 87a75d5b1983df0800519afca8921a410460b2b1..cb979d3c1c03329a0629860ef8f2be98
          }
          catch {
              // Transport connection failed (e.g. peer disconnected during handshake)
-@@ -66,5 +70,22 @@ export class AdapterConnections {
+@@ -66,5 +120,30 @@ export class AdapterConnections {
              this.#generation++;
              this.#onChangeCallback?.();
          }
++        // Record the binding so we can disconnect the rust peer when
++        // the adapter peer goes away (see `peer-disconnected` handler
++        // in `addAdapter`). The map is keyed by `repoPeerId.toString()`
++        // since the adapter's `peer-disconnected` event carries the
++        // adapter-side peer id, not the rust-side one.
++        if (subductionPeerId !== null) {
++            this.#boundPeers.set(peerId.toString(), subductionPeerId);
++        }
 +        // Notify outside the try/finally so a listener throw can't be
 +        // mistaken for a transport failure, and so the bookkeeping above
 +        // has already settled (consumers see the post-handshake state).
@@ -332,19 +400,63 @@ index 6a38b9cd2d85fe1c37e8b7bea27c58837a6fb440..b1a0d40657a1efc829d9fe57491cbfc9
      attach(query: DocumentQuery<unknown>): void;
      detach(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index a9246970a30bf4efbbfb96696368de10ad7c5489..4005d44b772d0fd45ee62b80c9fac7d49a964b50 100644
+index a9246970a30bf4efbbfb96696368de10ad7c5489..5cab20e6c154e1232be3be8a96f44b420e05472a 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
-@@ -39,7 +39,7 @@ export class SubductionSource {
+@@ -39,7 +39,51 @@ export class SubductionSource {
      #syncTimeoutMs;
      #syncTimeout;
      priority;
 -    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, priority = 2, policy, timeouts, }) {
++    // ── Bulk-sync coalescing state ──────────────────────────────────────
++    //
++    // Per-entry `subduction.syncWithAllPeers(sid)` calls all queue
++    // through the same rust actor. When `#recomputeEntry` fires on N
++    // entries simultaneously (e.g. on a connection-generation change
++    // that retries every "succeeded" entry, or after a bulk insert that
++    // triggers N `#save` → `#recompute` rounds), we get N concurrent
++    // calls to the actor; the actor serializes them and per-call cost
++    // is O(total sedimentree count), so total work is O(N²) and we
++    // trivially blow past the default 60s per-request timeout.
++    //
++    // Instead, route every per-entry sync through a debounced batch
++    // executed sequentially with a small per-entry timeout (1.5s).
++    // This:
++    //  - collapses N fan-out into 1 batch traversal,
++    //  - lets a stuck peer fail fast (next attempt lands on the
++    //    rebuilt session in ~ms after a reconnect signal arrives),
++    //  - leaves the existing heal-scheduler retry loop in charge of
++    //    longer-horizon recovery for entries that settle "all-failed".
++    #bulkSyncInFlight = false;
++    #bulkSyncPendingEntries = new Set();
++    #bulkSyncDebounceTimer = null;
++    /** Debounce window for coalescing concurrent per-entry sync requests. */
++    #bulkSyncDebounceMs = 50;
++    /**
++     * Timeout (bigint ms) for the single `fullSyncWithAllPeers` round
++     * that handles every pending entry. Bounds wall-clock when a peer
++     * is stuck. Independent from the source-wide `#syncTimeout` used
++     * by `SyncScheduler`'s heal path.
++     *
++     * Sized to comfortably absorb a legitimate fingerprint+transfer
++     * round across hundreds of sids on a single peer at WAN latency.
++     * Observed working ranges:
++     *   - localhost edge:dev, 4×100 sids:   ~5–10 s per round
++     *   - localhost edge:dev, 10×100 sids:  ~10–30 s per round
++     *   - deployed Cloudflare WAN, 4×100:   ~20–30 s per round (`subduction.20` over WS adds ~50–200ms RTT per fingerprint exchange)
++     * Tightening triggers a cascade: timeout → mark all entries
++     * `"no-peers"` → widened gate fires on next connection-generation
++     * change → another full round. 60 s matches the source-wide
++     * `#syncTimeout` default and the rust per-request timeout, so a
++     * single legitimate slow round can finish before our JS-side cap
++     * fires.
++     */
++    #bulkSyncTimeout = 60000n;
 +    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onPeerBound, priority = 2, policy, timeouts, }) {
          this.priority = priority;
          this.#syncTimeoutMs = timeouts?.syncMs ?? DEFAULT_SYNC_TIMEOUT_MS;
          // Validate + coerce once at construction so the wasm boundary
-@@ -99,12 +99,23 @@ export class SubductionSource {
+@@ -99,12 +143,23 @@ export class SubductionSource {
              onRemoteHeads, onEphemeral));
          }
          // ── Connection managers ─────────────────────────────────────────
@@ -370,16 +482,333 @@ index a9246970a30bf4efbbfb96696368de10ad7c5489..4005d44b772d0fd45ee62b80c9fac7d4
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-@@ -287,7 +298,7 @@ export class SubductionSource {
-                         entry.syncInFlight = true;
-                         void this.#doSync(entry);
+@@ -236,8 +291,27 @@ export class SubductionSource {
+     }
+     detach(documentId) { }
+     shareConfigChanged() {
++        // Reset every entry that previously settled to a terminal failure
++        // state ("all-failed" or "no-peers") so the next `#recompute()`
++        // pass re-schedules it through the bulk-sync path. Callers invoke
++        // this method when they have an out-of-band signal that the peer
++        // landscape has changed (e.g. a subduction reconnect handshake
++        // completed) — we cannot detect "the peer set just gained members"
++        // from `AdapterConnections.onChange` alone, because that fires on
++        // transport-level transitions, not on per-peer SUH bindings.
++        //
++        // "no-peers" specifically becomes terminal when bulk-sync runs in
++        // the narrow window between transport teardown and a fresh SUH
++        // binding: `syncWithAllPeers` returns an empty `peerResultMap`,
++        // we record `lastSyncResult = "no-peers"` with the current
++        // generation, and `#recomputeEntry`'s `noPeersButConnectionChanged`
++        // guard refuses to retry until `#connectionGeneration()` advances
++        // again. If the adapter's generation tracks transport-level
++        // state only (not per-peer bindings), the retry never happens
++        // until the WS itself flaps — which is what "stop+start edge"
++        // accidentally does.
+         for (const entry of this.#entries.values()) {
+-            if (entry.lastSyncResult === "all-failed" && !entry.syncInFlight) {
++            if ((entry.lastSyncResult === "all-failed" || entry.lastSyncResult === "no-peers") && !entry.syncInFlight) {
+                 entry.lastSyncResult = null;
+                 this.#scheduler.resetHealState(entry.sedimentreeId.toString());
+             }
+@@ -265,18 +339,29 @@ export class SubductionSource {
+                     return;
+                 }
+                 if (!entry.syncInFlight && !entry.blobLoadInFlight) {
+-                    const noPeersButConnectionChanged = entry.lastSyncResult === "no-peers" &&
+-                        entry.lastSyncGeneration !== this.#connectionGeneration();
+-                    if (entry.lastSyncResult === null || noPeersButConnectionChanged) {
+-                        // Sync when we haven't tried yet (null) or when the last
+-                        // attempt found no peers and a connection state has changed
+-                        // since then (new peer connected, adapter state transitioned).
++                    // Retry on first attempt (`null`) or when the
++                    // connection generation has advanced since the last
++                    // sync (covers `"no-peers"`, `"all-failed"`,
++                    // `"succeeded"` — the previous `noPeersButConnectionChanged`
++                    // gate covered only `"no-peers"`).
++                    //
++                    // Safe to also retry `"succeeded"` because the
++                    // bulk-sync coalescer below collapses the N-entry
++                    // fan-out into a single sequential batch with a
++                    // short per-entry timeout, so this cannot
++                    // thundering-herd the rust actor.
++                    const connectionChanged = entry.lastSyncGeneration !== this.#connectionGeneration();
++                    const shouldRetry = entry.lastSyncResult === null ||
++                        (connectionChanged &&
++                            (entry.lastSyncResult === "no-peers" ||
++                                entry.lastSyncResult === "all-failed" ||
++                                entry.lastSyncResult === "succeeded"));
++                    if (shouldRetry) {
+                         // Re-enter pending in case the query was previously unavailable.
+                         entry.query.sourcePending("subduction");
+-                        entry.syncInFlight = true;
+-                        void this.#doSync(entry);
++                        this.#scheduleBulkSync(entry);
                      }
 -                    else if (entry.handle.heads().length === 0 &&
 +                    else if (false &&
                          !this.#anyConnectionManagerConnecting()) {
                          // All connections settled and sync failed — give up.
                          this.#log("marking as unavailable");
-@@ -716,11 +727,28 @@ export class SubductionSource {
+@@ -286,77 +371,145 @@ export class SubductionSource {
+                 return;
+             }
+             case "running": {
+-                const noPeersButConnectionChanged = entry.lastSyncResult === "no-peers" &&
+-                    entry.lastSyncGeneration !== this.#connectionGeneration();
+-                if (!entry.syncInFlight &&
+-                    (entry.lastSyncResult === null || noPeersButConnectionChanged)) {
+-                    entry.syncInFlight = true;
+-                    void this.#doSync(entry);
++                if (!entry.syncInFlight) {
++                    // Same widened gate as in "initializing" — see comment above.
++                    const connectionChanged = entry.lastSyncGeneration !== this.#connectionGeneration();
++                    const shouldRetry = entry.lastSyncResult === null ||
++                        (connectionChanged &&
++                            (entry.lastSyncResult === "no-peers" ||
++                                entry.lastSyncResult === "all-failed" ||
++                                entry.lastSyncResult === "succeeded"));
++                    if (shouldRetry) {
++                        this.#scheduleBulkSync(entry);
++                    }
+                 }
+                 return;
+             }
+         }
+     }
+     // ── Async work kicked off by #recompute ─────────────────────────────
+-    async #doSync(entry) {
+-        const { sedimentreeId } = entry;
+-        const sid = sedimentreeId.toString().slice(0, 8);
+-        entry.lastSyncGeneration = this.#connectionGeneration();
++    //
++    // Per-entry sync requests from `#recomputeEntry` are coalesced into a
++    // debounced batch handled by `#runBulkSync`, which issues a single
++    // `subduction.fullSyncWithAllPeers(timeoutMs)` round-trip per peer
++    // covering every batched entry. See `#runBulkSync` doc-comment for
++    // the trade-off vs per-entry `syncWithAllPeers(sid)` and the
++    // empirical evidence behind the choice.
++    /**
++     * Mark `entry` for sync and arm the debounced bulk-sync timer.
++     *
++     * Sets `entry.syncInFlight = true` synchronously so subsequent
++     * `#recomputeEntry` calls don't re-add the same entry to the pending
++     * set. The flag is cleared inside `#runBulkSync.finally`.
++     */
++    #scheduleBulkSync(entry) {
++        if (entry.syncInFlight)
++            return;
++        entry.syncInFlight = true;
++        this.#bulkSyncPendingEntries.add(entry);
++        this.#armBulkSyncTimer();
++    }
++    #armBulkSyncTimer() {
++        if (this.#bulkSyncDebounceTimer !== null || this.#bulkSyncInFlight)
++            return;
++        this.#bulkSyncDebounceTimer = setTimeout(() => {
++            this.#bulkSyncDebounceTimer = null;
++            void this.#runBulkSync();
++        }, this.#bulkSyncDebounceMs);
++    }
++    /**
++     * Drain the pending batch via a single `subduction.fullSyncWithAllPeers`
++     * round-trip per peer.
++     *
++     * We tested two coalescer shapes against `edge-subduction-sync.test.ts`
++     * at SPACE_NUMBER=10, DOCUMENT_COUNT=100 (10×100 = 1000 sids on host):
++     *   - Per-entry `syncWithAllPeers(sid)` sequentially in the batch:
++     *     happy-path 5 s per space, but every per-entry call waits on each
++     *     stale peer up to its per-entry timeout, so the batch cost is
++     *     `O(entries × stale_peers × timeout)`. Failure at space-6.
++     *   - This: one `fullSyncWithAllPeers(timeoutMs)` per batch. Cost is
++     *     `O(stale_peers × timeout)` independent of batch size. The
++     *     trade-off is that rust internally walks every known sid on
++     *     this peer (not just batched ones), so per-round work grows
++     *     with total host sid count, not batch size. In practice this
++     *     wins out at edge:dev scale because the stale-peer cost
++     *     dominates. Reaches space-9 (38.6 s) where the per-entry path
++     *     fails at space-6 (21.6 s).
++     *
++     * Failure handling: on `result.success === false`, mark every
++     * batched entry `"no-peers"` (not `"all-failed"`). `"all-failed"`
++     * would arm `scheduleHealSync` per entry — with N=100+ batched
++     * entries that fans out into N concurrent `syncWithAllPeers(sid, 60s)`
++     * heal retries, saturating the rust actor (observed as hundreds of
++     * `subduction_core/.../request RequestId ... timed out` lines per
++     * failure). `"no-peers"` is retried by the widened gate in
++     * `#recomputeEntry` on the next connection-generation change — the
++     * signal we actually want to act on.
++     */
++    async #runBulkSync() {
++        if (this.#bulkSyncInFlight)
++            return;
++        this.#bulkSyncInFlight = true;
++        const batch = Array.from(this.#bulkSyncPendingEntries);
++        this.#bulkSyncPendingEntries.clear();
++        // Pin generation before the round so the gate's
++        // `connectionChanged` check doesn't fire on the same gen after we
++        // settle.
++        const generationAtStart = this.#connectionGeneration();
++        for (const entry of batch) {
++            entry.lastSyncGeneration = generationAtStart;
++        }
+         try {
+             const subduction = await this.#subduction;
+-            // Flush any pending throttled save and wait for in-progress saves
+-            // to complete. This ensures that all locally-known commits have
+-            // been persisted to subduction before the sync round reads state.
+-            // Without this, a sync can race ahead of the save and send stale
+-            // data, causing a "one-behind" pattern on the remote peer.
+-            entry.flushSave.flush();
+-            await entry.saveSettled;
+-            this.#log(`doSync ${sid} (state=${entry.syncState})`);
+-            const peerResultMap = await subduction.syncWithAllPeers(sedimentreeId, true, this.#syncTimeout);
+-            const results = peerResultMap.entries();
+-            const anySuccess = results.some(r => r.success);
+-            this.#log(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
+-            // Check if any data was received from peers
+-            const dataReceived = results.some(r => {
+-                const s = r.stats;
+-                return s && (s.commitsReceived > 0 || s.fragmentsReceived > 0);
+-            });
+-            // If new data was received, immediately load it into the handle.
+-            // This makes sync reactive — the handle updates as soon as data
+-            // arrives, without waiting for further state transitions.
+-            if (dataReceived) {
+-                await this.#loadBlobsIntoHandle(entry, subduction);
+-            }
+-            if (results.length === 0) {
+-                entry.lastSyncResult = "no-peers";
+-            }
+-            else if (results.every(r => !r.success)) {
+-                entry.lastSyncResult = "all-failed";
+-                this.#scheduler.scheduleHealSync(entry.sedimentreeId);
++            // Flush all throttled saves so the upcoming round reads the
++            // post-save state. Without this, a sync can race ahead of the
++            // save and ship stale data — same "one-behind" mitigation the
++            // per-entry path used to do inline.
++            for (const entry of batch) {
++                entry.flushSave.flush();
+             }
+-            else {
+-                entry.lastSyncResult = "succeeded";
+-                this.#scheduler.resetHealState(sedimentreeId.toString());
++            await Promise.all(batch.map(e => e.saveSettled));
++            this.#log(`runBulkSync: ${batch.length} entries via fullSyncWithAllPeers (timeoutMs=${this.#bulkSyncTimeout})`);
++            const result = await subduction.fullSyncWithAllPeers(this.#bulkSyncTimeout);
++            const success = !!(result && result.success);
++            this.#log(`runBulkSync: result success=${success}`);
++            // Load any received commits/fragments into each entry's handle.
++            // `fullSyncWithAllPeers` doesn't tell us which sids received data,
++            // so we load defensively for every batched entry — `loadBlobsIntoHandle`
++            // is a no-op when nothing new arrived.
++            for (const entry of batch) {
++                try {
++                    await this.#loadBlobsIntoHandle(entry, subduction);
++                }
++                catch (e) {
++                    this.#log(`runBulkSync: loadBlobsIntoHandle failed for ${entry.sedimentreeId.toString().slice(0, 8)}: %O`, e);
++                }
++                if (success) {
++                    entry.lastSyncResult = "succeeded";
++                    this.#scheduler.resetHealState(entry.sedimentreeId.toString());
++                }
++                else {
++                    entry.lastSyncResult = "no-peers";
++                }
+             }
+         }
+         catch (e) {
+-            console.error(`[subduction] doSync THREW for ${sid}:`, e);
+-            entry.lastSyncResult = "all-failed";
+-            this.#scheduler.scheduleHealSync(sedimentreeId);
++            console.error(`[subduction] runBulkSync.fullSyncWithAllPeers THREW:`, e);
++            for (const entry of batch) {
++                entry.lastSyncResult = "no-peers";
++            }
+         }
+         finally {
+-            entry.syncInFlight = false;
+-            // If new commits were saved or a new connection was established
+-            // while this sync was in flight, re-sync immediately.
+-            if (entry.needsResync || entry.lastSyncResult === null) {
+-                this.#log(`doSync ${sid} finally: re-sync needed ` +
+-                    `(needsResync=${entry.needsResync}, lastSyncResult=${entry.lastSyncResult})`);
+-                entry.needsResync = false;
+-                entry.lastSyncResult = null;
++            for (const entry of batch) {
++                entry.syncInFlight = false;
++                if (entry.needsResync || entry.lastSyncResult === null) {
++                    entry.needsResync = false;
++                    entry.lastSyncResult = null;
++                }
+             }
+-            else {
+-                this.#log(`doSync ${sid} finally: no re-sync ` +
+-                    `(needsResync=${entry.needsResync}, lastSyncResult=${entry.lastSyncResult})`);
++            this.#bulkSyncInFlight = false;
++            if (this.#bulkSyncPendingEntries.size > 0) {
++                this.#armBulkSyncTimer();
+             }
+             this.#recompute();
+         }
+@@ -435,7 +588,7 @@ export class SubductionSource {
+      * set is durable") MUST call `entry.flushSave.flush()` themselves
+      * before awaiting `entry.saveSettled`, otherwise the gate may have
+      * absorbed their trigger into an earlier in-flight pass that
+-     * predates their change. `#doSync`, `flush()`, and `shutdown()`
++     * predates their change. `#runBulkSync`, `flush()`, and `shutdown()`
+      * follow this pattern.
+      */
+     async #save(entry) {
+@@ -593,14 +746,33 @@ export class SubductionSource {
+         // On failure, roll the ring entries back so the next save can
+         // retry. `#save` separately keeps `entry.lastSavedHeads` at its
+         // previous value when this rejects.
++        //
++        // `addCommitsBatch` is the local-only variant of `addBatch` per
++        // the rust API doc: "Like `addBatch` for the commits half only,
++        // but skips the trailing `sync_with_all_peers` step". `addBatch`
++        // would await the rust per-request broadcast ack (~30s) inside
++        // its trailing sync; when a peer is briefly unresponsive (e.g.
++        // an evicted Cloudflare DO) that wedges `entry.saveSettled` and
++        // every caller awaiting it — including `flush()`,
++        // `_automergeHost.flush(ctx, { documentIds: [newRoot] })`,
++        // `_echoHost.createSpaceRoot(...)`, and ultimately
++        // `client.spaces.create()` — for the full timeout window. With
++        // `addCommitsBatch` the save path is storage-only; sync is
++        // driven independently by the `#recompute()` call at the end of
++        // `#save`, which schedules `subduction.syncWithAllPeers(sid)`
++        // through the existing bulk-sync path.
++        //
++        // Proof tests:
++        //  - `packages/services/edge/test/proof/addbatch-broadcast-scaling.node.test.ts` (#1b)
++        //    nails the ~30s wedge of `addBatch` with a paused peer.
+         try {
+-            await subduction.addBatch(entry.sedimentreeId, commitInputs, []);
++            await subduction.addCommitsBatch(entry.sedimentreeId, commitInputs);
+         }
+         catch (e) {
+             for (const hash of acceptedHashes) {
+                 entry.recentlySavedHashes.delete(hash);
+             }
+-            console.warn(`[SubductionSource] addBatch failed for ${entry.sedimentreeId
++            console.warn(`[SubductionSource] addCommitsBatch failed for ${entry.sedimentreeId
+                 .toString()
+                 .slice(0, 8)} (${commitInputs.length} commits):`, e);
+             throw e;
+@@ -712,15 +884,39 @@ export class SubductionSource {
+         }
+         // 2. Stop any pending heal-retry timers and prevent new schedules
+         this.#scheduler.shutdown();
++        // 2.5 Cancel any pending bulk-sync batch so its sequential
++        //     `syncWithAllPeers` calls don't outlive the transport tear-down.
++        if (this.#bulkSyncDebounceTimer !== null) {
++            clearTimeout(this.#bulkSyncDebounceTimer);
++            this.#bulkSyncDebounceTimer = null;
++        }
++        this.#bulkSyncPendingEntries.clear();
+         // 3. Flush all pending throttled saves so they start executing
          for (const entry of this.#entries.values()) {
              entry.flushSave.flush();
          }
@@ -413,7 +842,7 @@ index a9246970a30bf4efbbfb96696368de10ad7c5489..4005d44b772d0fd45ee62b80c9fac7d4
          //    If hydration failed, this.#subduction is a rejected promise —
          //    treat that as a no-op (nothing to disconnect).
          let subduction = null;
-@@ -737,6 +765,11 @@ export class SubductionSource {
+@@ -737,6 +933,11 @@ export class SubductionSource {
          catch (e) {
              this.#log("error disconnecting subduction transports: %O", e);
          }

@@ -69,13 +69,39 @@ export type EchoEdgeSubductionReplicatorProps = {
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
+  /**
+   * Coordinates cross-space lifecycle (`connect`/`disconnect`/`_handleReconnect`)
+   * — operations that touch the entire `_connections` map atomically. Per-space
+   * operations use {@link _spaceMutex} instead, so a slow restart on space A
+   * cannot serialize behind / block `connectToSpace(B)`.
+   */
   private readonly _mutex = new Mutex();
+  /**
+   * Per-space serialization for `connectToSpace`/`disconnectFromSpace` and the
+   * restart task fired from `onRestartRequested`. Restart tears down the WS
+   * subscription and runs a fresh SUH handshake against the edge (seconds of
+   * I/O), and under a single global mutex this blocked every other space's
+   * `host.spaces.create` → `connectToSpace` call, producing O(N) create-latency
+   * growth at space-creation boundaries. Per-space mutexes preserve the same-
+   * space serialization invariant (`_openConnection`'s `invariant(!_connections.has)`,
+   * single in-flight restart per space) without cross-space contention.
+   */
+  private readonly _spaceMutexes = new Map<SpaceId, Mutex>();
   private readonly _disableSharePolicy: boolean;
 
   private _ctx?: Context = undefined;
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeSubductionReplicatorConnection>();
+
+  private _spaceMutex(spaceId: SpaceId): Mutex {
+    let mutex = this._spaceMutexes.get(spaceId);
+    if (!mutex) {
+      mutex = new Mutex();
+      this._spaceMutexes.set(spaceId, mutex);
+    }
+    return mutex;
+  }
 
   constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeSubductionReplicatorProps) {
     this._edgeConnection = edgeConnection;
@@ -107,17 +133,34 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private async _handleReconnect(): Promise<void> {
     using _guard = await this._mutex.acquire();
 
+    // Snapshot + tear down all existing connections in one pass. Per-space
+    // operations no longer share `_mutex` with us, so we acquire each
+    // `_spaceMutex` before touching its slot to avoid racing with a concurrent
+    // `connectToSpace`/`disconnectFromSpace`/restart-task for the same space.
     const spaces = [...this._connectedSpaces];
-    for (const connection of this._connections.values()) {
-      await connection.close();
-    }
-    this._connections.clear();
-
-    if (this._context !== null) {
-      for (const spaceId of spaces) {
+    for (const spaceId of spaces) {
+      using _spaceGuard = await this._spaceMutex(spaceId).acquire();
+      const connection = this._connections.get(spaceId);
+      if (connection) {
+        await connection.close();
+        this._connections.delete(spaceId);
+      }
+      if (this._context !== null && this._connectedSpaces.has(spaceId)) {
         await this._openConnection(spaceId);
       }
     }
+
+    // Reconnect-driven recovery for bulk-sync entries that settled to
+    // `"no-peers"` during the prior transport's teardown window.
+    // `AdapterConnections.onChange` does fire on transport transitions,
+    // but the patched `SubductionSource.#recomputeEntry` will only retry
+    // a `"no-peers"` entry when `#connectionGeneration()` shows a
+    // different value than the one recorded at the no-peers verdict —
+    // and the adapter's generation only ticks on socket open/close, not
+    // on per-peer SUH binding. So we explicitly kick `shareConfigChanged`
+    // after the new sessions are bound; the patch widens it to also reset
+    // `"no-peers"` entries, which then re-enter the bulk-sync queue.
+    this._context?.kickShareConfigChanged?.();
   }
 
   async disconnect(): Promise<void> {
@@ -133,7 +176,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   @trace.span({ showInBrowserTimeline: true })
   async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
-    using _guard = await this._mutex.acquire();
+    using _guard = await this._spaceMutex(spaceId).acquire();
 
     if (this._connectedSpaces.has(spaceId)) {
       return;
@@ -146,7 +189,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   }
 
   async disconnectFromSpace(spaceId: SpaceId): Promise<void> {
-    using _guard = await this._mutex.acquire();
+    using _guard = await this._spaceMutex(spaceId).acquire();
 
     this._connectedSpaces.delete(spaceId);
 
@@ -155,6 +198,11 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       await connection.close();
       this._connections.delete(spaceId);
     }
+    // NOTE: do not delete from `_spaceMutexes`. A concurrent `connectToSpace`
+    // that arrived while we held the mutex is parked on this exact instance
+    // and would otherwise race against a fresh mutex created by a later
+    // caller. The map entries are bounded by the live space set, so the
+    // residual cost is one Mutex per ever-connected space.
   }
 
   private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
@@ -190,7 +238,11 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
         scheduleTask(
           this._ctx!,
           async () => {
-            using _guard = await this._mutex.acquire();
+            // Per-space mutex (not the global `_mutex`) — the restart's heavy
+            // I/O (`close()` + fresh SUH handshake on `open()`) must not block
+            // `connectToSpace`/`disconnectFromSpace` for other spaces, which
+            // was the O(N) create-latency cliff at space-creation boundaries.
+            using _guard = await this._spaceMutex(spaceId).acquire();
             if (this._connections.get(spaceId) !== connection) {
               return;
             }
@@ -407,6 +459,31 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     switch (message.type) {
       case MESSAGE_TYPE_SUBDUCTION_CONNECTION:
         message.targetId = this._subductionServiceId as PeerId;
+        // #region DEBUG
+        {
+          const data = (message as any).data as Uint8Array | undefined;
+          if (data instanceof Uint8Array) {
+            const head = data.slice(0, 8);
+            const headHex = Array.from(head)
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join(' ');
+            const headAscii = Array.from(head)
+              .map((b) => (b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : '.'))
+              .join('');
+            const isSUH = headAscii.startsWith('SUH');
+            log.info('[DEBUG H2] outbound subduction-frame', {
+              bytes: data.length,
+              headHex,
+              headAscii,
+              isSUH,
+              connectionId: this._connectionId,
+              senderId: (message as any).senderId,
+              remotePeerId: this._remotePeerId,
+              spaceId: this._spaceId,
+            });
+          }
+        }
+        // #endregion DEBUG
         wire = {
           type: MESSAGE_TYPE_SUBDUCTION_FRAME,
           connectionId: this._connectionId,

@@ -40,6 +40,22 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
+
+  /**
+   * Enable Subduction sedimentree transport for Automerge document replication.
+   * Mirrors `runtime.client.edgeFeatures.subductionReplicator` in production.
+   * @default false
+   */
+  useSubduction?: boolean;
+
+  /**
+   * Optional resolver from a document id to the space key it belongs to.
+   * Useful for tests that drive the host below `createSpaceRoot()` and need
+   * `MeshReplicatorConnection.shouldAdvertise` to find docs in the
+   * `_authorizedDevices` map. The same hook is wired in production via
+   * `service-context.ts` from `SpaceManager.findSpaceByRootDocumentId`.
+   */
+  getSpaceKeyByRootDocumentId?: (documentId: string) => PublicKey | undefined;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -82,6 +98,8 @@ export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _types: Type.AnyEntity[];
   private readonly _assignQueuePositions?: boolean;
+  private readonly _useSubduction?: boolean;
+  private readonly _getSpaceKeyByRootDocumentId?: (documentId: string) => PublicKey | undefined;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -95,12 +113,20 @@ export class EchoTestPeer extends Resource {
   >;
   private _isReloading = false;
 
-  constructor({ kv = createTestLevel(), types, assignQueuePositions }: PeerOptions) {
+  constructor({
+    kv = createTestLevel(),
+    types,
+    assignQueuePositions,
+    useSubduction,
+    getSpaceKeyByRootDocumentId,
+  }: PeerOptions) {
     super();
     this._kv = kv;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
+    this._useSubduction = useSubduction;
+    this._getSpaceKeyByRootDocumentId = getSpaceKeyByRootDocumentId;
   }
 
   private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<
@@ -139,6 +165,8 @@ export class EchoTestPeer extends Resource {
       kv: this._kv,
       runtime: this._managedRuntime.runtimeEffect,
       assignQueuePositions: this._assignQueuePositions,
+      useSubduction: this._useSubduction,
+      getSpaceKeyByRootDocumentId: this._getSpaceKeyByRootDocumentId,
     });
     this._clients.clear();
     this._echoClient = new EchoClient();

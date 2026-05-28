@@ -288,9 +288,15 @@ export class EchoHost extends Resource {
 
   /**
    * Flush all pending writes to the underlying storage.
+   *
+   * When `documentIds` is provided, the flush is scoped to those documents
+   * only. Prefer the scoped form during space creation / import paths so the
+   * flush does not block on background subduction fragment processing for
+   * unrelated entries — each `subduction.addFragment(...)` can hang on the
+   * rust per-request timeout (~30s) when a peer is unresponsive.
    */
-  async flush(ctx: Context): Promise<void> {
-    await this._automergeHost.flush(ctx);
+  async flush(ctx: Context, opts?: { documentIds?: DocumentId[] }): Promise<void> {
+    await this._automergeHost.flush(ctx, { documentIds: opts?.documentIds });
   }
 
   /**

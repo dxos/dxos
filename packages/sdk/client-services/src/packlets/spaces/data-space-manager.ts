@@ -317,6 +317,7 @@ export class DataSpaceManager extends Resource {
     log('opening space...', { spaceKey });
 
     let root: DatabaseRoot;
+    const importedDocumentIds: DocumentId[] = Object.values(documentIdMapping);
     if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
@@ -327,7 +328,20 @@ export class DataSpaceManager extends Resource {
     } else {
       root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
     }
-    await this._echoHost.flush(ctx);
+    // Scope the flush to just the documents we touched. A full-repo flush
+    // here serialises against background subduction fragment processing on
+    // every other in-flight entry — each `subduction.addFragment(...)` call
+    // can hang for the rust per-request timeout (~30s) when a peer is
+    // unresponsive, multiplying with N prior entries. With sequential
+    // `client.spaces.create(...)` after my `shareConfigChanged`-on-reconnect
+    // patch this turns space-3+ create into a 30s wedge on every new space.
+    //
+    // `createSpaceRoot` already calls `_automergeHost.flush(ctx, { documentIds: [root] })`
+    // for the fresh case. The import path needs the imported `createDoc`
+    // writes settled; pass exactly those ids.
+    if (importedDocumentIds.length > 0) {
+      await this._echoHost.flush(ctx, { documentIds: importedDocumentIds });
+    }
 
     log('constructing space...', { spaceKey });
 
