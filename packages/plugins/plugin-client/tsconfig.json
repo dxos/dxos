@@ -30,16 +30,10 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/util"
@@ -88,9 +82,6 @@
     },
     {
       "path": "../../sdk/shell"
-    },
-    {
-      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"

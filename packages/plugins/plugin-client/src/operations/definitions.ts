@@ -105,4 +105,3 @@ export const RedeemToken = Operation.make({
   }),
   output: Schema.Void,
 });
-
