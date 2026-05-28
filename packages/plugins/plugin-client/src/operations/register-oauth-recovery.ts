@@ -5,21 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { getPersonalSpace } from '@dxos/app-toolkit';
-import { Context } from '@dxos/context';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type InitiateOAuthFlowRequest, type InitiateOAuthFlowResponse, OAuthProvider } from '@dxos/protocols';
 
+import { oauthRecoveryPendingKey } from '../constants';
 import { ClientCapabilities } from '../types';
-import { plainCredentialToBase64 } from './credential-codec';
 import { RegisterOAuthRecovery } from './definitions';
-
-const OAUTH_POPUP_TIMEOUT = 5 * 60_000;
-
-const SPACE_GENESIS_CREDENTIAL_TYPE = 'dxos.halo.credentials.SpaceGenesis';
 
 /** Default scope set per provider — enough to identify the user and read a verified email. */
 const SCOPES_BY_PROVIDER: Record<string, string[]> = {
@@ -28,55 +22,44 @@ const SCOPES_BY_PROVIDER: Record<string, string[]> = {
 };
 
 /**
- * Register an OAuth provider as a recovery method for the current identity.
+ * Phase 1 of OAuth-first recovery registration (redirect flow).
  *
- * Requires an existing local identity. Serializes the personal-space genesis credential and
- * supplies it in-band so kms-service can verify it chains to the identity and route the OAuth
- * refresh token to that space. Returns the verified email from the provider so the caller can
- * mint a hub Account (e.g. redeem an invitation code with the verified email).
+ * Initiates the OAuth flow and opens the provider authorization URL in a new tab. Because
+ * atproto/bsky nullifies `window.opener`, kms-service finalizes via a top-level redirect to
+ * `/redirect/oauth-recovery` rather than a `postMessage` relay. The redirect reloads the app in a
+ * fresh tab, so the invitation code + hub URL needed to complete registration are persisted to
+ * `localStorage` (keyed by `accessTokenId`) here, and the recovery finalizer reads them back on
+ * boot. This operation returns as soon as the auth tab is open — it does not await completion.
  */
 const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAuthRecovery.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
 
-      const identity = client.halo.identity.get();
-      invariant(identity, 'Cannot register OAuth recovery without a local identity.');
-      const identityKey = identity.identityKey.toHex();
-
       const edgeUrl = client.config.values.runtime?.services?.edge?.url;
       invariant(edgeUrl, 'Edge URL not configured.');
-
-      const personalSpace = getPersonalSpace(client);
-      invariant(personalSpace, 'Personal space not found.');
-
-      // Find the SpaceGenesis credential for the personal space. kms-service verifies it chains to
-      // identityKey and bears the personal-space tag, then routes the OAuth token to that space.
-      const genesisCredential = client.halo
-        .queryCredentials({ type: SPACE_GENESIS_CREDENTIAL_TYPE })
-        .find((credential: any) => credential.subject?.assertion?.spaceKey?.equals?.(personalSpace.key));
-      invariant(genesisCredential, 'Personal space genesis credential not found.');
-      const personalSpaceCredential = plainCredentialToBase64(genesisCredential as any);
 
       const provider = data.provider as OAuthProvider;
       const scopes = SCOPES_BY_PROVIDER[provider] ?? ['openid', 'email'];
       const httpEndpoint = toHttpUrl(edgeUrl);
+      // accessTokenId doubles as: (a) the cron id in SpaceSecretsObject (≤26 chars for the
+      // scheduled-run storage key) and (b) the ECHO id of the AccessToken object the recovery
+      // finalizer creates in the personal space. ULIDs satisfy both — they are exactly 26 chars
+      // and a valid ECHO ObjectId.
+      const accessTokenId = ObjectId.random();
 
-      // `personalSpaceCredential` is a local kms-service extension not yet present on the upstream
-      // schema, so it is attached out-of-band on the request object.
       const initiateRequest: InitiateOAuthFlowRequest & {
         purpose: 'register';
         registerRecovery: true;
-        personalSpaceCredential: string;
       } = {
         provider,
         spaceId: SpaceId.random(),
-        accessTokenId: `register-${crypto.randomUUID()}`,
+        accessTokenId,
         scopes,
         purpose: 'register',
         registerRecovery: true,
-        identityKey,
-        personalSpaceCredential,
+        // atproto requires a login hint (handle or DID) to resolve the user's PDS/auth server.
+        ...(data.loginHint ? { loginHint: data.loginHint } : {}),
       };
 
       const initiateResponse = yield* Effect.tryPromise({
@@ -84,18 +67,25 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
         catch: (error) => new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
       });
 
-      log.info('registering OAuth recovery', { provider });
-
-      // Open the auth URL and wait for the redirect page to postMessage the verified email back.
-      const email = yield* Effect.tryPromise({
-        try: () => waitForRegistration(initiateResponse.authUrl, httpEndpoint),
-        catch: (error) =>
-          new Error(
-            `OAuth registration cancelled or failed: ${error instanceof Error ? error.message : String(error)}`,
-          ),
+      // Persist what the finalizer needs to complete registration after the redirect reload.
+      yield* Effect.sync(() => {
+        try {
+          localStorage.setItem(
+            oauthRecoveryPendingKey(accessTokenId),
+            JSON.stringify({ purpose: 'register', code: data.code, hubUrl: data.hubUrl }),
+          );
+        } catch (error) {
+          log.warn('failed to persist OAuth recovery registration snapshot', { error });
+        }
       });
 
-      return { email };
+      log.info('registering OAuth recovery (redirect flow)', { provider, accessTokenId });
+
+      // Open the auth URL in a new tab. After auth, kms-service redirects the tab to
+      // `/redirect/oauth-recovery`, where the recovery finalizer takes over.
+      yield* Effect.sync(() => {
+        window.open(initiateResponse.authUrl, '_blank');
+      });
     }),
   ),
 );
@@ -113,71 +103,9 @@ const initiateOAuthFlow = async (endpoint: string, request: unknown): Promise<In
   });
   const envelope = (await response.json()) as
     | { success: true; data: InitiateOAuthFlowResponse }
-    | { success: false; error?: { message?: string } };
+    | { success: false; message?: string; error?: { message?: string } };
   if (!envelope.success) {
-    throw new Error(envelope.error?.message ?? 'OAuth initiate failed');
+    throw new Error(envelope.message ?? envelope.error?.message ?? 'OAuth initiate failed');
   }
   return envelope.data;
-};
-
-/**
- * Open the OAuth provider authorization URL in a popup window and wait for the kms-service
- * redirect page to postMessage back. For the register flow the redirect page includes the
- * provider-verified `email` alongside the OAuth result.
- */
-const waitForRegistration = (authUrl: string, expectedOrigin: string): Promise<string> => {
-  return new Promise<string>((resolve, reject) => {
-    const popup = window.open(authUrl, 'dxos-oauth-register', 'width=520,height=720');
-    if (!popup) {
-      reject(new Error('Failed to open OAuth popup — popup blocker?'));
-      return;
-    }
-
-    const ctx = Context.default();
-    const expectedOriginUrl = new URL(expectedOrigin);
-
-    const cleanup = () => {
-      window.removeEventListener('message', onMessage);
-      clearInterval(pollClosed);
-      clearTimeout(timeoutHandle);
-      void ctx.dispose();
-    };
-
-    const onMessage = (event: MessageEvent) => {
-      // Trust only messages from the kms-service origin (or same-origin localhost during dev).
-      if (event.origin !== expectedOriginUrl.origin && event.origin !== window.location.origin) {
-        return;
-      }
-      const data = event.data as { success?: boolean; email?: string; reason?: string };
-      if (typeof data !== 'object' || data === null || typeof data.success !== 'boolean') {
-        return;
-      }
-      cleanup();
-      if (data.success && data.email) {
-        resolve(data.email);
-      } else {
-        reject(new Error(data.reason ?? 'OAuth registration did not return a verified email'));
-      }
-    };
-
-    window.addEventListener('message', onMessage);
-
-    // Detect user-closed popup.
-    const pollClosed = setInterval(() => {
-      if (popup.closed) {
-        cleanup();
-        reject(new Error('OAuth popup closed before completing'));
-      }
-    }, 500);
-
-    const timeoutHandle = setTimeout(() => {
-      cleanup();
-      try {
-        popup.close();
-      } catch {
-        // Ignore — popup may already be closed.
-      }
-      reject(new Error('OAuth flow timed out'));
-    }, OAUTH_POPUP_TIMEOUT);
-  });
 };

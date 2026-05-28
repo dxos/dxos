@@ -5,18 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Context } from '@dxos/context';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type InitiateOAuthFlowRequest, type InitiateOAuthFlowResponse, OAuthProvider } from '@dxos/protocols';
 
 import { ClientCapabilities } from '../types';
 import { RedeemOAuthRecovery } from './definitions';
-
-const RECOVER_IDENTITY_RPC_TIMEOUT = 30_000;
-const OAUTH_POPUP_TIMEOUT = 5 * 60_000;
 
 /** Default scope set per provider — enough to identify the user without granting broad access. */
 const SCOPES_BY_PROVIDER: Record<string, string[]> = {
@@ -24,11 +20,21 @@ const SCOPES_BY_PROVIDER: Record<string, string[]> = {
   [OAuthProvider.ATPROTO]: ['atproto', 'transition:email'],
 };
 
+/**
+ * Recover an existing identity by completing an OAuth flow with a registered recovery provider
+ * (e.g. atproto / Atmosphere), using the redirect flow.
+ *
+ * Initiates the OAuth flow and opens the provider authorization URL in a new tab. Because
+ * atproto/bsky nullifies `window.opener`, kms-service finalizes via a top-level redirect to
+ * `/redirect/oauth-recovery` (carrying the one-time `recoveryProof`) rather than a `postMessage`
+ * relay. The recovery finalizer reads the proof on boot and redeems it via
+ * `IdentityService.recoverIdentity` to admit this device into HALO. This operation returns as soon
+ * as the auth tab is open — it does not await completion.
+ */
 const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRecovery.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      invariant(client.services.services.IdentityService, 'IdentityService not available');
 
       const edgeUrl = client.config.values.runtime?.services?.edge?.url;
       invariant(edgeUrl, 'Edge URL not configured.');
@@ -36,16 +42,20 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
       const provider = data.provider as OAuthProvider;
       const scopes = SCOPES_BY_PROVIDER[provider] ?? ['openid'];
       const httpEndpoint = toHttpUrl(edgeUrl);
+      // Placeholder; the recovery flow does not register a refresh cron under this id. Kept as a
+      // valid ObjectId/ULID to satisfy InitiateOAuthFlowRequest validation.
+      const accessTokenId = ObjectId.random();
 
-      // 1. Initiate the OAuth flow. spaceId/accessTokenId are placeholders — kms-service
-      //    overwrites spaceId from the IdentityRecovery row once it identifies the user, and
-      //    accessTokenId is irrelevant on a fresh device.
+      // spaceId/accessTokenId are placeholders — kms-service overwrites spaceId from the
+      // IdentityRecovery row once it identifies the user.
       const initiateRequest: InitiateOAuthFlowRequest & { purpose: 'recovery' } = {
         provider,
         spaceId: SpaceId.random(),
-        accessTokenId: `recovery-${crypto.randomUUID()}`,
+        accessTokenId,
         scopes,
         purpose: 'recovery',
+        // atproto requires a login hint (handle or DID) to resolve the user's PDS/auth server.
+        ...(data.loginHint ? { loginHint: data.loginHint } : {}),
       };
 
       const initiateResponse = yield* Effect.tryPromise({
@@ -53,25 +63,16 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
         catch: (error) => new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
       });
 
-      // 2. Open the auth URL in a popup and wait for the redirect page to postMessage the
-      //    recoveryProof back to this window.
-      const recoveryProof = yield* Effect.tryPromise({
-        try: () => waitForRecoveryProof(initiateResponse.authUrl, httpEndpoint),
-        catch: (error) =>
-          new Error(`OAuth recovery cancelled or failed: ${error instanceof Error ? error.message : String(error)}`),
+      // The finalizer needs only the one-time `recoveryProof` carried in the redirect URL — no
+      // localStorage snapshot is required for recovery (unlike register, which stashes the
+      // invitation code + hub URL).
+      log.info('redeeming OAuth recovery (redirect flow)', { provider, accessTokenId });
+
+      // Open the auth URL in a new tab. After auth, kms-service redirects the tab to
+      // `/redirect/oauth-recovery`, where the recovery finalizer redeems the proof.
+      yield* Effect.sync(() => {
+        window.open(initiateResponse.authUrl, '_blank');
       });
-
-      log.info('redeeming OAuth recovery proof');
-
-      // 3. Submit the proof to db-service via the existing IdentityService.recoverIdentity RPC,
-      //    which routes proof requests to recoverIdentityWithOAuthProof on the client-services
-      //    side and admits the new device into HALO.
-      yield* Effect.promise(() =>
-        client.services.services.IdentityService!.recoverIdentity(
-          { recoveryProof },
-          { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-        ),
-      );
     }),
   ),
 );
@@ -89,71 +90,9 @@ const initiateOAuthFlow = async (endpoint: string, request: unknown): Promise<In
   });
   const envelope = (await response.json()) as
     | { success: true; data: InitiateOAuthFlowResponse }
-    | { success: false; error?: { message?: string } };
+    | { success: false; message?: string; error?: { message?: string } };
   if (!envelope.success) {
-    throw new Error(envelope.error?.message ?? 'OAuth initiate failed');
+    throw new Error(envelope.message ?? envelope.error?.message ?? 'OAuth initiate failed');
   }
   return envelope.data;
-};
-
-/**
- * Open the OAuth provider authorization URL in a popup window and wait for the kms-service
- * redirect page to postMessage back with the result. The redirect page already postMessages
- * `{ ...oauthResult, recoveryProof }` to `window.opener` (see kms-service redirect-page.ts).
- */
-const waitForRecoveryProof = (authUrl: string, expectedOrigin: string): Promise<string> => {
-  return new Promise<string>((resolve, reject) => {
-    const popup = window.open(authUrl, 'dxos-oauth-recovery', 'width=520,height=720');
-    if (!popup) {
-      reject(new Error('Failed to open OAuth popup — popup blocker?'));
-      return;
-    }
-
-    const ctx = Context.default();
-    const expectedOriginUrl = new URL(expectedOrigin);
-
-    const cleanup = () => {
-      window.removeEventListener('message', onMessage);
-      clearInterval(pollClosed);
-      clearTimeout(timeoutHandle);
-      void ctx.dispose();
-    };
-
-    const onMessage = (event: MessageEvent) => {
-      // Trust only messages from the kms-service origin (or same-origin localhost during dev).
-      if (event.origin !== expectedOriginUrl.origin && event.origin !== window.location.origin) {
-        return;
-      }
-      const data = event.data as { success?: boolean; recoveryProof?: string; reason?: string };
-      if (typeof data !== 'object' || data === null || typeof data.success !== 'boolean') {
-        return;
-      }
-      cleanup();
-      if (data.success && data.recoveryProof) {
-        resolve(data.recoveryProof);
-      } else {
-        reject(new Error(data.reason ?? 'OAuth flow did not return a recovery proof'));
-      }
-    };
-
-    window.addEventListener('message', onMessage);
-
-    // Detect user-closed popup.
-    const pollClosed = setInterval(() => {
-      if (popup.closed) {
-        cleanup();
-        reject(new Error('OAuth popup closed before completing'));
-      }
-    }, 500);
-
-    const timeoutHandle = setTimeout(() => {
-      cleanup();
-      try {
-        popup.close();
-      } catch {
-        // Ignore — popup may already be closed.
-      }
-      reject(new Error('OAuth flow timed out'));
-    }, OAUTH_POPUP_TIMEOUT);
-  });
 };

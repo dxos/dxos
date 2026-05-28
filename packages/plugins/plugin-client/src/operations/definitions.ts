@@ -116,15 +116,21 @@ export const RedeemOAuthRecovery = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     provider: Schema.String,
+    /** Provider login hint (atproto handle or DID) forwarded to Edge as `loginHint`. Required for atproto. */
+    loginHint: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
 
 /**
- * Register an OAuth provider (e.g. atproto / Atmosphere) as a recovery method for the current
- * identity. Requires an existing local identity; supplies the personal-space genesis credential
- * so kms-service can route the refresh token to the personal space. Returns the verified email
- * from the provider so the caller can mint a hub Account.
+ * Phase 1 of OAuth-first recovery registration (redirect flow).
+ *
+ * Initiates the OAuth flow, persists a snapshot of the invitation code + hub URL keyed by the
+ * flow's `accessTokenId`, then opens the provider authorization URL in a new tab. atproto/bsky
+ * nullifies `window.opener`, so completion is finalized out-of-band: after auth, kms-service
+ * redirects the tab to `/redirect/oauth-recovery` where the recovery finalizer reads the snapshot,
+ * creates the local identity, calls {@link CompleteOAuthRegistration}, and redeems the invitation.
+ * This operation returns immediately once the tab is open — it does not await completion.
  */
 export const RegisterOAuthRecovery = Operation.make({
   meta: {
@@ -135,8 +141,33 @@ export const RegisterOAuthRecovery = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     provider: Schema.String,
+    /** Provider login hint (atproto handle or DID) forwarded to Edge as `loginHint`. Required for atproto. */
+    loginHint: Schema.optional(Schema.String),
+    /** Invitation code to redeem (with the provider-verified email) once registration completes. */
+    code: Schema.String,
+    /** Hub-service URL the invitation code is redeemed against. */
+    hubUrl: Schema.String,
+  }),
+  output: Schema.Void,
+});
+
+/**
+ * Phase 2 of OAuth-first recovery registration. Requires an existing local identity. Serializes
+ * the personal-space genesis credential and submits it with the phase-1 `registrationToken` so
+ * kms-service routes the stashed OAuth refresh token to the personal space and writes the
+ * IdentityRecovery row.
+ */
+export const CompleteOAuthRegistration = Operation.make({
+  meta: {
+    key: `${CLIENT_OPERATION}.complete-oauth-registration`,
+    name: 'Complete OAuth Registration',
+    icon: 'ph--cloud--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    registrationToken: Schema.String,
   }),
   output: Schema.Struct({
-    email: Schema.String,
+    email: Schema.optional(Schema.String),
   }),
 });

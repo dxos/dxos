@@ -125,6 +125,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",

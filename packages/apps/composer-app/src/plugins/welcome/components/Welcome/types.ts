@@ -26,8 +26,11 @@ export type WelcomeScreenProps = {
   onPasskey?: () => MaybePromise<void>;
   onJoinIdentity?: () => MaybePromise<void>;
   onRecoverIdentity?: () => MaybePromise<void>;
-  /** Recover an existing identity via an OAuth provider (e.g. Atmosphere/atproto). */
-  onRecoverWithOAuth?: (provider: string) => MaybePromise<void>;
+  /**
+   * Recover an existing identity via an OAuth provider (e.g. Atmosphere/atproto). `loginHint` is the
+   * provider login hint (atproto handle or DID); required for atproto so Edge can resolve the PDS.
+   */
+  onRecoverWithOAuth?: (provider: string, loginHint?: string) => MaybePromise<void>;
 
   // Sign-up tab.
   /** Validate an invitation code before showing the auth step. Resolves true if valid. */
@@ -39,7 +42,7 @@ export type WelcomeScreenProps = {
    * registers the provider as a recovery method, and redeems the invitation code with the
    * provider-verified email.
    */
-  onCreateAccountWithOAuth?: (args: { code: string; provider: string }) => MaybePromise<void>;
+  onCreateAccountWithOAuth?: (args: { code: string; provider: string; loginHint?: string }) => MaybePromise<void>;
   /** Submit waitlist sign-up (no invitation code). */
   onJoinWaitlist?: (email: string) => MaybePromise<void>;
 

@@ -106,7 +106,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   }, [invokePromise]);
 
   const handleRecoverWithOAuth = useCallback(
-    async (provider: string) => {
+    async (provider: string, loginHint?: string) => {
       if (pendingRef.current) {
         return;
       }
@@ -115,9 +115,14 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
       pendingRef.current = true;
       try {
-        await invokePromise(ClientOperation.RedeemOAuthRecovery, { provider });
-        void invokePromise(ClientOperation.CreateAgent);
-        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+        // Opens the provider auth in a new tab. Because atproto nullifies window.opener, the flow
+        // can't relay back via postMessage; kms-service redirects the tab to /redirect/oauth-recovery,
+        // where the welcome OAuthRecoveryRedirect module redeems the recovery proof and admits this
+        // device. This call returns once the tab is open — completion happens out-of-band.
+        const result = await invokePromise(ClientOperation.RedeemOAuthRecovery, { provider, loginHint });
+        if (result.error) {
+          throw result.error;
+        }
       } catch (err) {
         log.catch(err);
         setError(true);
@@ -221,7 +226,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   const handleCreateAccountWithOAuth = useCallback(
-    async ({ code, provider }: { code: string; provider: string }) => {
+    async ({ code, provider, loginHint }: { code: string; provider: string; loginHint?: string }) => {
       if (pendingRef.current) {
         return;
       }
@@ -230,39 +235,21 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
       pendingRef.current = true;
       try {
-        // 1. Ensure a local identity exists — OAuth recovery registration requires one (it
-        //    serializes the personal-space genesis credential issued by this identity).
-        const ensureIdentity = async () => {
-          if (identity) {
-            return identity;
-          }
-          await invokePromise(ClientOperation.CreateIdentity, {});
-          return client.halo.identity.get();
-        };
-        const resolvedIdentity = await ensureIdentity();
-        invariant(resolvedIdentity, 'identity should exist after create');
-
-        // 2. Register the OAuth provider as a recovery method; kms-service returns the
-        //    provider-verified email.
-        const registerResult = await invokePromise(ClientOperation.RegisterOAuthRecovery, { provider });
-        if (registerResult.error) {
-          throw registerResult.error;
-        }
-        const email = registerResult.data?.email;
-        invariant(email, 'OAuth provider did not return a verified email');
-
-        // 3. Redeem the invitation code with the verified email to mint the hub Account.
-        const result = await redeemAccountInvitation({
+        // Opens the provider auth in a new tab (OAuth-first: no local identity yet). Because atproto
+        // nullifies window.opener, the flow can't relay back via postMessage; the invitation code +
+        // hub URL are persisted, then kms-service redirects the tab to /redirect/oauth-recovery. The
+        // welcome OAuthRecoveryRedirect module then creates the identity, completes registration, and
+        // redeems this invitation code with the provider-verified email. This call returns once the
+        // tab is open — completion happens out-of-band.
+        const result = await invokePromise(ClientOperation.RegisterOAuthRecovery, {
+          provider,
+          loginHint,
+          code,
           hubUrl,
-          email,
-          identityKey: resolvedIdentity.identityKey.toHex(),
-          code: code.replace(/-/g, '').toUpperCase(),
         });
-        if ('accountId' in result) {
-          log.info('account created', { accountId: result.accountId });
-          void invokePromise(ClientOperation.CreateAgent);
+        if (result.error) {
+          throw result.error;
         }
-        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
         setError(true);
@@ -270,7 +257,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hubUrl, identity, client, invokePromise, error],
+    [hubUrl, invokePromise, error],
   );
 
   const handleJoinWaitlist = useCallback(
