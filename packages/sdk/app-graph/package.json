@@ -50,7 +50,6 @@
     "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

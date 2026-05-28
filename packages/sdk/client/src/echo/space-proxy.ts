@@ -33,12 +33,11 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import {
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
-  Filter,
   type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-db';
