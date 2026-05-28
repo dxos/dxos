@@ -14,7 +14,6 @@ import {
   CalendarGridHeader as RACCalendarGridHeader,
   CalendarHeaderCell as RACCalendarHeaderCell,
   Heading as RACHeading,
-  I18nProvider,
   RangeCalendar as RACRangeCalendar,
   type RangeCalendarProps as RACRangeCalendarProps,
   type DateValue,
@@ -89,15 +88,13 @@ const CalendarShell = ({
 }) => {
   const { tx } = useThemeContext();
   return (
-    <I18nProvider locale='en-US'>
-      <div
-        ref={forwardedRef}
-        className={tx('calendar.root', {}, classNames, className) ?? undefined}
-        aria-disabled={isDisabled || undefined}
-      >
-        {children}
-      </div>
-    </I18nProvider>
+    <div
+      ref={forwardedRef}
+      className={tx('calendar.root', {}, classNames, className) ?? undefined}
+      aria-disabled={isDisabled || undefined}
+    >
+      {children}
+    </div>
   );
 };
 

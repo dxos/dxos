@@ -10,7 +10,6 @@ import {
   type DateFieldProps,
   DateInput,
   DateSegment,
-  I18nProvider,
   TimeField,
   type TimeFieldProps,
 } from 'react-aria-components';
@@ -258,17 +257,15 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     );
 
     return (
-      <I18nProvider locale='en-US'>
-        <PickerWrapper
-          pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
-          onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
-          withTime={false}
-          disabled={disabled}
-          calendar={<DatePicker.Calendar />}
-        >
-          {field}
-        </PickerWrapper>
-      </I18nProvider>
+      <PickerWrapper
+        pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
+        onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
+        withTime={false}
+        disabled={disabled}
+        calendar={<DatePicker.Calendar />}
+      >
+        {field}
+      </PickerWrapper>
     );
   },
 );
@@ -325,23 +322,25 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     };
 
     return (
-      <I18nProvider locale='en-US'>
-        <TimeField {...fieldProps}>
-          <DateInput
-            ref={forwardedRef}
-            {...(id ? { id } : {})}
-            data-density={density}
-            className={tx(
-              'input.input',
-              { variant, disabled, density, elevation, validationValence },
-              fieldClass,
-              classNames,
-            )}
-          >
-            {renderSegment}
-          </DateInput>
-        </TimeField>
-      </I18nProvider>
+      <TimeField {...fieldProps}>
+        <DateInput
+          ref={forwardedRef}
+          {...((id ?? contextId) ? { id: id ?? contextId } : {})}
+          {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
+          {...(validationValence === 'error' && errorMessageId
+            ? { 'aria-invalid': true, 'aria-errormessage': errorMessageId }
+            : {})}
+          data-density={density}
+          className={tx(
+            'input.input',
+            { variant, disabled, density, elevation, validationValence },
+            fieldClass,
+            classNames,
+          )}
+        >
+          {renderSegment}
+        </DateInput>
+      </TimeField>
     );
   },
 );
@@ -420,33 +419,31 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     );
 
     return (
-      <I18nProvider locale='en-US'>
-        <PickerWrapper
-          pickerValue={
-            parsed ? new Date(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute) : undefined
-          }
-          onPickerChange={(next) =>
-            setStringValue(
-              next
-                ? formatCalendarDateTime(
-                    new CalendarDateTime(
-                      next.getFullYear(),
-                      next.getMonth() + 1,
-                      next.getDate(),
-                      next.getHours(),
-                      next.getMinutes(),
-                    ),
-                  )
-                : '',
-            )
-          }
-          withTime
-          disabled={disabled}
-          calendar={<DatePicker.Calendar />}
-        >
-          {field}
-        </PickerWrapper>
-      </I18nProvider>
+      <PickerWrapper
+        pickerValue={
+          parsed ? new Date(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute) : undefined
+        }
+        onPickerChange={(next) =>
+          setStringValue(
+            next
+              ? formatCalendarDateTime(
+                  new CalendarDateTime(
+                    next.getFullYear(),
+                    next.getMonth() + 1,
+                    next.getDate(),
+                    next.getHours(),
+                    next.getMinutes(),
+                  ),
+                )
+              : '',
+          )
+        }
+        withTime
+        disabled={disabled}
+        calendar={<DatePicker.Calendar />}
+      >
+        {field}
+      </PickerWrapper>
     );
   },
 );

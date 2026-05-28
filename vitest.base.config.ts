@@ -74,7 +74,10 @@ const createStorybookProject = (dirname: string) =>
       browser: {
         enabled: true,
         headless: true,
-        provider: playwright(),
+        // Pin the browser timezone so `Intl.DateTimeFormat().resolvedOptions().timeZone`
+        // does not resolve to `Etc/Unknown` in headless CI containers — react-aria's
+        // calendar feeds that value back into `Intl.DateTimeFormat`, which throws.
+        provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' } }),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
