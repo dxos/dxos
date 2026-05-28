@@ -28,7 +28,7 @@ export const RedeemOAuthRecovery = Operation.make({
 });
 
 /**
- * Phase 1 of OAuth-first recovery registration (redirect flow).
+ * Begins OAuth recovery registration (redirect flow).
  *
  * Initiates the OAuth flow, persists a snapshot of the invitation code + hub URL keyed by the
  * flow's `accessTokenId`, then opens the provider authorization URL in a new tab. atproto/bsky
@@ -57,10 +57,9 @@ export const RegisterOAuthRecovery = Operation.make({
 });
 
 /**
- * Phase 2 of OAuth-first recovery registration. Requires an existing local identity. Serializes
- * the personal-space genesis credential and submits it with the phase-1 `registrationToken` so
- * kms-service routes the stashed OAuth refresh token to the personal space and writes the
- * IdentityRecovery row.
+ * Completes OAuth recovery registration for an existing local identity. Submits the registration
+ * token along with the identity and space keys so the OAuth refresh token is routed to the personal
+ * space and the recovery binding is recorded.
  */
 export const CompleteOAuthRegistration = Operation.make({
   meta: {

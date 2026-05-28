@@ -17,7 +17,7 @@ import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient, oauthRecoveryPendingKey } f
 
 
 /**
- * Phase 1 of OAuth-first recovery registration (redirect flow).
+ * Begins OAuth recovery registration (redirect flow).
  *
  * Initiates the OAuth flow and opens the provider authorization URL in a new tab. Because
  * atproto/bsky nullifies `window.opener`, kms-service finalizes via a top-level redirect to
@@ -33,16 +33,11 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
 
       const provider = data.provider as OAuthProvider;
       const edgeClient = createEdgeHttpClient(client);
-      // accessTokenId doubles as: (a) the cron id in SpaceSecretsObject (≤26 chars for the
-      // scheduled-run storage key) and (b) the ECHO id of the AccessToken object the recovery
-      // finalizer creates in the personal space. ULIDs satisfy both — they are exactly 26 chars
-      // and a valid ECHO ObjectId.
+      // The recovery finalizer creates an AccessToken ECHO object in the personal space under this
+      // id, so it must be a valid ObjectId.
       const accessTokenId = ObjectId.random();
 
-      const initiateRequest: InitiateOAuthFlowRequest & {
-        purpose: 'register';
-        registerRecovery: true;
-      } = {
+      const initiateRequest: InitiateOAuthFlowRequest = {
         provider,
         spaceId: SpaceId.random(),
         accessTokenId,

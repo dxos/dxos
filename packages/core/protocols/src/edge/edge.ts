@@ -364,8 +364,8 @@ export type OAuthFlowResult =
   | { success: false; reason: string };
 
 /**
- * Phase 2 of OAuth-first recovery registration. Submitted after a local identity exists; routes the
- * stashed OAuth refresh token into the personal space and writes the IdentityRecovery row.
+ * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
+ * into the personal space and writes the recovery binding.
  */
 export type CompleteOAuthRegistrationRequest = {
   registrationToken: string;

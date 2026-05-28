@@ -34,13 +34,11 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
 
       const provider = data.provider as OAuthProvider;
       const edgeClient = createEdgeHttpClient(client);
-      // Placeholder; the recovery flow does not register a refresh cron under this id. Kept as a
-      // valid ObjectId/ULID to satisfy InitiateOAuthFlowRequest validation.
+      // The recovery flow does not consume these — the user's space/token are resolved server-side
+      // from the recovery binding. Random values satisfy InitiateOAuthFlowRequest validation.
       const accessTokenId = ObjectId.random();
 
-      // spaceId/accessTokenId are placeholders — kms-service overwrites spaceId from the
-      // IdentityRecovery row once it identifies the user.
-      const initiateRequest: InitiateOAuthFlowRequest & { purpose: 'recovery' } = {
+      const initiateRequest: InitiateOAuthFlowRequest = {
         provider,
         spaceId: SpaceId.random(),
         accessTokenId,

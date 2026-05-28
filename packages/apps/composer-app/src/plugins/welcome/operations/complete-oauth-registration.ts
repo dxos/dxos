@@ -29,17 +29,10 @@ const SOURCE_BY_PROVIDER: Record<string, string> = {
 };
 
 /**
- * Phase 2 of OAuth-first recovery registration.
- *
- * Requires an existing local identity (created after phase 1 authenticated the user). Submits
- * `{ registrationToken, identityKey, spaceKey }` so kms-service can route the stashed OAuth
- * refresh token into the personal space and write the IdentityRecovery row. The spaceKey is a
- * routing hint, not a security boundary — kms-service does not verify identityKey↔spaceKey
- * ownership cryptographically; SpaceSecretsObject access is gated by space membership server-side.
- *
- * On success kms-service returns the initial access token. We materialize an AccessToken ECHO
- * object in the personal space with `id = accessTokenId` so the kms-service refresh cron can later
- * write rotated access tokens onto it (it looks the object up by id via `_queryTokenObjects`).
+ * Completes OAuth recovery registration for the local identity. Submits the registration token plus
+ * the identity and space keys to edge, which routes the OAuth refresh token into the personal space
+ * and records the recovery binding. On success, materializes an `AccessToken` object in the personal
+ * space keyed by the returned `accessTokenId` so subsequent token rotations land on it.
  */
 const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = CompleteOAuthRegistration.pipe(
   Operation.withHandler(
@@ -69,9 +62,8 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
           new Error(`OAuth registration completion failed: ${error instanceof Error ? error.message : String(error)}`),
       });
 
-      // Materialize the AccessToken ECHO object so kms-service's refresh cron can find it by id.
-      // Without this, the first cron tick logs "AccessToken object was deleted" and unregisters
-      // the refresh token.
+      // Materialize the AccessToken object keyed by the returned id so rotated tokens can be written
+      // back onto it; without it the stored refresh token is treated as orphaned and dropped.
       yield* Effect.promise(() => personalSpace.waitUntilReady());
       const source = SOURCE_BY_PROVIDER[result.provider] ?? result.provider;
       const tokenObject = Obj.make(AccessToken.AccessToken, {

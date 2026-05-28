@@ -16,6 +16,7 @@ export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transitio
 /**
  * Create an `EdgeHttpClient` pointed at the configured edge URL. Extracted here
  * so all OAuth recovery operations share the same construction pattern.
+ * TODO(wittjosiah): Use shared edge client.
  */
 export const createEdgeHttpClient = (client: Client): EdgeHttpClient => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
