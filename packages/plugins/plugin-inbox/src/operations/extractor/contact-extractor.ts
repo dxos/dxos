@@ -9,7 +9,6 @@ import { type Message } from '@dxos/types';
 
 import { type MessageExtractor } from '../../capabilities';
 import { InboxOperation } from '../../types';
-
 import { buildContactFromActor } from './contact';
 
 export const ID = 'org.dxos.plugin.inbox.extractor.contact';
@@ -22,7 +21,10 @@ const matchMessage = (message: Message.Message): MessageExtractor.MatchResult =>
 };
 
 /** Turns the sender into a Person (+ Organization link by domain) via the shared helper. */
-const extract = ({ db, message }: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
+const extract = ({
+  db,
+  message,
+}: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
   Effect.gen(function* () {
     const contact = yield* buildContactFromActor(message.sender, db);
     return { created: contact ? [contact] : [], updated: [], relations: [] };

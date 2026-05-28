@@ -214,7 +214,10 @@ const findExistingFlight = (
   );
 };
 
-const extract = ({ db, message }: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
+const extract = ({
+  db,
+  message,
+}: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
   extractFromMessage(db, message);
 
 /**

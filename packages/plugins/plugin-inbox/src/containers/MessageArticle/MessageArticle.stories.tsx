@@ -18,11 +18,10 @@ import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType, Person } from '@dxos/types';
 
-import { InboxPlugin } from '../../InboxPlugin';
 import { type MessageExtractor } from '../../capabilities';
+import { InboxPlugin } from '../../InboxPlugin';
 import { translations } from '../../translations';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
-
 import { MessageArticle } from './MessageArticle';
 
 // No-op handlers for layout operations that MessageArticle calls (e.g. Open on companion mode).

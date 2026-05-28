@@ -42,8 +42,8 @@ export const buildContactFromActor = (
       emails: [{ value: email }],
     });
     if (actor.name) {
-      Obj.update(newContact, (contact) => {
-        contact.fullName = actor.name;
+      Obj.update(newContact, (newContact) => {
+        newContact.fullName = actor.name;
       });
     }
 
@@ -55,8 +55,8 @@ export const buildContactFromActor = (
     const existingOrganizations = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run());
     const matchingOrg = existingOrganizations.find((org) => matchesDomain(org.website, emailDomain));
     if (matchingOrg) {
-      Obj.update(newContact, (contact) => {
-        contact.organization = Ref.make(matchingOrg);
+      Obj.update(newContact, (newContact) => {
+        newContact.organization = Ref.make(matchingOrg);
       });
     }
 

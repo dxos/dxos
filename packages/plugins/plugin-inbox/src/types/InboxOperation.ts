@@ -13,7 +13,6 @@ import { Collection, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Message } from '@dxos/types';
 
-import type * as MessageExtractor from '../capabilities/MessageExtractor';
 import { meta } from '#meta';
 
 import * as Calendar from './Calendar';

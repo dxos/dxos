@@ -8,7 +8,6 @@ import { Operation } from '@dxos/compute';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { InboxOperation } from '../../types';
-
 import { buildContactFromActor } from './contact';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractContact> = InboxOperation.ExtractContact.pipe(
