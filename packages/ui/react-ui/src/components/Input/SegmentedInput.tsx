@@ -10,6 +10,7 @@ import {
   type DateFieldProps,
   DateInput,
   DateSegment,
+  I18nProvider,
   TimeField,
   type TimeFieldProps,
 } from 'react-aria-components';
@@ -247,14 +248,16 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     );
 
     return (
-      <PickerWrapper
-        pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
-        onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
-        withTime={false}
-        calendar={<DatePicker.Calendar />}
-      >
-        {field}
-      </PickerWrapper>
+      <I18nProvider locale='en-US'>
+        <PickerWrapper
+          pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
+          onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
+          withTime={false}
+          calendar={<DatePicker.Calendar />}
+        >
+          {field}
+        </PickerWrapper>
+      </I18nProvider>
     );
   },
 );
@@ -311,21 +314,23 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     };
 
     return (
-      <TimeField {...fieldProps}>
-        <DateInput
-          ref={forwardedRef}
-          {...(id ? { id } : {})}
-          data-density={density}
-          className={tx(
-            'input.input',
-            { variant, disabled, density, elevation, validationValence },
-            fieldClass,
-            classNames,
-          )}
-        >
-          {renderSegment}
-        </DateInput>
-      </TimeField>
+      <I18nProvider locale='en-US'>
+        <TimeField {...fieldProps}>
+          <DateInput
+            ref={forwardedRef}
+            {...(id ? { id } : {})}
+            data-density={density}
+            className={tx(
+              'input.input',
+              { variant, disabled, density, elevation, validationValence },
+              fieldClass,
+              classNames,
+            )}
+          >
+            {renderSegment}
+          </DateInput>
+        </TimeField>
+      </I18nProvider>
     );
   },
 );
@@ -400,30 +405,32 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     );
 
     return (
-      <PickerWrapper
-        pickerValue={
-          parsed ? new Date(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute) : undefined
-        }
-        onPickerChange={(next) =>
-          setStringValue(
-            next
-              ? formatCalendarDateTime(
-                  new CalendarDateTime(
-                    next.getFullYear(),
-                    next.getMonth() + 1,
-                    next.getDate(),
-                    next.getHours(),
-                    next.getMinutes(),
-                  ),
-                )
-              : '',
-          )
-        }
-        withTime
-        calendar={<DatePicker.Calendar />}
-      >
-        {field}
-      </PickerWrapper>
+      <I18nProvider locale='en-US'>
+        <PickerWrapper
+          pickerValue={
+            parsed ? new Date(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute) : undefined
+          }
+          onPickerChange={(next) =>
+            setStringValue(
+              next
+                ? formatCalendarDateTime(
+                    new CalendarDateTime(
+                      next.getFullYear(),
+                      next.getMonth() + 1,
+                      next.getDate(),
+                      next.getHours(),
+                      next.getMinutes(),
+                    ),
+                  )
+                : '',
+            )
+          }
+          withTime
+          calendar={<DatePicker.Calendar />}
+        >
+          {field}
+        </PickerWrapper>
+      </I18nProvider>
     );
   },
 );
