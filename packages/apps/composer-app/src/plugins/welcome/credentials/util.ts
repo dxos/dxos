@@ -105,7 +105,7 @@ export const login = async ({
   hubUrl: string;
   email: string;
   identityKey?: string;
-}): Promise<{ token?: string; needsIdentity?: boolean; admitted?: boolean; noAccount?: boolean }> => {
+}): Promise<{ token?: string; needsIdentity?: boolean; admitted?: boolean }> => {
   const response = await fetch(new URL('/account/login', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
