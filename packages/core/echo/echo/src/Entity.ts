@@ -274,8 +274,7 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  * `IconAnnotation`. Returns the full `{ icon, hue }` annotation so callers can use both
  * the phosphor icon name and the suggested colour.
  */
-export const getIcon = (entity: Unknown | Snapshot): internal.IconAnnotation | undefined =>
-  internal.getIcon(entity);
+export const getIcon = (entity: Unknown | Snapshot): internal.IconAnnotation | undefined => internal.getIcon(entity);
 
 /**
  * Convert an entity to its JSON representation.

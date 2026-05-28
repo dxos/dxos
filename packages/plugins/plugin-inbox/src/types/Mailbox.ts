@@ -214,7 +214,9 @@ const messageIdFromRef = (ref: Ref.Ref<Message.Message>): string | undefined => 
  * once and indexes by message id. UI surfaces (`MessageStack` tiles, `MessageHeader`) use
  * this to render chips.
  */
-export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>): Record<string, Array<{ id: string } & Tag>> => {
+export const buildMessageTagsIndex = (
+  mailbox: Mailbox | Obj.Snapshot<Mailbox>,
+): Record<string, Array<{ id: string } & Tag>> => {
   const index: Record<string, Array<{ id: string } & Tag>> = {};
   for (const [id, entry] of Object.entries(mailbox.tags ?? {})) {
     for (const ref of entry.messages) {

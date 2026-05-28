@@ -674,9 +674,8 @@ export const getDescription = (entity: Unknown | Snapshot): string | undefined =
  * Returns the full `{ icon, hue }` annotation; callers wanting just the icon name typically
  * write `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
  */
-export const getIcon = (
-  entity: Entity.Unknown | Entity.Snapshot,
-): internal.IconAnnotation | undefined => internal.getIcon(entity);
+export const getIcon = (entity: Entity.Unknown | Entity.Snapshot): internal.IconAnnotation | undefined =>
+  internal.getIcon(entity);
 
 /**
  * Set the description of the object.
