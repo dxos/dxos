@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useRef } from 'react';
+import React from 'react';
 
 import { type URI } from '@dxos/keys';
-import { DxAnchorActivate, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+
+import { AnchorIconButton } from '../AnchorIconButton';
 
 export type UserIconButtonProps = ThemedClassName<{
   value?: URI.URI;
@@ -18,33 +20,15 @@ export type UserIconButtonProps = ThemedClassName<{
 // TODO(burdon): Reconcile with Avatar if space member.
 export const UserIconButton = ({ value, title, onContactCreate }: UserIconButtonProps) => {
   const { t } = useTranslation(meta.id);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const handleSenderClick = useCallback(() => {
-    if (value) {
-      buttonRef.current?.dispatchEvent(
-        new DxAnchorActivate({
-          trigger: buttonRef.current,
-          dxn: value.toString(),
-          label: 'never',
-          kind: 'card',
-          title,
-        }),
-      );
-    } else {
-      onContactCreate?.();
-    }
-  }, [value, title, onContactCreate]);
-
   return (
-    <IconButton
-      ref={buttonRef}
-      variant='ghost'
-      disabled={!value && !onContactCreate}
-      icon={value ? 'ph--user--regular' : 'ph--user-plus--regular'}
-      iconOnly
-      size={4}
-      label={value ? t('show-contact.label') : t('create-contact.label')}
-      onClick={handleSenderClick}
+    <AnchorIconButton
+      value={value}
+      title={title}
+      onClick={onContactCreate}
+      icon='ph--user--regular'
+      fallbackIcon='ph--user-plus--regular'
+      label={t('show-contact.label')}
+      fallbackLabel={t('create-contact.label')}
     />
   );
 };

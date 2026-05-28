@@ -183,7 +183,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
   return (
-    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
+    <div className='flex flex-col p-1 border-b border-subdued-separator'>
       <div className='grid grid-cols-[2rem_1fr] gap-1'>
         <div className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />

@@ -196,18 +196,16 @@ export const ExtractTripWithPlay: Story = {
     await userEvent.click(tripItem as HTMLElement);
 
     // The dispatcher persists Trip + Booking + Segment + ExtractedFrom relations; the
-    // `useExtractedObjects` hook then reactively surfaces the Trip in the header.
-    const tripTag = await waitFor(
-      () => canvas.queryByRole('button', { name: /SFO/i }),
-      (value) => Boolean(value),
-    );
-    expect(tripTag).toBeInTheDocument();
+    // `useExtractedObjects` hook then reactively surfaces the Trip in the message header
+    // as a row matching the sender-row layout (icon column + label column).
+    const tripRow = await waitFor(() => canvas.queryByText(/SFO/i));
+    expect(tripRow).toBeInTheDocument();
 
-    // Hover the tag — preview card with disabled drag handle should appear.
-    await userEvent.hover(tripTag as HTMLElement);
-    const previewDragHandle = await waitFor(() =>
-      body.queryByLabelText(/Drag handle \(disabled in preview\)/i),
-    );
-    expect(previewDragHandle).toBeDisabled();
+    // The row's AnchorIconButton should be enabled (has a DXN → opens card preview on click
+    // via DxAnchorActivate). We don't assert the preview card itself here because the deck
+    // plugin's anchor preview surface isn't wired up in this story.
+    const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO|trip/i }));
+    expect(tripButton).toBeInTheDocument();
+    expect(tripButton).not.toBeDisabled();
   },
 };
