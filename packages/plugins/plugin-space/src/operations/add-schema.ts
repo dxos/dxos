@@ -14,8 +14,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
-      const schema = db.add(input.type);
-      Type.update(schema, (draft) => {
+      const type = db.add(input.type);
+      Type.update(type, (draft) => {
         if (input.name) {
           draft.name = input.name;
         }
@@ -31,20 +31,20 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
       yield* Plugin.activate(SpaceEvents.TypeAdded);
       const onTypeAdded = yield* Capability.getAll(SpaceCapabilities.OnTypeAdded);
       yield* Effect.all(
-        onTypeAdded.map((callback) => callback({ db, type: schema, show: input.show })),
+        onTypeAdded.map((callback) => callback({ db, type, show: input.show })),
         { concurrency: 'unbounded' },
       );
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-        name: 'space.schema.add',
+        name: 'space.type.add',
         properties: {
           spaceId: db.spaceId,
-          objectId: schema.id,
-          typename: Type.getTypename(schema),
+          objectId: type.id,
+          typename: Type.getTypename(type),
         },
       });
 
-      return { id: schema.id!, object: schema };
+      return { id: type.id!, object: type };
     }),
   ),
 );
