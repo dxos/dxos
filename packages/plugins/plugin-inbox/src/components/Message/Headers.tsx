@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React from 'react';
+import React, { useEffect, useReducer } from 'react';
 
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
@@ -33,8 +33,14 @@ export const Headers = ({
   const db = space?.db;
   const objects = useExtractedObjects(db, message);
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
-  // Compute inline (no useMemo) so ECHO's reactive proxy registers our reads against the
-  // mailbox's `tags` field and re-renders on mutation.
+  // `useQuery` only fires when the matching set changes, not when nested fields mutate.
+  // Subscribe directly to each mailbox so tag-only extractor runs (no created objects,
+  // no relation, just a `mailbox.tags` mutation) still trigger a re-render here.
+  const [, bump] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => {
+    const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [mailboxes]);
   const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
 
   return (
@@ -55,10 +61,10 @@ export const Headers = ({
 
       {tags.length > 0 && (
         <div className='col-span-2 grid grid-cols-subgrid items-center'>
-          <div className='flex px-2 text-subdued' aria-hidden='true'>
+          <div className='flex p-2 text-subdued' aria-hidden='true'>
             <Icon icon='ph--tag--regular' />
           </div>
-          <div className='flex flex-wrap gap-1' data-testid='extracted-tags'>
+          <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
             {tags.map((tag) => (
               <Tag key={tag.id} palette={paletteOf(tag.hue)} data-testid={`message-tag-${tag.id}`}>
                 {tag.label}
