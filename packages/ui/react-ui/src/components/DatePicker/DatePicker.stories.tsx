@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
-import { type DateRange } from 'react-day-picker';
 
 import { withTheme } from '../../testing';
 import { translations } from '../../translations';
+import { type DateRange } from '../Calendar';
 import { Input } from '../Input';
 import { DatePicker } from './DatePicker';
 
@@ -58,20 +58,6 @@ export const Range: Story = {
   },
 };
 
-export const Multiple: Story = {
-  render: () => {
-    const [value, setValue] = useState<Date[] | undefined>([]);
-    return (
-      <DatePicker.Root mode='multiple' value={value} onValueChange={setValue}>
-        <DatePicker.Trigger />
-        <DatePicker.Content>
-          <DatePicker.Calendar />
-        </DatePicker.Content>
-      </DatePicker.Root>
-    );
-  },
-};
-
 export const SingleWithTime: Story = {
   render: () => {
     const [value, setValue] = useState<Date | undefined>();
@@ -81,7 +67,7 @@ export const SingleWithTime: Story = {
         <DatePicker.Content>
           <DatePicker.Calendar />
           <Input.Root>
-            <Input.Time value={toTime(value)} onChange={(event) => setValue(applyTime(value, event.target.value))} />
+            <Input.Time value={toTime(value)} onValueChange={(next) => setValue(applyTime(value, next))} />
           </Input.Root>
         </DatePicker.Content>
       </DatePicker.Root>
@@ -100,17 +86,13 @@ export const RangeWithTime: Story = {
           <Input.Root>
             <Input.Time
               value={toTime(value?.from)}
-              onChange={(event) =>
-                setValue(value ? { ...value, from: applyTime(value.from, event.target.value) } : undefined)
-              }
+              onValueChange={(next) => setValue(value ? { ...value, from: applyTime(value.from, next) } : undefined)}
             />
           </Input.Root>
           <Input.Root>
             <Input.Time
               value={toTime(value?.to)}
-              onChange={(event) =>
-                setValue(value?.from ? { ...value, to: applyTime(value.to, event.target.value) } : undefined)
-              }
+              onValueChange={(next) => setValue(value?.from ? { ...value, to: applyTime(value.to, next) } : undefined)}
             />
           </Input.Root>
         </DatePicker.Content>

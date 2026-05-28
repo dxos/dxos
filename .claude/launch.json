@@ -40,6 +40,16 @@
       "port": 9009
     },
     {
+      "name": "storybook-react-alt",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd .claude/worktrees/inbox && pnpm --filter @dxos/storybook-react exec storybook dev --port 9012 --no-open --ci"
+      ],
+      "port": 9012,
+      "autoPort": true
+    },
+    {
       "name": "plugin-explorer-storybook",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@dxos/plugin-explorer", "exec", "storybook", "dev", "--port", "9010", "--no-open"],

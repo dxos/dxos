@@ -88,7 +88,7 @@ type Story = StoryObj<DefaultStoryProps & Variant>;
 export const Density: Story = {
   render: () => (
     <div className='flex flex-col gap-4'>
-      {(['lg', 'md', 'sm'] as const).map((density) => (
+      {(['lg', 'md', 'sm', 'xs'] as const).map((density) => (
         <Input.Root key={density}>
           <Input.Label>{`density="${density}"`}</Input.Label>
           <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
@@ -198,6 +198,15 @@ export const TimeUncontrolled: Story = {
   },
 };
 
+export const TimeAmPm: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (12-hour, AM/PM)',
+    defaultValue: '14:00',
+    hourCycle: 12,
+  } as any,
+};
+
 export const TimeDisabled: Story = {
   args: {
     kind: 'time',
@@ -221,6 +230,32 @@ export const DateTime: Story = {
     label: 'Date & time',
     defaultValue: '2026-06-01T15:30',
   },
+};
+
+export const DateWithPicker: Story = {
+  render: () => (
+    <Input.Root>
+      <Input.Label>Date (with picker)</Input.Label>
+      <div className='flex items-center gap-1'>
+        <Input.Date defaultValue='2026-06-01' />
+        <Input.TriggerIcon />
+      </div>
+      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
+    </Input.Root>
+  ),
+};
+
+export const DateTimeWithPicker: Story = {
+  render: () => (
+    <Input.Root>
+      <Input.Label>Date & time (with picker)</Input.Label>
+      <div className='flex items-center gap-1'>
+        <Input.DateTime defaultValue='2026-06-01T15:30' />
+        <Input.TriggerIcon />
+      </div>
+      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
+    </Input.Root>
+  ),
 };
 
 export const Checkbox: Story = {

@@ -7,108 +7,68 @@ import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 export type CalendarStyleProps = Partial<{}>;
 
-// Slot names match react-day-picker v9 `ClassNames` keys.
-// See https://daypicker.dev/api/type-aliases/ClassNames
+//
+// Theme slots target react-aria-components elements. RAC attaches `data-*` attributes to its
+// rendered nodes (`data-selected`, `data-focused`, `data-disabled`, `data-outside-month`,
+// `data-selection-start`, `data-selection-end`, `data-hovered`, etc.) which we hook into via
+// Tailwind's `data-[…]:` modifiers.
+//
 
 const root: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  // `relative` anchors the absolutely-positioned `nav` to the calendar bounds; `w-fit h-fit` keep the root
-  // sized to its content; `self-start` prevents a flex/grid parent from stretching the calendar vertically.
   mx('relative w-fit h-fit self-start p-2 select-none bg-group-surface text-base-foreground', ...etc);
 
-// `<Months>` wraps `<Nav>` and each `<Month>` as flex siblings — keep them stacked so nav sits above the grid.
-const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2', ...etc);
+const nav: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex items-center justify-between pb-1', ...etc);
 
-const month: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2', ...etc);
-
-const month_caption: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('flex justify-center items-center relative', ...etc);
-
-const caption_label: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-sm font-medium', ...etc);
-
-const nav: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  // Flex row: prev chevron, month label (from CalendarNav via useDayPicker), next chevron.
-  mx('flex items-center justify-between', ...etc);
+const caption_label: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
+  mx('flex-1 text-center text-sm font-medium', ...etc);
 
 const button_previous: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(
-    'h-7 w-7 inline-flex items-center justify-center rounded-sm',
-    'text-description hover:bg-hover-surface aria-disabled:opacity-50',
+    'h-7 w-7 inline-flex items-center justify-center rounded-sm shrink-0',
+    'text-description hover:bg-hover-surface',
+    'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed',
     ...etc,
   );
 
 const button_next: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(
-    'h-7 w-7 inline-flex items-center justify-center rounded-sm',
-    'text-description hover:bg-hover-surface aria-disabled:opacity-50',
+    'h-7 w-7 inline-flex items-center justify-center rounded-sm shrink-0',
+    'text-description hover:bg-hover-surface',
+    'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed',
     ...etc,
   );
 
 const month_grid: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('w-full border-collapse', ...etc);
 
-const weekdays: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex pb-1', ...etc);
+const weekdays: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('', ...etc);
 
 const weekday: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('w-9 text-xs font-thin text-description', ...etc);
-
-const week: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex w-full mt-1', ...etc);
+  mx('w-9 h-7 text-xs font-thin text-description', ...etc);
 
 const day: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('relative w-9 h-9 p-0 text-center text-sm', ...etc);
-
-const day_button: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(
-    'inline-flex items-center justify-center w-9 h-9 rounded-sm',
-    'hover:bg-hover-surface aria-disabled:opacity-50 aria-disabled:pointer-events-none',
-    'focus-visible:outline-2 focus-visible:outline-primary-500',
+    'relative w-9 h-9 p-0 text-center text-sm rounded-sm inline-flex items-center justify-center cursor-pointer',
+    'outline-none',
+    'data-[hovered]:bg-hover-surface',
+    'data-[focus-visible]:outline-2 data-[focus-visible]:outline-primary-500',
+    'data-[selected]:bg-primary-500 data-[selected]:text-primary-fg data-[selected]:hover:bg-primary-500',
+    'data-[outside-month]:text-description/40',
+    'data-[disabled]:text-description/40 data-[disabled]:cursor-not-allowed data-[disabled]:hover:bg-transparent',
+    'data-[unavailable]:line-through data-[unavailable]:text-description/50 data-[unavailable]:cursor-not-allowed',
+    // Range selection visual layer.
+    'data-[selection-start]:rounded-l-sm data-[selection-end]:rounded-r-sm',
+    'data-[selection-start]:bg-primary-500 data-[selection-end]:bg-primary-500',
     ...etc,
   );
 
-const selected: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('[&_button]:bg-primary-500 [&_button]:text-primary-fg [&_button]:hover:bg-primary-500', ...etc);
-
-const today: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('[&_button]:border [&_button]:border-amber-500', ...etc);
-
-const outside: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-description/50', ...etc);
-
-const disabled: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-description/40', ...etc);
-
-const range_start: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('[&_button]:bg-primary-500 [&_button]:text-primary-fg rounded-l-sm', ...etc);
-
-const range_middle: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('bg-primary-500/20 [&_button]:hover:bg-primary-500/30', ...etc);
-
-const range_end: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('[&_button]:bg-primary-500 [&_button]:text-primary-fg rounded-r-sm', ...etc);
-
-const hidden: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('invisible', ...etc);
-
-const footer: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('flex justify-between items-center pt-2 mt-2 border-t border-separator', ...etc);
-
 export const calendarTheme: Theme<CalendarStyleProps> = {
   root,
-  months,
-  month,
-  month_caption,
-  caption_label,
   nav,
+  caption_label,
   button_previous,
   button_next,
   month_grid,
   weekdays,
   weekday,
-  week,
   day,
-  day_button,
-  selected,
-  today,
-  outside,
-  disabled,
-  range_start,
-  range_middle,
-  range_end,
-  hidden,
-  footer,
 };

@@ -105,6 +105,7 @@ catalog:
   '@fontsource/poiret-one': ^5.0.20
   '@hazae41/symbol-dispose-polyfill': ^1.0.2
   '@huggingface/transformers': ^3.8.1
+  '@internationalized/date': ^3.12.1
   '@ipld/car': ^5.3.3
   '@jitl/quickjs-wasmfile-release-sync': ^0.31.0
   '@lezer/common': ^1.5.2
@@ -547,6 +548,7 @@ catalog:
   randombytes: ^2.1.0
   re-resizable: ^6.9.17
   react: ~19.2.3
+  react-aria-components: ^1.17.0
   react-charts: beta
   react-day-picker: ^9.4.0
   react-dom: ~19.2.3
