@@ -377,7 +377,7 @@ const resolveModule = (
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
   const meta = builder.meta;
-  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${DXN.getName(meta.id)} declares itself as a dependency.`);
+  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
 
   const factory = (options: T) => {
     const modules = builder.modules.map((module) => resolveModule(meta, module, options));
