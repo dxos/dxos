@@ -186,7 +186,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   // ExtractedTags renders its own two subgrid rows — the sender row used to live here but
   // now belongs alongside the chips it relates to.
   return (
-    <div className='grid grid-cols-[2rem_1fr] gap-y-2 gap-x-1 p-1 mb-2 border-b border-subdued-separator'>
+    <div className='grid grid-cols-[2rem_1fr] gap-x-1 p-1 mb-2 border-b border-subdued-separator'>
       <div className='col-span-2 grid grid-cols-subgrid'>
         <div className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
@@ -199,7 +199,6 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         </div>
       </div>
 
-      {/* TODO(burdon): List other To/CC/BCC. */}
       <ExtractedTags message={message} sender={sender} onContactCreate={onContactCreate} />
     </div>
   );

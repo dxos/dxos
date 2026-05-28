@@ -8,9 +8,9 @@ import React from 'react';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Tag } from '@dxos/react-ui';
-import { type Hue, palette } from '@dxos/ui-theme';
+import { Icon, Tag } from '@dxos/react-ui';
 import { type Actor, type Message } from '@dxos/types';
+import { type Hue, palette } from '@dxos/ui-theme';
 
 import { useExtractedObjects } from '../../hooks';
 import { Mailbox } from '../../types';
@@ -57,6 +57,7 @@ export const ExtractedTags = ({
 
   return (
     <>
+      {/* TODO(burdon): List other To/CC/BCC. */}
       <div className='col-span-2 grid grid-cols-subgrid items-center'>
         <UserIconButton
           title={message.sender.name}
@@ -72,14 +73,12 @@ export const ExtractedTags = ({
 
       {tags.length > 0 && (
         <div className='col-span-2 grid grid-cols-subgrid items-start'>
-          <span />
+          <div className='flex px-2 pt-1.5 text-subdued' aria-hidden='true'>
+            <Icon icon='ph--tag--regular' />
+          </div>
           <div className='flex flex-wrap gap-1' data-testid='extracted-tags'>
             {tags.map((tag) => (
-              <Tag
-                key={tag.id}
-                palette={paletteOf(tag.hue)}
-                data-testid={`message-tag-${tag.id}`}
-              >
+              <Tag key={tag.id} palette={paletteOf(tag.hue)} data-testid={`message-tag-${tag.id}`}>
                 {tag.label}
               </Tag>
             ))}
@@ -96,10 +95,7 @@ const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
   const echoUri = EchoURI.tryParse(Obj.getURI(object).toString());
 
   return (
-    <div
-      className='col-span-2 grid grid-cols-subgrid items-center'
-      data-testid={`extracted-tag-${object.id}`}
-    >
+    <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>
       <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
       <h3 className='truncate text-primary-text'>{label}</h3>
     </div>
@@ -121,5 +117,4 @@ const iconForObject = (object: Obj.Any): string => {
   return Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined)?.icon ?? 'ph--cube--regular';
 };
 
-const paletteOf = (hue: string | undefined): Hue =>
-  hue && VALID_HUES.has(hue as Hue) ? (hue as Hue) : 'neutral';
+const paletteOf = (hue: string | undefined): Hue => (hue && VALID_HUES.has(hue as Hue) ? (hue as Hue) : 'neutral');
