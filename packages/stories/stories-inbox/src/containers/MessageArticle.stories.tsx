@@ -234,21 +234,21 @@ export const ExtractTripWithPlay: Story = {
     const runAllItem = await waitFor(() => body.queryByText(/run all/i));
     await userEvent.click(runAllItem as HTMLElement);
 
-    // Trip object chip — sourced from `ExtractedFrom` relation (task #16). Label includes
-    // the SFO/LHR route from `tripNameFor(candidate)`.
-    const tripRow = await waitFor(() => canvas.queryByText(/SFO/i));
-    expect(tripRow).toBeInTheDocument();
+    // Trip object chip — sourced from `ExtractedFrom` relation (task #16). The chip is a
+    // `Tag` from react-ui wrapping a button (clickable → opens card preview via
+    // `DxAnchorActivate`). Label includes the SFO/LHR route from `tripNameFor(candidate)`.
     const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO/i }));
+    expect(tripButton).toBeInTheDocument();
     expect(tripButton).not.toBeDisabled();
 
-    // Trip extractor's `tags: [{ label: 'travel' }]` — applied to the source message via
-    // `Mailbox.applyTag` and rendered as a disabled chip in the header.
-    const travelTag = await waitFor(() => canvas.queryByRole('button', { name: /^travel$/i }));
+    // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` — applied via
+    // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target).
+    const travelTag = await waitFor(() => canvas.queryByText(/^travel$/i));
     expect(travelTag).toBeInTheDocument();
 
-    // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important' }]` — exercises
-    // the tag-only path through the dispatcher (no created objects, just a tag).
-    const importantTag = await waitFor(() => canvas.queryByRole('button', { name: /^important$/i }));
+    // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
+    // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
+    const importantTag = await waitFor(() => canvas.queryByText(/^important$/i));
     expect(importantTag).toBeInTheDocument();
   },
 };

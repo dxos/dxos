@@ -3,31 +3,53 @@
 //
 
 import * as Option from 'effect/Option';
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { DxAnchorActivate, Tag } from '@dxos/react-ui';
+import { type ChromaticPalette, type NeutralPalette } from '@dxos/ui-types';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
 import { useExtractedObjects } from '../../hooks';
 import { Mailbox } from '../../types';
-import { AnchorIconButton } from '../AnchorIconButton';
+
+const PALETTES: ReadonlySet<ChromaticPalette | NeutralPalette> = new Set([
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
+  'neutral',
+]);
 
 /**
- * Renders the related-entity chip rows below the sender row in `MessageHeader`. Merges TWO
- * sources into one chip row so the header reads as a single list of related entities:
+ * Single horizontal chip row below the sender row in `MessageHeader`. Merges both sources
+ * into the same row so the header reads as one continuous list of related entities:
  *
- *   - **Extracted relations** (task #16): one row per ECHO object the message produced — Trip,
- *     Booking, etc. Sourced from `ExtractedFrom` relations whose Target is the message.
- *     Each row's icon opens a card preview via `DxAnchorActivate` (deck plugin handler).
- *   - **Applied tags** (task #15): one row per entry in the owning `Mailbox.tags` whose
+ *   - **Extracted relations** (task #16): one chip per ECHO object the message produced —
+ *     Trip, Booking, etc. Sourced from `ExtractedFrom` relations whose Target is the
+ *     message. Each chip is wrapped in a button so clicking opens a card preview via
+ *     `DxAnchorActivate` (deck plugin handler). Colour comes from the type's
+ *     `IconAnnotation.hue`.
+ *   - **Applied tags** (task #15): one chip per entry in the owning `Mailbox.tags` whose
  *     `messages` array includes a Ref to this message. Covers both Gmail-synced provider
- *     labels and user-applied tags.
+ *     labels and user-applied tags. Colour comes from the tag entry's `hue` field.
  *
- * Both render with the same `[2rem icon | 1fr label]` grid as the sender row so the header
- * reads as one consistent column. Tag rows have no DXN, so their icon button falls back to
- * a no-op disabled state; that's fine because tags aren't standalone navigable entities.
+ * Both render as `Tag` components from `@dxos/react-ui` (chromatic palette + chip styling),
+ * so the row reads as one visual unit regardless of source.
  */
 export const ExtractedTags = ({ message }: { message: Message.Message }) => {
   const space = getSpace(message);
@@ -44,60 +66,62 @@ export const ExtractedTags = ({ message }: { message: Message.Message }) => {
   }
 
   return (
-    <div className='flex flex-col gap-1' data-testid='extracted-tags'>
+    <div className='flex flex-wrap gap-1' data-testid='extracted-tags'>
       {objects.map((object) => (
-        <ExtractedObjectRow key={Obj.getURI(object).toString()} object={object} />
+        <ExtractedObjectTag key={Obj.getURI(object).toString()} object={object} />
       ))}
       {tags.map((tag) => (
-        <TagRow key={tag.id} tag={tag} />
+        <Tag
+          key={tag.id}
+          palette={paletteOf(tag.hue)}
+          data-testid={`message-tag-${tag.id}`}
+        >
+          {tag.label}
+        </Tag>
       ))}
     </div>
   );
 };
 
-const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
+const ExtractedObjectTag = ({ object }: { object: Obj.Any }) => {
   const label = Obj.getLabel(object) ?? Type.getTypename(object) ?? 'object';
-  const icon = iconForObject(object);
-  const uri = Obj.getURI(object);
-  const echoUri = EchoURI.tryParse(uri.toString());
+  const uri = Obj.getURI(object).toString();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleClick = useCallback(() => {
+    buttonRef.current?.dispatchEvent(
+      new DxAnchorActivate({
+        trigger: buttonRef.current,
+        dxn: uri,
+        label: 'never',
+        kind: 'card',
+        title: label,
+      }),
+    );
+  }, [uri, label]);
 
   return (
-    <div
-      className='grid grid-cols-[2rem_1fr] gap-1 items-center'
-      data-testid={`extracted-tag-${object.id}`}
-    >
-      <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      <h3 className='truncate text-primary-text'>{label}</h3>
-    </div>
-  );
-};
-
-const TagRow = ({ tag }: { tag: { id: string; label: string; hue?: string } }) => {
-  return (
-    <div
-      className='grid grid-cols-[2rem_1fr] gap-1 items-center'
-      data-testid={`message-tag-${tag.id}`}
-    >
-      <AnchorIconButton icon='ph--tag--regular' label={tag.label} title={tag.label} />
-      <h3 className='truncate text-primary-text' data-hue={tag.hue}>
-        {tag.label}
-      </h3>
-    </div>
+    <Tag asChild palette={paletteOfObject(object)} data-testid={`extracted-tag-${object.id}`}>
+      <button type='button' onClick={handleClick} aria-label={label} ref={buttonRef}>
+        {label}
+      </button>
+    </Tag>
   );
 };
 
 /**
- * Resolve the phosphor icon from the object's type-level `IconAnnotation` (set on the schema
- * via `Annotation.IconAnnotation.set({ icon, hue })`). Falls back to a generic cube glyph
- * when the object's type isn't registered in the runtime or the annotation is absent.
+ * Resolve a react-ui palette from an object's type-level `IconAnnotation` (the `hue` field).
+ * Falls back to `neutral` when the type isn't registered or the annotation is absent.
  */
-const iconForObject = (object: Obj.Any): string => {
+const paletteOfObject = (object: Obj.Any): ChromaticPalette | NeutralPalette => {
   const type = Obj.getType(object);
   if (!type) {
-    return 'ph--cube--regular';
+    return 'neutral';
   }
   const schema = Type.getSchema(type);
-  return (
-    Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined)?.icon ?? 'ph--cube--regular'
-  );
+  const hue = Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined)?.hue;
+  return paletteOf(hue);
 };
+
+const paletteOf = (hue: string | undefined): ChromaticPalette | NeutralPalette =>
+  hue && PALETTES.has(hue as ChromaticPalette) ? (hue as ChromaticPalette) : 'neutral';
