@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Collection, Database, EchoURI, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
+import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -110,13 +110,8 @@ const meta = {
               );
               yield* Feed.append(messageFeed, messages);
 
-              const messageQueueDxn = Feed.getQueueUri(messageFeed)!;
               const messageView = ViewModel.make({
-                query: Query.select(Filter.type(Message.Message)).from([
-                  Scope.feed(
-                    `dxn:queue:data:${EchoURI.getSpaceId(messageQueueDxn)}:${EchoURI.getObjectId(messageQueueDxn)}`,
-                  ),
-                ]),
+                query: Query.select(Filter.type(Message.Message)).from(Scope.feed(Obj.getURI(messageFeed))),
                 jsonSchema: JsonSchema.toJsonSchema(Message.Message),
               });
 

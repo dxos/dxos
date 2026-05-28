@@ -17,15 +17,15 @@ const handler: Operation.WithHandler<typeof KanbanOperation.RestoreCardField> = 
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');
       const types = db.graph.registry.list().filter(Type.isType);
-      const schema = types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast));
-      invariant(schema, 'Schema not found');
+      const type = types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast));
+      invariant(type, 'Schema not found');
 
-      invariant(Type.isType(schema), 'expected stored Type.Type for card schema');
+      invariant(Type.isType(type), 'expected stored Type.Type for card schema');
       const projection = new ProjectionModel({
         registry,
         view,
-        baseSchema: schema.jsonSchema,
-        change: createEchoChangeCallback(view, schema),
+        baseSchema: type.jsonSchema,
+        change: createEchoChangeCallback(view, type),
       });
 
       projection.setFieldProjection({ field, props }, index);
