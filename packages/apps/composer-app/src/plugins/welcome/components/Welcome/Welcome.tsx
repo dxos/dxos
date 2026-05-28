@@ -24,7 +24,7 @@ export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
 type Tab = 'login' | 'signup';
-type LoginMethod = 'passkey' | 'email' | 'atmosphere';
+type LoginMethod = 'passkey' | 'email' | 'atproto';
 type SignupMode = 'code' | 'waitlist';
 type SignupStep = 'collect' | 'auth';
 
@@ -545,13 +545,13 @@ const LoginTab = ({
   }
   // Atmosphere: second in the list (after the other primary-swap option), swaps to primary like
   // email/passkey do so only one form is shown at a time.
-  if (primary !== 'atmosphere' && onRecoverWithOAuth) {
+  if (primary !== 'atproto' && onRecoverWithOAuth) {
     moreOptions.push({
-      key: 'atmosphere',
+      key: 'atproto',
       icon: 'ph--cloud--regular',
       label: t('login-atmosphere.label'),
       description: t('login-atmosphere.description'),
-      onClick: () => setPrimary('atmosphere'),
+      onClick: () => setPrimary('atproto'),
     });
   }
   // Device + recovery: always direct-invoke (open their own dialogs) rather than
@@ -606,7 +606,7 @@ const LoginTab = ({
           validation={emailError ? t('email-error.message') : null}
         />
       )}
-      {primary === 'atmosphere' && onRecoverWithOAuth && (
+      {primary === 'atproto' && onRecoverWithOAuth && (
         <div className='flex flex-col gap-2'>
           <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
           <InlineForm
