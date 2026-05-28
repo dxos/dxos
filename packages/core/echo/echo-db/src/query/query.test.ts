@@ -26,7 +26,7 @@ import {
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, EchoURI, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -625,7 +625,7 @@ describe('Query', () => {
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from([
             {
               _tag: 'feed' as const,
-              feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+              feedUri: queue.uri,
             },
           ]),
         )
@@ -686,7 +686,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
-              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`),
+              Scope.feed(queue1.uri),
             ]),
           )
           .run();
@@ -700,7 +700,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
-              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`),
+              Scope.feed(queue2.uri),
             ]),
           )
           .run();
@@ -714,8 +714,8 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
               ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
-              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}`),
-              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}`),
+              Scope.feed(queue1.uri),
+              Scope.feed(queue2.uri),
             ]),
           )
           .run();
@@ -980,7 +980,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await db.flush({ indexes: true });
 
-      const nonExistentFeed = 'dxn:queue:data:AAAAAAAAAAAAAAAAAAAAAAAAAAAA:00000000000000000000000000';
+      const nonExistentFeed = 'echo://AAAAAAAAAAAAAAAAAAAAAAAAAAAA/00000000000000000000000000';
       const results = await db
         .query(Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: nonExistentFeed }]))
         .run();
@@ -1969,7 +1969,7 @@ describe('Query', () => {
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
               {
                 _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+                feedUri: queue.uri,
               },
             ]),
           )
@@ -1985,7 +1985,7 @@ describe('Query', () => {
             Query.select(Filter.text('React', { type: 'full-text' })).from([
               {
                 _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+                feedUri: queue.uri,
               },
             ]),
           )
@@ -2001,7 +2001,7 @@ describe('Query', () => {
             Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([
               {
                 _tag: 'feed' as const,
-                feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+                feedUri: queue.uri,
               },
             ]),
           )
@@ -2058,7 +2058,7 @@ describe('Query', () => {
           Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
             {
               _tag: 'feed' as const,
-              feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}`,
+              feedUri: queue.uri,
             },
           ]),
         )

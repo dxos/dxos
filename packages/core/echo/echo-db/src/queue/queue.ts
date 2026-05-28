@@ -262,7 +262,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const queryWithScope = query.from(
       Scope.space(this._spaceId),
-      Scope.feed(`dxn:queue:${this._subspaceTag}:${this._spaceId}:${this._queueId}`),
+      Scope.feed(this._echoUri),
     );
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
