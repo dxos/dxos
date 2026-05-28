@@ -4,12 +4,12 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import * as Record from 'effect/Record';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
+import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import React from 'react';
