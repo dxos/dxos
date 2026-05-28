@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
 import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -172,20 +174,70 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
   );
 };
 
+const getObjectIconProps = (object: Entity.Unknown): { icon?: string; iconHue?: string } => {
+  const schema = Entity.getSchema(object);
+  const annotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+  return annotation ? { icon: annotation.icon, iconHue: annotation.hue } : {};
+};
+
 const getWorkflowOptions = (graphs: ComputeGraph[]) => {
-  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: Obj.getURI(graph).toString() }));
+  return graphs.map((graph) => ({
+    label: `compute-${graph.id}`,
+    value: Obj.getURI(graph),
+    ...getObjectIconProps(graph),
+  }));
 };
 
 const getFunctionOptions = (scripts: Script.Script[], functions: Operation.PersistentOperation[]) => {
   const getLabel = (fn: Operation.PersistentOperation) =>
     scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
-  return functions.map((fn) => ({ label: getLabel(fn), value: Obj.getURI(fn).toString() }));
+  return functions.map((fn) => {
+    const { icon: schemaIcon, iconHue } = getObjectIconProps(fn);
+    return {
+      label: getLabel(fn),
+      value: Obj.getURI(fn),
+      icon: fn.icon ?? schemaIcon,
+      iconHue,
+    };
+  });
+};
+
+const getFeedDisplayName = (feed: Feed.Feed): string =>
+  Entity.getLabel(feed) ?? feed.name ?? Entity.getTypename(feed) ?? 'Feed';
+
+const computeRefRole = (entity: Feed.Feed): string | undefined => {
+  const parent = Obj.getParent(entity);
+  if (!parent) {
+    return undefined;
+  }
+  for (const key of Record.keys(parent)) {
+    if (Ref.isRef(parent[key]) && parent[key].target?.id === entity.id) {
+      return `$.${key}`;
+    }
+  }
+  return undefined;
 };
 
 const getFeedOptions = (feeds: Feed.Feed[]) => {
   return feeds.map((feed) => {
     const parent = Obj.getParent(feed);
-    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
-    return { label: label ?? feed.id, value: Obj.getURI(feed).toString() };
+    const displayObject = parent ?? feed;
+    const role = computeRefRole(feed);
+
+    if (parent) {
+      return {
+        label: Entity.getLabel(parent) ?? Entity.getTypename(parent) ?? 'Parent',
+        secondaryLabel: role ?? getFeedDisplayName(feed),
+        value: Obj.getURI(feed),
+        ...getObjectIconProps(displayObject),
+      };
+    }
+
+    return {
+      label: getFeedDisplayName(feed),
+      secondaryLabel: role,
+      value: Obj.getURI(feed),
+      ...getObjectIconProps(displayObject),
+    };
   });
 };
