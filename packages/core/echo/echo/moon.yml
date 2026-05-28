@@ -20,6 +20,8 @@ tasks:
       - '--entryPoint=src/Format.ts'
       - '--entryPoint=src/Relation.ts'
       - '--entryPoint=src/Ref.ts'
+      - '--entryPoint=src/Registry.ts'
+      - '--entryPoint=src/Scope.ts'
       - '--entryPoint=src/JsonSchema.ts'
       - '--entryPoint=src/QueryResult.ts'
       - '--entryPoint=src/Query.ts'

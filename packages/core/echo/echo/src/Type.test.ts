@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { DXN, ObjectId } from '@dxos/keys';
+
 import * as Entity from './Entity';
 import * as JsonSchema from './JsonSchema';
 import * as Obj from './Obj';
@@ -87,6 +89,8 @@ describe('Type', () => {
       const draft = Type.makeObjectFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.String })),
       });
+      // Drafts default version to `'0.0.0'` in `ObjectMeta.version`; the
+      // typename (`ObjectMeta.key`) is undefined until set.
       expect(Type.getVersion(draft)).toBe('0.0.0');
       const meta = Type.getMeta(draft);
       expect(meta.key).toBeUndefined();
@@ -190,6 +194,64 @@ describe('Type', () => {
     test('Type.getURI returns the DXN for static types', ({ expect }) => {
       expect(Type.getURI(TestSchema.Person).toString()).toBe('dxn:com.example.type.person:0.1.0');
       expect(Type.getURI(TestSchema.HasManager).toString()).toBe('dxn:com.example.type.hasManager:0.1.0');
+    });
+  });
+
+  describe('deterministic id default', () => {
+    // The default id is `ObjectId.deterministic(typename, version)` — required so that
+    // `Type.makeObject(...)` never calls `crypto.getRandomValues()` at module-evaluation
+    // time (forbidden by Cloudflare workerd in global scope).
+    const personDxn = DXN.make('com.example.type.deterministic.person', '0.1.0');
+    const worksForDxn = DXN.make('com.example.type.deterministic.worksFor', '0.1.0');
+
+    test('Type.makeObject with the same DXN twice yields entities with identical ids', ({ expect }) => {
+      const a = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
+      const b = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
+      expect(a.id).toBe(b.id);
+      expect(a.id).toBe(ObjectId.deterministic('com.example.type.deterministic.person', '0.1.0'));
+    });
+
+    test('different versions produce different ids', ({ expect }) => {
+      const v1 = Schema.Struct({ name: Schema.String }).pipe(
+        Type.makeObject(DXN.make('com.example.type.deterministic.person', '0.1.0')),
+      );
+      const v2 = Schema.Struct({ name: Schema.String }).pipe(
+        Type.makeObject(DXN.make('com.example.type.deterministic.person', '0.2.0')),
+      );
+      expect(v1.id).not.toBe(v2.id);
+    });
+
+    test('Type.makeObject({ id }) override is honoured', ({ expect }) => {
+      const explicit = ObjectId.random();
+      const entity = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn, { id: explicit }));
+      expect(entity.id).toBe(explicit);
+      // And the default still kicks in when no override is supplied.
+      const defaultEntity = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
+      expect(defaultEntity.id).not.toBe(explicit);
+    });
+
+    test('Type.makeRelation defaults id to deterministic(typename, version)', ({ expect }) => {
+      const a = Schema.Struct({ since: Schema.Number }).pipe(
+        Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
+      );
+      const b = Schema.Struct({ since: Schema.Number }).pipe(
+        Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
+      );
+      expect(a.id).toBe(b.id);
+      expect(a.id).toBe(ObjectId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
+    });
+
+    test('Type.makeRelation({ id }) override is honoured', ({ expect }) => {
+      const explicit = ObjectId.random();
+      const entity = Schema.Struct({ since: Schema.Number }).pipe(
+        Type.makeRelation({
+          dxn: worksForDxn,
+          source: TestSchema.Person,
+          target: TestSchema.Organization,
+          id: explicit,
+        }),
+      );
+      expect(entity.id).toBe(explicit);
     });
   });
 });

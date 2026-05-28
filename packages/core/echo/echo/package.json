@@ -103,10 +103,20 @@
       "types": "./dist/types/src/Ref.d.ts",
       "default": "./dist/lib/neutral/Ref.mjs"
     },
+    "./Registry": {
+      "source": "./src/Registry.ts",
+      "types": "./dist/types/src/Registry.d.ts",
+      "default": "./dist/lib/neutral/Registry.mjs"
+    },
     "./Relation": {
       "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",
       "default": "./dist/lib/neutral/Relation.mjs"
+    },
+    "./Scope": {
+      "source": "./src/Scope.ts",
+      "types": "./dist/types/src/Scope.d.ts",
+      "default": "./dist/lib/neutral/Scope.mjs"
     },
     "./Tag": {
       "source": "./src/Tag.ts",

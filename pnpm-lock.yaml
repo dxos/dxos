@@ -6014,9 +6014,6 @@ importers:
       '@solidjs/testing-library':
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.11)
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
