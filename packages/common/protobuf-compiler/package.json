@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "argparse": "catalog:",
     "chalk": "catalog:",
