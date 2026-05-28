@@ -16,7 +16,9 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
  */
 export const FileDataSchema = Schema.Union(
   Schema.TaggedStruct('inline', {
-    bytes: Schema.Uint8ArrayFromSelf,
+    bytes: Schema.Uint8ArrayFromSelf.annotations({
+      jsonSchema: { type: 'string', contentEncoding: 'base64' },
+    }),
   }),
   Schema.TaggedStruct('external', {
     url: Schema.String,

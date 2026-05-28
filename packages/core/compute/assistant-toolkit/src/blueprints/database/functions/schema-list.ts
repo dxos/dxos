@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Routine, Blueprint, Operation } from '@dxos/compute';
 import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { SchemaList } from './definitions';
 
@@ -20,13 +21,20 @@ export default SchemaList.pipe(
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
       return schema
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
-        .map((schema) => {
-          const meta = Type.getMeta(schema);
-          return {
-            typename: Type.getTypename(schema),
-            jsonSchema: JsonSchema.toJsonSchema(schema),
-            kind: meta?.sourceSchema ? 'relation' : 'record',
-          };
+        .flatMap((schema) => {
+          try {
+            const meta = Type.getMeta(schema);
+            return [
+              {
+                typename: Type.getTypename(schema),
+                jsonSchema: JsonSchema.toJsonSchema(schema),
+                kind: meta?.sourceSchema ? 'relation' : 'record',
+              },
+            ];
+          } catch (err) {
+            log.warn('Failed to generate JSON schema for type', { typename: Type.getTypename(schema), err });
+            return [];
+          }
         });
     }),
   ),
