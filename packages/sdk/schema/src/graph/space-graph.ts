@@ -44,7 +44,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
-  private _schema?: Type.RuntimeType[];
+  private _schema?: Type.AnyEntity[];
   private _objects?: Entity.Unknown[];
   private _extraItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
@@ -108,7 +108,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     const schemaaQuery = db.schemaRegistry.query({});
     this._schemaSubscription = schemaaQuery.subscribe(
-      ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results),
+      ({ results }: { results: Type.AnyEntity[] }) => (this._schema = results),
       { fire: true },
     );
 
@@ -204,15 +204,16 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     ];
 
     objects.forEach((object) => {
-      const schema = Entity.getSchema(object);
+      const type = Entity.getType(object);
+      const schema = type != null ? Type.getSchema(type) : undefined;
 
       // Relations.
       if (Relation.isRelation(object)) {
         const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
-          source: EchoURI.getObjectId(Relation.getSourceURI(object))!,
-          target: EchoURI.getObjectId(Relation.getTargetURI(object))!,
+          source: EchoURI.getObjectId(EchoURI.parse(Relation.getSourceURI(object)))!,
+          target: EchoURI.getObjectId(EchoURI.parse(Relation.getTargetURI(object)))!,
           data: {
             object,
           },

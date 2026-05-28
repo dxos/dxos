@@ -5,15 +5,17 @@
 import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Filter, Obj, Query, Type, View } from '@dxos/echo';
+import { DXN, Filter, Query, Type, View } from '@dxos/echo';
 import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   type JsonPath,
   type JsonProp,
+  type JsonSchemaType,
   Ref,
   TypeEnum,
   getPropertyMetaAnnotation,
@@ -54,7 +56,7 @@ describe('ProjectionModel', () => {
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
     const [mutable] = await registry.register([schema]);
 
     const view = ViewModel.make({
@@ -145,7 +147,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
       organization: Ref(TestSchema.Organization),
-    }).pipe(Type.object(DXN.make(typename, '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make(typename, '0.1.0')));
     const jsonSchema = toJsonSchema(schema);
 
     const view = await ViewModel.makeWithReferences({
@@ -196,7 +198,7 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -230,7 +232,7 @@ describe('ProjectionModel', () => {
       name: Schema.optional(Schema.Number),
       email: Schema.optional(Schema.Number),
       description: Schema.optional(Schema.String),
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -278,7 +280,7 @@ describe('ProjectionModel', () => {
     const schema = Schema.Struct({
       name: Schema.String,
       email: Format.Email,
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -328,7 +330,7 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
       age: Schema.Number,
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -383,7 +385,7 @@ describe('ProjectionModel', () => {
 
     const schema = Schema.Struct({
       status: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -465,7 +467,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const effectSchema = mutable.snapshot;
+    const effectSchema = Type.getSchema(mutable);
     expect(() => Schema.validateSync(effectSchema)({ id: '1', status: 'draft' })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ id: '2', status: 'published' })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ id: '3', status: 'archived' })).not.to.throw();
@@ -492,7 +494,7 @@ describe('ProjectionModel', () => {
 
     const schema = Schema.Struct({
       tags: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -592,7 +594,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const effectSchema = mutable.snapshot;
+    const effectSchema = Type.getSchema(mutable);
     expect(effectSchema).not.toBeUndefined;
     expect(() => Schema.validateSync(effectSchema)({ id: '1', tags: ['draft'] })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ id: '2', tags: ['published'] })).not.to.throw();
@@ -626,7 +628,7 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
       createdAt: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
 
@@ -648,7 +650,7 @@ describe('ProjectionModel', () => {
       change: createEchoChangeCallback(view, mutable),
     });
     projectionModel.normalizeView();
-    const initialSchema = mutable.snapshot;
+    const initialJsonSchema = JSON.parse(JSON.stringify(mutable.jsonSchema));
 
     // Verify only the included fields are in the view.
     expect(projectionModel.getFields()).to.have.length(2);
@@ -717,7 +719,7 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getFields().find((f) => f.path === 'email')?.id).to.equal(emailId);
 
     // Ensure schema still matches.
-    expect(mutable.snapshot).to.deep.equal(initialSchema);
+    expect(JSON.parse(JSON.stringify(mutable.jsonSchema))).to.deep.equal(initialJsonSchema);
   });
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
@@ -729,7 +731,7 @@ describe('ProjectionModel', () => {
       title: Schema.String,
       description: Schema.String,
       status: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
 
@@ -767,7 +769,7 @@ describe('ProjectionModel', () => {
     // Create initial schema with a single field.
     const initialSchema = Schema.Struct({
       title: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
     const [mutable] = await registry.register([initialSchema]);
 
@@ -792,9 +794,8 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getHiddenFields()[0].path).to.equal('title');
 
     // Modify the schema - add a field.
-    // Type assertion needed because PersistentSchema's type doesn't include [KindId] but runtime value does.
-    Obj.update(mutable.persistentSchema as unknown as Obj.Unknown, (s: any) => {
-      s.jsonSchema.properties!.status = { type: 'string' };
+    Type.update(mutable, (draft) => {
+      (draft.jsonSchema as Types.DeepMutable<JsonSchemaType>).properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 
@@ -815,7 +816,7 @@ describe('ProjectionModel', () => {
       name: Schema.String,
       email: Format.Email,
       phone: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const [mutable] = await registry.register([schema]);
     const view = ViewModel.make({
@@ -927,7 +928,7 @@ describe('ProjectionModel', () => {
           }),
         ),
       ),
-    }).pipe(Type.object(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
     const [mutable] = await registry.register([ContactWithArrayOfEmails]);
 
@@ -970,7 +971,7 @@ describe('ProjectionModel', () => {
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
       const schema = Schema.Struct({
         [fieldName]: schemaType,
-      }).pipe(Type.object(DXN.make('com.example.type.testObject', '0.1.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.testObject', '0.1.0')));
 
       const [mutable] = await registry.register([schema]);
       const view = ViewModel.make({
@@ -1020,11 +1021,11 @@ describe('ProjectionModel', () => {
     // Create and register schema using Format.Email
     const schema = Schema.Struct({
       email: Format.Email,
-    }).pipe(Type.object(DXN.make('com.example.type.emailTest', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.emailTest', '0.1.0')));
 
-    // Check with the primary schema (id is added by Type.object)
-    expect(() => Schema.validateSync(schema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
-    expect(() => Schema.validateSync(schema)({ id: '2', email: 'invalid-email' })).toThrow();
+    // Check with the primary schema (id is added by Type.makeObject)
+    expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '1', email: 'valid@example.com' })).not.toThrow();
+    expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '2', email: 'invalid-email' })).toThrow();
 
     const [registeredSchema] = await registry.register([schema]);
 
@@ -1037,7 +1038,7 @@ describe('ProjectionModel', () => {
     });
 
     // Verify reconstructed Effect schema maintains validation
-    const reconstructedSchema = registeredSchema.snapshot;
+    const reconstructedSchema = Type.getSchema(registeredSchema);
 
     expect(() => Schema.validateSync(reconstructedSchema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
     expect(() => Schema.validateSync(reconstructedSchema)({ id: '2', email: 'invalid-email' })).toThrow();

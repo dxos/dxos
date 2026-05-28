@@ -15,10 +15,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectViewer } from '../../../components';
+import { ObjectViewer, ObjectsTree } from '../../../components';
 import { DevtoolsContextProvider } from '../../../hooks';
 import { ObjectsPanel } from './ObjectsPanel';
-import { ObjectsTree } from './ObjectsTree';
 
 random.seed(1);
 
@@ -31,7 +30,7 @@ const withDevtoolsContext: Decorator = (Story) => (
 const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
     source: TestSchema.Person,
     target: TestSchema.Organization,

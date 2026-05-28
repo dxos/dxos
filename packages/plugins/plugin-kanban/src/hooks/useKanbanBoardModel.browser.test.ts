@@ -35,9 +35,9 @@ const KanbanTaskSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-}).pipe(Type.object(DXN.make('com.example.type.kanbanTask', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0')));
 
-type KanbanTask = Schema.Schema.Type<typeof KanbanTaskSchema>;
+type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
 
 describe('useKanbanBoardModel', () => {
   let registry: Registry.Registry;

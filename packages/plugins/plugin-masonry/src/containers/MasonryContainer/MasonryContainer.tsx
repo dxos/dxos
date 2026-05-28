@@ -99,8 +99,9 @@ export const MasonryContainer = ({
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
   const icon = Function.pipe(
-    Obj.getSchema(data),
+    Obj.getType(data),
     Option.fromNullable,
+    Option.map(Type.getSchema),
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
     Option.getOrElse(() => 'ph--circle-dashed--regular'),

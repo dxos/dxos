@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { JsonSchema, Obj, type Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { useSchema } from '@dxos/react-client/echo';
+import { useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
@@ -25,8 +25,8 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   const db = Obj.getDatabase(object);
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(db, typename);
-  const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
+  const currentSchema = useType(db, typename);
+  const [allSchemata, setAllSchemata] = useState<Type.AnyEntity[]>([]);
 
   useEffect(() => {
     if (!db) {
@@ -44,14 +44,16 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
   }, [db]);
 
   const schemaOptions = useMemo(() => {
-    const uniqueTypenames = new Set(allSchemata.map((schema) => schema.typename));
+    const uniqueTypenames = new Set(
+      allSchemata.map((schema) => Type.getTypename(schema)).filter((typename): typename is string => typename != null),
+    );
     return Array.from(uniqueTypenames).map((typename) => ({
       value: typename,
       label: typename,
     }));
   }, [allSchemata]);
 
-  const jsonSchema = useMemo(() => (currentSchema ? JsonSchema.toJsonSchema(currentSchema) : {}), [currentSchema]);
+  const jsonSchema = useMemo(() => (currentSchema ? currentSchema.jsonSchema : {}), [currentSchema]);
   const locationFields = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];

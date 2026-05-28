@@ -24,16 +24,16 @@ export const Pipeline = Schema.Struct({
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--path--regular',
     hue: 'purple',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.pipeline', '0.1.0')),
 );
 
-export type Pipeline = Schema.Schema.Type<typeof Pipeline>;
+export type Pipeline = Type.InstanceType<typeof Pipeline>;
 
 export const make = (props: Partial<Obj.MakeProps<typeof Pipeline>> = {}): Pipeline =>
   Obj.make(Pipeline, {

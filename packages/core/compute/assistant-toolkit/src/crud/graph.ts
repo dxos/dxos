@@ -32,8 +32,7 @@ export const Subgraph = Schema.Struct({
   objects: Schema.Array(Schema.Any),
 });
 
-export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
-
+export type Subgraph = Schema.Schema.Type<typeof Subgraph>;
 export type RelatedSchema = {
   schema: Type.AnyEntity;
   kind: 'reference' | 'relation';
@@ -52,7 +51,8 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas
-    .filter((schema) => {
+    .filter((type) => {
+      const schema = Type.getSchema(type);
       if (getTypeAnnotation(schema)?.kind !== Entity.Kind.Relation) {
         return false;
       }
@@ -74,12 +74,12 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
  * Non-strict DXN comparison.
  * Returns true if the DXN could be resolved to the schema.
  */
-const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN.DXN): boolean => {
-  if (getTypeIdentifierAnnotation(schema) === dxn) {
+const isSchemaAddressableByDXN = (type: Type.AnyEntity, dxn: DXN.DXN): boolean => {
+  if (getTypeIdentifierAnnotation(Type.getSchema(type)) === dxn) {
     return true;
   }
 
-  return DXN.getName(dxn) === Type.getTypename(schema);
+  return DXN.getName(dxn) === Type.getTypename(type);
 };
 
 /**
@@ -165,7 +165,7 @@ export const makeGraphWriterHandler = (
       const data = yield* sanitizeObjects(schema, input as any, db, feed);
       yield* Feed.append(feed, data as Obj.Unknown[]);
 
-      const dxns = data.map((obj) => Obj.getURI(obj));
+      const dxns = data.map((obj) => Entity.getURI(obj));
       onAppend?.(dxns);
       return dxns;
     }),
@@ -178,12 +178,14 @@ export const makeGraphWriterHandler = (
 export const createExtractionSchema = (types: Type.AnyEntity[]) => {
   return Schema.Struct({
     ...Object.fromEntries(
-      types.map(preprocessSchema).map((schema, index) => [
-        `objects_${getSanitizedSchemaName(types[index])}`,
-        Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${DXN.getName(DXN.tryMake(Type.getURI(types[index])!)!)}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
-        }),
-      ]),
+      types
+        .map((type) => preprocessSchema(Type.getSchema(type)))
+        .map((schema, index) => [
+          `objects_${getSanitizedSchemaName(types[index])}`,
+          Schema.optional(Schema.Array(schema)).annotations({
+            description: `The objects of type: ${DXN.getName(DXN.tryMake(Type.getURI(types[index])!)!)}. ${SchemaAST.getDescriptionAnnotation(Type.getSchema(types[index]).ast).pipe(Option.getOrElse(() => ''))}`,
+          }),
+        ]),
     ),
   });
 };
@@ -197,7 +199,7 @@ export const sanitizeObjects = (
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
   feed?: Feed.Feed,
-): Effect.Effect<Obj.Unknown[], never, Feed.FeedService> =>
+): Effect.Effect<Entity.Unknown[], never, Feed.FeedService> =>
   Effect.gen(function* () {
     const entries = types
       .map(
@@ -258,7 +260,7 @@ export const sanitizeObjects = (
 
         let sourceUri: EchoURI.EchoURI | undefined;
         let targetUri: EchoURI.EchoURI | undefined;
-        if (Entity.getKind(entry.schema) === 'relation') {
+        if (Entity.getKind(Type.getSchema(entry.schema)) === 'relation') {
           sourceUri = resolveId(data.source);
           if (!sourceUri) {
             log.warn('source not found', { source: data.source });

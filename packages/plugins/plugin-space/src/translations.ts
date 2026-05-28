@@ -12,7 +12,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Type.PersistentType)]: {
+      [Type.getTypename(Type.Type)]: {
         'typename.label': 'Type',
         'typename.label_zero': 'Types',
         'typename.label_one': 'Type',
@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete type',
         'object-deleted.label': 'Type deleted',
       },
-      [Collection.Collection.typename]: {
+      [Type.getTypename(Collection.Collection)]: {
         'typename.label': 'Collection',
         'typename.label_zero': 'Collections',
         'typename.label_one': 'Collection',
@@ -34,7 +34,7 @@ export const translations = [
         'delete-object.label': 'Delete collection',
         'object-deleted.label': 'Collection deleted',
       },
-      [Event.Event.typename]: {
+      [Type.getTypename(Event.Event)]: {
         'typename.label': 'Event',
         'typename.label_zero': 'Events',
         'typename.label_one': 'Event',
@@ -45,7 +45,7 @@ export const translations = [
         'delete-object.label': 'Delete event',
         'object-deleted.label': 'Event deleted',
       },
-      [Message.Message.typename]: {
+      [Type.getTypename(Message.Message)]: {
         'typename.label': 'Message',
         'typename.label_zero': 'Messages',
         'typename.label_one': 'Message',
@@ -56,7 +56,7 @@ export const translations = [
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
       },
-      [Organization.Organization.typename]: {
+      [Type.getTypename(Organization.Organization)]: {
         'typename.label': 'Organization',
         'typename.label_zero': 'Organizations',
         'typename.label_one': 'Organization',
@@ -67,7 +67,7 @@ export const translations = [
         'delete-object.label': 'Delete organization',
         'object-deleted.label': 'Organization deleted',
       },
-      [Person.Person.typename]: {
+      [Type.getTypename(Person.Person)]: {
         'typename.label': 'Person',
         'typename.label_zero': 'People',
         'typename.label_one': 'Person',
@@ -78,7 +78,7 @@ export const translations = [
         'delete-object.label': 'Delete person',
         'object-deleted.label': 'Person deleted',
       },
-      [Pipeline.Pipeline.typename]: {
+      [Type.getTypename(Pipeline.Pipeline)]: {
         'typename.label': 'Pipeline',
         'typename.label_zero': 'Pipelines',
         'typename.label_one': 'Pipeline',
@@ -89,7 +89,7 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [Project.Project.typename]: {
+      [Type.getTypename(Project.Project)]: {
         'typename.label': 'Project',
         'typename.label_zero': 'Projects',
         'typename.label_one': 'Project',
@@ -100,7 +100,7 @@ export const translations = [
         'delete-object.label': 'Delete project',
         'object-deleted.label': 'Project deleted',
       },
-      [Task.Task.typename]: {
+      [Type.getTypename(Task.Task)]: {
         'typename.label': 'Task',
         'typename.label_zero': 'Tasks',
         'typename.label_one': 'Task',
@@ -221,6 +221,7 @@ export const translations = [
         'create-object-dialog.title': 'Create {{object}}',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
+        'plugin-subtitle.label': '{{plugin}} Plugin',
         'creating-object-type.label': 'Type',
         'creating-in-space.label': 'Location',
         'creating-in-collection.label': 'In Collection',

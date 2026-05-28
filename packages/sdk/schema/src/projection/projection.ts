@@ -6,10 +6,9 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Format, Obj, View } from '@dxos/echo';
+import { Format, Obj, Type, View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import {
-  EchoSchema,
   type JsonProp,
   type JsonSchemaType,
   type Mutable,
@@ -50,30 +49,21 @@ export type ProjectionChangeCallback = {
 };
 
 /**
- * Creates a change callback for ECHO-backed View and EchoSchema objects.
+ * Creates a change callback for ECHO-backed View and Type.Type objects.
  * Use this when the view is stored in the ECHO database.
  *
- * Note: Type assertions are needed because:
- * 1. PersistentSchema's type doesn't include [KindId] but runtime value does
- * 2. Inside Obj.update, the mutable object has different type constraints
- *
  * @param view - The ECHO-backed view object.
- * @param schema - Optional EchoSchema. If not provided, schema mutations will throw.
+ * @param schema - Optional persisted `Type.AnyEntity`. If not provided, schema mutations will throw.
  */
-export const createEchoChangeCallback = (
-  view: View.View,
-  schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
-): ProjectionChangeCallback => ({
+export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntity): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
   schema:
-    schema instanceof EchoSchema
-      ? (mutate) => Obj.update(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
-      : schema
-        ? (mutate) => mutate(schema)
-        : () => {
-            throw new Error('Schema is not mutable');
-          },
+    schema == null
+      ? () => {
+          throw new Error('Schema is not mutable');
+        }
+      : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema)),
 });
 
 /**

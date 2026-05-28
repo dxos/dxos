@@ -15,7 +15,7 @@ import {
   isDiscriminatedUnion,
   isNestedType,
 } from '@dxos/effect';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -96,14 +96,7 @@ export const ArrayField = ({
             <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
           </div>
           {!readonly && layout !== 'static' && (
-            <IconButton
-              iconOnly
-              density='md'
-              variant='ghost'
-              icon='ph--plus--regular'
-              label={t('add-item.button')}
-              onClick={handleAdd}
-            />
+            <IconBlock icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
           )}
         </div>
       )}
@@ -134,10 +127,7 @@ export const ArrayField = ({
           );
 
           return (
-            <div
-              key={index}
-              className='grid grid-cols-[1fr_min-content] gap-form-gap items-center mb-1 last:mb-form-gap'
-            >
+            <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
               {renderItemAsObject ? (
                 <div className='p-1 border border-subdued-separator'>{fieldField}</div>
               ) : (
@@ -145,29 +135,7 @@ export const ArrayField = ({
               )}
 
               {!readonly && layout !== 'static' && (
-                <div className='h-full flex flex-col justify-end'>
-                  {renderItemAsObject ? (
-                    <IconButton
-                      variant='ghost'
-                      icon='ph--x--regular'
-                      iconOnly
-                      label={t('remove-item.button')}
-                      onClick={() => handleDelete(index)}
-                    />
-                  ) : (
-                    // Centers against the inline single-row FormField.
-                    <div className='flex items-center h-[2rem]'>
-                      <IconButton
-                        variant='ghost'
-                        icon='ph--x--regular'
-                        iconOnly
-                        label={t('remove-item.button')}
-                        onClick={() => handleDelete(index)}
-                        classNames='self-center'
-                      />
-                    </div>
-                  )}
-                </div>
+                <IconBlock icon='ph--x--regular' label={t('remove-item.button')} onClick={() => handleDelete(index)} />
               )}
             </div>
           );
@@ -178,6 +146,14 @@ export const ArrayField = ({
 };
 
 ArrayField.displayName = 'Form.ArrayField';
+
+const IconBlock = (props: IconButtonProps) => {
+  return (
+    <div className='flex items-center h-full px-1'>
+      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
+    </div>
+  );
+};
 
 /**
  * Returns the default empty value for a given AST.

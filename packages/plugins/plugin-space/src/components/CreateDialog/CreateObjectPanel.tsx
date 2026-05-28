@@ -8,9 +8,11 @@ import { type Collection, type Database, Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
+import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
@@ -24,6 +26,8 @@ export type CreateObjectOption = {
   id: string;
   label: string;
   icon?: string;
+  iconHue?: string;
+  plugin?: string;
 };
 
 export type Metadata = SpaceCapabilities.CreateObjectEntry;
@@ -155,13 +159,26 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
       />
       <SearchList.Viewport>
         {results.map((option) => (
-          <SearchList.Item
+          <Picker.Item
             key={option.id}
             value={option.id}
-            label={option.label}
-            icon={option.icon ?? 'ph--circle-dashed--regular'}
             onSelect={() => onChange(option.id)}
-          />
+            classNames='flex gap-3 items-center px-2 py-2 rounded-xs'
+          >
+            <Icon
+              icon={option.icon ?? 'ph--circle-dashed--regular'}
+              size={8}
+              classNames={getIconHueStyles(option.iconHue)}
+            />
+            <div className='flex flex-col min-w-0 grow gap-0.5'>
+              <span className='truncate'>{option.label}</span>
+              {option.plugin && (
+                <span className='truncate text-description text-xs'>
+                  {t('plugin-subtitle.label', { plugin: option.plugin })}
+                </span>
+              )}
+            </div>
+          </Picker.Item>
         ))}
       </SearchList.Viewport>
     </SearchList.Root>
@@ -228,4 +245,9 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
       </SearchList.Viewport>
     </SearchList.Root>
   );
+};
+
+const getIconHueStyles = (iconHue?: string): string | undefined => {
+  const styles = iconHue ? getStyles(iconHue) : undefined;
+  return styles?.foreground;
 };

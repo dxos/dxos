@@ -56,14 +56,14 @@ export const CanvasBoard = Schema.Struct({
    */
   layout: Graph.Graph,
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.canvasBoard', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--infinity--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.canvasBoard', '0.1.0')),
 );
 
-export type CanvasBoard = Schema.Schema.Type<typeof CanvasBoard>;
+export type CanvasBoard = Type.InstanceType<typeof CanvasBoard>;
 
 /**
  * Creates a CanvasBoard with default empty layout and compute graph when not provided.

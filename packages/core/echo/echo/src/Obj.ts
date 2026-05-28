@@ -24,7 +24,7 @@ import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
 import * as Ref from './Ref';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 /**
  * Base type for all ECHO objects.
@@ -64,25 +64,24 @@ export interface Unknown extends BaseObj {}
  * // Reference to any object type
  * const Collection = Schema.Struct({
  *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
- * }).pipe(Type.object(DXN.make('com.example.type.collection', '0.1.0')));
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.collection', '0.1.0')));
  * ```
  */
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Unknown: Type.Obj<Unknown> = Schema.Struct({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  // TODO(dmaretskyi): Clean this up.
-  // NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Obj.Unknown) to work.
-  //   The typename/version only satisfy ECHO schema machinery for reference targets.
-  internal.EchoObjectSchema(DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION)),
-  (schema) =>
-    Object.assign(schema, {
-      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
-    }) as unknown as Type.Obj<Unknown>,
-);
+  Schema.annotations({
+    [internal.TypeAnnotationId]: {
+      kind: Entity.Kind.Object,
+      typename: internal.ANY_OBJECT_TYPENAME,
+      version: internal.ANY_OBJECT_VERSION,
+    },
+  }),
+) as unknown as internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object>;
 
 /**
  * Object with arbitrary properties.
@@ -124,26 +123,36 @@ const defaultMeta: internal.ObjectMeta = {
   keys: [],
 };
 
-type MakePropsInternal<T extends Unknown> = {
-  id?: ObjectId;
-  [Meta]?: Partial<internal.ObjectMeta>;
-} & Entity.Properties<T>;
-
 // TODO(burdon): Should we allow the caller to set the id?
 /**
- * Props type for object creation with a given schema.
+ * Props type for object creation with a given type. Accepts a `Type.AnyObj`
+ * entity and derives the instance shape via `Type.InstanceType`. Relation-kind
+ * entities are rejected at the type level — use `Relation.MakeProps` for those.
+ *
+ * When the schema is the unconstrained `Type.AnyObj` (`Obj<unknown>` — e.g. a
+ * dynamic type from `schemaRegistry.register`), the instance shape is not
+ * statically known, so data props widen to `Record<string, unknown>` and the
+ * caller can pass arbitrary fields without a cast.
  */
-export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
+export type MakeProps<S extends Type.AnyObj> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & MakePropsInternal<Schema.Schema.Type<S>>;
+  // When the resolved instance has no known data keys, widen to a permissive
+  // record (the `Obj<unknown>` case); otherwise use the precise property shape.
+  // `[keyof …] extends [never]` is wrapped in tuples so the check is
+  // non-distributive — a `never` instance type (e.g. when narrowing collapses
+  // the schema) stays a single branch instead of distributing to `never`.
+} & ([keyof Entity.Properties<Type.InstanceType<S>>] extends [never]
+  ? Record<string, unknown>
+  : Entity.Properties<Type.InstanceType<S>>);
 
 /**
- * Creates a new echo object of the given schema.
- * @param schema - Object schema.
+ * Creates a new echo object of the given schema or `Type.Type`.
+ *
+ * @param typeOrSchema - A static object schema (`Type.makeObject(...)`) or a
+ *   `Type.Type` entity (e.g. one returned by `db.schemaRegistry.register`).
  * @param props - Object properties.
- * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
  *
  * Meta can be passed as a symbol in `props`.
  *
@@ -152,12 +161,15 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
  * ```
  *
- * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
+ * Note: Only accepts object schemas / object-kind types, not relation schemas.
+ * Use `Relation.make` for relations.
  */
-export const make = <S extends Type.AnyObj>(
-  schema: S,
-  props: NoInfer<MakeProps<S>>,
-): OfShape<Schema.Schema.Type<S>> => {
+export function make<T extends Type.AnyObj>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
+export function make(input: Type.AnyObj, props: any): OfShape<any> {
+  // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
+  // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
+  // so subsequent schema mutations (`Type.addFields`, etc.) propagate.
+  const schema = Type.getSchema(input);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',
@@ -183,11 +195,16 @@ export const make = <S extends Type.AnyObj>(
     }
   }
 
-  return internal.makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
-    ...defaultMeta,
-    ...meta,
-  });
-};
+  return internal.makeObject(
+    schema,
+    filterUndefined,
+    {
+      ...defaultMeta,
+      ...meta,
+    },
+    input,
+  );
+}
 
 /**
  * Determine if object is an ECHO object.
@@ -406,7 +423,8 @@ export const ID = ObjectId;
 export type ID = ObjectId;
 
 /**
- * Test if object or relation is an instance of a schema.
+ * Test if an object is an instance of a given object type.
+ *
  * @example
  * ```ts
  * const john = Obj.make(Person, { name: 'John' });
@@ -415,11 +433,29 @@ export type ID = ObjectId;
  *   // john is Person
  * }
  * ```
+ *
+ * Only accepts `Type.AnyObj` — use `Relation.instanceOf` for relations and
+ * `Type.isType(value)` to test for `Type.Type` meta-schema entities.
  */
 export const instanceOf: {
-  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
-} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
+  // Reject `Type.Type` at the type level — those are meta-schema entities, not
+  // object instances. Use `Type.isType(value)` instead.
+  <T extends Type.Type>(
+    type: T,
+    _hint?: never,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    ..._error: ['ERROR: Obj.instanceOf does not accept Type.Type; use Type.isType(value) instead']
+  ): never;
+  // Reject relation types — use `Relation.instanceOf` instead.
+  <R extends Type.AnyRelation>(
+    type: R,
+    _hint?: never,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    ..._error: ['ERROR: Obj.instanceOf does not accept relation types; use Relation.instanceOf instead']
+  ): never;
+  <S extends Type.AnyObj>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyObj>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyEntity, value?: unknown]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }
@@ -441,9 +477,9 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
-  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
-} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
+  <S extends Type.AnyObj>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S>>;
+  <S extends Type.AnyObj>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S>>;
+} = ((...args: [schema: Type.AnyObj, value: unknown] | [schema: Type.AnyObj]) => {
   const check = (entity: unknown) =>
     entity != null &&
     typeof entity === 'object' &&
@@ -481,10 +517,15 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
 };
 
 /**
- * Get the schema of the object.
- * Returns the branded ECHO schema used to create the object.
+ * Get the type entity (`Type.AnyObj`) the object was created from.
+ *
+ * Returns `undefined` when the object's type isn't registered in this runtime
+ * (e.g. a freshly deserialized snapshot whose type entity hasn't been wired
+ * up yet, or an object loaded from storage before its schema is known). To
+ * get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getSchema: (obj: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObj | undefined =>
+  internal.getType(obj) as Type.AnyObj | undefined;
 
 /**
  * @returns The typename of the object's type.
@@ -654,7 +695,7 @@ export const Parent: unique symbol = internal.ParentId as any;
  * @returns The parent object, or undefined if the object has no parent.
  */
 export const getParent = (entity: Unknown | Snapshot): Unknown | undefined => {
-  assertArgument(isObject(entity), 'Expected an object');
+  assertArgument(isObject(entity) || isSnapshot(entity), 'Expected an object');
   assumeType<internal.InternalObjectProps>(entity);
   return entity[internal.ParentId] as Unknown | undefined;
 };

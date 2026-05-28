@@ -75,24 +75,21 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.view', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--funnel--regular',
     hue: 'green',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 
-export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
-
-/**
- * View instance type.
- */
-// NOTE: This interface is explicitly defined rather than derived from the schema to avoid
-//   TypeScript "cannot be named" portability errors. The schema contains QueryAST.Query which
-//   references internal @dxos/echo-protocol module paths. Without this explicit interface,
-//   any schema using Ref.Ref(View) would inherit the non-portable type and fail to compile.
+// NOTE: Declared as a named interface and the `View` const is annotated `Type.Obj<View>` so
+//   downstream consumers see a named `View` type instead of the inlined `QueryAST.Query` union.
+//   Without the named interface, embedding `Type.getSchema(View.View)` in a downstream
+//   `Schema.Struct` triggers TS2742 portability errors (e.g. plugin-kanban, plugin-table).
 // TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
+export interface View extends Type.InstanceType<typeof ViewSchema> {}
+
 export const View: Type.Obj<View> = ViewSchema as any;
 
 export const make = (props: Partial<Obj.MakeProps<typeof View>>): View => {

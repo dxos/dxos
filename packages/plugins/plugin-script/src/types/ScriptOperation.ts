@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Script, Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -37,6 +37,6 @@ export const CreateScript = Operation.make({
     }),
   ),
   output: Schema.Struct({
-    object: Script.Script,
+    object: Type.getSchema(Script.Script),
   }),
 });

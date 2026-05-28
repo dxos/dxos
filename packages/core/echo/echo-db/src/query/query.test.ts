@@ -95,7 +95,7 @@ describe('Query', () => {
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({ types: [...Dataset.Dataset.members] }));
+      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View] }));
       createTestObjects().forEach((object) => db.add(object));
       await db.flush();
     });
@@ -582,11 +582,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object(DXN.make('com.example.type.person', '0.2.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -1224,11 +1224,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object(DXN.make('com.example.type.person', '0.2.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
@@ -2041,8 +2041,8 @@ describe('Query', () => {
       expect(obj).toBeDefined();
       expect(Obj.getURI(obj)).toMatch(/^echo:\/\//);
       expect(Obj.getURI(obj)).toContain(obj.id);
-      expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
-      expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
+      expect(Obj.getTypename(obj)).toBe(Type.getTypename(TestSchema.Task));
+      expect(Obj.getType(obj)).toEqual(TestSchema.Task);
       expect(obj.id).toEqual(task.id);
       expect(Obj.isDeleted(obj)).toBe(false);
       expect(Obj.getMeta(obj).keys).toEqual([]);
@@ -2431,7 +2431,7 @@ describe('Query', () => {
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(schema, {}));
 
-      // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
+      // Filter.type matches by schema-entity object id — pass the stored Type.Type entity.
       const query = db.query(Query.type(schema));
       const result = await query.run();
       expect(result).to.have.length(1);

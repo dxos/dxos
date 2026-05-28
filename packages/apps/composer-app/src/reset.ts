@@ -48,4 +48,7 @@ void (async () => {
   print('Cookies cleared');
 
   print('\nDone. Navigate to / to restart.');
+  if (window.location.hash.includes('continue')) {
+    window.location.href = '/';
+  }
 })();

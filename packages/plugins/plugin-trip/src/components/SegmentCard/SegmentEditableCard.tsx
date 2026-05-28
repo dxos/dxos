@@ -3,7 +3,7 @@
 //
 
 import { format as formatDate } from 'date-fns';
-import React, { type ChangeEvent, type MouseEvent, forwardRef, useCallback } from 'react';
+import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, Input, useTranslation } from '@dxos/react-ui';
@@ -49,11 +49,11 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     const { t } = useTranslation(meta.id);
 
     const handleDepartChange = useCallback(
-      (event: ChangeEvent<HTMLInputElement>) => {
+      (next: string) => {
         Obj.update(segment, (segment) => {
           // Card is only mounted for flight segments (see SegmentEdit registration).
           if (segment.details._tag === 'flight') {
-            segment.details.departAt = localDateTimeToIso(event.target.value);
+            segment.details.departAt = localDateTimeToIso(next);
           }
         });
       },
@@ -91,8 +91,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
               <Input.DateTime
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}
-                onChange={handleDepartChange}
-                placeholder={t('segment.depart.placeholder')}
+                onValueChange={handleDepartChange}
               />
             </Input.Root>
           </Card.Row>

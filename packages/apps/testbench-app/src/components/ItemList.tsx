@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -51,13 +51,13 @@ export type ItemProps<T> = {
 // TODO(burdon): Use ui list with key nav/selection.
 // TODO(burdon): Toggle options to show deleted.
 export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
-  const schema = Obj.getSchema(object);
-  if (!schema) {
+  const type = Obj.getType(object);
+  if (!type) {
     return <DebugItem object={object} onDelete={onDelete} />;
   }
 
   // TODO(burdon): Get additional metadata.
-  const props = mapSchemaToFields(schema);
+  const props = mapSchemaToFields(Type.getSchema(type));
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: Obj.Any, prop: string) => object[prop];

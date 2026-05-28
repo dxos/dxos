@@ -27,7 +27,8 @@ export default InboxOperation.GmailSend.pipe(
       const inReplyTo = message.properties?.inReplyTo;
       const references = message.properties?.references;
       const threadId = message.properties?.threadId;
-      const text = message.blocks.find((b) => b._tag === 'text')?.text;
+      const textBlock = message.blocks.find((block) => block._tag === 'text');
+      const text = textBlock?._tag === 'text' ? textBlock.text : undefined;
 
       if (!to || !text) {
         return yield* Effect.fail(new GmailSendMessageInvalidError());

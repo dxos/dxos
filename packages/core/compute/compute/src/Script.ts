@@ -21,16 +21,15 @@ export const Script = Schema.Struct({
   changed: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
   source: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.script', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--code--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.script', '0.1.0')),
 );
 
-export interface Script extends Schema.Schema.Type<typeof Script> {}
-
+export type Script = Type.InstanceType<typeof Script>;
 type Props = Omit<Obj.MakeProps<typeof Script>, 'source'> & { source?: string };
 
 export const make = ({ source = '', ...props }: Props = {}): Script =>

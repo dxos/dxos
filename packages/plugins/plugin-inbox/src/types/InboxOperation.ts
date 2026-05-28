@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Message } from '@dxos/types';
 
@@ -51,7 +51,7 @@ export const AddMailbox = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
-    target: Schema.Union(Database.Database, Collection.Collection),
+    target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -119,7 +119,7 @@ export const GmailSend = Operation.make({
   },
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
-    message: Message.Message,
+    message: Type.getSchema(Message.Message),
     integration: Ref.Ref(Integration.Integration).annotations({
       description: 'Integration to source Gmail credentials from.',
     }),
@@ -355,7 +355,7 @@ export const ExtractMessage = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
-    message: Message.Message,
+    message: Type.getSchema(Message.Message),
     extractorId: Schema.optional(Schema.String),
     targetTripId: Schema.optional(Schema.String),
   }),

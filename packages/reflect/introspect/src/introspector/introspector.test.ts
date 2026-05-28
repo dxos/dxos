@@ -27,7 +27,7 @@ describe('refs', () => {
 
 describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   // Fixture shape:
-  //   @fixture/pkg-a — ECHO type definition (Schema.Struct + Type.object) for Task,
+  //   @fixture/pkg-a — ECHO type definition (Schema.Struct + Type.makeObject) for Task,
   //                    plus a make() factory using Obj.make.
   //   @fixture/pkg-b — React component (TaskCard) consuming a Task via useObject,
   //                    plus a TaskCardProps interface.
@@ -131,7 +131,7 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   test('getSymbol with include=source returns Schema.Struct + annotations', ({ expect }) => {
     const detail = introspector.getSymbol('@fixture/pkg-a#Task', ['source']);
     expect(detail!.source).toContain('Schema.Struct');
-    expect(detail!.source).toContain('Type.object');
+    expect(detail!.source).toContain('Type.makeObject');
     expect(detail!.source).toContain('com.example.type.Task');
     // Property-level description annotation.
     expect(detail!.source).toContain("description: 'Short summary of the task.'");
@@ -140,13 +140,13 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('getSymbol surfaces both merged declarations of Task in source', ({ expect }) => {
-    // ECHO idiom: `export const Task = Schema.Struct(...)` AND
-    // `export interface Task extends Schema.Schema.Type<typeof Task> {}` — both
-    // declarations share a name, and the indexer concatenates their source so
-    // consumers see the full pattern rather than only the value form.
+    // ECHO idiom: `export const Task = Schema.Struct(...).pipe(Type.makeObject(...))` AND
+    // `export type Task = Type.InstanceType<typeof Task>` — both declarations share
+    // a name, and the indexer concatenates their source so consumers see the full
+    // pattern rather than only the value form.
     const detail = introspector.getSymbol('@fixture/pkg-a#Task', ['source']);
     expect(detail!.source).toContain('export const Task');
-    expect(detail!.source).toContain('export interface Task extends Schema.Schema.Type<typeof Task>');
+    expect(detail!.source).toContain('export type Task = Type.InstanceType<typeof Task>');
   });
 
   test('getSymbol on the React component captures its useObject body', ({ expect }) => {

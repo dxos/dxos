@@ -10,7 +10,7 @@ import type { ComponentType } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { type Collection, type Database } from '@dxos/echo';
+import { type Collection, type Database, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
@@ -60,13 +60,13 @@ export namespace SpaceCapabilities {
   }) => Effect.Effect<void, Error, Operation.Service>;
   export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}.capability.on-space-created`);
 
-  export type OnSchemaAdded = (params: {
+  export type OnTypeAdded = (params: {
     db: Database.Database;
-    schema: Schema.Schema.AnyNoContext;
+    type: Type.AnyEntity;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnSchemaAdded = Capability.make<OnSchemaAdded>(`${meta.id}.capability.on-schema-added`);
+  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.id}.capability.on-type-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
@@ -76,6 +76,10 @@ export namespace SpaceCapabilities {
   export type CreateObjectEntry = Readonly<{
     id: string;
     createObject: CreateObject;
+    /**
+     * Effect Schema describing the create form inputs. To use a `Type.Type`
+     * entity as the form schema, extract its schema first via `Type.getSchema(...)`.
+     */
     inputSchema?: Schema.Schema.AnyNoContext;
     /**
      * Optional custom React panel rendered in place of the default `inputSchema` form.

@@ -8,12 +8,13 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(AppCapabilities.CommentConfig, {
-      id: Table.Table.typename,
+      id: Type.getTypename(Table.Table),
       comments: 'unanchored',
     });
   }),

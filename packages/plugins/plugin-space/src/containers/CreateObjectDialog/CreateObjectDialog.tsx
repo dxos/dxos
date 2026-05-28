@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
@@ -55,7 +56,23 @@ export const CreateObjectDialog = ({
   // TODO(wittjosiah): Support database schemas.
   const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
 
-  const createObjectEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
+  const entriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
+
+  const { createObjectEntries, pluginNameByEntryId } = useMemo(() => {
+    const entries: SpaceCapabilities.CreateObjectEntry[] = [];
+    const pluginByEntryId = new Map<string, string>();
+    const plugins = manager.getPlugins();
+    for (const [moduleId, contributions] of Object.entries(entriesByModule)) {
+      const owningPlugin = plugins.find((plugin) => plugin.modules.some((module) => module.id === moduleId));
+      for (const entry of contributions) {
+        entries.push(entry);
+        if (owningPlugin) {
+          pluginByEntryId.set(entry.id, owningPlugin.meta.name);
+        }
+      }
+    }
+    return { createObjectEntries: entries, pluginNameByEntryId: pluginByEntryId };
+  }, [entriesByModule, manager]);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (id) => createObjectEntries.find((entry) => entry.id === id),
@@ -77,15 +94,18 @@ export const CreateObjectDialog = ({
       createObjectEntries
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => {
-          const schema = schemas?.find((s) => Type.getTypename(s) === entry.id);
+          const type = schemas?.find((s) => Type.getTypename(s) === entry.id);
+          const schema = type && Type.getSchema(type);
           const iconAnnotation = schema ? Annotation.IconAnnotation.get(schema).pipe(Option.getOrUndefined) : undefined;
           return {
             id: entry.id,
             label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
             icon: iconAnnotation?.icon,
+            iconHue: iconAnnotation?.hue,
+            plugin: pluginNameByEntryId.get(entry.id),
           };
         }),
-    [createObjectEntries, views, viewTypenames, schemas, t],
+    [createObjectEntries, views, viewTypenames, schemas, t, pluginNameByEntryId],
   );
 
   const handleCreateObject = useCallback<NonNullable<CreateObjectPanelProps['onCreateObject']>>(

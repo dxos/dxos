@@ -64,10 +64,18 @@ const stripResidualTags = (str: string, { fromHtml = false }: { fromHtml?: boole
 };
 
 const stripWhitespace = (str: string): string => {
+  // Invisible/whitespace characters that newsletters use to pad preview text:
+  // soft hyphen (U+00AD), combining grapheme joiner (U+034F), zero-width
+  // space/non-joiner/joiner (U+200B-U+200D), word joiner (U+2060), and BOM/
+  // ZWNBSP (U+FEFF), plus regular space, tab, and NBSP.
+  const INVISIBLE = ' \\t\\u00A0\\u00AD\\u034F\\u200B-\\u200D\\u2060\\uFEFF';
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return (
     str
       .trim()
+      // Blank out lines that contain only invisible/whitespace characters so
+      // they get folded together by the blank-line collapse below.
+      .replace(new RegExp(`^[${INVISIBLE}]+$`, 'gm'), '')
       // Blank out setext-underline / horizontal-rule lines (entirely `=` or `-`).
       .replace(/^[ \t\u00A0]*[=-]+[ \t\u00A0]*$/gm, '')
       // Replace multiple newlines with double newlines.

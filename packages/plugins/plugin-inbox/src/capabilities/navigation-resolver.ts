@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
+import { Database, Filter, Key, Obj, Query, Type } from '@dxos/echo';
 import { EchoURI, URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
@@ -51,7 +51,7 @@ export default Capability.makeModule(
           {
             path: getMailboxAllMailPath(db.spaceId, object.id),
             label: (object as Mailbox.Mailbox).name ?? '',
-            type: Mailbox.Mailbox.typename,
+            type: Type.getTypename(Mailbox.Mailbox),
           },
         ];
       })) as AppCapabilities.NavigationTargetResolver;

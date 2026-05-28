@@ -13,14 +13,14 @@ export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.outline', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--tree-structure--regular',
     hue: 'indigo',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.outline', '0.1.0')),
 );
 
-export interface Outline extends Schema.Schema.Type<typeof Outline> {}
+export type Outline = Type.InstanceType<typeof Outline>;
 
 export const make = ({ name, content }: { name?: string; content?: string } = {}): Outline => {
   return Obj.make(Outline, {

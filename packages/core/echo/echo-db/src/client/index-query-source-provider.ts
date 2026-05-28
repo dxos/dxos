@@ -176,7 +176,7 @@ export class IndexQuerySource implements QuerySource {
             (response.results ?? []).map((result) => this._filterMapResult(ctx, start, result)),
           );
           const results = processedResults.filter(isNonNullable);
-          const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getSchema(_.result));
+          const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getType(_.result));
           if (resultsWithNoSchema.length > 0) {
             log.warn('unable to resolve schema for queried objects', {
               count: resultsWithNoSchema.length,

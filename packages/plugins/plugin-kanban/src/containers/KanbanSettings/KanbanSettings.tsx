@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { useObject, useSchema } from '@dxos/react-client/echo';
+import { useObject, useType } from '@dxos/react-client/echo';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
@@ -31,7 +31,7 @@ export const KanbanSettings = ({ subject: object }: KanbanSettingsProps) => {
   const [view, updateView] = useObject(object.spec.kind === 'view' ? object.spec.view : undefined);
   const [, updateKanban] = useObject(object);
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(db, currentTypename);
+  const schema = useType(db, currentTypename);
   const projection = useProjectionModel(schema, object, registry);
 
   const fieldProjections = projection?.getFieldProjections() ?? [];

@@ -65,16 +65,16 @@ export const Magazine = Schema.Struct({
     }),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.magazine', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--newspaper-clipping--regular',
     hue: 'indigo',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.makeObject(DXN.make('org.dxos.type.magazine', '0.1.0')),
 );
 
-export interface Magazine extends Schema.Schema.Type<typeof Magazine> {}
+export type Magazine = Type.InstanceType<typeof Magazine>;
 
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);

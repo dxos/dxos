@@ -4,8 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { JsonSchema, Obj } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 
@@ -26,11 +25,12 @@ const handler: Operation.WithHandler<typeof KanbanOperation.RestoreCardField> = 
           .first(),
       );
 
+      invariant(Type.isType(schema), 'expected stored Type.Type for card schema');
       const projection = new ProjectionModel({
         registry,
         view,
-        baseSchema: JsonSchema.toJsonSchema(schema),
-        change: createEchoChangeCallback(view, schema as EchoSchema),
+        baseSchema: schema.jsonSchema,
+        change: createEchoChangeCallback(view, schema),
       });
 
       projection.setFieldProjection({ field, props }, index);

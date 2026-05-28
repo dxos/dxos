@@ -80,6 +80,17 @@ describe('Obj', () => {
       expect(SnapshotKindId in snapshot).toBe(true);
       expect(Entity.KindId in snapshot).toBe(false);
     });
+
+    test('getSnapshot preserves parent', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'child' });
+      Obj.setParent(child, parent);
+
+      const snapshot = Obj.getSnapshot(child);
+
+      expect(Obj.getParent(child)).toBe(parent);
+      expect(Obj.getParent(snapshot)).toBe(parent);
+    });
   });
 
   describe('snapshotOf', () => {
@@ -329,8 +340,8 @@ describe('Obj', () => {
       expect(cloned.address?.city).toBe('San Francisco');
       expect(cloned.address?.state).toBe('CA');
       expect(cloned.address?.zip).toBe('94102');
-      expect(cloned.address?.coordinates.lat).toBe(37.7749);
-      expect(cloned.address?.coordinates.lng).toBe(-122.4194);
+      expect(cloned.address?.coordinates?.lat).toBe(37.7749);
+      expect(cloned.address?.coordinates?.lng).toBe(-122.4194);
 
       // Modifying nested properties should be independent
       Obj.update(person, (person) => {
@@ -405,7 +416,7 @@ describe('Obj', () => {
       const cloned = Obj.clone(person);
 
       expect(Obj.instanceOf(TestSchema.Person, cloned)).toBe(true);
-      expect(Obj.getSchema(cloned)).toBe(Obj.getSchema(person));
+      expect(Obj.getType(cloned)).toBe(Obj.getType(person));
     });
   });
 

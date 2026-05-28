@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { useObject, useSchema } from '@dxos/react-client/echo';
+import { useObject, useType } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
@@ -41,7 +41,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
-  const schemaFromDb = useSchema(db, typename);
+  const schemaFromDb = useType(db, typename);
   const cardSchema = useMemo(
     () => schemaFromDb ?? schemas.flat().find((schema) => Type.getTypename(schema) === typename),
     [schemaFromDb, schemas, typename],
@@ -66,7 +66,9 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
       if (db && cardSchema && columnFieldPath) {
-        const card = Obj.make(cardSchema, { [columnFieldPath]: columnValue });
+        const card = Obj.make(Type.assertObject(cardSchema), {
+          [columnFieldPath]: columnValue,
+        });
         db.add(card);
         return card.id;
       }

@@ -16,7 +16,9 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
  */
 export const FileDataSchema = Schema.Union(
   Schema.TaggedStruct('inline', {
-    bytes: Schema.Uint8ArrayFromSelf,
+    bytes: Schema.Uint8ArrayFromSelf.annotations({
+      jsonSchema: { type: 'string', contentEncoding: 'base64' },
+    }),
   }),
   Schema.TaggedStruct('external', {
     url: Schema.String,
@@ -56,15 +58,14 @@ export const File = Schema.Struct({
   data: FileDataSchema.pipe(FormInputAnnotation.set(false)),
   timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.file', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--file--regular',
     hue: 'teal',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.file', '0.1.0')),
 );
 
-export interface File extends Schema.Schema.Type<typeof File> {}
-
+export type File = Type.InstanceType<typeof File>;
 /**
  * Constructs a `File.File` ECHO object from the given props.
  * @param props - The initial field values for the file object.
