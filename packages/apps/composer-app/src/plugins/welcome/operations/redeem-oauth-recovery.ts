@@ -9,11 +9,11 @@ import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
-import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient } from '../constants';
-import { ClientCapabilities } from '../types';
 import { RedeemOAuthRecovery } from './definitions';
+import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient } from './shared';
 
 
 /**

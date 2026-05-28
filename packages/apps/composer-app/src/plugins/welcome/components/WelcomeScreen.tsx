@@ -10,6 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
+
+import { WelcomeOperation } from '../operations';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -119,7 +121,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         // can't relay back via postMessage; kms-service redirects the tab to /redirect/oauth-recovery,
         // where the welcome OAuthRecoveryRedirect module redeems the recovery proof and admits this
         // device. This call returns once the tab is open — completion happens out-of-band.
-        const result = await invokePromise(ClientOperation.RedeemOAuthRecovery, { provider, loginHint });
+        const result = await invokePromise(WelcomeOperation.RedeemOAuthRecovery, { provider, loginHint });
         if (result.error) {
           throw result.error;
         }
@@ -241,7 +243,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         // welcome OAuthRecoveryRedirect module then creates the identity, completes registration, and
         // redeems this invitation code with the provider-verified email. This call returns once the
         // tab is open — completion happens out-of-band.
-        const result = await invokePromise(ClientOperation.RegisterOAuthRecovery, {
+        const result = await invokePromise(WelcomeOperation.RegisterOAuthRecovery, {
           provider,
           loginHint,
           code,

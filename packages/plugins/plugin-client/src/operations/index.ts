@@ -14,10 +14,8 @@ export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-recovery-code'),
   () => import('./join-identity'),
   () => import('./recover-identity'),
-  () => import('./redeem-oauth-recovery'),
   () => import('./redeem-passkey'),
   () => import('./redeem-token'),
-  () => import('./register-oauth-recovery'),
   () => import('./reset-storage'),
   () => import('./share-identity'),
 );
