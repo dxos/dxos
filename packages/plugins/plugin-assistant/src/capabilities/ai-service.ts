@@ -9,9 +9,11 @@ import { AiModelResolver, AiService } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
+import type { AssistantPluginOptions } from '#types';
+import { Context } from 'effect';
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+export default Capability.makeModule<AssistantPluginOptions | void>(
+  Effect.fnUntraced(function* (options) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
     // TODO(dmaretskyi): Extract function to reduce them.
@@ -20,9 +22,16 @@ export default Capability.makeModule(
       AiModelResolver.AiModelResolver.fromModelMap({ name: 'Fallback' }, Effect.succeed({})), // Empty resolver as fallback.
     );
 
-    const aiServiceLayer: Layer.Layer<AiService.AiService> = AiModelResolver.AiModelResolver.buildAiService.pipe(
+    let aiServiceLayer: Layer.Layer<AiService.AiService> = AiModelResolver.AiModelResolver.buildAiService.pipe(
       Layer.provide(combinedLayer),
     );
+
+    if (options?.aiServiceMiddleware) {
+      aiServiceLayer = aiServiceLayer.pipe(Layer.map(context => {
+        const aiService = Context.get(context, AiService.AiService);
+        return Context.make(AiService.AiService, options.aiServiceMiddleware!(aiService));
+      }));
+    }
 
     const aiServiceSpec = LayerSpec.make(
       {

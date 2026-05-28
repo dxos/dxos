@@ -37,11 +37,11 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AssistantEvents, AssistantOperation } from '#types';
+import { AssistantEvents, AssistantOperation, type AssistantPluginOptions } from '#types';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 
-export const AssistantPlugin = Plugin.define(meta).pipe(
+export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),

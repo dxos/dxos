@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { AssistantPluginOptions } from '#types';
 import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const AiContext = Capability.lazy<void, Capability.Any[]>('AiContext', () => import('./ai-context'));
-export const AiService = Capability.lazy<void, Capability.Any[]>('AiService', () => import('./ai-service'));
+export const AiService = Capability.lazy<AssistantPluginOptions | void, Capability.Any[]>('AiService', () => import('./ai-service'));
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CompanionChatProvisioner = Capability.lazy(

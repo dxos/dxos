@@ -46,4 +46,8 @@ describe('AssistantPlugin', () => {
       }).pipe(Effect.provide(ServiceResolver.provide({}, AiService.AiService))),
     );
   });
+
+  test('runs prompts with memoized model', async ({ expect }) => {
+
+  });
 });
