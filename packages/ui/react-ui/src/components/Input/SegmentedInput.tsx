@@ -55,12 +55,54 @@ const toCalendarDate = (date: Date) => new CalendarDate(date.getFullYear(), date
 
 const fieldClass = 'inline-flex items-center gap-px font-mono tabular-nums focus-within:bg-attention-surface';
 
+// React Aria sets `caret-color: transparent` inline on each segment because spinbuttons replace
+// the whole value rather than inserting at a caret position. We override with `!important` so a
+// caret is visible while typing — friendlier UX even though it's slightly misleading mid-segment.
+//
+// `tabular-nums` on the field combined with `min-width` per segment keeps each segment a fixed
+// width regardless of value (so e.g. month `1` and `12` occupy the same space). `text-align: end`
+// right-aligns the digits within that fixed width.
+// TODO(burdon): Move to Input.theme.ts
 const segmentClass =
-  'rounded-xs px-0.5 outline-none ' +
+  'rounded-xs outline-none text-end [caret-color:currentColor]! ' +
+  'data-[type=year]:min-w-[4ch] ' +
+  'data-[type=month]:min-w-[2ch] data-[type=day]:min-w-[2ch] ' +
+  'data-[type=hour]:min-w-[2ch] data-[type=minute]:min-w-[2ch] ' +
   'data-[placeholder]:text-subdued data-[type=literal]:text-subdued ' +
-  'data-[focused]:bg-attention-surface data-[focused]:text-base-foreground ' +
+  'data-[focused]:bg-accent-surface data-[focused]:text-accent-foreground ' +
   'data-[invalid]:text-rose-500 ' +
   'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
+
+// Match bidi format characters (LRI/RLI/PDI/LRE/RLE/PDF/LRO/RLO) that React Aria inserts to
+// isolate locale-formatted portions. These are invisible glyphs but the browser still gives
+// them ~4px of width, which pushes the first visible character of time-only fields out of
+// alignment with date fields. Keep them in the DOM (so directional isolation survives) but
+// collapse them to zero width.
+const BIDI_FORMAT_RE = /^[‪-‮⁦-⁩]+$/;
+
+/**
+ * Render a single DateSegment. Locale-specific literals between date and time portions
+ * (e.g. en-US's `", "`) become a plain space; bidi format markers are kept but rendered
+ * zero-width so the visible content lines up at the field's left edge.
+ */
+const renderSegment = (segment: { type: string; text: string }) => {
+  if (segment.type === 'literal') {
+    if (BIDI_FORMAT_RE.test(segment.text)) {
+      // Render as a fixed-width spacer (between date and time portions of a datetime field),
+      // but hide when at the field's edges — opening LRI is the first child of a time-only
+      // field and would push everything right; closing PDI is the last child everywhere.
+      return <span aria-hidden className='select-none w-[2ch] first:hidden last:hidden' />;
+    }
+    if (segment.text.includes(',')) {
+      return (
+        <span aria-hidden className='select-none'>
+          {' '}
+        </span>
+      );
+    }
+  }
+  return <DateSegment segment={segment as any} className={segmentClass} />;
+};
 
 //
 // Shared props.
@@ -76,6 +118,11 @@ type SegmentedInputBaseProps = InputSharedProps &
     autoFocus?: boolean;
     'aria-label'?: string;
   }>;
+
+type SegmentedTimeBearingProps = SegmentedInputBaseProps & {
+  /** `24` (default) renders HH:mm; `12` renders hh:mm with an AM/PM segment. */
+  hourCycle?: 12 | 24;
+};
 
 //
 // Internal helpers.
@@ -178,6 +225,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
       autoFocus,
       'aria-label': ariaLabel ?? 'date',
       granularity: 'day',
+      shouldForceLeadingZeros: true,
     };
 
     const field = (
@@ -193,7 +241,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
             classNames,
           )}
         >
-          {(segment) => <DateSegment segment={segment} className={segmentClass} />}
+          {renderSegment}
         </DateInput>
       </DateField>
     );
@@ -216,7 +264,7 @@ SegmentedDate.displayName = 'Input.SegmentedDate';
 // SegmentedTime — no picker (no time-only picker primitive available); does not register a trigger.
 //
 
-type SegmentedTimeProps = SegmentedInputBaseProps;
+type SegmentedTimeProps = SegmentedTimeBearingProps;
 
 const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeProps>>(
   (
@@ -232,6 +280,7 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
       disabled,
       autoFocus,
       id,
+      hourCycle = 24,
       'aria-label': ariaLabel,
     },
     forwardedRef,
@@ -257,7 +306,8 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
       autoFocus,
       'aria-label': ariaLabel ?? 'time',
       granularity: 'minute',
-      hourCycle: 24,
+      hourCycle,
+      shouldForceLeadingZeros: true,
     };
 
     return (
@@ -273,7 +323,7 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
             classNames,
           )}
         >
-          {(segment) => <DateSegment segment={segment} className={segmentClass} />}
+          {renderSegment}
         </DateInput>
       </TimeField>
     );
@@ -285,7 +335,7 @@ SegmentedTime.displayName = 'Input.SegmentedTime';
 // SegmentedDateTime.
 //
 
-type SegmentedDateTimeProps = SegmentedInputBaseProps;
+type SegmentedDateTimeProps = SegmentedTimeBearingProps;
 
 const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateTimeProps>>(
   (
@@ -301,6 +351,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
       disabled,
       autoFocus,
       id,
+      hourCycle = 24,
       'aria-label': ariaLabel,
     },
     forwardedRef,
@@ -326,7 +377,8 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
       autoFocus,
       'aria-label': ariaLabel ?? 'date-time',
       granularity: 'minute',
-      hourCycle: 24,
+      hourCycle,
+      shouldForceLeadingZeros: true,
     };
 
     const field = (
@@ -342,7 +394,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
             classNames,
           )}
         >
-          {(segment) => <DateSegment segment={segment} className={segmentClass} />}
+          {renderSegment}
         </DateInput>
       </DateField>
     );

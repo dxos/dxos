@@ -198,6 +198,15 @@ export const TimeUncontrolled: Story = {
   },
 };
 
+export const TimeAmPm: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (12-hour, AM/PM)',
+    defaultValue: '14:00',
+    hourCycle: 12,
+  } as any,
+};
+
 export const TimeDisabled: Story = {
   args: {
     kind: 'time',

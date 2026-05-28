@@ -132,16 +132,18 @@ type TriggerIconProps = ThemedClassName<
 >;
 
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
-  ({ classNames, icon = 'ph--calendar--regular', ...props }, forwardedRef) => {
+  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, ...props }, forwardedRef) => {
     const ctx = useContext(InputTriggerContext);
     const { tx } = useThemeContext();
     if (!ctx?.hasTrigger) {
       return null;
     }
+
     return (
       <button
         type='button'
         ref={forwardedRef}
+        aria-label={ariaLabel ?? 'Open picker'}
         {...props}
         onClick={ctx.trigger}
         className={tx('input.triggerIcon', {}, classNames) ?? undefined}

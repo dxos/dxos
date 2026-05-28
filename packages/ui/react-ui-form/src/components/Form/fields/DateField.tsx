@@ -68,17 +68,25 @@ export const DateField = ({
       {({ value }) => {
         switch (format) {
           case Format.TypeFormat.Date:
-            return <Input.Date disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />;
+            return (
+              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+                <Input.Date disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />
+                <Input.TriggerIcon />
+              </div>
+            );
           case Format.TypeFormat.Time:
             return <Input.Time disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />;
           case Format.TypeFormat.DateTime:
           default:
             return (
-              <Input.DateTime
-                disabled={!!readonly}
-                value={isoToLocalDateTime(value)}
-                onValueChange={handleDateTimeChange}
-              />
+              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+                <Input.DateTime
+                  disabled={!!readonly}
+                  value={isoToLocalDateTime(value)}
+                  onValueChange={handleDateTimeChange}
+                />
+                <Input.TriggerIcon />
+              </div>
             );
         }
       }}
