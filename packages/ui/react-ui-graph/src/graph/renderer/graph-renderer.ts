@@ -655,7 +655,7 @@ const applyHoverHighlight = (root: SVGGElement | null, focusedId: string | null)
         groupSel.style('opacity', null);
         shape.style('stroke', 'var(--color-orange-400)').style('stroke-width', '2.5px');
       } else {
-        groupSel.style('opacity', '0.15');
+        groupSel.style('opacity', '0.5');
         shape.style('stroke', null).style('stroke-width', null);
       }
     });
