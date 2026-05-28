@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { ExtractedFrom, InboxCapabilities, InboxOperation } from '../../types';
@@ -76,9 +76,16 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
 
       const extractedAt = new Date().toISOString();
 
-      // Persist created objects and their ExtractedFrom relations.
+      // Persist created objects. ExtractedFrom relations are only attached to TOP-LEVEL
+      // objects (those without a parent via `Obj.setParent`) so the message header surfaces
+      // one chip per user-meaningful artifact rather than one per sub-object. Example: the
+      // trip extractor emits Trip + Booking + Segment, but only the Trip is top-level — the
+      // Booking and Segment hang off the Trip and shouldn't render as their own tags.
       for (const obj of result.created) {
         db.add(obj);
+        if (Obj.getParent(obj) !== undefined) {
+          continue;
+        }
         const rel = ExtractedFrom.make({
           [Relation.Source]: obj,
           [Relation.Target]: message,
@@ -89,9 +96,13 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         db.add(rel);
       }
 
-      // Updated objects were mutated in place by the extractor; do NOT re-add,
-      // but record provenance for the contributing message.
+      // Updated objects were mutated in place by the extractor; do NOT re-add. Apply the
+      // same top-level filter as created objects so the provenance graph stays focused on
+      // user-meaningful artifacts.
       for (const obj of result.updated ?? []) {
+        if (Obj.getParent(obj) !== undefined) {
+          continue;
+        }
         const rel = ExtractedFrom.make({
           [Relation.Source]: obj,
           [Relation.Target]: message,

@@ -202,6 +202,10 @@ const extractFromMessage = (
       end: candidate.arriveAt,
     });
     Trip.addSegment(trip, segment);
+    // Anchor the Booking under the Trip so the dispatcher treats it as a child object — only
+    // top-level objects (no parent) get an `ExtractedFrom` relation back to the message, so
+    // the message header surfaces the Trip itself rather than a chip per sub-artifact.
+    Obj.setParent(booking, trip);
 
     return { created: [trip, booking, segment], updated: [], relations: [] };
   });
