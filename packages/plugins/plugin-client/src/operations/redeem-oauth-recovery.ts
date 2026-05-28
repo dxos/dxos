@@ -16,11 +16,9 @@ import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 import { ClientCapabilities } from '../types';
 import { RedeemOAuthRecovery } from './definitions';
 
-/** Default scope set per provider — enough to identify the user without granting broad access. */
-const SCOPES_BY_PROVIDER: Record<string, string[]> = {
-  [OAuthProvider.GOOGLE]: ['openid', 'email'],
-  [OAuthProvider.ATPROTO]: ['atproto', 'transition:email'],
-};
+/** Scopes requested during atproto OAuth recovery. `transition:generic` gives the full
+ * offline-access token needed to identify the user and store credentials in the space. */
+const ATPROTO_SCOPES = ['atproto', 'transition:generic', 'transition:email'];
 
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
@@ -42,7 +40,6 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
       invariant(edgeUrl, 'Edge URL not configured.');
 
       const provider = data.provider as OAuthProvider;
-      const scopes = SCOPES_BY_PROVIDER[provider] ?? ['openid'];
       const edgeClient = new EdgeHttpClient(edgeUrl);
       // Placeholder; the recovery flow does not register a refresh cron under this id. Kept as a
       // valid ObjectId/ULID to satisfy InitiateOAuthFlowRequest validation.
@@ -54,7 +51,7 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
         provider,
         spaceId: SpaceId.random(),
         accessTokenId,
-        scopes,
+        scopes: ATPROTO_SCOPES,
         purpose: 'recovery',
         // atproto requires a login hint (handle or DID) to resolve the user's PDS/auth server.
         ...(data.loginHint ? { loginHint: data.loginHint } : {}),

@@ -17,11 +17,9 @@ import { oauthRecoveryPendingKey } from '../constants';
 import { ClientCapabilities } from '../types';
 import { RegisterOAuthRecovery } from './definitions';
 
-/** Default scope set per provider — enough to identify the user and read a verified email. */
-const SCOPES_BY_PROVIDER: Record<string, string[]> = {
-  [OAuthProvider.GOOGLE]: ['openid', 'email'],
-  [OAuthProvider.ATPROTO]: ['atproto', 'transition:email'],
-};
+/** Scopes requested during atproto OAuth registration. `transition:generic` gives the full
+ * offline-access token that can be used for space operations after registration. */
+const ATPROTO_SCOPES = ['atproto', 'transition:generic', 'transition:email'];
 
 /**
  * Phase 1 of OAuth-first recovery registration (redirect flow).
@@ -42,7 +40,6 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
       invariant(edgeUrl, 'Edge URL not configured.');
 
       const provider = data.provider as OAuthProvider;
-      const scopes = SCOPES_BY_PROVIDER[provider] ?? ['openid', 'email'];
       const edgeClient = new EdgeHttpClient(edgeUrl);
       // accessTokenId doubles as: (a) the cron id in SpaceSecretsObject (≤26 chars for the
       // scheduled-run storage key) and (b) the ECHO id of the AccessToken object the recovery
@@ -57,7 +54,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
         provider,
         spaceId: SpaceId.random(),
         accessTokenId,
-        scopes,
+        scopes: ATPROTO_SCOPES,
         purpose: 'register',
         registerRecovery: true,
         // atproto requires a login hint (handle or DID) to resolve the user's PDS/auth server.
