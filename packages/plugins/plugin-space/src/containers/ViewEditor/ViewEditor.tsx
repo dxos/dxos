@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoURI, Filter, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { EchoURI, Filter, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -53,10 +53,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target;
       const query = queue
         ? Query.fromAst(newQuery).from([
-            {
-              _tag: 'feed' as const,
-              feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`,
-            },
+            Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`),
           ])
         : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
