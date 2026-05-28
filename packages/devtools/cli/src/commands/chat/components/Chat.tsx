@@ -12,7 +12,7 @@ import { type Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';
