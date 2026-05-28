@@ -20,14 +20,15 @@ import {
   type QueryResult,
   Ref,
   Registry,
-  type SchemaRegistry,
   Type,
 } from '@dxos/echo';
 import {
   type AnyProperties,
+  EntityKind,
   MetaId,
   type ObjectMeta,
   TypeSchema as PersistentSchema,
+  type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   assertObjectModel,
@@ -59,8 +60,8 @@ import { type ObjectMigration } from './object-migration';
 
 /**
  * Per-database registry that wraps the shared hypergraph registry.
- * Delegates entity storage to the shared registry and provides
- * register() for persisting new schemas as PersistentSchema ECHO objects.
+ * Delegates entity storage and queries to the shared registry. Schemas are
+ * persisted via `db.add(schemaEntity)`, not through the registry.
  */
 class EchoDatabaseRegistry implements Registry.Registry {
   readonly #db: EchoDatabaseImpl;
@@ -110,10 +111,6 @@ class EchoDatabaseRegistry implements Registry.Registry {
   private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
     // Delegate as a method call so `this` is bound to the underlying registry.
     return this.#delegate.query(query as any);
-  }
-
-  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
-    return this.#db._registerSchemas(inputs);
   }
 }
 
@@ -296,38 +293,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * @internal
-   * Called by EchoDatabaseRegistry.register().
-   */
-  async _registerSchemas(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
-    const results: Type.AnyEntity[] = [];
-    for (const input of inputs) {
-      if (Type.isType(input)) {
-        // Type.AnyEntity — extract the underlying Effect Schema from its slot.
-        const effectSchema = Type.getSchema(input);
-        results.push(this._addPersistentSchema(effectSchema));
-      } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
-        const typeEntity = this._addPersistentSchema(
-          JsonSchema.toEffectSchema({
-            ...input.jsonSchema,
-            typename: input.typename,
-            version: input.version,
-          }),
-        );
-        results.push(typeEntity);
-        if (input.name) {
-          Type.update(typeEntity, (mutable) => {
-            mutable.name = input.name;
-          });
-        }
-      } else {
-        throw new TypeError('Invalid schema');
-      }
-    }
-    return results;
-  }
-
-  /**
-   * @internal
    * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
    * Returns the Type.AnyEntity registered in the graph registry for this persisted schema.
    */
@@ -358,11 +323,23 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext): Type.AnyEntity {
     let schema = schemaInput;
-    if (Type.isType(schema as any)) {
-      schema = Type.getSchema(schema as any).annotations({ [TypeIdentifierAnnotationId]: undefined });
+    let meta: TypeAnnotation | undefined;
+    if (Type.isType(schemaInput as any)) {
+      const entity = schemaInput as unknown as Type.AnyEntity;
+      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      // Prefer the annotation embedded in the schema; fall back to the entity's
+      // ObjectMeta-derived accessors for entities built via `makeObjectFromJsonSchema`
+      // (whose `jsonSchema` carries no `TypeAnnotation`).
+      meta =
+        getTypeAnnotation(schema) ??
+        ({
+          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
+          typename: Type.getTypename(entity),
+          version: Type.getVersion(entity),
+        } satisfies TypeAnnotation);
+    } else {
+      meta = getTypeAnnotation(schema);
     }
-
-    const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
     // Create a TypeSchema entity using the internal createObject utility.
     // We pass typename/version via ObjectMeta (MetaId) since TypeSchema no longer
@@ -387,7 +364,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }),
     );
 
-    const persistentSchema = this.add(schemaToStore as any);
+    const persistentSchema = this._addObject(schemaToStore as any);
     this._registerPersistentSchema(persistentSchema as unknown as PersistentSchema);
     return Registry.findTypeByDXN(this.graph.registry, typeId)!;
   }
@@ -460,6 +437,20 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Add reactive object.
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
+    // Schema-definition entities (produced by Type.makeObject / Type.makeObjectFromJsonSchema)
+    // are persisted as PersistentSchema ECHO objects so they replicate to other clients.
+    // The returned value is the mutable persisted type entity, not the original draft.
+    // NOTE: A PersistentSchema instance is itself `Type.isType` (it represents a type), so
+    // `_addPersistentSchema` must persist its TypeSchema object via `_addObject` directly
+    // rather than re-entering `add`, otherwise this branch recurses indefinitely.
+    if (!isEchoObject(obj) && Type.isType(obj)) {
+      return this._addPersistentSchema(obj as unknown as Schema.Schema.AnyNoContext) as unknown as T;
+    }
+
+    return this._addObject(obj, opts);
+  }
+
+  private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
       const typeEntity = Obj.getType(obj as unknown as Obj.Unknown);
       if (typeEntity != null) {

@@ -18,7 +18,7 @@ import {
   Query,
   QueryAST,
   Ref,
-  type SchemaRegistry,
+  type Registry,
   Type,
   View,
 } from '@dxos/echo';
@@ -54,7 +54,7 @@ export type ViewEditorProps = ThemedClassName<
     schema: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
-    registry?: SchemaRegistry.SchemaRegistry;
+    registry?: Registry.Registry;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: EchoURI.EchoURI) => void;
     onDelete?: (fieldId: string) => void;

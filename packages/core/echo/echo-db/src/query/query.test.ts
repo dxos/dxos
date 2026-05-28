@@ -2453,7 +2453,7 @@ describe('Query', () => {
     });
 
     test('query mutable schema objects', async () => {
-      const [schema] = await db.registry.register([TestSchema.Person]);
+      const schema = db.add(TestSchema.Person);
       const contact = db.add(Obj.make(schema as Type.AnyObj, {}));
 
       // NOTE: Must use `Filter.type` with the stored Type.Type entity since matching is done by the object id of the schema entity.
@@ -2554,7 +2554,7 @@ describe('Query', () => {
       graph.registry.add([TestSchema.Person]);
 
       // Persist a different type to the database.
-      await db.registry.register([TestSchema.Task]);
+      db.add(TestSchema.Task);
       await db.flush();
 
       // Scoping to space + registry fans in both persisted and code-shipped types.

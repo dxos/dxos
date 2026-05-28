@@ -16,7 +16,6 @@ import type * as Filter from './Filter';
 import { filterMatchObjectJSON } from './internal/filter';
 import * as Query from './Query';
 import type * as QueryResult from './QueryResult';
-import type * as SchemaRegistry from './SchemaRegistry';
 import * as Type from './Type';
 
 /**
@@ -92,15 +91,6 @@ export interface Registry {
    * and boolean combinators. Server-side concerns (order, traversal, text/timestamp filters) throw.
    */
   query: Database.QueryFn;
-
-  /**
-   * Persist schemas in the backing database so they replicate to other clients.
-   * Creates a PersistentSchema ECHO object for each input and adds it to the space.
-   *
-   * Requires the registry to be bound to a database.
-   * Throws if called on a registry without a database backing (e.g. the hypergraph-level registry).
-   */
-  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]>;
 }
 
 /**
@@ -217,10 +207,6 @@ export class RegistryImpl implements Registry {
   private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
     const normalized: Query.Any = Query.is(query) ? query : Query.select(query as Filter.Any);
     return new RegistryQueryResult<any>(this, normalized);
-  }
-
-  register(_inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.AnyEntity[]> {
-    throw new Error('Registry is not bound to a database. Use db.registry.register() instead.');
   }
 
   /**

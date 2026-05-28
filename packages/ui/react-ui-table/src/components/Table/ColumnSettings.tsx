@@ -5,14 +5,14 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type SchemaRegistry, type View } from '@dxos/echo';
+import { type Registry, type View } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 
 import { type ModalController, type TableModel } from '../../model';
 
 type ColumnSettingsProps = {
-  registry?: SchemaRegistry.SchemaRegistry;
+  registry?: Registry.Registry;
   model?: TableModel;
   modals: ModalController;
   onNewColumn: () => void;

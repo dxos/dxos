@@ -14,8 +14,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
-      const types = yield* Effect.promise(() => db.registry.register([input.type]));
-      const schema = types[0];
+      const schema = db.add(input.type);
       Type.update(schema, (draft) => {
         if (input.name) {
           draft.name = input.name;

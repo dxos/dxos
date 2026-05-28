@@ -25,7 +25,6 @@ export * as QueryResult from './QueryResult';
 export * as Ref from './Ref';
 export * as Registry from './Registry';
 export * as Relation from './Relation';
-export * as SchemaRegistry from './SchemaRegistry';
 export * as Scope from './Scope';
 export * as Tag from './Tag';
 export * as Type from './Type';

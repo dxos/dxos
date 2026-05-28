@@ -662,7 +662,7 @@ export const update = (type: AnyEntity, callback: (mutable: Mutable) => void): v
 // Field-level helpers for mutating persisted types.
 // These are thin wrappers over `Type.update` plus the JsonSchema manipulation
 // utilities. Callers pass a persisted `Type.Type` (e.g. one returned by
-// `DatabaseSchemaRegistry.register`) and the helper drives the change context.
+// `db.add(schemaEntity)`) and the helper drives the change context.
 //
 
 /**

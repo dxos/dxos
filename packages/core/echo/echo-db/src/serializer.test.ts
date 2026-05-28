@@ -240,14 +240,16 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await db.registry.register([
-          {
+        const roundTrip = db.add(
+          Type.makeObjectFromJsonSchema({
             typename,
             version: '0.1.0',
             jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
-            name: 'Round Trip Type',
-          },
-        ]);
+          }),
+        );
+        Type.update(roundTrip, (draft) => {
+          draft.name = 'Round Trip Type';
+        });
         await db.flush();
         data = await new Serializer().export(db);
       }

@@ -249,14 +249,12 @@ export const MutableSchema: Story = {
   decorators: [
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
-        // Register schema in the database to make it mutable (stored Type.Type).
-        const [schema] = (await space.db.registry.register([Organization.Organization])) as unknown as [
-          typeof Organization.Organization,
-        ];
+        // Persist the schema in the database to make it mutable (stored Type.Type).
+        const schema = space.db.add(Organization.Organization);
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          // `register` returns a persisted `Type.Type` entity; its typename lives in the
+          // `db.add` returns a persisted `Type.Type` entity; its typename lives in the
           // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
           typename: Type.getTypename(schema),
           pivotFieldName: 'status',

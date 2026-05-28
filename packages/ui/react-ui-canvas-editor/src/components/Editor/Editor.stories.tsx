@@ -117,9 +117,9 @@ const meta = {
           const resolveType = (t: any) => (typeof t === 'function' ? t() : t);
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
-            const registeredSchema = await space.db.registry.register([
-              ...new Set(spec.map((schema: any) => resolveType(schema.type))),
-            ] as Type.AnyEntity[]);
+            const registeredSchema = [...new Set(spec.map((schema: any) => resolveType(schema.type)))].map((type) =>
+              space.db.add(type as Type.AnyEntity),
+            );
 
             spec = spec.map((schema: any) => ({
               ...schema,

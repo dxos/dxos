@@ -108,11 +108,6 @@
       "types": "./dist/types/src/Relation.d.ts",
       "default": "./dist/lib/neutral/Relation.mjs"
     },
-    "./SchemaRegistry": {
-      "source": "./src/SchemaRegistry.ts",
-      "types": "./dist/types/src/SchemaRegistry.d.ts",
-      "default": "./dist/lib/neutral/SchemaRegistry.mjs"
-    },
     "./Tag": {
       "source": "./src/Tag.ts",
       "types": "./dist/types/src/Tag.d.ts",

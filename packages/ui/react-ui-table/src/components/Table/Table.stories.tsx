@@ -178,7 +178,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const [schema] = (await space.db.registry.register([Example])) as unknown as [typeof Example];
+        const schema = space.db.add(Example);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: Type.getTypename(schema),
@@ -324,7 +324,7 @@ export const Tags: Meta<DefaultStoryProps> = {
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.registry.register([schema]);
+        const storedSchema = space.db.add(schema);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
