@@ -671,7 +671,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-
     return undefined;
   }
 

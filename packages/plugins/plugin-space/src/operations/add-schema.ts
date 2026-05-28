@@ -10,12 +10,12 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { SpaceEvents, SpaceCapabilities } from '../types';
 import { SpaceOperation } from './definitions';
 
-const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOperation.AddSchema.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
-      const schemas = yield* Effect.promise(() => db.registry.register([input.schema]));
-      const schema = schemas[0];
+      const types = yield* Effect.promise(() => db.registry.register([input.type]));
+      const schema = types[0];
       Type.update(schema, (draft) => {
         if (input.name) {
           draft.name = input.name;
@@ -29,10 +29,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         }
       });
 
-      yield* Plugin.activate(SpaceEvents.SchemaAdded);
-      const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
+      yield* Plugin.activate(SpaceEvents.TypeAdded);
+      const onTypeAdded = yield* Capability.getAll(SpaceCapabilities.OnTypeAdded);
       yield* Effect.all(
-        onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
+        onTypeAdded.map((callback) => callback({ db, type: schema, show: input.show })),
         { concurrency: 'unbounded' },
       );
 

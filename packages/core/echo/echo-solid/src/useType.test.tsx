@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useSchema } from './useType';
+import { useType as useSchema } from './useType';
 
 describe('useSchema', () => {
   let testBuilder: EchoTestBuilder;
