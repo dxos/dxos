@@ -48,7 +48,6 @@ export default Capability.makeModule(
 
     yield* Plugin.activate(ActivationEvents.SetupProcessManager);
 
-    const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
     const traceSinkFactories = yield* Capability.getAll(Capabilities.TraceSink);
 
     // Forward reference to `ProcessManager.ProcessManagerService`. The runtime
@@ -89,7 +88,11 @@ export default Capability.makeModule(
         ),
     );
 
-    const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
+    // Use a lazy getter so layer specs contributed after SetupProcessManager fires
+    // (e.g. from ClientReady modules) are included when slices are first created.
+    const layerStack = new LayerStack.LayerStack({
+      getLayers: () => [ambientLayerSpec, ...capabilityManager.getAll(Capabilities.LayerSpec)],
+    });
     const serviceResolver = layerStack.getServiceResolver();
 
     const handlerSet = OperationHandlerSet.reactive(

@@ -5,7 +5,7 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { Client, OperationHandler, SchemaDefs } from '#capabilities';
+import { Client, LayerSpecs, Migrations, OperationHandler, SchemaDefs } from '#capabilities';
 import { meta } from '#meta';
 import { ClientEvents } from '#types';
 import { type ClientPluginOptions } from '#types';
@@ -26,6 +26,16 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activatesOn: ClientEvents.ClientReady,
     firesBeforeActivation: [AppActivationEvents.SetupSchema],
     activate: SchemaDefs,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    firesBeforeActivation: [ClientEvents.SetupMigration],
+    activate: Migrations,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
+    activate: LayerSpecs,
   }),
   Plugin.make,
 );
