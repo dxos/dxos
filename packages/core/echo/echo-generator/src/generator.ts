@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';
@@ -112,9 +109,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyEntity> {
     if (Type.isTypeKindSchema(schema)) {
-      const types = await runAndForwardErrors(
-        Effect.sync(() => this._space.internal.db.graph.registry.list().filter(Type.isType)),
-      );
+      const types = this._space.internal.db.graph.registry.list().filter(Type.isType);
       const version = Type.getVersion(schema);
       const existingSchema = types.find(
         (t) => Type.isTypeKindSchema(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
@@ -124,9 +119,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       }
       return this._space.internal.db.add(schema);
     } else {
-      const allTypes = await runAndForwardErrors(
-        Effect.sync(() => this._space.internal.db.graph.registry.list().filter(Type.isType)),
-      );
+      const allTypes = this._space.internal.db.graph.registry.list().filter(Type.isType);
       const version = Type.getVersion(schema);
       const existingSchema = [...allTypes].find(
         (s) => Type.getTypename(s) === typename && Type.getVersion(s) === version,

@@ -10,9 +10,9 @@ import { Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useType as useSchema } from './useType';
+import { useType } from './useType';
 
-describe('useSchema', () => {
+describe('useType', () => {
   let testBuilder: EchoTestBuilder;
   let db: any;
 
@@ -30,7 +30,7 @@ describe('useSchema', () => {
     let result: any;
 
     render(() => {
-      const schema = useSchema(undefined, 'dxos.test.Person');
+      const schema = useType(undefined, 'dxos.test.Person');
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -42,7 +42,7 @@ describe('useSchema', () => {
     let result: any;
 
     render(() => {
-      const schema = useSchema(db, undefined);
+      const schema = useType(db, undefined);
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -54,7 +54,7 @@ describe('useSchema', () => {
     let result: any;
 
     render(() => {
-      const schema = useSchema(db, 'dxos.test.NonExistent');
+      const schema = useType(db, 'dxos.test.NonExistent');
       result = schema();
       return (<div>test</div>) as JSX.Element;
     });
@@ -72,7 +72,7 @@ describe('useSchema', () => {
     let schemaAccessor: (() => any) | undefined;
 
     function TestComponent() {
-      const schema = useSchema(db, Type.getTypename(registeredSchema)!);
+      const schema = useType(db, Type.getTypename(registeredSchema)!);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -101,7 +101,7 @@ describe('useSchema', () => {
     const typename = 'com.example.type.person';
 
     function TestComponent() {
-      const schema = useSchema(db, typename);
+      const schema = useType(db, typename);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -139,7 +139,7 @@ describe('useSchema', () => {
     let dbAccessor: any = db;
 
     function TestComponent() {
-      const schema = useSchema(() => dbAccessor, Type.getTypename(registeredSchema)!);
+      const schema = useType(() => dbAccessor, Type.getTypename(registeredSchema)!);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -173,7 +173,7 @@ describe('useSchema', () => {
     let typename: string | undefined = Type.getTypename(registeredSchema)!;
 
     function TestComponent() {
-      const schema = useSchema(db, () => typename);
+      const schema = useType(db, () => typename);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
