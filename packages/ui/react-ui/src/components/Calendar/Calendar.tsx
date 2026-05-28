@@ -158,12 +158,7 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwa
       },
     };
     return (
-      <CalendarShell
-        classNames={classNames}
-        className={className}
-        isDisabled={isDisabled}
-        forwardedRef={forwardedRef}
-      >
+      <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled} forwardedRef={forwardedRef}>
         <RACRangeCalendar {...racProps}>
           <CalendarChrome />
           <CalendarGridContent />
@@ -181,12 +176,7 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwa
     onChange: (next) => props.onSelect?.(fromCalendarDate(next)),
   };
   return (
-    <CalendarShell
-      classNames={classNames}
-      className={className}
-      isDisabled={isDisabled}
-      forwardedRef={forwardedRef}
-    >
+    <CalendarShell classNames={classNames} className={className} isDisabled={isDisabled} forwardedRef={forwardedRef}>
       <RACCalendar {...racProps}>
         <CalendarChrome />
         <CalendarGridContent />
