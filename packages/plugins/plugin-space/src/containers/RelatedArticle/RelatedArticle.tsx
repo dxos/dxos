@@ -44,7 +44,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
   const { t } = useTranslation(meta.id);
   const data = useMemo(() => ({ subject }), [subject]);
-  const icon = Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
+  const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
   // TODO(burdon): BUG: Includes item itself.
   const menuItems = useObjectMenuItems(subject);

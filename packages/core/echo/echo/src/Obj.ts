@@ -667,13 +667,16 @@ export const setLabel = (entity: Mutable<Unknown>, label: string): void => inter
 export const getDescription = (entity: Unknown | Snapshot): string | undefined => internal.getDescription(entity);
 
 /**
- * Get the icon annotation for the object, resolved via its type-level `IconAnnotation`.
- * Accepts both reactive objects and snapshots.
+ * Get the icon annotation for the object (or any entity), resolved via its type-level
+ * `IconAnnotation`. Accepts both reactive entities and snapshots, and either Objects or
+ * Relations — the underlying schema-based lookup works for both.
  *
  * Returns the full `{ icon, hue }` annotation; callers wanting just the icon name typically
  * write `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
  */
-export const getIcon = (entity: Unknown | Snapshot): internal.IconAnnotation | undefined => internal.getIcon(entity);
+export const getIcon = (
+  entity: Entity.Unknown | Entity.Snapshot,
+): internal.IconAnnotation | undefined => internal.getIcon(entity);
 
 /**
  * Set the description of the object.
