@@ -12,8 +12,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
-import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtractor } from '@dxos/plugin-inbox';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtractor } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -238,17 +238,17 @@ export const ExtractTripWithPlay: Story = {
     // `Tag` from react-ui wrapping a button (clickable → opens card preview via
     // `DxAnchorActivate`). Label includes the SFO/LHR route from `tripNameFor(candidate)`.
     const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO/i }));
-    expect(tripButton).toBeInTheDocument();
-    expect(tripButton).not.toBeDisabled();
+    void expect(tripButton).toBeInTheDocument();
+    void expect(tripButton).not.toBeDisabled();
 
     // Trip extractor's `tags: [{ label: 'travel', hue: 'sky' }]` — applied via
     // `Mailbox.applyTag` and rendered as a plain `Tag` chip (no click target).
     const travelTag = await waitFor(() => canvas.queryByText(/^travel$/i));
-    expect(travelTag).toBeInTheDocument();
+    void expect(travelTag).toBeInTheDocument();
 
     // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important', hue: 'amber' }]`
     // — exercises the tag-only path through the dispatcher (no created objects, just a tag).
     const importantTag = await waitFor(() => canvas.queryByText(/^important$/i));
-    expect(importantTag).toBeInTheDocument();
+    void expect(importantTag).toBeInTheDocument();
   },
 };

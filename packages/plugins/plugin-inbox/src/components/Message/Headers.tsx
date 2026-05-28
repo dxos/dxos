@@ -8,7 +8,7 @@ import React, { useEffect, useReducer } from 'react';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Icon, Tag } from '@dxos/react-ui';
+import { Icon, IconBlock, Tag } from '@dxos/react-ui';
 import { type Actor, type Message } from '@dxos/types';
 import { type Hue, palette } from '@dxos/ui-theme';
 
@@ -61,9 +61,9 @@ export const Headers = ({
 
       {tags.length > 0 && (
         <div className='col-span-2 grid grid-cols-subgrid items-center'>
-          <div className='flex p-2 text-subdued' aria-hidden='true'>
+          <IconBlock classNames='text-subdued' aria-hidden='true'>
             <Icon icon='ph--tag--regular' />
-          </div>
+          </IconBlock>
           <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
             {tags.map((tag) => (
               <Tag key={tag.id} palette={paletteOf(tag.hue)} data-testid={`message-tag-${tag.id}`}>
@@ -78,7 +78,7 @@ export const Headers = ({
 };
 
 const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
-  const label = Obj.getLabel(object) ?? Type.getTypename(object) ?? 'object';
+  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
   const icon = iconForObject(object);
   const echoUri = EchoURI.tryParse(Obj.getURI(object).toString());
 
