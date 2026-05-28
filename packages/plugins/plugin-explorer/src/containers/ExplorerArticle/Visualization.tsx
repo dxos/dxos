@@ -67,10 +67,13 @@ export const Visualization = ({ classNames, debug = true, variant, model, onNode
     if (!svgRef.current) {
       return;
     }
+
     setProjector(createProjector(variant, svgRef.current, lastLayoutRef.current));
   }, [variant]);
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
+
+  // TODO(burdon): Factor out layout-specific logic.
 
   // Per-tick polyline-points update for boid trails. The base GraphRenderer only writes
   // transform + edge `d` on `applyPositions`, so we listen to the same emit and rewrite
@@ -78,7 +81,6 @@ export const Visualization = ({ classNames, debug = true, variant, model, onNode
   // history deltas trailing behind). Runs after the renderer's listener — by then the
   // node group's transform already points at the new head, so the local-coord polyline
   // visually lines up.
-  // TODO(burdon): Factor out.
   useEffect(() => {
     if (variant !== 'swarm' || !(projector instanceof GraphSwarmProjector)) {
       return;
@@ -258,7 +260,7 @@ const createProjector = (
       return new GraphForceProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
 
     case 'swarm':
-      // Boids in SVG: a per-tick projector mirroring force's emit-positions pattern.
+      // Swarm in SVG: a per-tick projector mirroring force's emit-positions pattern.
       return new GraphSwarmProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
 
     case 'lattice':
@@ -320,6 +322,16 @@ const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefi
 
 const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGraphNode> | undefined => {
   switch (variant) {
+    case 'force':
+      return (group, node) => {
+        const r = node.r ?? 6;
+        group
+          .append('circle')
+          .attr('r', r)
+          .style('cursor', 'pointer')
+          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
+      };
+
     case 'swarm':
       // Match the force variant's shape so identity-by-id transitions read continuously.
       // The tail is a SINGLE `<path>` traced through head + history points; its stroke
@@ -358,16 +370,6 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .attr('stroke-linejoin', 'round')
           .attr('pointer-events', 'none');
         group.append('circle').attr('r', r).style('cursor', 'pointer').style('fill', fill);
-      };
-
-    case 'force':
-      return (group, node) => {
-        const r = node.r ?? 6;
-        group
-          .append('circle')
-          .attr('r', r)
-          .style('cursor', 'pointer')
-          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
       };
 
     case 'lattice':

@@ -119,7 +119,7 @@ const CarouselRoot = ({
        * its content height. With no parent height constraint, the `1fr` row simply tracks
        * row-1 content — preserving the existing aspect-video behaviour for unbounded use.
        */}
-      {/* TODO(burdon): Move to ui-theme. */}
+      {/* TODO(burdon): Move to Carousel.theme.ts */}
       <div
         className={mx(
           'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
