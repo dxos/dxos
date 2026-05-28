@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 
-import { Database, type Entity, type Filter, Query, type QueryResult, Registry, Type, URI } from '@dxos/echo';
+import { Database, type Entity, type Filter, Query, type QueryResult, URI } from '@dxos/echo';
 import { WeakDictionary } from '@dxos/util';
 
 /**
@@ -24,23 +24,6 @@ export const fromQuery = <T>(queryResult: QueryResult.QueryResult<T>): Atom.Atom
     });
     get.addFinalizer(unsubscribe);
     return queryResult.runSync();
-  });
-
-/**
- * Create a self-updating atom from a Registry's types.
- * Subscribes to registry.changed and returns the current array of registered types.
- * Cleanup is handled via get.addFinalizer.
- *
- * @param registry - The Registry to watch.
- * @returns An atom that automatically updates when registry types change.
- */
-export const fromRegistryTypes = (registry: Registry.Registry): Atom.Atom<Type.AnyEntity[]> =>
-  Atom.make((get) => {
-    const unsubscribe = registry.changed.on(() => {
-      get.setSelf([...registry.list().filter(Type.isType)]);
-    });
-    get.addFinalizer(unsubscribe);
-    return [...registry.list().filter(Type.isType)];
   });
 
 // Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).

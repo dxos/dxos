@@ -77,7 +77,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const allSchemas = get(AtomQuery.fromRegistryTypes(space.db.graph.registry));
+        const allSchemas = get(AtomQuery.fromQuery(space.db.graph.registry.query(Filter.type(Type.Type))));
 
         const userSchemas = allSchemas.filter((type) => {
           if (Type.isRelation(type)) {
@@ -120,7 +120,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.fromRegistryTypes(client.graph.registry)) : [];
+        const schemas = client ? get(AtomQuery.fromQuery(client.graph.registry.query(Filter.type(Type.Type)))) : [];
 
         const typename = Type.getTypename(schema);
 
@@ -171,7 +171,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, typename }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.fromRegistryTypes(client.graph.registry)) : [];
+        const schemas = client ? get(AtomQuery.fromQuery(client.graph.registry.query(Filter.type(Type.Type)))) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
         const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object),
@@ -206,7 +206,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.fromRegistryTypes(client.graph.registry)) : [];
+        const schemas = client ? get(AtomQuery.fromQuery(client.graph.registry.query(Filter.type(Type.Type)))) : [];
 
         const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
