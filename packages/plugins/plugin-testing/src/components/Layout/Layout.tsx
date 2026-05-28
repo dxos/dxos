@@ -180,6 +180,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
             <Popover.Portal>
               <Popover.Content
                 side={layout.popoverSide}
+                onOpenAutoFocus={(event) => event.preventDefault()}
                 onInteractOutside={handleInteractOutside}
                 onEscapeKeyDown={handleInteractOutside}
                 sticky='always'
@@ -189,8 +190,8 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   {layout.popoverKind === 'card' && (
                     <Card.Root>
                       <Card.Header>
-                        {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                        <span />
+                        {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
+                        <Card.DragHandle />
                         {layout.popoverTitle ? (
                           <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
                         ) : (

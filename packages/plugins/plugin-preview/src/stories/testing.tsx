@@ -131,7 +131,7 @@ const TableLike = Schema.Struct({
     Schema.mutable,
     Annotation.FormInputAnnotation.set(false),
   ),
-}).pipe(Type.makeObject(DXN.make('org.dxos.test.table-like', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.test.tableLike', '0.1.0')));
 type TableLike = Type.InstanceType<typeof TableLike>;
 
 /**

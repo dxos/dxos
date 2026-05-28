@@ -59,7 +59,15 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   }, []);
 
   const handleHover = useCallback((node: TreeNode | null, event?: MouseEvent) => {
-    if (!node || !event) {
+    // Pointer left the node/label: dispatch a close event so the preview popover
+    // dismisses (the dxn/label/trigger fields are placeholders ignored on `state: false`).
+    if (!node) {
+      document.defaultView?.dispatchEvent(
+        new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
+      );
+      return;
+    }
+    if (!event) {
       return;
     }
     const obj = node.data;
@@ -105,7 +113,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         </Panel.Toolbar>
       )}
       <Panel.Content>
-        <Visualization variant={selected} model={model} onNodeHover={handleHover} />
+        <Visualization classNames='bg-base-surface' variant={selected} model={model} onNodeHover={handleHover} />
       </Panel.Content>
     </Panel.Root>
   );

@@ -25,6 +25,12 @@ export type FlockBoid = {
   color?: string;
   /** Recent acceleration magnitudes; consumed by Movement / Grey colorings. */
   last?: number[];
+  /**
+   * Ring buffer of recent positions (newest at index 0). Rendered with decreasing
+   * alpha to draw the visible trail. Cleared and refilled by the renderer per tick,
+   * so consumers don't need to seed it. Allocated lazily.
+   */
+  trail?: Array<{ x: number; y: number }>;
 };
 
 /**
