@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj } from '@dxos/echo';
-import { ExtractedFrom, Mailbox } from '@dxos/plugin-inbox';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtractor } from '@dxos/plugin-inbox';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
@@ -45,13 +45,49 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
 );
 
 /**
- * Seeds a personal space with a Mailbox and one message that matches BOTH registered
- * extractors:
+ * Story-only extractor that produces no objects, only a tag. Demonstrates the tag-only
+ * path through the `ExtractMessage` dispatcher: `ExtractResult.tags` is applied to the
+ * source message via `Mailbox.applyTag` even when `created` / `updated` / `relations` are
+ * empty. Match is unconditional so the toolbar always offers the action.
+ */
+const ImportantMessageExtractor: MessageExtractor.MessageExtractor = {
+  id: 'story.extractor.important',
+  description: 'Mark message as important',
+  kinds: ['tag'],
+  match: () => ({ matched: true, confidence: 0.05 }),
+  operation: InboxOperation.ExtractContactFromMessage,
+  extract: () =>
+    Effect.succeed({
+      created: [],
+      updated: [],
+      relations: [],
+      tags: [{ label: 'important', hue: 'amber' }],
+    }),
+};
+
+const ImportantExtractorPlugin = Plugin.define({
+  id: 'story.important-extractor',
+  name: 'Story Important Extractor',
+}).pipe(
+  Plugin.addModule({
+    id: 'extractor',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ImportantMessageExtractor)),
+  }),
+  Plugin.make,
+);
+
+/**
+ * Seeds a personal space with a Mailbox and one message that matches THREE extractors:
  *  - `ContactMessageExtractor` (plugin-inbox) — any sender with an email.
- *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block.
+ *  - `TripMessageExtractor` (plugin-trip) — body contains a United-style flight block;
+ *    creates Trip + Booking + Segment AND tags the message `travel`.
+ *  - `ImportantMessageExtractor` (story-local, defined above) — always matches; tags
+ *    the message `important` and produces no objects.
  *
- * Clicking the toolbar `Extract` items produces real Person / Booking / Segment objects in
- * the space; `Run all` fans out across both.
+ * Clicking the toolbar `Extract` items produces real Person / Trip / Booking / Segment
+ * objects in the space; tags land in `mailbox.tags`. `Run all` fans out across all three.
  */
 const seedMessage = (space: Space) => {
   const body = [
@@ -132,6 +168,7 @@ const meta = {
         TripPlugin(),
         PreviewPlugin(),
         MockDeckOperationsPlugin(),
+        ImportantExtractorPlugin(),
       ],
     }),
   ],
@@ -191,28 +228,27 @@ export const ExtractTripWithPlay: Story = {
     const extractTrigger = await waitFor(() => canvas.queryByRole('button', { name: /extract/i }));
     await userEvent.click(extractTrigger as HTMLElement);
 
-    // Click the trip extractor entry (label comes from `TripMessageExtractor.description`).
-    const tripItem = await waitFor(() => body.queryByText(/airline booking confirmations/i));
-    await userEvent.click(tripItem as HTMLElement);
+    // Click the `Run all` entry so all three matching extractors fire (contact + trip + the
+    // story-local "important"). Each extractor's `tags` lands in `mailbox.tags`; the trip
+    // extractor additionally persists Trip + Booking + Segment + ExtractedFrom.
+    const runAllItem = await waitFor(() => body.queryByText(/run all/i));
+    await userEvent.click(runAllItem as HTMLElement);
 
-    // The dispatcher persists Trip + Booking + Segment + ExtractedFrom relations; the
-    // `useExtractedObjects` hook then reactively surfaces the Trip in the message header
-    // as a row matching the sender-row layout (icon column + label column).
+    // Trip object chip — sourced from `ExtractedFrom` relation (task #16). Label includes
+    // the SFO/LHR route from `tripNameFor(candidate)`.
     const tripRow = await waitFor(() => canvas.queryByText(/SFO/i));
     expect(tripRow).toBeInTheDocument();
-
-    // The Trip row's AnchorIconButton should be enabled (has a DXN → opens card preview on
-    // click via DxAnchorActivate). Use the trip's full label as the query so we don't also
-    // match the (separate) `trip` tag chip below.
     const tripButton = await waitFor(() => canvas.queryByRole('button', { name: /SFO/i }));
-    expect(tripButton).toBeInTheDocument();
     expect(tripButton).not.toBeDisabled();
 
-    // The dispatcher also applies the trip extractor's `tags: [{ label: 'trip' }]` to the
-    // source message — covers task #15 (Mailbox.tags map) + task #17 (chip rendering in
-    // MessageHeader). The chip uses a 'tag' icon and the literal label; the button is
-    // disabled (tag rows have no DXN, so the AnchorIconButton has no value to navigate to).
-    const tagButton = await waitFor(() => canvas.queryByRole('button', { name: /^trip$/i }));
-    expect(tagButton).toBeInTheDocument();
+    // Trip extractor's `tags: [{ label: 'travel' }]` — applied to the source message via
+    // `Mailbox.applyTag` and rendered as a disabled chip in the header.
+    const travelTag = await waitFor(() => canvas.queryByRole('button', { name: /^travel$/i }));
+    expect(travelTag).toBeInTheDocument();
+
+    // Story-local `ImportantMessageExtractor`'s `tags: [{ label: 'important' }]` — exercises
+    // the tag-only path through the dispatcher (no created objects, just a tag).
+    const importantTag = await waitFor(() => canvas.queryByRole('button', { name: /^important$/i }));
+    expect(importantTag).toBeInTheDocument();
   },
 };

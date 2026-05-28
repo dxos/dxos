@@ -172,7 +172,7 @@ const extractFromMessage = (
         created: [],
         updated: [existing],
         relations: [],
-        tags: [{ label: 'trip', hue: 'sky' }],
+        tags: [{ label: 'travel', hue: 'sky' }],
       };
     }
 
@@ -218,7 +218,7 @@ const extractFromMessage = (
       relations: [],
       // Surface the message as "trip-tagged" so it's discoverable from MailboxArticle tile
       // chips alongside the standalone Trip relation in MessageHeader.
-      tags: [{ label: 'trip', hue: 'sky' }],
+      tags: [{ label: 'travel', hue: 'sky' }],
     };
   });
 
