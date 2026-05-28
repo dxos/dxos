@@ -16,7 +16,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Markdown } from '@dxos/plugin-markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
-import summarizeHandler, { SUMMARIZE_ID, SummarizeMessageExtractor } from './summarize-extractor';
+import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor';
 
 const MOCK_SUMMARY = 'A mock summary of the email body in two short sentences.';
 
@@ -79,15 +79,14 @@ describe('SummarizeMessageExtractor', () => {
     expect(result.matched).toBe(false);
   });
 
-  test('operation handler — produces a Document containing the AI summary', async ({ expect }) => {
-    // Exercise the operation handler directly with a mocked AI service. The MessageExtractor's
-    // `extract` field delegates here via `Operation.invoke`, but that path adds an `Operation.Service`
-    // requirement that's irrelevant to validating the AI prompt → Document mapping; testing the
-    // handler keeps the setup focused on the summarize logic itself.
+  test('summarizeMessage — produces a Document containing the AI summary', async ({ expect }) => {
+    // Exercise the core `summarizeMessage` Effect with a mocked AI service. The
+    // MessageExtractor's `extract` field wraps this via `Operation.invoke`, but that path
+    // adds Operation.Service / Capability.Service requirements that are irrelevant to
+    // validating the AI prompt → Document mapping.
     const message = makeMessage(LONG_BODY);
 
-    const result = await summarizeHandler
-      .handler({ db, message })
+    const result = await summarizeMessage({ db, message })
       .pipe(Effect.provide(mockAiServiceLayer))
       .pipe(runAndForwardErrors);
 

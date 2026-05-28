@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Markdown } from '@dxos/plugin-markdown';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { type MessageExtractor } from '../../capabilities';
+import { MessageExtractor } from '../../capabilities';
 import { InboxOperation } from '../../types';
 
 /**
@@ -55,33 +55,44 @@ const matchMessage = (message: Message.Message): MessageExtractor.MatchResult =>
 };
 
 /**
- * Inner operation handler — does the actual AI call. Returns ExtractResult without touching
- * the database; the dispatcher (`ExtractMessage`) persists. Provided as `default` so the
- * OperationHandlerSet registers it.
+ * Core summarization logic. Returns an `ExtractResult` containing a `Markdown.Document` with
+ * the AI-generated summary. Provides the LanguageModel layer internally so the residual `R`
+ * is just `AiService.AiService` — exported (rather than inlined into `Operation.withHandler`)
+ * so unit tests can invoke it directly with a mocked `AiService` layer instead of going
+ * through the full operation runtime.
+ */
+export const summarizeMessage = ({
+  message,
+}: MessageExtractor.ExtractInput): Effect.Effect<
+  MessageExtractor.ExtractResult,
+  MessageExtractor.ExtractError,
+  AiService.AiService
+> =>
+  Effect.gen(function* () {
+    const body = getBodyText(message);
+    const subject = getSubject(message);
+
+    const response = yield* LanguageModel.generateText({
+      prompt: `${SUMMARIZE_PROMPT}\n\n${body}`,
+    });
+
+    const doc = Markdown.make({
+      name: subject ? `${subject} (summary)` : 'Summary',
+      content: response.text,
+    });
+
+    return { created: [doc], updated: [], relations: [] };
+  }).pipe(
+    Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
+    Effect.catchAllCause((cause) => Effect.fail(new MessageExtractor.ExtractError('Summarize failed', cause))),
+  );
+
+/**
+ * Operation handler — wraps the inline `summarizeMessage` so the extractor is also a
+ * first-class registered operation. Does NOT write to the database; the dispatcher persists.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractSummaryFromMessage> =
-  InboxOperation.ExtractSummaryFromMessage.pipe(
-    Operation.withHandler(
-      Effect.fnUntraced(
-        function* ({ message }) {
-          const body = getBodyText(message);
-          const subject = getSubject(message);
-
-          const response = yield* LanguageModel.generateText({
-            prompt: `${SUMMARIZE_PROMPT}\n\n${body}`,
-          });
-
-          const doc = Markdown.make({
-            name: subject ? `${subject} (summary)` : 'Summary',
-            content: response.text,
-          });
-
-          return { created: [doc], updated: [], relations: [] };
-        },
-        Effect.provide(AiService.model(SUMMARIZE_MODEL).pipe(Layer.orDie)),
-      ),
-    ),
-  );
+  InboxOperation.ExtractSummaryFromMessage.pipe(Operation.withHandler(summarizeMessage));
 
 export default handler;
 

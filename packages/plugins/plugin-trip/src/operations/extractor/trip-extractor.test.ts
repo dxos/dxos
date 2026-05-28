@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -16,6 +18,18 @@ import unitedConfirmationRaw from './testing/files/united-confirmation.txt?raw';
 import unrelatedRaw from './testing/files/unrelated.txt?raw';
 import { parseFixtureMessage } from './testing/load-fixture';
 import { ID, TripMessageExtractor } from './trip-extractor';
+
+// `MessageExtractor.extract` is typed with `R = Operation.Service` to accommodate AI-backed
+// extractors that delegate via `Operation.invoke` (e.g. the summarize extractor in
+// plugin-inbox). The trip extractor never actually yields `Operation.Service` — its
+// implementation returns `R = never` — but every caller going through the interface inherits
+// the wider `R`. The stub satisfies the type so `runAndForwardErrors` (which requires
+// `R = never`) is callable; the stub's methods are unreachable for the trip path.
+const provideOperationServiceStub = Effect.provideService(Operation.Service, {
+  invoke: () => Effect.die('Operation.Service stub: invoke not available in trip extractor tests.'),
+  schedule: () => Effect.die('Operation.Service stub: schedule not available in trip extractor tests.'),
+  invokePromise: async () => ({ error: new Error('Operation.Service stub: invokePromise not available.') }),
+} as any);
 
 describe('TripMessageExtractor', () => {
   let builder: EchoTestBuilder;
@@ -58,7 +72,9 @@ describe('TripMessageExtractor', () => {
     const result = await TripMessageExtractor.extract({
       db,
       message: parseFixtureMessage(genericConfirmationRaw),
-    }).pipe(runAndForwardErrors);
+    })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
 
     expect(result.created).toEqual([]);
     expect(result.updated).toEqual([]);
@@ -66,7 +82,9 @@ describe('TripMessageExtractor', () => {
 
   test('extract — first email creates Trip + Booking + flight Segment', async ({ expect }) => {
     const message = parseFixtureMessage(unitedConfirmationRaw);
-    const result = await TripMessageExtractor.extract({ db, message }).pipe(runAndForwardErrors);
+    const result = await TripMessageExtractor.extract({ db, message })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
 
     expect(result.created).toHaveLength(3);
     expect(result.updated).toEqual([]);
@@ -106,7 +124,9 @@ describe('TripMessageExtractor', () => {
     const first = await TripMessageExtractor.extract({
       db,
       message: parseFixtureMessage(unitedConfirmationRaw),
-    }).pipe(runAndForwardErrors);
+    })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
     expect(first.created).toHaveLength(3);
     const firstSegment = first.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
     for (const obj of first.created) {
@@ -125,7 +145,9 @@ describe('TripMessageExtractor', () => {
     const second = await TripMessageExtractor.extract({
       db,
       message: parseFixtureMessage(gateChangeRaw),
-    }).pipe(runAndForwardErrors);
+    })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
 
     expect(second.created).toEqual([]);
     expect(second.updated).toHaveLength(1);
