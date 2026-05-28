@@ -45,45 +45,141 @@ Also remove the `sdk/client` barrel re-export of `Filter` (currently re-exported
 
 ---
 
-## 2. Automerge / text editing: expose via `@dxos/echo` and a dedicated text package
+## 2. Automerge / text editing: what consumers actually need and how to hide automerge
 
-### Problem
+### What each consumer uses from the current API
 
-`createDocAccessor`, `DocAccessor`, `updateText`, and six cursor helpers (`toCursor`, `fromCursor`,
-`toCursorRange`, `getTextInRange`, `getRangeFromCursor`, `IDocHandle`) are used in ~40 files across
-UI, plugins, and editor packages. They are currently implemented in `echo-db` but have nothing
-inherently DB-internal about them—they are automerge document utilities.
+The ~40 import sites fall into three distinct layers with very different needs:
 
-### Proposal
+#### Layer A — CodeMirror sync (`ui-editor/src/extensions/automerge/`)
 
-**2a. `Obj.updateText` → move to `@dxos/echo`**
+These files implement the automerge ↔ CodeMirror bridge and **legitimately depend on automerge**:
 
-`updateText(obj, path, newText)` is a one-liner that goes through `createDocAccessor` and calls
-`A.updateText`. It operates at the `Obj` level with no DB-internal knowledge. Move it into the `Obj`
-namespace in `@dxos/echo` as `Obj.updateText`. The two existing callers
+| File                  | Automerge API used                                                        |
+| --------------------- | ------------------------------------------------------------------------- |
+| `automerge.ts`        | `A.getHeads(doc)` to track revision heads; `accessor.handle.doc()`        |
+| `sync.ts`             | `A.getHeads`, `A.diff`, `A.equals` to compute patches between revisions   |
+| `update-automerge.ts` | `handle.changeAt(heads, fn)`, `A.splice` to apply editor edits to the doc |
+| `cursor.ts`           | `A.getCursor`, `A.getCursorPosition` for stable position encoding         |
+
+These must import `@automerge/automerge` directly. No amount of abstraction eliminates that — they
+are implementing the CRDT sync protocol. They should declare the dependency explicitly rather than
+inheriting it through `@dxos/echo-db`.
+
+#### Layer B — Sketch / TLDraw adapter (`plugin-sketch/src/util/base-adapter.ts`, `actions.ts`)
+
+The sketch adapter drives TLDraw from an automerge document that stores a `Record<string, TLRecord>`
+map. It uses:
+
+- `accessor.handle.doc()` — reads the raw map to initialize the TLDraw store
+- `accessor.handle.change(fn)` — mutates the map (add/delete/update shapes)
+- `accessor.handle.addListener/removeListener` — reacts to remote changes
+
+The callback in `handle.change(fn)` receives the automerge doc but only uses `getDeep(doc, path)`
+to navigate into it — **no automerge API functions are called inside the callback itself**. The
+mutation is plain JS object manipulation (`map[record.id] = encode(record)`).
+
+This means sketch's dependency on automerge is superficial: it needs the raw doc only because
+`IDocHandle` returns `Doc<T>` rather than `unknown`. If `doc()` returned `unknown`, all the sketch
+code works unchanged after a trivial `as any` or a typed helper.
+
+#### Layer C — Plugin code (all remaining ~30 files)
+
+Plugins like `plugin-markdown`, `plugin-thread`, `plugin-script`, `plugin-code`, `plugin-generator`,
+`plugin-sheet`, `plugin-assistant`, etc. use `createDocAccessor` and the cursor helpers. Their
+actual needs:
+
+| What they do           | Current API                                                         | Automerge leakage                              |
+| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------- |
+| Pass to editor         | `{ text: createDocAccessor(obj, ['content']) }`                     | `DocAccessor` type contains `IDocHandle`       |
+| Read text content      | `DocAccessor.getValue<string>(accessor)`                            | None — wraps `getDeep(handle.doc(), path)`     |
+| Update text atomically | `accessor.handle.change((doc) => A.updateText(doc, path, newText))` | `A.updateText` leaks                           |
+| Stable cursor position | `toCursorRange(accessor, from, to): string`                         | Return type is `A.Cursor` (alias for `string`) |
+| Decode cursor          | `getRangeFromCursor(accessor, cursor: string)`                      | None                                           |
+| Text in range          | `getTextInRange(accessor, start, end)`                              | None                                           |
+
+The **only** automerge leakage to layer C is:
+
+1. The `IDocHandle` type on `DocAccessor.handle` (exposes `Doc<T>`, `ChangeFn<T>`, `Heads`)
+2. The `A.Cursor` type alias on the return of `toCursor` (it's just `string` at runtime)
+3. `updateText` calling `A.updateText` inside `handle.change` (not visible to callers)
+
+### How to eliminate automerge from layer C and B
+
+**`A.Cursor` → `string`**
+
+`A.Cursor` is `string` in automerge. Changing the return type of `toCursor` from `A.Cursor` to
+`string` is a no-op at runtime and removes the only type-level automerge leak in the cursor API.
+`fromCursor` already accepts `A.Cursor` which is `string`, so its signature is already clean.
+
+**`IDocHandle` → opaque handle interface with no automerge types**
+
+Change the `IDocHandle` interface to not expose automerge types:
+
+```ts
+// Before — leaks Doc<T>, ChangeFn<T>, Heads from automerge
+interface IDocHandle<T = any> {
+  doc(): Doc<T> | undefined;
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>): Heads | undefined;
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
+}
+
+// After — no automerge types at all
+interface IDocHandle<T = any> {
+  doc(): T | undefined;
+  change(callback: (doc: T) => void): void;
+  changeAt(heads: unknown, callback: (doc: T) => void): unknown;
+  addListener(event: 'change', listener: () => void): void;
+  removeListener(event: 'change', listener: () => void): void;
+}
+```
+
+The editor layer (`ui-editor`, the legitimate automerge consumer) holds the concrete
+`AutomergeRepo.DocHandle` which satisfies this interface. It can call
+`A.getHeads(handle.doc() as A.Doc<unknown>)` — a single cast at the boundary, contained in the
+editor package.
+
+The sketch adapter works unchanged: its `handle.change(fn)` callback uses plain JS object
+manipulation, not automerge API functions.
+
+**`Obj.updateText` → move to `@dxos/echo`**
+
+`updateText(obj, path, newText)` calls `A.updateText` inside `handle.change`. Plugin callers don't
+see the automerge call — they just call `updateText(obj, path, text)`. Moving to `Obj.updateText`
+in `@dxos/echo` (which can depend on `echo-db` internally or have `echo-db` expose the
+implementation) removes the import from plugin code entirely. The two current callers
 (`plugin-outliner/Journal.ts`, `plugin-native-filesystem/markdown-documents.ts`) switch to
-`import { Obj } from '@dxos/echo'` and call `Obj.updateText(...)`.
+`Obj.updateText(obj, ['content'], newText)`.
 
-**2b. `createDocAccessor` + `DocAccessor` + cursor helpers → new `@dxos/echo-text` package**
+**`createDocAccessor` → `Obj.getDocAccessor` or a stable re-export**
 
-These are automerge handle accessors and cursor math. They are widely used in UI and editor code and
-have no business being imported from an internal DB package. Extract to a new
-`packages/core/echo/echo-text` (or `packages/ui/ui-editor-automerge`) package that depends only on
-`@dxos/echo` and `@automerge/automerge`.
+`createDocAccessor(obj, path)` only needs `echo-db` internals (`getObjectCore`, `symbolPath`). It
+cannot move to `@dxos/echo` without creating a circular dependency — `echo` has no knowledge of the
+CRDT layer. Options:
 
-Exports: `DocAccessor`, `IDocHandle`, `createDocAccessor`, `toCursor`, `fromCursor`,
-`toCursorRange`, `getTextInRange`, `getRangeFromCursor`.
+- **Stay in `echo-db`, re-export as a stable surface** (lowest friction). Plugins continue to import
+  `createDocAccessor` from `@dxos/echo-db`. With the `IDocHandle` interface cleaned up, the
+  automerge types are no longer visible to callers. The function itself is a stable bridge between
+  the `Obj` proxy layer and the CRDT handle layer.
+- **New package `@dxos/echo-crdt`** containing `createDocAccessor`, `DocAccessor`, `IDocHandle`,
+  and the cursor helpers. Both `echo-db` and `ui-editor` depend on it. Plugin packages import from
+  `@dxos/echo-crdt`. This is the cleanest long-term shape but requires a new package.
 
-All ~40 import sites switch from `@dxos/echo-db` to the new package. `echo-db` can then re-export
-from it for its own internal use and remove the implementations.
+### Summary: what needs to change
 
-Alternatively (simpler, lower risk): publish these as a stable sub-path
-`@dxos/echo-db/text` using an exports condition, treating them as a promoted stable surface while
-keeping the code in place. The editor/UI packages import from `@dxos/echo-db/text` rather than the
-default barrel, signalling intent without a package split.
+| Item                                             | Action                                               | Automerge removed from callers? |
+| ------------------------------------------------ | ---------------------------------------------------- | ------------------------------- |
+| `A.Cursor` return type on `toCursor`             | Change to `string`                                   | Yes                             |
+| `Doc<T>`, `ChangeFn<T>`, `Heads` on `IDocHandle` | Change to `unknown`/generic                          | Yes                             |
+| `updateText` → `Obj.updateText`                  | Move to `@dxos/echo`                                 | Yes (2 callers)                 |
+| `createDocAccessor`                              | Keep in `echo-db`, clean interface is enough         | Yes (types are clean)           |
+| `ui-editor` automerge extensions                 | Import `@automerge/automerge` directly               | n/a (expected)                  |
+| `plugin-sketch` adapter                          | No change needed; `handle.change(fn)` stays abstract | Yes                             |
 
-**Effort:** 2a is ~2 hours. 2b (new package) is ~1 day including wiring moon/tsconfig. Sub-path
-approach is ~2 hours.
+**Effort:** Interface cleanup (~2h), `Obj.updateText` move (~1h), `ui-editor` direct automerge dep
+(~30min). No new packages required in this path.
 
 ---
 
@@ -116,18 +212,16 @@ already in scope when these operations run.
 These include `useChatProcessor.ts`, `useContextBinder.ts`, `run-prompt-in-new-chat.ts`,
 `create-chat.ts`, `feed-logger.ts`, `cli/processor.ts`, `cli-util/space.ts`,
 `devtools/WorkflowDebugPanel.tsx`, `stories-assistant/*`. They run outside the LayerSpec Effect
-context and need to construct a runtime snapshot.
+context and need to construct a runtime snapshot explicitly.
 
-Fix: Expose `feedServiceLayer` as a getter on the `Space` type (parallel to `space.db` and
-`space.queues`). Implementation: the space builds it lazily from `space.queues` the first time. All
-category B call sites replace `createFeedServiceLayer(space.queues)` with `space.feedServiceLayer`.
+These sites exist because the operations are triggered imperatively (React hooks, CLI commands)
+rather than through the Effect layer system. The right fix is not to expose a pre-built layer on
+`Space` — `Space` shouldn't know about Effect layers. Instead, the callers should be migrated into
+the Effect operation system so they are invoked through the LayerSpec context like category A.
+Until that migration happens, these sites keep their explicit `createFeedServiceLayer(space.queues)`
+calls.
 
-Once both categories are fixed, `createFeedServiceLayer` becomes internal to `echo-db` (only used
-by `plugin-client`'s `DatabaseLayerSpec` and `TestDatabaseLayer`). Its public export can be removed
-from the `echo-db` barrel.
-
-**Effort:** Category A is ~half a day. Category B (adding `space.feedServiceLayer`) requires touching
-the `Space` class in `client-protocol` or `client` — ~half a day. Total: ~1 day.
+**Effort:** Category A is ~half a day per the investigation below.
 
 ---
 
