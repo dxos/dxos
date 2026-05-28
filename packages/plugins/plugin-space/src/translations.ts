@@ -221,6 +221,7 @@ export const translations = [
         'create-object-dialog.title': 'Create {{object}}',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
+        'plugin-subtitle.label': '{{plugin}} Plugin',
         'creating-object-type.label': 'Type',
         'creating-in-space.label': 'Location',
         'creating-in-collection.label': 'In Collection',

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Record } from 'effect';
 import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
 import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
@@ -183,7 +183,7 @@ const getObjectIconProps = (object: Entity.Unknown): { icon?: string; iconHue?: 
 const getWorkflowOptions = (graphs: ComputeGraph[]) => {
   return graphs.map((graph) => ({
     label: `compute-${graph.id}`,
-    value: Obj.getDXN(graph).toString(),
+    value: Obj.getURI(graph),
     ...getObjectIconProps(graph),
   }));
 };
@@ -195,7 +195,7 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
     const { icon: schemaIcon, iconHue } = getObjectIconProps(fn);
     return {
       label: getLabel(fn),
-      value: Obj.getDXN(fn).toString(),
+      value: Obj.getURI(fn),
       icon: fn.icon ?? schemaIcon,
       iconHue,
     };
@@ -228,7 +228,7 @@ const getFeedOptions = (feeds: Feed.Feed[]) => {
       return {
         label: Entity.getLabel(parent) ?? Entity.getTypename(parent) ?? 'Parent',
         secondaryLabel: role ?? getFeedDisplayName(feed),
-        value: Obj.getDXN(feed).toString(),
+        value: Obj.getURI(feed),
         ...getObjectIconProps(displayObject),
       };
     }
@@ -236,7 +236,7 @@ const getFeedOptions = (feeds: Feed.Feed[]) => {
     return {
       label: getFeedDisplayName(feed),
       secondaryLabel: role,
-      value: Obj.getDXN(feed).toString(),
+      value: Obj.getURI(feed),
       ...getObjectIconProps(displayObject),
     };
   });
