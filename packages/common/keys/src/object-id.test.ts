@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test, vi } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { ObjectId } from './object-id';
 
