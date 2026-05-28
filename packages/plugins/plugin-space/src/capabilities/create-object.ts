@@ -36,10 +36,10 @@ export default Capability.makeModule(
         inputSchema: SpaceOperation.StoredSchemaForm,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
+            const result = yield* Operation.invoke(SpaceOperation.AddType, {
               db: options.db,
               name: props.name,
-              schema: createDefaultSchema(),
+              type: createDefaultSchema(),
             });
             return {
               id: result.id,

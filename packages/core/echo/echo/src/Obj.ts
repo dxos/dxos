@@ -123,22 +123,26 @@ const defaultMeta: internal.ObjectMeta = {
   keys: [],
 };
 
-type MakePropsInternal<T extends Unknown> = {
-  id?: ObjectId;
-  [Meta]?: Partial<internal.ObjectMeta>;
-} & Entity.Properties<T>;
-
 // TODO(burdon): Should we allow the caller to set the id?
 /**
  * Props type for object creation with a given type. Accepts a `Type.AnyObj`
  * entity and derives the instance shape via `Type.InstanceType`. Relation-kind
  * entities are rejected at the type level — use `Relation.MakeProps` for those.
+ *
+ * When the schema is the unconstrained `Type.AnyObj` (`Obj<unknown>` — e.g. a
+ * dynamic type from `schemaRegistry.register`), the instance shape is not
+ * statically known, so data props widen to `Record<string, unknown>` and the
+ * caller can pass arbitrary fields without a cast.
  */
 export type MakeProps<S extends Type.AnyObj> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & MakePropsInternal<Type.InstanceType<S>>;
+} & (S extends Type.Obj<infer A, any>
+  ? unknown extends A
+    ? Record<string, unknown>
+    : Entity.Properties<Type.InstanceType<S>>
+  : Entity.Properties<Type.InstanceType<S>>);
 
 /**
  * Creates a new echo object of the given schema or `Type.Type`.

@@ -83,7 +83,7 @@ const meta = {
             Obj.make(Type.assertObject(storedSchema), {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
-            } as any),
+            }),
           );
         });
       },
