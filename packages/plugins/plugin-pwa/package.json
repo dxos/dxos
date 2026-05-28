@@ -55,8 +55,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/observability": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

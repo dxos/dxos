@@ -80,7 +80,6 @@
     "@dxos/plugin-feed": "workspace:*",
     "@dxos/plugin-integration": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
