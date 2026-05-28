@@ -73,9 +73,6 @@ const StoryViewEditor = ({
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.getDatabase(schema) != null);
-      // NOTE: typename on a persisted Type.Type entity is immutable; the
-      // previous flow renamed the schema in place, which is no longer
-      // supported. Only the view's query is updated here.
       invariant(view);
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;

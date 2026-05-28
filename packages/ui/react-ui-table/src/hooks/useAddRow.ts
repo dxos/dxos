@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { type Database, Obj, Type } from '@dxos/echo';
+import { type Database, Obj, type Type } from '@dxos/echo';
 
 import { type InsertRowResult } from '../model';
 
@@ -23,8 +23,7 @@ export const useAddRow = ({ db, schema }: UseAddRowProps) => {
     (data?: any): InsertRowResult => {
       if (db && schema) {
         try {
-          const obj = Obj.make(schema, data ?? {});
-          db.add(obj);
+          db.add(Obj.make(schema, data ?? {}));
           return 'final';
         } catch (error) {
           return 'draft';
