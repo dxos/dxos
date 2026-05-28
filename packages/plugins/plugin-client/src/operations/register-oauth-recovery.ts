@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Context as DxContext } from '@dxos/context';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type InitiateOAuthFlowRequest, type InitiateOAuthFlowResponse, OAuthProvider } from '@dxos/protocols';
+import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
 import { oauthRecoveryPendingKey } from '../constants';
 import { ClientCapabilities } from '../types';
@@ -41,7 +43,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
 
       const provider = data.provider as OAuthProvider;
       const scopes = SCOPES_BY_PROVIDER[provider] ?? ['openid', 'email'];
-      const httpEndpoint = toHttpUrl(edgeUrl);
+      const edgeClient = new EdgeHttpClient(edgeUrl);
       // accessTokenId doubles as: (a) the cron id in SpaceSecretsObject (≤26 chars for the
       // scheduled-run storage key) and (b) the ECHO id of the AccessToken object the recovery
       // finalizer creates in the personal space. ULIDs satisfy both — they are exactly 26 chars
@@ -63,7 +65,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
       };
 
       const initiateResponse = yield* Effect.tryPromise({
-        try: () => initiateOAuthFlow(httpEndpoint, initiateRequest),
+        try: () => edgeClient.initiateOAuthFlow(DxContext.default(), initiateRequest),
         catch: (error) => new Error(`OAuth initiate failed: ${error instanceof Error ? error.message : String(error)}`),
       });
 
@@ -91,21 +93,3 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
 );
 
 export default handler;
-
-/** Convert a ws(s):// edge URL to http(s):// for HTTP API calls. */
-const toHttpUrl = (url: string): string => url.replace(/^wss?:/, (match) => (match === 'wss:' ? 'https:' : 'http:'));
-
-const initiateOAuthFlow = async (endpoint: string, request: unknown): Promise<InitiateOAuthFlowResponse> => {
-  const response = await fetch(`${endpoint.replace(/\/$/, '')}/oauth/initiate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-  });
-  const envelope = (await response.json()) as
-    | { success: true; data: InitiateOAuthFlowResponse }
-    | { success: false; message?: string; error?: { message?: string } };
-  if (!envelope.success) {
-    throw new Error(envelope.message ?? envelope.error?.message ?? 'OAuth initiate failed');
-  }
-  return envelope.data;
-};

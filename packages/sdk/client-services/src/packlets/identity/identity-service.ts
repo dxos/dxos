@@ -86,7 +86,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     } else if (request.token) {
       await this._recoveryManager.recoverIdentityWithToken(ctx, { token: request.token });
     } else if (request.recoveryProof) {
-      await this._recoveryManager.recoverIdentityWithOAuthProof(ctx, { recoveryProof: request.recoveryProof });
+      await this._recoveryManager.recoverIdentityWithToken(ctx, { token: request.recoveryProof });
     } else {
       throw new Error('Invalid request.');
     }

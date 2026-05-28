@@ -139,7 +139,8 @@ export class EdgeIdentityRecoveryManager {
   }
 
   /**
-   * Recovery identity using an opaque token sent to the user's email.
+   * Recover an identity using an opaque one-time token. Covers both email magic-link tokens
+   * and OAuth recovery proofs — callers pass whichever string they have as `token`.
    */
   public async recoverIdentityWithToken(ctx: Context, { token }: { token: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
@@ -150,38 +151,6 @@ export class EdgeIdentityRecoveryManager {
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
       token,
-    };
-
-    const response = await this._edgeClient.recoverIdentity(ctx, request);
-
-    await this._acceptRecoveredIdentity({
-      authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
-      haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
-      haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
-      identityKey: PublicKey.fromHex(response.identityKey),
-      deviceKey,
-      controlFeedKey,
-      dataFeedKey: await this._keyring.createKey(),
-    });
-  }
-
-  /**
-   * Recovery identity using an OAuth recovery proof minted by edge kms-service.
-   * The proof opaquely binds an identityKey to a verified OAuth provider+identifier; db-service
-   * redeems it directly without a separate lookup key.
-   */
-  public async recoverIdentityWithOAuthProof(
-    ctx: Context,
-    { recoveryProof }: { recoveryProof: string },
-  ): Promise<void> {
-    invariant(this._edgeClient, 'Not connected to EDGE.');
-
-    const deviceKey = await this._keyring.createKey();
-    const controlFeedKey = await this._keyring.createKey();
-    const request: EdgeRecoverIdentityRequest = {
-      deviceKey: deviceKey.toHex(),
-      controlFeedKey: controlFeedKey.toHex(),
-      recoveryProof,
     };
 
     const response = await this._edgeClient.recoverIdentity(ctx, request);
