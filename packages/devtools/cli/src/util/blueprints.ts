@@ -13,8 +13,13 @@ import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { Chess, ChessBlueprint } from '@dxos/plugin-chess';
 import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
 import { Game } from '@dxos/plugin-game';
-import { Calendar, CalendarBlueprint, InboxBlueprint, InboxSendBlueprint, Mailbox } from '@dxos/plugin-inbox';
+// Narrow subpath imports so the CLI's `bun run --conditions=source` doesn't pull
+// `@dxos/plugin-inbox`'s React-component sources (which transitively import
+// `react-aria-components` — a package whose `source` export condition advertises
+// a TS file that isn't shipped in its dist, causing Bun resolution to fail).
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban';
 import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/plugin';
 import { MapBlueprint } from '@dxos/plugin-map';
