@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import {
   Collection,
+  Database,
   Dataset,
   type Entity,
   Feed,
@@ -2558,6 +2559,23 @@ describe('Query', () => {
 
       await asyncTimeout(trigger.wait(), 500);
       expect(query.results).toHaveLength(1);
+    });
+
+    test('Database.schemaQuery returns Type.Type entities from both registry and db', async ({ expect }) => {
+      // Register one type statically in the in-process registry.
+      graph.registry.add([TestSchema.Person]);
+
+      // Persist a different type to the database.
+      await db.registry.register([TestSchema.Task]);
+      await db.flush();
+
+      // Database.schemaQuery builds a pre-scoped query that fans in both the
+      // space (persisted DB types) and the local registry (static types).
+      const results = await db.query(Database.schemaQuery(db)).run();
+
+      const typenames = results.map((t) => Type.getTypename(t));
+      expect(typenames).toContain(Type.getTypename(TestSchema.Person));
+      expect(typenames).toContain(Type.getTypename(TestSchema.Task));
     });
   });
 
