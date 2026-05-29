@@ -418,7 +418,6 @@ export const setValue: (obj: Mutable<Unknown>, path: readonly (string | number)[
 // Type
 //
 
-// TODO(burdon): To discuss: prefer over EntityId or Key.EntityId or Type.ID?
 export const ID = EntityId;
 export type ID = EntityId;
 

@@ -25,7 +25,6 @@ export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 // EntityMeta
 //
 
-// TODO(dmaretskyi): Rename to EntityMeta
 export const EntityMetaSchema = Schema.Struct({
   keys: Schema.Array(ForeignKey),
 

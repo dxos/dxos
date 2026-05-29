@@ -142,7 +142,6 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
     /**
      * Removes items from a feed by ID.
      */
-    // TODO(dmaretskyi): Change type to EntityId.
     remove(feed: Feed, ids: string[]): Promise<void>;
 
     /**
