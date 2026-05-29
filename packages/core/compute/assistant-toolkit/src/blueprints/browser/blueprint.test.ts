@@ -12,7 +12,7 @@ import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -23,7 +23,7 @@ import { Person } from '@dxos/types';
 import { DatabaseBlueprint, DatabaseHandlers } from '../database';
 import BrowserBlueprint from './blueprint';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',

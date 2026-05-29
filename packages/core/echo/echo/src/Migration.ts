@@ -10,7 +10,7 @@ import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import { MetaId, type ObjectMeta, getSchemaURI } from './internal';
+import { MetaId, type EntityMeta, getSchemaURI } from './internal';
 import * as Type from './Type';
 
 /**
@@ -27,7 +27,7 @@ type MigrationInstanceType<S> = S extends Type.AnyEntity
     : never;
 
 export type TransformResult<To> = Omit<MigrationInstanceType<To>, 'id' | Entity.KindId> & {
-  [MetaId]?: Partial<ObjectMeta>;
+  [MetaId]?: Partial<EntityMeta>;
 };
 
 type DefineObjectMigrationOptions<From extends MigrationSchemaInput, To extends MigrationSchemaInput> = {

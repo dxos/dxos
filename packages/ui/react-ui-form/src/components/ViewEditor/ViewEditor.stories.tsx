@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
+import { DXN, EID, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
 import { Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -73,7 +73,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
+    async (newQuery: QueryAST.Query, target?: EID.EID) => {
       if (!type || !view || !space) {
         return;
       }
@@ -82,7 +82,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         const queue = target;
         const query = queue
           ? Query.fromAst(newQuery).from([
-              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`),
+              Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
             ])
           : Query.fromAst(newQuery);
         Obj.update(view, (view) => {

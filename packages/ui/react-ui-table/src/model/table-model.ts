@@ -10,7 +10,7 @@ import { type JsonProp, type JsonSchemaType, type Mutable, toEffectSchema } from
 import { getSnapshot } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
@@ -523,7 +523,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     // NOTE(ZaymonFC): This is initialized with id because it's required in all schemata?
-    const draftData = { id: ObjectId.random() } as any as T;
+    const draftData = { id: EntityId.random() } as any as T;
     const validationErrors = this.validateDraftRowData(draftData);
 
     const draftRow: DraftRow<T> = {

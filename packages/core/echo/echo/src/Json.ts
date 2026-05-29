@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import * as Database from './Database';
 import * as Obj from './Obj';
@@ -70,8 +70,8 @@ export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): 
 
       let echoUri: string | undefined;
       try {
-        const parsed = EchoURI.tryParse(dxnString);
-        echoUri = parsed ? EchoURI.getObjectId(parsed) : undefined;
+        const parsed = EID.tryParse(dxnString);
+        echoUri = parsed ? EID.getEntityId(parsed) : undefined;
       } catch {
         return value;
       }

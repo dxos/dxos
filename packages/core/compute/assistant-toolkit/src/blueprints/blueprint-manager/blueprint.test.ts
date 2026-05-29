@@ -12,14 +12,14 @@ import { Blueprint, Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { DatabaseBlueprint, DiscordBlueprint, MemoryBlueprint } from '../index';
 import BlueprintManagerDefinition from './blueprint';
 import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',

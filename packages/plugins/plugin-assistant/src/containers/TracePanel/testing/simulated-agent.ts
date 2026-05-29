@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Process, Trace } from '@dxos/compute';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 export interface AgentScenario {
   readonly prompt: string;
@@ -60,7 +60,7 @@ export const SimulatedAgent = Process.make(
     Effect.succeed({
       onInput: (index: number) =>
         Effect.gen(function* () {
-          const messageId = ObjectId.random();
+          const messageId = EntityId.random();
           const scenario = agentScenarios[index % agentScenarios.length];
 
           // Decide upfront whether this run will fail (and at which tool) so the trace shows a partial sequence.
@@ -79,7 +79,7 @@ export const SimulatedAgent = Process.make(
 
           // Simulate tool calls sequentially with delays.
           for (const [index, toolName] of scenario.tools.entries()) {
-            const toolCallId = ObjectId.random();
+            const toolCallId = EntityId.random();
 
             // Tool call event.
             yield* writeAndFlush(CompleteBlock, {

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { DXN, EchoURI } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
@@ -41,7 +41,7 @@ describe('Object JSON serializer', () => {
     expect(taskJson.id).toBe(task.id);
     expect(taskJson[ATTR_TYPE]).toEqual(Type.getURI(TestSchema.Task).toString());
     expect(taskJson.title).toEqual('Fix the tests');
-    expect(taskJson.assignee).toEqual({ '/': EchoURI.make({ objectId: contact.id }) });
+    expect(taskJson.assignee).toEqual({ '/': EID.make({ entityId: contact.id }) });
 
     const refResolver = new StaticRefResolver()
       .addSchema(TestSchema.Person)
@@ -73,7 +73,7 @@ describe('Object JSON serializer', () => {
 
     expect(taskFromJson.id).toBe(task.id);
     expect(taskFromJson.title).toBe('Fix the tests');
-    expect(taskFromJson.assignee!.uri).toEqual(EchoURI.make({ objectId: contact.id }));
+    expect(taskFromJson.assignee!.uri).toEqual(EID.make({ entityId: contact.id }));
     expect(taskFromJson.assignee!.target).toEqual(contact);
     expect(await taskFromJson.assignee!.load()).toEqual(contact);
     expect((taskFromJson as any)[TypeId]).toEqual(Type.getURI(TestSchema.Task));
@@ -139,7 +139,7 @@ describe('Object JSON serializer', () => {
 
       expect(reconstructed[KindId]).toBe(EntityKind.Type);
       expect(Type.isType(reconstructed)).toBe(true);
-      // `typename` lives in `ObjectMeta.key` on persisted Type.Type entities
+      // `typename` lives in `EntityMeta.key` on persisted Type.Type entities
       // — surfaced via `Type.getTypename`.
       expect(Type.getTypename(reconstructed)).toBe('com.example.type.regression');
     });

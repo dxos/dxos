@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Ref, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 //
 // Test Data
@@ -20,7 +20,7 @@ export const TestItem = Schema.Struct({
 export type TestItem = Type.InstanceType<typeof TestItem>;
 
 export const TestColumn = Schema.Struct({
-  id: ObjectId,
+  id: EntityId,
   name: Schema.String,
   items: Schema.mutable(Schema.Array(Ref.Ref(TestItem))),
 }).pipe(Type.makeObject(DXN.make('com.example.type.column', '0.1.0')));

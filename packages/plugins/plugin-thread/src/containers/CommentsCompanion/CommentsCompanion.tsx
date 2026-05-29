@@ -152,7 +152,7 @@ export const CommentsCompanion = ({ attendableId, subject }: CommentsCompanionPr
   const handleAcceptProposal = useCallback<NonNullable<CommentsPanelProps['onAcceptProposal']>>(
     async (anchor, messageId) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
+      const messageIndex = thread.messages.findIndex(Ref.hasEntityId(messageId));
       const message = thread.messages[messageIndex]?.target;
       const proposal = message?.blocks.find((block) => block._tag === 'proposal');
       if (!proposal || !anchor.anchor) {

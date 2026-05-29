@@ -47,7 +47,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
 /**
  * @returns The schema's type identifier URI — whichever URI fits.
  *
- * - Stored (dynamic) schemas: the schema-as-object's EchoURI, so loaded objects ride
+ * - Stored (dynamic) schemas: the schema-as-object's EID, so loaded objects ride
  *   along with their schema as a strong dependency.
  * - Non-stored (static) schemas: the typename DXN built from `TypeAnnotation`.
  *

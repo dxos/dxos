@@ -14,7 +14,7 @@ import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint, Operation } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
 
 import { LAYOUT_CAPABILITY_ID } from './capability-ids';
@@ -258,7 +258,7 @@ export namespace AppCapabilities {
    * Used to validate navigation targets against remote services (e.g., edge).
    * @category Capability
    */
-  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EchoURI.EchoURI>>;
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
 
   export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
     'org.dxos.app-framework.capability.navigation-path-resolver',

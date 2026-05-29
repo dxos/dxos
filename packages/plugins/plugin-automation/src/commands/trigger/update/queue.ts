@@ -14,7 +14,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Feed as FeedNs, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
-import { EchoURI, type ObjectId } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 
 import { Enabled, Feed, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectFeed, selectTrigger } from '../util';
@@ -36,7 +36,7 @@ export const queue = Command.make(
         onNone: () => selectTrigger('feed'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.make({ objectId: triggerId as ObjectId });
+      const dxn = EID.make({ entityId: triggerId as EntityId });
       const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
       if (trigger.spec?.kind !== 'feed') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
@@ -124,7 +124,7 @@ const updateFeed = Effect.fn(function* (trigger: Trigger.Trigger, feedOption: Op
   if (shouldChangeFeed) {
     const feed = yield* Option.match(feedOption, {
       onNone: () => selectFeed(),
-      onSome: (uri) => Database.resolve(EchoURI.parse(uri), FeedNs.Feed),
+      onSome: (uri) => Database.resolve(EID.parse(uri), FeedNs.Feed),
     });
     Obj.update(trigger, (trigger) => {
       if (trigger.spec?.kind === 'feed') {

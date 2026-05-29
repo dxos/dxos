@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-import { EchoURI, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { FeedAnnotation } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -31,7 +31,7 @@ export enum MessageState {
  * - `hue`: optional Tailwind colour name (`red`, `amber`, `green`, …). See the canonical
  *   set in `@dxos/echo`'s `IconAnnotationSchema.hue` field.
  * - `source`: origin discriminator. Provider-synced tags use Gmail's label-id as the map
- *   key and shouldn't be renamed locally; user tags use a random `ObjectId` as the key
+ *   key and shouldn't be renamed locally; user tags use a random `EntityId` as the key
  *   and can be edited freely.
  * - `messages`: inverse index — `Ref<Message>` for each message tagged with this entry.
  *   Feed-stored Messages are immutable so the association lives here on the mutable Mailbox.
@@ -58,7 +58,7 @@ export const Mailbox = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Unified tag map covering both Gmail-synced provider labels (`source: 'provider'`,
-  // keyed by Gmail's label-id) and user-applied tags (`source: 'user'`, keyed by ObjectId).
+  // keyed by Gmail's label-id) and user-applied tags (`source: 'user'`, keyed by EntityId).
   // See `Tag` doc for the id-strategy rationale.
   tags: Tags.pipe(FormInputAnnotation.set(false), Schema.optional),
   // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
@@ -145,8 +145,8 @@ const refTargetsMessageId = (ref: Ref.Ref<Message.Message>, messageId: string): 
     return true;
   }
   try {
-    const parsed = EchoURI.tryParse(ref.uri.toString());
-    return parsed ? EchoURI.getObjectId(parsed) === messageId : false;
+    const parsed = EID.tryParse(ref.uri.toString());
+    return parsed ? EID.getEntityId(parsed) === messageId : false;
   } catch {
     return false;
   }
@@ -166,7 +166,7 @@ export const applyTag = (
   message: Message.Message,
 ): string => {
   const existing = findUserTagByLabel(mailbox, label);
-  const tagId = existing?.[0] ?? ObjectId.random().toString();
+  const tagId = existing?.[0] ?? EntityId.random().toString();
   // Build the Ref outside `Obj.update` so we don't capture mid-transaction state.
   const ref = Ref.make(message);
   Obj.update(mailbox, (mailbox) => {
@@ -205,8 +205,8 @@ const messageIdFromRef = (ref: Ref.Ref<Message.Message>): string | undefined => 
     return ref.target.id;
   }
   try {
-    const parsed = EchoURI.tryParse(ref.uri.toString());
-    return parsed ? EchoURI.getObjectId(parsed) : undefined;
+    const parsed = EID.tryParse(ref.uri.toString());
+    return parsed ? EID.getEntityId(parsed) : undefined;
   } catch {
     return undefined;
   }

@@ -10,7 +10,7 @@ import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -18,7 +18,7 @@ import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 import defaultAgentPrompt from './prompt';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const operationHandlerSet = OperationHandlerSet.make(defaultAgentPrompt);
 

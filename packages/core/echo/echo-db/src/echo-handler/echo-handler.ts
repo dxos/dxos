@@ -12,7 +12,7 @@ import { Entity, Obj, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
   EncodedReference,
-  type ObjectStructure,
+  type EntityStructure,
   PROPERTY_ID,
   isEncodedReference,
 } from '@dxos/echo-protocol';
@@ -30,9 +30,9 @@ import {
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
-  type ObjectMeta,
-  type ObjectMetaJSON,
-  ObjectMetaSchema,
+  type EntityMeta,
+  type EntityMetaJSON,
+  EntityMetaSchema,
   ObjectVersionId,
   ParentId,
   TypeSchema,
@@ -73,7 +73,7 @@ import {
   toEffectSchema,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -205,12 +205,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case SelfURIId: {
           if (target[symbolInternals].database) {
-            return EchoURI.make({
+            return EID.make({
               spaceId: target[symbolInternals].database.spaceId,
-              objectId: target[symbolInternals].core.id,
+              entityId: target[symbolInternals].core.id,
             });
           } else {
-            return EchoURI.make({ objectId: target[symbolInternals].core.id });
+            return EID.make({ entityId: target[symbolInternals].core.id });
           }
         }
         case Entity.KindId: {
@@ -317,8 +317,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       } else {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
-        invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromURI(EchoURI.make({ objectId: objectId })));
+        invariant(EntityId.isValid(objectId));
+        target[symbolInternals].core.setParent(EncodedReference.fromURI(EID.make({ entityId: objectId })));
       }
       return true;
     }
@@ -377,8 +377,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(parentDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const parentEchoUri = EchoURI.tryParse(parentDXN);
-      const echoUri = parentEchoUri ? EchoURI.getObjectId(parentEchoUri) : undefined;
+      const parentEchoUri = EID.tryParse(parentDXN);
+      const echoUri = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
       invariant(echoUri);
       return target[symbolInternals].linkCache.get(echoUri);
     }
@@ -400,8 +400,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(sourceDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const sourceEchoId = EchoURI.tryParse(sourceDXN);
-      const echoUri = sourceEchoId ? EchoURI.getObjectId(sourceEchoId) : undefined;
+      const sourceEchoId = EID.tryParse(sourceDXN);
+      const echoUri = sourceEchoId ? EID.getEntityId(sourceEchoId) : undefined;
       invariant(echoUri);
       return target[symbolInternals].linkCache.get(echoUri);
     }
@@ -422,8 +422,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(targetDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const targetEchoId = EchoURI.tryParse(targetDXN);
-      const echoUri = targetEchoId ? EchoURI.getObjectId(targetEchoId) : undefined;
+      const targetEchoId = EID.tryParse(targetDXN);
+      const echoUri = targetEchoId ? EID.getEntityId(targetEchoId) : undefined;
       invariant(echoUri);
       return target[symbolInternals].linkCache.get(echoUri);
     }
@@ -450,7 +450,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // with the same `TypeIdentifierAnnotation`); otherwise the cached path would
     // silently drop the URI annotation.
     const rebuilt = toEffectSchema(jsonSchema).annotations({
-      [TypeIdentifierAnnotationId]: EchoURI.make({ objectId: target[symbolInternals].core.id }),
+      [TypeIdentifierAnnotationId]: EID.make({ entityId: target[symbolInternals].core.id }),
     });
     target[symbolInternals].cachedStaticSlot = rebuilt;
     return rebuilt;
@@ -659,10 +659,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Legacy EchoURI form (echo://spaceId/objectId or echo:/<objectId>) — load on demand.
-    const echoUri = EchoURI.tryParse(typeURI);
+    // Legacy EID form (echo://spaceId/objectId or echo:/<objectId>) — load on demand.
+    const echoUri = EID.tryParse(typeURI);
     if (echoUri) {
-      const echoId = EchoURI.getObjectId(echoUri);
+      const echoId = EID.getEntityId(echoUri);
       if (echoId != null) {
         const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
         if (found != null) {
@@ -682,10 +682,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target[symbolNamespace] === META_NAMESPACE) {
       // TODO(dmaretskyi): Breaks tests.
       // if (target[symbolPath].length !== 0) {
-      //   // TODO(dmaretskyi): pluck from ObjectMetaSchema.
+      //   // TODO(dmaretskyi): pluck from EntityMetaSchema.
       //   return undefined;
       // }
-      return ObjectMetaSchema;
+      return EntityMetaSchema;
     }
 
     // TODO(y): Make reactive.
@@ -728,10 +728,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Legacy EchoURI form (echo://spaceId/objectId) — load the PersistentSchema on demand.
-    const echoUri = EchoURI.tryParse(typeURI);
+    // Legacy EID form (echo://spaceId/objectId) — load the PersistentSchema on demand.
+    const echoUri = EID.tryParse(typeURI);
     if (echoUri != null) {
-      const echoId = EchoURI.getObjectId(echoUri);
+      const echoId = EID.getEntityId(echoUri);
       if (echoId != null) {
         const schemaObject = database.getObjectById(echoId);
         if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
@@ -897,7 +897,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  getMeta(target: ProxyTarget): ObjectMeta {
+  getMeta(target: ProxyTarget): EntityMeta {
     // TODO(dmaretskyi): Reuse meta target.
     const metaTarget: ProxyTarget = {
       [symbolInternals]: target[symbolInternals],
@@ -929,7 +929,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // and call `database.add()`, leaking the object into `space.db`.
     if (typeof otherEchoObj === 'object' && otherEchoObj !== null && !isEchoObject(otherEchoObj)) {
       const selfUri = (otherEchoObj as any)[SelfURIId];
-      if (typeof selfUri === 'string' && EchoURI.isEchoURI(selfUri)) {
+      if (typeof selfUri === 'string' && EID.isEID(selfUri)) {
         return selfUri;
       }
     }
@@ -947,7 +947,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as Entity.Unknown);
-      return EchoURI.make({ objectId: otherObjId });
+      return EID.make({ entityId: otherObjId });
     }
 
     // TODO(burdon): Remote?
@@ -955,15 +955,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (!foreignDatabase) {
       database.add(otherEchoObj);
       // TODO(dmaretskyi): Is this right.
-      return EchoURI.make({ objectId: otherObjId });
+      return EID.make({ entityId: otherObjId });
     }
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
-      return EchoURI.make({ spaceId: foreignDatabase.spaceId, objectId: otherObjId });
+      return EID.make({ spaceId: foreignDatabase.spaceId, entityId: otherObjId });
     }
 
-    return EchoURI.make({ objectId: otherObjId });
+    return EID.make({ entityId: otherObjId });
   }
 
   /**
@@ -988,8 +988,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);
-      const parsedEchoUri = EchoURI.tryParse(dxn);
-      const objectId = parsedEchoUri ? EchoURI.getObjectId(parsedEchoUri) : undefined;
+      const parsedEchoUri = EID.tryParse(dxn);
+      const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
       invariant(objectId, 'Invalid DXN');
       return new RefImpl(dxn, this._handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
     }
@@ -1088,7 +1088,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
       [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
-      [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
+      [ATTR_META]: { ...this.getMeta(target) } as EntityMetaJSON,
     };
 
     if (target[symbolInternals].core.isDeleted()) {
@@ -1097,11 +1097,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const sourceRef = target[symbolInternals].core.getSource();
     if (sourceRef) {
-      obj[ATTR_RELATION_SOURCE] = EchoURI.tryParse(EncodedReference.toURI(sourceRef));
+      obj[ATTR_RELATION_SOURCE] = EID.tryParse(EncodedReference.toURI(sourceRef));
     }
     const targetRef = target[symbolInternals].core.getTarget();
     if (targetRef) {
-      obj[ATTR_RELATION_TARGET] = EchoURI.tryParse(EncodedReference.toURI(targetRef));
+      obj[ATTR_RELATION_TARGET] = EID.tryParse(EncodedReference.toURI(targetRef));
     }
 
     Object.assign(
@@ -1190,7 +1190,7 @@ export { getObjectCore };
  * @returns Automerge document (or a part of it) that backs the object.
  * Mostly used for debugging.
  */
-export const getObjectDocument = (obj: Obj.Any): A.Doc<ObjectStructure> => {
+export const getObjectDocument = (obj: Obj.Any): A.Doc<EntityStructure> => {
   const core = getObjectCore(obj);
   return getDeep(core.getDoc(), core.mountPath)!;
 };
@@ -1258,7 +1258,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   const core = new ObjectCore();
   if (isProxy(obj)) {
     // Already an echo-schema reactive object.
-    const meta = getProxyTarget<ObjectMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
+    const meta = getProxyTarget<EntityMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
 
     // TODO(burdon): Requires comment.
     const slot = getProxySlot(obj);
@@ -1333,7 +1333,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // internal `createObject`) which stamps it as a non-enumerable hidden
     // property, so `...(obj as any)` above doesn't pick it up. The reactive
     // proxy branch above does the equivalent via `Entity.getMeta`.
-    const seededMeta = (obj as any)[MetaId] as ObjectMeta | undefined;
+    const seededMeta = (obj as any)[MetaId] as EntityMeta | undefined;
     if (seededMeta && metaNotEmpty(seededMeta)) {
       core.setMeta(seededMeta);
     }
@@ -1342,7 +1342,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   }
 };
 
-const metaNotEmpty = (meta: ObjectMeta) =>
+const metaNotEmpty = (meta: EntityMeta) =>
   meta.keys.length > 0 || (meta.tags && meta.tags.length > 0) || meta.key !== undefined || meta.version !== undefined;
 
 /**
@@ -1371,8 +1371,8 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   const parentValue = (target as any)[ParentId];
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
-    if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromURI(EchoURI.make({ objectId: parentId })));
+    if (EntityId.isValid(parentId)) {
+      core.setParent(EncodedReference.fromURI(EID.make({ entityId: parentId })));
     }
     delete (target as any)[ParentId];
   }

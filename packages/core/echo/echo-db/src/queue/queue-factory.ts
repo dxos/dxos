@@ -5,22 +5,19 @@
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
-import { EchoURI, ObjectId, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueueImpl } from './queue';
 import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(
-    echoUri: EchoURI.EchoURI,
-    options?: { subspaceTag?: string },
-  ): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoUri: EID.EID, options?: { subspaceTag?: string }): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
-  private readonly _queues = new Map<EchoURI.EchoURI, QueueImpl<any>>();
+  private readonly _queues = new Map<EID.EID, QueueImpl<any>>();
 
   private _service?: FeedProtocol.QueueService = undefined;
 
@@ -39,8 +36,8 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(echoUri: EchoURI.EchoURI, { subspaceTag }: { subspaceTag?: string } = {}): Queue<T> {
-    assertArgument(EchoURI.isEchoURI(echoUri), 'echoUri', 'must be an EchoURI');
+  get<T extends Entity.Unknown>(echoUri: EID.EID, { subspaceTag }: { subspaceTag?: string } = {}): Queue<T> {
+    assertArgument(EID.isEID(echoUri), 'echoUri', 'must be an EID');
     return this._getOrCreate<T>(echoUri, subspaceTag);
   }
 
@@ -55,7 +52,7 @@ export class QueueFactory extends Resource implements QueueAPI {
    * would manufacture a phantom queue at every URI that turns out to be an
    * object, poisoning later real lookups.
    */
-  tryGet<T extends Entity.Unknown>(echoUri: EchoURI.EchoURI): Queue<T> | undefined {
+  tryGet<T extends Entity.Unknown>(echoUri: EID.EID): Queue<T> | undefined {
     return this._queues.get(echoUri) as Queue<T> | undefined;
   }
 
@@ -72,11 +69,11 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
-    const echoUri = EchoURI.make({ spaceId: this._spaceId, objectId: ObjectId.random() });
+    const echoUri = EID.make({ spaceId: this._spaceId, entityId: EntityId.random() });
     return this._getOrCreate<T>(echoUri, subspaceTag);
   }
 
-  private _getOrCreate<T extends Entity.Unknown>(echoUri: EchoURI.EchoURI, subspaceTag?: string): Queue<T> {
+  private _getOrCreate<T extends Entity.Unknown>(echoUri: EID.EID, subspaceTag?: string): Queue<T> {
     assertState(this._service, 'Service not set');
     const existing = this._queues.get(echoUri);
     if (existing) {

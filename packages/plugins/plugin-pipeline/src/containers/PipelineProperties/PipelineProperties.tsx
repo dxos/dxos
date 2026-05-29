@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
+import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -70,7 +70,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   );
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
+    async (newQuery: QueryAST.Query, target?: EID.EID) => {
       if (!view || !db) {
         return;
       }
@@ -78,7 +78,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       const queue = target;
       const query = queue
         ? Query.fromAst(newQuery).from([
-            Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`),
+            Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
           ])
         : Query.fromAst(newQuery);
       updateView((view) => {

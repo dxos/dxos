@@ -10,7 +10,7 @@ import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope, Tag, 
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -18,7 +18,7 @@ import DatabaseBlueprint from './blueprint';
 import { DatabaseHandlers } from './functions';
 import { Query as DatabaseQueryOperation } from './functions/definitions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DatabaseHandlers,

@@ -5,7 +5,7 @@
 import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
 
 import type { Obj } from '@dxos/echo';
-import { ObjectStructure } from '@dxos/echo-protocol';
+import { EntityStructure } from '@dxos/echo-protocol';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
@@ -47,12 +47,12 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
   versionCore.doc = snapshot;
   versionCore.mountPath = objectCore.mountPath;
 
-  const structure: ObjectStructure | undefined = getDeep(snapshot, [...objectCore.mountPath]);
+  const structure: EntityStructure | undefined = getDeep(snapshot, [...objectCore.mountPath]);
 
   // TODO(dmaretskyi): Fix this nonsense.
   return {
     id: objectCore.id,
-    [ATTR_TYPE]: structure && ObjectStructure.getTypeReference(structure)?.['/'],
+    [ATTR_TYPE]: structure && EntityStructure.getTypeReference(structure)?.['/'],
     [ATTR_META]: structure?.meta,
     ...(structure && structure.data),
   } as any;

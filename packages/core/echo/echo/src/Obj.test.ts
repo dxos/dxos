@@ -145,7 +145,7 @@ describe('Obj', () => {
 
     test('throws for plain object without metadata', ({ expect }) => {
       const plain = { id: 'plain-1', name: 'Plain' };
-      expect(() => Obj.getKeys(plain as any, SOURCE)).toThrow(/ObjectMeta not found/);
+      expect(() => Obj.getKeys(plain as any, SOURCE)).toThrow(/EntityMeta not found/);
     });
   });
 

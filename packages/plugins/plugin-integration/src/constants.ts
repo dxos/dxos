@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
+
 import { meta } from './meta';
 
 /** Surface id for the sync-targets dialog. */
@@ -32,10 +34,15 @@ export const pendingIntegrationStorageKey = (
 /** URL path Edge redirects to after redirect-flow OAuth completes. */
 export const OAUTH_REDIRECT_PATH = '/redirect/oauth' as const;
 
+/** Node id (local segment) for the per-space "Integrations" section. */
+export const INTEGRATIONS_SECTION_ID = 'integrations';
+
 /**
  * Deck navigation subject for a specific integration inside a space — used
  * by `navigateToNewIntegration` to open the freshly created integration
- * after the redirect-flow finalization step.
+ * after the finalization step. The integrations section is nested under the
+ * space's settings section, so the subject must include the `settings`
+ * segment to resolve through the graph.
  */
-export const integrationDeckSubject = (spacePath: string, integrationId: string): `${string}/integrations/${string}` =>
-  `${spacePath}/integrations/${integrationId}`;
+export const integrationDeckSubject = (spacePath: string, integrationId: string): string =>
+  `${spacePath}/${SETTINGS_SECTION_ID}/${INTEGRATIONS_SECTION_ID}/${integrationId}`;

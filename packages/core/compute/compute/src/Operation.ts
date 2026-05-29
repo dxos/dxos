@@ -435,8 +435,8 @@ export interface InvokeOptions {
    */
   notify?: NotifyOptions;
   /**
-   * URI of the conversation feed (queue) — today always an EchoURI, but typed as
-   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EchoURI.parse`
+   * URI of the conversation feed (queue) — today always an EID, but typed as
+   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
    * at the point of use.
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
