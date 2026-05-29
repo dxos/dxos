@@ -20,33 +20,33 @@ import {
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const WelcomePlugin = (options: WelcomeOptions) =>
-  Plugin.define(meta).pipe(
-    Plugin.addModule({
-      id: 'options',
-      activate: Capability.makeModule(
-        Effect.fnUntraced(function* () {
-          return Capability.contributes(WelcomeCapabilities.Options, options);
-        }),
-      ),
-    }),
-    AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-    AppPlugin.addTranslationsModule({ translations }),
-    Plugin.addModule({
-      id: 'default-content',
-      activatesOn: SpaceEvents.PersonalSpaceReady,
-      activate: DefaultContent,
-    }),
-    Plugin.addModule({
-      id: 'onboarding',
-      activatesOn: ActivationEvent.allOf(
-        AppActivationEvents.AppGraphReady,
-        ActivationEvents.ProcessManagerReady,
-        AppActivationEvents.LayoutReady,
-        ClientEvents.ClientReady,
-      ),
-      activate: Onboarding,
-    }),
-    Plugin.make,
-  );
+export const WelcomePlugin = Plugin.define<WelcomeOptions>(meta).pipe(
+  Plugin.addModule((options) => ({
+    id: 'options',
+    activatesOn: ActivationEvents.Startup,
+    activate: Capability.makeModule(
+      Effect.fnUntraced(function* () {
+        return Capability.contributes(WelcomeCapabilities.Options, options);
+      }),
+    ),
+  })),
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'default-content',
+    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activate: DefaultContent,
+  }),
+  Plugin.addModule({
+    id: 'onboarding',
+    activatesOn: ActivationEvent.allOf(
+      AppActivationEvents.AppGraphReady,
+      ActivationEvents.ProcessManagerReady,
+      AppActivationEvents.LayoutReady,
+      ClientEvents.ClientReady,
+    ),
+    activate: Onboarding,
+  }),
+  Plugin.make,
+);
