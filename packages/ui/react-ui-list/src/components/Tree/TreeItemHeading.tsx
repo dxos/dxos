@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallback } from 'react';
 
-import { Button, Icon, type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type Label, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -17,12 +17,14 @@ export type TreeItemHeadingProps = {
   iconHue?: string;
   disabled?: boolean;
   current?: boolean;
+  /** Optional item count rendered as a badge directly after the label. */
+  count?: number;
   onSelect?: (option: boolean) => void;
 };
 
 export const TreeItemHeading = memo(
   forwardRef<HTMLButtonElement, TreeItemHeadingProps>(
-    ({ label, className, icon, iconHue, disabled, current, onSelect }, forwardedRef) => {
+    ({ label, className, icon, iconHue, disabled, current, count, onSelect }, forwardedRef) => {
       const { t } = useTranslation();
       const styles = iconHue ? getStyles(iconHue) : undefined;
 
@@ -57,7 +59,7 @@ export const TreeItemHeading = memo(
             data-testid='treeItem.heading'
             variant='ghost'
             classNames={[
-              'grow gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
+              'grow justify-start gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
               'disabled:cursor-default disabled:opacity-100',
               className,
             ]}
@@ -69,9 +71,14 @@ export const TreeItemHeading = memo(
             {icon && (
               <Icon size={5} icon={icon ?? 'ph--circle-dashed--regular'} classNames={['my-1', styles?.foreground]} />
             )}
-            <span className='flex-1 w-0 truncate text-start font-normal' data-tooltip>
+            <span className='min-w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>
+            {typeof count === 'number' && (
+              <Tag palette='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+                {count}
+              </Tag>
+            )}
           </Button>
         </TextTooltip>
       );

@@ -171,6 +171,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 properties: getProperties(`object-${i}`, {
                   label: `Object ${i}`,
                   icon: random.properties.icon(),
+                  ...(i % 3 === 0 && { count: (i + 1) * 2 }),
                 }),
               }),
             );

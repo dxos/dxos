@@ -57,6 +57,7 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
         icon: node.properties.icon,
         iconHue: node.properties.iconHue,
         testId: node.properties.testId,
+        count: node.properties.count,
       };
     }).pipe(Atom.keepAlive);
   });

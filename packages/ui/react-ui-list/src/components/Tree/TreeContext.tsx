@@ -22,6 +22,8 @@ export type TreeItemDataProps = {
   iconHue?: string;
   disabled?: boolean;
   testId?: string;
+  /** Optional item count rendered as a badge directly after the label. */
+  count?: number;
 };
 
 export interface TreeModel<T extends { id: string } = any> {

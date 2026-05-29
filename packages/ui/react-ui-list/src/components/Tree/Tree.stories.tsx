@@ -93,6 +93,7 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
             icon: parent.icon,
             ...((parent.items?.length ?? 0) > 0 && {
               parentOf: parent.items!.map(({ id }) => id),
+              count: parent.items!.length,
             }),
           };
         }).pipe(Atom.keepAlive);

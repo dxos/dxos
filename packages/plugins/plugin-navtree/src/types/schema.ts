@@ -43,6 +43,8 @@ export type NodeProperties = SharedProperties & {
   error?: string;
   modified?: boolean;
   palette?: string;
+  /** Optional item count rendered as a badge before the action column. */
+  count?: number;
 };
 
 export type ActionProperties = SharedProperties & {
