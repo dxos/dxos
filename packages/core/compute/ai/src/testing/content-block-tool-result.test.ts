@@ -1,38 +1,35 @@
+import { Tool, Toolkit } from '@effect/ai';
+import { describe, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ContentBlock } from '@dxos/types';
-import { Tool, Toolkit } from '@effect/ai';
-import { describe, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
-
 import { Message } from '@dxos/types';
+
 import * as AiService from '../AiService';
 import { agenticLoop } from './process-messages';
 import { AiServiceTestingPreset } from './test-layers';
 
-const EXAMPLE_PDF = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-pdf.pdf'),
-);
-const EXAMPLE_IMAGE = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-image.jpg'),
-);
+const EXAMPLE_PDF = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-pdf.pdf'));
+const EXAMPLE_IMAGE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-image.jpg'));
 
 class TestPdfToolkit extends Toolkit.make(
   Tool.make('getPdf', {
-    success: ContentBlock.ContentBlockResult
+    success: ContentBlock.ContentBlockResult,
   }),
-
 ) {
   static readonly layer = TestPdfToolkit.toLayer({
     getPdf: Effect.fn(function* () {
       return ContentBlock.ContentBlockResult.make({
-        content: [ContentBlock.File.make({
-          name: 'file.pdf',
-          mediaType: 'application/pdf',
-          url: EXAMPLE_PDF.toString('base64url'),
-        })],
+        content: [
+          ContentBlock.File.make({
+            name: 'file.pdf',
+            mediaType: 'application/pdf',
+            url: EXAMPLE_PDF.toString('base64url'),
+          }),
+        ],
       });
     }),
   });
@@ -40,19 +37,21 @@ class TestPdfToolkit extends Toolkit.make(
 
 class TestImageToolkit extends Toolkit.make(
   Tool.make('getImage', {
-    success: ContentBlock.ContentBlockResult
-  })
+    success: ContentBlock.ContentBlockResult,
+  }),
 ) {
   static readonly layer = TestImageToolkit.toLayer({
     getImage: Effect.fn(function* () {
       return ContentBlock.ContentBlockResult.make({
-        content: [ContentBlock.Image.make({
-          source: {
-            type: 'base64',
-            mediaType: 'image/jpeg',
-            data: EXAMPLE_IMAGE.toString('base64'),
-          }
-        })],
+        content: [
+          ContentBlock.Image.make({
+            source: {
+              type: 'base64',
+              mediaType: 'image/jpeg',
+              data: EXAMPLE_IMAGE.toString('base64'),
+            },
+          }),
+        ],
       });
     }),
   });
@@ -61,15 +60,13 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model('@anthropic/claude-opus-4-6').pipe(
-    Layer.provideMerge(AiServiceTestingPreset('direct')),
-  ),
+  AiService.model('@anthropic/claude-opus-4-6').pipe(Layer.provideMerge(AiServiceTestingPreset('direct'))),
 );
 
-
 describe('ContentBlockToolResult', { tags: ['llm'] }, () => {
-  it.effect('return image from tool result', Effect.fn(
-    function* ({ expect }) {
+  it.effect(
+    'return image from tool result',
+    Effect.fn(function* ({ expect }) {
       const messages = yield* agenticLoop({
         messages: [
           Message.make({
@@ -83,14 +80,12 @@ describe('ContentBlockToolResult', { tags: ['llm'] }, () => {
       expect(messages.length).toBeGreaterThan(1);
       expect(JSON.stringify(messages).toLowerCase()).toContain('kitten');
       expect(JSON.stringify(messages).toLowerCase()).toContain('orange');
-    },
-    Effect.provide(
-      TestLayer,
-    )
-  ));
+    }, Effect.provide(TestLayer)),
+  );
 
-  it.effect.only('return pdf from tool result', Effect.fn(
-    function* ({ expect }) {
+  it.effect.only(
+    'return pdf from tool result',
+    Effect.fn(function* ({ expect }) {
       const messages = yield* agenticLoop({
         messages: [
           Message.make({
@@ -106,9 +101,6 @@ describe('ContentBlockToolResult', { tags: ['llm'] }, () => {
       expect(JSON.stringify(messages).toLowerCase()).toContain('red');
       expect(JSON.stringify(messages).toLowerCase()).toContain('green');
       expect(JSON.stringify(messages).toLowerCase()).toContain('purple');
-    },
-    Effect.provide(
-      TestLayer,
-    ),
-  ));
+    }, Effect.provide(TestLayer)),
+  );
 });

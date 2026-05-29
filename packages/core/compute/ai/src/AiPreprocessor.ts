@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Prompt from '@effect/ai/Prompt';
+import { Match, Struct } from 'effect';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -17,7 +18,6 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
-import { Match, Struct } from 'effect';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -372,13 +372,9 @@ const toolResultHeaderMessage = (toolCallId: string): string => `Result from ${t
  * stub `tool-result` parts first, then a `user` message with headers and file/text parts.
  * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
  */
-const convertToolMessage = (
-  message: Message.Message,
-): Effect.Effect<Prompt.Message[], PromptPreprocesorError, never> =>
+const convertToolMessage = (message: Message.Message): Effect.Effect<Prompt.Message[], PromptPreprocesorError, never> =>
   Effect.gen(function* () {
-    const toolResults = message.blocks.filter(
-      (block): block is ContentBlock.ToolResult => block._tag === 'toolResult',
-    );
+    const toolResults = message.blocks.filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
 
     if (toolResults.length === 0) {
       return [];
@@ -772,16 +768,16 @@ const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) =
           index !== prompt.content.length - 1
             ? message
             : {
-              ...message,
-              options: {
-                anthropic: {
-                  cacheControl: {
-                    ttl: '5m',
-                    type: 'ephemeral',
+                ...message,
+                options: {
+                  anthropic: {
+                    cacheControl: {
+                      ttl: '5m',
+                      type: 'ephemeral',
+                    },
                   },
                 },
               },
-            },
         ),
       );
     } else {

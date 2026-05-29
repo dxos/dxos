@@ -240,7 +240,7 @@ const ToolCallState = Schema.Struct({
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable),
 });
-interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> { }
+interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 
 // Id's of processes who's results were already submitted to the agent.
 const ToolCallStateKey = StorageService.key(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
@@ -316,11 +316,11 @@ const ToolExecutionService = ({
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
             const result = enableBackgrounding
               ? yield* awaitWithReport.pipe(
-                Effect.timeout(backgroundThreshold),
-                Effect.catchTag('TimeoutException', () =>
-                  Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
-                ),
-              )
+                  Effect.timeout(backgroundThreshold),
+                  Effect.catchTag('TimeoutException', () =>
+                    Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
+                  ),
+                )
               : yield* awaitWithReport;
             log('result', { result });
             return yield* result;
@@ -353,7 +353,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
       }),
     },
   }),
-) { }
+) {}
 
 // TODO(dmaretskyi): Currently broken: polling a completed process returns interruped error.
 const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(

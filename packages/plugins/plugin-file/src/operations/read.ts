@@ -19,13 +19,14 @@ const handler: Operation.WithHandler<typeof FileOperation.Read> = FileOperation.
           ? `data:${obj.type};base64,${Buffer.from(obj.data.bytes).toString('base64')}`
           : obj.data.url;
 
-
       return ContentBlock.ContentBlockResult.make({
-        content: [ContentBlock.File.make({
-          url,
-          name: obj.name,
-          mediaType: obj.type,
-        })],
+        content: [
+          ContentBlock.File.make({
+            url,
+            name: obj.name,
+            mediaType: obj.type,
+          }),
+        ],
       });
     }),
   ),
