@@ -7,7 +7,6 @@ import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Relation } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
@@ -84,13 +83,9 @@ const GATE_CHANGE = {
 
 describe('trip extraction over a message feed', () => {
   let builder: EchoTestBuilder;
-  let db: EchoDatabase;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({
-      types: [Booking.Booking, Segment.Segment, Trip.Trip, Message.Message, ExtractedFrom.ExtractedFrom],
-    }));
   });
 
   afterEach(async () => {
@@ -98,44 +93,37 @@ describe('trip extraction over a message feed', () => {
   });
 
   test('processing a feed yields one Trip with multiple Segments and Message→Trip relations', async ({ expect }) => {
-    // The "feed": a sequence of messages, each paired with the structured payload a cheap LLM
-    // would extract. Two are flight legs under one PNR, one is a gate change for the first leg,
-    // and one is an unrelated message that should not match.
-    const feed: Array<{ message: Message.Message; payload: unknown | undefined }> = [
-      {
-        message: makeMessage({ from: 'no-reply@united.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
-        payload: FIRST_LEG,
-      },
-      {
-        message: makeMessage({ from: 'no-reply@united.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
-        payload: SECOND_LEG,
-      },
-      {
-        message: makeMessage({ from: 'no-reply@united.com', subject: 'Gate change', body: 'Gate update' }),
-        payload: GATE_CHANGE,
-      },
-      {
-        // Unrelated message — no travel sender/subject, so `match()` rejects it.
-        message: makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
-        payload: undefined,
-      },
-    ];
+    await using peer = await builder.createPeer({
+      types: [Booking.Booking, Segment.Segment, Trip.Trip, Message.Message, ExtractedFrom.ExtractedFrom],
+    });
+    const db = await peer.createDatabase();
 
-    // Persist the feed messages so provenance relations can target them.
-    const messages = feed.map(({ message }) => db.add(message));
-    await db.flush();
+    // The source is an actual ECHO Queue (a Feed) of immutable Message items — not objects in
+    // the database. Each message is paired with the structured payload a cheap LLM would extract:
+    // two flight legs under one PNR, a gate change for the first leg, and an unrelated message.
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const feed = queues.create();
+
+    const payloads: Array<unknown | undefined> = [FIRST_LEG, SECOND_LEG, GATE_CHANGE, undefined];
+    await feed.append([
+      makeMessage({ from: 'no-reply@united.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
+      makeMessage({ from: 'no-reply@united.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
+      makeMessage({ from: 'no-reply@united.com', subject: 'Gate change', body: 'Gate update' }),
+      // Unrelated message — no travel sender/subject, so `match()` rejects it.
+      makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
+    ]);
+
+    const messages = feed.objects as Message.Message[];
 
     // Iterate the feed, invoking the extract dispatcher per message. Non-matching messages fail
     // with NoMatchingExtractorError, which we tolerate via Effect.either.
-    for (const { message, payload } of feed) {
+    for (let index = 0; index < messages.length; index++) {
+      const message = messages[index];
+      const payload = payloads[index];
       await dispatch({ db, source: message }, { provenance })
         .pipe(
           Effect.provide(
-            Layer.mergeAll(
-              fromExtractors([TripMessageExtractor]),
-              noResolver,
-              mockAiService({ object: payload ?? {} }),
-            ),
+            Layer.mergeAll(fromExtractors([TripMessageExtractor]), noResolver, mockAiService({ object: payload ?? {} })),
           ),
         )
         .pipe(Effect.either)
@@ -161,9 +149,7 @@ describe('trip extraction over a message feed', () => {
     expect(numbers).toEqual(['AF-1', 'AF-2']);
 
     // The gate change updated the first leg in place (no duplicate segment).
-    const firstLeg = segments.find(
-      (segment) => segment.details._tag === 'flight' && segment.details.number === 'AF-1',
-    )!;
+    const firstLeg = segments.find((segment) => segment.details._tag === 'flight' && segment.details.number === 'AF-1')!;
     expect(firstLeg.details._tag).toBe('flight');
     if (firstLeg.details._tag !== 'flight') {
       throw new Error('expected flight details');
@@ -172,15 +158,17 @@ describe('trip extraction over a message feed', () => {
     expect(firstLeg.details.terminalFrom).toBe('3');
 
     // Every contributing message (legs + gate change) has an ExtractedFrom relation to the Trip;
-    // the unrelated message does not.
+    // the unrelated message does not. The targets are Queue items (not in the database), so we
+    // compare against the target URIs rather than resolving them.
     const relations = await db.query(Filter.type(ExtractedFrom.ExtractedFrom)).run();
     for (const relation of relations) {
       expect(Relation.getSource(relation).id).toBe(trip.id);
     }
-    const relatedMessageIds = new Set(relations.map((relation) => Relation.getTarget(relation).id));
-    expect(relatedMessageIds.has(messages[0].id)).toBe(true);
-    expect(relatedMessageIds.has(messages[1].id)).toBe(true);
-    expect(relatedMessageIds.has(messages[2].id)).toBe(true);
-    expect(relatedMessageIds.has(messages[3].id)).toBe(false);
+    const targetUris = relations.map((relation) => String(Relation.getTargetURI(relation)));
+    const targetsMessage = (message: Message.Message) => targetUris.some((uri) => uri.includes(message.id));
+    expect(targetsMessage(messages[0])).toBe(true);
+    expect(targetsMessage(messages[1])).toBe(true);
+    expect(targetsMessage(messages[2])).toBe(true);
+    expect(targetsMessage(messages[3])).toBe(false);
   });
 });

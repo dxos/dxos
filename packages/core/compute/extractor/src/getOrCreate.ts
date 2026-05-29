@@ -10,9 +10,8 @@ import { Resolver, resolve } from './Resolver';
 
 export interface GetOrCreateOptions<T> {
   /**
-   * Identity input handed to the `Resolver` for the candidate's type (e.g. `{ email }`,
-   * `{ domain }`). When omitted, no lookup is performed and the candidate is always treated as
-   * new.
+   * Identity input handed to the `Resolver` for the candidate's type (e.g. `{ email }`, `{ domain }`).
+   * When omitted, no lookup is performed and the candidate is always treated as new.
    */
   readonly identity?: unknown;
   /**
@@ -48,5 +47,6 @@ export const getOrCreate = <S extends Type.AnyObj>(
     if (options.merge) {
       Obj.update(existing, (existing) => options.merge!(existing, candidate));
     }
+
     return { object: existing, created: false };
   });
