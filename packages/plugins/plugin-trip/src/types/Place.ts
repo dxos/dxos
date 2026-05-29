@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Annotation } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 
 /**
@@ -19,6 +20,6 @@ export const Place = Schema.Struct({
   city: Schema.optional(Schema.String),
   country: Schema.optional(Schema.String),
   geo: Format.GeoPoint.pipe(Schema.optional),
-});
+}).pipe(Annotation.LabelAnnotation.set(['name']));
 
 export interface Place extends Schema.Schema.Type<typeof Place> {}

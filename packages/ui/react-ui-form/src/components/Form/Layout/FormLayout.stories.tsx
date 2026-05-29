@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DXN, Format, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Card, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -85,6 +85,42 @@ const FLIGHT_LAYOUT_COMPACT = trim`
 const AnnotatedFlight = Type.getSchema(Flight)
   .annotations({})
   .pipe(FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }));
+
+/**
+ * Sample schema with nested `Place` structs carrying a `LabelAnnotation`.
+ * Demonstrates the two nested-field DSL behaviors: `<field name="origin"/>`
+ * auto-converts to the place's computed label, while `<field name="origin.code"/>`
+ * drills into a leaf sub-field.
+ */
+const Place = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  code: Schema.optional(Schema.String.annotations({ title: 'Code' })),
+  city: Schema.optional(Schema.String.annotations({ title: 'City' })),
+}).pipe(Annotation.LabelAnnotation.set(['name']));
+
+const Journey = Schema.Struct({
+  flightNumber: Schema.optional(Schema.String.annotations({ title: 'Flight #' })),
+  origin: Schema.optional(Place),
+  destination: Schema.optional(Place),
+}).pipe(Type.makeObject(DXN.make('com.example.type.journey', '0.1.0')));
+
+type JourneyValues = Omit<Type.InstanceType<typeof Journey>, 'id'>;
+
+const journey = {
+  flightNumber: 'AF-1',
+  origin: { name: 'John F. Kennedy Intl', code: 'JFK', city: 'New York' },
+  destination: { name: 'Charles de Gaulle', code: 'CDG', city: 'Paris' },
+} satisfies Partial<JourneyValues>;
+
+const JOURNEY_LAYOUT = trim`
+  <grid cols="2">
+    <field name="flightNumber" span="2"/>
+    <field name="origin"/>
+    <field name="destination"/>
+    <field name="origin.code"/>
+    <field name="destination.code"/>
+  </grid>
+`;
 
 type StoryProps = {
   schema: Schema.Schema<any>;
@@ -193,6 +229,38 @@ const NamedAnnotationStory = () => {
 
 export const NamedAnnotation: Story = {
   render: () => <NamedAnnotationStory />,
+};
+
+/**
+ * Nested struct fields. `origin`/`destination` are `Place` structs with a
+ * `LabelAnnotation` — referenced bare they collapse to the place's name, while
+ * `origin.code`/`destination.code` drill into the leaf sub-field.
+ */
+const NestedLabelStory = () => {
+  const schema = useMemo(() => omitId(Type.getSchema(Journey)) as unknown as Schema.Schema<any>, []);
+  const [values, setValues] = useState<Partial<JourneyValues>>(journey);
+
+  const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
+    setValues(next as Partial<JourneyValues>);
+  }, []);
+
+  return (
+    <Tooltip.Provider>
+      <TestLayout json={{ values }}>
+        <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+          <Form.Viewport>
+            <Form.Content>
+              <Form.Layout schema={schema} template={JOURNEY_LAYOUT} />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </TestLayout>
+    </Tooltip.Provider>
+  );
+};
+
+export const NestedLabel: Story = {
+  render: () => <NestedLabelStory />,
 };
 
 /**

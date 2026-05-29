@@ -31,8 +31,9 @@ export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;
 
 /**
  * Shared fields for any leg that moves between two places at scheduled times.
+ * Transport variants extend this via `Schema.extend`.
  */
-const transportFields = {
+export const TransportFields = Schema.Struct({
   /** Operator of the leg: airline for flights, rail operator for trains, ferry line for boats, road operator for taxi/bus. */
   provider: Schema.optional(Provider.Provider),
   /** Operator-assigned identifier: flight number, train number, vessel/route code. */
@@ -44,35 +45,44 @@ const transportFields = {
   serviceClass: Schema.optional(ServiceClass),
   /** Single seat assignment, or a list when the booking covers multiple passengers. */
   seat: Schema.optional(Schema.Union(Schema.String, Schema.Array(Schema.String))),
-};
-
-export const FlightDetails = Schema.TaggedStruct('flight', {
-  ...transportFields,
-  terminalFrom: Schema.optional(Schema.String),
-  terminalTo: Schema.optional(Schema.String),
-  gateFrom: Schema.optional(Schema.String),
-  gateTo: Schema.optional(Schema.String),
 });
+export interface TransportFields extends Schema.Schema.Type<typeof TransportFields> {}
+
+export const FlightDetails = Schema.extend(
+  TransportFields,
+  Schema.TaggedStruct('flight', {
+    terminalFrom: Schema.optional(Schema.String),
+    terminalTo: Schema.optional(Schema.String),
+    gateFrom: Schema.optional(Schema.String),
+    gateTo: Schema.optional(Schema.String),
+  }),
+);
 export interface FlightDetails extends Schema.Schema.Type<typeof FlightDetails> {}
 
-export const TrainDetails = Schema.TaggedStruct('train', {
-  ...transportFields,
-  platform: Schema.optional(Schema.String),
-  coach: Schema.optional(Schema.String),
-});
+export const TrainDetails = Schema.extend(
+  TransportFields,
+  Schema.TaggedStruct('train', {
+    platform: Schema.optional(Schema.String),
+    coach: Schema.optional(Schema.String),
+  }),
+);
 export interface TrainDetails extends Schema.Schema.Type<typeof TrainDetails> {}
 
-export const BoatDetails = Schema.TaggedStruct('boat', {
-  ...transportFields,
-  vessel: Schema.optional(Schema.String),
-});
+export const BoatDetails = Schema.extend(
+  TransportFields,
+  Schema.TaggedStruct('boat', {
+    vessel: Schema.optional(Schema.String),
+  }),
+);
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 
 // TODO(burdon): Separate structure for route?
-export const RoadDetails = Schema.TaggedStruct('road', {
-  ...transportFields,
-  subKind: Schema.optional(RoadSubKind),
-});
+export const RoadDetails = Schema.extend(
+  TransportFields,
+  Schema.TaggedStruct('road', {
+    subKind: Schema.optional(RoadSubKind),
+  }),
+);
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
 
 export const AccommodationDetails = Schema.TaggedStruct('accommodation', {
