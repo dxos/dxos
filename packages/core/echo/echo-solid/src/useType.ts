@@ -9,12 +9,12 @@ import { type Database, Type } from '@dxos/echo';
 type MaybeAccessor<T> = T | Accessor<T>;
 
 /**
- * Subscribe to and retrieve schema changes from a database's schema registry.
+ * Subscribe to and retrieve type changes from a database's schema registry.
  * Accepts either values or accessors for db and typename.
  *
  * @param db - The database instance (can be reactive)
- * @param typename - The schema typename to query (can be reactive)
- * @returns An accessor that returns the current schema or undefined
+ * @param typename - The typename to query (can be reactive)
+ * @returns An accessor that returns the current type or undefined
  */
 export const useType = (
   db?: MaybeAccessor<Database.Database | undefined>,
@@ -30,8 +30,8 @@ export const useType = (
     return { db: resolvedDb, typename: resolvedTypename };
   });
 
-  // Store the current schema in a signal.
-  const [schema, setSchema] = createSignal<Type.AnyEntity | undefined>(undefined);
+  // Store the current type in a signal.
+  const [type, setType] = createSignal<Type.AnyEntity | undefined>(undefined);
 
   // Subscribe to registry changes.
   createEffect(() => {
@@ -44,7 +44,7 @@ export const useType = (
     const { db: resolvedDb, typename: resolvedTypename } = r;
 
     // Set initial value immediately.
-    setSchema(() =>
+    setType(() =>
       resolvedDb.graph.registry
         .list()
         .filter(Type.isType)
@@ -52,7 +52,7 @@ export const useType = (
     );
 
     const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
-      setSchema(() =>
+      setType(() =>
         resolvedDb.graph.registry
           .list()
           .filter(Type.isType)
@@ -63,5 +63,5 @@ export const useType = (
     onCleanup(unsubscribe);
   });
 
-  return schema;
+  return type;
 };
