@@ -9,8 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ResultCard, SearchArticle } from '../containers';
-import { Result, Search } from '../types';
+import { ProviderArticle, ResultCard, SearchArticle } from '../containers';
+import { Provider, Result, Search } from '../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,6 +25,11 @@ export default Capability.makeModule(() =>
         id: 'search-article',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
         component: ({ data, role }) => <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />,
+      }),
+      Surface.create({
+        id: 'provider-article',
+        filter: AppSurface.object(AppSurface.Article, Provider.Provider),
+        component: ({ data, role }) => <ProviderArticle subject={data.subject} attendableId={data.attendableId} role={role} />,
       }),
     ]),
   ),

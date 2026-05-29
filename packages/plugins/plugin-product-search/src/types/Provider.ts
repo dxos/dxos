@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const BLUEPRINT_KEY = 'org.dxos.plugin.product-search/blueprint/provider';
 
@@ -55,9 +55,9 @@ export const Provider = Schema.Struct({
   description: Schema.optional(Schema.String),
   kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
   // JSONSchema describing the typed search fields. Converted to Effect Schema for the form.
-  searchSchema: Schema.optional(JsonSchema.JsonSchema),
-  request: Schema.optional(RequestMapping),
-  result: Schema.optional(ResultMapping),
+  searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),
+  request: RequestMapping.pipe(FormInputAnnotation.set(false), Schema.optional),
+  result: ResultMapping.pipe(FormInputAnnotation.set(false), Schema.optional),
   enabled: Schema.Boolean,
 }).pipe(
   LabelAnnotation.set(['name']),
