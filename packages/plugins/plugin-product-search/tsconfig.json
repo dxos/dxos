@@ -54,6 +54,9 @@
       "path": "../../ui/react-ui-masonry"
     },
     {
+      "path": "../../ui/ui-theme"
+    },
+    {
       "path": "../plugin-attention"
     },
     {

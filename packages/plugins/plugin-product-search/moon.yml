@@ -1,6 +1,5 @@
 layer: library
 language: typescript
-type: library
 tags:
   - ts-build
   - ts-test
