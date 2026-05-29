@@ -15,9 +15,10 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Feed, Filter, Obj, Type } from '@dxos/echo';
+import { type ObjectExtractor } from '@dxos/extractor';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox, MessageExtractor } from '@dxos/plugin-inbox';
+import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -59,10 +60,11 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
  * source message via `Mailbox.applyTag` even when `created` / `updated` / `relations` are
  * empty. Match is unconditional so the toolbar always offers the action.
  */
-const ImportantMessageExtractor: MessageExtractor.MessageExtractor = {
+const ImportantMessageExtractor: ObjectExtractor = {
   id: 'story.extractor.important',
   description: 'Mark message as important',
   kinds: ['tag'],
+  sourceTypes: [Type.getTypename(MessageType.Message)!],
   match: () => ({ matched: true, confidence: 0.05 }),
   operation: InboxOperation.ExtractContactFromMessage,
   extract: () =>
@@ -82,7 +84,7 @@ const ImportantExtractorPlugin = Plugin.define({
     id: 'extractor',
     activatesOn: ActivationEvents.Startup,
     activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ImportantMessageExtractor)),
+      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)),
   }),
   Plugin.make,
 );
