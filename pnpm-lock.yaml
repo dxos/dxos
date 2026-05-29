@@ -10695,9 +10695,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -18918,6 +18915,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

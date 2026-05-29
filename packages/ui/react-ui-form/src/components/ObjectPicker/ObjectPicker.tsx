@@ -23,7 +23,7 @@ export type RefOption = {
 export type ObjectPickerContentProps = ThemedClassName<{
   options: RefOption[];
   selectedIds?: string[];
-  createOptionLabel?: [string, { ns: string }];
+  createOptionLabel?: [string, { ns: string | readonly string[] }];
   createOptionIcon?: string;
   createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
@@ -167,7 +167,7 @@ const CreateItem = ({
   onCreateItemSelect,
 }: {
   query: string;
-  createOptionLabel?: [string, { ns: string }];
+  createOptionLabel?: [string, { ns: string | readonly string[] }];
   createOptionIcon: string;
   onCreateItemSelect: (query: string) => void;
 }) => {
