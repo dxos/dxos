@@ -85,7 +85,8 @@ export class ConsolePrinter {
             break;
           case 'reasoning':
             this.log(
-              `${prefix}💭 [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${content.signature ? ' [signed]' : ''
+              `${prefix}💭 [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${
+                content.signature ? ' [signed]' : ''
               }`,
             );
             break;
@@ -101,14 +102,14 @@ export class ConsolePrinter {
                 if (typeof payload !== 'string') {
                   payload = inspect(payload, { depth: null, colors: true });
                 }
-              } catch { }
+              } catch {}
             } else {
               try {
                 payload = JSON.parse(content.input);
                 if (typeof payload !== 'string') {
                   payload = inspect(payload, { depth: null, colors: true });
                 }
-              } catch { }
+              } catch {}
             }
             if (!payload) {
               payload = inspect(content.input, { depth: null, colors: true });
@@ -133,14 +134,14 @@ export class ConsolePrinter {
                   if (typeof payload !== 'string') {
                     payload = inspect(payload, { depth: null, colors: true });
                   }
-                } catch { }
+                } catch {}
               } else {
                 try {
                   payload = typeof content.result === 'string' ? JSON.parse(content.result) : content.result;
                   if (typeof payload !== 'string') {
                     payload = inspect(payload, { depth: null, colors: true });
                   }
-                } catch { }
+                } catch {}
               }
               if (!payload) {
                 payload = inspect(content.result, { depth: null, colors: true });
