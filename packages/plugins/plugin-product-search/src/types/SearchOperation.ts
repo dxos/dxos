@@ -8,11 +8,11 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, JsonSchema, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { Provider } from './Provider';
+import { Provider, RequestMapping, ResultMapping } from './Provider';
 import { Result } from './Result';
 import { Search } from './Search';
 
@@ -47,16 +47,33 @@ export const RunSearch = Operation.make({
   services: [Database.Service, Capability.Service],
 });
 
-/** Analyzes a vendor site and produces a provider template. */
+/** Fetches a provider's vendor site so the agent can derive its template. */
 export const AnalyzeProvider = Operation.make({
   meta: {
     key: `${SEARCH_OPERATION}.analyze-provider`,
     name: 'Analyze Provider',
-    description:
-      'Analyzes a vendor site and produces a provider template (search schema + request + result mappings).',
+    description: "Fetches the provider's vendor site and returns the page source for the agent to inspect.",
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({ provider: Ref.Ref(Provider) }),
+  output: Schema.String,
+  services: [Database.Service],
+});
+
+/** Persists a derived provider template (search schema + request + result mappings). */
+export const SetProviderTemplate = Operation.make({
+  meta: {
+    key: `${SEARCH_OPERATION}.set-provider-template`,
+    name: 'Set Provider Template',
+    description: 'Persists the derived search schema, request mapping, and result mapping onto a provider.',
+    icon: 'ph--floppy-disk--regular',
+  },
+  input: Schema.Struct({
+    provider: Ref.Ref(Provider),
+    searchSchema: JsonSchema.JsonSchema,
+    request: RequestMapping,
+    result: ResultMapping,
+  }),
   output: Ref.Ref(Provider),
-  services: [Database.Service, Capability.Service],
+  services: [Database.Service],
 });
