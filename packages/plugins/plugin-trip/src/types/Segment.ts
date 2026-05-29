@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
@@ -139,7 +138,7 @@ export const Segment = Schema.Struct({
     icon: 'ph--ticket--regular',
     hue: 'sky',
   }),
-  SystemTypeAnnotation.set(true),
+  Annotation.SystemTypeAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
 );
 
