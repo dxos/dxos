@@ -417,7 +417,19 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       return;
     }
 
-    const payload = cbor.decode(message.payload!.value) as SubductionProtocolMessageEnveloped;
+    let payload: SubductionProtocolMessageEnveloped;
+    try {
+      payload = cbor.decode(message.payload!.value) as SubductionProtocolMessageEnveloped;
+    } catch (err) {
+      log.warn('failed to decode subduction envelope', { err });
+      return;
+    }
+    // Defensive validation: cbor.decode returns untrusted bytes. Drop malformed
+    // envelopes before touching `payload.type` / `payload.subductionFrame`.
+    if (payload === null || typeof payload !== 'object' || typeof (payload as { type?: unknown }).type !== 'string') {
+      log.warn('dropping malformed subduction envelope', { payload });
+      return;
+    }
 
     switch (payload.type) {
       case MESSAGE_TYPE_ERROR: {
@@ -452,8 +464,12 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           });
           return;
         }
-        log.verbose('received subduction frame', { remoteId: this._remotePeerId });
         const inner = payload.subductionFrame;
+        if (inner === null || typeof inner !== 'object') {
+          log.warn('dropping subduction-frame with missing inner frame', { payload });
+          return;
+        }
+        log.verbose('received subduction frame', { remoteId: this._remotePeerId });
         // Fix the peer id so subduction routing inside the Repo accepts the frame.
         inner.senderId = this._remotePeerId as PeerId;
         this._readableStreamController.enqueue(inner);
