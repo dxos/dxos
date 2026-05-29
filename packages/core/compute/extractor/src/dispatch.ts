@@ -63,7 +63,8 @@ const pickExtractor = (
 ): { extractor: ObjectExtractor; confidence?: number } | undefined => {
   const sourceType = Obj.getTypename(source);
   const candidates = extractors.filter(
-    (extractor) => extractor.sourceTypes.length === 0 || (sourceType !== undefined && extractor.sourceTypes.includes(sourceType)),
+    (extractor) =>
+      extractor.sourceTypes.length === 0 || (sourceType !== undefined && extractor.sourceTypes.includes(sourceType)),
   );
 
   if (extractorId !== undefined) {

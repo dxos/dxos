@@ -14,8 +14,8 @@ import { normalizeText } from '../util';
 /**
  * Maps Google Calendar event to ECHO event object.
  */
-export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Resolver> =
-  Effect.fn(function* (event: GoogleCalendar.Event) {
+export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Resolver> = Effect.fn(
+  function* (event: GoogleCalendar.Event) {
     // Skip cancelled events.
     if (event.status === 'cancelled') {
       return null;
@@ -62,4 +62,5 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
       startDate,
       endDate,
     });
-  });
+  },
+);

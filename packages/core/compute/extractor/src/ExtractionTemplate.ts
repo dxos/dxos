@@ -131,7 +131,9 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       return tags ? { ...result, tags } : result;
     }).pipe(
       Effect.provide(AiService.model(template.model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
-      Effect.catchAllCause((cause) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, cause))),
+      Effect.catchAllCause((cause) =>
+        Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, cause)),
+      ),
     );
 
   return {

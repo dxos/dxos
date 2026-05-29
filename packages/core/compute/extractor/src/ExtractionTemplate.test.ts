@@ -13,12 +13,12 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { type ExtractResult } from './ObjectExtractor';
+import { dispatch } from './dispatch';
 import { type ExtractionTemplate, makeTemplateExtractor } from './ExtractionTemplate';
 import { fromExtractors } from './ExtractorRegistry';
-import { fromResolvers } from './Resolver';
-import { dispatch } from './dispatch';
 import { getOrCreate } from './getOrCreate';
+import { type ExtractResult } from './ObjectExtractor';
+import { fromResolvers } from './Resolver';
 import { mockAiService } from './testing/mock-ai';
 
 //
@@ -114,7 +114,11 @@ describe('template extractor + dispatch', () => {
 
     const result = await contactExtractor
       .extract({ db, source })
-      .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: { email: 'ada@example.test', name: 'Ada' } }), resolverLayer())))
+      .pipe(
+        Effect.provide(
+          Layer.mergeAll(mockAiService({ object: { email: 'ada@example.test', name: 'Ada' } }), resolverLayer()),
+        ),
+      )
       .pipe(operationServiceStub)
       .pipe(runAndForwardErrors);
 
@@ -162,11 +166,16 @@ describe('template extractor + dispatch', () => {
     const source = db.add(Obj.make(Note, { text: 'Reach Cy at cy@example.test' }));
     await db.flush();
 
-    const outcome = await dispatch(
-      { db, source },
-      { onProposal: () => Effect.succeed(undefined) },
-    )
-      .pipe(Effect.provide(Layer.mergeAll(fromExtractors([contactExtractor]), resolverLayer(), mockAiService({ object: { email: 'cy@example.test' } }))))
+    const outcome = await dispatch({ db, source }, { onProposal: () => Effect.succeed(undefined) })
+      .pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            fromExtractors([contactExtractor]),
+            resolverLayer(),
+            mockAiService({ object: { email: 'cy@example.test' } }),
+          ),
+        ),
+      )
       .pipe(operationServiceStub)
       .pipe(runAndForwardErrors);
 

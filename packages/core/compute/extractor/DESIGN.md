@@ -12,14 +12,14 @@ This package generalises the former `plugin-inbox` `MessageExtractor` capability
 framework-free `ObjectExtractor` and replaces brittle regex parsing with a **template-driven**
 extractor:
 
-- **LLM** (cheap/fast model) does *entity recognition + field extraction only*: given the
+- **LLM** (cheap/fast model) does _entity recognition + field extraction only_: given the
   source text + a prompt + a structured-output schema, it returns well-formed candidate
   objects. No DB awareness, no tools.
 - **Framework** does the deterministic work: **merge** each candidate against existing objects
   via the `Resolver` (identity keys), and **assemble** the graph — containment
   (`Obj.setParent`), relations (e.g. `Message → Trip`), and tags.
 
-Extractors return a *description* (`ExtractResult`); the **dispatcher** is the single writer,
+Extractors return a _description_ (`ExtractResult`); the **dispatcher** is the single writer,
 with an `onProposal` seam (default no-op) so a future preview/edit Dialog or a server-side
 trigger can interpose before any write.
 
@@ -35,10 +35,10 @@ The package is **not** `private` — it may be consumed by EDGE (server-side tri
 
 ## 3. Two-tier model
 
-| Tier | Input | Mechanism | Lives in | Examples |
-| --- | --- | --- | --- | --- |
-| **Structured mappers** | external API JSON | deterministic code | `plugin-inbox` | gmail/calendar/people sync mappers |
-| **LLM extractors** | unstructured text/objects | LLM + framework assembly | extractor registered by plugin | trip, contact-from-signature, summarize |
+| Tier                   | Input                     | Mechanism                | Lives in                       | Examples                                |
+| ---------------------- | ------------------------- | ------------------------ | ------------------------------ | --------------------------------------- |
+| **Structured mappers** | external API JSON         | deterministic code       | `plugin-inbox`                 | gmail/calendar/people sync mappers      |
+| **LLM extractors**     | unstructured text/objects | LLM + framework assembly | extractor registered by plugin | trip, contact-from-signature, summarize |
 
 Both tiers share this package's `Resolver`. "Migrating sync" = **moving `Resolver` down** and
 re-pointing imports; the deterministic mappers keep their behaviour.
@@ -108,8 +108,11 @@ from here. Calendar's attendee→Person resolution is unchanged.
 
 ```ts
 // Returns a well-formed, UNCOMMITTED object. Never calls db.add.
-export const getOrCreate: <T>(type, candidate, identity) =>
-  Effect.Effect<{ object: T; created: boolean }, never, Resolver>;
+export const getOrCreate: <T>(
+  type,
+  candidate,
+  identity,
+) => Effect.Effect<{ object: T; created: boolean }, never, Resolver>;
 ```
 
 Generalises `upsertPerson` (foreignKey), `buildContactFromActor` (email), and the trip
@@ -123,9 +126,9 @@ as defaults today (hybrid).
 
 ```ts
 const TargetSpec = Schema.Struct({
-  type: Schema.String,                              // ECHO typename to extract.
-  identity: Schema.optional(IdentitySpec),          // How to find an existing instance for merge.
-  parent: Schema.optional(Schema.String),           // Parent target type (containment).
+  type: Schema.String, // ECHO typename to extract.
+  identity: Schema.optional(IdentitySpec), // How to find an existing instance for merge.
+  parent: Schema.optional(Schema.String), // Parent target type (containment).
   relations: Schema.optional(Schema.Array(RelationSpec)), // Relations from source to this target.
 });
 
@@ -135,7 +138,7 @@ const ExtractionTemplate = Schema.Struct({
   kinds: Schema.Array(Schema.String),
   sourceTypes: Schema.Array(Schema.String),
   prompt: Schema.String,
-  model: Schema.optional(Schema.String),            // default '@anthropic/claude-haiku-4-5'.
+  model: Schema.optional(Schema.String), // default '@anthropic/claude-haiku-4-5'.
   targets: Schema.Array(TargetSpec),
   tags: Schema.optional(Schema.Array(Schema.Struct({ label: Schema.String, hue: Schema.optional(Schema.String) }))),
 });
