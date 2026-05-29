@@ -12,7 +12,7 @@ import * as PubSub from 'effect/PubSub';
 import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
-import { ObjectId, type SpaceId } from '@dxos/keys';
+import { EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Label } from '@dxos/ui-types/translations';
 
@@ -224,7 +224,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const options = args[1] as Operation.InvokeOptions | undefined;
     const notify = options?.notify;
     return Effect.gen(this, function* () {
-      const invocationId = ObjectId.random();
+      const invocationId = EntityId.random();
       const base = { invocationId, operation: op, input, notify };
 
       // Publish lifecycle start event.

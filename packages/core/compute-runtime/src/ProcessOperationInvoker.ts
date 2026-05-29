@@ -19,7 +19,7 @@ import * as Stream from 'effect/Stream';
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
@@ -205,7 +205,7 @@ export const make = (opts: {
     const notify = options?.notify;
     log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
-      const invocationId = ObjectId.random();
+      const invocationId = EntityId.random();
       const base = { invocationId, operation: op, input, notify };
 
       // Publish lifecycle start event.
