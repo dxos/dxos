@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Query, Relation } from '@dxos/echo';
+import { Database, Feed, Filter, type Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
@@ -27,13 +28,36 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
 
       // Relation endpoints + tag refs require a LIVE ECHO proxy. This operation runs in a separate
-      // process, so `source` arrives as a deserialized snapshot; re-resolve a live proxy via the
-      // space db (`getObjectById`). For feed/queue-stored messages this returns undefined — the
-      // operation runtime exposes no live queue handle — so extraction still persists objects but
-      // provenance + tagging are skipped (with a warning) rather than throwing "target must be an
-      // ECHO object". TODO(burdon): attach provenance/tags in the caller where the message proxy
-      // is live (the worker cannot resolve feed items to live proxies).
-      const live = db.getObjectById(source.id);
+      // process, so `source` arrives as a deserialized snapshot. Resolve the live proxy AND the
+      // owning Mailbox: most inbox messages live in a Mailbox feed (a Queue), so resolve them via
+      // the graph ref-resolver with feed context (the documented way to load a live queue item) —
+      // `db.query(...).from(feed)` returns snapshots, which are not valid relation targets. Fall
+      // back to a direct space-db lookup for non-feed messages. When nothing resolves, extraction
+      // still persists objects but provenance + tagging are skipped (with a warning).
+      const messageUri = EchoURI.make({ spaceId: db.spaceId, objectId: source.id });
+      const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
+      const resolved = yield* Effect.promise(async () => {
+        for (const candidate of mailboxes) {
+          const feed = await candidate.feed?.tryLoad();
+          if (!feed) {
+            continue;
+          }
+          const inFeed = await db.query(Query.select(Filter.id(source.id)).from(feed)).run();
+          if (inFeed.length === 0) {
+            continue;
+          }
+          const feedUri = Feed.getQueueUri(feed);
+          const message = feedUri
+            ? ((await db.graph
+                .createRefResolver({ context: { space: db.spaceId, feed: feedUri } })
+                .resolve(messageUri)) as Obj.Any | undefined)
+            : undefined;
+          return { mailbox: candidate, message };
+        }
+        return { mailbox: mailboxes[0], message: db.getObjectById(source.id) as Obj.Any | undefined };
+      });
+      const owningMailbox = resolved.mailbox;
+      const live = resolved.message;
       const sourceIsLive = live !== undefined;
       if (!sourceIsLive) {
         log.warn('extract: source did not resolve to a live object; skipping provenance + tags', {
@@ -64,25 +88,9 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       const result = outcome.result;
 
       // Apply tags to the (live) source message via its owning Mailbox.
-      if (sourceIsLive && result?.tags && result.tags.length > 0) {
-        const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
-        const owningMailbox = yield* Effect.promise(async () => {
-          for (const candidate of mailboxes) {
-            const feed = await candidate.feed?.tryLoad();
-            if (!feed) {
-              continue;
-            }
-            const found = await db.query(Query.select(Filter.id(source.id)).from(feed)).run();
-            if (found.length > 0) {
-              return candidate;
-            }
-          }
-          return mailboxes[0];
-        });
-        if (owningMailbox) {
-          for (const tag of result.tags) {
-            Mailbox.applyTag(owningMailbox, tag, live as Message.Message);
-          }
+      if (sourceIsLive && owningMailbox && result?.tags && result.tags.length > 0) {
+        for (const tag of result.tags) {
+          Mailbox.applyTag(owningMailbox, tag, live as Message.Message);
         }
       }
 
