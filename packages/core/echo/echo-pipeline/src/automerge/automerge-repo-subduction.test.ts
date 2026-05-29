@@ -152,7 +152,7 @@ describe('AutomergeRepo with Subduction', () => {
       await expect.poll(() => docD.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
     });
 
-    test('documents loaded from disk get replicated', { timeout: 15_000 }, async () => {
+    test('documents loaded from disk get replicated', { timeout: 30_000 }, async () => {
       const storage = await createLevelAdapter();
       let url: AutomergeUrl | undefined;
 
@@ -171,12 +171,14 @@ describe('AutomergeRepo with Subduction', () => {
 
       const hostHandle = await peer1.find<any>(url as AutomergeUrl);
       await hostHandle.whenReady();
-      await expect.poll(() => hostHandle.doc()?.text, { timeout: 5_000 }).toEqual('foo');
+      // Bumped from 5_000 to 10_000: loading from disk on a loaded CI box can be slow.
+      await expect.poll(() => hostHandle.doc()?.text, { timeout: 10_000 }).toEqual('foo');
       const peer2Handle = await findInStates<any>(peer2, hostHandle.url, FIND_STATES);
-      // Bumped from 5_000 to 10_000: on a loaded CI box, the subduction RequestId
-      // round-trip can hit its internal timeout (~5 s) and only the heal retry succeeds,
-      // pushing past the original 5 s window. See the same fix on `accept/connect syncs`.
-      await expect.poll(() => peer2Handle.doc(), { timeout: 10_000 }).toEqual(hostHandle.doc());
+      // Bumped from 5_000 → 10_000 → 20_000: on a loaded CI box the subduction
+      // RequestId round-trip can hit its internal ~5 s timeout; the heal scheduler
+      // then retries after exponential backoff (up to ~3 s), so a full retry cycle
+      // can take 10–13 s — beyond the previous 10 s poll window.
+      await expect.poll(() => peer2Handle.doc(), { timeout: 20_000 }).toEqual(hostHandle.doc());
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
