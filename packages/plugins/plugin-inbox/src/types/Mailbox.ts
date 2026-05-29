@@ -234,10 +234,8 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
 };
 
 /** Returns the extracted-object ids recorded for a message (see {@link recordExtraction}). */
-export const getExtractedObjectIds = (
-  mailbox: Mailbox | Obj.Snapshot<Mailbox>,
-  messageId: string,
-): readonly string[] => mailbox.extracted?.[messageId] ?? [];
+export const getExtractedObjectIds = (mailbox: Mailbox | Obj.Snapshot<Mailbox>, messageId: string): readonly string[] =>
+  mailbox.extracted?.[messageId] ?? [];
 
 /**
  * Inverts `mailbox.tags` to a `messageId → Tag[]` view-model.

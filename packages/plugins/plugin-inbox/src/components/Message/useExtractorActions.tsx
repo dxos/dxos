@@ -21,10 +21,10 @@ export type ExtractorMenuItem = {
 const RUN_ALL_ID = 'run-all';
 
 /**
- * Returns menu items for each registered MessageExtractor that matches the given message.
- * Clicking an item invokes the ExtractMessage operation with that extractor's id. When two
- * or more extractors match, a synthetic "Run all" item is prepended that invokes every
- * matching extractor in parallel and logs aggregated results.
+ * Returns a menu item for every registered `ObjectExtractor` applicable to the message's source
+ * type (no `match()` filtering — see below). Clicking an item invokes the `ExtractMessage`
+ * operation with that extractor's id. When two or more extractors are listed, a synthetic
+ * "Run all" item is prepended that invokes every extractor in parallel and logs aggregated results.
  */
 export const useExtractorActions = (message: Message.Message): ExtractorMenuItem[] => {
   const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
