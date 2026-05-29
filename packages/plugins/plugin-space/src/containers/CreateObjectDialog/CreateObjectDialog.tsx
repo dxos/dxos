@@ -84,6 +84,9 @@ export const CreateObjectDialog = ({
     [createObjectEntries],
   );
 
+  // The type selector is shown while no type has been resolved; the registry button is only relevant then.
+  const showTypeSelector = !(typename && resolve(typename));
+
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
     for (const schema of schemas ?? []) {
@@ -183,15 +186,17 @@ export const CreateObjectDialog = ({
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <IconButton
-            icon='ph--squares-four--regular'
-            label={t('open-plugin-registry.label')}
-            onClick={() => void operationInvoker.invokePromise(SettingsOperation.OpenPluginRegistry)}
-          />
-        </Dialog.Close>
-      </Dialog.ActionBar>
+      {showTypeSelector && (
+        <Dialog.ActionBar>
+          <Dialog.Close asChild>
+            <IconButton
+              icon='ph--squares-four--regular'
+              label={t('open-plugin-registry.label')}
+              onClick={() => void operationInvoker.invokePromise(SettingsOperation.OpenPluginRegistry)}
+            />
+          </Dialog.Close>
+        </Dialog.ActionBar>
+      )}
     </Dialog.Content>
   );
 };
