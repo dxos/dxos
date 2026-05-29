@@ -24,7 +24,7 @@ export const LABELS: Mailbox.Tags = Object.fromEntries(
 /**
  * Initializes a mailbox with linked messages in the given space.
  */
-export const initializeMailbox = async (space: Space, count = 0) => {
+export const initializeMailbox = async (space: Space, count = 0): Promise<Mailbox.Mailbox> => {
   const mailbox = space.db.add(Mailbox.make());
   const feed = await mailbox.feed?.tryLoad();
   if (!feed) {

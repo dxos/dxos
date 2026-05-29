@@ -303,7 +303,7 @@ export const Tags: Meta<DefaultStoryProps> = {
 
         const selectOptionIds = selectOptions.map((o) => o.id);
 
-        const schema = getSchemaFromPropertyDefinitions(typename, [
+        const type = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
             format: Format.TypeFormat.SingleSelect,
@@ -315,7 +315,7 @@ export const Tags: Meta<DefaultStoryProps> = {
             config: { options: selectOptions },
           },
         ]);
-        const storedSchema = space.db.add(schema);
+        const storedType = await space.db.addType(type);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
@@ -325,7 +325,7 @@ export const Tags: Meta<DefaultStoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(Type.assertObject(storedSchema), {
+            Obj.make(Type.assertObject(storedType), {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
             }),

@@ -18,7 +18,7 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties } from './internal/common/types';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri';
@@ -62,6 +62,16 @@ export type AddOptions = {
    */
   placeIn?: ObjectPlacement;
 };
+
+/**
+ * Rejects Type entities from {@link Database.add} at compile time via their `[KindId]` brand. Used
+ * as `T & RejectTypeEntity<T>` to preserve inference of `T`. Bounding `add` on
+ * `Obj.Unknown | Relation.Unknown` instead would reject broadly-typed instance adds (e.g.
+ * `Entity.Any`, `Obj.OfShape<T>`), forcing casts repo-wide.
+ */
+export type RejectTypeEntity<T> = T extends { readonly [KindId]: EntityKind.Type }
+  ? { __error: 'Type entities must be persisted via db.addType(), not db.add().' }
+  : T;
 
 export type FlushOptions = {
   /**
@@ -135,9 +145,9 @@ export interface Database extends Queryable {
    * Adds an object or relation to the database.
    *
    * Only Object and Relation entities are accepted. To persist a Type definition use
-   * {@link addType} — passing a Type entity here throws at runtime.
+   * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
    */
-  add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
+  add<T extends Entity.Unknown = Entity.Unknown>(obj: T & RejectTypeEntity<T>, opts?: AddOptions): T;
 
   /**
    * Persists a Type definition (clones/forks the entity) so it replicates to other peers.
@@ -279,8 +289,8 @@ export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, nev
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
-export const add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add(obj))).pipe(Effect.withSpan('Database.add'));
+export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
 
 /**
  * Persists a Type definition to the database.
