@@ -29,7 +29,7 @@ export type EchoTypeKindSchema<
  * {@link EchoObjectSchema} / {@link EchoRelationSchema}, but stamps the
  * resulting entity with `[SchemaKindId]: EntityKind.Type` and a matching
  * `TypeAnnotation.kind = 'type'` so meta-schemas surface uniformly through
- * `Type.isTypeKindSchema`, `Filter.type`, etc.
+ * `Type.isTypeKind`, `Filter.type`, etc.
  */
 export const EchoTypeKindSchema: {
   (
