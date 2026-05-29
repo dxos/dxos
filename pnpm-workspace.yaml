@@ -510,6 +510,7 @@ catalog:
   next-tick: ^1.0.0
   node-datachannel: ^0.30.0
   node-fetch: ^2.6.0
+  node-html-parser: ^7.0.1
   node-notifier: ^10.0.1
   noise-protocol: 3.0.1
   nyc: ^15.1.0

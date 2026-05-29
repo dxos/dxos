@@ -1,0 +1,17 @@
+layer: library
+language: typescript
+type: library
+tags:
+  - ts-build
+  - ts-test
+  - ts-test-storybook
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/ProductSearchPlugin.tsx'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--platform=neutral'

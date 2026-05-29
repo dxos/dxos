@@ -1,0 +1,76 @@
+{
+  "name": "@dxos/plugin-product-search",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Product search plugin.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/neutral/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/ProductSearchPlugin.tsx",
+      "types": "./dist/types/src/ProductSearchPlugin.d.ts",
+      "default": "./dist/lib/neutral/ProductSearchPlugin.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:",
+    "node-html-parser": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/test-utils": "workspace:*",
+    "@types/react": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}
