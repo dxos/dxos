@@ -104,6 +104,12 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
    */
   operationName: Schema.optional(Schema.String),
 
+  /**
+   * Phosphor icon identifier (`ph--<name>--<variant>`) of the Operation that backs this tool call.
+   * Absent when the tool is not backed by an Operation or the operation has no icon.
+   */
+  operationIcon: Schema.optional(Schema.String),
+
   ...Base.fields,
 });
 
