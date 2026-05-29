@@ -6,7 +6,6 @@ import { useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
@@ -37,15 +36,11 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
       return [];
     }
 
-    // The menu lists every extractor applicable to this source type — it deliberately does NOT
-    // filter by `match()`. `match()` is a heuristic only used for auto-selection / auto-on-arrival;
-    // gating the menu on it hid the action for senders/subjects the heuristic didn't recognise
-    // (e.g. Omio, Expedia). The user picks explicitly; the dispatcher runs the chosen extractor.
-    const sourceType = Obj.getTypename(message);
-    const matching = extractors.filter(
-      (extractor) =>
-        extractor.sourceTypes.length === 0 || (sourceType !== undefined && extractor.sourceTypes.includes(sourceType)),
-    );
+    // The menu lists EVERY registered extractor — no filtering. `match()` is a heuristic used
+    // only for auto-selection / auto-on-arrival; gating the menu on it (or on source type) hid the
+    // action for senders/subjects the heuristic didn't recognise (e.g. Omio, Expedia). The user
+    // picks explicitly and the dispatcher runs the chosen extractor.
+    const matching = extractors;
 
     const runOne = (extractorId: string) => {
       const space = getSpace(message);
