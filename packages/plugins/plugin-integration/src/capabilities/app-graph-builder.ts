@@ -17,6 +17,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
+import { INTEGRATIONS_SECTION_ID } from '../constants';
 import { Integration } from '../types';
 
 /** Type for the per-space "Integrations" container node. */
@@ -89,7 +90,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             Node.make({
-              id: 'integrations',
+              id: INTEGRATIONS_SECTION_ID,
               type: INTEGRATIONS_SECTION_TYPE,
               data: null,
               properties: {

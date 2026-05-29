@@ -10,7 +10,7 @@ import { type Space, isSpace } from '@dxos/client/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { SETTINGS_SECTION_TYPE } from '#types';
+import { SETTINGS_SECTION_ID, SETTINGS_SECTION_TYPE } from '#types';
 
 //
 // Extension Factory
@@ -31,7 +31,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
     connector: (space) =>
       Effect.succeed([
         AppNode.makeSection({
-          id: 'settings',
+          id: SETTINGS_SECTION_ID,
           type: SETTINGS_SECTION_TYPE,
           label: ['settings-section.label', { ns: meta.id }],
           icon: 'ph--sliders--regular',

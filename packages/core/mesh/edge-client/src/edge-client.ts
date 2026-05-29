@@ -163,7 +163,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: () => void) {
+  public onReconnected(listener: ReconnectListener) {
     this._reconnectListeners.add(listener);
     if (this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
