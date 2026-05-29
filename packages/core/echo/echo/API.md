@@ -25,7 +25,7 @@ import { DXN } from '@dxos/keys';
 
 ## Defining Types
 
-`Type.makeObject` / `Type.makeRelation` turn a plain Effect `Schema` into a **type entity** (`Type.Type`). A type entity is itself an ECHO entity (branded `Kind.Type`); its `typename` and `version` live in its `ObjectMeta` and are read via `Type.getTypename` / `Type.getVersion` (not as direct fields). Retrieve the underlying Effect `Schema` with `Type.getSchema`.
+`Type.makeObject` / `Type.makeRelation` turn a plain Effect `Schema` into a **type entity** (`Type.Type`). A type entity is itself an ECHO entity (branded `Kind.Type`); its `typename` and `version` live in its `EntityMeta` and are read via `Type.getTypename` / `Type.getVersion` (not as direct fields). Retrieve the underlying Effect `Schema` with `Type.getSchema`.
 
 ### Object types
 

@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
@@ -31,7 +31,7 @@ import { AgentWizardHandlers, SyncTriggers } from '../project-wizard';
 import AgentBlueprintDef from './blueprint';
 import { AgentWorker, AgentBlueprintHandlers } from './functions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',

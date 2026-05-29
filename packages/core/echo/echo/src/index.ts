@@ -3,7 +3,7 @@
 //
 
 export { QueryAST } from '@dxos/echo-protocol';
-export { DXN, EchoURI, URI } from '@dxos/keys';
+export { DXN, EID, URI } from '@dxos/keys';
 
 export * as Annotation from './Annotation';
 export * as Database from './Database';

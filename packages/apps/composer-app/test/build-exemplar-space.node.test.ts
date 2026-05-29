@@ -40,20 +40,7 @@ import { describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import {
-  Annotation,
-  Collection,
-  DXN,
-  EchoURI,
-  Feed,
-  Filter,
-  JsonSchema,
-  Obj,
-  Query,
-  Ref,
-  Type,
-  View,
-} from '@dxos/echo';
+import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -882,7 +869,7 @@ const makeNotes = (
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
-  const localDxn = (obj: Obj.Unknown) => EchoURI.make({ objectId: obj.id });
+  const localDxn = (obj: Obj.Unknown) => EID.make({ entityId: obj.id });
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 

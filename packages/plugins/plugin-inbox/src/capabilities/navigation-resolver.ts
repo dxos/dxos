@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Filter, Key, Obj, Query, Type } from '@dxos/echo';
-import { EchoURI, URI } from '@dxos/keys';
+import { EID, URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
         }
 
         const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
-        const dxnRef = EchoURI.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
+        const dxnRef = EID.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
         if (!dxnRef) {
           return [];
         }
@@ -65,7 +65,7 @@ export default Capability.makeModule(
       const spaceId = getSpaceIdFromPath(qualifiedPath);
       const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
       const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
-      if (!spaceId || !mailboxId || !Key.ObjectId.isValid(mailboxId)) {
+      if (!spaceId || !mailboxId || !Key.EntityId.isValid(mailboxId)) {
         return Effect.succeed(Option.none());
       }
 
@@ -74,7 +74,7 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxEchoId = EchoURI.make({ spaceId: spaceId, objectId: mailboxId as Key.ObjectId });
+      const mailboxEchoId = EID.make({ spaceId: spaceId, entityId: mailboxId as Key.EntityId });
       const mailboxRef = space.db.makeRef(mailboxEchoId);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
@@ -83,11 +83,11 @@ export default Capability.makeModule(
       return Database.loadOption(mailboxRef).pipe(
         Effect.flatMap((mailboxOption) => {
           if (Option.isNone(mailboxOption) || !Mailbox.instanceOf(mailboxOption.value)) {
-            return Effect.succeed(Option.none<EchoURI.EchoURI>());
+            return Effect.succeed(Option.none<EID.EID>());
           }
 
           // For non-message paths, the mailbox existing is sufficient.
-          if (!messageId || !Key.ObjectId.isValid(messageId)) {
+          if (!messageId || !Key.EntityId.isValid(messageId)) {
             return Effect.succeed(Option.some(mailboxEchoId));
           }
 
@@ -101,7 +101,7 @@ export default Capability.makeModule(
               const feed = await mailbox.feed.load();
               const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
               if (messages.length > 0) {
-                return Option.some(EchoURI.parse(Obj.getURI(messages[0])));
+                return Option.some(EID.parse(Obj.getURI(messages[0])));
               }
             }
 
@@ -109,11 +109,11 @@ export default Capability.makeModule(
               | Message.Message
               | undefined;
             if (fromDb && DraftMessage.belongsTo(fromDb, mailboxUriString)) {
-              return Option.some(EchoURI.parse(Obj.getURI(fromDb)));
+              return Option.some(EID.parse(Obj.getURI(fromDb)));
             }
 
-            return Option.none<EchoURI.EchoURI>();
-          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EchoURI.EchoURI>())));
+            return Option.none<EID.EID>();
+          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EID.EID>())));
         }),
       );
     };

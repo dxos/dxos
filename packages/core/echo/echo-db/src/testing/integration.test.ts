@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { Ref, getTypeAnnotation } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, type ObjectId, PublicKey, type URI } from '@dxos/keys';
+import { DXN, type EntityId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -463,7 +463,7 @@ describe('Integration tests', () => {
       });
       db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
 
-      let relationId!: ObjectId;
+      let relationId!: EntityId;
       {
         const alice = db.add(
           Obj.make(TestSchema.Person, {

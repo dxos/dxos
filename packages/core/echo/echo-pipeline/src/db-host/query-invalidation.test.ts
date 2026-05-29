@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { QueryExecutor } from '../query/query-executor';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint';
@@ -19,7 +19,7 @@ const makeHint = (partial: Partial<InvalidationHint>): InvalidationHint => parti
 
 const makeSpaceSet = (...ids: SpaceId[]) => new Set<SpaceId>(ids);
 const makeTypeSet = (...types: string[]) => new Set<string>(types);
-const makeObjectSet = (...ids: ObjectId[]) => new Set<ObjectId>(ids);
+const makeObjectSet = (...ids: EntityId[]) => new Set<EntityId>(ids);
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 
@@ -27,9 +27,9 @@ const PERSON_DXN = 'dxn:com.example.type.person:0.1.0';
 const ORG_DXN = 'dxn:com.example.type.organization:0.1.0';
 
 // Stable queue DXN mirroring query-planner.test.ts.
-const QUEUE_DXN = EchoURI.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
+const QUEUE_DXN = EID.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
-const QUEUE_ID = ObjectId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
+const QUEUE_ID = EntityId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
 
 const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
@@ -68,7 +68,7 @@ describe('hintFromIndexingResult', () => {
 
   test('converts populated result to hint with non-empty dimensions', ({ expect }) => {
     const spaceId = SpaceId.random();
-    const objectId = ObjectId.random();
+    const objectId = EntityId.random();
     const result = hintFromIndexingResult({
       updated: 1,
       done: true,
@@ -264,7 +264,7 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
     expect(executor.matchesHint(matchingHint)).toBe(true);
 
     // Hint with a different queue → no match.
-    const nonMatchingHint = makeHint({ queueIds: makeObjectSet(ObjectId.random()) });
+    const nonMatchingHint = makeHint({ queueIds: makeObjectSet(EntityId.random()) });
     expect(executor.matchesHint(nonMatchingHint)).toBe(false);
   });
 });

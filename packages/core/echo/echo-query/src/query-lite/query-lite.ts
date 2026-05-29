@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-// `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
+// `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
 // `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
-import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
+import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -85,9 +85,9 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static id(...ids: ObjectId[]): Filter$.Any {
+  static id(...ids: EntityId[]): Filter$.Any {
     // assertArgument(
-    //   ids.every((id) => ObjectId.isValid(id)),
+    //   ids.every((id) => EntityId.isValid(id)),
     //   'ids',
     //   'ids must be valid',
     // );
@@ -269,9 +269,9 @@ class FilterClass implements Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isEchoUriLike(item)) {
-        return item.toString() as EchoURI.EchoURI;
+        return item.toString() as EID.EID;
       }
-      throw new TypeError('childOf requires EchoURI values in query-lite');
+      throw new TypeError('childOf requires EID values in query-lite');
     });
     return new FilterClass({
       type: 'child-of',
@@ -343,7 +343,7 @@ export { Filter1 as Filter };
 type RefPropKey<T> = keyof T & string;
 
 const propsFilterToAst = (predicates: Filter$.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
-  let idFilter: readonly ObjectId[] | undefined;
+  let idFilter: readonly EntityId[] | undefined;
   if ('id' in predicates) {
     assertArgument(
       typeof predicates.id === 'string' || Array.isArray(predicates.id),
@@ -660,7 +660,7 @@ const isDxnLike = (value: unknown): value is DXN.DXN => {
   );
 };
 
-const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
+const isEchoUriLike = (value: unknown): value is EID.EID => {
   if (typeof value === 'string') {
     return value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:');
   }

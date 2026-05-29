@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { ObjectId, URI } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -81,7 +81,7 @@ export namespace QueryPlan {
   export type IdSelector = {
     _tag: 'IdSelector';
 
-    objectIds: readonly ObjectId[];
+    objectIds: readonly EntityId[];
   };
 
   /**
@@ -115,7 +115,7 @@ export namespace QueryPlan {
 
   /**
    * Select objects by timestamp range (createdAt / updatedAt).
-   * Uses the ObjectMetaIndex timestamp columns.
+   * Uses the EntityMetaIndex timestamp columns.
    */
   export type TimestampSelector = {
     _tag: 'TimestampSelector';

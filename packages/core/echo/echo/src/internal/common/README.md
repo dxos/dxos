@@ -7,7 +7,7 @@
 - [x] Unify FOUR different nests of test schema.
 - [x] Remove @deprecated from internal methods and mark @internal (e.g., getSchemaDXN).
   - NOTE: Internal methods should not use the import \* from Obj/Type APIs.
-- [x] import ObjectId => @dxos/keys
+- [x] import EntityId => @dxos/keys
 - [x] Entity.Any = Obj.Any | Relation.Any
   - NOTE: Relation does not extend (in not polymorphic with) Obj.
 - [x] import LabelAnnotation => Annotation.LabelAnnotation

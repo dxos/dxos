@@ -20,12 +20,12 @@ export default GetContext.pipe(
         name: agent.name,
         instructions: yield* agent.instructions.pipe(Database.load).pipe(
           Effect.map((_) => _.content),
-          Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No instructions found.')),
+          Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No instructions found.')),
         ),
         plan: yield* (
           agent.plan?.pipe(Database.load).pipe(
             Effect.map(Plan.formatPlan),
-            Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
+            Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
           ) ?? Effect.succeed('No plan found.')
         ),
         artifacts: yield* Effect.forEach(agent.artifacts, (artifact) =>
@@ -34,7 +34,7 @@ export default GetContext.pipe(
               name: artifact.name,
               type: yield* Database.load(artifact.data).pipe(
                 Effect.map(Obj.getTypename),
-                Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('Artifact not found.')),
+                Effect.catchTag('EntityNotFoundError', () => Effect.succeed('Artifact not found.')),
               ),
               dxn: artifact.data.uri,
             };

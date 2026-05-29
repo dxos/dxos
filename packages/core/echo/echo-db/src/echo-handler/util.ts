@@ -4,14 +4,14 @@
 
 import { Obj } from '@dxos/echo';
 import { type ForeignKey } from '@dxos/echo-protocol';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 /**
- * @deprecated Use `EchoURI.make({ spaceId: spaceId, objectId: obj.id })` instead.
+ * @deprecated Use `EID.make({ spaceId: spaceId, entityId: obj.id })` instead.
  */
-export const getDXNWithSpaceKey = (obj: Obj.Any): EchoURI.EchoURI | undefined => {
+export const getDXNWithSpaceKey = (obj: Obj.Any): EID.EID | undefined => {
   const db = Obj.getDatabase(obj);
-  return db && EchoURI.make({ spaceId: db.spaceId, objectId: obj.id });
+  return db && EID.make({ spaceId: db.spaceId, entityId: obj.id });
 };
 
 // TODO(burdon): Factor out.

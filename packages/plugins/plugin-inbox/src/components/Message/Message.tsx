@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useReducer, useState
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconBlock, Tag, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -44,7 +44,7 @@ type MessageContextValue = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   message: MessageType.Message;
-  sender: EchoURI.EchoURI | undefined;
+  sender: EID.EID | undefined;
   onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
@@ -253,7 +253,7 @@ MessageHeader.displayName = MESSAGE_HEADER_NAME;
 const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
   const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
-  const echoUri = EchoURI.tryParse(Obj.getURI(object).toString());
+  const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   return (
     <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>

@@ -17,7 +17,7 @@ import {
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EchoURI, ObjectId, PublicKey, SpaceId } from '@dxos/keys';
+import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -413,8 +413,8 @@ describe('Reactive Object with ECHO database', () => {
     const objData = Relation.toJSON(manager);
     expect(objData).to.deep.contain({
       id: manager.id,
-      [ATTR_RELATION_SOURCE]: EchoURI.make({ objectId: alice.id }),
-      [ATTR_RELATION_TARGET]: EchoURI.make({ objectId: bob.id }),
+      [ATTR_RELATION_SOURCE]: EID.make({ entityId: alice.id }),
+      [ATTR_RELATION_TARGET]: EID.make({ entityId: bob.id }),
     });
   });
 
@@ -469,7 +469,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.reference['/']).to.eq(EchoURI.make({ objectId: obj1.reference!.target!.id }));
+        expect(obj.reference['/']).to.eq(EID.make({ entityId: obj1.reference!.target!.id }));
       }
 
       const obj2 = db.add(obj1);
@@ -478,8 +478,8 @@ describe('Reactive Object with ECHO database', () => {
       {
         const obj = JSON.parse(JSON.stringify(obj2));
         const refUri = EncodedReference.toURI(obj.reference);
-        const refEchoUri = EchoURI.tryParse(refUri);
-        expect(refEchoUri ? EchoURI.getObjectId(refEchoUri) : undefined).to.eq(obj2.reference?.target?.id);
+        const refEchoUri = EID.tryParse(refUri);
+        expect(refEchoUri ? EID.getEntityId(refEchoUri) : undefined).to.eq(obj2.reference?.target?.id);
       }
 
       // Load refs.
@@ -755,7 +755,7 @@ describe('Reactive Object with ECHO database', () => {
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
         name: 'John',
-        worksAt: EncodedReference.fromURI(EchoURI.make({ objectId: org.id })),
+        worksAt: EncodedReference.fromURI(EID.make({ entityId: org.id })),
       });
     });
 
@@ -911,10 +911,10 @@ describe('Reactive Object with ECHO database', () => {
 
   test('able to create queue references', async () => {
     const { db } = await builder.createDatabase();
-    const uri = EchoURI.make({ spaceId: SpaceId.random(), objectId: ObjectId.random() });
+    const uri = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
     const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromURI(uri) });
     const dbObj = db.add(obj);
-    const queueId = EchoURI.getObjectId(uri);
+    const queueId = EID.getEntityId(uri);
     expect(dbObj.queue.uri).to.include(queueId!);
   });
 

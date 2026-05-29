@@ -49,7 +49,7 @@ export default Query.pipe(
       query = query.limit(limit);
       if (includeQueues) {
         // Must scope to the current space: `from({ allFeedsFromSpaces: true })` alone has no spaceIds, so the SQL
-        // index returns nothing (see ObjectMetaIndex.buildSourceCondition / early returns when spaceIds are empty).
+        // index returns nothing (see EntityMetaIndex.buildSourceCondition / early returns when spaceIds are empty).
         query = query.from(db, { includeFeeds: true });
       }
 

@@ -17,7 +17,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
@@ -123,7 +123,7 @@ const seedFeed = async (space: Space) => {
   const mailbox = space.db.add(Mailbox.make());
   await space.db.flush();
   const feed = await mailbox.feed.load();
-  const queue = space.queues.get(EchoURI.make({ spaceId: space.id, objectId: feed.id }));
+  const queue = space.queues.get(EID.make({ spaceId: space.id, entityId: feed.id }));
   await queue.append(
     FEED_MESSAGES.map((message) =>
       Obj.make(Message.Message, {

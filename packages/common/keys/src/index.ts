@@ -3,11 +3,11 @@
 //
 
 export * as DXN from './DXN';
-export * as EchoURI from './EchoURI';
+export * as EID from './EID';
 export * as URI from './URI';
 
 export * from './identity-did';
-export * from './object-id';
+export * from './entity-id';
 export * from './parse-id';
 export * from './public-key';
 export * from './space-id';

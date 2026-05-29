@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, type ObjectId } from '@dxos/keys';
+import { DXN, type EntityId } from '@dxos/keys';
 
 // Type-only imports (erased at runtime — no import cycle); `internal` may depend
 // on the top-level `Obj` / `Type` API at the type level only.
@@ -85,10 +85,10 @@ export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget 
   /**
    * Override the entity id stamped on the in-memory `Type.Type` value.
    *
-   * Defaults to `ObjectId.deterministic(typename, version)` — stable across processes
+   * Defaults to `EntityId.deterministic(typename, version)` — stable across processes
    * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
    */
-  id?: ObjectId;
+  id?: EntityId;
 };
 
 /**
