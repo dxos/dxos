@@ -6,13 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
   getSchemaReference,
+  getTypeAnnotation,
 } from '@dxos/echo/internal';
 import {
   type SchemaProperty,
@@ -59,6 +60,65 @@ export const createObjectFactory =
         const objects = await runAndForwardErrors(createArrayPipeline(count, pipeline));
         result.push(...objects);
         // NOTE: Flush so that available to other generators as refs.
+        await db.flush();
+      } catch (err) {
+        log.catch(err);
+      }
+    }
+
+    return result;
+  };
+
+export type RelationSpec = {
+  /** A relation type (created with `Type.makeRelation`). */
+  type: Type.AnyEntity;
+  count: number;
+};
+
+/**
+ * Create sets of relations between existing objects.
+ *
+ * Parallel to {@link createObjectFactory}: iterates relation specs, resolves each relation's
+ * declared source/target object types, queries the database for candidate objects of those
+ * types, and creates `count` relations between randomly-paired source/target objects. The
+ * relation's own properties are generated from their generator annotations (as for objects).
+ *
+ * Objects of the source/target types must already exist in the database — run
+ * {@link createObjectFactory} for those types first.
+ */
+export const createRelationFactory =
+  (db: Database.Database, generator: ValueGenerator) =>
+  async (specs: RelationSpec[]): Promise<any[]> => {
+    const result: any[] = [];
+    for (const { type, count } of specs) {
+      try {
+        invariant(Type.isRelation(type), 'RelationSpec.type must be a relation type');
+
+        // Resolve the source/target object typenames declared on the relation type.
+        const annotation = getTypeAnnotation(Type.getSchema(type));
+        const sourceTypename = annotation?.sourceSchema && DXN.getName(annotation.sourceSchema);
+        const targetTypename = annotation?.targetSchema && DXN.getName(annotation.targetSchema);
+        invariant(sourceTypename && targetTypename, 'Relation type must declare source and target types');
+
+        // Query candidate endpoints.
+        // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
+        const allObjects = await db.query(Query.select(Filter.everything())).run();
+        const sources = allObjects.filter((object) => Obj.getTypename(object) === sourceTypename);
+        const targets = allObjects.filter((object) => Obj.getTypename(object) === targetTypename);
+        if (sources.length === 0 || targets.length === 0) {
+          log.warn('no candidate objects for relation', { sourceTypename, targetTypename });
+          continue;
+        }
+
+        for (let i = 0; i < count; i++) {
+          const props = createProps(generator, type as unknown as Type.AnyObj)({
+            [Relation.Source]: randomElement(sources),
+            [Relation.Target]: randomElement(targets),
+          } as any);
+          result.push(addToDatabase(db)(Relation.make(type as any, props as any)));
+        }
+
+        // NOTE: Flush so relations are available to subsequent generators.
         await db.flush();
       } catch (err) {
         log.catch(err);

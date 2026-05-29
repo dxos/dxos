@@ -51,16 +51,21 @@ const meta: Meta<DefaultStoryProps> = {
         ClientPlugin({
           types: [
             Graph.Graph,
-            View.View,
             HasRelationship.HasRelationship,
             Organization.Organization,
-            Pipeline.Pipeline,
             Person.Person,
+            Pipeline.Pipeline,
+            View.View,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => generate(personalSpace, generator));
+              // Denser HasRelationship graph so the plexus variant shows multiple relation
+              // groups (organization ref + relationships) fanning out from a focused person.
+              yield* Effect.promise(() =>
+                generate(personalSpace, generator, { relations: [{ kind: 'friend', count: 40 }] }),
+              );
+
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({
                   db: personalSpace.db,
@@ -110,6 +115,12 @@ export const Cluster: Story = {
 export const Bundle: Story = {
   args: {
     variant: 'bundle',
+  },
+};
+
+export const Plexus: Story = {
+  args: {
+    variant: 'plexus',
   },
 };
 

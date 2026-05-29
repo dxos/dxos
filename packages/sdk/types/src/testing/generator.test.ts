@@ -2,17 +2,40 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type Database, Query, Type } from '@dxos/echo';
+import { DXN, type Database, Obj, Query, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from '@dxos/schema/testing';
+import {
+  type RelationSpec,
+  type TypeSpec,
+  type ValueGenerator,
+  createGenerator,
+  createObjectFactory,
+  createRelationFactory,
+} from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
 import { Message, Organization, Person, Pipeline } from '../types';
+
+// Local relation type (Person → Person) with only optional props, so the generated relation's
+// properties come entirely from annotations / endpoints.
+const Knows = Schema.Struct({
+  id: Obj.ID,
+  since: Schema.optional(Schema.Number),
+})
+  .annotations({ description: 'A person knows another person.' })
+  .pipe(
+    Type.makeRelation({
+      dxn: DXN.make('org.dxos.relation.knows', '0.1.0'),
+      source: Person.Person,
+      target: Person.Person,
+    }),
+  );
 
 random.seed(1);
 
@@ -104,6 +127,28 @@ describe('Generator', () => {
 
     await createObjects(spec);
     await queryObjects(db, spec);
+  });
+
+  test('generate relations between objects', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    await db.graph.schemaRegistry.register([Person.Person, Knows]);
+
+    // Create endpoint objects first.
+    const createObjects = createObjectFactory(db, generator);
+    await createObjects([{ type: Person.Person, count: 8 }]);
+
+    // Create relations between them.
+    const createRelations = createRelationFactory(db, generator);
+    const spec: RelationSpec[] = [{ type: Knows, count: 6 }];
+    await createRelations(spec);
+
+    const relations = await db.query(Query.type(Knows)).run();
+    expect(relations).to.have.length(6);
+    const personTypename = Type.getTypename(Person.Person);
+    for (const relation of relations) {
+      expect(Obj.getTypename(Relation.getSource(relation))).to.eq(personTypename);
+      expect(Obj.getTypename(Relation.getTarget(relation))).to.eq(personTypename);
+    }
   });
 
   test('generate message from static schema', async ({ expect }) => {

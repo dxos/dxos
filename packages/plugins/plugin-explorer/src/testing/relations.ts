@@ -111,9 +111,9 @@ export const buildOrgHierarchy = (organizations: Obj.Any[], sectors: readonly st
 export type GenerateOptions = {
   spec?: TypeSpec[];
   relations?: {
-    count: number;
     kind: string;
-  };
+    count: number;
+  }[];
 };
 
 const defaultGenerateTypes: TypeSpec[] = [
@@ -123,18 +123,20 @@ const defaultGenerateTypes: TypeSpec[] = [
   },
   {
     type: Person.Person,
-    count: 20,
+    count: 30,
   },
   {
     type: Pipeline.Pipeline,
-    count: 20,
+    count: 10,
   },
 ];
 
-const defaultGenerateRelations: NonNullable<GenerateOptions['relations']> = {
-  kind: 'friend',
-  count: 10,
-};
+const defaultGenerateRelations: NonNullable<GenerateOptions['relations']> = [
+  {
+    kind: 'friend',
+    count: 20,
+  },
+];
 
 /**
  * Populate a space with a mixed dataset (Orgs, Pipelines, People) plus
@@ -152,11 +154,13 @@ export const generate = async (
   await createObjects(spec);
 
   const contacts: Obj.Any[] = await space.db.query(Query.type(Person.Person)).run();
-  if (contacts.length < 2 || relations.count <= 0) {
+  if (contacts.length < 2 || !relations.length) {
     return;
   }
 
-  for (const _ of range(relations.count)) {
+  // TODO(burdon): Pick.
+  const relation = relations[0];
+  for (const _ of range(relation.count)) {
     const source = pick(contacts);
     const target = pick(contacts);
     if (source.id !== target.id) {
@@ -164,7 +168,7 @@ export const generate = async (
         Relation.make(HasRelationship.HasRelationship, {
           [Relation.Source]: source as any,
           [Relation.Target]: target as any,
-          kind: relations.kind,
+          kind: relation.kind,
         }) as any,
       );
     }

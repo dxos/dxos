@@ -16,9 +16,14 @@ import {
   type GraphLayout,
   type GraphLayoutNode,
   GraphLatticeProjector,
+  type GraphLayoutEdge,
+  GraphPlexusProjector,
   type GraphProjector,
   GraphSwarmProjector,
   type ModelPoint,
+  PLEXUS_NODE_TYPE_FOCUS,
+  PLEXUS_NODE_TYPE_RELATION,
+  type PlexusRelation,
   type RenderNode,
   SVG,
   type SVGContext,
@@ -60,6 +65,10 @@ export const Visualization = ({
   const projectorRef = useRef<GraphProjector<SpaceGraphNode> | undefined>(undefined);
   projectorRef.current = projector;
 
+  // Plexus focus — single source of truth for both the bundle→plexus dispatch and re-focus.
+  // `undefined` means "no node focused", which dispatches to the bundle projector.
+  const [focusId, setFocusId] = useState<string | undefined>(undefined);
+
   // Latest layout we hand to the next SVG projector as `prev`. Captured from the live
   // projector when the variant changes so node x/y survive the swap.
   const lastLayoutRef = useRef<GraphLayout<SpaceGraphNode> | undefined>(undefined);
@@ -68,8 +77,15 @@ export const Visualization = ({
   // disposes atoms with no subscribers) and triggers re-renders when query results land.
   useEffect(() => model?.subscribe(() => undefined), [model]);
 
-  // Recreate the projector when the variant changes; snapshot the live layout first so
-  // the next projector animates from where the previous one left off.
+  // Clear any focus when leaving plexus so returning to it starts from the bundle layout.
+  useEffect(() => {
+    if (variant !== 'plexus') {
+      setFocusId(undefined);
+    }
+  }, [variant]);
+
+  // Recreate the projector when the variant or focus changes; snapshot the live layout
+  // first so the next projector animates from where the previous one left off.
   useEffect(() => {
     if (projectorRef.current?.layout) {
       lastLayoutRef.current = projectorRef.current.layout as GraphLayout<SpaceGraphNode>;
@@ -78,8 +94,23 @@ export const Visualization = ({
       return;
     }
 
-    setProjector(createProjector(svgRef.current, variant, lastLayoutRef.current));
-  }, [variant]);
+    setProjector(createProjector(svgRef.current, variant, focusId, lastLayoutRef.current));
+  }, [variant, focusId]);
+
+  // Plexus: clicking an object node re-focuses on it; clicking the current focus clears it
+  // (back to the bundle layout). Relation nodes carry no ECHO object, so their clicks are ignored.
+  const handleSelect = useCallback(
+    (node: GraphLayoutNode<SpaceGraphNode>) => {
+      if (variant !== 'plexus') {
+        return;
+      }
+      if (!node.data?.data?.object) {
+        return;
+      }
+      setFocusId((current) => (current === node.id ? undefined : node.id));
+    },
+    [variant],
+  );
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
@@ -106,14 +137,13 @@ export const Visualization = ({
 
   const handleInspect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode> | null, event: MouseEvent) => {
-      // null = pointerleave: forward to the shared hover handler so it can clear any preview.
-      if (!node) {
-        onNodeHover?.(null);
+      if (variant === 'plexus') {
         return;
       }
-      onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
+
+      onNodeHover?.(node ? { id: node.id, data: node.data?.data?.object } : null, event);
     },
-    [onNodeHover],
+    [variant === 'plexus' ? undefined : onNodeHover],
   );
 
   // Only attach pointer handlers when the SVG swarm is active — other variants don't
@@ -133,6 +163,7 @@ export const Visualization = ({
             edgeOpacity={variant === 'swarm' ? 0.3 : undefined}
             drag={variant === 'force'}
             highlightOnHover={variant === 'bundle'}
+            onSelect={handleSelect}
             onInspect={handleInspect}
             {...swarmPointerProps}
           />
@@ -194,6 +225,7 @@ const applyNodeSwarm = (group: SVGGElement, node: GraphLayoutNode<SpaceGraphNode
 const createProjector = (
   ctx: SVGContext,
   variant: ExplorerArticleVariant,
+  focusId: string | undefined,
   prev?: GraphLayout<SpaceGraphNode>,
 ): GraphProjector<SpaceGraphNode> => {
   switch (variant) {
@@ -252,7 +284,65 @@ const createProjector = (
         undefined,
         prev,
       );
+
+    case 'plexus':
+      // No focus → dispatch to the bundle projector (the unfocused overview). Once a node is
+      // focused, switch to the focus-centric plexus layout; both receive `prev` so the swap
+      // (and every re-focus) animates from the previous node positions.
+      if (!focusId) {
+        return new GraphBundleProjector<SpaceGraphNode>(
+          ctx,
+          {
+            duration: TWEEN_MS,
+            groupOf: typenameGroupOf,
+          },
+          undefined,
+          prev,
+        );
+      }
+      return new GraphPlexusProjector<SpaceGraphNode>(
+        ctx,
+        {
+          duration: TWEEN_MS,
+          focus: focusId,
+          relationOf: plexusRelationOf,
+        },
+        undefined,
+        prev,
+      );
   }
+};
+
+/**
+ * Classify an edge incident to the focus into a relation group. Each relation/property gets two
+ * possible nodes: one for the outgoing direction (focus is the edge source, arrow `→`) and one
+ * for the incoming direction (focus is the edge target, arrow `←`), so both sides of a relation
+ * fan out separately. Relations group by relation typename; references group by their top-level
+ * property name. Edges not incident to the focus are ignored.
+ */
+const plexusRelationOf = (edge: GraphLayoutEdge<SpaceGraphNode>, focusId: string): PlexusRelation | undefined => {
+  const outgoing = edge.source.id === focusId;
+  const incoming = edge.target.id === focusId;
+  if (!outgoing && !incoming) {
+    return undefined;
+  }
+  const direction = outgoing ? 'out' : 'in';
+  const arrow = outgoing ? '→' : '←';
+
+  if (edge.type === 'relation') {
+    const relation = (edge.data as any)?.object as Obj.Unknown | undefined;
+    const typename = relation ? Obj.getTypename(relation) : undefined;
+    const name = typename ? shortTypename(typename) : 'Relation';
+    return { key: `relation:${direction}:${typename ?? '?'}`, label: `${name} ${arrow}` };
+  }
+
+  if (edge.type === 'ref') {
+    const property = (edge.data as any)?.property as string | undefined;
+    const name = property ?? 'References';
+    return { key: `ref:${direction}:${property ?? '?'}`, label: `${name} ${arrow}` };
+  }
+
+  return undefined;
 };
 
 const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGraphNode> | undefined => {
@@ -364,6 +454,40 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
         const text = labelForLeaf(node, obj);
         if (text) {
           appendRadialLeafLabel(group, node, text, r, { delay: TWEEN_MS, duration: LABEL_FADE_MS });
+        }
+      };
+
+    case 'plexus':
+      // Three node kinds: the focus at the centre (larger, object fill), synthetic relation
+      // nodes on the inner ring (neutral, labelled by relation/property), and object leaves on
+      // the outer ring (object fill). Type tags are set by the projector.
+      return (group, node) => {
+        const obj = node.data?.data?.object as Obj.Unknown | undefined;
+        const labelOptions = { delay: TWEEN_MS, duration: LABEL_FADE_MS };
+
+        if (node.type === PLEXUS_NODE_TYPE_RELATION) {
+          const r = node.r ?? 4;
+          group.append('circle').attr('r', r).style('cursor', 'default').style('fill', 'var(--color-neutral-500)');
+          if (node.label) {
+            appendRadialGroupLabel(group, node, node.label, r, labelOptions);
+          }
+          return;
+        }
+
+        const isFocus = node.type === PLEXUS_NODE_TYPE_FOCUS;
+        const r = node.r ?? (isFocus ? 8 : 5);
+        group
+          .append('circle')
+          .attr('r', r)
+          .style('cursor', 'pointer')
+          .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
+        const text = labelForLeaf(node, obj);
+        if (text) {
+          if (isFocus) {
+            appendRootLabel(group, text, r, labelOptions);
+          } else {
+            appendRadialLeafLabel(group, node, text, r, labelOptions);
+          }
         }
       };
   }

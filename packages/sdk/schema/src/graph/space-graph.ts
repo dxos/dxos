@@ -262,7 +262,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
           // Link to refs.
           const refs = getOutgoingReferences(object);
-          for (const ref of refs) {
+          for (const { ref, property } of refs) {
             if (!Obj.isObject(ref.target)) {
               continue;
             }
@@ -274,6 +274,9 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
               target: ref.target.id,
               data: {
                 force: true,
+                // Originating top-level property name (when known) — used by the plexus
+                // projector to group/label outgoing references by property.
+                property,
               },
             });
           }
@@ -286,16 +289,22 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   }
 }
 
-const getOutgoingReferences = (object: Obj.Unknown): Ref.Unknown[] => {
-  const refs: Ref.Unknown[] = [];
-  const go = (value: unknown) => {
-    if (Ref.isRef(value)) {
-      refs.push(value);
-    } else {
-      visitValues(value, go);
-    }
-  };
+const getOutgoingReferences = (object: Obj.Unknown): Array<{ ref: Ref.Unknown; property?: string }> => {
+  const refs: Array<{ ref: Ref.Unknown; property?: string }> = [];
+  // Walk top-level properties first so each ref can be tagged with the originating
+  // top-level property name; recurse into nested values keeping that same property name.
+  visitValues(object, (value, key) => {
+    const property = typeof key === 'string' ? key : undefined;
+    const go = (inner: unknown) => {
+      if (Ref.isRef(inner)) {
+        refs.push({ ref: inner, property });
+      } else {
+        visitValues(inner, go);
+      }
+    };
 
-  visitValues(object, go);
+    go(value);
+  });
+
   return refs;
 };
