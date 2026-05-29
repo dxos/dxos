@@ -43,9 +43,10 @@ export interface DispatchOptions {
   /**
    * Factory for the provenance relation attached to each top-level created/updated object. When
    * omitted, no provenance relations are written. Kept out of core so this package does not
-   * depend on any particular relation type (e.g. the inbox `ExtractedFrom`).
+   * depend on any particular relation type (e.g. the inbox `ExtractedFrom`). Return `undefined`
+   * to skip a single relation (e.g. when the source is not a live ECHO object).
    */
-  readonly provenance?: (params: ProvenanceParams) => Relation.Unknown;
+  readonly provenance?: (params: ProvenanceParams) => Relation.Unknown | undefined;
 }
 
 export interface DispatchOutcome {
@@ -136,8 +137,12 @@ export const dispatch = (
       if (!shouldRelate || Obj.getParent(object) !== undefined) {
         return;
       }
+      // The provenance factory returns `undefined` to opt out (e.g. when the source could not be
+      // resolved to a live ECHO object — a relation endpoint must be a live proxy, not a snapshot).
       const relation = options.provenance!({ source, object, extractorId: extractor.id, extractedAt, confidence });
-      db.add(relation);
+      if (relation) {
+        db.add(relation);
+      }
     };
 
     for (const object of proposed.created) {

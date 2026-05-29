@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Query, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
+import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
 import { InboxResolver } from '../../services';
@@ -47,19 +48,31 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         return { mailbox: mailboxes[0], message: undefined };
       });
       const owningMailbox = resolved.mailbox;
-      const liveSource = resolved.message ?? source;
+      // Prefer the feed-resolved object, then a direct space-db lookup, then the raw input.
+      const liveSource = resolved.message ?? db.getObjectById(source.id) ?? source;
+      // Relation endpoints and tag refs require a live ECHO proxy; a deserialized snapshot throws
+      // "target must be an ECHO object". Guard so extraction still succeeds (objects are created)
+      // even when the live source can't be resolved — provenance/tagging are then skipped.
+      const sourceIsLive = Obj.isObject(liveSource);
+      if (!sourceIsLive) {
+        log.warn('extract: source did not resolve to a live object; skipping provenance + tags', {
+          sourceId: source.id,
+        });
+      }
 
       const outcome = yield* dispatch(
         { db, source: liveSource, extractorId },
         {
           provenance: ({ source: from, object, extractorId: id, extractedAt, confidence }) =>
-            ExtractedFrom.make({
-              [Relation.Source]: object,
-              [Relation.Target]: from,
-              extractorId: id,
-              extractedAt,
-              confidence,
-            }),
+            sourceIsLive
+              ? ExtractedFrom.make({
+                  [Relation.Source]: object,
+                  [Relation.Target]: from,
+                  extractorId: id,
+                  extractedAt,
+                  confidence,
+                })
+              : undefined,
         },
       ).pipe(
         Effect.provide(fromExtractors(extractors)),
@@ -70,7 +83,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       const result = outcome.result;
 
       // Apply tags to the (live) source message via its owning Mailbox.
-      if (result?.tags && result.tags.length > 0 && owningMailbox) {
+      if (sourceIsLive && result?.tags && result.tags.length > 0 && owningMailbox) {
         for (const tag of result.tags) {
           Mailbox.applyTag(owningMailbox, tag, liveSource as Message.Message);
         }
