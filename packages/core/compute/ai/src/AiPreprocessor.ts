@@ -17,6 +17,7 @@ import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { Match, Struct } from 'effect';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -261,6 +262,132 @@ const parseToolJson = (
       }),
   });
 
+/** Anthropic `document` / nested `tool_result` content block for a PDF. */
+type AnthropicPdfDocumentBlock = {
+  readonly type: 'document';
+  readonly source: {
+    readonly type: 'base64';
+    readonly media_type: 'application/pdf';
+    readonly data: string;
+  };
+  readonly title?: string;
+};
+
+/** Anthropic `document` block for plain text. */
+type AnthropicTextDocumentBlock = {
+  readonly type: 'document';
+  readonly source: {
+    readonly type: 'text';
+    readonly media_type: 'text/plain';
+    readonly data: string;
+  };
+  readonly title?: string;
+};
+
+/**
+ * Decode file payload from a data URL, standard base64, or base64url string.
+ * Returns standard base64 suitable for Anthropic `source.data`.
+ */
+const unwrapFileBase64Data = (url: string): Effect.Effect<string, PromptPreprocesorError, never> =>
+  Effect.try({
+    try: () => {
+      if (/^https?:\/\//i.test(url)) {
+        throw new Error('HTTP(S) file URLs are not supported for tool result documents');
+      }
+
+      if (url.startsWith('data:')) {
+        const commaIndex = url.indexOf(',');
+        if (commaIndex === -1) {
+          throw new Error('Invalid data URL');
+        }
+        const meta = url.slice(5, commaIndex);
+        const payload = url.slice(commaIndex + 1);
+        if (!meta.includes('base64')) {
+          throw new Error('Data URL must use base64 encoding');
+        }
+        Buffer.from(payload, 'base64');
+        return payload;
+      }
+
+      try {
+        return Buffer.from(url, 'base64url').toString('base64');
+      } catch {
+        Buffer.from(url, 'base64');
+        return url;
+      }
+    },
+    catch: (cause) =>
+      new PromptPreprocesorError({
+        message: `File url must be base64 or base64url encoded data: ${(cause as Error)?.message ?? cause}`,
+        cause,
+      }),
+  });
+
+const fileBlockToAnthropicDocument = (
+  block: ContentBlock.File,
+): Effect.Effect<AnthropicPdfDocumentBlock | AnthropicTextDocumentBlock, PromptPreprocesorError, never> =>
+  Effect.gen(function* () {
+    const mediaType = block.mediaType ?? 'application/octet-stream';
+    const data = yield* unwrapFileBase64Data(block.url);
+    const title = block.name;
+
+    if (mediaType === 'application/pdf') {
+      return {
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data,
+        },
+        ...(title ? { title } : {}),
+      };
+    }
+
+    if (mediaType === 'text/plain') {
+      return {
+        type: 'document',
+        source: {
+          type: 'text',
+          media_type: 'text/plain',
+          data: Buffer.from(data, 'base64').toString('utf8'),
+        },
+        ...(title ? { title } : {}),
+      };
+    }
+
+    return yield* Effect.fail(
+      new PromptPreprocesorError({
+        message: `Unsupported file media type for tool result document: ${mediaType}`,
+      }),
+    );
+  });
+
+// TODO(dmaretskyi): Obviously this only works for anthropic, but thats the only provider we're using.
+// see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
+const contentBlockToAnthropicShape = (
+  block: ContentBlock.Text | ContentBlock.Image | ContentBlock.File,
+): Effect.Effect<unknown, PromptPreprocesorError, never> =>
+  Match.value(block).pipe(
+    Match.tags({
+      text: (textBlock) =>
+        Effect.succeed({
+          type: 'text',
+          text: textBlock.text,
+        }),
+      image: (imageBlock) =>
+        Effect.succeed({
+          type: 'image',
+          source: imageBlock.source,
+        }),
+      file: fileBlockToAnthropicDocument,
+    }),
+    Match.exhaustive,
+  );
+
+const contentBlockResultToAnthropicShape = (
+  result: ContentBlock.ContentBlockResult,
+): Effect.Effect<unknown[], PromptPreprocesorError, never> => Effect.forEach(result.content, contentBlockToAnthropicShape);
+
 /**
  * Build a `tool-result` prompt part from a `toolResult` content block, validating the JSON
  * payload and preserving the `isFailure` flag when the block carries an error.
@@ -272,9 +399,11 @@ const buildToolResultPart = (
     const hasError = block.error != null;
     const result = hasError
       ? block.error
-      : block.result != null
-        ? yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
-        : {};
+      : ContentBlock.isContentBlockResult(block.result)
+        ? yield* contentBlockResultToAnthropicShape(block.result)
+        : block.result != null
+          ? yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
+          : {};
     return Prompt.makePart('tool-result', {
       id: block.toolCallId,
       name: block.name,
@@ -642,16 +771,16 @@ const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) =
           index !== prompt.content.length - 1
             ? message
             : {
-                ...message,
-                options: {
-                  anthropic: {
-                    cacheControl: {
-                      ttl: '5m',
-                      type: 'ephemeral',
-                    },
+              ...message,
+              options: {
+                anthropic: {
+                  cacheControl: {
+                    ttl: '5m',
+                    type: 'ephemeral',
                   },
                 },
               },
+            },
         ),
       );
     } else {

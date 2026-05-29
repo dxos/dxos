@@ -8,6 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
+import { ContentBlock } from '.';
+import { Predicate } from 'effect';
 
 export const Base = Schema.Struct({
   /**
@@ -124,7 +126,7 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
    * JSON encoding is preferred.
    * Missing on error.
    */
-  result: Schema.optional(Schema.String),
+  result: Schema.optional(Schema.Union(Schema.String, Schema.suspend(() => ContentBlockResult))),
 
   // TODO(dmaretskyi): Use discriminated union.
   // result: Schema.Union(
@@ -147,6 +149,26 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
 });
 
 export type ToolResult = Schema.Schema.Type<typeof ToolResult>;
+
+
+
+/**
+ * Tool Result as set of content blocks.
+ * Useful for returning images and files.
+ */
+export const ContentBlockResult = Schema.TaggedStruct('~@dxos/types/ContentBlock.ContentBlockResult', {
+  content: Schema.Array(Schema.Union(
+    Text,
+    Schema.suspend(() => Image),
+    Schema.suspend(() => File),
+  )),
+});
+export interface ContentBlockResult extends Schema.Schema.Type<typeof ContentBlockResult> { }
+
+export const isContentBlockResult = (result: unknown): result is ContentBlockResult => {
+  return Predicate.isTagged('~@dxos/types/ContentBlock.ContentBlockResult')(result);
+};
+
 /**
  * GPT Summary
  */
@@ -183,18 +205,18 @@ export const createStatsMessage = ({ message, model, usage, toolCalls, duration 
     verbose && model,
     toolCalls && `${toolCalls} tool uses`,
     usage &&
-      [
-        `${String(Unit.Thousand(usage.totalTokens ?? 0))} tokens`,
-        verbose &&
-          paren(
-            [
-              `→${String(Unit.Thousand(usage.inputTokens ?? 0))}`,
-              `←${String(Unit.Thousand(usage.outputTokens ?? 0))}`,
-            ].join(' '),
-          ),
-      ]
-        .filter(isTruthy)
-        .join(' '),
+    [
+      `${String(Unit.Thousand(usage.totalTokens ?? 0))} tokens`,
+      verbose &&
+      paren(
+        [
+          `→${String(Unit.Thousand(usage.inputTokens ?? 0))}`,
+          `←${String(Unit.Thousand(usage.outputTokens ?? 0))}`,
+        ].join(' '),
+      ),
+    ]
+      .filter(isTruthy)
+      .join(' '),
     duration && Unit.Duration(duration),
   ].filter(isTruthy);
 
@@ -390,6 +412,6 @@ export type Any = Schema.Schema.Type<typeof Any>;
 
 export const is =
   <T extends Any['_tag']>(tag: T) =>
-  (block: Any): block is Extract<Any, { _tag: T }> => {
-    return block._tag === tag;
-  };
+    (block: Any): block is Extract<Any, { _tag: T }> => {
+      return block._tag === tag;
+    };

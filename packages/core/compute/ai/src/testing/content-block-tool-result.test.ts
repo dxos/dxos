@@ -19,15 +19,13 @@ const EXAMPLE_IMAGE = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-image.jpg'),
 );
 
-class TestToolkit extends Toolkit.make(
+class TestPdfToolkit extends Toolkit.make(
   Tool.make('getPdf', {
     success: ContentBlock.ContentBlockResult
   }),
-  Tool.make('getImage', {
-    success: ContentBlock.ContentBlockResult
-  })
+
 ) {
-  static readonly layer = TestToolkit.toLayer({
+  static readonly layer = TestPdfToolkit.toLayer({
     getPdf: Effect.fn(function* () {
       return ContentBlock.ContentBlockResult.make({
         content: [ContentBlock.File.make({
@@ -37,6 +35,15 @@ class TestToolkit extends Toolkit.make(
         })],
       });
     }),
+  });
+}
+
+class TestImageToolkit extends Toolkit.make(
+  Tool.make('getImage', {
+    success: ContentBlock.ContentBlockResult
+  })
+) {
+  static readonly layer = TestImageToolkit.toLayer({
     getImage: Effect.fn(function* () {
       return ContentBlock.ContentBlockResult.make({
         content: [ContentBlock.Image.make({
@@ -52,7 +59,8 @@ class TestToolkit extends Toolkit.make(
 }
 
 const TestLayer = Layer.mergeAll(
-  TestToolkit.layer,
+  TestPdfToolkit.layer,
+  TestImageToolkit.layer,
   AiService.model('@anthropic/claude-sonnet-4-5').pipe(
     Layer.provideMerge(AiServiceTestingPreset('direct')),
   ),
@@ -60,8 +68,7 @@ const TestLayer = Layer.mergeAll(
 
 
 describe('ContentBlockToolResult', () => {
-
-  it.effect('return image from tool result', Effect.fn(
+  it.effect.only('return image from tool result', Effect.fn(
     function* ({ expect }) {
       const messages = yield* agenticLoop({
         messages: [
@@ -70,7 +77,7 @@ describe('ContentBlockToolResult', () => {
             blocks: [ContentBlock.Text.make({ text: 'What is the image?' })],
           }),
         ],
-        toolkit: TestToolkit,
+        toolkit: TestImageToolkit,
       });
 
       expect(messages.length).toBeGreaterThan(1);
@@ -89,7 +96,7 @@ describe('ContentBlockToolResult', () => {
             blocks: [ContentBlock.Text.make({ text: 'What colors are the lines on the chart in the pdf file?' })],
           }),
         ],
-        toolkit: TestToolkit,
+        toolkit: TestPdfToolkit,
       });
 
       expect(messages.length).toBeGreaterThan(1);

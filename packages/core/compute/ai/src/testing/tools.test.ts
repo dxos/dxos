@@ -11,11 +11,11 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
-import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from '../testing/calculator';
-import { callTool } from './call';
-import { ToolId } from './tool';
-import { ToolExecutionService } from './tool-execution-service';
-import { ToolResolverService } from './tool-resolver-service';
+import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from './calculator';
+import { callTool } from '../tools/call';
+import { ToolId } from '../tools/tool';
+import { ToolExecutionService } from '../tools/tool-execution-service';
+import { ToolResolverService } from '../tools/tool-resolver-service';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (_id: ToolId) => Effect.succeed(CalculatorTool),

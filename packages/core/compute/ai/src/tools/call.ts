@@ -9,7 +9,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
-import { type ContentBlock } from '@dxos/types';
+import { ContentBlock } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
 // TODO(burdon): Not Used?
@@ -43,7 +43,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
             toolCallId: toolCall.toolCallId,
             name: toolCall.name,
             // TODO(dmaretskyi): Should we use encodedResult?
-            result: JSON.stringify(result),
+            result: ContentBlock.isContentBlockResult(result) ? result : JSON.stringify(result),
             providerExecuted: false,
           }) satisfies ContentBlock.ToolResult,
       ),

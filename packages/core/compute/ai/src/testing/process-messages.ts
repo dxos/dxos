@@ -16,6 +16,9 @@ import * as AiParser from '../AiParser';
 import * as AiPreprocessor from '../AiPreprocessor';
 import { callTools, getToolCalls } from '../tools';
 import { TestingToolkit, testingLayer } from './toolkit';
+import * as Toolkit from '@effect/ai/Toolkit';
+import type { AiError, Tool } from '@effect/ai';
+import type { PromptPreprocessingError } from '../errors';
 
 // TODO(dmaretskyi): What is the right stopping condition?
 export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
@@ -37,17 +40,28 @@ export const processMessages = Effect.fn(function* ({
   system?: string;
   messages?: Message.Message[];
 }) {
-  const toolkit = yield* TestingToolkit.pipe(Effect.provide(testingLayer));
-  const history: Message.Message[] = [...messages];
+
+  return yield* agenticLoop({ system, messages, toolkit: TestingToolkit });
+});
+
+export const agenticLoop: {
+  <Tools extends Record<string, Tool.Any> = {}>(opts: {
+    system?: string;
+    messages?: Message.Message[];
+    toolkit?: Toolkit.Toolkit<Tools>;
+  }): Effect.Effect<Message.Message[], PromptPreprocessingError | AiError.AiError, LanguageModel.LanguageModel | Tool.Requirements<Tools>>
+} = Effect.fn('agenticLoop')(function* (opts) {
+  const tk: Toolkit.Toolkit<{}> = opts.toolkit ?? Toolkit.make() as any;
+  const toolkit = yield* tk.pipe(Effect.provide(testingLayer));
+  const history: Message.Message[] = [...(opts.messages ?? [])];
 
   do {
-    const prompt = yield* AiPreprocessor.preprocessPrompt(history, { system });
+    const prompt = yield* AiPreprocessor.preprocessPrompt(history, { system: opts.system });
     const blocks = yield* LanguageModel.streamText({
       disableToolCallResolution: true,
       toolkit,
       prompt,
     }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
-
     const message = Obj.make(Message.Message, {
       created: new Date().toISOString(),
       sender: { role: 'assistant' },
@@ -66,7 +80,7 @@ export const processMessages = Effect.fn(function* ({
     history.push(
       Obj.make(Message.Message, {
         created: new Date().toISOString(),
-        sender: { role: 'user' },
+        sender: { role: 'tool' },
         blocks: toolResults,
       }),
     );
