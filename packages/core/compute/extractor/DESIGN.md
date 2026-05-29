@@ -61,12 +61,13 @@ export interface ExtractResult {
 
 export interface ObjectExtractor {
   readonly id: string;
+  readonly title: string; // Short human-facing label (toolbar action).
   readonly description: string;
   readonly kinds: readonly string[];
   readonly sourceTypes: readonly string[]; // ECHO typenames this extractor applies to.
   match(source: Obj.Any): MatchResult;
-  readonly operation: Operation.Definition<ExtractInput, ExtractResult>;
-  extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError, Operation.Service>;
+  readonly operation?: Operation.Definition<ExtractInput, ExtractResult>; // Optional first-class op.
+  extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError, Operation.Service | Resolver | AiService.AiService>;
   readonly createRelation?: boolean;
 }
 ```
@@ -88,16 +89,21 @@ export const fromExtractors = (extractors: ReadonlyArray<ObjectExtractor>) => La
 ### 4.2 Dispatcher + onProposal
 
 ```ts
+export interface DispatchInput extends ExtractInput {
+  readonly extractorId?: string; // Explicit invocation bypasses match().
+}
+
 export interface DispatchOptions {
-  readonly extractorId?: string;
   readonly onProposal?: (result: ExtractResult) => Effect.Effect<ExtractResult | undefined>;
+  readonly provenance?: (params: ProvenanceParams) => Relation.Unknown | undefined;
 }
 ```
 
-Selects an extractor (by id or highest-confidence `match`, pre-filtered by `sourceTypes`), runs
-`extract`, passes the result through `onProposal` (default identity; `undefined` cancels), then
-persists: `db.add` created objects, attach `ExtractedFrom`-style provenance relations for
-top-level objects, persist extra relations.
+`dispatch(input, options)` selects an extractor (by `extractorId` — which bypasses `match` — or
+the highest-confidence `match`, pre-filtered by `sourceTypes`), runs `extract`, passes the result
+through `onProposal` (default identity; `undefined` cancels), then persists: `db.add` created
+objects, attach provenance relations (via the `provenance` factory) for top-level objects, persist
+extra relations.
 
 ## 5. Resolver + getOrCreate
 
