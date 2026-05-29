@@ -169,10 +169,10 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const schema = space.db.add(Example);
+        const type = await space.db.addType(Example);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: Type.getTypename(schema),
+          typename: Type.getTypename(type),
         });
         const table = Table.make({ view, jsonSchema });
         Obj.update(view, (view) => {
@@ -186,7 +186,7 @@ const meta = {
 
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(schema, {
+            Obj.make(type, {
               name: random.lorem.sentence(),
               status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: random.lorem.paragraph(),

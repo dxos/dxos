@@ -230,7 +230,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const roundTrip = db.add(
+        const roundTrip = await db.addType(
           Type.makeObjectFromJsonSchema({
             typename,
             version: '0.1.0',

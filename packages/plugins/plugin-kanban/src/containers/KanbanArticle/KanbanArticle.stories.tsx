@@ -250,13 +250,13 @@ export const MutableSchema: Story = {
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
         // Persist the schema in the database to make it mutable (stored Type.Type).
-        const schema = space.db.add(Organization.Organization);
+        const type = await space.db.addType(Organization.Organization);
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          // `db.add` returns a persisted `Type.Type` entity; its typename lives in the
+          // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the
           // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
-          typename: Type.getTypename(schema),
+          typename: Type.getTypename(type),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });
@@ -270,7 +270,7 @@ export const MutableSchema: Story = {
           ...Array.from({ length: 1 }, () => createOrg('commit')),
           ...Array.from({ length: 1 }, () => createOrg('reject')),
         ];
-        requiredOrgs.forEach((org) => space.db.add(Obj.make(schema, org)));
+        requiredOrgs.forEach((org) => space.db.add(Obj.make(type, org)));
       },
     }),
   ],

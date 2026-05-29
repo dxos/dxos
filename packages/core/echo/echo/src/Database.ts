@@ -101,8 +101,8 @@ export interface Database extends Queryable {
 
   /**
    * Registry for this database. Delegates type lookups to the shared hypergraph registry.
-   * To persist a schema so it replicates to other clients, add the schema entity with
-   * {@link add} (e.g. `db.add(Type.makeObjectFromJsonSchema(...))`).
+   * To persist a schema so it replicates to other clients, add the type entity with
+   * {@link addType} (e.g. `await db.addType(Type.makeObjectFromJsonSchema(...))`).
    */
   readonly registry: Registry.Registry;
 
@@ -132,9 +132,21 @@ export interface Database extends Queryable {
   makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref<T>;
 
   /**
-   * Adds object to the database.
+   * Adds an object or relation to the database.
+   *
+   * Only Object and Relation entities are accepted. To persist a Type definition use
+   * {@link addType} — passing a Type entity here throws at runtime.
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
+
+  /**
+   * Persists a Type definition (clones/forks the entity) so it replicates to other peers.
+   *
+   * Runs a conflict query first: if a type with the same typename + version already exists in
+   * this space, the existing persisted entity is returned and no duplicate is created. This is
+   * the only supported way to add Type entities — {@link add} rejects them.
+   */
+  addType<T extends Type.AnyEntity>(type: T): Promise<T>;
 
   /**
    * Removes object from the database.
@@ -264,11 +276,20 @@ export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, nev
 });
 
 /**
- * Adds an object to the database.
+ * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
 export const add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
   Service.pipe(Effect.map(({ db }) => db.add(obj))).pipe(Effect.withSpan('Database.add'));
+
+/**
+ * Persists a Type definition to the database.
+ * @see {@link Database.addType}
+ */
+export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.addType(type)))).pipe(
+    Effect.withSpan('Database.addType'),
+  );
 
 /**
  * Removes an object from the database.

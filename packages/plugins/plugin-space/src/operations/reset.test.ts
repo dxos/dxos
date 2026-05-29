@@ -93,7 +93,7 @@ describe('SpaceOperation.Reset', () => {
 
   test('removes registered schemas from the space', async ({ expect }) => {
     const space = await createSpaceWithObjects(0);
-    space.db.add(TestSchema.Expando);
+    await space.db.addType(TestSchema.Expando);
     await space.db.flush();
 
     const beforeSchemas = await space.db.query(Filter.type(Type.Type)).run();

@@ -492,7 +492,7 @@ describe('Integration tests', () => {
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
         }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-        const stored = db.add(LocalTestSchema);
+        const stored = await db.addType(LocalTestSchema);
         schemaDxn = Type.getURI(stored)!;
 
         const object = db.add(Obj.make(stored, { field: 'test' }));
@@ -552,7 +552,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const schema = db.add(TestSchema.Person);
+      const schema = await db.addType(TestSchema.Person);
       typeURI = Type.getURI(schema)!;
       db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush();

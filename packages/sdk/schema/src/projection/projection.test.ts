@@ -54,7 +54,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
 
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
@@ -196,7 +196,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -229,7 +229,7 @@ describe('ProjectionModel', () => {
       description: Schema.optional(Schema.String),
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -276,7 +276,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -325,7 +325,7 @@ describe('ProjectionModel', () => {
       age: Schema.Number,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -379,7 +379,7 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -487,7 +487,7 @@ describe('ProjectionModel', () => {
       tags: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -620,7 +620,7 @@ describe('ProjectionModel', () => {
       createdAt: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
 
     // Create view with only name and email fields.
     const view = ViewModel.make({
@@ -722,7 +722,7 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
 
     // Create view with no explicit fields.
     const view = ViewModel.make({
@@ -759,7 +759,7 @@ describe('ProjectionModel', () => {
       title: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const mutable = db.add(initialSchema);
+    const mutable = await db.addType(initialSchema);
 
     // Create empty view (no fields).
     const view = ViewModel.make({
@@ -805,7 +805,7 @@ describe('ProjectionModel', () => {
       phone: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const mutable = db.add(schema);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -916,7 +916,7 @@ describe('ProjectionModel', () => {
       ),
     }).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
-    const mutable = db.add(ContactWithArrayOfEmails);
+    const mutable = await db.addType(ContactWithArrayOfEmails);
 
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
@@ -958,7 +958,7 @@ describe('ProjectionModel', () => {
         [fieldName]: schemaType,
       }).pipe(Type.makeObject(DXN.make('com.example.type.testObject', '0.1.0')));
 
-      const mutable = db.add(schema);
+      const mutable = await db.addType(schema);
       const view = ViewModel.make({
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
@@ -1011,7 +1011,7 @@ describe('ProjectionModel', () => {
     expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '1', email: 'valid@example.com' })).not.toThrow();
     expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '2', email: 'invalid-email' })).toThrow();
 
-    const registeredSchema = db.add(schema);
+    const registeredSchema = await db.addType(schema);
 
     // Verify JSON schema preserves the validation constraint
     const emailJsonSchema = registeredSchema.jsonSchema.properties?.email;

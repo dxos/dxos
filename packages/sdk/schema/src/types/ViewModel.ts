@@ -226,8 +226,8 @@ export const makeFromDatabase = async ({
   ...props
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
-    const type = db.add(createDefaultSchema());
-    // `db.add` returns a persisted `Type.Type` entity; its typename lives in the
+    const type = await db.addType(createDefaultSchema());
+    // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the
     // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
     typename = Type.getTypename(type);
   } else {

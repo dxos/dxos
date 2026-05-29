@@ -12,8 +12,7 @@ import { SchemaAdd } from './definitions';
 export default SchemaAdd.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, typename, jsonSchema }) {
-      const { db } = yield* Database.Service;
-      const schema = db.add(Type.makeObjectFromJsonSchema({ typename, version: '0.1.0', jsonSchema }));
+      const schema = yield* Database.addType(Type.makeObjectFromJsonSchema({ typename, version: '0.1.0', jsonSchema }));
       if (name) {
         Type.update(schema, (draft) => {
           draft.name = name;

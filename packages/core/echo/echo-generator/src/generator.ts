@@ -117,7 +117,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       if (existingSchema != null) {
         return existingSchema;
       }
-      return this._space.internal.db.add(schema);
+      return this._space.internal.db.addType(schema);
     } else {
       const allTypes = this._space.internal.db.graph.registry.list().filter(Type.isType);
       const version = Type.getVersion(schema);

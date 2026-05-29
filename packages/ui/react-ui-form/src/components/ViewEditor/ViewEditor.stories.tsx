@@ -59,15 +59,15 @@ const DefaultStory = (props: DefaultStoryProps) => {
         completed: Schema.Boolean,
       }).pipe(Type.makeObject(DXN.make('com.example.type.alternate', '0.1.0')));
 
-      const testSchema = space.db.add(TestSchema);
-      space.db.add(AlternateSchema);
+      const testType = await space.db.addType(TestSchema);
+      await space.db.addType(AlternateSchema);
       const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
         jsonSchema: JsonSchema.toJsonSchema(TestSchema),
       });
 
-      setType(testSchema);
+      setType(testType);
       setView(view);
     }
   }, [space]);

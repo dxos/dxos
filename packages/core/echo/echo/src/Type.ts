@@ -131,7 +131,7 @@ export const makeObject: {
 
 //
 // Type — the ECHO entity that holds a schema and metadata.
-// Persisted via `db.add()`; subscribed to via `Filter.type(Type.Type)`.
+// Persisted via `db.addType()`; subscribed to via `Filter.type(Type.Type)`.
 //
 
 /**
@@ -167,7 +167,7 @@ type MakeTypeProps = {
  * or from a UI editor). Parallel to {@link makeObject} but takes pre-built
  * `jsonSchema` instead of piping through an Effect schema.
  *
- * The returned entity is in-memory; persist it with `db.add(entity)`.
+ * The returned entity is in-memory; persist it with `db.addType(entity)`.
  */
 export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.TypeSchema> => {
   const { typename, version, ...data } = props;
@@ -193,7 +193,7 @@ export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInterna
  * through an Effect schema. `source` / `target` accept either a static
  * `Type.Obj` entity or the well-known `Obj.Unknown` schema.
  *
- * The returned entity is in-memory; persist it with `db.add(entity)`.
+ * The returned entity is in-memory; persist it with `db.addType(entity)`.
  */
 export const makeRelationFromJsonSchema = (
   props: MakeTypeProps & {
@@ -297,7 +297,7 @@ export const makeRelation: {
 
 /**
  * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema
- * value (static `Type.Type` or a persisted draft from `db.add(...)`).
+ * value (static `Type.Type` or a persisted draft from `db.addType(...)`).
  * Mirrors {@link AnyObj} / {@link AnyRelation} for the third sibling kind.
  */
 export type AnyType = Type<unknown>;
@@ -678,7 +678,7 @@ export const update = (type: AnyEntity, callback: (mutable: Mutable) => void): v
 // Field-level helpers for mutating persisted types.
 // These are thin wrappers over `Type.update` plus the JsonSchema manipulation
 // utilities. Callers pass a persisted `Type.Type` (e.g. one returned by
-// `db.add(schemaEntity)`) and the helper drives the change context.
+// `db.addType(schemaEntity)`) and the helper drives the change context.
 //
 
 /**

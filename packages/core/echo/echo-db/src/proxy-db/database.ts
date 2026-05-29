@@ -378,17 +378,43 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * Add reactive object.
+   * Add a reactive object or relation.
+   *
+   * Type definitions are not accepted here — use {@link addType}, which clones the entity and
+   * checks for an existing type with the same typename/version before persisting.
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
-    // Persist type-definition drafts (Type.makeObject / makeObjectFromJsonSchema) as
-    // PersistentSchema ECHO objects so they replicate. Returns the persisted entity (not
-    // the draft), typed as the caller's `T` for ergonomics — hence the bridging cast.
-    if (!isEchoObject(obj) && Type.isType(obj)) {
-      return this._addPersistentSchema(obj) as unknown as T;
+    invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    return this._addObject(obj, opts);
+  }
+
+  /**
+   * Persist a Type definition (clones/forks the entity) so it replicates to other peers.
+   *
+   * Queries the space first: if a type with the same typename + version is already persisted,
+   * the existing entity is returned and no duplicate is created (idempotent). This is the only
+   * supported way to add Type entities — {@link add} rejects them.
+   */
+  async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
+    invariant(Type.isType(type), 'addType expects a Type entity');
+    const typename = Type.getTypename(type);
+    // Compare the canonical (head-free) ObjectMeta version on both sides — `Type.getVersion`
+    // appends automerge heads for db-attached entities and would never match a fresh draft.
+    const version = Type.getMeta(type).version ?? Type.getVersion(type);
+
+    // Space-scoped by default (the in-process registry is opt-in via `Scope.registry()`), so this
+    // sees only types persisted in this space — exactly what `_open()` reloads.
+    const existing = await this.query(Filter.type(Type.Type)).run();
+    const match = existing.find(
+      (candidate) =>
+        Type.getTypename(candidate) === typename &&
+        (Type.getMeta(candidate).version ?? Type.getVersion(candidate)) === version,
+    );
+    if (match) {
+      return match as unknown as T;
     }
 
-    return this._addObject(obj, opts);
+    return this._addPersistentSchema(type) as unknown as T;
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {

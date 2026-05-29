@@ -151,7 +151,7 @@ export type MakeProps<S extends Type.AnyObj> = {
  * Creates a new echo object of the given schema or `Type.Type`.
  *
  * @param typeOrSchema - A static object schema (`Type.makeObject(...)`) or a
- *   `Type.Type` entity (e.g. one returned by `db.add(schemaEntity)`).
+ *   `Type.Type` entity (e.g. one returned by `db.addType(schemaEntity)`).
  * @param props - Object properties.
  *
  * Meta can be passed as a symbol in `props`.
