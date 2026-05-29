@@ -131,12 +131,9 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
-    // Show a "Leave Composer?" confirmation only when a back/forward navigation would exit the
-    // app (see `installLeaveTrap` at the bottom of this module). In-app back/forward and reload
-    // must not prompt.
+    // Confirm before a Back-press leaves Composer. See `installLeaveTrap` below.
     const onNavigate = (event: NavigateEvent) => {
-      // Only trap a same-document (cancelable) traversal back onto the sentinel — i.e. a
-      // Back-press that would otherwise leave Composer. In-app back/forward and reload are ignored.
+      // Only a same-document traversal back onto the sentinel (a would-be exit) is trapped.
       if (
         event.navigationType !== 'traverse' ||
         !event.canIntercept ||
@@ -144,23 +141,18 @@ export default Capability.makeModule(
       ) {
         return;
       }
-      // Cancel synchronously to hold the user in place, then confirm outside the event dispatch
-      // (confirm() can be suppressed while a navigation is being dispatched).
+      // Cancel synchronously; confirm after, since confirm() can be suppressed mid-dispatch.
       event.preventDefault();
       queueMicrotask(() => {
-        if (!window.confirm('Leave Composer?')) {
-          return;
+        if (window.confirm('Leave Composer?')) {
+          // Working entry -> sentinel -> prior page. History API (the prior page is usually
+          // cross-origin, so absent from navigation.entries()).
+          history.go(-2);
         }
-        // The trap always fires from the entry directly above the sentinel, so going back two
-        // entries (working -> sentinel -> prior page) leaves Composer. Uses the History API
-        // rather than navigation.traverseTo because the prior page is typically cross-origin
-        // and therefore absent from navigation.entries().
-        history.go(-2);
       });
     };
 
-    // Initial navigation. Install the sentinel first so the floor entry sits beneath the first
-    // working entry before handleNavigation() and the state subscription push entries on top.
+    // Install the sentinel before handleNavigation()/state-sync push entries on top of it.
     installLeaveTrap();
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
@@ -239,25 +231,21 @@ export default Capability.makeModule(
 const SENTINEL_KEY = '__composerSentinel';
 
 /**
- * Insert a marked "sentinel" history entry beneath the app's working entries so that the first
- * Back-press that would leave Composer instead lands on the sentinel as a same-document
- * (cancelable) traversal — which `onNavigate` cancels and confirms. The platform makes a
- * cross-document back uncancelable (and `beforeunload` cannot tell a reload from a leave), so
- * trapping it requires this same-document floor entry. Reload fires no navigate traversal, so it
- * is never trapped. Requires the Navigation API (Chromium); no-op in browsers without it (e.g.
- * Safari). Idempotent across reloads — entry state survives reload, so the existing sentinel is
- * detected and not duplicated.
+ * Insert a marked "sentinel" history entry beneath the app's working entries, so the first
+ * Back-press that would leave Composer instead lands on it as a same-document (cancelable)
+ * traversal — which `onNavigate` cancels and confirms. A cross-document back is uncancelable and
+ * `beforeunload` cannot distinguish reload from leave, so this same-document floor is required;
+ * reload fires no traversal and is never trapped. Requires the Navigation API (Chromium); no-op
+ * otherwise. Idempotent across reloads — entry state survives, so the sentinel is not duplicated.
  */
 const installLeaveTrap = (): void => {
   if (!('navigation' in window)) {
     return;
   }
   const hasSentinel = window.navigation.entries().some((entry) => entry.getState()?.[SENTINEL_KEY] === true);
-  // history.length > 1 means there is a prior entry to leave to (counts cross-origin entries,
-  // unlike navigation.canGoBack which is false when the previous entry is another origin).
-  // If there is nowhere to go back to, Back can't exit, so no sentinel is needed.
+  // history.length > 1 (not navigation.canGoBack, which is false for a cross-origin prior entry)
+  // means there is somewhere to leave to; otherwise Back can't exit and no sentinel is needed.
   if (!hasSentinel && window.history.length > 1) {
-    // Mark the current (landing) entry as the sentinel, then push the working entry above it.
     window.navigation.updateCurrentEntry({
       state: { ...window.navigation.currentEntry?.getState(), [SENTINEL_KEY]: true },
     });
