@@ -20,7 +20,7 @@ import genericConfirmationRaw from './testing/files/generic-booking-confirmation
 import unitedConfirmationRaw from './testing/files/united-confirmation.md?raw';
 import unrelatedRaw from './testing/files/unrelated.md?raw';
 import { parseFixtureMessage } from './testing/load-fixture';
-import { ID, TripMessageExtractor } from './trip-extractor';
+import { TEMPLATE_ID, TripMessageExtractor } from './trip-extractor';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.
 const noResolver = fromResolvers({});
@@ -88,7 +88,7 @@ describe('TripMessageExtractor', () => {
       .pipe(runAndForwardErrors);
 
   test('id and kinds', ({ expect }) => {
-    expect(TripMessageExtractor.id).toBe(ID);
+    expect(TripMessageExtractor.id).toBe(TEMPLATE_ID);
     expect(TripMessageExtractor.kinds).toContain('flight');
   });
 

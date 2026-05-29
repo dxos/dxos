@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 import { InboxOperation } from '../../types';
 import { buildContactFromActor } from './contact';
 
-export const ID = 'org.dxos.plugin.inbox.extractor.contact';
+export const TEMPLATE_ID = 'org.dxos.plugin.inbox.extractor.contact';
 
 const matchMessage = (source: Obj.Any): MatchResult => {
   // Any message with a sender email is a candidate. Low confidence so domain-specific extractors
@@ -44,7 +44,7 @@ export default handler;
  * linkage and clutter the message header with a redundant chip alongside the sender row.
  */
 export const ContactMessageExtractor: ObjectExtractor = {
-  id: ID,
+  id: TEMPLATE_ID,
   title: 'Contact',
   description: 'Create contact from message sender',
   kinds: ['contact'],

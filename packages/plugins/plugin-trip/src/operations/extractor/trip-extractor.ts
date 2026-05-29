@@ -21,6 +21,7 @@ import { type ContentBlock, Message, Organization, type Provider } from '@dxos/t
 import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
+import { AIRLINE_NAMES } from './const';
 
 /**
  * Template-driven extractor for travel-booking confirmation emails. A cheap/fast LLM parses the
@@ -34,7 +35,7 @@ import { Booking, Segment, Trip, TripOperation } from '../../types';
  * linked to a matching Organization. The `match()` pre-filter (sender domain / subject keywords)
  * keeps the LLM off non-travel mail.
  */
-export const ID = 'org.dxos.plugin.trip.extractor.trip';
+export const TEMPLATE_ID = 'org.dxos.plugin.trip.extractor.trip';
 
 const UNITED_DOMAIN_REGEX = /@(?:[\w-]+\.)?united\.(?:com|co\.uk)$/i;
 const CONFIRMATION_SUBJECT_REGEX = /(?:flight|booking)\s+confirmation/i;
@@ -255,19 +256,6 @@ const assemble = (
     return { created: [trip, booking, segment], updated: [], relations: [] };
   });
 
-/** IATA airline prefix → display name. Extend as needed; falls back to the sender domain. */
-const AIRLINE_NAMES: Record<string, string> = {
-  AA: 'American Airlines',
-  AF: 'Air France',
-  BA: 'British Airways',
-  DL: 'Delta Air Lines',
-  IB: 'Iberia',
-  KL: 'KLM',
-  LH: 'Lufthansa',
-  TP: 'TAP Air Portugal',
-  UA: 'United Airlines',
-};
-
 /** Leading two-letter IATA code of a flight number (e.g. "AF0003" → "AF"). */
 const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
   flightNumber?.match(/^([A-Za-z]{2})/)?.[1]?.toUpperCase();
@@ -330,7 +318,7 @@ const resolveProvider = (
   });
 
 const template: ExtractionTemplate = {
-  id: ID,
+  id: TEMPLATE_ID,
   title: 'Trip',
   description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
   kinds: ['flight'],
