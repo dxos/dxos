@@ -58,7 +58,7 @@ export const CreateObjectDialog = ({
     ? db.graph.registry
         .list()
         .filter(Type.isType)
-        .filter((t) => !Type.isTypeKindSchema(t))
+        .filter((t) => !Type.isTypeKind(t))
     : undefined;
 
   const entriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));

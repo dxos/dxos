@@ -53,8 +53,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     // Query space to get info.
     const updateInfo = useCallback(async () => {
       const allSchema = [...space.db.graph.registry.list().filter(Type.isType)];
-      const echoSchema = allSchema.filter((t) => Type.isTypeKindSchema(t));
-      const staticSchema = allSchema.filter((t) => !Type.isTypeKindSchema(t));
+      const echoSchema = allSchema.filter((t) => Type.isTypeKind(t));
+      const staticSchema = allSchema.filter((t) => !Type.isTypeKind(t));
 
       const objects = await space.db.query(Filter.everything()).run();
       const objectMap = sortKeys(

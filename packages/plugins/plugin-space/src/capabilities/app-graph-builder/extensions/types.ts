@@ -87,6 +87,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           if (Type.isRelation(type)) {
             return false;
           }
+          if (Type.isTypeKind(type)) {
+            return false;
+          }
           const schema = Type.getSchema(type);
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
