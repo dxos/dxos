@@ -192,6 +192,7 @@
       if (!element) {
         return;
       }
+
       // The track holds every appended status line. On the first
       // `status()` call we hoist any pre-existing lines (the initial
       // status injected by `bootLoaderPlugin`) into the track so the

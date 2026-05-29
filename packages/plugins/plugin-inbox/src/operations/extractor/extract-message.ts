@@ -26,11 +26,13 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
     Effect.fnUntraced(function* ({ db, source, extractorId }) {
       const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
 
-      // Relation endpoints and tag refs require a LIVE ECHO proxy. This operation runs in a
-      // separate process, so `source` arrives as a deserialized snapshot; re-resolve the live
-      // object by id (`getObjectById` returns a live proxy, or undefined for feed-only items).
-      // When it can't be resolved, extraction still runs and persists objects — provenance +
-      // tagging are skipped (with a warning) rather than throwing "target must be an ECHO object".
+      // Relation endpoints + tag refs require a LIVE ECHO proxy. This operation runs in a separate
+      // process, so `source` arrives as a deserialized snapshot; re-resolve a live proxy via the
+      // space db (`getObjectById`). For feed/queue-stored messages this returns undefined — the
+      // operation runtime exposes no live queue handle — so extraction still persists objects but
+      // provenance + tagging are skipped (with a warning) rather than throwing "target must be an
+      // ECHO object". TODO(burdon): attach provenance/tags in the caller where the message proxy
+      // is live (the worker cannot resolve feed items to live proxies).
       const live = db.getObjectById(source.id);
       const sourceIsLive = live !== undefined;
       if (!sourceIsLive) {
@@ -83,6 +85,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
           }
         }
       }
+
+      // Flush (with index update) so a subsequent extraction's create-or-update queries — segment
+      // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
+      // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
+      // appending segments to the existing one.
+      yield* Effect.promise(() => db.flush({ indexes: true }));
 
       return {
         extractorId: outcome.extractorId,

@@ -4,6 +4,11 @@
  * keeps moving even while the JS main thread is busy parsing modules.
  */
 
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
 /*
  * Defaults match `@dxos/ui-theme`'s `--color-base-surface`, which resolves to
  * Tailwind's `neutral-50` / `neutral-950` in light / dark mode respectively
@@ -36,6 +41,7 @@
   --boot-loader-line-feather: 1px;
   --boot-loader-status-gap: 32px;
 
+  overflow: hidden;
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -79,6 +85,7 @@
  * mask (the mask would otherwise clip the SVG to the 1px-thick arc shape).
  */
 #boot-loader-disc {
+  overflow: hidden;
   position: absolute;
   top: 50%;
   left: 50%;
