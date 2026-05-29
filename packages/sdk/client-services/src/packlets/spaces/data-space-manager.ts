@@ -327,11 +327,7 @@ export class DataSpaceManager extends Resource {
     } else {
       root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
     }
-    // Import path: `createSpaceRoot` is skipped — flush imported docs to disk.
-    // Fresh path: `createSpaceRoot` already flushes the root document.
-    if (options.rootUrl) {
-      await this._echoHost.flush(ctx);
-    }
+    await this._echoHost.flush(ctx);
 
     log('constructing space...', { spaceKey });
 
