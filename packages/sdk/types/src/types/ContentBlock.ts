@@ -4,13 +4,12 @@
 
 // @import-as-namespace
 
-import { Predicate } from 'effect';
+import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
-import { ContentBlock } from '.';
 
 export const Base = Schema.Struct({
   /**

@@ -34,7 +34,7 @@ import {
   MemoizedAiService,
   hasToolCall,
   testingLayer,
-} from '.';
+} from './index';
 import * as AiService from '../AiService';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { AiError, Tool } from '@effect/ai';
+import * as AiError from '@effect/ai/AiError';
+import * as Tool from '@effect/ai/Tool';
 import type * as Chat from '@effect/ai/Chat';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Toolkit from '@effect/ai/Toolkit';

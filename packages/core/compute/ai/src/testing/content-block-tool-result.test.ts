@@ -1,6 +1,12 @@
-import { Tool, Toolkit } from '@effect/ai';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

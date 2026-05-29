@@ -5,11 +5,11 @@
 // @import-as-namespace
 
 import * as Prompt from '@effect/ai/Prompt';
-import { Match, Struct } from 'effect';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import { flow } from 'effect/Function';
+import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
@@ -768,16 +768,16 @@ const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) =
           index !== prompt.content.length - 1
             ? message
             : {
-                ...message,
-                options: {
-                  anthropic: {
-                    cacheControl: {
-                      ttl: '5m',
-                      type: 'ephemeral',
-                    },
+              ...message,
+              options: {
+                anthropic: {
+                  cacheControl: {
+                    ttl: '5m',
+                    type: 'ephemeral',
                   },
                 },
               },
+            },
         ),
       );
     } else {
