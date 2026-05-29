@@ -27,11 +27,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -75,11 +76,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -125,11 +127,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -183,11 +186,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "IdSelector",
               "objectIds": [
@@ -270,11 +274,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "IdSelector",
               "objectIds": [
@@ -340,11 +345,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -453,11 +459,12 @@ describe('QueryPlanner', () => {
                 "steps": [
                   {
                     "_tag": "SelectStep",
-                    "scope": {
-                      "spaceIds": [
-                        "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                      ],
-                    },
+                    "scope": [
+                      {
+                        "_tag": "space",
+                        "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                      },
+                    ],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -493,11 +500,12 @@ describe('QueryPlanner', () => {
                 "steps": [
                   {
                     "_tag": "SelectStep",
-                    "scope": {
-                      "spaceIds": [
-                        "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                      ],
-                    },
+                    "scope": [
+                      {
+                        "_tag": "space",
+                        "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                      },
+                    ],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -560,11 +568,12 @@ describe('QueryPlanner', () => {
               "steps": [
                 {
                   "_tag": "SelectStep",
-                  "scope": {
-                    "spaceIds": [
-                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                    ],
-                  },
+                  "scope": [
+                    {
+                      "_tag": "space",
+                      "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    },
+                  ],
                   "selector": {
                     "_tag": "TypeSelector",
                     "inverted": false,
@@ -631,11 +640,12 @@ describe('QueryPlanner', () => {
               "steps": [
                 {
                   "_tag": "SelectStep",
-                  "scope": {
-                    "spaceIds": [
-                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                    ],
-                  },
+                  "scope": [
+                    {
+                      "_tag": "space",
+                      "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    },
+                  ],
                   "selector": {
                     "_tag": "TypeSelector",
                     "inverted": false,
@@ -694,11 +704,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -760,11 +771,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TextSelector",
               "searchKind": "full-text",
@@ -807,11 +819,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TextSelector",
               "searchKind": "vector",
@@ -845,11 +858,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -915,11 +929,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": true,
@@ -975,11 +990,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1015,7 +1031,7 @@ describe('QueryPlanner', () => {
   });
 
   test('select items from a specific feed', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] });
+    const query = Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri: QUEUE_DXN }]);
 
     const plan = planner.createPlan(query.ast);
     expect(plan).toMatchInlineSnapshot(`
@@ -1023,11 +1039,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "feeds": [
-                "echo://B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO/01JJRA86VK4H1TEB6QQVSWXP0E",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "feed",
+                "feedUri": "echo://B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO/01JJRA86VK4H1TEB6QQVSWXP0E",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1063,10 +1080,9 @@ describe('QueryPlanner', () => {
   });
 
   test('select items from all feeds in a space', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from({
-      spaceIds: [SPACE_ID],
-      allFeedsFromSpaces: true,
-    });
+    const query = Query.select(Filter.type(TestSchema.Task)).from([
+      { _tag: 'space', spaceId: SPACE_ID, includeAllFeeds: true },
+    ]);
 
     const plan = planner.createPlan(query.ast);
     expect(plan).toMatchInlineSnapshot(`
@@ -1074,12 +1090,13 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "allFeedsFromSpaces": true,
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "includeAllFeeds": true,
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1124,11 +1141,12 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "limit": 10,
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1174,11 +1192,12 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "limit": 10,
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1234,11 +1253,12 @@ describe('QueryPlanner', () => {
                   {
                     "_tag": "SelectStep",
                     "limit": 5,
-                    "scope": {
-                      "spaceIds": [
-                        "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                      ],
-                    },
+                    "scope": [
+                      {
+                        "_tag": "space",
+                        "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                      },
+                    ],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -1276,11 +1296,12 @@ describe('QueryPlanner', () => {
                   {
                     "_tag": "SelectStep",
                     "limit": 5,
-                    "scope": {
-                      "spaceIds": [
-                        "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-                      ],
-                    },
+                    "scope": [
+                      {
+                        "_tag": "space",
+                        "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                      },
+                    ],
                     "selector": {
                       "_tag": "TypeSelector",
                       "inverted": false,
@@ -1341,7 +1362,7 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {},
+            "scope": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1387,9 +1408,7 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "allFeedsFromSpaces": true,
-            },
+            "scope": [],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1425,32 +1444,31 @@ describe('QueryPlanner', () => {
   });
 
   test('from specific feed via feeds scope', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] });
+    const query = Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri: QUEUE_DXN }]);
 
     const plan = planner.createPlan(query.ast);
     expect(plan.steps[0]).toMatchObject({
       _tag: 'SelectStep',
-      scope: { feeds: [QUEUE_DXN] },
+      scope: [{ _tag: 'feed' }],
     });
   });
 
   test('from specific space with feeds', () => {
-    const query = Query.select(Filter.type(TestSchema.Person)).from({
-      spaceIds: [SPACE_ID],
-      allFeedsFromSpaces: true,
-    });
+    const query = Query.select(Filter.type(TestSchema.Person)).from([
+      { _tag: 'space', spaceId: SPACE_ID, includeAllFeeds: true },
+    ]);
 
     const plan = planner.createPlan(query.ast);
     expect(plan.steps[0]).toMatchObject({
       _tag: 'SelectStep',
-      scope: { spaceIds: [SPACE_ID], allFeedsFromSpaces: true },
+      scope: [{ _tag: 'space', spaceId: SPACE_ID, includeAllFeeds: true }],
     });
   });
 
   test('from subquery flattens into filter on subquery results', () => {
     // Query.select(Filter.props({ name: 'Alice' })).from(Query.select(Filter.type(Person)))
     // Should flatten to: select type Person -> filter props { name: 'Alice' }.
-    const subquery = Query.select(Filter.type(TestSchema.Person)).from({ spaceIds: [SPACE_ID] });
+    const subquery = Query.select(Filter.type(TestSchema.Person)).from([{ _tag: 'space', spaceId: SPACE_ID }]);
     const query = Query.select(Filter.props<TestSchema.Person>({ name: 'Alice' })).from(subquery);
 
     const plan = planner.createPlan(query.ast);
@@ -1459,11 +1477,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1516,7 +1535,7 @@ describe('QueryPlanner', () => {
   test('from subquery with reference traversal', () => {
     // Query.select(Filter.type(Task)).reference('assignee').from(subquery)
     // The reference traversal wraps the outer select; flattening should still work.
-    const subquery = Query.select(Filter.type(TestSchema.Person)).from({ spaceIds: [SPACE_ID] });
+    const subquery = Query.select(Filter.type(TestSchema.Person)).from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
     const query = Query.select(Filter.type(TestSchema.Task)).reference('assignee').from(subquery);
 
     const plan = planner.createPlan(query.ast);
@@ -1525,11 +1544,12 @@ describe('QueryPlanner', () => {
         "steps": [
           {
             "_tag": "SelectStep",
-            "scope": {
-              "spaceIds": [
-                "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
-              ],
-            },
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
@@ -1587,14 +1607,14 @@ describe('QueryPlanner', () => {
 
   test('from subquery inherits scope from inner query', () => {
     // The outer query has no scope — the subquery carries the scope.
-    const subquery = Query.select(Filter.type(TestSchema.Task)).from({ spaceIds: [SPACE_ID] });
+    const subquery = Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'space', spaceId: SPACE_ID }]);
     const query = Query.select(Filter.props<TestSchema.Task>({ title: 'Test' })).from(subquery);
 
     const plan = planner.createPlan(query.ast);
     const selectStep = plan.steps.find((step) => step._tag === 'SelectStep');
     expect(selectStep).toMatchObject({
       _tag: 'SelectStep',
-      scope: { spaceIds: [SPACE_ID] },
+      scope: [{ _tag: 'space', spaceId: SPACE_ID }],
     });
   });
 
@@ -1643,8 +1663,6 @@ const withSpaceIdOptions = (query: QueryAST.Query): QueryAST.Query => ({
   query,
   from: {
     _tag: 'scope',
-    scope: {
-      spaceIds: [SPACE_ID],
-    },
+    scopes: [{ _tag: 'space', spaceId: SPACE_ID }],
   },
 });

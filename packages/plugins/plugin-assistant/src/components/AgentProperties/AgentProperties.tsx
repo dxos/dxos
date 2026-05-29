@@ -31,13 +31,15 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
       return Filter.nothing();
     }
 
-    const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+    const schemas = db.graph.registry.list().filter(Type.isType);
     const feedSchemas = schemas.filter((type) => {
       const annotation = FeedAnnotation.get(Type.getSchema(type));
       return Option.isSome(annotation) && annotation.value === true;
     });
 
-    return feedSchemas.length === 0 ? Filter.nothing() : Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
+    return feedSchemas.length === 0
+      ? Filter.nothing()
+      : Filter.or(...feedSchemas.map((schema: Type.AnyEntity) => Filter.type(schema)));
   }, [db]);
 
   const subscribedObjects = useQuery(db, feedFilter);

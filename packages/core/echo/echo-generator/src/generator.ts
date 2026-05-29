@@ -107,20 +107,27 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private async _maybeRegisterSchema(typename: string, schema: Type.AnyEntity): Promise<Type.AnyEntity> {
-    if (Type.getDatabase(schema) != null) {
-      const existingSchema = this._space.internal.db.schemaRegistry.getSchema(typename);
+  private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyEntity> {
+    if (Type.isTypeKindSchema(schema)) {
+      const types = this._space.internal.db.graph.registry.list().filter(Type.isType);
+      const version = Type.getVersion(schema);
+      const existingSchema = types.find(
+        (t) => Type.isTypeKindSchema(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
+      );
       if (existingSchema != null) {
         return existingSchema;
       }
-      const [registeredSchema] = await this._space.internal.db.schemaRegistry.register([schema]);
-      return registeredSchema;
+      return this._space.internal.db.addType(schema);
     } else {
-      const existingSchema = this._space.internal.db.graph.schemaRegistry.getSchema(typename);
+      const allTypes = this._space.internal.db.graph.registry.list().filter(Type.isType);
+      const version = Type.getVersion(schema);
+      const existingSchema = [...allTypes].find(
+        (s) => Type.getTypename(s) === typename && Type.getVersion(s) === version,
+      );
       if (existingSchema != null) {
         return existingSchema;
       }
-      await this._space.internal.db.graph.schemaRegistry.register([schema]);
+      this._space.internal.db.graph.registry.add([schema]);
       return schema;
     }
   }

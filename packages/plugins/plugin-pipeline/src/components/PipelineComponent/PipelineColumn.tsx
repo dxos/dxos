@@ -52,7 +52,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       return;
     }
 
-    const type = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
+    const type = await resolveSchemaWithRegistry(db, query.ast);
     setType(() => type);
   }, [db, query]);
 

@@ -2,13 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type AnyProperties, MetaId, type ObjectMeta, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
+import { Database, Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, Type } from '@dxos/echo';
+import {
+  type AnyProperties,
+  EntityKind,
+  MetaId,
+  type ObjectMeta,
+  TypeSchema as PersistentSchema,
+  type TypeAnnotation,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
+  assertObjectModel,
+  createObject as createPersistentObject,
+  getTypeAnnotation,
+  makeTypeJsonSchemaAnnotation,
+  setRefResolver,
+} from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
@@ -28,7 +44,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import { DatabaseSchemaRegistry } from './database-schema-registry';
+import { findTypeByDXN } from '../registry';
 import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
@@ -48,10 +64,13 @@ export interface EchoDatabase extends Database.Database {
   get spaceKey(): PublicKey;
 
   // Overrides interface.
-  get schemaRegistry(): DatabaseSchemaRegistry;
-
-  // Overrides interface.
   get graph(): HypergraphImpl;
+
+  /**
+   * @internal
+   * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
+   */
+  _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity;
 
   /**
    * Run migrations.
@@ -88,11 +107,15 @@ export type EchoDatabaseProps = {
   spaceId: SpaceId;
 
   /**
-   * Run a reactive query for a set of dynamic schema.
+   * Run a reactive query for dynamic schemas.
    * @default true
    */
   reactiveSchemaQuery?: boolean;
 
+  /**
+   * Preload all schemas during open.
+   * @default true
+   */
   preloadSchemaOnOpen?: boolean;
 
   /** @deprecated Use spaceId */
@@ -111,8 +134,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _coreDatabase: CoreDatabase;
 
-  private readonly _schemaRegistry: DatabaseSchemaRegistry;
-
   /**
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
@@ -122,9 +143,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   private _rootUrl: string | undefined = undefined;
+  private readonly _reactiveSchemaQuery: boolean;
+  private readonly _preloadSchemaOnOpen: boolean;
 
   constructor(params: EchoDatabaseProps) {
     super();
+
+    this._reactiveSchemaQuery = params.reactiveSchemaQuery ?? true;
+    this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
 
     this._coreDatabase = new CoreDatabase({
       graph: params.graph,
@@ -132,11 +158,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       queryService: params.queryService,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
-    });
-
-    this._schemaRegistry = new DatabaseSchemaRegistry(this, {
-      reactiveQuery: params.reactiveSchemaQuery,
-      preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
 
     this.saveStateChanged = this._coreDatabase.saveStateChanged;
@@ -169,9 +190,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
-  // TODO(burdon): Move into hypergraph.
-  get schemaRegistry(): DatabaseSchemaRegistry {
-    return this._schemaRegistry;
+  // `db.registry` is literally the shared hypergraph registry — queries with a
+  // registry target pull from it directly. Getter (not eager field) so it resolves
+  // lazily after graph initialisation.
+  get registry(): Registry.Registry {
+    return this.graph.registry;
   }
 
   @synchronized
@@ -180,13 +203,93 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
     }
 
-    await this._schemaRegistry.open();
+    if (this._preloadSchemaOnOpen) {
+      // Eager-load persisted schema cores so synchronous schema resolution
+      // (echo-handler getSchema/getTypeEntity → getObjectById) succeeds for objects
+      // loaded at open. Persisted schemas live in the db only; they are never added to
+      // the shared graph registry (which holds runtime/static type entities) to avoid
+      // leaking types across spaces.
+      await this.query(Filter.type(PersistentSchema)).run();
+    }
+
+    if (this._reactiveSchemaQuery) {
+      // Keep persisted schema cores loaded as they are added or replicated after open,
+      // so synchronous schema resolution continues to succeed.
+      const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe(() => {});
+      this._ctx.onDispose(unsubscribe);
+    }
   }
 
   @synchronized
   protected override async _close(): Promise<void> {
-    await this._schemaRegistry.close();
     await this._coreDatabase.close();
+  }
+
+  /**
+   * @internal
+   * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
+   * A persisted schema materializes directly as its `Type.AnyEntity` (kind=type), so the
+   * object is returned as-is. Persisted schemas live in the db only and are never added to
+   * the shared graph registry, which would leak types across spaces.
+   */
+  _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity {
+    // A persisted object matching `Filter.type(TypeSchema)` by its `@type` but materializing
+    // as kind=object (e.g. data in a pre-Type-entity format) must fail loudly here rather than
+    // deep inside a consumer that assumes `Type.getSchema()` is safe.
+    invariant(
+      Type.isType(schema),
+      'persisted schema must materialize as a Type entity (kind=type); data may be in a legacy format',
+    );
+    return schema;
+  }
+
+  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Schema.AnyNoContext;
+    let meta: TypeAnnotation | undefined;
+    if (Type.isType(schemaInput)) {
+      const entity = schemaInput;
+      schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
+      // Prefer the annotation embedded in the schema; fall back to the entity's
+      // ObjectMeta-derived accessors for entities built via `makeObjectFromJsonSchema`
+      // (whose `jsonSchema` carries no `TypeAnnotation`).
+      meta =
+        getTypeAnnotation(schema) ??
+        ({
+          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
+          typename: Type.getTypename(entity),
+          version: Type.getVersion(entity),
+        } satisfies TypeAnnotation);
+    } else {
+      schema = schemaInput;
+      meta = getTypeAnnotation(schema);
+    }
+    invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
+    // Create a TypeSchema entity using the internal createObject utility.
+    // We pass typename/version via ObjectMeta (MetaId) since TypeSchema no longer
+    // has them as own data fields.
+    const schemaToStore = createPersistentObject(PersistentSchema, {
+      [MetaId]: { keys: [], key: meta.typename, version: meta.version },
+      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
+    });
+    const typeId = `dxn:echo:@:${schemaToStore.id}`;
+    // Update jsonSchema with the full annotated schema.
+    // TypeSchema.jsonSchema is readonly in the type but writable via change context.
+    schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
+      schema.annotations({
+        [TypeAnnotationId]: meta,
+        [TypeIdentifierAnnotationId]: typeId,
+        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+          identifier: typeId,
+          kind: meta.kind,
+          typename: meta.typename,
+          version: meta.version,
+        }),
+      }),
+    );
+
+    const persistentSchema = this._addObject(schemaToStore);
+    invariant(Type.isType(persistentSchema), 'persisted schema must materialize as a Type entity (kind=type)');
+    return persistentSchema;
   }
 
   @synchronized
@@ -229,7 +332,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     query = Filter.is(query) ? Query.select(query) : query;
 
     if (!isQueryScoped(query.ast)) {
-      query = query.from({ spaceIds: [this.spaceId] });
+      // Default to the owning space only. The in-process registry is opt-in:
+      // callers add `Scope.registry()` (e.g. `.from(Scope.space(), Scope.registry())`)
+      // when they want to fan a query into code-shipped types/objects too.
+      query = query.from(this);
+    } else {
+      // An explicit `Scope.space()` with no spaceId targets the owning space. Bind it to
+      // this database's spaceId here (the only place the owning space is known) so it does
+      // not fan across every space in the hypergraph — e.g. `.from(Scope.space(), Scope.registry())`.
+      query = Query.fromAst(bindOwningSpaceScopes(query.ast, this.spaceId));
     }
 
     return this._coreDatabase.graph.query(query);
@@ -251,14 +362,63 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * Add reactive object.
+   * Add a reactive object or relation.
+   *
+   * Type definitions are not accepted here — use {@link addType}, which clones the entity and
+   * checks for an existing type with the same typename/version before persisting.
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
+    invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    return this._addObject(obj, opts);
+  }
+
+  /**
+   * Persist a Type definition (clones/forks the entity) so it replicates to other peers.
+   *
+   * Queries the space first: if a type with the same typename + version is already persisted,
+   * the existing entity is returned and no duplicate is created (idempotent). This is the only
+   * supported way to add Type entities — {@link add} rejects them.
+   */
+  async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
+    invariant(Type.isType(type), 'addType expects a Type entity');
+    const typename = Type.getTypename(type);
+    // Compare the canonical (head-free) ObjectMeta version on both sides — `Type.getVersion`
+    // appends automerge heads for db-attached entities and would never match a fresh draft.
+    const version = Type.getMeta(type).version ?? Type.getVersion(type);
+
+    // Space-scoped by default (the in-process registry is opt-in via `Scope.registry()`), so this
+    // sees only types persisted in this space — exactly what `_open()` reloads.
+    const existing = await this.query(Filter.type(Type.Type)).run();
+    const match = existing.find(
+      (candidate) =>
+        Type.getTypename(candidate) === typename &&
+        (Type.getMeta(candidate).version ?? Type.getVersion(candidate)) === version,
+    );
+    if (match) {
+      return match as unknown as T;
+    }
+
+    return this._addPersistentSchema(type) as unknown as T;
+  }
+
+  private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const type = Obj.getType(obj as unknown as Obj.Unknown);
-      if (type != null) {
-        if (!this.schemaRegistry.hasSchema(type) && !this.graph.schemaRegistry.hasSchema(type)) {
-          throw createSchemaNotRegisteredError(Type.getSchema(type));
+      const typeEntity = Entity.getType(obj);
+      if (typeEntity != null) {
+        // A persisted (database-attached) type is valid by virtue of living in a database;
+        // its schema resolves through the db rather than the shared registry. A static/runtime
+        // type must be present in the shared registry.
+        const isPersisted = Type.getDatabase(typeEntity) != null;
+        if (!isPersisted) {
+          const typename = Type.getTypename(typeEntity);
+          const version = Type.getVersion(typeEntity);
+          const inRegistry =
+            typename && version
+              ? findTypeByDXN(this.graph.registry, `dxn:${typename}:${version}`) !== undefined
+              : false;
+          if (!inRegistry) {
+            throw createSchemaNotRegisteredError(typeEntity);
+          }
         }
       }
 
@@ -410,4 +570,26 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
     }
   });
   return scoped;
+};
+
+/**
+ * Binds every space scope without an explicit `spaceId` to the owning database's space.
+ * `Scope.space()` means "the owning space"; without binding it here it would fan across
+ * every space source in the hypergraph query context.
+ */
+const bindOwningSpaceScopes = (ast: QueryAST.Query, spaceId: SpaceId): QueryAST.Query => {
+  const transform = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(transform);
+    }
+    if (value !== null && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      if (record._tag === 'space' && record.spaceId === undefined) {
+        return { ...record, spaceId };
+      }
+      return Object.fromEntries(Object.entries(record).map(([key, child]) => [key, transform(child)]));
+    }
+    return value;
+  };
+  return transform(ast) as QueryAST.Query;
 };

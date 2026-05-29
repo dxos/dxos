@@ -14,7 +14,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { FormBuilder } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Scope, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -345,7 +345,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
  */
 export const selectFeed = Effect.fn(function* () {
   // Query schema registry for schemas with FeedAnnotation.
-  const schemas = yield* Database.runSchemaQuery({ location: ['database', 'runtime'] });
+  const schemas = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
 
   // Filter schemas that have FeedAnnotation.
   const feedSchemas = schemas.filter((type) => {

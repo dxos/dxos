@@ -73,12 +73,13 @@ import {
   toEffectSchema,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { findTypeByDXN } from '../registry';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
@@ -511,9 +512,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Stored schemas surface through the database schema registry so consumers
     // see the registered Type.Type entity rather than the raw persisted object.
+    // Only *persisted* (db-backed) stored schemas need registration; a type
+    // entity resolved directly from the registry (e.g. a DXN ref to an in-memory
+    // declaration) is already canonical and passes through unchanged.
     const database = target[symbolInternals].database;
-    if (database && isInstanceOf(TypeSchema, object)) {
-      return database.schemaRegistry._registerSchema(object);
+    if (database && isInstanceOf(TypeSchema, object) && Type.getDatabase(object) != null) {
+      return database._getOrRegisterPersistentSchema(object);
     }
 
     return object;
@@ -631,25 +635,46 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
     const typeURI = EncodedReference.toURI(typeRef);
-    const typeDxn = DXN.tryMake(typeURI);
-    if (typeDxn) {
-      const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
-      if (staticType != null) {
-        return staticType;
-      }
-      const typename = DXN.getName(typeDxn);
-      const version = DXN.getVersion(typeDxn);
-      return target[symbolInternals].database.schemaRegistry
-        .query({ typename, ...(version ? { version } : {}) })
-        .runSync()[0];
+    const registry = target[symbolInternals].database.graph.registry;
+    // Look up by the raw typeURI string — the registry normalises DXN forms.
+    const fromRegistry = findTypeByDXN(registry, typeURI);
+    if (fromRegistry != null) {
+      return fromRegistry;
     }
+    const database = target[symbolInternals].database;
+
+    // For dxn:echo:@:objectId references, load the PersistentSchema on demand.
+    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
+    if (echoRefMatch) {
+      const echoId = echoRefMatch[1];
+      if (echoId != null) {
+        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
+        if (found != null) {
+          return found;
+        }
+        const schemaObject = database.getObjectById(echoId);
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
+          return database._getOrRegisterPersistentSchema(schemaObject);
+        }
+      }
+    }
+
+    // Legacy EchoURI form (echo://spaceId/objectId or echo:/<objectId>) — load on demand.
     const echoUri = EchoURI.tryParse(typeURI);
     if (echoUri) {
-      const id = EchoURI.getObjectId(echoUri);
-      if (id) {
-        return target[symbolInternals].database.schemaRegistry.getSchemaById(id);
+      const echoId = EchoURI.getObjectId(echoUri);
+      if (echoId != null) {
+        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
+        if (found != null) {
+          return found;
+        }
+        const schemaObject = database.getObjectById(echoId);
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
+          return database._getOrRegisterPersistentSchema(schemaObject);
+        }
       }
     }
+
     return undefined;
   }
 
@@ -677,44 +702,46 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const typeURI = EncodedReference.toURI(typeRef);
-    // Try to parse as a typename DXN — legacy storage forms like `dxn:echo:@:<id>` and
-    // `dxn:queue:…` look like DXNs by prefix but are not parseable as typename DXNs.
-    const typeDxn = DXN.tryMake(typeURI);
-    if (typeDxn) {
-      const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
-      if (staticType != null) {
-        return Type.getSchema(staticType);
-      }
-      // Skip protobuf types as they are runtime registered types.
-      if (DXN.getName(typeDxn)?.startsWith('protobuf')) {
-        return undefined;
-      }
-      // Stored schemas use the storage URI as `$id`, so we can't look them up by typename DXN.
-      // Query by typename + version instead.
-      const typename = DXN.getName(typeDxn);
-      const version = DXN.getVersion(typeDxn);
-      const type = target[symbolInternals].database.schemaRegistry
-        .query({ typename, ...(version ? { version } : {}) })
-        .runSync()[0];
-      return type && Type.getSchema(type);
+    const database = target[symbolInternals].database;
+
+    // Skip protobuf types as they are runtime registered types.
+    if (typeURI.startsWith('dxn:type:protobuf') || typeURI.startsWith('dxn:protobuf')) {
+      return undefined;
     }
 
-    // For persisted Type.Type entities, system.type holds the local schema-as-object
-    // EchoURI (`echo:/<objectId>`). Look up by `backingObjectId` so we find the
-    // entity by its ObjectId even when the registry stores `jsonSchema.$id` as
-    // the typename DXN.
-    const echoUri = EchoURI.tryParse(typeURI);
-    if (echoUri != null) {
-      const backingObjectId = EchoURI.getObjectId(echoUri);
-      if (backingObjectId != null) {
-        const type = target[symbolInternals].database.schemaRegistry.query({ backingObjectId }).runSync()[0];
-        if (type != null) {
-          return Type.getSchema(type);
+    const fromRegistry = findTypeByDXN(database.graph.registry, typeURI);
+    if (fromRegistry != null) {
+      return Type.getSchema(fromRegistry);
+    }
+
+    // For dxn:echo:@:objectId references, load the PersistentSchema on demand
+    // (handles the case where preloadSchemaOnOpen is false or the schema was added after open).
+    const echoRefMatch = /^dxn:echo:@:(.+)$/.exec(typeURI);
+    if (echoRefMatch) {
+      const echoId = echoRefMatch[1];
+      if (echoId != null) {
+        const schemaObject = database.getObjectById(echoId);
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
+          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject);
+          return Type.getSchema(typeEntity);
         }
       }
     }
-    const type = target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
-    return type && Type.getSchema(type);
+
+    // Legacy EchoURI form (echo://spaceId/objectId) — load the PersistentSchema on demand.
+    const echoUri = EchoURI.tryParse(typeURI);
+    if (echoUri != null) {
+      const echoId = EchoURI.getObjectId(echoUri);
+      if (echoId != null) {
+        const schemaObject = database.getObjectById(echoId);
+        if (schemaObject != null && isInstanceOf(TypeSchema, schemaObject)) {
+          const typeEntity = database._getOrRegisterPersistentSchema(schemaObject);
+          return Type.getSchema(typeEntity);
+        }
+      }
+    }
+
+    return undefined;
   }
 
   getTypeURI(target: ProxyTarget): URI.URI | undefined {

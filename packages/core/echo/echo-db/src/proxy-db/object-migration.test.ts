@@ -56,7 +56,7 @@ const migrationV3 = defineObjectMigration({
 
 test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([ContactV1, ContactV2]);
+  graph.registry.add([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush();
@@ -73,7 +73,7 @@ test('migrate 1 object', async () => {
 
 test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([ContactV1, ContactV2]);
+  graph.registry.add([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush();
@@ -127,7 +127,7 @@ test('migration moves data key/version into meta', async () => {
   });
 
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([RegistryEntryV1, RegistryEntryV2]);
+  graph.registry.add([RegistryEntryV1, RegistryEntryV2]);
 
   db.add(
     Obj.make(RegistryEntryV1, {
@@ -158,7 +158,7 @@ test('migration moves data key/version into meta', async () => {
 
 test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
+  graph.registry.add([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush();
@@ -175,7 +175,8 @@ test('chained migrations', async () => {
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
 // test('view migration', async () => {
 //   const { db, graph } = await builder.createDatabase();
-//   graph.schemaRegistry.register([ViewTypeV1, ViewTypeV2]);
+//   db.add(ViewTypeV1);
+//   db.add(ViewTypeV2);
 
 //   db.add(
 //     Obj.make(ViewTypeV1, {

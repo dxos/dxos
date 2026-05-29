@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
+import { type Database, Entity, Feed, Filter, Obj, Query, type Ref, Scope } from '@dxos/echo';
 import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -260,7 +260,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._echoUri] });
+    const queryWithScope = query.from(Scope.space(this._spaceId), Scope.feed(this._echoUri));
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 

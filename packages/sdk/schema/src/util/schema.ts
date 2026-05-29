@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type SchemaRegistry, Type } from '@dxos/echo';
+import { type Registry, Type } from '@dxos/echo';
+import { findTypeByDXN } from '@dxos/echo-db';
 import {
   EchoObjectSchema,
   Format,
@@ -55,20 +56,18 @@ export const createDefaultSchema = () =>
     // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
   }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
 
-export const getSchema = async (
-  dxn: DXN.DXN,
-  registry?: SchemaRegistry.SchemaRegistry,
-): Promise<Type.AnyEntity | undefined> => {
+export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
   if (!DXN.isDXN(dxn)) {
     return;
   }
 
-  const type = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  const schema = await registry
-    ?.query({ typename: type, version, location: ['database', 'runtime'] })
-    .firstOrUndefined();
-  return schema;
+  if (!version || !registry) {
+    return;
+  }
+  // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
+  // directly rather than rebuilding a legacy `dxn:type:` string.
+  return findTypeByDXN(registry, dxn);
 };
 
 // TODO(burdon): Factor out.
@@ -91,7 +90,9 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  // EchoObjectSchema wraps a static Type.Obj entity; unwrap to the source schema for createEchoSchema.
+  // `EchoObjectSchema(...)` yields a static `Type.Obj` entity; unwrap to its
+  // source schema (which carries the typename annotation) before handing it to
+  // `createEchoSchema`, which expects a raw Effect Schema.
   const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
   const schema = createEchoSchema(Type.getSchema(typeSchema));
 

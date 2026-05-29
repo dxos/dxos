@@ -48,7 +48,7 @@ describe('EchoSchema', () => {
       field: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
-    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
+    const schema = await db.addType(GeneratedSchema);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schema = Ref.make(schema);
     });
@@ -73,7 +73,7 @@ describe('EchoSchema', () => {
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
+    const schema = await db.addType(GeneratedSchema);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema) }));
     expect(Type.getTypename(instanceWithSchemaRef.schema!.target!)).to.eq(Type.getTypename(GeneratedSchema));
   });
@@ -84,7 +84,7 @@ describe('EchoSchema', () => {
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
+    const schema = await db.addType(GeneratedSchema);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
     });
@@ -93,7 +93,7 @@ describe('EchoSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([TestEmpty]);
+    const schema = await db.addType(TestEmpty);
     const object: Obj.Any = Obj.make(schema, {});
     Type.addFields(schema, { field1: Schema.String });
     Obj.update(object, (object) => {
@@ -124,7 +124,7 @@ describe('EchoSchema', () => {
 
   test('getSchemaURI returns the schema-as-object EchoURI for stored schemas', async ({ expect }) => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([TestEmpty]);
+    const schema = await db.addType(TestEmpty);
     const uri = Type.getURI(schema)!;
     // Stored schemas resolve to their schema-as-object EchoURI (echo:/<id>) so the
     // schema rides along with loaded objects as a strong dependency.
@@ -149,8 +149,8 @@ describe('EchoSchema', () => {
       org: Schema.optional(Ref(OrgSchema)),
     }).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
 
-    const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
-    const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
+    const orgSchema = await db.addType(OrgSchema);
+    const contactSchema = await db.addType(ContactSchema);
     const org = db.add(Obj.make(orgSchema, { name: 'DXOS' }));
     const contact = db.add(Obj.make(contactSchema, { name: 'Bot', org: Ref.make(org) }));
     expect(contact.org?.target?.id).to.eq(org.id);
@@ -158,14 +158,14 @@ describe('EchoSchema', () => {
 
   test('schema id stays as echo URI for stored schemas', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([TestEmpty]);
+    const schema = await db.addType(TestEmpty);
     // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
     expect(getTypeIdentifierAnnotation(Type.getSchema(schema))).to.match(/^echo:\//);
   });
 
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestWithRefs]);
+    graph.registry.add([TestWithRefs]);
     return { db };
   };
 });

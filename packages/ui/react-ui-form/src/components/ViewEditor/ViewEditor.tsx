@@ -3,7 +3,6 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -19,7 +18,7 @@ import {
   Query,
   QueryAST,
   Ref,
-  type SchemaRegistry,
+  type Registry,
   Type,
   View,
 } from '@dxos/echo';
@@ -55,7 +54,7 @@ export type ViewEditorProps = ThemedClassName<
     type: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
-    registry?: SchemaRegistry.SchemaRegistry;
+    registry?: Registry.Registry;
     showHeading?: boolean;
     onQueryChanged?: (query: QueryAST.Query, target?: EchoURI.EchoURI) => void;
     onDelete?: (fieldId: string) => void;
@@ -112,9 +111,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
-        return Option.fromNullable(from.scope.feeds).pipe(
-          Option.flatMap((feeds) => Array.head(feeds)),
-          Option.map(String),
+        const feedScope = from.scopes.find((s) => s._tag === 'feed');
+        return Option.fromNullable(feedScope).pipe(
+          Option.map((s) => s.feedUri),
           Option.getOrUndefined,
         );
       }),

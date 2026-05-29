@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, type SchemaRegistry, Type, type View } from '@dxos/echo';
+import { Filter, Obj, type Registry, Type, type View } from '@dxos/echo';
 import { Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionF
 export type FieldEditorProps = {
   projection: ProjectionModel;
   field: View.FieldType;
-  registry?: SchemaRegistry.SchemaRegistry;
+  registry?: Registry.Registry;
   view?: Obj.Unknown;
   onSave: () => void;
   onCancel?: () => void;
@@ -44,10 +44,12 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       return;
     }
 
-    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
+    const subscription = registry
+      .query(Filter.type(Type.Type))
+      .subscribe((query) => setSchemas(query.results), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
-    const schemas = await registry.query().run();
+    const schemas = await registry.query(Filter.type(Type.Type)).run();
     setSchemas(schemas);
 
     return () => subscription?.();

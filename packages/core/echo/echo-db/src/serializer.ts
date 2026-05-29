@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, Obj, type Query } from '@dxos/echo';
+import { Filter, Obj, type Query, Type } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EchoURI, type URI } from '@dxos/keys';
@@ -89,7 +89,12 @@ export class Serializer {
     const obj = await Obj.fromJSON(data, {
       refResolver: database.graph.createRefResolver({ context: { space: database.spaceId } }),
     });
-    database.add(obj);
+    // Type entities must be persisted via `addType` (clones/forks + conflict check); `add` rejects them.
+    if (Type.isType(obj)) {
+      await database.addType(obj);
+    } else {
+      database.add(obj);
+    }
   }
 }
 

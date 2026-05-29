@@ -431,15 +431,15 @@ export const WithMap: Story = {
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
-      const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
+      const type = await space.db.addType(createLocationSchema());
       const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
         db: space.db,
-        typename: Type.getTypename(schema),
+        typename: Type.getTypename(type),
       });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
       const { view: mapView } = await ViewModel.makeFromDatabase({
         db: space.db,
-        typename: Type.getTypename(schema),
+        typename: Type.getTypename(type),
         pivotFieldName: 'location',
       });
       const map = Map.make({ name: 'Map', view: mapView });

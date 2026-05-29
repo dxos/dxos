@@ -6024,40 +6024,6 @@ importers:
         specifier: ~19.2.3
         version: 19.2.6(react@19.2.6)
 
-  packages/core/echo/echo-registry:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo-pipeline
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-    devDependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../../common/test-utils
-
   packages/core/echo/echo-solid:
     dependencies:
       '@dxos/echo':
