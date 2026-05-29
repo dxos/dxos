@@ -131,14 +131,25 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+    // Show a leave-Composer confirmation only on back/forward navigations that exit the app.
+    // Uses the Navigation API to distinguish traverse from reload (beforeunload cannot).
+    // Not supported in Safari — no guard shown there.
+    const onNavigate = (event: NavigateEvent) => {
+      if (event.navigationType !== 'traverse') return;
+      // canIntercept is false for cross-document navigations (leaving the SPA entirely).
+      if (event.canIntercept) return;
       event.preventDefault();
+      if (window.confirm('Leave Composer?')) {
+        window.location.href = event.destination.url;
+      }
     };
 
     // Initial navigation.
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
-    window.addEventListener('beforeunload', onBeforeUnload);
+    if ('navigation' in window) {
+      window.navigation.addEventListener('navigate', onNavigate);
+    }
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
@@ -197,7 +208,9 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
-        window.removeEventListener('beforeunload', onBeforeUnload);
+        if ('navigation' in window) {
+          window.navigation.removeEventListener('navigate', onNavigate);
+        }
         unsubscribe();
         unlistenDeepLink?.();
       }),
