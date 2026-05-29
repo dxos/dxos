@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EchoURI } from '@dxos/keys';
 import { InboxOperation } from '@dxos/plugin-inbox';
@@ -179,9 +179,7 @@ export const generator = () => ({
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).from({
-              feeds: [queueDxn],
-            }),
+            ).from(Scope.feed(Obj.getURI(mailboxFeed))),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
           const contactsView = ViewModel.make({

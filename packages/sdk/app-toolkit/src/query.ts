@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Filter, Key, Query, type QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
+import { type Database, Filter, Key, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -35,16 +35,18 @@ export const evalQuery = (queryString: string): Query.Any => {
   }
 };
 
-export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
+export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
     const typename = DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined;
     if (!typename) {
       return Option.none<Type.AnyEntity>();
     }
 
-    const query = registry.query({ typename, location: ['database', 'runtime'] });
-    const types = yield* Effect.promise(() => query.run());
-    return Array.head(types) as Option.Option<Type.AnyEntity>;
+    const types = yield* Effect.promise(() =>
+      db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
+    );
+    const schema = types.find((t) => Type.getTypename(t) === typename);
+    return Option.fromNullable(schema);
   });
 
   return resolveType(query, resolve).pipe(
@@ -146,12 +148,13 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       if (from._tag !== 'scope') {
         return space?.db;
       }
-      const result = Option.fromNullable(from.scope.feeds).pipe(
-        Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedRef) => Option.fromNullable(EchoURI.tryParse(String(feedRef)))),
+      const feedScopes = from._tag === 'scope' ? from.scopes.filter((s) => s._tag === 'feed') : [];
+      const result = Option.fromNullable(feedScopes[0]).pipe(
+        Option.map((s) => s.feedUri),
+        Option.flatMap((feedUri) => Option.fromNullable(EchoURI.tryParse(String(feedUri)))),
         Option.flatMap((echoUri) => {
-          const queueId = EchoURI.getObjectId(echoUri);
-          if (!queueId || !Key.ObjectId.isValid(queueId)) {
+          const objectId = EchoURI.getObjectId(echoUri);
+          if (!objectId || !Key.ObjectId.isValid(objectId)) {
             return Option.none();
           }
           return Option.fromNullable(space?.queues.get(echoUri));
@@ -160,7 +163,7 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN
       // referencing a feed not present in space.queues, e.g. not yet synced) to avoid 400 errors.
       // TODO(wittjosiah): Can we handle this upstream?
-      if (from.scope.feeds?.length && Option.isNone(result)) {
+      if (feedScopes.length > 0 && Option.isNone(result)) {
         return undefined;
       }
       return Option.getOrElse(result, () => space?.db);

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
-import { Filter, Key, Query } from '@dxos/echo';
+import { Filter, Key, Query, Scope } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention/types';
@@ -120,7 +120,7 @@ export const createEdgeExistenceChecker = (
     if (!spaceId || !objectId) {
       return Effect.succeed(false);
     }
-    const queryAst = Query.select(Filter.id(objectId)).from({ spaceIds: [spaceId] }).ast;
+    const queryAst = Query.select(Filter.id(objectId)).from(Scope.space(spaceId)).ast;
     return Effect.tryPromise(() =>
       execQuery(spaceId, {
         query: JSON.stringify(queryAst),

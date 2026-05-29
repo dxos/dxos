@@ -9,7 +9,7 @@ import type * as Entity from './Entity';
 import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
-import type * as SchemaRegistry from './SchemaRegistry';
+import type * as Registry from './Registry';
 
 /**
  * Resolution context.
@@ -46,7 +46,12 @@ export interface RefResolverOptions {
  * Manages cross-space database interactions.
  */
 export interface Hypergraph extends Database.Queryable {
-  get schemaRegistry(): SchemaRegistry.SchemaRegistry;
+  /**
+   * In-process registry of keyed objects and static schema types.
+   * Populated at startup via `registry.add(objects)` / `registry.add(schemas)`.
+   * Queries that include no explicit from() clause will fan out to this registry automatically.
+   */
+  get registry(): Registry.Registry;
 
   /**
    * Query objects.

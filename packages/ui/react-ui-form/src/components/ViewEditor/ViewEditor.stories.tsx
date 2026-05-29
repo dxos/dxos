@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
 import { Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -59,14 +59,15 @@ const DefaultStory = (props: DefaultStoryProps) => {
         completed: Schema.Boolean,
       }).pipe(Type.makeObject(DXN.make('com.example.type.alternate', '0.1.0')));
 
-      const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
+      const testType = await space.db.addType(TestSchema);
+      await space.db.addType(AlternateSchema);
       const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
         jsonSchema: JsonSchema.toJsonSchema(TestSchema),
       });
 
-      setType(testSchema);
+      setType(testType);
       setView(view);
     }
   }, [space]);
@@ -79,20 +80,25 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
       if (props.mode === 'tag') {
         const queue = target;
-        const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
+        const query = queue
+          ? Query.fromAst(newQuery).from([
+              Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`),
+            ])
+          : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;
         });
 
         const typename = getTypenameFromQuery(query.ast);
-        const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
+        const allTypes = space.db.graph.registry.list().filter(Type.isType);
+        const newSchema = allTypes.find((t) => Type.getTypename(t) === typename);
         if (!newSchema) {
           return;
         }
 
         const newView = ViewModel.make({
           query,
-          jsonSchema: newSchema.jsonSchema,
+          jsonSchema: JsonSchema.toJsonSchema(newSchema),
         });
         Obj.update(view, (view) => {
           view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
@@ -139,7 +145,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         ref={projectionRef}
         type={type}
         view={view}
-        registry={space?.db.schemaRegistry}
+        registry={space?.db.graph.registry}
         mode={props.mode}
         readonly={props.readonly}
         types={types}

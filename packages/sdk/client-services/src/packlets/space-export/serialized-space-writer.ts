@@ -158,6 +158,12 @@ export const objectStructureToObjJson = (objectId: string, structure: ObjectStru
     result[ATTR_META] = {
       keys: structure.meta.keys ?? [],
       ...(structure.meta.tags ? { tags: structure.meta.tags } : {}),
+      // Preserve the registry-provenance fields (typename / semver) so persisted
+      // `Type.Type` entities round-trip with their `meta.key` / `meta.version`
+      // intact — `Type.getTypename` / `Type.getVersion` read these. Without them
+      // a type loaded from an archive would fall back to its object id.
+      ...(structure.meta.key !== undefined ? { key: structure.meta.key } : {}),
+      ...(structure.meta.version !== undefined ? { version: structure.meta.version } : {}),
     };
   }
   if (structure.system?.deleted) {

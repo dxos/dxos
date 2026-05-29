@@ -40,10 +40,9 @@ describe('Echo reactive proxy', () => {
       },
       createObjectFn: async (props = {}) => {
         const object = Obj.make(schema, props as any) as TestSchema.Example;
-        if (!db.graph.schemaRegistry.hasSchema(schema)) {
-          await db.graph.schemaRegistry.register([schema]);
-        }
-
+        // `registry.add` is idempotent (replaces by entity id), so re-adding the same
+        // schema across invocations is a harmless no-op — no presence check needed.
+        db.graph.registry.add([schema]);
         return db.add(object) as TestSchema.Example;
       },
     };

@@ -457,26 +457,31 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static from(source: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  static from(...args: any[]): Query$.Any {
     const baseQuery: QueryAST.Query = {
       type: 'select',
       filter: FilterClass.everything().ast,
     };
     const wrapper = new QueryClass(baseQuery);
-    return wrapper.from(source, options);
+    return (wrapper.from as (...args: any[]) => Query$.Any)(...args);
   }
 
-  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  from(...args: any[]): Query$.Any {
+    // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
+    if (args.length > 1 && args.every((arg) => _isScopeLike(arg))) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: args as QueryAST.Scope[] },
+      });
+    }
+
+    const [arg] = args;
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
-        },
+        from: { _tag: 'scope', scopes: [] },
       });
     }
 
@@ -484,7 +489,7 @@ class QueryClass implements Query$.Any {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: { _tag: 'scope', scope: arg },
+        from: { _tag: 'scope', scopes: Array.isArray(arg) ? arg : [arg] },
       });
     }
 
@@ -668,13 +673,24 @@ const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
   );
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
+const SCOPE_TAGS = new Set(['space', 'feed', 'registry']);
 
-const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
+const _isScopeLike = (value: unknown): value is QueryAST.Scope | QueryAST.Scope[] => {
+  if (Array.isArray(value)) {
+    return value.every((item) => _isSingleScopeLike(item));
   }
-  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
+  return _isSingleScopeLike(value);
+};
+
+const _isSingleScopeLike = (value: unknown): value is QueryAST.Scope => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    '_tag' in value &&
+    typeof value._tag === 'string' &&
+    SCOPE_TAGS.has(value._tag)
+  );
 };
 
 const prettyFilter = (filter: QueryAST.Filter): string => {
@@ -777,18 +793,21 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'from': {
       if (query.from._tag === 'scope') {
-        const scope = query.from.scope;
-        const parts: string[] = [];
-        if (scope.spaceIds !== undefined) {
-          parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
+        if (query.from.scopes.length === 0) {
+          return `${prettyQuery(query.query)}.from('all-accessible-spaces')`;
         }
-        if (scope.feeds !== undefined) {
-          parts.push(`feeds: [${scope.feeds.join(', ')}]`);
-        }
-        if (scope.allFeedsFromSpaces !== undefined) {
-          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
-        }
-        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+        const scopeStrs = query.from.scopes.map((scope) => {
+          if (scope._tag === 'space') {
+            return scope.includeAllFeeds
+              ? `{ space: ${JSON.stringify(scope.spaceId)}, includeAllFeeds: true }`
+              : `{ space: ${JSON.stringify(scope.spaceId)} }`;
+          }
+          if (scope._tag === 'feed') {
+            return `{ feed: ${String(scope.feedUri)} }`;
+          }
+          return `{ registry: ${JSON.stringify(scope.location)} }`;
+        });
+        return `${prettyQuery(query.query)}.from([${scopeStrs.join(', ')}])`;
       }
       return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
     }

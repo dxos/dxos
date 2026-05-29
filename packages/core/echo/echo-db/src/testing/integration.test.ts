@@ -237,6 +237,30 @@ describe('Integration tests', () => {
     }
   });
 
+  test('database object resolves a registry object via a DXN ref', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase(spaceKey);
+
+    // Register a type in the in-process registry — the "registry object".
+    db.graph.registry.add([TestSchema.Person]);
+    const typeDXN = DXN.make(Type.getTypename(TestSchema.Person), Type.getVersion(TestSchema.Person));
+
+    // A database object holds a reference to the registry object via its DXN.
+    const object = db.add(Obj.make(TestSchema.Expando, { type: db.makeRef(typeDXN) })) as any;
+    await db.flush();
+
+    // A DXN ref into the in-process registry resolves synchronously (resolveSync),
+    // since the registry is in-memory — no async load is required.
+    const target = object.type.target;
+    expect(Type.isType(target)).to.be.true;
+    expect(Type.getTypename(target)).to.eq(Type.getTypename(TestSchema.Person));
+
+    // ref.load() routes through the resolver to the same registry entity.
+    const loaded = await object.type.load();
+    expect(loaded).to.eq(target);
+  });
+
   test('replication', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
@@ -437,7 +461,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      await db.graph.schemaRegistry.register([TestSchema.Person, TestSchema.HasManager]);
+      db.graph.registry.add([TestSchema.Person, TestSchema.HasManager]);
 
       let relationId!: ObjectId;
       {
@@ -492,7 +516,7 @@ describe('Integration tests', () => {
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
         }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-        const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
+        const stored = await db.addType(LocalTestSchema);
         schemaDxn = Type.getURI(stored)!;
 
         const object = db.add(Obj.make(stored, { field: 'test' }));
@@ -526,9 +550,11 @@ describe('Integration tests', () => {
 
       await peer.reload();
       {
-        // Can query by stored schema ref.
+        // Can query by stored schema ref. Persisted types live in the db (not the shared
+        // registry), so resolve the stored Type entity via a space query.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.schemaRegistry.getSchema('com.example.type.test');
+        const types = await db.query(Filter.type(Type.Type)).run();
+        const schema = types.find((t) => Type.getTypename(t) === 'com.example.type.test');
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
@@ -549,7 +575,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
+      const schema = await db.addType(TestSchema.Person);
       typeURI = Type.getURI(schema)!;
       db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush();
