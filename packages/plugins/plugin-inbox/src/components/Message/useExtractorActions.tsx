@@ -27,7 +27,7 @@ const RUN_ALL_ID = 'run-all';
  * matching extractor in parallel and logs aggregated results.
  */
 export const useExtractorActions = (message: Message.Message): ExtractorMenuItem[] => {
-  const extractors = useCapabilities(InboxCapabilities.MessageExtractor);
+  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
   // Use the plural form so this hook is safe in contexts without a registered operation invoker (e.g. isolated stories).
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
 
@@ -53,7 +53,7 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
         return Promise.resolve();
       }
       return invoker
-        .invokePromise(InboxOperation.ExtractMessage, { db: space.db, message, extractorId })
+        .invokePromise(InboxOperation.ExtractMessage, { db: space.db, source: message, extractorId })
         .catch((err) => log.warn('extract message failed', { err, extractorId }));
     };
 

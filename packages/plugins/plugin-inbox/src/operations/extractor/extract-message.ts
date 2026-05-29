@@ -6,128 +6,51 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { log } from '@dxos/log';
+import { Database, Filter, Query, Relation } from '@dxos/echo';
+import { dispatch, fromExtractors } from '@dxos/extractor';
+import { type Message } from '@dxos/types';
 
+import { InboxResolver } from '../../services';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
 
-class NoMatchingExtractorError extends Error {
-  readonly _tag = 'NoMatchingExtractorError';
-  constructor(readonly extractorId?: string) {
-    super(extractorId ? `Extractor not found or did not match: ${extractorId}` : 'No extractor matched the message.');
-  }
-}
-
 /**
- * Generic dispatcher for the MessageExtractor capability. Resolves the registered extractors,
- * picks one (by `extractorId` when supplied, otherwise the highest-confidence `match()` over
- * the message), runs its `extract()` Effect, and persists the result: newly-created objects
- * are `db.add`-ed, updated objects are left in place, and every created/updated object gets
- * an `ExtractedFrom` relation back to the source message for provenance (carrying the
- * extractor id, timestamp, and confidence). Additional relations returned by the extractor
- * are persisted verbatim. Fails with `NoMatchingExtractorError` when no extractor matches.
+ * Inbox bridge over the generic `@dxos/extractor` dispatcher. Builds the extractor registry from
+ * the registered `ObjectExtractor` capabilities, runs `dispatch` (which selects an extractor,
+ * runs its `extract`, and persists created objects + provenance relations), then applies any
+ * returned tags to the owning Mailbox. Provenance uses the inbox `ExtractedFrom` relation; the
+ * `Resolver` is the inbox domain resolver (Person-by-email, Organization-by-domain).
  */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = InboxOperation.ExtractMessage.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, message, extractorId, targetTripId }) {
-      const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
+    Effect.fnUntraced(function* ({ db, source, extractorId }) {
+      const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
 
-      // Pick the extractor.
-      let chosen: (typeof extractors)[number];
-      let chosenConfidence: number | undefined;
+      const outcome = yield* dispatch(
+        { db, source, extractorId },
+        {
+          provenance: ({ source: from, object, extractorId: id, extractedAt, confidence }) =>
+            ExtractedFrom.make({
+              [Relation.Source]: object,
+              [Relation.Target]: from,
+              extractorId: id,
+              extractedAt,
+              confidence,
+            }),
+        },
+      ).pipe(
+        Effect.provide(fromExtractors(extractors)),
+        Effect.provide(InboxResolver.Live),
+        Effect.provide(Database.layer(db)),
+      );
 
-      if (extractorId !== undefined) {
-        const found = extractors.find((e) => e.id === extractorId);
-        if (!found) {
-          return yield* Effect.fail(new NoMatchingExtractorError(extractorId));
-        }
-        const matchResult = found.match(message);
-        if (!matchResult.matched) {
-          return yield* Effect.fail(new NoMatchingExtractorError(extractorId));
-        }
-        chosen = found;
-        chosenConfidence = matchResult.confidence;
-      } else {
-        // Auto-select the highest-confidence matched extractor.
-        let best: (typeof extractors)[number] | undefined;
-        let bestConfidence = -Infinity;
+      const result = outcome.result;
 
-        for (const extractor of extractors) {
-          const matchResult = extractor.match(message);
-          if (matchResult.matched) {
-            const confidence = matchResult.confidence ?? 0;
-            if (confidence > bestConfidence) {
-              best = extractor;
-              bestConfidence = confidence;
-            }
-          }
-        }
-
-        if (!best) {
-          return yield* Effect.fail(new NoMatchingExtractorError());
-        }
-        chosen = best;
-        chosenConfidence = bestConfidence === -Infinity ? undefined : bestConfidence;
-      }
-
-      log.info('extract message', { extractorId: chosen.id, confidence: chosenConfidence });
-
-      const result = yield* chosen.extract({ db, message, targetTripId });
-
-      const extractedAt = new Date().toISOString();
-      // Two gates on relation creation:
-      //  1. Per-extractor opt-out via `createRelation: false` — for extractors whose output
-      //     is already linked to the message by some other field (e.g. the contact extractor
-      //     materialises `msg.sender`, which the Message schema already references).
-      //  2. Per-object: only top-level objects (no parent via `Obj.setParent`) get an edge,
-      //     so the trip extractor's Trip + Booking + Segment trio surfaces as one Trip chip,
-      //     not three.
-      const shouldRelate = chosen.createRelation !== false;
-
-      // Persist created objects, then attach an ExtractedFrom relation for each top-level
-      // one when the extractor opts in.
-      for (const obj of result.created) {
-        db.add(obj);
-        if (!shouldRelate || Obj.getParent(obj) !== undefined) {
-          continue;
-        }
-        const rel = ExtractedFrom.make({
-          [Relation.Source]: obj,
-          [Relation.Target]: message,
-          extractorId: chosen.id,
-          extractedAt,
-          confidence: chosenConfidence,
-        });
-        db.add(rel);
-      }
-
-      // Updated objects were mutated in place by the extractor; do NOT re-add. Same gates
-      // as created objects.
-      for (const obj of result.updated ?? []) {
-        if (!shouldRelate || Obj.getParent(obj) !== undefined) {
-          continue;
-        }
-        const rel = ExtractedFrom.make({
-          [Relation.Source]: obj,
-          [Relation.Target]: message,
-          extractorId: chosen.id,
-          extractedAt,
-          confidence: chosenConfidence,
-        });
-        db.add(rel);
-      }
-
-      // Persist additional relations from the extractor.
-      for (const rel of result.relations) {
-        db.add(rel);
-      }
-
-      // Apply tags to the source message. The Mailbox containing this message owns the
-      // tag map; resolve the owning mailbox by querying each mailbox's feed for the
-      // message id (feed-stored Messages are immutable so the back-ref is the feed query).
-      // Falls back to the first mailbox in the space for environments where the message
-      // hasn't yet been appended to any feed (e.g. unit tests).
-      if (result.tags && result.tags.length > 0) {
+      // Apply tags to the source message. The Mailbox containing this message owns the tag map;
+      // resolve the owning mailbox by querying each mailbox's feed for the message id, falling
+      // back to the first mailbox in the space (e.g. unit tests where the message isn't yet in a
+      // feed).
+      if (result?.tags && result.tags.length > 0) {
+        const message = source as Message.Message;
         const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
         const owningMailbox = yield* Effect.promise(async () => {
           for (const candidate of mailboxes) {
@@ -150,10 +73,10 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       }
 
       return {
-        extractorId: chosen.id,
-        created: result.created.length,
-        updated: result.updated?.length ?? 0,
-        summary: result.summary,
+        extractorId: outcome.extractorId,
+        created: result?.created.length ?? 0,
+        updated: result?.updated?.length ?? 0,
+        summary: result?.summary,
       };
     }),
   ),

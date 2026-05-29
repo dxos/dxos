@@ -115,6 +115,7 @@ describe('template extractor + dispatch', () => {
     const result = await contactExtractor
       .extract({ db, source })
       .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: { email: 'ada@example.test', name: 'Ada' } }), resolverLayer())))
+      .pipe(operationServiceStub)
       .pipe(runAndForwardErrors);
 
     expect(result.created).toHaveLength(1);

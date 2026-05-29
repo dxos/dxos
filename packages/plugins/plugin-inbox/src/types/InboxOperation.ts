@@ -358,20 +358,18 @@ export const ExtractContact = Operation.make({
  * directly via SpaceOperation.AddObject (no preview interposition there by design).
  */
 /**
- * Uniform input shape every extractor operation receives. Defined late in this file (after
- * the other Operation.make calls) so its `Schema.Struct` call doesn't run while
- * `capabilities/MessageExtractor.ts` is still loading via the `import type` chain — moving
- * it earlier triggers a load-order cycle that leaves `Database.Database` undefined when
- * the struct is constructed. Use `Type.getSchema(Message.Message)` for the same reason
- * other ops in this file do.
+ * Uniform input shape every extractor operation receives — generalised over any source ECHO
+ * object (`source`), not just messages. Defined late in this file (after the other
+ * Operation.make calls) so its `Schema.Struct` call doesn't run before `Database.Database` is
+ * initialised — moving it earlier triggers a load-order cycle that leaves `Database.Database`
+ * undefined when the struct is constructed.
  */
 export const ExtractInputSchema = Schema.Struct({
   db: Database.Database,
-  message: Type.getSchema(Message.Message),
-  targetTripId: Schema.optional(Schema.String),
+  source: Obj.Unknown,
 });
 
-/** Runtime Schema for `MessageExtractor.ExtractResult`. See ExtractInputSchema for rationale. */
+/** Runtime Schema for `@dxos/extractor` `ExtractResult`. See ExtractInputSchema for rationale. */
 export const ExtractResultSchema = Schema.Struct({
   created: Schema.Array(Schema.Any),
   updated: Schema.optional(Schema.Array(Schema.Any)),
@@ -409,12 +407,11 @@ export const ExtractSummaryFromMessage = Operation.make({
 
 export const ExtractMessage = Operation.make({
   meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
-  services: [Capability.Service],
+  services: [Capability.Service, AiService.AiService],
   input: Schema.Struct({
     db: Database.Database,
-    message: Type.getSchema(Message.Message),
+    source: Obj.Unknown,
     extractorId: Schema.optional(Schema.String),
-    targetTripId: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
     extractorId: Schema.String,

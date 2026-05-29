@@ -51,13 +51,13 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'contact-extractor',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)),
   }),
   Plugin.addModule({
     id: 'summarize-extractor',
     activatesOn: ActivationEvents.Startup,
     activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, SummarizeMessageExtractor)),
+      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)),
   }),
   Plugin.make,
 );

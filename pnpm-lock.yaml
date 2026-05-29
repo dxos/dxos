@@ -10702,6 +10702,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/extractor':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/compute/functions

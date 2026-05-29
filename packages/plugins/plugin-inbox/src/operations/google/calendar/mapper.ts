@@ -5,16 +5,16 @@
 import * as Effect from 'effect/Effect';
 
 import { Ref } from '@dxos/echo';
+import { type Resolver, resolve } from '@dxos/extractor';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../../apis';
-import * as Resolver from '../../../services/resolver';
 import { normalizeText } from '../util';
 
 /**
  * Maps Google Calendar event to ECHO event object.
  */
-export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Resolver.Resolver> =
+export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Resolver> =
   Effect.fn(function* (event: GoogleCalendar.Event) {
     // Skip cancelled events.
     if (event.status === 'cancelled') {
@@ -44,7 +44,7 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
         .filter((a) => a.email)
         .map((a) =>
           Effect.gen(function* () {
-            const contact = yield* Resolver.resolve(Person.Person, { email: a.email! });
+            const contact = yield* resolve(Person.Person, { email: a.email! });
             return {
               email: a.email!,
               ...(a.displayName ? { name: a.displayName } : {}),
