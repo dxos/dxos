@@ -11,9 +11,8 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
-import { WelcomeCapabilities } from './capabilities';
-
 import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
+import { WelcomeCapabilities } from './capabilities';
 
 const PERSONAL_SPACE_ICON = 'house-line';
 const PERSONAL_SPACE_ICON_HUE = 'violet';
@@ -83,7 +82,11 @@ export default Capability.makeModule(
 
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
-      graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'), Graph.expand(exemplarSpace.id, 'child'));
+      graph.pipe(
+        Graph.expand(Node.RootId, 'child'),
+        Graph.expand(personalSpace.id, 'child'),
+        Graph.expand(exemplarSpace.id, 'child'),
+      );
     } else {
       graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
     }

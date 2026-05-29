@@ -9,7 +9,14 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
-import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface, WelcomeCapabilities, type WelcomeOptions } from './capabilities';
+import {
+  AppGraphBuilder,
+  DefaultContent,
+  Onboarding,
+  ReactSurface,
+  WelcomeCapabilities,
+  type WelcomeOptions,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -17,9 +24,11 @@ export const WelcomePlugin = (options: WelcomeOptions) =>
   Plugin.define(meta).pipe(
     Plugin.addModule({
       id: 'options',
-      activate: Capability.makeModule(Effect.fnUntraced(function* () {
-        return Capability.contributes(WelcomeCapabilities.Options, options);
-      })),
+      activate: Capability.makeModule(
+        Effect.fnUntraced(function* () {
+          return Capability.contributes(WelcomeCapabilities.Options, options);
+        }),
+      ),
     }),
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
     AppPlugin.addSurfaceModule({ activate: ReactSurface }),
