@@ -3,5 +3,6 @@
 //
 
 export * as Provider from './Provider';
-export * as Search from './Search';
 export * as Result from './Result';
+export * as Search from './Search';
+export * as SearchOperation from './SearchOperation';
