@@ -24,8 +24,6 @@ const FLIGHT_LAYOUT = trim`
     <field name="serviceClass"/>
     <field name="departAt"/>
     <field name="arriveAt"/>
-    <field name="origin.code"/>
-    <field name="destination.code"/>
   </grid>
 `;
 
