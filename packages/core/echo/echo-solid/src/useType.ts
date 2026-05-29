@@ -47,11 +47,8 @@ export const useType = (
 
     const { db: resolvedDb, typename: resolvedTypename } = r;
 
-    const queryResult = resolvedDb.query(
-      Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
-    );
-    const update = () =>
-      setType(() => queryResult.results.find((type) => Type.getTypename(type) === resolvedTypename));
+    const queryResult = resolvedDb.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+    const update = () => setType(() => queryResult.results.find((type) => Type.getTypename(type) === resolvedTypename));
 
     // Subscribe before reading `.results` — the query requires at least one subscriber.
     const unsubscribe = queryResult.subscribe(update);

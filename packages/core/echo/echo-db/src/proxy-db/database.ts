@@ -288,10 +288,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     );
 
     const persistentSchema = this._addObject(schemaToStore);
-    invariant(
-      Type.isType(persistentSchema),
-      'persisted schema must materialize as a Type entity (kind=type)',
-    );
+    invariant(Type.isType(persistentSchema), 'persisted schema must materialize as a Type entity (kind=type)');
     return persistentSchema;
   }
 
