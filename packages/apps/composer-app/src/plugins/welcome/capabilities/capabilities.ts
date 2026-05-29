@@ -13,5 +13,4 @@ export type WelcomeOptions = {
 
 export namespace WelcomeCapabilities {
   export const Onboarding = Capability.make<OnboardingManager>(`${meta.id}.capability.onboarding`);
-  export const Options = Capability.make<WelcomeOptions>(`${meta.id}.capability.options`);
 }

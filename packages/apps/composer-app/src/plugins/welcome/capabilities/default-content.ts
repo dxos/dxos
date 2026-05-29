@@ -12,14 +12,14 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
-import { WelcomeCapabilities } from './capabilities';
+import { type WelcomeOptions } from './capabilities';
 
 const PERSONAL_SPACE_ICON = 'house-line';
 const PERSONAL_SPACE_ICON_HUE = 'violet';
 const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ generateExemplarSpace }: WelcomeOptions) {
     const { Collection, Obj, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { Migrations } = yield* Effect.tryPromise(() => import('@dxos/migrations'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
@@ -28,7 +28,6 @@ export default Capability.makeModule(
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
     const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
-    const { generateExemplarSpace } = yield* Capability.get(WelcomeCapabilities.Options);
 
     const personalSpace = getPersonalSpace(client);
     if (!personalSpace) {
