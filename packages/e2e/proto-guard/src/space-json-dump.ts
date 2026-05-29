@@ -10,7 +10,7 @@ import path from 'node:path';
 import { type Client } from '@dxos/client';
 import { Filter, type Obj, Query, Scope, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
-import { DXN, EchoURI, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {
@@ -19,7 +19,7 @@ export type SpacesDump = {
    */
   [spaceId: string]: {
     /**
-     * ObjectIds mapped to JSON dump of the object.
+     * EntityIds mapped to JSON dump of the object.
      */
     [objectId: string]: Obj.JSON;
   };
@@ -126,10 +126,10 @@ export class SpacesDumper {
       if (DXN.isDXN(objType) && DXN.isDXN(schemaURI)) {
         return DXN.tryMake(objType) === DXN.tryMake(schemaURI);
       }
-      // Normalize EchoURI-style type references: handles `dxn:echo:@:<id>` (legacy local)
+      // Normalize EID-style type references: handles `dxn:echo:@:<id>` (legacy local)
       // vs `echo://<spaceId>/<id>` (new qualified) — same object, different format.
-      if (EchoURI.isEchoURI(objType) && EchoURI.isEchoURI(schemaURI)) {
-        return EchoURI.getObjectId(EchoURI.parse(objType)) === EchoURI.getObjectId(EchoURI.parse(schemaURI));
+      if (EID.isEID(objType) && EID.isEID(schemaURI)) {
+        return EID.getEntityId(EID.parse(objType)) === EID.getEntityId(EID.parse(schemaURI));
       }
       return false;
     });
@@ -137,9 +137,9 @@ export class SpacesDumper {
 }
 
 /**
- * EchoURI fields whose wire format changed between snapshots and current output
+ * EID fields whose wire format changed between snapshots and current output
  * (`dxn:echo:<space>:<id>` → `echo://<space>/<id>`). Compared semantically via
- * `EchoURI.parse` (which normalizes both forms).
+ * `EID.parse` (which normalizes both forms).
  */
 const ECHO_ID_FIELDS = new Set(['@uri', '@dxn', '@parent', '@source', '@target']);
 
@@ -169,8 +169,8 @@ export const equals = (actual: Record<string, any>, expected: Record<string, any
     }
     const actualValue = aliasedValue(actual, key);
     if (ECHO_ID_FIELDS.has(key) && typeof value === 'string' && typeof actualValue === 'string') {
-      // Normalize both via EchoURI.parse so legacy `dxn:echo:` and new `echo://` formats compare equal.
-      if (EchoURI.parse(value) !== EchoURI.parse(actualValue)) {
+      // Normalize both via EID.parse so legacy `dxn:echo:` and new `echo://` formats compare equal.
+      if (EID.parse(value) !== EID.parse(actualValue)) {
         log.warn('value mismatch', { key, expected: value, actual: actualValue });
         return false;
       }

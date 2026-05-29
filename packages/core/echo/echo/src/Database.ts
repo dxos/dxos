@@ -233,11 +233,11 @@ export const resolve: {
   <S extends Type.AnyEntity>(
     ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
   ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
@@ -252,7 +252,7 @@ export const resolve: {
     );
 
     if (!object) {
-      return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
+      return yield* Effect.fail(new Err.EntityNotFoundError(dxn));
     }
     // `isInstanceOf` uses a conditional generic that TS can't resolve through
     // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
@@ -263,11 +263,11 @@ export const resolve: {
 /**
  * Loads an object reference.
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn('Database.load')(
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.uri));
+      return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
     }
     return object;
   },
@@ -280,7 +280,7 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError,
 export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(
   'Database.loadOption',
 )(function* (ref) {
-  const object = yield* load(ref).pipe(Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)));
+  const object = yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
 
   return Option.fromNullable(object);
 });

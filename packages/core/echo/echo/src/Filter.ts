@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -79,11 +79,11 @@ export const nothing = (): FilterClass => {
 };
 
 /*
- * Filter by ObjectId.
+ * Filter by EntityId.
  */
-export const id = (...ids: ObjectId[]): Any => {
+export const id = (...ids: EntityId[]): Any => {
   assertArgument(
-    ids.every((id) => ObjectId.isValid(id)),
+    ids.every((id) => EntityId.isValid(id)),
     'ids',
     'ids must be valid',
   );
@@ -160,7 +160,7 @@ export const typename = (typename: string): Any => {
 
 /**
  * Filter by fully qualified type URI — either a typename DXN (for static schemas) or
- * a schema-as-object EchoURI (for stored dynamic schemas). See `getSchemaURI`.
+ * a schema-as-object EID (for stored dynamic schemas). See `getSchemaURI`.
  */
 export const typeURI = (uri: URI.URI): Any => {
   return new FilterClass({
@@ -410,7 +410,7 @@ export const childOf = (
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
-      return EchoURI.parse(item.uri);
+      return EID.parse(item.uri);
     }
     return internal.getUri(item);
   });
@@ -454,7 +454,7 @@ export const or = <Filters extends readonly Any[]>(...filters: Filters): Filter<
 // TODO(dmaretskyi): Add `Filter.match` to support pattern matching on string props.
 
 const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
-  let idFilter: readonly ObjectId[] | undefined;
+  let idFilter: readonly EntityId[] | undefined;
   if ('id' in predicates) {
     assertArgument(
       typeof predicates.id === 'string' || Array.isArray(predicates.id),
@@ -462,7 +462,7 @@ const propsFilterToAst = (predicates: Props<any>): Pick<QueryAST.FilterObject, '
       'invalid id filter',
     );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-    Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
+    Schema.Array(EntityId).pipe(Schema.validateSync)(idFilter);
   }
 
   return {

@@ -72,7 +72,7 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
   if (Registry.isRegistry(queryable)) {
     return queryable.id;
   }
-  // Queue or similar: use uri if it's a URI (EchoURI or DXN).
+  // Queue or similar: use uri if it's a URI (EID or DXN).
   if ('uri' in queryable && URI.isURI(queryable.uri)) {
     return queryable.uri;
   }

@@ -9,11 +9,11 @@ import type * as Schema from 'effect/Schema';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
-import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaURI } from '@dxos/echo/internal';
 import * as Type from '@dxos/echo/Type';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
@@ -53,7 +53,7 @@ export class MigrationBuilder {
       .doc() as Doc<DatabaseDirectory>;
   }
 
-  async findObject(id: string): Promise<ObjectStructure | undefined> {
+  async findObject(id: string): Promise<EntityStructure | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
@@ -67,7 +67,7 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ type: Type.AnyEntity; props: any }>,
+    migrate: (objectStructure: EntityStructure) => MaybePromise<{ type: Type.AnyEntity; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
@@ -112,15 +112,15 @@ export class MigrationBuilder {
   }
 
   createReference(id: string) {
-    invariant(ObjectId.isValid(id), 'Invalid ObjectId.');
-    return EncodedReference.fromURI(EchoURI.make({ objectId: id }));
+    invariant(EntityId.isValid(id), 'Invalid EntityId.');
+    return EncodedReference.fromURI(EID.make({ entityId: id }));
   }
 
   deleteObject(id: string): void {
     this._deleteObjects.push(id);
   }
 
-  async changeProperties(changeFn: (properties: ObjectStructure) => void): Promise<void> {
+  async changeProperties(changeFn: (properties: EntityStructure) => void): Promise<void> {
     if (!this._newRoot) {
       await this._buildNewRoot();
     }
@@ -208,7 +208,7 @@ export class MigrationBuilder {
         spaceKey: this._space.key.toHex(),
       },
       objects: {
-        [core.id]: core.getDoc() as ObjectStructure,
+        [core.id]: core.getDoc() as EntityStructure,
       },
     });
     await newHandle.whenReady();

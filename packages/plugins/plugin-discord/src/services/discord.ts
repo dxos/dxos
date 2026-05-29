@@ -42,7 +42,7 @@ export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordRES
  */
 export const makeDiscordLayer = (
   integrationRef: Ref.Ref<Integration.Integration>,
-): Layer.Layer<DiscordREST, Err.ObjectNotFoundError> =>
+): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);
@@ -70,7 +70,7 @@ export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<Discor
  */
 export const makeDiscordUserLayer = (
   integrationRef: Ref.Ref<Integration.Integration>,
-): Layer.Layer<DiscordREST, Err.ObjectNotFoundError> =>
+): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);

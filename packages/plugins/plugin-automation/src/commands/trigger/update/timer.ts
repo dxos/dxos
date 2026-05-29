@@ -14,7 +14,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import { Cron, Enabled, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -37,7 +37,7 @@ export const timer = Command.make(
         onNone: () => selectTrigger('timer'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.make({ objectId: triggerId });
+      const dxn = EID.make({ entityId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (!trigger.spec || trigger.spec?.kind !== 'timer') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
@@ -101,7 +101,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
 
   if (!currentFn) {
     const functionId =
-      (trigger.function ? EchoURI.getObjectId(EchoURI.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
+      (trigger.function ? EID.getEntityId(EID.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 

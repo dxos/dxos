@@ -14,7 +14,7 @@ export const Label = Schema.Union(
       Schema.String,
       Schema.mutable(
         Schema.Struct({
-          ns: Schema.String,
+          ns: Schema.Union(Schema.String, Schema.Array(Schema.String)),
           count: Schema.optional(Schema.Number),
           defaultValue: Schema.optional(Schema.String),
         }),

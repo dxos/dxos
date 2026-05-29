@@ -11,7 +11,7 @@ import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Message, Organization, Person } from '@dxos/types';
 
@@ -20,7 +20,7 @@ import { ProfileOf } from '#types';
 import { EMAIL_FIXTURES, makeEmailMessage } from '../../testing';
 import CrmBlueprint from './blueprint';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 /**
  * Tuning playground for the CRM blueprint. Runs each reference email fixture

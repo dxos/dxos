@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import type { ObjectId } from '@dxos/keys';
+import type { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { type ChunkRenderer, DocumentAdapter, SerializationModel } from './model';
@@ -112,7 +112,7 @@ describe('SerializationModel', () => {
     const adapter = new DocumentAdapter(view);
     expect(adapter.lineCount()).to.eq(0);
 
-    let msgId: ObjectId;
+    let msgId: EntityId;
 
     // Append message.
     {

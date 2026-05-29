@@ -20,7 +20,7 @@ export default AgentWorker.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, prompt, event }) {
       const agent = yield* Database.load(agentRef).pipe(
-        Effect.catchTag('ObjectNotFoundError', () => Effect.die(new Error('Unable to load agent object.'))),
+        Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load agent object.'))),
       );
       invariant(Obj.instanceOf(Agent.Agent, agent));
       invariant(agent.chat, 'Agent has no chat.');
@@ -28,7 +28,7 @@ export default AgentWorker.pipe(
       const chatFeed = yield* agent.chat.pipe(
         Database.load,
         Effect.flatMap((chat) => Database.load(chat.feed)),
-        Effect.catchTag('ObjectNotFoundError', () => Effect.die(new Error('Unable to load agent chat feed object.'))),
+        Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load agent chat feed object.'))),
       );
       invariant(chatFeed, 'Agent chat feed not found.');
       const runtime = yield* Effect.runtime<Feed.FeedService>();

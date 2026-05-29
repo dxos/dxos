@@ -9,6 +9,7 @@ export * from './graph-projector';
 export * from './graph-force-projector';
 export * from './graph-hierarchical-projector';
 export * from './graph-lattice-projector';
+export * from './graph-plexus-projector';
 export * from './graph-relational-projector';
 export * from './graph-radial-projector';
 export * from './graph-swarm-projector';

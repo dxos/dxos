@@ -3,18 +3,18 @@
 //
 
 import type { IndexingResult } from '@dxos/index-core';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, type EntityId, type SpaceId } from '@dxos/keys';
 
 export type InvalidationHint = {
   spaceIds?: ReadonlySet<SpaceId>;
-  queueIds?: ReadonlySet<ObjectId>;
+  queueIds?: ReadonlySet<EntityId>;
   /**
    * Canonical typenames (version-less, no legacy `dxn:type:` prefix) — see {@link canonicalTypename}.
    * A type filter matches every version of a typename, so invalidation keys on the bare typename.
    * Query scopes are canonicalized the same way, so hints and scopes compare with a plain set overlap.
    */
   typenames?: ReadonlySet<string>;
-  objectIds?: ReadonlySet<ObjectId>;
+  objectIds?: ReadonlySet<EntityId>;
 };
 
 /**

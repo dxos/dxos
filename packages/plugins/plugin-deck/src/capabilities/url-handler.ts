@@ -131,9 +131,14 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+
     // Initial navigation.
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
+    window.addEventListener('beforeunload', onBeforeUnload);
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
@@ -192,6 +197,7 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
+        window.removeEventListener('beforeunload', onBeforeUnload);
         unsubscribe();
         unlistenDeepLink?.();
       }),

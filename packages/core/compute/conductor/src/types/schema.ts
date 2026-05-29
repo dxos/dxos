@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 //
@@ -72,7 +72,7 @@ export const ConstantOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Scalar });
 // Queue
 //
 
-export const QueueInput = Schema.Struct({ [DEFAULT_INPUT]: ObjectId });
+export const QueueInput = Schema.Struct({ [DEFAULT_INPUT]: EntityId });
 export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Type.getSchema(Message.Message)) });
 
 //
@@ -89,7 +89,7 @@ export type FunctionInput = Schema.Schema.Type<typeof FunctionInput>;
 export const JsonTransformInput = Schema.Struct({ [DEFAULT_INPUT]: Schema.Any, expression: Schema.String });
 export type JsonTransformInput = Schema.Schema.Type<typeof JsonTransformInput>;
 
-export const AppendInput = Schema.Struct({ id: ObjectId, items: Schema.Any });
+export const AppendInput = Schema.Struct({ id: EntityId, items: Schema.Any });
 export type AppendInput = Schema.Schema.Type<typeof AppendInput>;
 
 // export const DatabaseOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });

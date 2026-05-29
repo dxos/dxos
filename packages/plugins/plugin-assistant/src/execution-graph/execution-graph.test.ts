@@ -7,13 +7,13 @@ import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
 
 import { CommitSelector, buildExecutionGraph } from './execution-graph';
 import { collectTraceEvents, withMeta } from './testing';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
   id,

@@ -24,12 +24,12 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
-  '@automerge/automerge': 3.2.6
-  '@automerge/automerge-repo': 2.6.0-subduction.20
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.20
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.20
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.20
-  '@automerge/automerge-subduction': 0.12.1
+  '@automerge/automerge': 3.3.0-fragments.1
+  '@automerge/automerge-repo': 2.6.0-subduction.23
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.23
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.23
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.23
+  '@automerge/automerge-subduction': 0.13.0
   '@babel/core': ^7.18.13
   '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
@@ -759,8 +759,8 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.20': patches/@automerge__automerge-repo@2.6.0-subduction.20.patch
-  '@automerge/automerge-subduction@0.12.1': patches/@automerge__automerge-subduction@0.12.1.patch
+  '@automerge/automerge-repo@2.6.0-subduction.23': patches/@automerge__automerge-repo@2.6.0-subduction.23.patch
+  '@automerge/automerge-subduction@0.13.0': patches/@automerge__automerge-subduction@0.13.0.patch
   '@vitest/browser@4.1.7': patches/@vitest__browser@4.1.7.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch

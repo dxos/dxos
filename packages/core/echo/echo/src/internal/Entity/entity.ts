@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
@@ -18,7 +18,7 @@ import {
   EntityKind,
   InstancePhantomId,
   KindId,
-  type ObjectMeta,
+  type EntityMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
@@ -38,12 +38,12 @@ export type EchoTypeOptions = {
   /**
    * Override the entity id stamped on the in-memory `Type.Type` value.
    *
-   * Defaults to `ObjectId.deterministic(typename, version)` — stable across processes
+   * Defaults to `EntityId.deterministic(typename, version)` — stable across processes
    * and workerd-safe (no `crypto.getRandomValues()` at module-evaluation time).
-   * Pass an explicit id (typically `ObjectId.random()`) to opt out of the
+   * Pass an explicit id (typically `EntityId.random()`) to opt out of the
    * deterministic default.
    */
-  id?: ObjectId;
+  id?: EntityId;
 };
 
 /**
@@ -78,13 +78,13 @@ export interface EchoTypeSchema<
    * DXN, switching to `echo:/<id>` only once attached to a database (see
    * `getTypeURIFromSpecifier`, which discriminates by database attachment).
    */
-  readonly id: ObjectId;
+  readonly id: EntityId;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
   readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
 
   // NOTE: `typename` / `version` are intentionally NOT fields. They live in
-  // `ObjectMeta` (`key` / `version`); read via `Type.getTypename(self)` /
+  // `EntityMeta` (`key` / `version`); read via `Type.getTypename(self)` /
   // `Type.getVersion(self)`.
   readonly jsonSchema: JsonSchemaType;
 
@@ -179,7 +179,7 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
   const struct = Schema.Struct({
     name: Schema.optional(Schema.String),
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
-    id: ObjectId,
+    id: EntityId,
   });
   const ast = SchemaAST.annotations(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
@@ -215,7 +215,7 @@ export const makeEchoTypeSchema = <
   version: string,
   kind: K,
   computeJsonSchema: () => JsonSchemaType,
-  explicitId?: ObjectId,
+  explicitId?: EntityId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
   const sourceSchema = Schema.make<
@@ -224,20 +224,20 @@ export const makeEchoTypeSchema = <
     Schema.Schema.Context<Self>
   >(ast);
 
-  // `typename` / `version` route through `ObjectMeta` (`key` / `version`) — the
+  // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
   // canonical registry-provenance pair — not data fields. `keys` is empty for
   // in-memory declarations until persisted.
-  const meta: ObjectMeta = { keys: [], key: typename, version };
+  const meta: EntityMeta = { keys: [], key: typename, version };
 
   // Default to a deterministic id derived from `(typename, version)` so that
   // constructing a `Type.Type` entity never reaches `crypto.getRandomValues()`.
   // Cloudflare workerd forbids RNG calls in global scope, and the ~hundreds of
   // `Type.makeObject(...)` call sites across the monorepo execute at module top.
   // `setIdOnTarget` (see `proxy/make-object.ts`) short-circuits on a pre-supplied
-  // valid id, so this also bypasses the `ObjectId.random()` path inside `makeObject`.
+  // valid id, so this also bypasses the `EntityId.random()` path inside `makeObject`.
   // Callers can override via `Type.makeObject(dxn, { id })` when they want a fresh
   // random id (e.g. inside a request handler where workerd does allow RNG).
-  const id = explicitId ?? ObjectId.deterministic(typename, version);
+  const id = explicitId ?? EntityId.deterministic(typename, version);
 
   // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
   // below as a getter (not passed here as data) for two reasons; see that accessor.

@@ -7,17 +7,17 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import type { DeepReadonly } from '@dxos/util';
 
 import { type Mutable } from '../proxy';
-import { type AnyProperties, type ObjectMeta, getMeta as getMeta$ } from '../types';
+import { type AnyProperties, type EntityMeta, getMeta as getMeta$ } from '../types';
 
 /**
- * Deeply read-only version of ObjectMeta.
+ * Deeply read-only version of EntityMeta.
  */
-export type ReadonlyMeta = DeepReadonly<ObjectMeta>;
+export type ReadonlyMeta = DeepReadonly<EntityMeta>;
 
 /**
  * Mutable meta type received in meta mutation callbacks.
  */
-export type Meta = Mutable<ObjectMeta>;
+export type Meta = Mutable<EntityMeta>;
 
 /**
  * Get the metadata for an entity with validation.

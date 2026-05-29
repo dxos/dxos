@@ -6,7 +6,7 @@ import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { type SerializedSpace } from '@dxos/echo-db';
-import { ObjectId, SpaceId, URI } from '@dxos/keys';
+import { EntityId, SpaceId, URI } from '@dxos/keys';
 import {
   FEED_ARCHIVE_BLOCKS_PER_CHUNK,
   type FeedArchiveBlock,
@@ -361,7 +361,7 @@ describe('SpaceArchive', () => {
     });
 
     test('buildDatabaseDirectoryFromObjects round-trips data and type info', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const objects = [
         {
           id,
@@ -380,10 +380,10 @@ describe('SpaceArchive', () => {
     });
 
     test('objectStructureToObjJson emits fields in canonical order', () => {
-      const id = ObjectId.random();
-      const sourceId = ObjectId.random();
-      const targetId = ObjectId.random();
-      const parentId = ObjectId.random();
+      const id = EntityId.random();
+      const sourceId = EntityId.random();
+      const targetId = EntityId.random();
+      const parentId = EntityId.random();
       const obj = objectStructureToObjJson(id, {
         data: { title: 'hello', count: 42 },
         meta: { keys: [] },
@@ -411,7 +411,7 @@ describe('SpaceArchive', () => {
     });
 
     test('orderObjJsonFields reorders feed queue messages with id/@type/@meta first', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const message = {
         payload: { value: 'x' },
         timestamp: 1000,
@@ -426,7 +426,7 @@ describe('SpaceArchive', () => {
     });
 
     test('orderObjJsonFields preserves unknown @-prefixed fields between system and data', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const obj = {
         data: 1,
         '@custom': 'extension',
@@ -439,9 +439,9 @@ describe('SpaceArchive', () => {
     });
 
     test('buildDatabaseDirectoryFromObjects flags relations', () => {
-      const id = ObjectId.random();
-      const sourceId = ObjectId.random();
-      const targetId = ObjectId.random();
+      const id = EntityId.random();
+      const sourceId = EntityId.random();
+      const targetId = EntityId.random();
       const objects = [
         {
           id,
@@ -459,7 +459,7 @@ describe('SpaceArchive', () => {
     });
 
     test('buildDatabaseDirectoryFromObjects flags persisted Type.Type entities as kind=type', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const objects = [
         {
           id,

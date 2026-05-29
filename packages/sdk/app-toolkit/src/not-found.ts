@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention/types';
 
@@ -22,7 +22,7 @@ export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
  * Callback to check if an object exists on a remote service (e.g., edge).
  * Takes a DXN identifying the object. Returns an Effect resolving to true if the object exists remotely.
  */
-export type RemoteExistenceChecker = (echoUri: EchoURI.EchoURI) => Effect.Effect<boolean>;
+export type RemoteExistenceChecker = (echoUri: EID.EID) => Effect.Effect<boolean>;
 
 /**
  * Expand a qualified graph path by expanding each ancestor prefix.
@@ -75,13 +75,13 @@ export const validateNavigationTarget = (params: {
 
   // Node not found locally. Ask path resolvers to identify the DXN for this path.
   return Effect.gen(function* () {
-    const dxn = yield* Effect.reduce(pathResolvers, Option.none<EchoURI.EchoURI>(), (acc, resolver) =>
+    const dxn = yield* Effect.reduce(pathResolvers, Option.none<EID.EID>(), (acc, resolver) =>
       Option.isSome(acc)
         ? Effect.succeed(acc)
         : resolver(subjectId).pipe(
             Effect.catchAll((error) => {
               log.warn('path resolver failed', { subjectId, error });
-              return Effect.succeed(Option.none<EchoURI.EchoURI>());
+              return Effect.succeed(Option.none<EID.EID>());
             }),
           ),
     );
@@ -115,8 +115,8 @@ export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
   return (echoUri) => {
-    const spaceId = EchoURI.getSpaceId(echoUri);
-    const objectId = EchoURI.getObjectId(echoUri);
+    const spaceId = EID.getSpaceId(echoUri);
+    const objectId = EID.getEntityId(echoUri);
     if (!spaceId || !objectId) {
       return Effect.succeed(false);
     }

@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { type Magazine, Subscription } from '#types';
 
-import { dxnToObjectId, getSubscriptionPostState, updateSubscriptionPostState } from '../../util';
+import { dxnToEntityId, getSubscriptionPostState, updateSubscriptionPostState } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
 import { MagazineSort, type CurateState } from './MagazineToolbar';
 import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
@@ -108,7 +108,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // string-comparing the full DXN flags every post as an orphan and wipes the
   // magazine on mount.
   useEffect(() => {
-    const feedIds = new Set(magazine.feeds.map((ref) => dxnToObjectId(ref.uri)));
+    const feedIds = new Set(magazine.feeds.map((ref) => dxnToEntityId(ref.uri)));
     const orphanIds = new Set<string>();
     for (const postRef of magazine.posts) {
       const post = postRef.target;
@@ -116,8 +116,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       if (!feedRef) {
         continue;
       }
-      if (!feedIds.has(dxnToObjectId(feedRef.uri))) {
-        orphanIds.add(dxnToObjectId(postRef.uri));
+      if (!feedIds.has(dxnToEntityId(feedRef.uri))) {
+        orphanIds.add(dxnToEntityId(postRef.uri));
       }
     }
     if (orphanIds.size === 0) {
@@ -125,7 +125,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     Obj.update(subject, (subject) => {
-      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.uri)));
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToEntityId(ref.uri)));
     });
   }, [subject, magazine.feeds, magazine.posts]);
 

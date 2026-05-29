@@ -12,16 +12,16 @@ import { type Obj, Query } from '@dxos/echo';
 import {
   DatabaseDirectory,
   EncodedReference,
-  type ObjectPropPath,
-  ObjectStructure,
+  type EntityPropPath,
+  EntityStructure,
   type QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
+import { EscapedPropPath, type IndexEngine, type EntityMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -56,17 +56,17 @@ type QueryExecutionResult = {
  * Represents an item in the query working set during execution.
  */
 type QueryItem = {
-  objectId: ObjectId;
+  objectId: EntityId;
 
   spaceId: SpaceId;
-  queueId: ObjectId | null;
+  queueId: EntityId | null;
   queueNamespace: string | null;
 
   // For objects from automerge documents.
   documentId: DocumentId | null;
 
   // For objects from automerge documents.
-  doc: ObjectStructure | null;
+  doc: EntityStructure | null;
 
   // For objects from queues.
   data: Obj.JSON | null;
@@ -86,7 +86,7 @@ const QueryItem = Object.freeze({
    */
   isDeleted: (item: QueryItem) => {
     if (item.doc) {
-      return ObjectStructure.isDeleted(item.doc);
+      return EntityStructure.isDeleted(item.doc);
     } else if (item.data) {
       return item.data['@deleted'] === true;
     } else {
@@ -94,7 +94,7 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getProperty: (item: QueryItem, property: ObjectPropPath) => {
+  getProperty: (item: QueryItem, property: EntityPropPath) => {
     if (item.doc) {
       return getDeep(item.doc.data, property);
     } else if (item.data) {
@@ -104,40 +104,40 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getParent: (item: QueryItem): EchoURI.EchoURI | undefined => {
+  getParent: (item: QueryItem): EID.EID | undefined => {
     let raw: string | undefined;
     if (item.doc) {
-      raw = ObjectStructure.getParent(item.doc)?.['/'];
+      raw = EntityStructure.getParent(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_PARENT];
     } else {
       throw new Error('Invalid query item');
     }
-    return raw !== undefined ? EchoURI.tryParse(raw) : undefined;
+    return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
 
-  getRelationSource: (item: QueryItem): EchoURI.EchoURI | undefined => {
+  getRelationSource: (item: QueryItem): EID.EID | undefined => {
     let raw: string | undefined;
     if (item.doc) {
-      raw = ObjectStructure.getRelationSource(item.doc)?.['/'];
+      raw = EntityStructure.getRelationSource(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_RELATION_SOURCE];
     } else {
       throw new Error('Invalid query item');
     }
-    return raw !== undefined ? EchoURI.tryParse(raw) : undefined;
+    return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
 
-  getRelationTarget: (item: QueryItem): EchoURI.EchoURI | undefined => {
+  getRelationTarget: (item: QueryItem): EID.EID | undefined => {
     let raw: string | undefined;
     if (item.doc) {
-      raw = ObjectStructure.getRelationTarget(item.doc)?.['/'];
+      raw = EntityStructure.getRelationTarget(item.doc)?.['/'];
     } else if (item.data) {
       raw = item.data[ATTR_RELATION_TARGET];
     } else {
       throw new Error('Invalid query item');
     }
-    return raw !== undefined ? EchoURI.tryParse(raw) : undefined;
+    return raw !== undefined ? EID.tryParse(raw) : undefined;
   },
 });
 
@@ -251,9 +251,9 @@ type QueryScopes = {
    */
   isSimple: boolean;
   spaceIds: Set<SpaceId> | null;
-  queueIds: Set<ObjectId> | null;
+  queueIds: Set<EntityId> | null;
   typenames: Set<string> | null;
-  objectIds: Set<ObjectId> | null;
+  objectIds: Set<EntityId> | null;
 };
 
 const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
@@ -284,13 +284,13 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         const hasIncludeAllFeeds = spaceScopes.some((s) => s.includeAllFeeds === true);
         if (feedScopesForExtract.length > 0 && !hasIncludeAllFeeds) {
           let parseFailed = false;
-          const derivedQueueIds = new Set<ObjectId>();
+          const derivedQueueIds = new Set<EntityId>();
           const derivedSpaceIds = new Set<SpaceId>();
           for (const feedEntry of feedScopesForExtract) {
-            const echoUri = EchoURI.tryParse(String(feedEntry.feedUri));
+            const echoUri = EID.tryParse(String(feedEntry.feedUri));
             if (echoUri) {
-              const queueId = EchoURI.getObjectId(echoUri);
-              const spaceId = EchoURI.getSpaceId(echoUri);
+              const queueId = EID.getEntityId(echoUri);
+              const spaceId = EID.getSpaceId(echoUri);
               if (queueId) {
                 derivedQueueIds.add(queueId);
               }
@@ -304,7 +304,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
 
           if (!parseFailed) {
             if (derivedQueueIds.size > 0) {
-              scopes.queueIds ??= new Set<ObjectId>();
+              scopes.queueIds ??= new Set<EntityId>();
               for (const id of derivedQueueIds) {
                 scopes.queueIds.add(id);
               }
@@ -628,7 +628,7 @@ export class QueryExecutor extends Resource {
 
         const items = await Promise.all(
           step.selector.objectIds.map((id) => {
-            if (!ObjectId.isValid(id)) {
+            if (!EntityId.isValid(id)) {
               return null;
             }
             if (queues.length > 0) {
@@ -639,7 +639,7 @@ export class QueryExecutor extends Resource {
               }
               return null;
             } else if (spaces.length > 0) {
-              return this._loadFromDXN(EchoURI.make({ objectId: id }), { sourceSpaceId: spaces[0] });
+              return this._loadFromDXN(EID.make({ entityId: id }), { sourceSpaceId: spaces[0] });
             } else {
               return null; // Unknown scope.
             }
@@ -763,7 +763,7 @@ export class QueryExecutor extends Resource {
               if (!snapshot || typeof snapshot !== 'object') {
                 return null;
               }
-              if (!ObjectId.isValid(result.queueId)) {
+              if (!EntityId.isValid(result.queueId)) {
                 return null;
               }
               return {
@@ -783,7 +783,7 @@ export class QueryExecutor extends Resource {
         // Load space items from documents.
         const spaceItems = await Promise.all(
           spaceResults.map(async (result): Promise<QueryItem | null> => {
-            const dxn = EchoURI.make({ objectId: result.objectId });
+            const dxn = EID.make({ entityId: result.objectId });
             const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId });
             if (item) {
               // Override the default rank with the FTS rank.
@@ -935,9 +935,9 @@ export class QueryExecutor extends Resource {
   ): Promise<StepExecutionResult> {
     const parentObjectIds = new Set<string>();
     for (const parentDxnStr of filter.parents) {
-      const echoUri = EchoURI.tryParse(parentDxnStr);
+      const echoUri = EID.tryParse(parentDxnStr);
       if (echoUri) {
-        const objectId = EchoURI.getObjectId(echoUri);
+        const objectId = EID.getEntityId(echoUri);
         if (objectId) {
           parentObjectIds.add(objectId);
         }
@@ -970,18 +970,18 @@ export class QueryExecutor extends Resource {
       return false;
     }
 
-    const parentRefs: { dxnStr: EchoURI.EchoURI; objectId: string }[] = [];
+    const parentRefs: { dxnStr: EID.EID; objectId: string }[] = [];
 
     const directParent = QueryItem.getParent(item);
     if (directParent) {
-      const objectId = EchoURI.getObjectId(directParent);
+      const objectId = EID.getEntityId(directParent);
       if (objectId) {
         parentRefs.push({ dxnStr: directParent, objectId });
       }
     }
 
     if (item.queueId && !directParent) {
-      const queueEchoUri = EchoURI.make({ spaceId: item.spaceId, objectId: item.queueId });
+      const queueEchoUri = EID.make({ spaceId: item.spaceId, entityId: item.queueId });
       parentRefs.push({
         dxnStr: queueEchoUri,
         objectId: item.queueId,
@@ -1135,7 +1135,7 @@ export class QueryExecutor extends Resource {
                 if (!item.doc) {
                   return null; // TODO(dmaretskyi): Queue items not supported here.
                 }
-                const ref = ObjectStructure.getParent(item.doc);
+                const ref = EntityStructure.getParent(item.doc);
                 if (!EncodedReference.isEncodedReference(ref)) {
                   return null;
                 }
@@ -1162,7 +1162,7 @@ export class QueryExecutor extends Resource {
             // Covers both standard parent/child hierarchy (via the `parent` field) and
             // feed -> queue items (via the `queueId` field — a feed's queue id matches the feed's object id).
             // Group working set by spaceId.
-            const bySpace = new Map<SpaceId, ObjectId[]>();
+            const bySpace = new Map<SpaceId, EntityId[]>();
             for (const item of workingSet) {
               const existing = bySpace.get(item.spaceId);
               if (existing) {
@@ -1173,7 +1173,7 @@ export class QueryExecutor extends Resource {
             }
 
             const beginIndexQuery = performance.now();
-            const allMetas: ObjectMeta[] = [];
+            const allMetas: EntityMeta[] = [];
             for (const [spaceId, parentIds] of bySpace) {
               const children = await this._runInRuntime(
                 this._indexEngine.queryChildren({ spaceId: [spaceId], parentIds }),
@@ -1203,7 +1203,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execUnionStep(step: QueryPlan.UnionStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const results = new Map<ObjectId, QueryItem>();
+    const results = new Map<EntityId, QueryItem>();
 
     const resultSets = await Promise.all(step.plans.map((plan) => this._execPlan(plan, [...workingSet])));
 
@@ -1366,8 +1366,8 @@ export class QueryExecutor extends Resource {
   private async _queryAllFromSqlIndex(
     spaceIds: readonly SpaceId[],
     includeAllQueues: boolean,
-    queueIds: readonly ObjectId[] | null,
-  ): Promise<readonly ObjectMeta[]> {
+    queueIds: readonly EntityId[] | null,
+  ): Promise<readonly EntityMeta[]> {
     return await this._runInRuntime(this._indexEngine.queryAll({ spaceIds, includeAllQueues, queueIds }));
   }
 
@@ -1376,8 +1376,8 @@ export class QueryExecutor extends Resource {
     typeDxns: readonly URI.URI[],
     inverted: boolean,
     includeAllQueues: boolean,
-    queueIds: readonly ObjectId[] | null,
-  ): Promise<readonly ObjectMeta[]> {
+    queueIds: readonly EntityId[] | null,
+  ): Promise<readonly EntityMeta[]> {
     return await this._runInRuntime(
       this._indexEngine.queryTypes({ spaceIds, typeDxns, inverted, includeAllQueues, queueIds }),
     );
@@ -1386,8 +1386,8 @@ export class QueryExecutor extends Resource {
   private async _queryIncomingReferencesFromSqlIndex(
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
-  ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoURI.make({ objectId: item.objectId }));
+  ): Promise<readonly EntityMeta[]> {
+    const anchorDxns = workingSet.map((item) => EID.make({ entityId: item.objectId }));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
@@ -1460,12 +1460,12 @@ export class QueryExecutor extends Resource {
   private async _queryRelationsFromSqlIndex(
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
-  ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoURI.make({ objectId: item.objectId }));
+  ): Promise<readonly EntityMeta[]> {
+    const anchorDxns = workingSet.map((item) => EID.make({ entityId: item.objectId }));
     return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
   }
 
-  private async _loadDocumentsAfterSqlQuery(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
+  private async _loadDocumentsAfterSqlQuery(metas: readonly EntityMeta[]): Promise<(QueryItem | null)[]> {
     const snapshotMap = await this._loadQueueSnapshotMap(metas);
     return await Promise.all(
       metas.map(async (meta) => {
@@ -1484,7 +1484,7 @@ export class QueryExecutor extends Resource {
     );
   }
 
-  private async _loadQueueSnapshotMap(metas: readonly ObjectMeta[]): Promise<Map<number, unknown>> {
+  private async _loadQueueSnapshotMap(metas: readonly EntityMeta[]): Promise<Map<number, unknown>> {
     const queueMetas = metas.filter((meta) => !meta.documentId && !!meta.queueId);
     if (queueMetas.length === 0) {
       return new Map();
@@ -1500,12 +1500,12 @@ export class QueryExecutor extends Resource {
    * Loads a queue-backed object from an indexed snapshot (by `recordId`).
    * Returns `null` when the snapshot is missing or is not a JSON object.
    */
-  private _loadFromQueue(meta: ObjectMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
+  private _loadFromQueue(meta: EntityMeta, snapshotMap: Map<number, unknown>): QueryItem | null {
     const snapshot = snapshotMap.get(meta.recordId);
     if (!snapshot || typeof snapshot !== 'object') {
       return null;
     }
-    if (!ObjectId.isValid(meta.queueId)) {
+    if (!EntityId.isValid(meta.queueId)) {
       return null;
     }
 
@@ -1526,7 +1526,7 @@ export class QueryExecutor extends Resource {
    * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
    * document id (e.g. queue-backed objects).
    */
-  private async _loadFromAutomerge(meta: ObjectMeta): Promise<QueryItem | null> {
+  private async _loadFromAutomerge(meta: EntityMeta): Promise<QueryItem | null> {
     if (!meta.documentId) {
       return null;
     }
@@ -1553,19 +1553,19 @@ export class QueryExecutor extends Resource {
   }
 
   private async _loadFromDXN(dxn: URI.URI, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
-    const echoUri = EchoURI.tryParse(dxn);
+    const echoUri = EID.tryParse(dxn);
     if (!echoUri) {
       log.warn('unable to resolve DXN', { dxn });
       return null;
     }
 
-    const objectId = EchoURI.getObjectId(echoUri);
+    const objectId = EID.getEntityId(echoUri);
     if (!objectId) {
       log.warn('unable to resolve DXN', { dxn });
       return null;
     }
 
-    const spaceId = EchoURI.getSpaceId(echoUri) ?? sourceSpaceId;
+    const spaceId = EID.getSpaceId(echoUri) ?? sourceSpaceId;
 
     const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (!spaceRoot) {
@@ -1625,7 +1625,7 @@ export class QueryExecutor extends Resource {
    * Loads a queue item by its object ID from the SQL index.
    * Used by the IdSelector path when querying within a queue scope.
    */
-  private async _loadQueueItemById(spaceId: SpaceId, queueId: ObjectId, objectId: ObjectId): Promise<QueryItem | null> {
+  private async _loadQueueItemById(spaceId: SpaceId, queueId: EntityId, objectId: EntityId): Promise<QueryItem | null> {
     const meta = await this._runInRuntime(this._indexEngine.lookupByObjectId({ objectId, spaceId, queueId }));
     if (!meta) {
       return null;
@@ -1667,20 +1667,20 @@ export class QueryExecutor extends Resource {
 }
 
 const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
-  const echoUri = EchoURI.tryParse(feedUri);
-  return echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
+  const echoUri = EID.tryParse(feedUri);
+  return echoUri ? EID.getSpaceId(echoUri) : undefined;
 };
 
-const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
+const extractQueueIds = (queues: readonly string[]): EntityId[] | null => {
   if (queues.length === 0) {
     return null;
   }
   return queues
     .map((feedUri) => {
-      const echoUri = EchoURI.tryParse(feedUri);
-      return echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+      const echoUri = EID.tryParse(feedUri);
+      return echoUri ? EID.getEntityId(echoUri) : undefined;
     })
-    .filter((id): id is ObjectId => id !== undefined);
+    .filter((id): id is EntityId => id !== undefined);
 };
 
 /**

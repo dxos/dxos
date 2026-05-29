@@ -21,7 +21,7 @@ export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
-  // typename/version are routed via ObjectMeta (the canonical registry-provenance
+  // typename/version are routed via EntityMeta (the canonical registry-provenance
   // pair); they're no longer data fields on `TypeSchema`.
   return makeObject(
     getStaticTypeSchema(TypeSchema) as any,

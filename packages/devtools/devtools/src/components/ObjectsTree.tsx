@@ -17,7 +17,7 @@ import { raise } from '@dxos/debug';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import { TREEGRID_PARENT_OF_SEPARATOR, DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
@@ -235,7 +235,7 @@ class ObjectsTreeModel {
   #makeNodeAtom(anchor: string | null): Atom.Atom<ObjectsTreeItem[]> {
     log('makeNodeAtom', { anchor });
     if (typeof anchor === 'string') {
-      invariant(ObjectId.isValid(anchor));
+      invariant(EntityId.isValid(anchor));
 
       const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
         this.#database.query(
@@ -288,7 +288,7 @@ class ObjectsTreeModel {
     return {
       id: entity.id,
       type: Relation.isSnapshot(entity)
-        ? EchoURI.getObjectId(Relation.getSourceURI(entity)) === anchor
+        ? EID.getEntityId(Relation.getSourceURI(entity)) === anchor
           ? 'outgoing-relation'
           : 'incoming-relation'
         : 'object',

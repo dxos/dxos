@@ -26,7 +26,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { filterReadyFeedItems } from './feed-position';
@@ -104,7 +104,7 @@ type TriggerDispatcherServices =
   | Database.Service;
 
 export type InvocationsState = {
-  invocationId: ObjectId;
+  invocationId: EntityId;
   trigger: Trigger.Trigger;
   function: Operation.Definition.Any | null;
   event: TriggerEvent.TriggerEvent;
@@ -313,7 +313,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
-      const invocationId = ObjectId.random();
+      const invocationId = EntityId.random();
       const invocation: InvocationsState = {
         invocationId,
         trigger,

@@ -58,12 +58,12 @@ Tag-id strategy depends on origin:
 | source                              | tag id                            | rationale                                                                                |
 | ----------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
 | provider-synced (e.g. Gmail labels) | external id (Gmail's `Label_123`) | preserves re-sync idempotence — same external id → same map entry, no duplicates         |
-| user-applied                        | random `ObjectId`                 | stable across renames; case-insensitive label dedupe via `findTagByLabel` at create time |
+| user-applied                        | random `EntityId`                 | stable across renames; case-insensitive label dedupe via `findTagByLabel` at create time |
 
 Trade-offs considered and rejected:
 
 - Slug from label (`kebab-case(label)`) — natural dedupe but renaming a tag breaks references that point at the old key.
-- ObjectId for everything — uniform but Gmail re-syncs would duplicate provider tags every run unless you also dedupe by label, which loses the external id.
+- EntityId for everything — uniform but Gmail re-syncs would duplicate provider tags every run unless you also dedupe by label, which loses the external id.
 
 ### 3. `HasSubject` relation (deprecated)
 

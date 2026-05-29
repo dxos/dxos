@@ -4,14 +4,14 @@
 
 import * as semver from 'semver';
 
-import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, type EntityId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
-  id: ObjectId;
+  id: EntityId;
   spaceId: SpaceId;
-  doc: ObjectStructure;
+  doc: EntityStructure;
 };
 
 /**
@@ -71,7 +71,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'tag': {
-      const tags = ObjectStructure.getTags(obj.doc);
+      const tags = EntityStructure.getTags(obj.doc);
       return tags.some((tag) => tag === filter.tag);
     }
 
@@ -377,7 +377,7 @@ const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean
       return false;
     }
   } else {
-    // EchoURI or other URI type — exact match.
+    // EID or other URI type — exact match.
     if (actualStr !== expectedStr) {
       return false;
     }
