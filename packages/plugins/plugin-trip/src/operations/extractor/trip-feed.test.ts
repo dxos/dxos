@@ -53,28 +53,28 @@ const makeMessage = (props: { from: string; subject: string; body: string }): Me
 // One booking (PNR ABC123) with two legs, plus a gate change for the first leg.
 const FIRST_LEG = {
   number: 'AF-1',
-  origin: { code: 'SFO', name: 'San Francisco' },
-  destination: { code: 'LHR', name: 'London Heathrow' },
+  origin: { code: 'JFK', name: 'New York' },
+  destination: { code: 'CDG', name: 'Paris' },
   departAt: '2026-06-01T15:30:00.000Z',
   arriveAt: '2026-06-02T09:30:00.000Z',
   confirmationCode: 'ABC123',
-  provider: { name: 'United', domain: 'united.com' },
+  provider: { name: 'Air France', domain: 'airfrance.com' },
 };
 
 const SECOND_LEG = {
   number: 'AF-2',
-  origin: { code: 'LHR', name: 'London Heathrow' },
-  destination: { code: 'CDG', name: 'Paris' },
+  origin: { code: 'CDG', name: 'Paris' },
+  destination: { code: 'BCN', name: 'Barcelona' },
   departAt: '2026-06-05T11:00:00.000Z',
   arriveAt: '2026-06-05T13:15:00.000Z',
   confirmationCode: 'ABC123',
-  provider: { name: 'United', domain: 'united.com' },
+  provider: { name: 'Air France', domain: 'airfrance.com' },
 };
 
 const GATE_CHANGE = {
   number: 'AF-1',
-  origin: { code: 'SFO', name: 'San Francisco' },
-  destination: { code: 'LHR', name: 'London Heathrow' },
+  origin: { code: 'JFK', name: 'New York' },
+  destination: { code: 'CDG', name: 'Paris' },
   departAt: '2026-06-01T15:30:00.000Z',
   arriveAt: '2026-06-02T09:30:00.000Z',
   gateFrom: '21B',
@@ -106,9 +106,9 @@ describe('trip extraction over a message feed', () => {
 
     const payloads: Array<unknown | undefined> = [FIRST_LEG, SECOND_LEG, GATE_CHANGE, undefined];
     await feed.append([
-      makeMessage({ from: 'no-reply@united.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
-      makeMessage({ from: 'no-reply@united.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
-      makeMessage({ from: 'no-reply@united.com', subject: 'Gate change', body: 'Gate update' }),
+      makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 1' }),
+      makeMessage({ from: 'no-reply@airfrance.com', subject: 'Flight Confirmation', body: 'Leg 2' }),
+      makeMessage({ from: 'no-reply@airfrance.com', subject: 'Gate change', body: 'Gate update' }),
       // Unrelated message — no travel sender/subject, so `match()` rejects it.
       makeMessage({ from: 'news@example.com', subject: 'Weekly digest', body: 'Nothing to see here.' }),
     ]);

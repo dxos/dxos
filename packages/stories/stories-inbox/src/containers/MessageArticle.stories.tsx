@@ -2,11 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Stream from 'effect/Stream';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
@@ -17,6 +14,7 @@ import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolk
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
+import { mockAiService } from '@dxos/extractor/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
@@ -101,6 +99,19 @@ const MOCK_SUMMARY =
   'Payment was settled in miles plus taxes; ticket changes incur a fee.';
 
 /**
+ * Canned structured output returned by the mocked `LanguageModel.generateObject` call. Drives
+ * the template-driven `TripMessageExtractor`, which produces a Trip named "JFK → CDG (AF0003)".
+ */
+const MOCK_FLIGHT_PAYLOAD = {
+  number: 'AF0003',
+  origin: { code: 'JFK', name: 'New York' },
+  destination: { code: 'CDG', name: 'Paris' },
+  departAt: '2026-05-05T17:30:00.000Z',
+  arriveAt: '2026-05-06T07:00:00.000Z',
+  confirmationCode: 'FB12345',
+};
+
+/**
  * Story-only `AiService` provider contributed on `SetupProcessManager`, mirroring
  * `AssistantPlugin`'s real wiring at `plugin-assistant/src/capabilities/ai-service.ts`. The
  * service's `model(...)` returns a `LanguageModel` whose `generateText` resolves with a
@@ -117,16 +128,10 @@ const MockAiServicePlugin = Plugin.define({ id: 'story.mock-ai-service', name: '
         Capability.contributes(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
-            Layer.succeed(AiService.AiService, {
-              model: () =>
-                Layer.scoped(
-                  LanguageModel.LanguageModel,
-                  LanguageModel.make({
-                    generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
-                    streamText: () => Stream.empty as any,
-                  }),
-                ),
-            }),
+            // Mock model: `generateText` returns a static summary (for SummarizeMessageExtractor),
+            // and `generateObject` returns a canned flight payload (for the template-driven
+            // TripMessageExtractor), so both extractors run end-to-end without a real provider.
+            mockAiService({ text: MOCK_SUMMARY, object: MOCK_FLIGHT_PAYLOAD }),
           ),
         ),
       ),
