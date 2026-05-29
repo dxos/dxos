@@ -153,11 +153,28 @@ export default Capability.makeModule(
     };
 
     // Install the sentinel before handleNavigation()/state-sync push entries on top of it.
-    installLeaveTrap();
+    const sentinelKey = installLeaveTrap();
+
+    // Re-arm: if a non-cancelable back (the browser makes a traversal uncancelable shortly after a
+    // preventDefault) slips past the trap and lands on the sentinel, re-mark it (the app may have
+    // overwritten its state) and climb back above it — so we never leave silently and the trap
+    // stays armed. Keyed on the entry key, which survives state changes.
+    const onCurrentEntryChange = () => {
+      const current = window.navigation.currentEntry;
+      if (!current || current.key !== sentinelKey) {
+        return;
+      }
+      if (current.getState()?.[SENTINEL_KEY] !== true) {
+        window.navigation.updateCurrentEntry({ state: { ...current.getState(), [SENTINEL_KEY]: true } });
+      }
+      history.pushState(null, '', window.location.pathname + window.location.search);
+    };
+
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
     if ('navigation' in window) {
       window.navigation.addEventListener('navigate', onNavigate);
+      window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
     }
 
     // Tauri deep link support.
@@ -219,6 +236,7 @@ export default Capability.makeModule(
         window.removeEventListener('popstate', onPopState);
         if ('navigation' in window) {
           window.navigation.removeEventListener('navigate', onNavigate);
+          window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
         unsubscribe();
         unlistenDeepLink?.();
@@ -237,20 +255,27 @@ const SENTINEL_KEY = '__composerSentinel';
  * `beforeunload` cannot distinguish reload from leave, so this same-document floor is required;
  * reload fires no traversal and is never trapped. Requires the Navigation API (Chromium); no-op
  * otherwise. Idempotent across reloads — entry state survives, so the sentinel is not duplicated.
+ * Returns the sentinel entry's key (stable across state changes) for the re-arm, or undefined.
  */
-const installLeaveTrap = (): void => {
+const installLeaveTrap = (): string | undefined => {
   if (!('navigation' in window)) {
-    return;
+    return undefined;
   }
-  const hasSentinel = window.navigation.entries().some((entry) => entry.getState()?.[SENTINEL_KEY] === true);
+  const existing = window.navigation.entries().find((entry) => entry.getState()?.[SENTINEL_KEY] === true);
+  if (existing) {
+    return existing.key;
+  }
   // history.length > 1 (not navigation.canGoBack, which is false for a cross-origin prior entry)
   // means there is somewhere to leave to; otherwise Back can't exit and no sentinel is needed.
-  if (!hasSentinel && window.history.length > 1) {
+  if (window.history.length > 1) {
     window.navigation.updateCurrentEntry({
       state: { ...window.navigation.currentEntry?.getState(), [SENTINEL_KEY]: true },
     });
+    const key = window.navigation.currentEntry?.key;
     history.pushState(null, '', window.location.pathname + window.location.search);
+    return key;
   }
+  return undefined;
 };
 
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
