@@ -69,15 +69,7 @@ export const preprocessPrompt: (
               ];
 
             case 'tool':
-              return [
-                Prompt.makeMessage('tool', {
-                  content: yield* Function.pipe(
-                    msg.blocks,
-                    Effect.forEach(convertToolMessagePart),
-                    Effect.map(Array.filter(Predicate.isNotUndefined)),
-                  ),
-                }),
-              ];
+              return yield* convertToolMessage(msg);
 
             default:
               return [];
@@ -262,28 +254,6 @@ const parseToolJson = (
       }),
   });
 
-/** Anthropic `document` / nested `tool_result` content block for a PDF. */
-type AnthropicPdfDocumentBlock = {
-  readonly type: 'document';
-  readonly source: {
-    readonly type: 'base64';
-    readonly media_type: 'application/pdf';
-    readonly data: string;
-  };
-  readonly title?: string;
-};
-
-/** Anthropic `document` block for plain text. */
-type AnthropicTextDocumentBlock = {
-  readonly type: 'document';
-  readonly source: {
-    readonly type: 'text';
-    readonly media_type: 'text/plain';
-    readonly data: string;
-  };
-  readonly title?: string;
-};
-
 /**
  * Decode file payload from a data URL, standard base64, or base64url string.
  * Returns standard base64 suitable for Anthropic `source.data`.
@@ -323,70 +293,56 @@ const unwrapFileBase64Data = (url: string): Effect.Effect<string, PromptPreproce
       }),
   });
 
-const fileBlockToAnthropicDocument = (
-  block: ContentBlock.File,
-): Effect.Effect<AnthropicPdfDocumentBlock | AnthropicTextDocumentBlock, PromptPreprocesorError, never> =>
-  Effect.gen(function* () {
-    const mediaType = block.mediaType ?? 'application/octet-stream';
-    const data = yield* unwrapFileBase64Data(block.url);
-    const title = block.name;
-
-    if (mediaType === 'application/pdf') {
-      return {
-        type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data,
-        },
-        ...(title ? { title } : {}),
-      };
-    }
-
-    if (mediaType === 'text/plain') {
-      return {
-        type: 'document',
-        source: {
-          type: 'text',
-          media_type: 'text/plain',
-          data: Buffer.from(data, 'base64').toString('utf8'),
-        },
-        ...(title ? { title } : {}),
-      };
-    }
-
-    return yield* Effect.fail(
-      new PromptPreprocesorError({
-        message: `Unsupported file media type for tool result document: ${mediaType}`,
-      }),
-    );
-  });
-
-// TODO(dmaretskyi): Obviously this only works for anthropic, but thats the only provider we're using.
-// see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
-const contentBlockToAnthropicShape = (
+const contentBlockToUserMessagePart = (
   block: ContentBlock.Text | ContentBlock.Image | ContentBlock.File,
-): Effect.Effect<unknown, PromptPreprocesorError, never> =>
+): Effect.Effect<Prompt.UserMessagePart, PromptPreprocesorError, never> =>
   Match.value(block).pipe(
     Match.tags({
-      text: (textBlock) =>
-        Effect.succeed({
-          type: 'text',
-          text: textBlock.text,
-        }),
+      text: (textBlock) => Effect.succeed(Prompt.makePart('text', { text: textBlock.text })),
       image: (imageBlock) =>
-        Effect.succeed({
-          type: 'image',
-          source: imageBlock.source,
+        Effect.gen(function* () {
+          switch (imageBlock.source?.type) {
+            case 'base64':
+              return Prompt.makePart('file', {
+                mediaType: imageBlock.source.mediaType,
+                data: bufferToArray(Buffer.from(imageBlock.source.data, 'base64')),
+              });
+            case 'http':
+              return Prompt.makePart('file', {
+                data: new URL(imageBlock.source.url),
+                mediaType: 'application/octet-stream',
+              });
+            default:
+              return yield* Effect.fail(
+                new PromptPreprocesorError({ message: 'Invalid image source for tool result content' }),
+              );
+          }
         }),
-      file: fileBlockToAnthropicDocument,
+      file: (fileBlock) =>
+        Effect.gen(function* () {
+          const data = yield* unwrapFileBase64Data(fileBlock.url);
+          return Prompt.makePart('file', {
+            mediaType: fileBlock.mediaType ?? 'application/octet-stream',
+            data: bufferToArray(Buffer.from(data, 'base64')),
+            fileName: fileBlock.name,
+          });
+        }),
     }),
     Match.exhaustive,
   );
 
-const contentBlockResultToAnthropicShape = (
-  result: ContentBlock.ContentBlockResult,
-): Effect.Effect<unknown[], PromptPreprocesorError, never> => Effect.forEach(result.content, contentBlockToAnthropicShape);
+const makeToolResultPart = (
+  block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
+  result: unknown,
+  isFailure: boolean,
+): Prompt.ToolMessagePart =>
+  Prompt.makePart('tool-result', {
+    id: block.toolCallId,
+    name: block.name,
+    result,
+    isFailure,
+    providerExecuted: false,
+  });
 
 /**
  * Build a `tool-result` prompt part from a `toolResult` content block, validating the JSON
@@ -399,32 +355,77 @@ const buildToolResultPart = (
     const hasError = block.error != null;
     const result = hasError
       ? block.error
-      : ContentBlock.isContentBlockResult(block.result)
-        ? yield* contentBlockResultToAnthropicShape(block.result)
-        : block.result != null
-          ? yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
-          : {};
-    return Prompt.makePart('tool-result', {
-      id: block.toolCallId,
-      name: block.name,
-      result,
-      isFailure: hasError,
-      providerExecuted: false,
-    });
+      : block.result != null
+        ? ContentBlock.isContentBlockResult(block.result)
+          ? block.result
+          : yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
+        : {};
+    return makeToolResultPart(block, result, hasError);
   });
 
-export const convertToolMessagePart: (
-  block: ContentBlock.Any,
-) => Effect.Effect<Prompt.ToolMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
-  function* (block) {
-    switch (block._tag) {
-      case 'toolResult':
-        return yield* buildToolResultPart(block);
-      default:
-        return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid tool content block: ${block._tag}` }));
+const toolResultSeeBelowMessage = (toolCallId: string): string => `See result for ${toolCallId} below`;
+
+const toolResultHeaderMessage = (toolCallId: string): string => `Result from ${toolCallId}:`;
+
+/**
+ * Tool messages with {@link ContentBlock.ContentBlockResult} are expanded for Anthropic:
+ * stub `tool-result` parts first, then a `user` message with headers and file/text parts.
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
+ */
+const convertToolMessage = (
+  message: Message.Message,
+): Effect.Effect<Prompt.Message[], PromptPreprocesorError, never> =>
+  Effect.gen(function* () {
+    const toolResults = message.blocks.filter(
+      (block): block is ContentBlock.ToolResult => block._tag === 'toolResult',
+    );
+
+    if (toolResults.length === 0) {
+      return [];
     }
-  },
-);
+
+    const contentBlockResults = toolResults.filter(
+      (block) => block.error == null && ContentBlock.isContentBlockResult(block.result),
+    );
+
+    if (contentBlockResults.length === 0) {
+      const content = yield* Effect.forEach(toolResults, buildToolResultPart);
+      return [Prompt.makeMessage('tool', { content })];
+    }
+
+    const toolParts: Prompt.ToolMessagePart[] = [];
+    const userParts: Prompt.UserMessagePart[] = [];
+
+    for (const block of toolResults) {
+      if (block.error != null) {
+        toolParts.push(makeToolResultPart(block, block.error, true));
+        continue;
+      }
+
+      if (ContentBlock.isContentBlockResult(block.result)) {
+        toolParts.push(makeToolResultPart(block, toolResultSeeBelowMessage(block.toolCallId), false));
+      } else {
+        toolParts.push(yield* buildToolResultPart(block));
+      }
+    }
+
+    for (const block of toolResults) {
+      if (block.error != null || !ContentBlock.isContentBlockResult(block.result)) {
+        continue;
+      }
+
+      userParts.push(Prompt.makePart('text', { text: toolResultHeaderMessage(block.toolCallId) }));
+      for (const contentBlock of block.result.content) {
+        userParts.push(yield* contentBlockToUserMessagePart(contentBlock));
+      }
+    }
+
+    const messages: Prompt.Message[] = [Prompt.makeMessage('tool', { content: toolParts })];
+    if (userParts.length > 0) {
+      messages.push(Prompt.makeMessage('user', { content: userParts }));
+    }
+    return messages;
+  });
 
 const convertAssistantMessagePart: (
   block: ContentBlock.Any,

@@ -81,6 +81,8 @@ describe('ContentBlockToolResult', () => {
       });
 
       expect(messages.length).toBeGreaterThan(1);
+      expect(JSON.stringify(messages).toLowerCase()).toContain('kitten');
+      expect(JSON.stringify(messages).toLowerCase()).toContain('orange');
     },
     Effect.provide(
       TestLayer,
@@ -100,6 +102,10 @@ describe('ContentBlockToolResult', () => {
       });
 
       expect(messages.length).toBeGreaterThan(1);
+      expect(JSON.stringify(messages).toLowerCase()).toContain('blue');
+      expect(JSON.stringify(messages).toLowerCase()).toContain('red');
+      expect(JSON.stringify(messages).toLowerCase()).toContain('green');
+      expect(JSON.stringify(messages).toLowerCase()).toContain('purple');
     },
     Effect.provide(
       TestLayer,
