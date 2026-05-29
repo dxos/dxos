@@ -20,7 +20,7 @@ const dispatch = (integration: Integration.Integration) =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(integration);
     invariant(db);
-    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/people'));
+    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/contacts'));
     yield* Operation.invoke(
       ContactsFunctions.Sync,
       {

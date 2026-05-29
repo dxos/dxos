@@ -15,9 +15,9 @@ import { meta } from '#meta';
 export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
 
 /**
- * Plugins contribute message extractors via this capability.
+ * Plugins contribute object extractors via this capability.
  * Multiple plugins may register; the ExtractMessage operation selects one based on match() confidence.
  */
-export const MessageExtractor = Capability.make<import('../capabilities/MessageExtractor').MessageExtractor>(
-  `${meta.id}.capability.messageExtractor`,
+export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>(
+  `${meta.id}.capability.objectExtractor`,
 );

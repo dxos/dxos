@@ -17,7 +17,7 @@ export const Place = Schema.Struct({
     Schema.String.annotations({
       title: 'Code',
       description: 'IATA / IBNR / port / property code',
-      examples: ['LHR', 'CDG', 'LAX', 'HNL'],
+      examples: ['JFK', 'CDG', 'LAX', 'BKK'],
     }),
   ),
   city: Schema.optional(Schema.String.annotations({ title: 'City' })),

@@ -1,19 +1,15 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'fs';
-import * as yaml from 'js-yaml';
-import { resolve } from 'path';
 import { describe, test } from 'vitest';
 
-import { type SignatureData, parseSignature } from './extract';
+import { type SignatureData, parseSignature } from './signature';
+import sigData from './testing/sig.json';
 
 describe('sig parser', () => {
   test('parse signatures to extract names and companies', ({ expect }) => {
-    const filePath = resolve(__dirname, 'testing', 'sig.yml');
-    const fileContent = readFileSync(filePath, 'utf8');
-    const data = yaml.load(fileContent) as SignatureData;
+    const data = sigData as SignatureData;
     expect(data).toBeDefined();
     expect(data.contacts).toBeDefined();
     expect(Array.isArray(data.contacts)).toBe(true);

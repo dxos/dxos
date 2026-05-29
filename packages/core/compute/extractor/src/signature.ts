@@ -1,8 +1,8 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-// TODO(burdon): Scrapers (e.g., ScrapeGraphAI).
+// TODO(burdon): Superseded by an LLM signature/contact template; retained for reference + reuse.
 
 export type Contact = {
   email: string;

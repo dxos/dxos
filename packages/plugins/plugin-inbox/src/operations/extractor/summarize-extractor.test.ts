@@ -50,13 +50,11 @@ describe('SummarizeMessageExtractor', () => {
   });
 
   test('summarizeMessage — produces a Document containing the AI summary', async ({ expect }) => {
-    // Exercise the core `summarizeMessage` Effect with a mocked AI service. The
-    // MessageExtractor's `extract` field wraps this via `Operation.invoke`, but that path
-    // adds Operation.Service / Capability.Service requirements that are irrelevant to
-    // validating the AI prompt → Document mapping.
+    // Exercise the core `summarizeMessage` Effect with a mocked AI service, validating the
+    // AI prompt → Document mapping in isolation from the dispatcher.
     const message = makeMessage(LONG_BODY);
 
-    const result = await summarizeMessage({ db, message })
+    const result = await summarizeMessage({ db, source: message })
       .pipe(Effect.provide(mockAiServiceLayer))
       .pipe(runAndForwardErrors);
 

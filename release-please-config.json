@@ -295,6 +295,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/extractor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/functions/package.json",
           "jsonpath": "$.version"
         },

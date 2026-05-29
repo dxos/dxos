@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Context from 'effect/Context';
@@ -8,16 +8,17 @@ import * as Layer from 'effect/Layer';
 
 import { Type } from '@dxos/echo';
 
-// TODO(wittjosiah): Factor out.
-
 export type ResolverType<T, I> = (input: I) => Effect.Effect<T | undefined>;
 
 export type ResolverMap = Record<string, ResolverType<any, any>>;
 
 /**
- * Service for resolving objects from external data.
+ * Service for resolving existing ECHO objects from external/extracted data. Keyed by typename,
+ * each resolver maps an identity input (e.g. `{ email }`, `{ domain }`) to an existing object
+ * when one exists. This is the identity backbone shared by extractors (merge vs create) and by
+ * deterministic mappers (e.g. calendar attendee email → Person).
  */
-export class Resolver extends Context.Tag('PluginInbox/Resolver')<
+export class Resolver extends Context.Tag('@dxos/extractor/Resolver')<
   Resolver,
   {
     resolve<T extends Type.AnyEntity, I>(type: T, input: I): Effect.Effect<Type.InstanceType<T> | undefined>;
@@ -35,7 +36,7 @@ export const fromResolvers = (resolvers: ResolverMap) =>
     Resolver.of({
       resolve: (type, input: any) => {
         const typename = Type.getTypename(type);
-        const resolver = resolvers[typename];
+        const resolver = typename ? resolvers[typename] : undefined;
         if (resolver) {
           return resolver(input);
         }

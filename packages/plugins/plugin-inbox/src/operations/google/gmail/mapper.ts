@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
+import { resolve, type Resolver } from '@dxos/extractor';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
-import { resolve, type Resolver } from '../../../services/resolver';
 import { normalizeText, parseFromHeader } from '../util';
 
 const getPart = (message: GoogleMail.Message, part: string) =>
