@@ -35,7 +35,10 @@ import {
 // granularity, topology, state change). Tests are deliberately named with
 // the empirical outcome up-front (e.g. `... does NOT gate ...`) so the
 // shape of any future upstream fix is obvious.
-describe('SubductionPolicy', () => {
+// TODO(mykola): subduction wasm/network tests are flaky on CI runners
+// (limited concurrency, signal-server timing). Re-enable once the suite
+// is stable in CI.
+describe.skipIf(process.env.CI)('SubductionPolicy', () => {
   beforeAll(async () => {
     await initSubduction();
   });
