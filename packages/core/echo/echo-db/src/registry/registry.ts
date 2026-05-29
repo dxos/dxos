@@ -10,7 +10,7 @@ import { type Database, Entity, Query, type Filter, type QueryResult, Registry, 
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI, URI } from '@dxos/keys';
+import { DXN, EchoURI, PublicKey, URI } from '@dxos/keys';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
@@ -21,6 +21,8 @@ import { DXN, EchoURI, URI } from '@dxos/keys';
  * them in O(1) without exposing a type-specific method on the interface.
  */
 export class RegistryImpl implements Registry.Registry {
+  readonly [Registry.TypeId]: typeof Registry.TypeId = Registry.TypeId;
+  readonly id = PublicKey.random().toHex();
   readonly #changed = new Event<void>();
   readonly #entities: Map<string, Entity.Unknown> = new Map();
   /**

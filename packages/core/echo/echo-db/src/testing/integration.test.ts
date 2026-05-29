@@ -550,12 +550,11 @@ describe('Integration tests', () => {
 
       await peer.reload();
       {
-        // Can query by stored schema ref.
+        // Can query by stored schema ref. Persisted types live in the db (not the shared
+        // registry), so resolve the stored Type entity via a space query.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.graph.registry
-          .list()
-          .filter(Type.isType)
-          .find((t) => Type.getTypename(t) === 'com.example.type.test');
+        const types = await db.query(Filter.type(Type.Type)).run();
+        const schema = types.find((t) => Type.getTypename(t) === 'com.example.type.test');
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);

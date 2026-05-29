@@ -1125,7 +1125,10 @@ const addRoastLogCollection = async (
 
   // db.addType creates the TypeSchema ECHO object in the space so the runtime can
   // discover and render the schema without it being compiled into the app.
-  await space.db.addType(RoastLog);
+  const roastLogType = await space.db.addType(RoastLog);
+  Type.update(roastLogType, (draft) => {
+    draft.name = 'Roast Log';
+  });
 
   const entries = makeRoastLogs(people);
   entries.forEach((entry) => space.db.add(entry));

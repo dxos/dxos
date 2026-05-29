@@ -4,13 +4,17 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Database, Type } from '@dxos/echo';
+import { type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
 /**
- * Subscribe to and retrieve type changes from a database's schema registry.
+ * Subscribe to and retrieve a type by typename from a space.
  * Accepts either values or accessors for db and typename.
+ *
+ * Fans across the owning space db (persisted custom types) and the shared
+ * registry (static/runtime plugin types). Persisted types live only in the db,
+ * so a registry-only lookup misses them.
  *
  * @param db - The database instance (can be reactive)
  * @param typename - The typename to query (can be reactive)
@@ -43,22 +47,15 @@ export const useType = (
 
     const { db: resolvedDb, typename: resolvedTypename } = r;
 
-    // Set initial value immediately.
-    setType(() =>
-      resolvedDb.graph.registry
-        .list()
-        .filter(Type.isType)
-        .find((t) => Type.getTypename(t) === resolvedTypename),
+    const queryResult = resolvedDb.query(
+      Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
     );
+    const update = () =>
+      setType(() => queryResult.results.find((type) => Type.getTypename(type) === resolvedTypename));
 
-    const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
-      setType(() =>
-        resolvedDb.graph.registry
-          .list()
-          .filter(Type.isType)
-          .find((t) => Type.getTypename(t) === resolvedTypename),
-      );
-    });
+    // Subscribe before reading `.results` — the query requires at least one subscriber.
+    const unsubscribe = queryResult.subscribe(update);
+    update();
 
     onCleanup(unsubscribe);
   });

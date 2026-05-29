@@ -273,14 +273,13 @@ describe('Serializer', () => {
         expect(Type.isType(roundTrip!)).to.be.true;
         expect(Type.getTypename(roundTrip!)).to.eq(typename);
 
-        // And the registry query path — the one Composer's markdown editor
-        // hits via `useLinkQuery` — must not throw `Invalid typename` from
-        // `getSortKey` for any returned schema.
-        const results = db.graph.registry.list().filter(Type.isType);
-        for (const schema of results) {
+        // Every returned schema must have a valid typename — the `getSortKey` path that
+        // Composer's markdown editor hits via `useLinkQuery` must not throw `Invalid typename`.
+        // Persisted types live in the db (not the shared registry), so query the space.
+        for (const schema of entities) {
           expect(() => Type.getTypename(schema as any)).not.to.throw();
         }
-        expect(results.some((schema) => Type.getTypename(schema as any) === typename)).to.be.true;
+        expect(entities.some((schema) => Type.getTypename(schema as any) === typename)).to.be.true;
       }
     });
 

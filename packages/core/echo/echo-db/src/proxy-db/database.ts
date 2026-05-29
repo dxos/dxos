@@ -145,7 +145,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
-  private readonly _registeredPersistentSchemaIds = new Set<string>();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -205,17 +204,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
 
     if (this._preloadSchemaOnOpen) {
-      // db.query() defaults to this space only, so the registry (whose entities have
-      // no automerge cores) is never passed to _registerPersistentSchema here.
-      const schemas = await this.query(Filter.type(PersistentSchema)).run();
-      schemas.forEach((schema) => this._registerPersistentSchema(schema));
+      // Eager-load persisted schema cores so synchronous schema resolution
+      // (echo-handler getSchema/getTypeEntity → getObjectById) succeeds for objects
+      // loaded at open. Persisted schemas live in the db only; they are never added to
+      // the shared graph registry (which holds runtime/static type entities) to avoid
+      // leaking types across spaces.
+      await this.query(Filter.type(PersistentSchema)).run();
     }
 
     if (this._reactiveSchemaQuery) {
-      const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe((query) => {
-        const newSchemas = query.results.filter((schema) => !this._registeredPersistentSchemaIds.has(schema.id));
-        newSchemas.forEach((schema) => this._registerPersistentSchema(schema));
-      });
+      // Keep persisted schema cores loaded as they are added or replicated after open,
+      // so synchronous schema resolution continues to succeed.
+      const unsubscribe = this.query(Filter.type(PersistentSchema)).subscribe(() => {});
       this._ctx.onDispose(unsubscribe);
     }
   }
@@ -228,40 +228,19 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    * Called by echo-handler when a PersistentSchema object is encountered during deserialization.
-   * Returns the Type.AnyEntity registered in the graph registry for this persisted schema.
+   * A persisted schema materializes directly as its `Type.AnyEntity` (kind=type), so the
+   * object is returned as-is. Persisted schemas live in the db only and are never added to
+   * the shared graph registry, which would leak types across spaces.
    */
   _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.AnyEntity {
-    const identifierDXN = `dxn:echo:@:${schema.id}`;
-    const existing = findTypeByDXN(this.graph.registry, identifierDXN);
-    if (existing != null) {
-      return existing;
-    }
-    this._registerPersistentSchema(schema);
-    return findTypeByDXN(this.graph.registry, identifierDXN)!;
-  }
-
-  private _registerPersistentSchema(schema: PersistentSchema): void {
-    if (this._registeredPersistentSchemaIds.has(schema.id)) {
-      return;
-    }
-    // The registry only ever holds Type entities (kind=type); the `types` graph connector and
-    // `findTypeByDXN` rely on every registry entry being a Type so `Type.getSchema()` is safe.
-    // A persisted object that matches `Filter.type(TypeSchema)` by its `@type` but materializes
-    // as kind=object (e.g. a schema stored in a pre-Type-entity format) must never enter the
-    // registry — fail loudly at this ingestion boundary rather than deep inside a UI connector.
+    // A persisted object matching `Filter.type(TypeSchema)` by its `@type` but materializing
+    // as kind=object (e.g. data in a pre-Type-entity format) must fail loudly here rather than
+    // deep inside a consumer that assumes `Type.getSchema()` is safe.
     invariant(
       Type.isType(schema),
       'persisted schema must materialize as a Type entity (kind=type); data may be in a legacy format',
     );
-    this._registeredPersistentSchemaIds.add(schema.id);
-    // Register the TypeSchema entity directly — no EchoSchema wrapper needed.
-    // Re-adding on core updates signals registry.changed without a dedicated touch() method.
-    this._ctx.onDispose(
-      getObjectCore(schema).updates.on(() => {
-        this.graph.registry.add([schema]);
-      }),
-    );
-    this.graph.registry.add([schema]);
+    return schema;
   }
 
   private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
@@ -309,8 +288,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     );
 
     const persistentSchema = this._addObject(schemaToStore);
-    this._registerPersistentSchema(persistentSchema);
-    return findTypeByDXN(this.graph.registry, typeId)!;
+    invariant(
+      Type.isType(persistentSchema),
+      'persisted schema must materialize as a Type entity (kind=type)',
+    );
+    return persistentSchema;
   }
 
   @synchronized
@@ -357,6 +339,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       // callers add `Scope.registry()` (e.g. `.from(Scope.space(), Scope.registry())`)
       // when they want to fan a query into code-shipped types/objects too.
       query = query.from(this);
+    } else {
+      // An explicit `Scope.space()` with no spaceId targets the owning space. Bind it to
+      // this database's spaceId here (the only place the owning space is known) so it does
+      // not fan across every space in the hypergraph — e.g. `.from(Scope.space(), Scope.registry())`.
+      query = Query.fromAst(bindOwningSpaceScopes(query.ast, this.spaceId));
     }
 
     return this._coreDatabase.graph.query(query);
@@ -421,20 +408,20 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (!isEchoObject(obj)) {
       const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
-        const typename = Type.getTypename(typeEntity);
-        const version = Type.getVersion(typeEntity);
-        // Persisted (database-attached) types are also indexed by their identifier DXN.
-        const identifierDXN =
-          Type.getDatabase(typeEntity) != null && typeof typeEntity.id === 'string'
-            ? `dxn:echo:@:${typeEntity.id}`
-            : undefined;
-        const inRegistry =
-          typename && version
-            ? findTypeByDXN(this.graph.registry, `dxn:${typename}:${version}`) !== undefined ||
-              (identifierDXN != null && findTypeByDXN(this.graph.registry, identifierDXN) !== undefined)
-            : false;
-        if (!inRegistry) {
-          throw createSchemaNotRegisteredError(typeEntity);
+        // A persisted (database-attached) type is valid by virtue of living in a database;
+        // its schema resolves through the db rather than the shared registry. A static/runtime
+        // type must be present in the shared registry.
+        const isPersisted = Type.getDatabase(typeEntity) != null;
+        if (!isPersisted) {
+          const typename = Type.getTypename(typeEntity);
+          const version = Type.getVersion(typeEntity);
+          const inRegistry =
+            typename && version
+              ? findTypeByDXN(this.graph.registry, `dxn:${typename}:${version}`) !== undefined
+              : false;
+          if (!inRegistry) {
+            throw createSchemaNotRegisteredError(typeEntity);
+          }
         }
       }
 
@@ -586,4 +573,26 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
     }
   });
   return scoped;
+};
+
+/**
+ * Binds every space scope without an explicit `spaceId` to the owning database's space.
+ * `Scope.space()` means "the owning space"; without binding it here it would fan across
+ * every space source in the hypergraph query context.
+ */
+const bindOwningSpaceScopes = (ast: QueryAST.Query, spaceId: SpaceId): QueryAST.Query => {
+  const transform = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(transform);
+    }
+    if (value !== null && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      if (record._tag === 'space' && record.spaceId === undefined) {
+        return { ...record, spaceId };
+      }
+      return Object.fromEntries(Object.entries(record).map(([key, child]) => [key, transform(child)]));
+    }
+    return value;
+  };
+  return transform(ast) as QueryAST.Query;
 };

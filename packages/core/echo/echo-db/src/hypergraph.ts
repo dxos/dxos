@@ -181,8 +181,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          // The registry handles both DXN-form (typename-based) and echo-form URIs.
-          const typeEntity = findTypeByDXN(this._registry, uri.toString());
+          // Static/runtime types are held in the registry (DXN-form, typename-based).
+          // Persisted (db-backed) types are resolved from the owning space db (echo-form URIs).
+          const typeEntity =
+            findTypeByDXN(this._registry, uri.toString()) ?? (await this._resolveTypeFromDatabase(uri, context));
           if (typeEntity != null) {
             status = 'resolved';
             return Type.getSchema(typeEntity);
@@ -205,7 +207,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        return findTypeByDXN(this._registry, uri.toString());
+        return findTypeByDXN(this._registry, uri.toString()) ?? (await this._resolveTypeFromDatabase(uri, context));
       },
     } satisfies Ref.Resolver;
   }
@@ -380,6 +382,28 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
     const [obj] = await db.query(Filter.id(objectId)).run();
     return obj;
+  }
+
+  /**
+   * Resolve a persisted (db-backed) type entity from an echo-form URI.
+   * Persisted schemas live in the db only (never in the shared registry), so type refs
+   * carrying an echo URI (`dxn:echo:@:<objectId>`) resolve through the owning space db.
+   */
+  private async _resolveTypeFromDatabase(
+    uri: URI.URI,
+    context: Hypergraph.RefResolutionContext,
+  ): Promise<Type.AnyEntity | undefined> {
+    const parsed = EchoURI.tryParse(uri);
+    if (!parsed) {
+      return undefined;
+    }
+    const spaceId = EchoURI.getSpaceId(parsed) ?? context.space;
+    const objectId = EchoURI.getObjectId(parsed);
+    if (spaceId === undefined || objectId === undefined) {
+      return undefined;
+    }
+    const obj = await this._resolveDatabaseObjectAsync(spaceId, objectId);
+    return obj != null && Type.isType(obj) ? obj : undefined;
   }
 
   private _resolveQueueSync(queueEchoUri: EchoURI.EchoURI): Queue | undefined {

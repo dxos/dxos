@@ -10,6 +10,12 @@ import type * as Database from './Database';
 import * as Entity from './Entity';
 
 /**
+ * Identifier denoting an ECHO Registry.
+ */
+export const TypeId = Symbol.for('@dxos/echo/Registry');
+export type TypeId = typeof TypeId;
+
+/**
  * Composable, in-memory registry of keyed ECHO entities.
  *
  * Entities are stored by id and queried via the standard ECHO Query API.
@@ -32,6 +38,14 @@ import * as Entity from './Entity';
  * `@dxos/echo` API surface stays free of query-matching dependencies.
  */
 export interface Registry {
+  readonly [TypeId]: TypeId;
+
+  /**
+   * Stable per-instance identifier. Used to key process-local resources (e.g. memoized
+   * reactive atoms) to a specific registry instance, analogous to {@link Database.spaceId}.
+   */
+  readonly id: string;
+
   /**
    * Fires whenever local registry contents change (add, remove, or clear).
    */
@@ -87,6 +101,12 @@ export interface Registry {
    */
   query: Database.QueryFn;
 }
+
+/**
+ * Type guard for {@link Registry}.
+ */
+export const isRegistry = (obj: unknown): obj is Registry =>
+  obj != null && typeof obj === 'object' && TypeId in obj && (obj as { [TypeId]?: unknown })[TypeId] === TypeId;
 
 /**
  * Options for the registry factory (`makeRegistry` in `@dxos/echo-db`).

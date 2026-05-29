@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Obj, Query, type QueryResult, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase, makeRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { SpaceId } from '@dxos/keys';
@@ -22,6 +22,10 @@ const TestItem = Schema.Struct({
   value: Schema.Number,
 }).pipe(Type.makeObject(DXN.make('com.example.type.testItem', '0.1.0')));
 type TestItem = Type.InstanceType<typeof TestItem>;
+
+const TestItem2 = Schema.Struct({
+  title: Schema.String,
+}).pipe(Type.makeObject(DXN.make('com.example.type.testItem2', '0.1.0')));
 
 describe('AtomQuery', () => {
   let testBuilder: EchoTestBuilder;
@@ -193,6 +197,55 @@ describe('AtomQuery', () => {
     expect(results2).toHaveLength(1);
     expect(results1[0].name).toBe('Object');
     expect(results2[0].name).toBe('Object');
+  });
+});
+
+describe('AtomQuery with registry', () => {
+  let atomRegistry: Registry.Registry;
+
+  beforeEach(() => {
+    atomRegistry = Registry.make();
+  });
+
+  test('AtomQuery.make memoizes per registry instance', () => {
+    const registry = makeRegistry({ initial: [TestItem] });
+
+    // Same registry + filter must yield the same atom instance. Otherwise reactive
+    // connectors re-create the atom on every recompute, which destabilizes the
+    // effect-atom dependency graph and loops synchronously (the type-create freeze).
+    const atom1 = AtomQuery.make(registry, Filter.type(Type.Type));
+    const atom2 = AtomQuery.make(registry, Filter.type(Type.Type));
+    expect(atom1).toBe(atom2);
+
+    // A different registry instance must yield a different atom.
+    const otherRegistry = makeRegistry({ initial: [TestItem] });
+    expect(AtomQuery.make(otherRegistry, Filter.type(Type.Type))).not.toBe(atom1);
+  });
+
+  test('AtomQuery.make queries registry type entities', () => {
+    const registry = makeRegistry({ initial: [TestItem] });
+
+    const atom = AtomQuery.make(registry, Filter.type(Type.Type));
+    const results = atomRegistry.get(atom);
+
+    expect(results.map((type) => Type.getTypename(type))).toContain('com.example.type.testItem');
+  });
+
+  test('AtomQuery.make updates when registry contents change', () => {
+    const registry = makeRegistry({ initial: [TestItem] });
+
+    const atom = AtomQuery.make(registry, Filter.type(Type.Type));
+    expect(atomRegistry.get(atom)).toHaveLength(1);
+
+    let updateCount = 0;
+    atomRegistry.subscribe(atom, () => {
+      updateCount++;
+    });
+
+    registry.add([TestItem2]);
+
+    expect(updateCount).toBeGreaterThan(0);
+    expect(atomRegistry.get(atom)).toHaveLength(2);
   });
 });
 

@@ -66,7 +66,7 @@ describe('useType', () => {
 
   test('returns schema when it exists', async () => {
     // Register a schema to the database
-    const registeredSchema = db.add(TestSchema.Person);
+    const registeredSchema = await db.addType(TestSchema.Person);
     await db.flush({ indexes: true });
 
     let schemaAccessor: (() => any) | undefined;
@@ -117,7 +117,7 @@ describe('useType', () => {
     });
 
     // Register the schema
-    const registeredSchema = db.add(TestSchema.Person);
+    const registeredSchema = await db.addType(TestSchema.Person);
     await db.flush({ indexes: true });
 
     // The schema registry query should pick up the new schema
@@ -133,7 +133,7 @@ describe('useType', () => {
   });
 
   test('accepts reactive database accessor', async () => {
-    const registeredSchema = db.add(TestSchema.Person);
+    const registeredSchema = await db.addType(TestSchema.Person);
 
     let schemaAccessor: (() => any) | undefined;
     let dbAccessor: any = db;
@@ -167,7 +167,7 @@ describe('useType', () => {
   });
 
   test('accepts reactive typename accessor', async () => {
-    const registeredSchema = db.add(TestSchema.Person);
+    const registeredSchema = await db.addType(TestSchema.Person);
 
     let schemaAccessor: (() => any) | undefined;
     let typename: string | undefined = Type.getTypename(registeredSchema)!;

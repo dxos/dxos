@@ -11,7 +11,7 @@ import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -77,7 +77,11 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const allSchemas = get(AtomQuery.fromQuery(space.db.graph.registry.query(Filter.type(Type.Type))));
+        // Persisted types live in the space db; static/runtime types live in the shared registry.
+        // Fan across both so the space's own types appear without leaking other spaces' types.
+        const allSchemas = get(
+          AtomQuery.make(space.db, Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())),
+        );
 
         const userSchemas = allSchemas.filter((type) => {
           if (Type.isRelation(type)) {
@@ -120,7 +124,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.fromQuery(client.graph.registry.query(Filter.type(Type.Type)))) : [];
+        const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
 
         const typename = Type.getTypename(schema);
 
@@ -171,7 +175,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, typename }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.fromQuery(client.graph.registry.query(Filter.type(Type.Type)))) : [];
+        const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
         const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
           (object: Obj.Unknown) => !viewIndex.isView(object),
@@ -206,7 +210,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client ? get(AtomQuery.fromQuery(client.graph.registry.query(Filter.type(Type.Type)))) : [];
+        const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
 
         const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
