@@ -386,19 +386,29 @@ index 04b5fadcc952e4eb2a9e847290aea5ef8e784f12..1c2ee740bdc7068b72eb0978b08436bd
      attach(query: DocumentQuery<unknown>): void;
      detach(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471c285d826 100644
+index f04a5cc7854844a994200ed5a3232dbdf72a76b8..c2f15bacf6dd45da05ac6a73b17a90abd9eb8dd2 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
-@@ -25,7 +25,7 @@ export class SubductionSource {
+@@ -24,10 +24,17 @@ export class SubductionSource {
+     #syncTimeoutMs;
      #syncTimeout;
      #blobInterceptor;
++    #hasNoTransports;
      priority;
 -    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, priority = 2, policy, timeouts, blobInterceptor, }) {
 +    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onPeerBound, priority = 2, policy, timeouts, blobInterceptor, }) {
          this.#blobInterceptor = blobInterceptor;
          this.priority = priority;
++        // DXOS: track "no subduction transport configured" so attach() can
++        // immediately mark the source unavailable instead of leaving the
++        // query stuck pending. This is the only path through which the
++        // classical-sync source is allowed to send requests (see
++        // shouldDeferAvailability in DocumentQuery).
++        this.#hasNoTransports = (websocketEndpoints?.length ?? 0) === 0 && (adapters?.length ?? 0) === 0;
          this.#syncTimeoutMs = timeouts?.syncMs ?? DEFAULT_SYNC_TIMEOUT_MS;
-@@ -86,12 +86,23 @@ export class SubductionSource {
+         // Validate + coerce once at construction so the wasm boundary
+         // never sees a non-integer / NaN / negative bigint conversion.
+@@ -86,12 +93,23 @@ export class SubductionSource {
              onRemoteHeads, onEphemeral));
          }
          // ── Connection managers ─────────────────────────────────────────
@@ -424,7 +434,23 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-@@ -336,8 +347,16 @@ export class SubductionSource {
+@@ -285,7 +303,14 @@ export class SubductionSource {
+             pendingInbound: [],
+             inboundFlushScheduled: false,
+         });
+-        query.sourcePending("subduction");
++        // DXOS: when no subduction transport is configured, this source can
++        // never produce data — declare it unavailable so the query can settle
++        // and lower-priority sources (classical sync) stop being deferred.
++        if (this.#hasNoTransports) {
++            query.sourceUnavailable("subduction");
++        } else {
++            query.sourcePending("subduction");
++        }
+         query.handle.on("heads-changed", () => throttledSave());
+         throttledSave();
+         // Subscribe to ephemeral messages for this sedimentree
+@@ -336,8 +361,16 @@ export class SubductionSource {
      }
      detach(documentId) { }
      shareConfigChanged() {
@@ -442,7 +468,22 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
                  entry.lastSyncResult = null;
                  this.#scheduler.resetHealState(entry.sedimentreeId.toString());
              }
-@@ -360,19 +379,24 @@ export class SubductionSource {
+@@ -351,6 +384,14 @@ export class SubductionSource {
+         }
+     }
+     #recomputeEntry(entry) {
++        // DXOS: when no subduction transport is configured, this source can
++        // never produce data. Skip the retry/sync paths and keep the query
++        // marked unavailable so lower-priority sources (classical sync) are
++        // not deferred via shouldDeferAvailability.
++        if (this.#hasNoTransports) {
++            entry.query.sourceUnavailable("subduction");
++            return;
++        }
+         switch (entry.syncState) {
+             case "initializing": {
+                 // After a successful sync, batch-load blobs into the handle
+@@ -360,19 +401,24 @@ export class SubductionSource {
                      return;
                  }
                  if (!entry.syncInFlight && !entry.blobLoadInFlight) {
@@ -475,7 +516,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
                          // All connections settled and sync failed — give up.
                          this.#log("marking as unavailable");
                          entry.query.sourceUnavailable("subduction");
-@@ -381,12 +405,17 @@ export class SubductionSource {
+@@ -381,12 +427,17 @@ export class SubductionSource {
                  return;
              }
              case "running": {
@@ -499,7 +540,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
                  }
                  return;
              }
-@@ -417,8 +446,6 @@ export class SubductionSource {
+@@ -417,8 +468,6 @@ export class SubductionSource {
                  return s && (s.commitsReceived > 0 || s.fragmentsReceived > 0);
              });
              // If new data was received, immediately load it into the handle.
@@ -508,7 +549,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
              if (dataReceived) {
                  await this.#loadBlobsIntoHandle(entry, subduction);
              }
-@@ -441,8 +468,6 @@ export class SubductionSource {
+@@ -441,8 +490,6 @@ export class SubductionSource {
          }
          finally {
              entry.syncInFlight = false;
@@ -517,7 +558,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
              if (entry.needsResync || entry.lastSyncResult === null) {
                  this.#log(`doSync ${sid} finally: re-sync needed ` +
                      `(needsResync=${entry.needsResync}, lastSyncResult=${entry.lastSyncResult})`);
-@@ -742,14 +767,25 @@ export class SubductionSource {
+@@ -742,14 +789,25 @@ export class SubductionSource {
          if (commitInputs.length === 0 && fragmentInputs.length === 0) {
              return { prepFailures: prepErrors.length };
          }
@@ -548,7 +589,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
          }
          catch (e) {
              // On failure, roll the set entries back so the next save can
-@@ -757,7 +793,7 @@ export class SubductionSource {
+@@ -757,7 +815,7 @@ export class SubductionSource {
              // previous value when this rejects.
              for (const hash of acceptedHashes)
                  entry.knownHashes.delete(hash);
@@ -557,7 +598,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
                  .toString()
                  .slice(0, 8)} (${commitInputs.length} commits, ` +
                  `${fragmentInputs.length} fragments):`, e);
-@@ -819,9 +855,25 @@ export class SubductionSource {
+@@ -819,9 +877,25 @@ export class SubductionSource {
              entry.persistedFragmentHashes.size === 0) {
              return;
          }
@@ -583,7 +624,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
          // Metadata-only: we just need the hashes to compute the stale
          // set, so avoid `getCommits` / `getFragments` which would
          // re-bundle every item (O(N × #items) wasted work per compaction
-@@ -970,11 +1022,13 @@ export class SubductionSource {
+@@ -970,11 +1044,13 @@ export class SubductionSource {
          for (const entry of this.#entries.values()) {
              entry.flushSave.flush();
          }
@@ -602,7 +643,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471
          //    If hydration failed, this.#subduction is a rejected promise —
          //    treat that as a no-op (nothing to disconnect).
          let subduction = null;
-@@ -991,6 +1045,11 @@ export class SubductionSource {
+@@ -991,6 +1067,11 @@ export class SubductionSource {
          catch (e) {
              this.#log("error disconnecting subduction transports: %O", e);
          }
