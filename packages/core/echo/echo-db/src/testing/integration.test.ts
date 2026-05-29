@@ -237,6 +237,30 @@ describe('Integration tests', () => {
     }
   });
 
+  test('database object resolves a registry object via a DXN ref', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase(spaceKey);
+
+    // Register a type in the in-process registry — the "registry object".
+    db.graph.registry.add([TestSchema.Person]);
+    const typeDXN = DXN.make(Type.getTypename(TestSchema.Person), Type.getVersion(TestSchema.Person));
+
+    // A database object holds a reference to the registry object via its DXN.
+    const object = db.add(Obj.make(TestSchema.Expando, { type: db.makeRef(typeDXN) })) as any;
+    await db.flush();
+
+    // A DXN ref into the in-process registry resolves synchronously (resolveSync),
+    // since the registry is in-memory — no async load is required.
+    const target = object.type.target;
+    expect(Type.isType(target)).to.be.true;
+    expect(Type.getTypename(target)).to.eq(Type.getTypename(TestSchema.Person));
+
+    // ref.load() routes through the resolver to the same registry entity.
+    const loaded = await object.type.load();
+    expect(loaded).to.eq(target);
+  });
+
   test('replication', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();

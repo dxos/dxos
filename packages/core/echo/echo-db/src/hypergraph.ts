@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -154,17 +154,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (!EchoURI.isEchoURI(uri)) {
-          return undefined; // Unsupported URI kind.
+        if (EchoURI.isEchoURI(uri)) {
+          const res = this._resolveSync(uri, context, onLoad);
+          return res ? middleware(res) : undefined;
         }
 
-        const res = this._resolveSync(uri, context, onLoad);
-
-        if (res) {
-          return middleware(res);
-        } else {
-          return undefined;
+        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
+        if (DXN.isDXN(uri)) {
+          const typeEntity = findTypeByDXN(this._registry, uri.toString());
+          return typeEntity ? middleware(typeEntity) : undefined;
         }
+
+        return undefined; // Unsupported URI kind.
       },
 
       resolve: async (uri) => {
@@ -333,6 +334,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
         status = 'missing';
         return undefined;
+      } else if (DXN.isDXN(uri)) {
+        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
+        const typeEntity = findTypeByDXN(this._registry, uri.toString());
+        status = typeEntity ? 'resolved' : 'missing';
+        return typeEntity ?? undefined;
       } else {
         status = 'error';
         throw new Error(`Unsupported URI kind: ${uri}`);

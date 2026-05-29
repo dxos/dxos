@@ -512,8 +512,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // Stored schemas surface through the database schema registry so consumers
     // see the registered Type.Type entity rather than the raw persisted object.
+    // Only *persisted* (db-backed) stored schemas need registration; a type
+    // entity resolved directly from the registry (e.g. a DXN ref to an in-memory
+    // declaration) is already canonical and passes through unchanged.
     const database = target[symbolInternals].database;
-    if (database && isInstanceOf(TypeSchema, object)) {
+    if (database && isInstanceOf(TypeSchema, object) && Type.getDatabase(object) != null) {
       return database._getOrRegisterPersistentSchema(object);
     }
 
