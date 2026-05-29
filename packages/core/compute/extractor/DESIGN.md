@@ -67,9 +67,7 @@ export interface ObjectExtractor {
   readonly sourceTypes: readonly string[]; // ECHO typenames this extractor applies to.
   match(source: Obj.Any): MatchResult;
   readonly operation?: Operation.Definition<ExtractInput, ExtractResult>; // Optional first-class op.
-  extract(
-    input: ExtractInput,
-  ): Effect.Effect<ExtractResult, ExtractError, Operation.Service | Resolver | AiService.AiService>;
+  extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError, Resolver | AiService.AiService>;
   readonly createRelation?: boolean;
 }
 ```
