@@ -160,8 +160,9 @@ Defined with `Operation.make({ meta, input, output, services })`, implemented vi
    mapping over the response, and returns/creates `Result` objects. Deterministic. Services:
    `Database`, web-fetch capability.
 
-Web fetch uses the existing capability used by `plugin-feed`'s `fetch-article-content`
-(confirm exact service during planning).
+HTTP fetch (and scraping) goes through the **DXOS edge proxy** rather than fetching
+directly from the client — avoids CORS and centralizes egress. Confirm the exact edge-proxy
+API / capability during planning.
 
 ## Blueprint (`blueprints/provider-blueprint.ts`)
 
@@ -181,6 +182,10 @@ Registered via `AppCapabilities.BlueprintDefinition` in `capabilities/blueprint-
   - **Left (config):** provider multi-select; a `react-ui-form` whose Effect Schema is built
     at render time from the **union** of selected providers' `searchSchema` (merge JSONSchema
     field defs, then `toEffectSchema`); a **Run** button invoking `RunSearch`.
+  - **Range fields:** `number-range` / `date-range` are expressed via a **schema annotation**
+    on the field (not a distinct primitive type). `react-ui-form` resolves the annotation to a
+    range input component (define a custom field component if one does not already exist). The
+    blueprint emits this annotation in the JSONSchema it generates.
   - **Right (results):** `Masonry.Root` of `ResultCard`s; `useSelected()` drives a detail
     pane (full metadata, images, link out).
 - **`ResultCard`** — Card surface for `Result`: `Card.Poster` (first image), title (line-clamp),
@@ -230,10 +235,10 @@ Plugin.define(meta).pipe(
 
 ## Risks / Open Questions (resolve during planning)
 
-1. Exact web-fetch service/capability name used by `plugin-feed` — confirm and reuse.
-2. Anti-bot / auth on real sites; MVP targets simple fetchable HTML/JSON.
+1. Exact DXOS **edge-proxy** API/capability for HTTP fetch — confirm and reuse.
+2. Anti-bot / auth on real sites is out of scope for v1; MVP targets simple fetchable HTML/JSON.
 3. Merging JSONSchema field defs across providers when names collide (union strategy:
    key by field name; identical names assumed compatible; flag conflicts).
-4. `number-range` / `date-range` representation in JSONSchema + `react-ui-form` input support
-   — confirm `react-ui-form` renders these (or define custom field components).
+4. Range fields use a **schema annotation** + a `react-ui-form` field component that resolves
+   it; confirm whether a range input component already exists or must be added.
 ```
