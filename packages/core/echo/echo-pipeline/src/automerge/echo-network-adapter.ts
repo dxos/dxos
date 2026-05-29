@@ -48,13 +48,8 @@ export type EchoNetworkAdapterProps = {
   isDocumentInRemoteCollection: (params: RemoteDocumentExistenceCheckProps) => Promise<boolean>;
   onCollectionStateQueried: (collectionId: string, peerId: PeerId) => void;
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
-  /**
-   * Forwarded to {@link AutomergeReplicatorContext.kickShareConfigChanged}.
-   * Replicators invoke this after a reconnect to unstick bulk-sync entries
-   * that settled to `"no-peers"` during the prior transport's teardown
-   * window; the host implements it by calling `repo.shareConfigChanged()`.
-   */
-  kickShareConfigChanged?: () => void;
+  /** Invoked when a replicator connection opens (including after reconnect). */
+  onConnectionOpen?: () => void;
   monitor?: NetworkDataMonitor;
 };
 
@@ -160,7 +155,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
         const key = await this._params.getContainingSpaceForDocument(documentId);
         return key ? createIdFromSpaceKey(key) : null;
       },
-      kickShareConfigChanged: this._params.kickShareConfigChanged,
     });
   }
 
@@ -303,6 +297,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     log('emit peer-candidate', { peerId: connection.peerId });
     this._emitPeerCandidate(connection);
     this._params.monitor?.recordPeerConnected(connection.peerId);
+    this._params.onConnectionOpen?.();
   }
 
   private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {

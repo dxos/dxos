@@ -238,12 +238,7 @@ export class AutomergeHost extends Resource {
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
-      // Replicators (e.g. `EchoEdgeSubductionReplicator`) call this from
-      // their reconnect path; we forward to `_sharePolicyChangedTask`
-      // which calls `_repo.shareConfigChanged()` on the next microtask.
-      // Reuses the existing debounce so a burst of per-space reconnects
-      // collapses into one `shareConfigChanged` pass.
-      kickShareConfigChanged: () => this._sharePolicyChangedTask?.schedule(),
+      onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {

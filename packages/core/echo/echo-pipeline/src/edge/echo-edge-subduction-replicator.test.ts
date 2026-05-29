@@ -145,16 +145,7 @@ describe('EchoEdgeSubductionReplicator', () => {
     const server = await createTestEdgeWsServer(await getRandomPort());
     onTestFinished(server.cleanup);
     const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: server.endpoint });
-    // Capture the initial WS connection before open() resolves so that reconnect
-    // tests can rely on `_connectionGeneration` already being set in handlers.
-    const wsConnected = new Promise<void>((resolve) => {
-      const unsub = client.onReconnected(() => {
-        unsub();
-        resolve();
-      });
-    });
     await openAndClose(client);
-    await wsConnected;
     return { client, server };
   };
 });

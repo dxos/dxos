@@ -67,19 +67,6 @@ export interface AutomergeReplicatorContext {
   onConnectionOpen(connection: AutomergeReplicatorConnection): void;
   onConnectionClosed(connection: AutomergeReplicatorConnection): void;
   onConnectionAuthScopeChanged(connection: AutomergeReplicatorConnection): void;
-
-  /**
-   * Notify the host that the peer landscape may have changed (e.g. a
-   * subduction reconnect handshake completed) so it can call
-   * `repo.shareConfigChanged()`. Without this, entries that bulk-sync
-   * marked `lastSyncResult = "no-peers"` during a transport-teardown
-   * window stay terminal until `#connectionGeneration()` advances —
-   * which only fires on transport-level transitions, not on per-peer
-   * SUH bindings. Replicators that own their own reconnect loop call
-   * this once the new session is bound; the host debounces and resets
-   * stuck entries through `SubductionSource.shareConfigChanged`.
-   */
-  kickShareConfigChanged?(): void;
 }
 
 export interface AutomergeReplicatorConnection {

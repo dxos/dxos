@@ -16,7 +16,7 @@ import {
   createIdFromSpaceKey,
   valueEncoding,
 } from '@dxos/echo-pipeline';
-import { type EdgeConnection, type MessageListener, type ReconnectListener } from '@dxos/edge-client';
+import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -110,8 +110,7 @@ describe('identity/identity', () => {
   test('edge feed replicator', async () => {
     let replicationStarted = false;
     let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
-    const listeners: ReconnectListener[] = [];
-    let connectionGeneration = 0;
+    const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
         statusChanged: new Event(),
@@ -120,9 +119,7 @@ describe('identity/identity', () => {
         },
         onReconnected: (listener) => {
           if (status === EdgeStatus.ConnectionState.CONNECTED) {
-            // Synthetic registration-time invocation — pass current generation
-            // so consumers can recognize it as the registration call.
-            listener(connectionGeneration);
+            listener();
           } else {
             listeners.push(listener);
           }
@@ -140,9 +137,7 @@ describe('identity/identity', () => {
     });
 
     await writeGenesisCredential(setup);
-    // Simulate a real ws reconnect by bumping the generation.
-    connectionGeneration += 1;
-    listeners.forEach((callback) => callback(connectionGeneration));
+    listeners.forEach((callback) => callback());
     status = EdgeStatus.ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
