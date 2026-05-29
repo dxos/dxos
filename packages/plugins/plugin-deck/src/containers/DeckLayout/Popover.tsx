@@ -122,8 +122,6 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
-                  {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
-                  <Card.DragHandle />
                   <Card.IconBlock padding>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
