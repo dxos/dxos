@@ -11,6 +11,8 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
+import { WelcomeCapabilities } from './capabilities';
+
 import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
 
 const PERSONAL_SPACE_ICON = 'house-line';
@@ -27,6 +29,7 @@ export default Capability.makeModule(
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
     const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
+    const { generateExemplarSpace } = yield* Capability.get(WelcomeCapabilities.Options);
 
     const personalSpace = getPersonalSpace(client);
     if (!personalSpace) {
@@ -53,36 +56,36 @@ export default Capability.makeModule(
       );
     }
 
-    // Import the bundled Bramble Coffee Roasters exemplar space on first launch.
-    // The immutable EXEMPLAR_SPACE_TAG guards re-import — if a space with that tag already
-    // exists we use it as-is, even if the user has renamed or partially deleted content.
-    const existingExemplar = client.spaces.get().find((space) => space.tags.includes(EXEMPLAR_SPACE_TAG));
-    const exemplarSpace =
-      existingExemplar ??
-      (yield* Effect.tryPromise(async () => {
-        const archive: SpaceArchive = {
-          filename: EXEMPLAR_SPACE_ARCHIVE_FILENAME,
-          contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
-          format: SpaceArchive.Format.JSON,
-        };
-        return client.spaces.import(archive, { tags: [EXEMPLAR_SPACE_TAG] });
-      }));
-    yield* Effect.tryPromise(() => exemplarSpace!.waitUntilReady());
+    if (generateExemplarSpace) {
+      // Import the bundled Bramble Coffee Roasters exemplar space on first launch.
+      // The immutable EXEMPLAR_SPACE_TAG guards re-import — if a space with that tag already
+      // exists we use it as-is, even if the user has renamed or partially deleted content.
+      const existingExemplar = client.spaces.get().find((space) => space.tags.includes(EXEMPLAR_SPACE_TAG));
+      const exemplarSpace =
+        existingExemplar ??
+        (yield* Effect.tryPromise(async () => {
+          const archive: SpaceArchive = {
+            filename: EXEMPLAR_SPACE_ARCHIVE_FILENAME,
+            contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
+            format: SpaceArchive.Format.JSON,
+          };
+          return client.spaces.import(archive, { tags: [EXEMPLAR_SPACE_TAG] });
+        }));
+      yield* Effect.tryPromise(() => exemplarSpace!.waitUntilReady());
 
-    // Stamp the migration version so the exemplar space is treated as already migrated,
-    // the same way create.ts and identity-created.ts do for newly created spaces.
-    if (Migrations.versionProperty) {
-      Obj.update(exemplarSpace.properties, (properties) => {
-        properties[Migrations.versionProperty!] = Migrations.targetVersion;
-      });
+      // Stamp the migration version so the exemplar space is treated as already migrated,
+      // the same way create.ts and identity-created.ts do for newly created spaces.
+      if (Migrations.versionProperty) {
+        Obj.update(exemplarSpace.properties, (properties) => {
+          properties[Migrations.versionProperty!] = Migrations.targetVersion;
+        });
+      }
+
+      // Eagerly expand the graph so the exemplar space's content is visible in the navtree
+      // as soon as the user opens it, without waiting for a lazy expansion pass.
+      graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'), Graph.expand(exemplarSpace.id, 'child'));
+    } else {
+      graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
     }
-
-    // Eagerly expand the graph so the exemplar space's content is visible in the navtree
-    // as soon as the user opens it, without waiting for a lazy expansion pass.
-    graph.pipe(
-      Graph.expand(Node.RootId, 'child'),
-      Graph.expand(personalSpace.id, 'child'),
-      Graph.expand(exemplarSpace.id, 'child'),
-    );
   }),
 );

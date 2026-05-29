@@ -2,33 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
-import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface } from './capabilities';
+import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface, WelcomeCapabilities, type WelcomeOptions } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const WelcomePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'default-content',
-    activatesOn: SpaceEvents.PersonalSpaceReady,
-    activate: DefaultContent,
-  }),
-  Plugin.addModule({
-    id: 'onboarding',
-    activatesOn: ActivationEvent.allOf(
-      AppActivationEvents.AppGraphReady,
-      ActivationEvents.ProcessManagerReady,
-      AppActivationEvents.LayoutReady,
-      ClientEvents.ClientReady,
-    ),
-    activate: Onboarding,
-  }),
-  Plugin.make,
-);
+export const WelcomePlugin = (options: WelcomeOptions) =>
+  Plugin.define(meta).pipe(
+    Plugin.addModule({
+      id: 'options',
+      activate: Capability.makeModule(Effect.fnUntraced(function* () {
+        return Capability.contributes(WelcomeCapabilities.Options, options);
+      })),
+    }),
+    AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+    AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+    AppPlugin.addTranslationsModule({ translations }),
+    Plugin.addModule({
+      id: 'default-content',
+      activatesOn: SpaceEvents.PersonalSpaceReady,
+      activate: DefaultContent,
+    }),
+    Plugin.addModule({
+      id: 'onboarding',
+      activatesOn: ActivationEvent.allOf(
+        AppActivationEvents.AppGraphReady,
+        ActivationEvents.ProcessManagerReady,
+        AppActivationEvents.LayoutReady,
+        ClientEvents.ClientReady,
+      ),
+      activate: Onboarding,
+    }),
+    Plugin.make,
+  );

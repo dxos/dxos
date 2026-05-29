@@ -7,6 +7,11 @@ import { Capability } from '@dxos/app-framework';
 import { meta } from '../meta';
 import { type OnboardingManager } from '../onboarding-manager';
 
+export type WelcomeOptions = {
+  generateExemplarSpace: boolean;
+};
+
 export namespace WelcomeCapabilities {
   export const Onboarding = Capability.make<OnboardingManager>(`${meta.id}.capability.onboarding`);
+  export const Options = Capability.make<WelcomeOptions>(`${meta.id}.capability.options`);
 }
