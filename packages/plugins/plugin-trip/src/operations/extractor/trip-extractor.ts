@@ -18,6 +18,7 @@ import {
 } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message, Organization, type Provider } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
 
@@ -80,12 +81,12 @@ const FlightPayload = Schema.Struct({
 });
 interface FlightPayload extends Schema.Schema.Type<typeof FlightPayload> {}
 
-const PROMPT = [
-  'Extract the FIRST flight segment from this airline booking/confirmation email.',
-  'Return ISO 8601 UTC timestamps for departAt and arriveAt, and IATA airport codes for origin.code/destination.code.',
-  'Include the airline reservation/confirmation code and, if present, gate, terminal, and seat.',
-  'If the email is not a flight confirmation, return empty fields.',
-].join(' ');
+const PROMPT = trim`
+  Extract the FIRST flight segment from this airline booking/confirmation email.
+  Return ISO 8601 UTC timestamps for departAt and arriveAt, and IATA airport codes for origin.code/destination.code.
+  Include the airline reservation/confirmation code and, if present, gate, terminal, and seat.
+  If the email is not a flight confirmation, return empty fields.
+`;
 
 /** Identity key used to dedupe segments across multiple emails. */
 const matchKey = (number: string, departAt: string): string => `${number.toUpperCase()}|${departAt.split('T')[0]}`;
