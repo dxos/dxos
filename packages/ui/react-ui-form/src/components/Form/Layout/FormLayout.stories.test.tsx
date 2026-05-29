@@ -3,12 +3,12 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup, screen } from '@testing-library/react';
+import { cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import * as stories from './FormLayout.stories';
 
-const { NestedLabel } = composeStories(stories);
+const { NestedLabel, NestedLabelStatic } = composeStories(stories);
 
 describe('FormLayout — nested fields', () => {
   afterEach(() => {
@@ -28,5 +28,21 @@ describe('FormLayout — nested fields', () => {
     // leaf sub-field, rendered as editable inputs holding the code.
     expect(await screen.findByDisplayValue('JFK')).toBeInTheDocument();
     expect(await screen.findByDisplayValue('CDG')).toBeInTheDocument();
+  });
+
+  test('static layout formats dates and renders labels as read-only text', { timeout: 30_000 }, async () => {
+    await NestedLabelStatic.run();
+
+    // Scope assertions to the form: the debug panel echoes the raw values JSON.
+    const form = await screen.findByRole('form');
+
+    // The depart date renders human-readable (contains the year) rather than the raw ISO
+    // string. Match `2026` and assert no ISO time fragment leaks through — timezone-robust.
+    expect(within(form).getByText(/2026/)).toBeInTheDocument();
+    expect(within(form).queryByText(/T\d\d:\d\d/)).toBeNull();
+
+    // Nested struct labels and dotted sub-fields render as static text (not inputs).
+    expect(within(form).getByText('John F. Kennedy Intl')).toBeInTheDocument();
+    expect(within(form).getByText('JFK')).toBeInTheDocument();
   });
 });

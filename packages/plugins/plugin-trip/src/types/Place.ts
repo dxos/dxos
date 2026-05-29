@@ -12,13 +12,16 @@ import { Format } from '@dxos/echo/internal';
  * Uniform across modes so Table and Map views work without per-variant branching.
  */
 export const Place = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  code: Schema.optional(Schema.String).annotations({
-    description: 'IATA / IBNR / port / property code',
-    examples: ['LHR', 'CDG', 'LAX', 'HNL'],
-  }),
-  city: Schema.optional(Schema.String),
-  country: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  code: Schema.optional(
+    Schema.String.annotations({
+      title: 'Code',
+      description: 'IATA / IBNR / port / property code',
+      examples: ['LHR', 'CDG', 'LAX', 'HNL'],
+    }),
+  ),
+  city: Schema.optional(Schema.String.annotations({ title: 'City' })),
+  country: Schema.optional(Schema.String.annotations({ title: 'Country' })),
   geo: Format.GeoPoint.pipe(Schema.optional),
 }).pipe(Annotation.LabelAnnotation.set(['name']));
 

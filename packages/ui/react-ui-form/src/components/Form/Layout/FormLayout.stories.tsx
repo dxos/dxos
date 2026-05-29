@@ -100,6 +100,7 @@ const Place = Schema.Struct({
 
 const Journey = Schema.Struct({
   flightNumber: Schema.optional(Schema.String.annotations({ title: 'Flight #' })),
+  departAt: Schema.optional(Format.DateTime.annotations({ title: 'Depart' })),
   origin: Schema.optional(Place),
   destination: Schema.optional(Place),
 }).pipe(Type.makeObject(DXN.make('com.example.type.journey', '0.1.0')));
@@ -108,6 +109,7 @@ type JourneyValues = Omit<Type.InstanceType<typeof Journey>, 'id'>;
 
 const journey = {
   flightNumber: 'AF-1',
+  departAt: '2026-06-01T15:30:00.000Z',
   origin: { name: 'John F. Kennedy Intl', code: 'JFK', city: 'New York' },
   destination: { name: 'Charles de Gaulle', code: 'CDG', city: 'Paris' },
 } satisfies Partial<JourneyValues>;
@@ -115,6 +117,7 @@ const journey = {
 const JOURNEY_LAYOUT = trim`
   <grid cols="2">
     <field name="flightNumber" span="2"/>
+    <field name="departAt" span="2"/>
     <field name="origin"/>
     <field name="destination"/>
     <field name="origin.code"/>
@@ -236,7 +239,7 @@ export const NamedAnnotation: Story = {
  * `LabelAnnotation` — referenced bare they collapse to the place's name, while
  * `origin.code`/`destination.code` drill into the leaf sub-field.
  */
-const NestedLabelStory = () => {
+const NestedLabelStory = ({ readonly = false }: { readonly?: boolean }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Journey)) as unknown as Schema.Schema<any>, []);
   const [values, setValues] = useState<Partial<JourneyValues>>(journey);
 
@@ -247,7 +250,14 @@ const NestedLabelStory = () => {
   return (
     <Tooltip.Provider>
       <TestLayout json={{ values }}>
-        <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+        <Form.Root
+          schema={schema}
+          defaultValues={values}
+          layout={readonly ? 'static' : 'full'}
+          readonly={readonly}
+          onSave={handleSave}
+          autoSave
+        >
           <Form.Viewport>
             <Form.Content>
               <Form.Layout schema={schema} template={JOURNEY_LAYOUT} />
@@ -261,6 +271,11 @@ const NestedLabelStory = () => {
 
 export const NestedLabel: Story = {
   render: () => <NestedLabelStory />,
+};
+
+/** Read-only static presentation: dates render human-readable; nested structs as labels. */
+export const NestedLabelStatic: Story = {
+  render: () => <NestedLabelStory readonly />,
 };
 
 /**

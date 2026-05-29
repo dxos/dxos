@@ -35,26 +35,26 @@ export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;
  */
 export const TransportFields = Schema.Struct({
   /** Operator of the leg: airline for flights, rail operator for trains, ferry line for boats, road operator for taxi/bus. */
-  provider: Schema.optional(Provider.Provider),
+  provider: Schema.optional(Provider.Provider).annotations({ title: 'Operator' }),
   /** Operator-assigned identifier: flight number, train number, vessel/route code. */
-  number: Schema.optional(Schema.String),
-  origin: Schema.optional(Place),
-  destination: Schema.optional(Place),
-  departAt: Schema.optional(Format.DateTime),
-  arriveAt: Schema.optional(Format.DateTime),
-  serviceClass: Schema.optional(ServiceClass),
+  number: Schema.optional(Schema.String).annotations({ title: 'Number' }),
+  origin: Schema.optional(Place).annotations({ title: 'Origin' }),
+  destination: Schema.optional(Place).annotations({ title: 'Destination' }),
+  departAt: Schema.optional(Format.DateTime).annotations({ title: 'Depart' }),
+  arriveAt: Schema.optional(Format.DateTime).annotations({ title: 'Arrive' }),
+  serviceClass: Schema.optional(ServiceClass).annotations({ title: 'Class' }),
   /** Single seat assignment, or a list when the booking covers multiple passengers. */
-  seat: Schema.optional(Schema.Union(Schema.String, Schema.Array(Schema.String))),
+  seat: Schema.optional(Schema.Union(Schema.String, Schema.Array(Schema.String))).annotations({ title: 'Seat' }),
 });
 export interface TransportFields extends Schema.Schema.Type<typeof TransportFields> {}
 
 export const FlightDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('flight', {
-    terminalFrom: Schema.optional(Schema.String),
-    terminalTo: Schema.optional(Schema.String),
-    gateFrom: Schema.optional(Schema.String),
-    gateTo: Schema.optional(Schema.String),
+    terminalFrom: Schema.optional(Schema.String).annotations({ title: 'Departure terminal' }),
+    terminalTo: Schema.optional(Schema.String).annotations({ title: 'Arrival terminal' }),
+    gateFrom: Schema.optional(Schema.String).annotations({ title: 'Departure gate' }),
+    gateTo: Schema.optional(Schema.String).annotations({ title: 'Arrival gate' }),
   }),
 );
 export interface FlightDetails extends Schema.Schema.Type<typeof FlightDetails> {}
@@ -62,8 +62,8 @@ export interface FlightDetails extends Schema.Schema.Type<typeof FlightDetails> 
 export const TrainDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('train', {
-    platform: Schema.optional(Schema.String),
-    coach: Schema.optional(Schema.String),
+    platform: Schema.optional(Schema.String).annotations({ title: 'Platform' }),
+    coach: Schema.optional(Schema.String).annotations({ title: 'Coach' }),
   }),
 );
 export interface TrainDetails extends Schema.Schema.Type<typeof TrainDetails> {}
@@ -71,7 +71,7 @@ export interface TrainDetails extends Schema.Schema.Type<typeof TrainDetails> {}
 export const BoatDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('boat', {
-    vessel: Schema.optional(Schema.String),
+    vessel: Schema.optional(Schema.String).annotations({ title: 'Vessel' }),
   }),
 );
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
@@ -80,29 +80,29 @@ export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 export const RoadDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('road', {
-    subKind: Schema.optional(RoadSubKind),
+    subKind: Schema.optional(RoadSubKind).annotations({ title: 'Mode' }),
   }),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
 
 export const AccommodationDetails = Schema.TaggedStruct('accommodation', {
-  propertyName: Schema.optional(Schema.String),
-  roomType: Schema.optional(Schema.String),
+  propertyName: Schema.optional(Schema.String).annotations({ title: 'Property' }),
+  roomType: Schema.optional(Schema.String).annotations({ title: 'Room type' }),
   /** Location of the property — single `Place`, no origin/destination distinction. */
-  location: Schema.optional(Place),
-  checkIn: Schema.optional(Format.DateTime),
-  checkOut: Schema.optional(Format.DateTime),
+  location: Schema.optional(Place).annotations({ title: 'Location' }),
+  checkIn: Schema.optional(Format.DateTime).annotations({ title: 'Check-in' }),
+  checkOut: Schema.optional(Format.DateTime).annotations({ title: 'Check-out' }),
 });
 
 export interface AccommodationDetails extends Schema.Schema.Type<typeof AccommodationDetails> {}
 
 export const ActivityDetails = Schema.TaggedStruct('activity', {
-  title: Schema.optional(Schema.String),
-  venue: Schema.optional(Place),
+  title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+  venue: Schema.optional(Place).annotations({ title: 'Venue' }),
   /** Activity start. */
-  departAt: Schema.optional(Format.DateTime),
+  departAt: Schema.optional(Format.DateTime).annotations({ title: 'Start' }),
   /** Activity end. */
-  arriveAt: Schema.optional(Format.DateTime),
+  arriveAt: Schema.optional(Format.DateTime).annotations({ title: 'End' }),
 });
 
 export interface ActivityDetails extends Schema.Schema.Type<typeof ActivityDetails> {}

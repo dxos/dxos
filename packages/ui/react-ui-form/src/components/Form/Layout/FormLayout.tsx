@@ -10,7 +10,7 @@ import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, findNode, getBaseType } from '@dxos/effect';
+import { createJsonPath, findNode, getAnnotation, getBaseType } from '@dxos/effect';
 import { Input } from '@dxos/react-ui';
 
 import { useFormFieldState } from '../Form';
@@ -114,7 +114,7 @@ const RenderNode = ({ node, schema, basePath, ...props }: RenderNodeProps) => {
     throw new LayoutParseError(`field "${node.name}" not found on schema`);
   }
 
-  const { type, segments, leafName, labelType } = resolved;
+  const { type, segments, leafName, title, labelType } = resolved;
   const path = [...basePath, ...segments];
   const span = node.span ? { gridColumn: `span ${node.span} / span ${node.span}` } : undefined;
 
@@ -124,7 +124,7 @@ const RenderNode = ({ node, schema, basePath, ...props }: RenderNodeProps) => {
         {labelType ? (
           <LabelField
             schema={Schema.make(labelType)}
-            label={String.capitalize(leafName)}
+            label={title ?? String.capitalize(leafName)}
             path={path}
             layout={props.layout}
           />
@@ -141,8 +141,10 @@ export type ResolvedLayoutField = {
   type: SchemaAST.AST;
   /** Path segments (dotted names split on `.`). */
   segments: string[];
-  /** Last path segment; used to derive the field label. */
+  /** Last path segment; used to derive the field label when there is no `title` annotation. */
   leafName: string;
+  /** Resolved `title` annotation for the field, if any. */
+  title?: string;
   /**
    * Set when the field resolves to a nested struct carrying a `LabelAnnotation` —
    * the type literal whose computed label should render in place of the struct's
@@ -205,13 +207,21 @@ export const resolveLayoutField = (
       ? ({ ...baseType, annotations: { ...baseType.annotations, ...prop.annotations } } as SchemaAST.AST)
       : baseType;
 
+  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
+
   // Label detection reads the *raw* property type: `getBaseType`'s `encodedBoundAST`
   // strips annotations from non-keyword inner types (e.g. nested structs), which would
   // drop the `LabelAnnotation` we rely on here.
   const labelType = findNode(prop.type, SchemaAST.isTypeLiteral);
   const labelled = labelType != null && Option.isSome(Annotation.LabelAnnotation.getFromAst(labelType));
 
-  return { type, segments, leafName: segments[segments.length - 1], labelType: labelled ? labelType : undefined };
+  return {
+    type,
+    segments,
+    leafName: segments[segments.length - 1],
+    title,
+    labelType: labelled ? labelType : undefined,
+  };
 };
 
 type LabelFieldProps = {

@@ -64,7 +64,7 @@ export const DateField = ({
   );
 
   return (
-    <FormFieldWrapper<string> readonly={readonly} {...props}>
+    <FormFieldWrapper<string> readonly={readonly} format={format} {...props}>
       {({ value }) => {
         switch (format) {
           case Format.TypeFormat.Date:
