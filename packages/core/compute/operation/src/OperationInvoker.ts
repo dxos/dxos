@@ -12,22 +12,60 @@ import * as PubSub from 'effect/PubSub';
 import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
-import { type SpaceId } from '@dxos/keys';
+import { ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Label } from '@dxos/ui-types/translations';
 
 import * as Scheduler from './scheduler';
 
 // @import-as-namespace
 
 /**
- * Invocation event emitted after each operation.
+ * Undo descriptor stamped onto a successful invocation event by the injected {@link UndoResolver}
+ * when the operation is undoable.
+ */
+export type UndoInfo = {
+  /** Message shown in the undo toast. */
+  message?: Label;
+  /** Inverse operation that undoes the original invocation. */
+  inverse: Operation.Definition.Any;
+  /** Input for the inverse operation, derived from the original input and output. */
+  inverseInput: unknown;
+};
+
+/**
+ * Lifecycle status of an invocation. Mirrors the success/failure/pending vocabulary used by EDGE
+ * invocation traces.
+ */
+export type InvocationStatus<O = any> =
+  | { type: 'pending' }
+  | { type: 'success'; output: O; undo?: UndoInfo }
+  | { type: 'failure'; error: { message: string; name?: string; stack?: string } };
+
+/**
+ * Invocation lifecycle event. A `pending` event is emitted before the handler runs, followed by a
+ * terminal `success`/`failure` event sharing the same `invocationId`.
  */
 export type InvocationEvent<I = any, O = any> = {
+  /** Correlates the `pending` event with its terminal event for one invocation. */
+  invocationId: string;
   operation: Operation.Definition<I, O>;
   input: I;
-  output: O;
+  /** Present when the caller opted into notifications via {@link Operation.InvokeOptions.notify}. */
+  notify?: Operation.NotifyOptions;
   timestamp: number;
+  status: InvocationStatus<O>;
 };
+
+/**
+ * Resolves undo information for a successful invocation. Injected by the layer that owns the undo
+ * registry (the invoker itself has no knowledge of undoability).
+ */
+export type UndoResolver = (
+  op: Operation.Definition.Any,
+  input: unknown,
+  output: unknown,
+) => UndoInfo | undefined;
 
 /**
  * Resolves a spaceId to a context containing Database.Service.
@@ -88,6 +126,12 @@ export interface OperationInvokerInternal extends OperationInvoker {
     input: I,
     options?: Operation.InvokeOptions,
   ) => Effect.Effect<O, NoHandlerError>;
+
+  /**
+   * Inject the resolver that stamps undo information onto successful invocation events.
+   * Late-bound because the undo registry is assembled after the invoker is constructed.
+   */
+  setUndoResolver: (resolver: UndoResolver) => void;
 }
 
 //
@@ -95,6 +139,17 @@ export interface OperationInvokerInternal extends OperationInvoker {
 //
 
 type AnyManagedRuntime = ManagedRuntime.ManagedRuntime<any, any>;
+
+/**
+ * Maps an Effect Cause to a serializable error shape for invocation failure events.
+ */
+const causeToError = (cause: Cause.Cause<unknown>): { message: string; name?: string; stack?: string } => {
+  const squashed = Cause.squash(cause);
+  if (squashed instanceof Error) {
+    return { message: squashed.message, name: squashed.name, stack: squashed.stack };
+  }
+  return { message: Cause.pretty(cause) };
+};
 
 class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
@@ -104,6 +159,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _databaseResolver?: DatabaseResolver;
   // Cache for DynamicRuntime instances keyed by service tag keys.
   private readonly _dynamicRuntimeCache = new Map<string, DynamicRuntime.DynamicRuntime<any>>();
+  // Late-bound by the layer that owns the undo registry.
+  private _undoResolver?: UndoResolver;
 
   constructor(
     getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>,
@@ -135,6 +192,11 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     return dynamicRuntime;
   }
 
+  // Arrow function to preserve `this` context when destructured.
+  setUndoResolver = (resolver: UndoResolver): void => {
+    this._undoResolver = resolver;
+  };
+
   get invocations(): PubSub.PubSub<InvocationEvent> {
     return this._pubsub;
   }
@@ -164,18 +226,32 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   ): Effect.Effect<O, NoHandlerError> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
+    const notify = options?.notify;
     return Effect.gen(this, function* () {
-      const output = yield* this._invokeCore(op, input, options);
+      const invocationId = ObjectId.random();
+      const base = { invocationId, operation: op, input, notify };
 
-      // Publish event after successful invocation.
-      yield* PubSub.publish(this._pubsub, {
-        operation: op,
-        input,
-        output,
-        timestamp: Date.now(),
-      });
+      // Publish lifecycle start event.
+      yield* PubSub.publish(this._pubsub, { ...base, timestamp: Date.now(), status: { type: 'pending' } });
 
-      return output;
+      const exit = yield* Effect.exit(this._invokeCore(op, input, options));
+      if (Exit.isSuccess(exit)) {
+        const output = exit.value;
+        const undo = this._undoResolver?.(op, input, output);
+        yield* PubSub.publish(this._pubsub, {
+          ...base,
+          timestamp: Date.now(),
+          status: { type: 'success', output, undo },
+        });
+      } else {
+        yield* PubSub.publish(this._pubsub, {
+          ...base,
+          timestamp: Date.now(),
+          status: { type: 'failure', error: causeToError(exit.cause) },
+        });
+      }
+
+      return yield* exit;
     });
   };
 

@@ -354,6 +354,15 @@ export default Capability.makeModule(
                         },
                       }),
                       Node.make({
+                        id: Devtools.Edge.Operations,
+                        data: Devtools.Edge.Operations,
+                        type: DEVTOOLS_TYPE,
+                        properties: {
+                          label: ['operations.label', { ns: meta.id }],
+                          icon: 'ph--play-circle--regular',
+                        },
+                      }),
+                      Node.make({
                         id: Devtools.Edge.Testing,
                         data: Devtools.Edge.Testing,
                         type: DEVTOOLS_TYPE,

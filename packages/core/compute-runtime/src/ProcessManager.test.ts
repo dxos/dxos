@@ -11,6 +11,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as PubSub from 'effect/PubSub';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -607,5 +609,99 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const childHandle = yield* manager.attach(childInfo.pid);
       expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
+  );
+});
+
+describe('ProcessOperationInvoker invocations', () => {
+  it.effect(
+    'publishes pending then success lifecycle events sharing an invocationId',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          // Subscribe before invoking so no lifecycle event is missed.
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const output = yield* invoker.invoke(Double, { value: 5 });
+          expect(output).toEqual(10);
+
+          const pending = yield* Queue.take(events);
+          const terminal = yield* Queue.take(events);
+          expect(pending.status.type).toBe('pending');
+          expect(terminal.status.type).toBe('success');
+          expect(pending.invocationId).toEqual(terminal.invocationId);
+          if (terminal.status.type === 'success') {
+            expect(terminal.status.output).toEqual(10);
+          }
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'publishes a failure lifecycle event and still propagates the error',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const exit = yield* invoker.invoke(Failing).pipe(Effect.exit);
+          expect(Exit.isFailure(exit)).toBe(true);
+
+          const pending = yield* Queue.take(events);
+          const terminal = yield* Queue.take(events);
+          expect(pending.status.type).toBe('pending');
+          expect(terminal.status.type).toBe('failure');
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'copies notify options onto lifecycle events',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const notify = { success: 'Done', error: 'Failed' };
+          yield* invoker.invoke(Double, { value: 1 }, { notify });
+
+          const pending = yield* Queue.take(events);
+          const terminal = yield* Queue.take(events);
+          expect(pending.notify).toEqual(notify);
+          expect(terminal.notify).toEqual(notify);
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'stamps undo info from the resolver onto success events',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      invoker.setUndoResolver((op, _input, output) =>
+        op.meta.key === Double.meta.key
+          ? { message: 'Undo double', inverse: Double, inverseInput: { value: output } }
+          : undefined,
+      );
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          yield* invoker.invoke(Double, { value: 5 });
+
+          yield* Queue.take(events); // pending
+          const terminal = yield* Queue.take(events);
+          expect(terminal.status.type).toBe('success');
+          if (terminal.status.type === 'success') {
+            expect(terminal.status.undo?.message).toBe('Undo double');
+            expect(terminal.status.undo?.inverseInput).toEqual({ value: 10 });
+          }
+        }),
+      );
+    }, Effect.provide(TestLayer)),
   );
 });

@@ -9,11 +9,8 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
-import { UndoOperation } from '../../common';
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
-import { resolveMessage } from './undo-mapping';
-import type { UndoRegistry } from './undo-registry';
 
 const HISTORY_LIMIT = 100;
 
@@ -36,34 +33,33 @@ export interface HistoryTracker {
 
 /**
  * Creates a HistoryTracker that subscribes to invocation events and provides undo.
+ *
+ * Undoability is resolved by the invoker's injected undo resolver and stamped onto the success event
+ * (see {@link OperationInvoker.UndoInfo}); the tracker consumes it directly. The undo toast is rendered
+ * separately by the deck notification tracker subscribing to the same stream.
  */
-export const make = (
-  invoker: OperationInvoker.OperationInvokerInternal,
-  undoRegistry: UndoRegistry,
-): HistoryTracker => {
+export const make = (invoker: OperationInvoker.OperationInvokerInternal): HistoryTracker => {
   const history: HistoryEntry[] = [];
 
   // Subscribe to invocation stream.
   const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
-    const mapping = undoRegistry.lookup(event.operation);
-    if (!mapping) {
-      // Operation is not undoable, skip.
+    if (event.status.type !== 'success') {
+      // Only successful invocations can be undone.
       return;
     }
 
-    const inverseInput = mapping.deriveContext(event.input, event.output);
-    if (inverseInput === undefined) {
-      // Operation is conditionally not undoable (deriveContext returned undefined).
-      log('operation not undoable', { key: event.operation.meta.key });
+    const undo = event.status.undo;
+    if (!undo) {
+      // Operation is not undoable.
       return;
     }
 
     const entry: HistoryEntry = {
       operation: event.operation,
       input: event.input,
-      output: event.output,
-      inverse: mapping.inverse,
-      inverseInput,
+      output: event.status.output,
+      inverse: undo.inverse,
+      inverseInput: undo.inverseInput,
       timestamp: event.timestamp,
     };
 
@@ -74,14 +70,6 @@ export const make = (
     if (history.length > HISTORY_LIMIT) {
       history.splice(0, history.length - HISTORY_LIMIT);
     }
-
-    // Show undo toast (resolve message if it's a function).
-    const resolvedMessage = resolveMessage(mapping.message, event.input, event.output);
-    Effect.runFork(
-      invoker.invoke(UndoOperation.ShowUndo, {
-        message: resolvedMessage,
-      }),
-    );
   };
 
   // Fork a fiber to consume the invocation stream.

@@ -4997,6 +4997,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../../ui/ui-types
       '@dxos/vendor-kbn-handlebars':
         specifier: workspace:*
         version: link:../../../../vendor/kbn-handlebars
@@ -5536,6 +5539,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../../ui/ui-types
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -9366,6 +9372,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9574,6 +9583,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/compute/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention

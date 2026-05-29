@@ -57,6 +57,8 @@ import {
 import { meta } from '#meta';
 import { DebugCapabilities, type Settings, Devtools } from '#types';
 
+import { useOperationInvocationSpans } from '../hooks/useOperationInvocationSpans';
+
 // TODO(burdon): Move to config.
 const MCP_SERVER_URL = 'https://introspect-service-labs.dxos.workers.dev/mcp';
 
@@ -399,6 +401,14 @@ export default Capability.makeModule(
           const feed = space.properties.invocationTraceFeed?.target;
           const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
           return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
+        },
+      }),
+      Surface.create({
+        id: 'edge.operations',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Operations),
+        component: () => {
+          const invocationSpans = useOperationInvocationSpans();
+          return <InvocationTraceContainer invocationSpans={invocationSpans} showSpaceSelector={false} detailAxis='block' />;
         },
       }),
       Surface.create({

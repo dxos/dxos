@@ -29,7 +29,8 @@
     "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/ui-types": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",

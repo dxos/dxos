@@ -119,7 +119,7 @@ export default Capability.makeModule(
           ],
         },
         optionsSchema: SyncOptions,
-        sync: InboxOperation.SyncMailbox,
+        sync: InboxOperation.GoogleMailSync,
         onTokenCreated: gmailOnTokenCreated,
       },
       {
@@ -135,7 +135,7 @@ export default Capability.makeModule(
         },
         optionsSchema: CalendarSyncOptions,
         getSyncTargets: InboxOperation.GetGoogleCalendars,
-        sync: InboxOperation.SyncCalendar,
+        sync: InboxOperation.GoogleCalendarSync,
         onTokenCreated: calendarOnTokenCreated,
       },
       {

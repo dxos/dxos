@@ -49,6 +49,18 @@ const SideEffect = Operation.make({
   meta: { key: 'test.side-effect' },
 });
 
+const Fail = Operation.make({
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Void,
+  meta: { key: 'test.fail' },
+});
+
+const Halve = Operation.make({
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
+  meta: { key: 'test.halve' },
+});
+
 //
 // Test Handlers
 //
@@ -65,6 +77,10 @@ const toStringHandler = Operation.withHandler(ToString, (data) => Effect.succeed
 const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] + data[1]));
 
 const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
+
+const failHandler = Operation.withHandler(Fail, () => Effect.fail(new Error('boom')));
+
+const halveHandler = Operation.withHandler(Halve, (data) => Effect.succeed({ value: data.value / 2 }));
 
 //
 // Test Utilities
@@ -215,22 +231,107 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('invocations pubsub receives events', () =>
+  it.effect('emits pending then success lifecycle events sharing an invocationId', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
       const collector = yield* createEventCollector(invoker);
 
-      // Small delay to ensure subscription is ready
+      // Small delay to ensure subscription is ready.
       yield* Effect.yieldNow();
 
-      yield* invoker.invoke(ToString, { value: 1 });
-      yield* invoker.invoke(ToString, { value: 2 });
+      yield* invoker.invoke(ToString, { value: 42 });
+
+      // Each invocation emits a pending event followed by a terminal event.
+      yield* collector.waitForEvents(2);
+      expect(collector.events.length).toBe(2);
+
+      const [pending, success] = collector.events;
+      expect(pending.status.type).toBe('pending');
+      expect(pending.input).toEqual({ value: 42 });
+      expect(success.status.type).toBe('success');
+      if (success.status.type === 'success') {
+        expect(success.status.output).toEqual({ string: '42' });
+      }
+      // Both events share the same invocation id.
+      expect(pending.invocationId).toBe(success.invocationId);
+
+      yield* collector.dispose;
+    }),
+  );
+
+  it.effect('emits a failure event and still propagates the error', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([failHandler]), testRuntime);
+      const collector = yield* createEventCollector(invoker);
+      yield* Effect.yieldNow();
+
+      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.either);
+      expect(result._tag).toBe('Left');
 
       yield* collector.waitForEvents(2);
+      const [pending, failure] = collector.events;
+      expect(pending.status.type).toBe('pending');
+      expect(failure.status.type).toBe('failure');
+      if (failure.status.type === 'failure') {
+        expect(failure.status.error.message).toContain('boom');
+      }
+      expect(pending.invocationId).toBe(failure.invocationId);
 
-      expect(collector.events.length).toBe(2);
-      expect(collector.events[0].input).toEqual({ value: 1 });
-      expect(collector.events[1].input).toEqual({ value: 2 });
+      yield* collector.dispose;
+    }),
+  );
+
+  it.effect('copies notify options onto lifecycle events', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
+      const collector = yield* createEventCollector(invoker);
+      yield* Effect.yieldNow();
+
+      const notify = { start: 'Starting', success: 'Done', error: 'Failed' } as const;
+      yield* invoker.invoke(ToString, { value: 1 }, { notify });
+
+      yield* collector.waitForEvents(2);
+      expect(collector.events[0].notify).toEqual(notify);
+      expect(collector.events[1].notify).toEqual(notify);
+
+      yield* collector.dispose;
+    }),
+  );
+
+  it.effect('stamps undo info from the resolver onto success events', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveHandler]), testRuntime);
+      invoker.setUndoResolver((operation, _input, output) => {
+        if (operation.meta.key !== Compute.meta.key) {
+          return undefined;
+        }
+        return { message: 'Undo compute', inverse: Halve, inverseInput: { value: (output as { value: number }).value } };
+      });
+      const collector = yield* createEventCollector(invoker);
+      yield* Effect.yieldNow();
+
+      // Compute 2 → 4.
+      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      yield* TestClock.adjust('20 millis');
+      yield* Fiber.join(fiber);
+
+      yield* collector.waitForEvents(2);
+      const success = collector.events.find((event) => event.status.type === 'success');
+      expect(success?.status.type).toBe('success');
+      if (success?.status.type === 'success') {
+        expect(success.status.undo?.message).toBe('Undo compute');
+        expect(success.status.undo?.inverseInput).toEqual({ value: 4 });
+      }
+
+      // Invoking the inverse operation (not a forward op in the resolver) yields no undo info.
+      yield* invoker.invoke(Halve, { value: 4 });
+      yield* collector.waitForEvents(4);
+      const halveSuccess = collector.events
+        .filter((event) => event.operation.meta.key === Halve.meta.key)
+        .find((event) => event.status.type === 'success');
+      if (halveSuccess?.status.type === 'success') {
+        expect(halveSuccess.status.undo).toBeUndefined();
+      }
 
       yield* collector.dispose;
     }),

@@ -39,6 +39,9 @@
       "path": "../../../sdk/schema"
     },
     {
+      "path": "../../../ui/ui-types"
+    },
+    {
       "path": "../../echo/echo"
     },
     {

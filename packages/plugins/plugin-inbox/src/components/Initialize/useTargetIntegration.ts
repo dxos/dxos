@@ -40,6 +40,7 @@ export const useTargetSync = <T extends Obj.Any>(
   target: T,
   operation: Operation.Definition<any, any>,
   targetKey: string,
+  notify?: Operation.NotifyOptions,
 ): {
   integration: Integration.Integration | undefined;
   sync: () => Promise<void>;
@@ -55,14 +56,18 @@ export const useTargetSync = <T extends Obj.Any>(
     }
     setSyncing(true);
     try {
-      await invokePromise(operation, {
-        integration: Ref.make(integration),
-        [targetKey]: Ref.make(target),
-      });
+      await invokePromise(
+        operation,
+        {
+          integration: Ref.make(integration),
+          [targetKey]: Ref.make(target),
+        },
+        { spaceId: Obj.getDatabase(target)?.spaceId, notify },
+      );
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, integration, operation, target, targetKey]);
+  }, [invokePromise, integration, operation, target, targetKey, notify]);
 
   return { integration, sync, syncing };
 };

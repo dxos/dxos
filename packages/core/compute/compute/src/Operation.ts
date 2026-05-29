@@ -13,6 +13,7 @@ import type * as Types from 'effect/Types';
 
 import { DXN, Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
+import type { Label } from '@dxos/ui-types/translations';
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
@@ -409,6 +410,19 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
 };
 
 /**
+ * Per-phase user notification messages for an invocation.
+ * A phase is notified to the user iff its message is provided; messages are translatable {@link Label}s.
+ */
+export interface NotifyOptions {
+  /** Shown when the invocation starts. */
+  start?: Label;
+  /** Shown when the invocation succeeds. */
+  success?: Label;
+  /** Shown when the invocation fails. */
+  error?: Label;
+}
+
+/**
  * Options for operation invocation.
  */
 export interface InvokeOptions {
@@ -416,6 +430,10 @@ export interface InvokeOptions {
    * Space ID to provide database context for the handler.
    */
   spaceId?: Key.SpaceId;
+  /**
+   * Request user-facing notifications at the given invocation phases.
+   */
+  notify?: NotifyOptions;
   /**
    * URI of the conversation feed (queue) — today always an EchoURI, but typed as
    * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EchoURI.parse`

@@ -19,6 +19,7 @@ import * as Stream from 'effect/Stream';
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
@@ -31,6 +32,17 @@ export interface OperationFiber<T> {
   await: Effect.Effect<Exit.Exit<T>>;
   poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
 }
+
+/**
+ * Maps an Effect Cause to a serializable error shape for invocation failure events.
+ */
+const causeToError = (cause: Cause.Cause<unknown>): { message: string; name?: string; stack?: string } => {
+  const squashed = Cause.squash(cause);
+  if (squashed instanceof Error) {
+    return { message: squashed.message, name: squashed.name, stack: squashed.stack };
+  }
+  return { message: Cause.pretty(cause) };
+};
 
 // TODO(dmaretskyi): Can we move this into the core invoker?
 export interface ProcessOperationInvoker {
@@ -110,6 +122,11 @@ export const make = (opts: {
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
+  // Late-bound by the layer that owns the undo registry.
+  let undoResolver: OperationInvoker.UndoResolver | undefined;
+  const setUndoResolver = (resolver: OperationInvoker.UndoResolver): void => {
+    undoResolver = resolver;
+  };
 
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
@@ -185,8 +202,15 @@ export const make = (opts: {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     const traceMeta = options?.tracing as Trace.Meta | undefined;
+    const notify = options?.notify;
     log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
+      const invocationId = ObjectId.random();
+      const base = { invocationId, operation: op, input, notify };
+
+      // Publish lifecycle start event.
+      yield* PubSub.publish(pubsub, { ...base, timestamp: Date.now(), status: { type: 'pending' as const } });
+
       const fiber = yield* invokeFiber(op, input, {
         traceMeta,
         environment: {
@@ -194,18 +218,26 @@ export const make = (opts: {
           ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       });
-      // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`,
-      // so flattening unwraps it into `Effect<O, …>` with the original cause.
-      const output = yield* fiber.await.pipe(Effect.flatten);
+      // `fiber.await` is `Effect<Exit<O>>`; inspect the Exit to publish the terminal lifecycle event,
+      // then re-raise it (Exit is a subtype of Effect) to preserve the original cause.
+      const exit = yield* fiber.await;
+      if (Exit.isSuccess(exit)) {
+        const output = exit.value;
+        const undo = undoResolver?.(op, input, output);
+        yield* PubSub.publish(pubsub, {
+          ...base,
+          timestamp: Date.now(),
+          status: { type: 'success', output, undo },
+        });
+      } else {
+        yield* PubSub.publish(pubsub, {
+          ...base,
+          timestamp: Date.now(),
+          status: { type: 'failure', error: causeToError(exit.cause) },
+        });
+      }
 
-      yield* PubSub.publish(pubsub, {
-        operation: op,
-        input,
-        output,
-        timestamp: Date.now(),
-      });
-
-      return output;
+      return yield* exit;
     }).pipe(
       Effect.tapErrorCause((cause) =>
         Effect.sync(() => {
@@ -302,6 +334,7 @@ export const make = (opts: {
     pendingFollowups: Ref.get(pendingCount),
     awaitFollowups,
     _invokeCore,
+    setUndoResolver,
   };
 };
 
