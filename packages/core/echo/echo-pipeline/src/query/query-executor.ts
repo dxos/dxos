@@ -27,7 +27,8 @@ import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dx
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
-import { type InvalidationHint, type SpaceStateManager, canonicalTypename } from '../db-host';
+import type { SpaceStateManager } from '../db-host';
+import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
