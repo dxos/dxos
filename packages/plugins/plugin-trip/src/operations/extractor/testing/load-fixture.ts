@@ -17,7 +17,7 @@ import { ContentBlock, Message } from '@dxos/types';
  * conversion the Gmail mapper applies before storing the message, so paste
  * the email body straight from your inbox's "View source" / "Show original".
  *
- * Paste real email content into the `.txt` files in this directory to extend
+ * Paste real email content into the `.md` files in this directory to extend
  * fixture coverage; one file = one `Message`.
  */
 export const parseFixtureMessage = (raw: string): Message.Message => {

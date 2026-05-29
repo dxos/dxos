@@ -5,10 +5,10 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { resolve } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
 import * as InboxResolver from './inbox-resolver';
-import * as Resolver from './resolver';
 
 describe('resolver', () => {
   it.effect(
@@ -16,13 +16,13 @@ describe('resolver', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         // Organization
-        expect(yield* Resolver.resolve(Organization.Organization, { email: 'alice@dxos.org' })).toBeDefined();
-        expect(yield* Resolver.resolve(Organization.Organization, { email: 'bob@dxos.org' })).toBeDefined();
-        expect(yield* Resolver.resolve(Organization.Organization, { email: 'charlie@testing.com' })).not.toBeDefined();
+        expect(yield* resolve(Organization.Organization, { email: 'alice@dxos.org' })).toBeDefined();
+        expect(yield* resolve(Organization.Organization, { email: 'bob@dxos.org' })).toBeDefined();
+        expect(yield* resolve(Organization.Organization, { email: 'charlie@testing.com' })).not.toBeDefined();
 
         // Person
-        expect(yield* Resolver.resolve(Person.Person, { email: 'alice@dxos.org' })).toBeDefined();
-        expect(yield* Resolver.resolve(Person.Person, { email: 'alice@gmail.com' })).not.toBeDefined();
+        expect(yield* resolve(Person.Person, { email: 'alice@dxos.org' })).toBeDefined();
+        expect(yield* resolve(Person.Person, { email: 'alice@gmail.com' })).not.toBeDefined();
       },
       Effect.provide(
         InboxResolver.Mock({

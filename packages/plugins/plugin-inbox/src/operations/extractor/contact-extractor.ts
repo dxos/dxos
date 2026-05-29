@@ -5,28 +5,26 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { type Message } from '@dxos/types';
+import { type Obj, Type } from '@dxos/echo';
+import { type ExtractInput, type ExtractResult, type MatchResult, type ObjectExtractor } from '@dxos/extractor';
+import { Message } from '@dxos/types';
 
-import { type MessageExtractor } from '../../capabilities';
 import { InboxOperation } from '../../types';
 import { buildContactFromActor } from './contact';
 
-export const ID = 'org.dxos.plugin.inbox.extractor.contact';
+export const TEMPLATE_ID = 'org.dxos.plugin.inbox.extractor.contact';
 
-const matchMessage = (message: Message.Message): MessageExtractor.MatchResult => {
+const matchMessage = (source: Obj.Any): MatchResult => {
   // Any message with a sender email is a candidate. Low confidence so domain-specific extractors
   // (e.g. travel) outrank this when both match.
-  const matched = !!message.sender.email;
+  const matched = !!(source as Message.Message).sender?.email;
   return matched ? { matched: true, confidence: 0.1, reason: 'sender-email' } : { matched: false };
 };
 
 /** Turns the sender into a Person (+ Organization link by domain) via the shared helper. */
-const extract = ({
-  db,
-  message,
-}: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
+const extract = ({ db, source }: ExtractInput): Effect.Effect<ExtractResult, never> =>
   Effect.gen(function* () {
-    const contact = yield* buildContactFromActor(message.sender, db);
+    const contact = yield* buildContactFromActor((source as Message.Message).sender, db);
     return { created: contact ? [contact] : [], updated: [], relations: [] };
   });
 
@@ -45,11 +43,12 @@ export default handler;
  * `Message.sender` already references the actor, so a provenance edge would duplicate that
  * linkage and clutter the message header with a redundant chip alongside the sender row.
  */
-export const ContactMessageExtractor: MessageExtractor.MessageExtractor = {
-  id: ID,
+export const ContactMessageExtractor: ObjectExtractor = {
+  id: TEMPLATE_ID,
   title: 'Contact',
   description: 'Create contact from message sender',
   kinds: ['contact'],
+  sourceTypes: [Type.getTypename(Message.Message)!],
   match: matchMessage,
   operation: InboxOperation.ExtractContactFromMessage,
   extract,

@@ -11,12 +11,13 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { ActivationEvents } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Type } from '@dxos/echo';
+import { type ObjectExtractor } from '@dxos/extractor';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
-import { type MessageExtractor } from '#capabilities';
 import { InboxOperationHandlerSet } from '#operations';
 import { ContactMessageExtractor } from '#operations';
 import { translations } from '#translations';
@@ -137,13 +138,14 @@ export const TrackingPixel: Story = {
 // message whose body mentions a flight number, mirroring TripMessageExtractor's heuristic.
 // The `operation` field is required by the interface for first-class registry, but the
 // dispatcher uses `extract` directly so pointing it at any real definition is fine here.
-const FakeTripExtractor: MessageExtractor.MessageExtractor = {
+const FakeTripExtractor: ObjectExtractor = {
   id: 'story.extractor.fake-trip',
   title: 'Trip',
   description: 'Story: extract travel itinerary',
   kinds: ['flight'],
-  match: (message) => {
-    const text = message.blocks
+  sourceTypes: [Type.getTypename(MessageType.Message)!],
+  match: (source) => {
+    const text = (source as MessageType.Message).blocks
       .filter((block): block is { _tag: 'text'; text: string } => block._tag === 'text')
       .map((block) => block.text)
       .join('\n');
@@ -162,12 +164,12 @@ const ExtractorsPlugin = Plugin.define({ id: 'story.extractors', name: 'Story Ex
   Plugin.addModule({
     id: 'contact-extractor',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, ContactMessageExtractor)),
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)),
   }),
   Plugin.addModule({
     id: 'fake-trip-extractor',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, FakeTripExtractor)),
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, FakeTripExtractor)),
   }),
   Plugin.addModule({
     id: 'operation-handlers',

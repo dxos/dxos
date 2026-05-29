@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { InboxOperation } from '@dxos/plugin-inbox';
@@ -27,7 +28,7 @@ export const ExtractTrip = Operation.make({
     description: 'Parse a flight confirmation email into Booking + Segment proposals.',
     icon: 'ph--airplane-takeoff--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, AiService.AiService],
   input: InboxOperation.ExtractInputSchema,
   output: InboxOperation.ExtractResultSchema,
 });
