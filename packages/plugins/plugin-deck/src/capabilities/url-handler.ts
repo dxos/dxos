@@ -131,20 +131,37 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
-    // Show a leave-Composer confirmation only on back/forward navigations that exit the app.
-    // Uses the Navigation API to distinguish traverse from reload (beforeunload cannot).
-    // Not supported in Safari — no guard shown there.
+    // Show a "Leave Composer?" confirmation only when a back/forward navigation would exit the
+    // app (see `installLeaveTrap` at the bottom of this module). In-app back/forward and reload
+    // must not prompt.
     const onNavigate = (event: NavigateEvent) => {
-      if (event.navigationType !== 'traverse') return;
-      // canIntercept is false for cross-document navigations (leaving the SPA entirely).
-      if (event.canIntercept) return;
-      event.preventDefault();
-      if (window.confirm('Leave Composer?')) {
-        window.location.href = event.destination.url;
+      // Only trap a same-document (cancelable) traversal back onto the sentinel — i.e. a
+      // Back-press that would otherwise leave Composer. In-app back/forward and reload are ignored.
+      if (
+        event.navigationType !== 'traverse' ||
+        !event.canIntercept ||
+        event.destination.getState()?.[SENTINEL_KEY] !== true
+      ) {
+        return;
       }
+      // Cancel synchronously to hold the user in place, then confirm outside the event dispatch
+      // (confirm() can be suppressed while a navigation is being dispatched).
+      event.preventDefault();
+      queueMicrotask(() => {
+        if (!window.confirm('Leave Composer?')) {
+          return;
+        }
+        // The trap always fires from the entry directly above the sentinel, so going back two
+        // entries (working -> sentinel -> prior page) leaves Composer. Uses the History API
+        // rather than navigation.traverseTo because the prior page is typically cross-origin
+        // and therefore absent from navigation.entries().
+        history.go(-2);
+      });
     };
 
-    // Initial navigation.
+    // Initial navigation. Install the sentinel first so the floor entry sits beneath the first
+    // working entry before handleNavigation() and the state subscription push entries on top.
+    installLeaveTrap();
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
     if ('navigation' in window) {
@@ -217,6 +234,36 @@ export default Capability.makeModule(
     );
   }),
 );
+
+/** State key marking the sentinel history entry used by the leave-Composer trap. */
+const SENTINEL_KEY = '__composerSentinel';
+
+/**
+ * Insert a marked "sentinel" history entry beneath the app's working entries so that the first
+ * Back-press that would leave Composer instead lands on the sentinel as a same-document
+ * (cancelable) traversal — which `onNavigate` cancels and confirms. The platform makes a
+ * cross-document back uncancelable (and `beforeunload` cannot tell a reload from a leave), so
+ * trapping it requires this same-document floor entry. Reload fires no navigate traversal, so it
+ * is never trapped. Requires the Navigation API (Chromium); no-op in browsers without it (e.g.
+ * Safari). Idempotent across reloads — entry state survives reload, so the existing sentinel is
+ * detected and not duplicated.
+ */
+const installLeaveTrap = (): void => {
+  if (!('navigation' in window)) {
+    return;
+  }
+  const hasSentinel = window.navigation.entries().some((entry) => entry.getState()?.[SENTINEL_KEY] === true);
+  // history.length > 1 means there is a prior entry to leave to (counts cross-origin entries,
+  // unlike navigation.canGoBack which is false when the previous entry is another origin).
+  // If there is nowhere to go back to, Back can't exit, so no sentinel is needed.
+  if (!hasSentinel && window.history.length > 1) {
+    // Mark the current (landing) entry as the sentinel, then push the working entry above it.
+    window.navigation.updateCurrentEntry({
+      state: { ...window.navigation.currentEntry?.getState(), [SENTINEL_KEY]: true },
+    });
+    history.pushState(null, '', window.location.pathname + window.location.search);
+  }
+};
 
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
