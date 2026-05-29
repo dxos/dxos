@@ -54,4 +54,4 @@ export const AgentPrompt = Operation.make({
     OperationRegistry.Service,
     Trace.TraceService,
   ],
-}).pipe(Operation.intrinsic);
+});

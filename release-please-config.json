@@ -750,6 +750,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sandbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
@@ -991,6 +996,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-inbox/package.json",
           "jsonpath": "$.version"
         },
         {

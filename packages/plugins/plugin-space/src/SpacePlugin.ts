@@ -46,6 +46,9 @@ import { translations } from '#translations';
 import { SpaceEvents } from '#types';
 import { type SpacePluginOptions } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
@@ -155,6 +158,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

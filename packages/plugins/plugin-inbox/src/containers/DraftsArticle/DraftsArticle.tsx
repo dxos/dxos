@@ -15,7 +15,7 @@ import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
-import { DraftMessage, type Mailbox } from '#types';
+import { DraftMessage, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
@@ -109,7 +109,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
             id={id}
             messages={drafts}
             currentId={currentId}
-            labels={mailbox.labels}
+            tags={Mailbox.buildMessageTagsIndex(mailbox)}
             onAction={handleAction}
           />
         )}

@@ -28,7 +28,7 @@ export const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: str
   },
   {
     value: 'swarm',
-    icon: 'ph--fish--regular',
+    icon: 'ph--microscope--regular',
     label: 'Swarm',
   },
 ];

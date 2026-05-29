@@ -719,16 +719,15 @@ describe('TriggerDispatcher', () => {
   // can resolve the same space-scoped services their handler declares.
   describe('Service Resolution', () => {
     /**
-     * Operation whose handler depends on {@link Database.Service}. Declared as
-     * `intrinsic` so it routes through the operation handler set we register
-     * via {@link OperationHandlerSet.provide} below.
+     * Operation whose handler depends on {@link Database.Service}. Resolved via the
+     * operation handler set registered with {@link OperationHandlerSet.provide} below.
      */
     const ProbeOp = Operation.make({
       meta: { key: 'test.trigger-dispatcher.probe-database', name: 'Probe Database' },
       input: Schema.Any,
       output: Schema.Struct({ spaceId: Schema.String }),
       services: [Database.Service],
-    }).pipe(Operation.intrinsic);
+    });
 
     const ProbeHandler = ProbeOp.pipe(
       Operation.withHandler(

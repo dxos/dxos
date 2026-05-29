@@ -18,6 +18,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -177,16 +178,18 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               </div>
             </div>
 
-            <Section.Root>
-              <Section.Heading title='Description' />
-              <Section.Body>
-                <p className='text-description'>{description}</p>
-              </Section.Body>
-            </Section.Root>
+            {description && (
+              <Section.Root>
+                <Section.Heading title={t('description.label')} />
+                <Section.Body>
+                  <MarkdownView classNames='text-description' content={description} />
+                </Section.Body>
+              </Section.Root>
+            )}
 
             {screenshots && screenshots.length > 0 && (
               <Section.Root>
-                <Section.Heading title='Preview' />
+                <Section.Heading title={t('preview.label')} />
                 <Section.Body>
                   <Carousel.Root classNames='contents' count={screenshots.length}>
                     <Carousel.Viewport>

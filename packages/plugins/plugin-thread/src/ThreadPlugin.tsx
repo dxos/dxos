@@ -27,6 +27,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { AgentIdentity, DEFAULT_AGENT_IDENTITY, ThreadOperation } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
 
@@ -88,6 +91,9 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     id: 'agent-identity',
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed(Capability.contributes(AgentIdentity, DEFAULT_AGENT_IDENTITY)),
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

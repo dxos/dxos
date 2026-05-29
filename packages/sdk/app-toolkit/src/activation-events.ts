@@ -27,6 +27,14 @@ export namespace AppActivationEvents {
   export const SetupAppGraph = ActivationEvent$.make('org.dxos.app-framework.event.setup-graph');
 
   /**
+   * Fired to activate modules that contribute static plugin assets (e.g. the
+   * bundled `PLUGIN.mdl` spec) via {@link AppCapabilities.PluginAsset}.
+   * Consumers (plugin-code's spec viewer, registry surfaces, …) yield this
+   * event before reading `Capability.getAll(AppCapabilities.PluginAsset)`.
+   */
+  export const SetupPluginAssets = ActivationEvent$.make('org.dxos.app-framework.event.setup-plugin-assets');
+
+  /**
    * Fired before the translations provider is created.
    */
   export const SetupTranslations = ActivationEvent$.make('org.dxos.app-framework.event.setup-translations');
