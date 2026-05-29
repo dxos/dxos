@@ -237,6 +237,9 @@ describe('TripMessageExtractor', () => {
     const trips = await db.query(Filter.type(Trip.Trip)).run();
     expect(trips).toHaveLength(1);
     expect(trips[0].segments).toHaveLength(2);
+    // The Trip date range widens to cover the appended segment (depart 2026-06-10).
+    expect(trips[0].start).toBe('2026-06-01T15:30:00.000Z');
+    expect(trips[0].end).toBe('2026-06-10T15:00:00.000Z');
   });
 });
 

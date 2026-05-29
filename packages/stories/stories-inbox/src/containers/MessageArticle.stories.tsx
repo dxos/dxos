@@ -287,11 +287,11 @@ export const ExtractTripWithPlay: Story = {
     await userEvent.click(extractTrigger as HTMLElement);
 
     // Assert the summarize extractor is registered and matches the seeded body. The dropdown
-    // entry uses the extractor's `description` text. If the body falls below the 200-char
+    // entry uses the extractor's short `title` ("Summary"). If the body falls below the 200-char
     // threshold or the InboxPlugin's Startup module stops contributing the extractor, this
     // assertion fails before "Run all" even fires — so the test catches a missing wire-up
     // rather than passing for the wrong reason on the trip-only assertions below.
-    const summarizeItem = await waitFor(() => body.queryByText(/summarize a long email body/i));
+    const summarizeItem = await waitFor(() => body.queryByText(/^summary$/i));
     void expect(summarizeItem).toBeInTheDocument();
 
     // The `Run all (N)` label includes the count of matching extractors. With contact + trip

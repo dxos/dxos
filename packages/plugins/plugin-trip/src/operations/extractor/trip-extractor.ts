@@ -328,6 +328,16 @@ const extractFromMessage = (
     const existingTrip = yield* findLatestTrip(db);
     if (existingTrip) {
       Trip.addSegment(existingTrip, segment);
+      // `Trip.addSegment` only pushes the segment ref; widen the Trip's date range so it
+      // covers the appended segment (ISO timestamps compare lexically).
+      Obj.update(existingTrip, (existingTrip) => {
+        if (candidate.departAt && (!existingTrip.start || candidate.departAt < existingTrip.start)) {
+          existingTrip.start = candidate.departAt;
+        }
+        if (candidate.arriveAt && (!existingTrip.end || candidate.arriveAt > existingTrip.end)) {
+          existingTrip.end = candidate.arriveAt;
+        }
+      });
       // Booking + Segment are parented to the Trip so the dispatcher skips a per-artifact edge.
       Obj.setParent(booking, existingTrip);
       return {
