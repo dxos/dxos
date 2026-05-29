@@ -83,6 +83,35 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       //     so the trip extractor's Trip + Booking + Segment trio surfaces as one Trip chip,
       //     not three.
       const shouldRelate = chosen.createRelation !== false;
+      const hasTags = !!result.tags && result.tags.length > 0;
+
+      // Resolve the owning mailbox AND the live message object. The `message` arg may be a
+      // deserialized snapshot (this operation runs in a separate process), and both
+      // `ExtractedFrom` relation endpoints and tag `Ref`s require live ECHO proxies — a
+      // snapshot as a relation Target throws "target must be an ECHO object". The owning
+      // mailbox's feed holds the live object, so resolve it by querying each mailbox's feed
+      // for the message id. Falls back to the passed `message` (unit tests add it to the db
+      // directly, so it's already a proxy) and the first mailbox in the space.
+      let owningMailbox: Mailbox.Mailbox | undefined;
+      let sourceMessage = message;
+      if (shouldRelate || hasTags) {
+        const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
+        const resolved = yield* Effect.promise(async () => {
+          for (const candidate of mailboxes) {
+            const feed = await candidate.feed?.tryLoad();
+            if (!feed) {
+              continue;
+            }
+            const found = await db.query(Query.select(Filter.id(message.id)).from(feed)).run();
+            if (found.length > 0) {
+              return { mailbox: candidate, message: found[0] };
+            }
+          }
+          return { mailbox: mailboxes[0], message: undefined };
+        });
+        owningMailbox = resolved.mailbox;
+        sourceMessage = resolved.message ?? message;
+      }
 
       // Persist created objects, then attach an ExtractedFrom relation for each top-level
       // one when the extractor opts in.
@@ -93,7 +122,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         }
         const rel = ExtractedFrom.make({
           [Relation.Source]: obj,
-          [Relation.Target]: message,
+          [Relation.Target]: sourceMessage,
           extractorId: chosen.id,
           extractedAt,
           confidence: chosenConfidence,
@@ -109,7 +138,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         }
         const rel = ExtractedFrom.make({
           [Relation.Source]: obj,
-          [Relation.Target]: message,
+          [Relation.Target]: sourceMessage,
           extractorId: chosen.id,
           extractedAt,
           confidence: chosenConfidence,
@@ -122,30 +151,10 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         db.add(rel);
       }
 
-      // Apply tags to the source message. The Mailbox containing this message owns the
-      // tag map; resolve the owning mailbox by querying each mailbox's feed for the
-      // message id (feed-stored Messages are immutable so the back-ref is the feed query).
-      // Falls back to the first mailbox in the space for environments where the message
-      // hasn't yet been appended to any feed (e.g. unit tests).
-      if (result.tags && result.tags.length > 0) {
-        const mailboxes = yield* Effect.promise(() => db.query(Filter.type(Mailbox.Mailbox)).run());
-        const owningMailbox = yield* Effect.promise(async () => {
-          for (const candidate of mailboxes) {
-            const feed = await candidate.feed?.tryLoad();
-            if (!feed) {
-              continue;
-            }
-            const found = await db.query(Query.select(Filter.id(message.id)).from(feed)).run();
-            if (found.length > 0) {
-              return candidate;
-            }
-          }
-          return mailboxes[0];
-        });
-        if (owningMailbox) {
-          for (const tag of result.tags) {
-            Mailbox.applyTag(owningMailbox, tag, message);
-          }
+      // Apply tags to the source message via the owning mailbox's tag map.
+      if (hasTags && owningMailbox) {
+        for (const tag of result.tags!) {
+          Mailbox.applyTag(owningMailbox, tag, sourceMessage);
         }
       }
 

@@ -139,6 +139,7 @@ export const TrackingPixel: Story = {
 // dispatcher uses `extract` directly so pointing it at any real definition is fine here.
 const FakeTripExtractor: MessageExtractor.MessageExtractor = {
   id: 'story.extractor.fake-trip',
+  title: 'Trip',
   description: 'Story: extract travel itinerary',
   kinds: ['flight'],
   match: (message) => {

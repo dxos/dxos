@@ -61,6 +61,7 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
  */
 const ImportantMessageExtractor: MessageExtractor.MessageExtractor = {
   id: 'story.extractor.important',
+  title: 'Important',
   description: 'Mark message as important',
   kinds: ['tag'],
   match: () => ({ matched: true, confidence: 0.05 }),
