@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'search-article',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
-        component: ({ data }) => <SearchArticle subject={data.subject} attendableId={data.attendableId} />,
+        component: ({ data, role }) => <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />,
       }),
     ]),
   ),

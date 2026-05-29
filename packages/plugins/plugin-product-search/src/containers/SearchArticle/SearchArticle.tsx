@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -15,10 +19,7 @@ import { ResultTile } from './ResultTile';
 import { SearchForm } from './SearchForm';
 import { type Result, type Search } from '../../types';
 
-export type SearchArticleProps = {
-  subject: Search.Search;
-  attendableId?: string;
-};
+export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 
 /**
  * 3-pane master/detail view for a {@link Search}.
@@ -26,7 +27,8 @@ export type SearchArticleProps = {
  * - center: masonry grid of result cards.
  * - right: detail pane for the selected result.
  */
-export const SearchArticle = ({ subject, attendableId }: SearchArticleProps) => {
+export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
+  const { invokePromise } = useOperationInvoker();
   const [search] = useObject(subject);
 
   const id = attendableId ?? Obj.getURI(search);
@@ -53,13 +55,25 @@ export const SearchArticle = ({ subject, attendableId }: SearchArticleProps) => 
     return resolved;
   }, [search.results, search.results.length]);
 
+  // Select a result by URI — updates attention context so useSelected returns the new id.
+  const handleSelect = useCallback(
+    (resultId: string) => {
+      void invokePromise(LayoutOperation.Select, {
+        contextId: id,
+        subject: { mode: 'single', id: resultId },
+      });
+    },
+    [id, invokePromise],
+  );
+
   const tileItems = useMemo<TileData[]>(
     () =>
       results.map((result) => ({
         result,
         current: Obj.getURI(result) === currentId,
+        onSelect: handleSelect,
       })),
-    [results, currentId],
+    [results, currentId, handleSelect],
   );
 
   const selectedResult = useMemo(
@@ -68,35 +82,40 @@ export const SearchArticle = ({ subject, attendableId }: SearchArticleProps) => 
   );
 
   return (
-    <div className='grid grid-cols-[20rem_minmax(0,1fr)_24rem] h-full overflow-hidden'>
-      <div className='border-ie border-separator overflow-hidden'>
-        <SearchForm search={subject} />
-      </div>
-      <div className='overflow-hidden'>
-        {results.length === 0 ? (
-          <div className='flex items-center justify-center h-full text-subdued text-sm'>No results.</div>
-        ) : (
-          <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-            <Masonry.Content thin centered padding>
-              <Masonry.Viewport
-                classNames='py-2'
-                items={tileItems}
-                getId={(data) => (data?.result ? Obj.getURI(data.result) : '')}
-              />
-            </Masonry.Content>
-          </Masonry.Root>
-        )}
-      </div>
-      <div className='border-is border-separator overflow-hidden'>
-        <ResultDetail result={selectedResult} />
-      </div>
-    </div>
+    <Panel.Root role={role}>
+      <Panel.Content>
+        <div className='grid grid-cols-[20rem_minmax(0,1fr)_24rem] h-full overflow-hidden'>
+          <div className='border-ie border-separator overflow-hidden'>
+            <SearchForm search={subject} />
+          </div>
+          <div className='overflow-hidden'>
+            {results.length === 0 ? (
+              <div className='flex items-center justify-center h-full text-subdued text-sm'>No results.</div>
+            ) : (
+              <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
+                <Masonry.Content thin centered padding>
+                  <Masonry.Viewport
+                    classNames='py-2'
+                    items={tileItems}
+                    getId={(data) => (data?.result ? Obj.getURI(data.result) : '')}
+                  />
+                </Masonry.Content>
+              </Masonry.Root>
+            )}
+          </div>
+          <div className='border-is border-separator overflow-hidden'>
+            <ResultDetail result={selectedResult} />
+          </div>
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 type TileData = {
   result: Result.Result;
   current: boolean;
+  onSelect: (id: string) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -104,5 +123,5 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <ResultTile result={data.result} current={data.current} />;
+  return <ResultTile result={data.result} current={data.current} onSelect={data.onSelect} />;
 };
