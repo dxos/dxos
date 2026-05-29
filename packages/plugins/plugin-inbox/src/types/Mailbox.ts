@@ -61,6 +61,11 @@ export const Mailbox = Schema.Struct({
   // keyed by Gmail's label-id) and user-applied tags (`source: 'user'`, keyed by ObjectId).
   // See `Tag` doc for the id-strategy rationale.
   tags: Tags.pipe(FormInputAnnotation.set(false), Schema.optional),
+  // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
+  // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
+  // the association lives here on the mutable Mailbox. The referenced objects are space-db
+  // objects resolved by id (`db.getObjectById`).
+  extracted: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) })),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -206,6 +211,33 @@ const messageIdFromRef = (ref: Ref.Ref<Message.Message>): string | undefined => 
     return undefined;
   }
 };
+
+/**
+ * Records the ids of objects extracted from a message under `mailbox.extracted[messageId]`.
+ * Idempotent — duplicate ids are not appended. Used as the provenance association for feed-stored
+ * messages (which cannot be ECHO relation endpoints).
+ */
+export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds: readonly string[]): void => {
+  if (objectIds.length === 0) {
+    return;
+  }
+  Obj.update(mailbox, (mailbox) => {
+    const map = (mailbox.extracted ??= {});
+    const merged = [...(map[messageId] ?? [])];
+    for (const id of objectIds) {
+      if (!merged.includes(id)) {
+        merged.push(id);
+      }
+    }
+    map[messageId] = merged;
+  });
+};
+
+/** Returns the extracted-object ids recorded for a message (see {@link recordExtraction}). */
+export const getExtractedObjectIds = (
+  mailbox: Mailbox | Obj.Snapshot<Mailbox>,
+  messageId: string,
+): readonly string[] => mailbox.extracted?.[messageId] ?? [];
 
 /**
  * Inverts `mailbox.tags` to a `messageId → Tag[]` view-model.

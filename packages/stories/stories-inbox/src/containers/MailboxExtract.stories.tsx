@@ -158,6 +158,11 @@ const FeedExtractHarness = () => {
   const [invoker] = useCapabilities(Capabilities.OperationInvoker);
   const [runs, setRuns] = useState(0);
 
+  // Messages with a recorded Message → extracted-object (Trip) association on the Mailbox.
+  const linked = mailbox
+    ? messages.filter((message) => Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0).length
+    : 0;
+
   const handleExtract = async () => {
     if (!db || !invoker) {
       return;
@@ -176,7 +181,7 @@ const FeedExtractHarness = () => {
         {`Extract all (${messages.length})`}
       </button>
       <div data-testid='counts'>
-        {`runs:${runs}|messages:${messages.length}|trips:${trips.length}|segments:${segments.length}|relations:${relations.length}`}
+        {`runs:${runs}|messages:${messages.length}|trips:${trips.length}|segments:${segments.length}|relations:${relations.length}|linked:${linked}|`}
       </div>
     </div>
   );
@@ -261,6 +266,9 @@ export const ExtractFeedWithPlay: Story = {
     const afterFirst = await waitFor((text) => /runs:1\|/.test(text));
     void expect(afterFirst).toMatch(/trips:1\|/);
     void expect(afterFirst).toMatch(/segments:2\|/);
+    // Both travel messages have a visible Message → Trip association on the Mailbox (feed messages
+    // can't be ECHO relation endpoints, so the association is recorded on the Mailbox).
+    void expect(afterFirst).toMatch(/linked:2\|/);
 
     // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
     // (segments updated in place, not duplicated). This is the "extract twice" case.
