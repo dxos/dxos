@@ -35,12 +35,7 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   if (assertion) {
     for (const key of Object.keys(assertion)) {
       const val = assertion[key];
-      if (
-        (Array.isArray(val) && val.length === 0) ||
-        val === 0 ||
-        val === '' ||
-        val === false
-      ) {
+      if ((Array.isArray(val) && val.length === 0) || val === 0 || val === '' || val === false) {
         delete assertion[key];
       }
     }
