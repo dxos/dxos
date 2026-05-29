@@ -869,6 +869,16 @@ describe('SubductionPolicy', () => {
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
         .toEqual('gated-put');
+
+      // Subsequent writes on the now-allowed channel must also propagate
+      // (covers the original `"after-flip"` recovery path: a fresh local
+      // commit still pushes successfully after the policy flip + reconnect).
+      handle.change((doc: any) => {
+        doc.text = 'after-flip';
+      });
+      await expect
+        .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
+        .toEqual('after-flip');
     });
 
     // Hypothesis: without `shareConfigChanged()`, recovery is left to
