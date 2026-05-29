@@ -11,6 +11,7 @@ const HTML = `
     <h2 class="t">Porsche 911</h2>
     <a class="l" href="/cars/1">link</a>
     <span class="p">120000</span>
+    <span class="curr">GBP</span>
     <img class="img" src="https://img/1.jpg" />
   </div>
   <div class="listing">
@@ -29,6 +30,7 @@ describe('extractResults', () => {
         title: { selector: '.t' },
         url: { selector: '.l', attr: 'href' },
         price: { selector: '.p' },
+        currency: { selector: '.curr' },
         image: { selector: '.img', attr: 'src' },
       },
     });
@@ -38,6 +40,23 @@ describe('extractResults', () => {
     expect(results[0].properties.price).toEqual('120000');
     expect(results[0].images).toEqual(['https://img/1.jpg']);
     expect(results[1].images).toEqual([]);
+  });
+
+  test('currency is a first-class field and not duplicated in properties', ({ expect }) => {
+    const results = extractResults(HTML, {
+      responseType: 'html',
+      itemLocator: '.listing',
+      fields: {
+        title: { selector: '.t' },
+        url: { selector: '.l', attr: 'href' },
+        price: { selector: '.p' },
+        currency: { selector: '.curr' },
+        image: { selector: '.img', attr: 'src' },
+      },
+    });
+    expect(results[0].currency).toEqual('GBP');
+    expect(results[0].properties.currency).toBeUndefined();
+    expect(results[1].currency).toBeUndefined();
   });
 
   test('extracts json listings via dotted path', ({ expect }) => {

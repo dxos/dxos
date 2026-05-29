@@ -16,7 +16,7 @@ export type ResultData = {
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const getByPath = (root: unknown, path: string): unknown =>
   path.split('.').reduce<unknown>((acc, key) => (isRecord(acc) ? acc[key] : undefined), root);
@@ -31,7 +31,7 @@ const extractHtmlField = (item: HTMLElement, extractor: FieldExtractor): string 
 };
 
 const toResultData = (raw: Record<string, string | undefined>): ResultData => {
-  const { title, url, price, image, ...rest } = raw;
+  const { title, url, price, currency, image, ...rest } = raw;
   const properties: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(rest)) {
     if (value !== undefined) {
@@ -45,6 +45,7 @@ const toResultData = (raw: Record<string, string | undefined>): ResultData => {
     title: title ?? '',
     url: url ?? '',
     price: price !== undefined && !Number.isNaN(Number(price)) ? Number(price) : undefined,
+    currency,
     images: image ? [image] : [],
     properties,
   };
