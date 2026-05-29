@@ -20,6 +20,34 @@ index d3acd572693c6b2e9efcd1453552ca9710fe7555..dc2911adce1411c042ae549666e332a4
          });
          this.#subductionSource = subductionSource;
          this.#sources.set("subduction", subductionSource);
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 3c02bee689a719d9c1480200e5829a352997e8e6..78a4ac7c4e992e290a88e95d928af029037f5c36 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -44,8 +44,9 @@ export type { DocHandleChangePayload, DocHandleDeletePayload, DocHandleEncodedCh
+ export type { DeleteDocumentPayload, DocumentPayload, RepoConfig, RepoEvents, ShareConfig, SharePolicy, } from "./Repo.js";
+ export type { DocumentProgress, QueryState } from "./DocumentQuery.js";
+ export type { DocumentSource } from "./DocumentSource.js";
+-export type { Policy as SubductionPolicy } from "@automerge/automerge-subduction/slim";
+-export type { SubductionTimeouts, BlobInterceptor, } from "./subduction/source.js";
++export { DocumentQuery } from "./DocumentQuery.js";
++export type { Policy as SubductionPolicy, PeerId as SubductionPeerId } from "@automerge/automerge-subduction/slim";
++export type { SubductionPeerBinding, OnSubductionPeerBound, SubductionTimeouts, BlobInterceptor, } from "./subduction/source.js";
+ export type { FindProgress, FindProgressWithMethods, ProgressSignal, } from "./_compat.js";
+ export type { NetworkAdapterEvents, OpenPayload, PeerCandidatePayload, PeerDisconnectedPayload, PeerMetadata, } from "./network/NetworkAdapterInterface.js";
+ export type { NetworkSubsystemEvents, PeerPayload, } from "./network/NetworkSubsystem.js";
+diff --git a/dist/index.js b/dist/index.js
+index 57d03af437c845d97b5b262ec972c50494672361..8b45520989b4dea9b2d0d5338e99bf9740373ebb 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -26,6 +26,7 @@
+  * ```
+  */
+ export { DocHandle } from "./DocHandle.js";
++export { DocumentQuery } from "./DocumentQuery.js";
+ export { isValidAutomergeUrl, isValidDocumentId, parseAutomergeUrl, stringifyAutomergeUrl, interpretAsDocumentId, documentIdToBinary, generateAutomergeUrl, encodeHeads, decodeHeads, } from "./AutomergeUrl.js";
+ export { Repo } from "./Repo.js";
+ export { initSubduction } from "./initSubduction.js";
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
 index 1cdd94c3443bd0be41a149059d271bac61d0e3a7..c9496513751c0582546e8017af51e8a56aa421bd 100644
 --- a/dist/subduction/AdapterConnections.d.ts
@@ -358,7 +386,7 @@ index 04b5fadcc952e4eb2a9e847290aea5ef8e784f12..1c2ee740bdc7068b72eb0978b08436bd
      attach(query: DocumentQuery<unknown>): void;
      detach(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index f04a5cc7854844a994200ed5a3232dbdf72a76b8..c88314e5fe878760957b18ee0f49210e5d6037d9 100644
+index f04a5cc7854844a994200ed5a3232dbdf72a76b8..1cd94ee3e4b13c51403f28152efbb471c285d826 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -25,7 +25,7 @@ export class SubductionSource {
