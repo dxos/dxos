@@ -408,7 +408,9 @@ export default Capability.makeModule(
         filter: AppSurface.literal(AppSurface.Article, Devtools.Edge.Operations),
         component: () => {
           const invocationSpans = useOperationInvocationSpans();
-          return <InvocationTraceContainer invocationSpans={invocationSpans} showSpaceSelector={false} detailAxis='block' />;
+          return (
+            <InvocationTraceContainer invocationSpans={invocationSpans} showSpaceSelector={false} detailAxis='block' />
+          );
         },
       }),
       Surface.create({

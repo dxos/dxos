@@ -61,11 +61,7 @@ export type InvocationEvent<I = any, O = any> = {
  * Resolves undo information for a successful invocation. Injected by the layer that owns the undo
  * registry (the invoker itself has no knowledge of undoability).
  */
-export type UndoResolver = (
-  op: Operation.Definition.Any,
-  input: unknown,
-  output: unknown,
-) => UndoInfo | undefined;
+export type UndoResolver = (op: Operation.Definition.Any, input: unknown, output: unknown) => UndoInfo | undefined;
 
 /**
  * Resolves a spaceId to a context containing Database.Service.

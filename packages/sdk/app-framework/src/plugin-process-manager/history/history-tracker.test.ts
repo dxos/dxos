@@ -33,7 +33,10 @@ import * as UndoRegistry from './undo-registry';
  * Wires the invoker's undo resolver from a registry, mirroring the production capability wiring so
  * successful invocations are stamped with undo info that the tracker consumes.
  */
-const wireUndoResolver = (invoker: OperationInvoker.OperationInvokerInternal, undoRegistry: UndoRegistry.UndoRegistry) =>
+const wireUndoResolver = (
+  invoker: OperationInvoker.OperationInvokerInternal,
+  undoRegistry: UndoRegistry.UndoRegistry,
+) =>
   invoker.setUndoResolver((operation, input, output) => {
     const mapping = undoRegistry.lookup(operation);
     if (!mapping) {
@@ -43,7 +46,11 @@ const wireUndoResolver = (invoker: OperationInvoker.OperationInvokerInternal, un
     if (inverseInput === undefined) {
       return undefined;
     }
-    return { message: UndoMapping.resolveMessage(mapping.message, input, output), inverse: mapping.inverse, inverseInput };
+    return {
+      message: UndoMapping.resolveMessage(mapping.message, input, output),
+      inverse: mapping.inverse,
+      inverseInput,
+    };
   });
 
 describe('HistoryTracker', () => {

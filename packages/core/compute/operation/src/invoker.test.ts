@@ -305,7 +305,11 @@ describe('OperationInvoker', () => {
         if (operation.meta.key !== Compute.meta.key) {
           return undefined;
         }
-        return { message: 'Undo compute', inverse: Halve, inverseInput: { value: (output as { value: number }).value } };
+        return {
+          message: 'Undo compute',
+          inverse: Halve,
+          inverseInput: { value: (output as { value: number }).value },
+        };
       });
       const collector = yield* createEventCollector(invoker);
       yield* Effect.yieldNow();

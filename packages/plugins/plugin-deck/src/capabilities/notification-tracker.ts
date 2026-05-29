@@ -91,9 +91,7 @@ export default Capability.makeModule(
     };
 
     Effect.runFork(
-      Stream.fromPubSub(invoker.invocations).pipe(
-        Stream.runForEach((event) => Effect.sync(() => handleEvent(event))),
-      ),
+      Stream.fromPubSub(invoker.invocations).pipe(Stream.runForEach((event) => Effect.sync(() => handleEvent(event)))),
     );
   }),
 );
