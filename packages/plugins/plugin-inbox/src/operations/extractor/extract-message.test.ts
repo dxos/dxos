@@ -27,6 +27,7 @@ const stubExtractor = (opts: {
   extract?: () => Effect.Effect<MessageExtractor.ExtractResult, MessageExtractor.ExtractError>;
 }): MessageExtractor.MessageExtractor => ({
   id: opts.id,
+  title: opts.id,
   description: opts.id,
   kinds: [],
   match: () => ({ matched: opts.matched, confidence: opts.confidence }),

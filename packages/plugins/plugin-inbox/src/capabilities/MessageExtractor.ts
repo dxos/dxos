@@ -81,6 +81,8 @@ export class ExtractError {
  */
 export interface MessageExtractor {
   readonly id: string;
+  /** Short, human-readable title for menus/toolbars (e.g. "Trip", "Contact"). */
+  readonly title: string;
   readonly description: string;
   readonly kinds: readonly string[];
   match(message: Message.Message): MatchResult;

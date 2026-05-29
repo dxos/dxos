@@ -121,6 +121,7 @@ const extract = (input: MessageExtractor.ExtractInput) =>
 
 export const SummarizeMessageExtractor: MessageExtractor.MessageExtractor = {
   id: SUMMARIZE_ID,
+  title: 'Summary',
   description: 'Summarize a long email body into a Markdown document via the AI service.',
   kinds: ['document', 'summary'],
   match: matchMessage,

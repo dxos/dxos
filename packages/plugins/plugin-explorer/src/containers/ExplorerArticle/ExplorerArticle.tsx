@@ -50,16 +50,18 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     }
   }, []);
 
+  // Dismiss the preview popover. The dxn/label/trigger fields are placeholders ignored on
+  // `state: false`.
+  const handleDismiss = useCallback(() => {
+    document.defaultView?.dispatchEvent(
+      new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
+    );
+  }, []);
+
   const handleHover = useCallback((node: TreeNode | null, event?: MouseEvent) => {
-    // Pointer left the node/label: dispatch a close event so the preview popover
-    // dismisses (the dxn/label/trigger fields are placeholders ignored on `state: false`).
-    if (!node) {
-      document.defaultView?.dispatchEvent(
-        new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
-      );
-      return;
-    }
-    if (!event) {
+    // Pointer left the node/label: keep the popover open so it can be hovered/interacted with.
+    // The popover is dismissed only on an explicit click on the component surface (handleDismiss).
+    if (!node || !event) {
       return;
     }
     const obj = node.data;
@@ -105,7 +107,13 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         </Panel.Toolbar>
       )}
       <Panel.Content>
-        <Visualization classNames='bg-base-surface' variant={selected} model={model} onNodeHover={handleHover} />
+        <Visualization
+          classNames='bg-base-surface'
+          variant={selected}
+          model={model}
+          onNodeHover={handleHover}
+          onSurfaceClick={handleDismiss}
+        />
       </Panel.Content>
     </Panel.Root>
   );

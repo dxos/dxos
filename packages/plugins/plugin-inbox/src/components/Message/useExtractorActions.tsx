@@ -59,7 +59,7 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
 
     const perExtractor: ExtractorMenuItem[] = matching.map((extractor) => ({
       id: extractor.id,
-      label: extractor.description,
+      label: extractor.title,
       onSelect: () => {
         void runOne(extractor.id);
       },

@@ -10,6 +10,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { Organization } from '@dxos/types';
 
 import { Booking, Segment, Trip } from '../../types';
 import gateChangeRaw from './testing/files/gate-change.txt?raw';
@@ -37,7 +38,9 @@ describe('TripMessageExtractor', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    const result = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment, Trip.Trip] });
+    const result = await builder.createDatabase({
+      types: [Booking.Booking, Segment.Segment, Trip.Trip, Organization.Organization],
+    });
     db = result.db;
   });
 
@@ -172,4 +175,94 @@ describe('TripMessageExtractor', () => {
     expect(bookings).toHaveLength(1);
     expect(segments).toHaveLength(1);
   });
+
+  test('extract — provider domain comes from the sender, name from the airline prefix', async ({ expect }) => {
+    // Regression: the provider was hardcoded to united.com regardless of the actual airline.
+    const result = await TripMessageExtractor.extract({ db, message: parseFixtureMessage(AIR_FRANCE_RAW) })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
+
+    const booking = result.created.find((obj) => Obj.instanceOf(Booking.Booking, obj)) as Booking.Booking;
+    expect(booking.provider?.domain).toBe('airfrance.com');
+    expect(booking.provider?.name).toBe('Air France');
+
+    const segment = result.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
+    if (segment.details._tag !== 'flight') {
+      throw new Error('expected flight details');
+    }
+    expect(segment.details.provider?.domain).toBe('airfrance.com');
+    // The Segment references the Booking created from the same email.
+    expect(segment.booking?.target?.id).toBe(booking.id);
+  });
+
+  test('extract — links the provider to a matching Organization', async ({ expect }) => {
+    const org = db.add(Organization.make({ name: 'Air France', website: 'https://airfrance.com' }));
+    await db.flush();
+
+    const result = await TripMessageExtractor.extract({ db, message: parseFixtureMessage(AIR_FRANCE_RAW) })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
+
+    const booking = result.created.find((obj) => Obj.instanceOf(Booking.Booking, obj)) as Booking.Booking;
+    expect(booking.provider?.ref?.target?.id).toBe(org.id);
+  });
+
+  test('extract — a different flight is appended to the most-recently-created Trip', async ({ expect }) => {
+    // Email 1 creates a Trip; persist it so the second extract can discover it.
+    const first = await TripMessageExtractor.extract({ db, message: parseFixtureMessage(unitedConfirmationRaw) })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
+    for (const obj of first.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trip = first.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
+
+    // Email 2: a different flight (new number) → no segment match → append to the existing Trip.
+    const second = await TripMessageExtractor.extract({ db, message: parseFixtureMessage(SECOND_FLIGHT_RAW) })
+      .pipe(provideOperationServiceStub)
+      .pipe(runAndForwardErrors);
+
+    // No new Trip; the existing one is returned as `updated` so the dispatcher links the message.
+    expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(false);
+    expect(second.created).toHaveLength(2);
+    expect(second.updated).toHaveLength(1);
+    expect((second.updated![0] as Trip.Trip).id).toBe(trip.id);
+
+    // After both emails there is a single Trip referencing two segments.
+    for (const obj of second.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trips = await db.query(Filter.type(Trip.Trip)).run();
+    expect(trips).toHaveLength(1);
+    expect(trips[0].segments).toHaveLength(2);
+    // The Trip date range widens to cover the appended segment (depart 2026-06-10).
+    expect(trips[0].start).toBe('2026-06-01T15:30:00.000Z');
+    expect(trips[0].end).toBe('2026-06-10T15:00:00.000Z');
+  });
 });
+
+const AIR_FRANCE_RAW = [
+  'From: noreply@airfrance.com',
+  'Subject: Flight confirmation',
+  '',
+  'Flight: AF-7',
+  'From: CDG (Paris)',
+  'To: JFK (New York)',
+  'Depart: 2026-07-01 10:00',
+  'Arrive: 2026-07-01 13:00',
+  'Confirmation: AF999',
+].join('\n');
+
+const SECOND_FLIGHT_RAW = [
+  'From: noreply@united.com',
+  'Subject: Flight confirmation',
+  '',
+  'Flight: AF-2',
+  'From: LHR (London Heathrow)',
+  'To: SFO (San Francisco)',
+  'Depart: 2026-06-10 12:00',
+  'Arrive: 2026-06-10 15:00',
+  'Confirmation: XYZ789',
+].join('\n');

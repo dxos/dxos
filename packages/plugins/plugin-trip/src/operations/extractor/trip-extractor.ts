@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, type Database } from '@dxos/echo';
+import { Filter, Obj, Ref, type Database } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type MessageExtractor } from '@dxos/plugin-inbox';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { type ContentBlock, type Message, Organization, type Provider } from '@dxos/types';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
 
@@ -30,7 +31,10 @@ import { Booking, Segment, Trip, TripOperation } from '../../types';
  * Create-or-update: existing flight segments in `ctx.database` are looked up
  * by `(number, departAt date)`. A match is mutated in place (returned in
  * `updated`) and a fresh `Booking` is NOT emitted; otherwise a new `Booking`
- * + `Segment` pair is created.
+ * + `Segment` pair is created and appended to the most-recently-created Trip
+ * (a new Trip is created only when none exists). The flight provider (airline)
+ * is derived from the sender domain + flight-number prefix and linked to a
+ * matching Organization when one is found.
  */
 export const ID = 'org.dxos.plugin.trip.extractor.trip';
 
@@ -292,17 +296,19 @@ const extractFromMessage = (
       };
     }
 
-    // No prior segment — create a Trip + Booking + flight Segment trio. The Trip is the
-    // top-level container surfaced as a tag on the source message; Booking + Segment hang
-    // off the Trip.
+    // No prior segment — create a Booking + flight Segment. The provider (airline) is derived
+    // from the sender domain + flight-number prefix and linked to a matching Organization.
+    const provider = yield* resolveProvider(db, candidate, message);
+
     const booking = Booking.make({
-      provider: { name: 'Air France', domain: 'united.com' },
+      provider,
       confirmationCode: candidate.confirmationCode,
       source: 'email',
       rawPayload: body,
     });
 
     const segment = Segment.make({
+      booking: Ref.make(booking),
       details: {
         _tag: 'flight',
         origin: candidate.origin,
@@ -310,13 +316,42 @@ const extractFromMessage = (
         departAt: candidate.departAt,
         arriveAt: candidate.arriveAt,
         number: candidate.number,
-        provider: { name: 'Air France', domain: 'united.com' },
+        provider,
         gateFrom: candidate.gateFrom,
         terminalFrom: candidate.terminalFrom,
         seat: candidate.seat,
       },
     });
 
+    // Decision: for now, append the segment to the most-recently-created Trip rather than
+    // spawning a new Trip per email; only create a new Trip when none exists yet.
+    const existingTrip = yield* findLatestTrip(db);
+    if (existingTrip) {
+      Trip.addSegment(existingTrip, segment);
+      // `Trip.addSegment` only pushes the segment ref; widen the Trip's date range so it
+      // covers the appended segment (ISO timestamps compare lexically).
+      Obj.update(existingTrip, (existingTrip) => {
+        if (candidate.departAt && (!existingTrip.start || candidate.departAt < existingTrip.start)) {
+          existingTrip.start = candidate.departAt;
+        }
+        if (candidate.arriveAt && (!existingTrip.end || candidate.arriveAt > existingTrip.end)) {
+          existingTrip.end = candidate.arriveAt;
+        }
+      });
+      // Booking + Segment are parented to the Trip so the dispatcher skips a per-artifact edge.
+      Obj.setParent(booking, existingTrip);
+      return {
+        created: [booking, segment],
+        // The Trip is mutated in place; surface it as `updated` so the dispatcher links THIS
+        // message to the Trip (top-level → one ExtractedFrom edge → Trip chip on the message).
+        updated: [existingTrip],
+        relations: [],
+        tags: [{ label: 'travel', hue: 'sky' }],
+      };
+    }
+
+    // First trip — create the Trip + Booking + flight Segment trio. The Trip is the top-level
+    // container surfaced as a tag on the source message; Booking + Segment hang off the Trip.
     const trip = Trip.make({
       name: tripNameFor(candidate),
       start: candidate.departAt,
@@ -337,6 +372,91 @@ const extractFromMessage = (
       tags: [{ label: 'travel', hue: 'sky' }],
     };
   });
+
+/** IATA airline prefix → display name. Extend as needed; falls back to the sender domain. */
+const AIRLINE_NAMES: Record<string, string> = {
+  AA: 'American Airlines',
+  AF: 'Air France',
+  BA: 'British Airways',
+  DL: 'Delta Air Lines',
+  IB: 'Iberia',
+  KL: 'KLM',
+  LH: 'Lufthansa',
+  TP: 'TAP Air Portugal',
+  UA: 'United Airlines',
+};
+
+/** Leading two-letter IATA code of a flight number (e.g. "AF0003" → "AF"). */
+const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
+  flightNumber?.match(/^([A-Za-z]{2})/)?.[1]?.toUpperCase();
+
+/** Domain part of the sender's email (e.g. "noreply@airfrance.com" → "airfrance.com"). */
+const senderDomainOf = (message: Message.Message): string | undefined =>
+  message.sender.email?.split('@')[1]?.toLowerCase();
+
+/** Title-case a domain's second-level label as a provider-name fallback (airfrance.com → Airfrance). */
+const domainToName = (domain: string): string => {
+  const label = domain.split('.')[0] ?? domain;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+/** Whether an Organization website matches the sender domain (host equality or sub-domain either way). */
+const matchesDomain = (website: string | undefined, domain: string): boolean => {
+  if (!website) {
+    return false;
+  }
+  try {
+    const host = new URL(website.startsWith('http') ? website : `https://${website}`).hostname.toLowerCase();
+    return host === domain || host.endsWith(`.${domain}`) || domain.endsWith(`.${host}`);
+  } catch (err) {
+    log.warn('parsing organization website', { website, err });
+    return false;
+  }
+};
+
+/**
+ * Builds the flight provider: `domain` from the sender's email, `name` from the airline-prefix
+ * map (sender-domain fallback), and a `ref` to an existing Organization when one matches by
+ * website domain or name.
+ */
+const resolveProvider = (
+  db: Database.Database,
+  candidate: Candidate,
+  message: Message.Message,
+): Effect.Effect<Provider.Provider, never> =>
+  Effect.gen(function* () {
+    const domain = senderDomainOf(message);
+    const code = airlineCodeOf(candidate.number);
+    const name = (code && AIRLINE_NAMES[code]) ?? (domain ? domainToName(domain) : undefined);
+    if (!domain && !name) {
+      return {};
+    }
+
+    const orgs = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run()).pipe(
+      Effect.catchAllDefect(() => Effect.succeed([] as Organization.Organization[])),
+    );
+    const match = orgs.find(
+      (org) =>
+        (!!domain && matchesDomain(org.website, domain)) || (!!name && org.name?.toLowerCase() === name.toLowerCase()),
+    );
+
+    return {
+      ...(name ? { name } : {}),
+      ...(domain ? { domain } : {}),
+      ...(match ? { ref: Ref.make(match) } : {}),
+    };
+  });
+
+/**
+ * Returns the most-recently-created Trip in the space, or undefined when none exist.
+ * TODO(burdon): No stable createdAt accessor on instances yet — relies on natural (insertion)
+ * query order. Replace with an explicit createdAt ordering when available.
+ */
+const findLatestTrip = (db: Database.Database): Effect.Effect<Trip.Trip | undefined, never> =>
+  Effect.promise(() => db.query(Filter.type(Trip.Trip)).run()).pipe(
+    Effect.map((trips) => trips.at(-1)),
+    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+  );
 
 const tripNameFor = (candidate: Candidate): string => {
   const origin = candidate.origin?.code ?? '?';
@@ -362,7 +482,7 @@ const findExistingFlight = (
   );
 };
 
-const extract = ({
+export const extract = ({
   db,
   message,
 }: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
@@ -382,6 +502,7 @@ export default handler;
 /** Heuristic v1 extractor — recognises United-style flight confirmations. */
 export const TripMessageExtractor: MessageExtractor.MessageExtractor = {
   id: ID,
+  title: 'Trip',
   description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
   kinds: ['flight'],
   match: matchMessage,
