@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
-
 import * as Schema from 'effect/Schema';
+import { describe, test } from 'vitest';
 
 import { makeProvider, instanceOf as isProvider, RequestMapping, ResultMapping } from './Provider';
 

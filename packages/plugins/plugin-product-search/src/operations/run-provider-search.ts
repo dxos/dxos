@@ -18,38 +18,37 @@ export const buildResults = (provider: Provider.Provider, body: string): ResultD
   return extractResults(body, provider.result);
 };
 
-const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
-  SearchOperation.RunProviderSearch.pipe(
-    Operation.withHandler(
-      Effect.fnUntraced(function* ({ search: searchRef, provider: providerRef }) {
-        const search = yield* Database.load(searchRef);
-        const provider = yield* Database.load(providerRef);
-        if (!provider.enabled || !provider.request || !provider.result) {
-          return [];
-        }
+const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> = SearchOperation.RunProviderSearch.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ search: searchRef, provider: providerRef }) {
+      const search = yield* Database.load(searchRef);
+      const provider = yield* Database.load(providerRef);
+      if (!provider.enabled || !provider.request || !provider.result) {
+        return [];
+      }
 
-        const request = bindRequest({ ...search.criteria }, provider.request);
-        const body = yield* fetchViaProxy(request);
-        const rows = buildResults(provider, body);
+      const request = bindRequest({ ...search.criteria }, provider.request);
+      const body = yield* fetchViaProxy(request);
+      const rows = buildResults(provider, body);
 
-        const refs: Ref.Ref<Result.Result>[] = [];
-        for (const row of rows) {
-          const result = Result.makeResult({
-            title: row.title,
-            url: row.url,
-            price: row.price,
-            currency: row.currency,
-            images: [...row.images],
-            properties: row.properties,
-            provider: Ref.make(provider),
-            fetchedAt: new Date().toISOString(),
-          });
-          const persisted = yield* Database.add(result);
-          refs.push(Ref.make(persisted));
-        }
-        return refs;
-      }),
-    ),
-  );
+      const refs: Ref.Ref<Result.Result>[] = [];
+      for (const row of rows) {
+        const result = Result.makeResult({
+          title: row.title,
+          url: row.url,
+          price: row.price,
+          currency: row.currency,
+          images: [...row.images],
+          properties: row.properties,
+          provider: Ref.make(provider),
+          fetchedAt: new Date().toISOString(),
+        });
+        const persisted = yield* Database.add(result);
+        refs.push(Ref.make(persisted));
+      }
+      return refs;
+    }),
+  ),
+);
 
 export default handler;

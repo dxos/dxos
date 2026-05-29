@@ -23,10 +23,10 @@ Results are stored as **linked objects** (stripped metadata + image refs) and vi
 The plugin is modeled structurally on `plugin-feed`:
 
 | plugin-feed  | plugin-product-search |
-| ------------ | ------------- |
-| Subscription | Provider      |
-| Magazine     | Search        |
-| Post         | Result        |
+| ------------ | --------------------- |
+| Subscription | Provider              |
+| Magazine     | Search                |
+| Post         | Result                |
 
 ## Goals
 
@@ -47,14 +47,15 @@ The plugin is modeled structurally on `plugin-feed`:
 ## Architecture
 
 Three ECHO types + Operations + a Blueprint + React surfaces, composed via `Plugin.define`
-+ `AppPlugin.add*Module` exactly like `FeedPlugin.tsx`.
+
+- `AppPlugin.add*Module` exactly like `FeedPlugin.tsx`.
 
 ### Decisions (from brainstorming)
 
 1. **Execution strategy:** LLM authors a reusable template; search execution runs the
    template deterministically. (LLM-at-authoring, not LLM-at-search.)
 2. **Search criteria:** typed fields — `string | number | number-range | date-range |
-   boolean` — rendered via `react-ui-form`.
+boolean` — rendered via `react-ui-form`.
 3. **Field schema home:** lives on each Provider as JSONSchema. A multi-provider Search
    form is the **union** of its providers' fields. No separate `Category` type.
 4. **Mapping representation:** declarative config (no eval). Search-request schema stored as
@@ -241,4 +242,7 @@ Plugin.define(meta).pipe(
    key by field name; identical names assumed compatible; flag conflicts).
 4. Range fields use a **schema annotation** + a `react-ui-form` field component that resolves
    it; confirm whether a range input component already exists or must be added.
+
+```
+
 ```

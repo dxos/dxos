@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
-
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
+import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { JsonSchema, Obj, Type } from '@dxos/echo';

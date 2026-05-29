@@ -14,10 +14,10 @@ import { Panel } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
+import { type Result, type Search } from '../../types';
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
 import { SearchForm } from './SearchForm';
-import { type Result, type Search } from '../../types';
 
 export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 

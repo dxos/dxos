@@ -24,12 +24,16 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'search-article',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
-        component: ({ data, role }) => <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />,
+        component: ({ data, role }) => (
+          <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
       }),
       Surface.create({
         id: 'provider-article',
         filter: AppSurface.object(AppSurface.Article, Provider.Provider),
-        component: ({ data, role }) => <ProviderArticle subject={data.subject} attendableId={data.attendableId} role={role} />,
+        component: ({ data, role }) => (
+          <ProviderArticle subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
       }),
     ]),
   ),

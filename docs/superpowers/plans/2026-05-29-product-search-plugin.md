@@ -84,6 +84,7 @@ packages/plugins/plugin-product-search/
 ## Task 0: Scaffold the package
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/package.json`
 - Create: `packages/plugins/plugin-product-search/moon.yml`
 - Create: `packages/plugins/plugin-product-search/vite.config.ts`
@@ -237,6 +238,7 @@ git commit -m "feat(plugin-product-search): scaffold package"
 These are plain Effect Schemas (not ECHO objects) used as fields inside `Provider`.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/types/Provider.ts` (mapping schemas portion)
 - Test: `packages/plugins/plugin-product-search/src/types/Provider.test.ts`
 
@@ -352,6 +354,7 @@ git commit -m "feat(plugin-product-search): request/result mapping schemas"
 ## Task 2: `Provider` ECHO type
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-product-search/src/types/Provider.ts`
 - Test: `packages/plugins/plugin-product-search/src/types/Provider.test.ts`
 
@@ -424,6 +427,7 @@ git commit -m "feat(plugin-product-search): Provider type"
 ## Task 3: `Result` ECHO type
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/types/Result.ts`
 - Test: `packages/plugins/plugin-product-search/src/types/Result.test.ts`
 
@@ -502,6 +506,7 @@ git commit -m "feat(plugin-product-search): Result type"
 ## Task 4: `Search` ECHO type
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/types/Search.ts`
 - Create: `packages/plugins/plugin-product-search/src/types/index.ts`
 - Test: `packages/plugins/plugin-product-search/src/types/Search.test.ts`
@@ -610,6 +615,7 @@ git commit -m "feat(plugin-product-search): Search type + types barrel"
 Pure function: `(criteria, request) -> { method, url, headers, body }`. No network.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/util/bindRequest.ts`
 - Test: `packages/plugins/plugin-product-search/src/util/bindRequest.test.ts`
 
@@ -750,6 +756,7 @@ git commit -m "feat(plugin-product-search): request binder"
 Pure function: `(responseBody, ResultMapping) -> ResultData[]`. HTML via `node-html-parser`; JSON via simple dotted-path.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/util/extractResults.ts`
 - Test: `packages/plugins/plugin-product-search/src/util/extractResults.test.ts`
 
@@ -836,7 +843,9 @@ export type ResultData = {
 };
 
 const getByPath = (root: unknown, path: string): unknown =>
-  path.split('.').reduce<unknown>((acc, key) => (acc == null ? undefined : (acc as Record<string, unknown>)[key]), root);
+  path
+    .split('.')
+    .reduce<unknown>((acc, key) => (acc == null ? undefined : (acc as Record<string, unknown>)[key]), root);
 
 const extractHtmlField = (item: ReturnType<typeof parse>, extractor: FieldExtractor): string | undefined => {
   const element = extractor.selector ? item.querySelector(extractor.selector) : item;
@@ -909,6 +918,7 @@ git commit -m "feat(plugin-product-search): result extractor"
 ## Task 7: Operation definitions
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/types/SearchOperation.ts`
 - Modify: `packages/plugins/plugin-product-search/src/types/index.ts` (add `SearchOperation` export)
 
@@ -961,8 +971,7 @@ export const AnalyzeProvider = Operation.make({
   meta: {
     key: `${meta.id}.operation.analyze-provider`,
     name: 'Analyze Provider',
-    description:
-      'Analyzes a vendor site and produces a provider template (search schema + request + result mappings).',
+    description: 'Analyzes a vendor site and produces a provider template (search schema + request + result mappings).',
     icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
@@ -996,6 +1005,7 @@ git commit -m "feat(plugin-product-search): operation definitions"
 ## Task 8: Edge fetch util
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/util/fetch.ts`
 - Create: `packages/plugins/plugin-product-search/src/util/index.ts`
 
@@ -1064,10 +1074,11 @@ git commit -m "feat(plugin-product-search): edge proxy fetch util"
 ## Task 9: `RunProviderSearch` handler
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/operations/run-provider-search.ts`
 - Test: `packages/plugins/plugin-product-search/src/operations/run-provider-search.test.ts`
 
-- [ ] **Step 1: Write the failing test.** This test drives the *pure composition* the handler relies on by testing the extracted helper `buildResults(criteria, provider, body)`; the Effect handler wires Database + fetch around it.
+- [ ] **Step 1: Write the failing test.** This test drives the _pure composition_ the handler relies on by testing the extracted helper `buildResults(criteria, provider, body)`; the Effect handler wires Database + fetch around it.
 
 ```typescript
 //
@@ -1130,37 +1141,36 @@ export const buildResults = (provider: Provider, body: string): ResultData[] => 
   return extractResults(body, provider.result);
 };
 
-const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
-  SearchOperation.RunProviderSearch.pipe(
-    Operation.withHandler(
-      Effect.fnUntraced(function* ({ search: searchRef, provider: providerRef }) {
-        const search = yield* Database.load(searchRef);
-        const provider = yield* Database.load(providerRef);
-        if (!provider.enabled || !provider.request || !provider.result) {
-          return [];
-        }
-        const request = bindRequest({ ...search.criteria }, provider.request);
-        const body = yield* fetchViaProxy(request);
-        const rows = buildResults(provider, body);
-        const refs: Ref.Ref<Result>[] = [];
-        for (const row of rows) {
-          const result = makeResult({
-            title: row.title,
-            url: row.url,
-            price: row.price,
-            images: [...row.images],
-            properties: row.properties,
-            provider: Ref.make(provider),
-            fetchedAt: new Date().toISOString(),
-          });
-          const db = yield* Database.Service;
-          db.add(result);
-          refs.push(Ref.make(result));
-        }
-        return refs;
-      }),
-    ),
-  );
+const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> = SearchOperation.RunProviderSearch.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ search: searchRef, provider: providerRef }) {
+      const search = yield* Database.load(searchRef);
+      const provider = yield* Database.load(providerRef);
+      if (!provider.enabled || !provider.request || !provider.result) {
+        return [];
+      }
+      const request = bindRequest({ ...search.criteria }, provider.request);
+      const body = yield* fetchViaProxy(request);
+      const rows = buildResults(provider, body);
+      const refs: Ref.Ref<Result>[] = [];
+      for (const row of rows) {
+        const result = makeResult({
+          title: row.title,
+          url: row.url,
+          price: row.price,
+          images: [...row.images],
+          properties: row.properties,
+          provider: Ref.make(provider),
+          fetchedAt: new Date().toISOString(),
+        });
+        const db = yield* Database.Service;
+        db.add(result);
+        refs.push(Ref.make(result));
+      }
+      return refs;
+    }),
+  ),
+);
 
 export default handler;
 ```
@@ -1181,6 +1191,7 @@ git commit -m "feat(plugin-product-search): run-provider-search handler"
 ## Task 10: `RunSearch` handler
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/operations/run-search.ts`
 
 - [ ] **Step 1: Implement** (fan-out; no new pure logic to unit-test beyond what Task 9 covers — an operation-level test with a stubbed fetch is added in Task 19's integration note).
@@ -1247,13 +1258,13 @@ git commit -m "feat(plugin-product-search): run-search handler"
 The LLM analyzes the provider's site and fills in `searchSchema` + `request` + `result`. The operation handler fetches the site HTML (via the proxy) and asks the AI to emit the template as structured output, then writes it onto the Provider.
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/operations/analyze-provider.ts`
 - Create: `packages/plugins/plugin-product-search/src/operations/index.ts`
 - Create: `packages/plugins/plugin-product-search/src/blueprints/provider-blueprint.ts`
 - Create: `packages/plugins/plugin-product-search/src/blueprints/index.ts`
 
 - [ ] **Step 1: Implement `analyze-provider.ts`.** Read the site, prompt the AI for a structured template, write it back. Use the AI-invocation pattern from `packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts` (AiContext.Binder + `Operation.invoke(AgentPrompt, ...)`), OR — simpler for a deterministic structured result — call the assistant's structured-generation operation. Because the precise AI structured-output API must be confirmed against the current `@dxos/assistant` / `@dxos/assistant-toolkit`, this task has TWO checkpoints:
-
   1. Confirm the API for "generate structured JSON from a prompt + schema" by reading `packages/plugins/plugin-assistant/src/operations/*.ts` and the `blueprints` / `operations` skills. Identify the operation that returns structured output conforming to an Effect Schema.
   2. Implement using that API with the target schema being `Schema.Struct({ searchSchema: JsonSchema, request: RequestMapping, result: ResultMapping })`.
 
@@ -1384,6 +1395,7 @@ git commit -m "feat(plugin-product-search): analyze-provider operation + bluepri
 ## Task 12: Capabilities + plugin assembly (first runnable build)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/capabilities/operation-handler.ts`
 - Create: `packages/plugins/plugin-product-search/src/capabilities/blueprint-definition.ts`
 - Create: `packages/plugins/plugin-product-search/src/capabilities/index.ts`
@@ -1538,6 +1550,7 @@ git commit -m "feat(plugin-product-search): capabilities, translations, plugin a
 ## Task 13: `ResultCard` + `react-surface` (Card)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/containers/ResultCard/ResultCard.tsx`
 - Create: `packages/plugins/plugin-product-search/src/containers/ResultCard/index.ts`
 - Create: `packages/plugins/plugin-product-search/src/containers/index.ts`
@@ -1654,6 +1667,7 @@ git commit -m "feat(plugin-product-search): ResultCard"
 ## Task 14: Union-schema util + `RangeField`
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/util/unionSchema.ts`
 - Modify: `packages/plugins/plugin-product-search/src/util/index.ts` (add export)
 - Test: `packages/plugins/plugin-product-search/src/util/unionSchema.test.ts`
@@ -1781,6 +1795,7 @@ git commit -m "feat(plugin-product-search): union schema builder + RangeField"
 ## Task 15: `SearchArticle` (master/detail)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/SearchArticle.tsx`
 - Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/SearchForm.tsx`
 - Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/ResultTile.tsx`
@@ -1980,6 +1995,7 @@ export const SearchArticle = ({ subject: search, attendableId }: SearchArticlePr
 ```
 
 CRITICAL fixes the implementer must make (do NOT leave the `as any`):
+
 - Replace `search as any` with the proper `Ref.make(search)` (import `Ref` from `@dxos/echo`). The operation input is `Ref.Ref(Search)`.
 - Confirm the ref-resolution + live-query hooks against `MagazineArticle.tsx` (it auto-loads refs on mount and uses reactive queries). Use the same hooks (`useQuery` / ref `.target` / `loadRefs`) it uses — match exactly rather than the sketch above.
 - Confirm how the operation is invoked from a React component — `MagazineArticle` triggers operations via app-graph actions (Task 17) rather than calling `Operation.invoke` directly in a callback. Prefer wiring "Run" as a graph action; if invoking inline, confirm the React-side operation-invocation helper.
@@ -2003,6 +2019,7 @@ git commit -m "feat(plugin-product-search): SearchArticle master/detail"
 ## Task 16: `ProviderArticle` (template editor)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/containers/ProviderArticle/ProviderArticle.tsx`
 - Create: `packages/plugins/plugin-product-search/src/containers/ProviderArticle/index.ts`
 
@@ -2063,6 +2080,7 @@ git commit -m "feat(plugin-product-search): ProviderArticle template editor"
 ## Task 17: App-graph (Providers branch + actions) + CreateObject
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/capabilities/app-graph-builder.ts`
 - Create: `packages/plugins/plugin-product-search/src/capabilities/create-object.ts`
 - Modify: `ProductSearchPlugin.tsx` (add modules), `capabilities/index.ts`
@@ -2199,6 +2217,7 @@ git commit -m "feat(plugin-product-search): app-graph actions + create-object"
 ## Task 18: `PLUGIN.mdl` + plugin-asset module
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-product-search/PLUGIN.mdl`
 - Modify: `ProductSearchPlugin.tsx` (add `addPluginAssetModule`)
 
@@ -2232,6 +2251,7 @@ git commit -m "feat(plugin-product-search): PLUGIN.mdl design doc + asset module
 ## Task 19: Stories + register in composer-app
 
 **Files:**
+
 - Create: `packages/plugins/plugin-product-search/src/containers/ResultCard/ResultCard.stories.tsx`
 - Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/SearchArticle.stories.tsx`
 - Create: `packages/plugins/plugin-product-search/src/containers/ProviderArticle/ProviderArticle.stories.tsx`
@@ -2328,6 +2348,7 @@ git commit -m "chore(plugin-product-search): lint/format + cast audit"
 ## Self-Review (completed by plan author)
 
 **Spec coverage:**
+
 - Provider template (schema + request + result mapping) → Tasks 1, 2. ✓
 - LLM-authored, user-editable templates → Task 11 (blueprint/analyze), Task 16 (editor). ✓
 - Search type with providers + typed criteria → Task 4; union form → Tasks 14–15. ✓
@@ -2339,6 +2360,7 @@ git commit -m "chore(plugin-product-search): lint/format + cast audit"
 - Plugin registration → Task 19. ✓
 
 **Known soft spots (flagged inline, must be resolved by implementer, not stubbed):**
+
 - Task 11 AI structured-output call (confirm `@dxos/assistant` API; fallback = blueprint + `SetProviderTemplate` op).
 - Task 15 ref-resolution hooks + operation invocation from React (match `MagazineArticle` exactly; remove the `as any`).
 - Task 17 app-graph capability tag + `GraphBuilder` API (copy from `plugin-feed`).
@@ -2347,4 +2369,7 @@ git commit -m "chore(plugin-product-search): lint/format + cast audit"
 These are explicitly called out because they depend on framework APIs best confirmed against the live `plugin-feed`/`plugin-assistant` source at implementation time rather than guessed here.
 
 **Range annotation mechanism (decision):** represent a range field in the merged JSONSchema as an object property `{ type: 'object', properties: { min, max }, $comment: 'range' }` (or the echo annotation namespace equivalent); the `SearchForm` `fieldMap` maps any property carrying that marker to `RangeField`. If wiring a custom field proves hard, the nested `{min,max}` object renders as two number inputs via the default `FormFieldSet` recursion — acceptable v1 fallback.
+
+```
+
 ```

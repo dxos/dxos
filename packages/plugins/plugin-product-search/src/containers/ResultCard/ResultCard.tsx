@@ -18,7 +18,9 @@ export const ResultCard = ({ subject, current }: ResultCardProps) => {
 
   return (
     <Card.Root fullWidth classNames={['dx-hover cursor-pointer', current && 'dx-current']}>
-      {imageUrl && <Card.Poster alt={subject.title ?? 'Product'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
+      {imageUrl && (
+        <Card.Poster alt={subject.title ?? 'Product'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+      )}
       <Card.Header>
         <Card.Title classNames='line-clamp-2'>{subject.title}</Card.Title>
       </Card.Header>

@@ -13,9 +13,7 @@ export type ResultDetailProps = {
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result }: ResultDetailProps) => {
   if (!result) {
-    return (
-      <div className='flex items-center justify-center h-full text-subdued text-sm'>No result selected.</div>
-    );
+    return <div className='flex items-center justify-center h-full text-subdued text-sm'>No result selected.</div>;
   }
 
   const properties = Object.entries(result.properties ?? {});
