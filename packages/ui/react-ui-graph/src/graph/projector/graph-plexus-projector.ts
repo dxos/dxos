@@ -8,7 +8,12 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, layoutRadial, updateNode } from './graph-radial-projector';
+import {
+  GraphRadialProjector,
+  type GraphRadialProjectorOptions,
+  layoutRadial,
+  updateNode,
+} from './graph-radial-projector';
 
 /** Display info for a relation group. */
 export type PlexusRelation = {

@@ -129,7 +129,7 @@ describe('Generator', () => {
 
   test('generate relations between objects', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    await db.graph.schemaRegistry.register([Person.Person, Knows]);
+    db.graph.registry.add([Person.Person, Knows]);
 
     // Create endpoint objects first.
     const createObjects = createObjectFactory(db, generator);

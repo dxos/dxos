@@ -66,16 +66,20 @@ const meta: Meta<typeof DefaultStory> = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
-                createObjectFactory(personalSpace.db, generator)([
+                createObjectFactory(
+                  personalSpace.db,
+                  generator,
+                )([
                   { type: Organization.Organization, count: 20 },
                   { type: Person.Person, count: 30 },
                   { type: Pipeline.Pipeline, count: 10 },
                 ]),
               );
               yield* Effect.promise(() =>
-                createRelationFactory(personalSpace.db, generator)([
-                  { type: HasRelationship.HasRelationship, count: 20, data: { kind: 'friend' } },
-                ]),
+                createRelationFactory(
+                  personalSpace.db,
+                  generator,
+                )([{ type: HasRelationship.HasRelationship, count: 20, data: { kind: 'friend' } }]),
               );
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({ db: personalSpace.db, typename: Type.getTypename(Graph.Graph) }),

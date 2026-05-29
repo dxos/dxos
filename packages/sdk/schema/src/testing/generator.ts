@@ -124,7 +124,10 @@ export const createRelationFactory =
             target = randomElement(targets.filter((object) => object.id !== source.id));
           }
 
-          const props = createProps(generator, type as unknown as Type.AnyObj)({
+          const props = createProps(
+            generator,
+            type as unknown as Type.AnyObj,
+          )({
             ...data,
             [Relation.Source]: source,
             [Relation.Target]: target,
