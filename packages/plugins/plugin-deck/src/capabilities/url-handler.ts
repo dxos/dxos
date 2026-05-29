@@ -131,49 +131,37 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
-    // Confirm before a Back-press leaves Composer. See `installLeaveTrap` below.
-    const onNavigate = (event: NavigateEvent) => {
-      // Only a same-document traversal back onto the sentinel (a would-be exit) is trapped.
-      if (
-        event.navigationType !== 'traverse' ||
-        !event.canIntercept ||
-        event.destination.getState()?.[SENTINEL_KEY] !== true
-      ) {
-        return;
-      }
-      // Cancel synchronously; confirm after, since confirm() can be suppressed mid-dispatch.
-      event.preventDefault();
-      queueMicrotask(() => {
-        if (window.confirm('Leave Composer?')) {
-          // Working entry -> sentinel -> prior page. History API (the prior page is usually
-          // cross-origin, so absent from navigation.entries()).
-          history.go(-2);
-        }
-      });
-    };
-
-    // Install the sentinel before handleNavigation()/state-sync push entries on top of it.
+    // Install the sentinel (the floor entry beneath the app's working entries) before
+    // handleNavigation()/state-sync push entries on top of it. See `installLeaveTrap` below.
     const sentinelKey = installLeaveTrap();
 
-    // Re-arm: if a non-cancelable back (the browser makes a traversal uncancelable shortly after a
-    // preventDefault) slips past the trap and lands on the sentinel, re-mark it (the app may have
-    // overwritten its state) and climb back above it — so we never leave silently and the trap
-    // stays armed. Keyed on the entry key, which survives state changes.
+    // Confirm before a Back-press leaves Composer. The platform makes a traversal uncancelable
+    // shortly after a preventDefault (and we can't block it then), so rather than cancelling the
+    // traversal we let a Back land on the sentinel and decide here: Leave -> step back to the prior
+    // page; Stay -> step forward to the entry the user came from. The blocking confirm also stops
+    // rapid repeated Backs from looping. Guarded so our own back()/forward() don't re-enter.
+    let handlingSentinel = false;
     const onCurrentEntryChange = () => {
       const current = window.navigation.currentEntry;
-      if (!current || current.key !== sentinelKey) {
+      if (handlingSentinel || !current || current.key !== sentinelKey) {
         return;
       }
-      if (current.getState()?.[SENTINEL_KEY] !== true) {
-        window.navigation.updateCurrentEntry({ state: { ...current.getState(), [SENTINEL_KEY]: true } });
-      }
-      history.pushState(null, '', window.location.pathname + window.location.search);
+      handlingSentinel = true;
+      queueMicrotask(() => {
+        if (window.confirm('Leave Composer?')) {
+          history.back(); // Sentinel -> prior page (leave Composer).
+        } else {
+          history.forward(); // Back to the entry the user came from (stay).
+        }
+        setTimeout(() => {
+          handlingSentinel = false;
+        });
+      });
     };
 
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
     if ('navigation' in window) {
-      window.navigation.addEventListener('navigate', onNavigate);
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
     }
 
@@ -235,7 +223,6 @@ export default Capability.makeModule(
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         if ('navigation' in window) {
-          window.navigation.removeEventListener('navigate', onNavigate);
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
         unsubscribe();
@@ -245,33 +232,42 @@ export default Capability.makeModule(
   }),
 );
 
-/** State key marking the sentinel history entry used by the leave-Composer trap. */
-const SENTINEL_KEY = '__composerSentinel';
+/**
+ * sessionStorage key holding the sentinel history entry's key. The entry is identified by its
+ * (reload-stable) Navigation API key rather than by entry state, because the deck overwrites
+ * history state via replaceState during URL sync — which would erase a state marker. sessionStorage
+ * survives reloads within the tab and the deck never touches it.
+ */
+const SENTINEL_STORAGE_KEY = 'dxos.composer.deck.leaveTrap.sentinelKey';
 
 /**
- * Insert a marked "sentinel" history entry beneath the app's working entries, so the first
- * Back-press that would leave Composer instead lands on it as a same-document (cancelable)
- * traversal — which `onNavigate` cancels and confirms. A cross-document back is uncancelable and
- * `beforeunload` cannot distinguish reload from leave, so this same-document floor is required;
- * reload fires no traversal and is never trapped. Requires the Navigation API (Chromium); no-op
- * otherwise. Idempotent across reloads — entry state survives, so the sentinel is not duplicated.
- * Returns the sentinel entry's key (stable across state changes) for the re-arm, or undefined.
+ * Insert a "sentinel" history entry beneath the app's working entries, so a Back-press that would
+ * leave Composer instead lands on the sentinel — where `onCurrentEntryChange` confirms the exit. A
+ * cross-document back is uncancelable and `beforeunload` cannot distinguish reload from leave, so
+ * this same-document floor is required; reload fires no traversal and is never trapped. Requires the
+ * Navigation API (Chromium); no-op otherwise. Idempotent across reloads via the sessionStorage-held
+ * entry key, so the sentinel is not duplicated. Returns the sentinel entry's key, or undefined.
  */
 const installLeaveTrap = (): string | undefined => {
   if (!('navigation' in window)) {
     return undefined;
   }
-  const existing = window.navigation.entries().find((entry) => entry.getState()?.[SENTINEL_KEY] === true);
-  if (existing) {
-    return existing.key;
+  const saved = sessionStorage.getItem(SENTINEL_STORAGE_KEY);
+  if (saved && window.navigation.entries().some((entry) => entry.key === saved)) {
+    // The sentinel survived (reload, or the user returned to Composer after leaving). If we are
+    // sitting ON it — e.g. the user left via the sentinel then came back Forward onto it — push a
+    // working entry above so the user is above the floor again and the trap re-arms.
+    if (window.navigation.currentEntry?.key === saved) {
+      history.pushState(null, '', window.location.pathname + window.location.search);
+    }
+    return saved;
   }
   // history.length > 1 (not navigation.canGoBack, which is false for a cross-origin prior entry)
   // means there is somewhere to leave to; otherwise Back can't exit and no sentinel is needed.
-  if (window.history.length > 1) {
-    window.navigation.updateCurrentEntry({
-      state: { ...window.navigation.currentEntry?.getState(), [SENTINEL_KEY]: true },
-    });
-    const key = window.navigation.currentEntry?.key;
+  const key = window.navigation.currentEntry?.key;
+  if (key && window.history.length > 1) {
+    // Record the current (landing) entry as the sentinel, then push the working entry above it.
+    sessionStorage.setItem(SENTINEL_STORAGE_KEY, key);
     history.pushState(null, '', window.location.pathname + window.location.search);
     return key;
   }
