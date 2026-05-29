@@ -11,12 +11,11 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler } from '#components';
-import { useArticleKeyboardNavigation } from '#hooks';
 import { meta } from '#meta';
 import { type Calendar } from '#types';
 
@@ -79,8 +78,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [events, id, showItem],
   );
 
-  // n / p keyboard navigation: clamp at the ends of the events list.
-  const eventIds = useMemo(() => events.map((event) => event.id), [events]);
   const handleNavigate = useCallback(
     (eventId: string) => {
       const event = events.find((entry) => entry.id === eventId);
@@ -93,6 +90,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     },
     [events, id, showItem],
   );
+
+  const eventIds = useMemo(() => events.map((event) => event.id), [events]);
   useArticleKeyboardNavigation({ articleId: id, ids: eventIds, currentId, onSelect: handleNavigate });
 
   return (

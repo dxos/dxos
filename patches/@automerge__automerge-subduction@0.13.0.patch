@@ -6,10 +6,10 @@ index 0000000000000000000000000000000000000000..3dc82ce810d19ed5e70c87f94a06bc18
 @@ -0,0 +1 @@
 +export * from '../wasm_bindgen/bundler/automerge_subduction_wasm.js';
 diff --git a/package.json b/package.json
-index 4d24cafe70797d62ad356401845d011418f4a39e..bafbc371d15818883811bb00d1f24ec5b27164c3 100644
+index 42bc5dcce085f707fcf34c32b7e9a7cdec60d629..dd33f50f9fdbb9ebf44db74da3213ae035674609 100644
 --- a/package.json
 +++ b/package.json
-@@ -61,6 +61,10 @@
+@@ -67,6 +67,10 @@
      },
      "./slim": {
        "types": "./dist/index.d.ts",
