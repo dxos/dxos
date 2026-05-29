@@ -84,16 +84,13 @@ export interface ObjectExtractor {
   readonly operation?: Operation.Definition<ExtractInput, ExtractResult>;
   /**
    * R includes:
-   *  - `Operation.Service` (auto-available in any operation handler context),
    *  - `Resolver` for identity-based merge (template / get-or-create extractors), and
    *  - `AiService.AiService` for LLM-backed extractors (summarize, template).
    * The consuming dispatcher's operation declares `AiService` in its services and provides the
    * `Resolver` layer, so these requirements are satisfied where `dispatch` is invoked.
    * Extractors that need none of these still satisfy this signature (`never` is assignable).
    */
-  extract(
-    input: ExtractInput,
-  ): Effect.Effect<ExtractResult, ExtractError, Operation.Service | Resolver | AiService.AiService>;
+  extract(input: ExtractInput): Effect.Effect<ExtractResult, ExtractError, Resolver | AiService.AiService>;
   /**
    * Whether the dispatcher should attach a provenance relation from each top-level
    * created/updated object back to the source. Defaults to `true`. Set `false` when the output

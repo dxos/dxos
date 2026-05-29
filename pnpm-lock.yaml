@@ -16116,6 +16116,9 @@ importers:
 
   packages/plugins/plugin-trip:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -16134,6 +16137,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/extractor':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

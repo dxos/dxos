@@ -3,33 +3,48 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { fromResolvers } from '@dxos/extractor';
+import { mockAiService } from '@dxos/extractor/testing';
 
 import { Booking, Segment, Trip } from '../../types';
-import gateChangeRaw from './testing/files/gate-change.txt?raw';
-import genericConfirmationRaw from './testing/files/generic-booking-confirmation.txt?raw';
-import unitedConfirmationRaw from './testing/files/united-confirmation.txt?raw';
-import unrelatedRaw from './testing/files/unrelated.txt?raw';
+import gateChangeRaw from './testing/files/gate-change.md?raw';
+import genericConfirmationRaw from './testing/files/generic-booking-confirmation.md?raw';
+import unitedConfirmationRaw from './testing/files/united-confirmation.md?raw';
+import unrelatedRaw from './testing/files/unrelated.md?raw';
 import { parseFixtureMessage } from './testing/load-fixture';
 import { ID, TripMessageExtractor } from './trip-extractor';
 
-// `MessageExtractor.extract` is typed with `R = Operation.Service` to accommodate AI-backed
-// extractors that delegate via `Operation.invoke` (e.g. the summarize extractor in
-// plugin-inbox). The trip extractor never actually yields `Operation.Service` — its
-// implementation returns `R = never` — but every caller going through the interface inherits
-// the wider `R`. The stub satisfies the type so `runAndForwardErrors` (which requires
-// `R = never`) is callable; the stub's methods are unreachable for the trip path.
-const provideOperationServiceStub = Effect.provideService(Operation.Service, {
-  invoke: () => Effect.die('Operation.Service stub: invoke not available in trip extractor tests.'),
-  schedule: () => Effect.die('Operation.Service stub: schedule not available in trip extractor tests.'),
-  invokePromise: async () => ({ error: new Error('Operation.Service stub: invokePromise not available.') }),
-} as any);
+// Empty resolver — the trip extractor dedupes segments via a direct db query, not the Resolver.
+const noResolver = fromResolvers({});
+
+// Mock LLM payloads. The body is handed to a mocked `generateObject`, so the fixture text only
+// drives `match()`; the structured payload below is what assembly consumes.
+const UNITED_PAYLOAD = {
+  number: 'AF-1',
+  origin: { code: 'SFO', name: 'San Francisco' },
+  destination: { code: 'LHR', name: 'London Heathrow' },
+  departAt: '2026-06-01T15:30:00.000Z',
+  arriveAt: '2026-06-02T09:30:00.000Z',
+  confirmationCode: 'ABC123',
+  provider: { name: 'Air France', domain: 'united.com' },
+};
+
+const GATE_CHANGE_PAYLOAD = {
+  number: 'AF-1',
+  origin: { code: 'SFO', name: 'San Francisco' },
+  destination: { code: 'LHR', name: 'London Heathrow' },
+  departAt: '2026-06-01T15:30:00.000Z',
+  arriveAt: '2026-06-02T09:30:00.000Z',
+  gateFrom: '21B',
+  terminalFrom: '3',
+};
 
 describe('TripMessageExtractor', () => {
   let builder: EchoTestBuilder;
@@ -37,8 +52,7 @@ describe('TripMessageExtractor', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    const result = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment, Trip.Trip] });
-    db = result.db;
+    ({ db } = await builder.createDatabase({ types: [Booking.Booking, Segment.Segment, Trip.Trip] }));
   });
 
   afterEach(async () => {
@@ -66,14 +80,9 @@ describe('TripMessageExtractor', () => {
     expect(result.matched).toBe(false);
   });
 
-  test('extract — subject-only generic confirmation emits no objects', async ({ expect }) => {
-    // Match succeeds on the "booking confirmation" subject keyword, but the body lacks any
-    // flight identity. Without a number + departAt the extractor should not invent a Booking.
-    const result = await TripMessageExtractor.extract({
-      db,
-      message: parseFixtureMessage(genericConfirmationRaw),
-    })
-      .pipe(provideOperationServiceStub)
+  test('extract — no flight identity emits no objects', async ({ expect }) => {
+    const result = await TripMessageExtractor.extract({ db, source: parseFixtureMessage(genericConfirmationRaw) })
+      .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: {} }), noResolver)))
       .pipe(runAndForwardErrors);
 
     expect(result.created).toEqual([]);
@@ -81,9 +90,8 @@ describe('TripMessageExtractor', () => {
   });
 
   test('extract — first email creates Trip + Booking + flight Segment', async ({ expect }) => {
-    const message = parseFixtureMessage(unitedConfirmationRaw);
-    const result = await TripMessageExtractor.extract({ db, message })
-      .pipe(provideOperationServiceStub)
+    const result = await TripMessageExtractor.extract({ db, source: parseFixtureMessage(unitedConfirmationRaw) })
+      .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: UNITED_PAYLOAD }), noResolver)))
       .pipe(runAndForwardErrors);
 
     expect(result.created).toHaveLength(3);
@@ -119,13 +127,10 @@ describe('TripMessageExtractor', () => {
   test('extract — subsequent email updates the existing segment instead of creating a duplicate', async ({
     expect,
   }) => {
-    // Email 1: original confirmation. Persist the resulting segment into the db so the
-    // second extract() call can find it via the (number, departAt-date) key.
-    const first = await TripMessageExtractor.extract({
-      db,
-      message: parseFixtureMessage(unitedConfirmationRaw),
-    })
-      .pipe(provideOperationServiceStub)
+    // Email 1: original confirmation. Persist the resulting objects so the second extract() call
+    // can find the segment via the (number, departAt-date) key.
+    const first = await TripMessageExtractor.extract({ db, source: parseFixtureMessage(unitedConfirmationRaw) })
+      .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: UNITED_PAYLOAD }), noResolver)))
       .pipe(runAndForwardErrors);
     expect(first.created).toHaveLength(3);
     const firstSegment = first.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
@@ -142,11 +147,8 @@ describe('TripMessageExtractor', () => {
     expect(firstSegment.details.terminalFrom).toBeUndefined();
 
     // Email 2: gate change for the same flight. Same number + departAt-date as email 1.
-    const second = await TripMessageExtractor.extract({
-      db,
-      message: parseFixtureMessage(gateChangeRaw),
-    })
-      .pipe(provideOperationServiceStub)
+    const second = await TripMessageExtractor.extract({ db, source: parseFixtureMessage(gateChangeRaw) })
+      .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: GATE_CHANGE_PAYLOAD }), noResolver)))
       .pipe(runAndForwardErrors);
 
     expect(second.created).toEqual([]);

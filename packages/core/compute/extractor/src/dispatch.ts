@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { type Operation } from '@dxos/compute';
 import { Obj, type Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
@@ -106,7 +105,7 @@ export const dispatch = (
 ): Effect.Effect<
   DispatchOutcome,
   NoMatchingExtractorError | ExtractError,
-  ExtractorRegistry | Operation.Service | Resolver | AiService.AiService
+  ExtractorRegistry | Resolver | AiService.AiService
 > =>
   Effect.gen(function* () {
     const registry = yield* ExtractorRegistry;
