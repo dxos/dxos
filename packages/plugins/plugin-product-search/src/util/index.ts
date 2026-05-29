@@ -5,3 +5,4 @@
 export * from './bindRequest';
 export * from './extractResults';
 export * from './fetch';
+export * from './unionSchema';
