@@ -308,9 +308,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (assignedPerson && !existing.assigned) {
         existing.assigned = Ref.make(assignedPerson);
       }
-      const currentProjectId = existing.project
-        ? EID.getEntityId(EID.tryParse(existing.project.uri)!)
-        : undefined;
+      const currentProjectId = existing.project ? EID.getEntityId(EID.tryParse(existing.project.uri)!) : undefined;
       const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);

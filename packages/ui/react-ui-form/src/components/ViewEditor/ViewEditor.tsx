@@ -8,20 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import {
-  EID,
-  Entity,
-  Feed,
-  Filter,
-  Format,
-  Obj,
-  Query,
-  QueryAST,
-  Ref,
-  type Registry,
-  Type,
-  View,
-} from '@dxos/echo';
+import { EID, Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type Registry, Type, View } from '@dxos/echo';
 import { type JsonProp } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';

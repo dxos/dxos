@@ -12,9 +12,9 @@ import * as Layer from 'effect/Layer';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { EntityMetaIndex } from './entity-meta-index';
 import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
-import { EntityMetaIndex } from './entity-meta-index';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');

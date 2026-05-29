@@ -251,9 +251,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
         existing.estimate = estimateResult.value;
       }
       if (project) {
-        const currentProjectId = existing.project
-          ? EID.getEntityId(EID.tryParse(existing.project.uri)!)
-          : undefined;
+        const currentProjectId = existing.project ? EID.getEntityId(EID.tryParse(existing.project.uri)!) : undefined;
         const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
         if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
           existing.project = Ref.make(project);
@@ -496,9 +494,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               continue;
             }
             if (teamFilterEchoId) {
-              const targetEchoId = target.object
-                ? EID.getEntityId(EID.tryParse(target.object.uri)!)
-                : undefined;
+              const targetEchoId = target.object ? EID.getEntityId(EID.tryParse(target.object.uri)!) : undefined;
               if (targetEchoId !== teamFilterEchoId) {
                 continue;
               }

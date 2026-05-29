@@ -20,9 +20,7 @@ export const useTargetIntegration = <T extends Obj.Any>(
   const db = Obj.getDatabase(target);
   const integrations = useQuery(db, Filter.type(Integration.Integration));
   const integration = integrations.find((candidate) =>
-    candidate.targets.some(
-      (entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === target.id,
-    ),
+    candidate.targets.some((entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === target.id),
   );
   return { integration };
 };

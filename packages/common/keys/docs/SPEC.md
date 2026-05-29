@@ -9,7 +9,7 @@ This document specifies the identifier types used in the DXOS ecosystem: **DXN**
 | DXN        | Names a type, plugin, or other resource       | `dxn:` scheme + NSID + optional version | `dxn:org.dxos.type.calendar`            |
 | SpaceId    | Identifies a space                            | Multibase base-32 encoded key hash      | `BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`     |
 | EntityId   | Identifies an object within a space           | ULID                                    | `01J00J9B45YHYSGZQTQMSKMGJ6`            |
-| EID    | Addresses an object (or space) for resolution | URI with `echo:` scheme                 | `echo://BA25QRC2...CKE/01J00J9B...MGJ6` |
+| EID        | Addresses an object (or space) for resolution | URI with `echo:` scheme                 | `echo://BA25QRC2...CKE/01J00J9B...MGJ6` |
 
 DXN and EID are two URI schemes used in DXOS. A DXN names a resource abstractly (a schema definition, a plugin, a blueprint, a published operation, a capability). An EID addresses a specific object within a space. The two can refer to the same underlying entity -- a blueprint or dynamic schema stored in a space has both a DXN (its published name) and an EID (its location as an object) -- but they remain distinct in use: a DXN identifies the named resource, an EID identifies a particular stored object. Reference fields throughout DXOS accept any URI. DXOS natively resolves URIs whose scheme it recognizes (`dxn:`, `echo:`); URIs with other schemes (e.g. [`did:`](https://www.w3.org/TR/did-core/), [`at://`](https://atproto.com/specs/at-uri-scheme), [`cid:`](https://github.com/multiformats/cid)) are stored opaquely today and may gain native resolution over time.
 
@@ -223,7 +223,7 @@ DXOS identifiers are inspired by [AT Protocol](https://atproto.com/) identifiers
 | DXN      | NSID    | Names a type, schema, or resource              |
 | EntityId | TID     | Identifies a record                            |
 | SpaceId  | DID     | Identifies the container/authority for records |
-| EID  | AT URI  | Composed address for a specific record         |
+| EID      | AT URI  | Composed address for a specific record         |
 
 ### Why EIDs have no collection segment
 
@@ -255,7 +255,7 @@ The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[
 | --------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
 | `dxn:type:org.dxos.type.calendar`       | `dxn:org.dxos.type.calendar`       | Kind segment removed; NSID follows `dxn:` directly    |
 | `dxn:type:org.dxos.type.calendar:1.0.0` | `dxn:org.dxos.type.calendar:1.0.0` | Version remains colon-separated, kind segment removed |
-| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                 | EID with no authority (current space)             |
-| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`      | EID with space as authority                       |
+| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                 | EID with no authority (current space)                 |
+| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`      | EID with space as authority                           |
 | `dxn:queue:<sub>:<spaceId>:<queueId>`   | `echo://<spaceId>/<queueId>`       | Queues are now feeds, which are objects in spaces     |
-| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`             | Encoded references use EID                        |
+| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`             | Encoded references use EID                            |

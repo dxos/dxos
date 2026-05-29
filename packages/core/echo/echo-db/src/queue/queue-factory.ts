@@ -12,10 +12,7 @@ import { QueueImpl } from './queue';
 import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(
-    echoUri: EID.EID,
-    options?: { subspaceTag?: string },
-  ): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoUri: EID.EID, options?: { subspaceTag?: string }): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
 }
 
