@@ -34,7 +34,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'trip-extractor',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.MessageExtractor, TripMessageExtractor)),
+    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, TripMessageExtractor)),
   }),
   Plugin.make,
 );

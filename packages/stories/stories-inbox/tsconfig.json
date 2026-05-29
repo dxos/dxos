@@ -34,6 +34,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

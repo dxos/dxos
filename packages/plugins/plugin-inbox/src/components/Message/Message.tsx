@@ -186,17 +186,33 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
-  const objects = useExtractedObjects(db, message);
+  const relationObjects = useExtractedObjects(db, message);
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   // `useQuery` only fires when the matching set changes, not when nested fields mutate.
   // Subscribe directly to each mailbox so a tag-only extractor run (no created objects,
-  // no relation, just a `mailbox.tags` mutation) still re-renders the tags row.
+  // no relation, just a `mailbox.tags`/`mailbox.extracted` mutation) still re-renders.
   const [, bump] = useReducer((tick: number) => tick + 1, 0);
   useEffect(() => {
     const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
     return () => unsubs.forEach((unsub) => unsub());
   }, [mailboxes]);
   const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+
+  // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
+  // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),
+  // deduped by id. The recorded ids reference space-db objects resolved via `getObjectById`.
+  const objects = useMemo(() => {
+    const byId = new Map<string, Obj.Any>(relationObjects.map((object) => [object.id, object]));
+    for (const id of mailboxes.flatMap((mailbox) => Mailbox.getExtractedObjectIds(mailbox, message.id))) {
+      if (!byId.has(id)) {
+        const object = db?.getObjectById(id);
+        if (object) {
+          byId.set(id, object);
+        }
+      }
+    }
+    return [...byId.values()];
+  }, [relationObjects, mailboxes, message.id, db]);
 
   return (
     <div

@@ -166,6 +166,9 @@
       "path": "packages/core/compute/conductor/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/extractor/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions/tsconfig.json"
     },
     {

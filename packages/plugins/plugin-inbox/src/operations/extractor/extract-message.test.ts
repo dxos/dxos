@@ -6,29 +6,30 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { AiService } from '@dxos/ai';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { type ExtractError, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { MessageExtractor } from '../../capabilities';
 import { ExtractedFrom, InboxCapabilities, InboxOperation } from '../../types';
 import handler from './extract-message';
 
-// Stub builder for MessageExtractor instances. The `operation` field is required by the
-// interface for first-class registry, but the dispatcher calls `extract` directly — stubs
-// can point all `operation` fields at the same real definition since registry traceability
-// is moot in unit tests.
+// Stub builder for ObjectExtractor instances. The `operation` field is optional and unused by
+// the dispatcher (which calls `extract` directly), but kept here for parity with real extractors.
 const stubExtractor = (opts: {
   id: string;
   matched: boolean;
   confidence?: number;
-  extract?: () => Effect.Effect<MessageExtractor.ExtractResult, MessageExtractor.ExtractError>;
-}): MessageExtractor.MessageExtractor => ({
+  extract?: () => Effect.Effect<ExtractResult, ExtractError>;
+}): ObjectExtractor => ({
   id: opts.id,
+  title: opts.id,
   description: opts.id,
   kinds: [],
+  sourceTypes: [Type.getTypename(Message.Message)!],
   match: () => ({ matched: opts.matched, confidence: opts.confidence }),
   operation: InboxOperation.ExtractContactFromMessage,
   extract: opts.extract ?? (() => Effect.succeed({ created: [], updated: [], relations: [] })),
@@ -42,13 +43,13 @@ const makeMessage = () =>
     blocks: [],
   });
 
-// Build a Capability.Service from a list of MessageExtractor instances.
-const makeCapabilityService = (extractors: MessageExtractor.MessageExtractor[]) => {
+// Build a Capability.Service from a list of ObjectExtractor instances.
+const makeCapabilityService = (extractors: ObjectExtractor[]) => {
   const registry = Registry.make();
   const manager = CapabilityManager.make({ registry });
   for (const extractor of extractors) {
     manager.contribute({
-      interface: InboxCapabilities.MessageExtractor,
+      interface: InboxCapabilities.ObjectExtractor,
       implementation: extractor,
       module: extractor.id,
     });
@@ -78,8 +79,12 @@ describe('ExtractMessage operation handler', () => {
     const capabilityService = makeCapabilityService([noMatchExtractor]);
 
     const result = await handler
-      .handler({ db, message })
-      .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.either)
+      .handler({ db, source: message })
+      .pipe(
+        Effect.provideService(Capability.Service, capabilityService),
+        Effect.provide(AiService.notAvailable),
+        Effect.either,
+      )
       .pipe(Effect.runPromise);
 
     expect(result._tag).toBe('Left');
@@ -117,8 +122,8 @@ describe('ExtractMessage operation handler', () => {
     const capabilityService = makeCapabilityService([lowConfidence, highConfidence]);
 
     const result = await handler
-      .handler({ db, message })
-      .pipe(Effect.provideService(Capability.Service, capabilityService))
+      .handler({ db, source: message })
+      .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.provide(AiService.notAvailable))
       .pipe(runAndForwardErrors);
 
     expect(calledExtractorId).toBe('high');
@@ -149,8 +154,8 @@ describe('ExtractMessage operation handler', () => {
     const capabilityService = makeCapabilityService([extractorWithCreated]);
 
     const result = await handler
-      .handler({ db, message })
-      .pipe(Effect.provideService(Capability.Service, capabilityService))
+      .handler({ db, source: message })
+      .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.provide(AiService.notAvailable))
       .pipe(runAndForwardErrors);
 
     expect(result.created).toBe(1);

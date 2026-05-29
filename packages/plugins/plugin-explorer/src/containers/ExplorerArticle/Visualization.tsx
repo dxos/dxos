@@ -40,12 +40,21 @@ export type VisualizationProps = ThemedClassName<{
   variant: ExplorerArticleVariant;
   model: SpaceGraphModel;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
+  /** Called when the user clicks the visualization surface (e.g. to dismiss a node preview). */
+  onSurfaceClick?: () => void;
 }>;
 
 /**
  * Renders the active visualization variant.
  */
-export const Visualization = ({ classNames, debug = true, variant, model, onNodeHover }: VisualizationProps) => {
+export const Visualization = ({
+  classNames,
+  debug = true,
+  variant,
+  model,
+  onNodeHover,
+  onSurfaceClick,
+}: VisualizationProps) => {
   const svgRef = useRef<SVGContext>(null);
   const [projector, setProjector] = useState<GraphProjector<SpaceGraphNode> | undefined>();
   const projectorRef = useRef<GraphProjector<SpaceGraphNode> | undefined>(undefined);
@@ -113,7 +122,7 @@ export const Visualization = ({ classNames, debug = true, variant, model, onNode
     variant === 'swarm' ? { onPointerMove: handlePointerMove, onPointerLeave: handlePointerLeave } : undefined;
 
   return (
-    <div className={mx('dx-expander relative', classNames)}>
+    <div className={mx('dx-expander relative', classNames)} onClick={onSurfaceClick}>
       <SVG.Root ref={svgRef}>
         <SVG.Zoom extent={[1 / 2, 2]}>
           <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>

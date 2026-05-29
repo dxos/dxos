@@ -3,103 +3,50 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, type Database } from '@dxos/echo';
-import { type MessageExtractor } from '@dxos/plugin-inbox';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import {
+  type ExtractInput,
+  type ExtractResult,
+  type ExtractionTemplate,
+  type MatchResult,
+  type ObjectExtractor,
+  fromResolvers,
+  makeTemplateExtractor,
+} from '@dxos/extractor';
+import { log } from '@dxos/log';
+import { type ContentBlock, Message, Organization, type Provider } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
+import { AIRLINES } from './const';
 
 /**
- * Heuristic v1 extractor for travel-booking confirmation emails. Recognises
- * United-style flight confirmations: a sender on a united.com domain or a
- * subject mentioning a flight/booking confirmation, with a plain-text body
- * of the form:
- *
- * ```text
- *   Flight: AF-1
- *   From: SFO (San Francisco)
- *   To: LHR (London Heathrow)
- *   Depart: 2026-06-01 15:30
- *   Arrive: 2026-06-02 09:30
- *   Confirmation: ABC123
- *   Gate: 21B
- * ```
- *
- * Create-or-update: existing flight segments in `ctx.database` are looked up
- * by `(number, departAt date)`. A match is mutated in place (returned in
- * `updated`) and a fresh `Booking` is NOT emitted; otherwise a new `Booking`
- * + `Segment` pair is created.
+ * Template-driven extractor for travel-booking confirmation emails. A cheap/fast LLM parses the
+ * email body into a single flight segment (number, route, times, confirmation, gate/terminal/seat),
+ * and the framework assembles the object graph:
+ *  - an existing Segment matching `(number, departAt date)` is updated in place;
+ *  - otherwise a fresh flight Segment is created and attached to the Trip whose Booking shares the
+ *    confirmation code (PNR) — producing one Trip with multiple Segments — or, when no such Trip
+ *    exists, a new `Trip` + `Booking` + `Segment` trio.
+ * The flight provider (airline) is derived from the sender domain + flight-number prefix and
+ * linked to a matching Organization. The `match()` pre-filter (sender domain / subject keywords)
+ * keeps the LLM off non-travel mail.
  */
-export const ID = 'org.dxos.plugin.trip.extractor.trip';
+export const TEMPLATE_ID = 'org.dxos.plugin.trip.extractor.trip';
 
-const UNITED_DOMAIN_REGEX = /@(?:[\w-]+\.)?united\.(?:com|co\.uk)$/i;
-const CONFIRMATION_SUBJECT_REGEX = /(?:flight|booking)\s+confirmation/i;
-const GATE_SUBJECT_REGEX = /gate\s+change|schedule\s+change|flight\s+update/i;
+// Travel-related subject keywords used by the cheap `match()` pre-filter. Generous on purpose —
+// the LLM returns empty fields for non-flight mail, so a false positive costs only one cheap call.
+const TRAVEL_SUBJECT_REGEX =
+  /\b(?:flight|booking|e-?ticket|itinerary|reservation|boarding|gate\s+change|schedule\s+change)\b/i;
 
-const FLIGHT_REGEX = /Flight:\s*([A-Z]{1,3}-?\d{1,5})/i;
-const FROM_REGEX = /From:\s*([A-Z]{3})(?:\s*\(([^)]+)\))?/;
-const TO_REGEX = /To:\s*([A-Z]{3})(?:\s*\(([^)]+)\))?/;
-const DEPART_REGEX = /Depart:\s*(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2})/;
-const ARRIVE_REGEX = /Arrive:\s*(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2})/;
-const CONFIRMATION_CODE_REGEX = /Confirmation:\s*([A-Z0-9]{4,})/i;
-const GATE_REGEX = /Gate:\s*([A-Z0-9]+)/i;
-const TERMINAL_REGEX = /Terminal:\s*([A-Z0-9]+)/i;
-const SEAT_REGEX = /Seat:\s*([A-Z0-9]+)/i;
+const senderDomain = (message: Message.Message): string =>
+  (message.sender?.email ?? '').split('@')[1]?.toLowerCase() ?? '';
 
-// Flying Blue / Air France style — picks up the FIRST segment in a multi-segment itinerary.
-// Format example (markdown-rendered):
-//   **New York City**, (John F. Kennedy Intl Airport)
-//   **Paris**, (Aéroport Charles de Gaulle)
-//   AF0003 Operated by: Air France - Aircraft type: Boeing 777-300ER
-//   Tuesday, May 5: 17h30 - 07h00 (D+1)
-const FB_CITY_REGEX_GLOBAL = /\*\*([^*\n]+)\*\*,?\s*(?:\(([^)\n]+)\))?/g;
-const FB_FLIGHT_REGEX = /\b([A-Z]{2})(\d{3,5})\s+Operated by:/;
-const FB_DATETIME_REGEX =
-  /\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\w*,\s+(\w+)\s+(\d{1,2})(?:,\s*(\d{4}))?:\s+(\d{2})h(\d{2})\s*-\s*(\d{2})h(\d{2})/;
-const FB_RESERVATION_REGEX = /reservation reference number:\s*([A-Z0-9]{4,})/i;
-
-const FB_MONTHS: Record<string, string> = {
-  january: '01',
-  february: '02',
-  march: '03',
-  april: '04',
-  may: '05',
-  june: '06',
-  july: '07',
-  august: '08',
-  september: '09',
-  october: '10',
-  november: '11',
-  december: '12',
-};
-
-// Heuristic city → IATA fallback. The Flying Blue body doesn't include IATA codes, so we
-// derive a code from a small lookup of common airports and otherwise fall back to the first
-// three letters of the city name (uppercased). Sufficient for trip-name labels; real-world
-// flows should rely on a proper airport-data service.
-const FB_AIRPORT_IATA: Record<string, string> = {
-  'john f. kennedy': 'JFK',
-  'charles de gaulle': 'CDG',
-  lisboa: 'LIS',
-  heathrow: 'LHR',
-  'san francisco': 'SFO',
-  newark: 'EWR',
-};
-
-const fbAirportCode = (city: string, airportName: string | undefined): string => {
-  const haystack = `${city} ${airportName ?? ''}`.toLowerCase();
-  for (const [needle, code] of Object.entries(FB_AIRPORT_IATA)) {
-    if (haystack.includes(needle)) {
-      return code;
-    }
-  }
-  return city
-    .replace(/[^A-Za-z]/g, '')
-    .slice(0, 3)
-    .toUpperCase();
-};
+const isAirlineDomain = (domain: string): boolean =>
+  AIRLINES.some((airline) => domain === airline.domain || domain.endsWith(`.${airline.domain}`));
 
 const getBodyText = (message: Message.Message): string =>
   message.blocks
@@ -109,13 +56,11 @@ const getBodyText = (message: Message.Message): string =>
 
 const getSubject = (message: Message.Message): string => String(message.properties?.subject ?? '');
 
-const toIso = (datePart: string, timePart: string): string => `${datePart}T${timePart}:00.000Z`;
-
-const matchMessage = (message: Message.Message): MessageExtractor.MatchResult => {
-  const senderEmail = message.sender.email ?? '';
+const matchMessage = (source: Obj.Any): MatchResult => {
+  const message = source as Message.Message;
   const subject = getSubject(message);
-  const domainMatched = UNITED_DOMAIN_REGEX.test(senderEmail);
-  const subjectMatched = CONFIRMATION_SUBJECT_REGEX.test(subject) || GATE_SUBJECT_REGEX.test(subject);
+  const domainMatched = isAirlineDomain(senderDomain(message));
+  const subjectMatched = TRAVEL_SUBJECT_REGEX.test(subject);
   if (!domainMatched && !subjectMatched) {
     return { matched: false };
   }
@@ -124,267 +69,298 @@ const matchMessage = (message: Message.Message): MessageExtractor.MatchResult =>
   return { matched: true, confidence, reason: domainMatched ? 'sender-domain' : 'subject-keyword' };
 };
 
-/**
- * Parsed candidate fields from an email body. Only `number` + `departAt`
- * are required for the create-or-update identity lookup; everything else is
- * optional and merged when present.
- */
-/** Inline Place shape — keeping the candidate dependency-free of the nominal Place.Place interface so structural assignment to Segment fields stays straightforward. */
-type PlaceCandidate = { code: string; name?: string };
+/** Structured output the LLM produces for the first flight segment in the email. */
+const PlacePayload = Schema.Struct({ code: Schema.String, name: Schema.optional(Schema.String) });
 
-type Candidate = {
-  number?: string;
-  origin?: PlaceCandidate;
-  destination?: PlaceCandidate;
-  departAt?: string;
-  arriveAt?: string;
-  confirmationCode?: string;
-  gateFrom?: string;
-  terminalFrom?: string;
-  seat?: string;
-};
+const FlightPayload = Schema.Struct({
+  number: Schema.optional(Schema.String),
+  origin: Schema.optional(PlacePayload),
+  destination: Schema.optional(PlacePayload),
+  departAt: Schema.optional(Schema.String),
+  arriveAt: Schema.optional(Schema.String),
+  confirmationCode: Schema.optional(Schema.String),
+  gateFrom: Schema.optional(Schema.String),
+  terminalFrom: Schema.optional(Schema.String),
+  seat: Schema.optional(Schema.String),
+  provider: Schema.optional(
+    Schema.Struct({ name: Schema.optional(Schema.String), domain: Schema.optional(Schema.String) }),
+  ),
+});
+interface FlightPayload extends Schema.Schema.Type<typeof FlightPayload> {}
 
-const parseCandidate = (body: string): Candidate => {
-  const flight = FLIGHT_REGEX.exec(body);
-  const from = FROM_REGEX.exec(body);
-  const to = TO_REGEX.exec(body);
-  const depart = DEPART_REGEX.exec(body);
-  const arrive = ARRIVE_REGEX.exec(body);
-  const confirmation = CONFIRMATION_CODE_REGEX.exec(body);
-  const gate = GATE_REGEX.exec(body);
-  const terminal = TERMINAL_REGEX.exec(body);
-  const seat = SEAT_REGEX.exec(body);
-
-  const united: Candidate = {
-    number: flight?.[1],
-    origin: from ? { code: from[1], name: from[2] ?? undefined } : undefined,
-    destination: to ? { code: to[1], name: to[2] ?? undefined } : undefined,
-    departAt: depart ? toIso(depart[1], depart[2]) : undefined,
-    arriveAt: arrive ? toIso(arrive[1], arrive[2]) : undefined,
-    confirmationCode: confirmation?.[1],
-    gateFrom: gate?.[1],
-    terminalFrom: terminal?.[1],
-    seat: seat?.[1],
-  };
-
-  // United format is the primary path. If it doesn't yield a flight number + departAt, try
-  // the Flying Blue format on the same body so airline-specific layouts also extract.
-  if (united.number && united.departAt) {
-    return united;
-  }
-  return parseFlyingBlueCandidate(body) ?? united;
-};
-
-/**
- * Parses the FIRST segment of a Flying Blue (Air France/KLM) confirmation email. Returns
- * undefined when the body lacks the bolded-city + `NN0000 Operated by:` + `Day, Month D:
- * HHhMM - HHhMM` triad. The cities are positional: the first bolded city block is the
- * origin, the second is the destination. We deliberately don't try to model multi-segment
- * itineraries — the extractor is single-segment-per-email by design (see existing United
- * handler) and the first segment is enough to anchor a Trip object.
- */
-const parseFlyingBlueCandidate = (body: string): Candidate | undefined => {
-  const cities: { city: string; airport?: string }[] = [];
-  FB_CITY_REGEX_GLOBAL.lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = FB_CITY_REGEX_GLOBAL.exec(body))) {
-    cities.push({ city: match[1].trim(), airport: match[2]?.trim() });
-    if (cities.length >= 2) {
-      break;
-    }
-  }
-  if (cities.length < 2) {
-    return undefined;
-  }
-
-  const flightMatch = FB_FLIGHT_REGEX.exec(body);
-  const datetimeMatch = FB_DATETIME_REGEX.exec(body);
-  if (!flightMatch || !datetimeMatch) {
-    return undefined;
-  }
-
-  const month = FB_MONTHS[datetimeMatch[1].toLowerCase()];
-  if (!month) {
-    return undefined;
-  }
-  const day = datetimeMatch[2].padStart(2, '0');
-  // The Flying Blue body in the fixture omits the year; default to a fixed seed year so the
-  // ISO timestamp parses. Real emails would either include the year or we'd resolve it
-  // against the `Message.created` date — out of scope for this heuristic extractor.
-  const year = datetimeMatch[3] ?? '2026';
-  const departTime = `${datetimeMatch[4]}:${datetimeMatch[5]}`;
-  const arriveTime = `${datetimeMatch[6]}:${datetimeMatch[7]}`;
-  const datePart = `${year}-${month}-${day}`;
-
-  const reservation = FB_RESERVATION_REGEX.exec(body);
-
-  return {
-    number: `${flightMatch[1]}${flightMatch[2]}`,
-    origin: { code: fbAirportCode(cities[0].city, cities[0].airport), name: cities[0].airport ?? cities[0].city },
-    destination: {
-      code: fbAirportCode(cities[1].city, cities[1].airport),
-      name: cities[1].airport ?? cities[1].city,
-    },
-    departAt: toIso(datePart, departTime),
-    arriveAt: toIso(datePart, arriveTime),
-    confirmationCode: reservation?.[1],
-  };
-};
+const PROMPT = trim`
+  Extract the FIRST flight segment from this airline booking/confirmation email.
+  Return ISO 8601 UTC timestamps for departAt and arriveAt, and IATA airport codes for origin.code/destination.code.
+  Include the airline reservation/confirmation code and, if present, gate, terminal, and seat.
+  If the email is not a flight confirmation, return empty fields.
+`;
 
 /** Identity key used to dedupe segments across multiple emails. */
 const matchKey = (number: string, departAt: string): string => `${number.toUpperCase()}|${departAt.split('T')[0]}`;
 
-const isSameFlight = (segment: Segment.Segment, candidate: Candidate): boolean => {
+const isSameFlight = (segment: Segment.Segment, payload: FlightPayload): boolean => {
   if (segment.details._tag !== 'flight' || !segment.details.number || !segment.details.departAt) {
     return false;
   }
-  if (!candidate.number || !candidate.departAt) {
+  if (!payload.number || !payload.departAt) {
     return false;
   }
-  return matchKey(segment.details.number, segment.details.departAt) === matchKey(candidate.number, candidate.departAt);
-};
-
-const extractFromMessage = (
-  db: Database.Database,
-  message: Message.Message,
-): Effect.Effect<MessageExtractor.ExtractResult, never> =>
-  Effect.gen(function* () {
-    const body = getBodyText(message);
-    const candidate = parseCandidate(body);
-
-    // `match()` can accept subject-only signals (e.g. generic "booking confirmation" emails);
-    // without flight identity we have nothing useful to persist, so emit no objects.
-    if (!candidate.number || !candidate.departAt) {
-      return { created: [], updated: [], relations: [] };
-    }
-
-    // Try to find an existing segment matching the same (number, depart-date) pair.
-    const existing = yield* findExistingFlight(db, candidate);
-    if (existing && existing.details._tag === 'flight') {
-      Obj.update(existing, (existing) => {
-        if (existing.details._tag !== 'flight') {
-          return;
-        }
-        if (candidate.origin !== undefined) {
-          existing.details.origin = candidate.origin;
-        }
-        if (candidate.destination !== undefined) {
-          existing.details.destination = candidate.destination;
-        }
-        if (candidate.arriveAt !== undefined) {
-          existing.details.arriveAt = candidate.arriveAt;
-        }
-        if (candidate.gateFrom !== undefined) {
-          existing.details.gateFrom = candidate.gateFrom;
-        }
-        if (candidate.terminalFrom !== undefined) {
-          existing.details.terminalFrom = candidate.terminalFrom;
-        }
-        if (candidate.seat !== undefined) {
-          existing.details.seat = candidate.seat;
-        }
-      });
-      return {
-        created: [],
-        updated: [existing],
-        relations: [],
-        tags: [{ label: 'travel', hue: 'sky' }],
-      };
-    }
-
-    // No prior segment — create a Trip + Booking + flight Segment trio. The Trip is the
-    // top-level container surfaced as a tag on the source message; Booking + Segment hang
-    // off the Trip.
-    const booking = Booking.make({
-      provider: { name: 'Air France', domain: 'united.com' },
-      confirmationCode: candidate.confirmationCode,
-      source: 'email',
-      rawPayload: body,
-    });
-
-    const segment = Segment.make({
-      details: {
-        _tag: 'flight',
-        origin: candidate.origin,
-        destination: candidate.destination,
-        departAt: candidate.departAt,
-        arriveAt: candidate.arriveAt,
-        number: candidate.number,
-        provider: { name: 'Air France', domain: 'united.com' },
-        gateFrom: candidate.gateFrom,
-        terminalFrom: candidate.terminalFrom,
-        seat: candidate.seat,
-      },
-    });
-
-    const trip = Trip.make({
-      name: tripNameFor(candidate),
-      start: candidate.departAt,
-      end: candidate.arriveAt,
-    });
-    Trip.addSegment(trip, segment);
-    // Anchor the Booking under the Trip so the dispatcher treats it as a child object — only
-    // top-level objects (no parent) get an `ExtractedFrom` relation back to the message, so
-    // the message header surfaces the Trip itself rather than a chip per sub-artifact.
-    Obj.setParent(booking, trip);
-
-    return {
-      created: [trip, booking, segment],
-      updated: [],
-      relations: [],
-      // Surface the message as "trip-tagged" so it's discoverable from MailboxArticle tile
-      // chips alongside the standalone Trip relation in MessageHeader.
-      tags: [{ label: 'travel', hue: 'sky' }],
-    };
-  });
-
-const tripNameFor = (candidate: Candidate): string => {
-  const origin = candidate.origin?.code ?? '?';
-  const destination = candidate.destination?.code ?? '?';
-  const flight = candidate.number ?? '';
-  return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
+  return matchKey(segment.details.number, segment.details.departAt) === matchKey(payload.number, payload.departAt);
 };
 
 const findExistingFlight = (
   db: Database.Database,
-  candidate: Candidate,
-): Effect.Effect<Segment.Segment | undefined, never> => {
-  if (!candidate.number || !candidate.departAt) {
+  payload: FlightPayload,
+): Effect.Effect<Segment.Segment | undefined> => {
+  if (!payload.number || !payload.departAt) {
     return Effect.succeed(undefined);
   }
-
   return Effect.promise(() => db.query(Filter.type(Segment.Segment)).run()).pipe(
-    Effect.map((segments) => segments.find((segment) => isSameFlight(segment, candidate))),
-    // If the query rejects (e.g. Segment type not registered, db closed), recover to
-    // undefined rather than letting an unhandled rejection bubble up through the
-    // operation handler as an opaque "unknown error occurred in Effect.tryPromise".
+    Effect.map((segments) => segments.find((segment) => isSameFlight(segment, payload))),
+    // Recover (e.g. Segment type not registered, db closed) to undefined rather than letting an
+    // unhandled rejection bubble through the operation handler.
     Effect.catchAllDefect(() => Effect.succeed(undefined)),
   );
 };
 
-const extract = ({
-  db,
-  message,
-}: MessageExtractor.ExtractInput): Effect.Effect<MessageExtractor.ExtractResult, never> =>
-  extractFromMessage(db, message);
+/**
+ * Find an existing Booking with this confirmation code (PNR). Flights booked under one
+ * reservation share a code, so a follow-up segment attaches to that Booking's Trip rather than
+ * spawning a new one. The Booking is parented to its Trip via `Obj.setParent`.
+ */
+const findExistingBookingByConfirmation = (
+  db: Database.Database,
+  confirmationCode: string | undefined,
+): Effect.Effect<Booking.Booking | undefined> => {
+  if (!confirmationCode) {
+    return Effect.succeed(undefined);
+  }
+  return Effect.promise(() => db.query(Filter.type(Booking.Booking)).run()).pipe(
+    Effect.map((bookings) => bookings.find((booking) => booking.confirmationCode === confirmationCode)),
+    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+  );
+};
+
+const tripNameFor = (payload: FlightPayload): string => {
+  const origin = payload.origin?.code ?? '?';
+  const destination = payload.destination?.code ?? '?';
+  const flight = payload.number ?? '';
+  return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
+};
+
+const makeSegment = (payload: FlightPayload, provider: Provider.Provider, booking: Booking.Booking): Segment.Segment =>
+  Segment.make({
+    booking: Ref.make(booking),
+    details: {
+      _tag: 'flight',
+      origin: payload.origin,
+      destination: payload.destination,
+      departAt: payload.departAt,
+      arriveAt: payload.arriveAt,
+      number: payload.number,
+      provider,
+      gateFrom: payload.gateFrom,
+      terminalFrom: payload.terminalFrom,
+      seat: payload.seat,
+    },
+  });
+
+/** Widen a Trip's date range to cover a newly-appended segment (ISO timestamps compare lexically). */
+const widenTripRange = (trip: Trip.Trip, payload: FlightPayload): void => {
+  Obj.update(trip, (trip) => {
+    if (payload.departAt && (!trip.start || payload.departAt < trip.start)) {
+      trip.start = payload.departAt;
+    }
+    if (payload.arriveAt && (!trip.end || payload.arriveAt > trip.end)) {
+      trip.end = payload.arriveAt;
+    }
+  });
+};
+
+const assemble = (
+  payload: FlightPayload,
+  { db, source }: { db: Database.Database; source: Obj.Any; template: ExtractionTemplate },
+): Effect.Effect<ExtractResult> =>
+  Effect.gen(function* () {
+    // Without flight identity there is nothing useful to persist.
+    if (!payload.number || !payload.departAt) {
+      return { created: [], updated: [], relations: [] };
+    }
+
+    const message = source as Message.Message;
+
+    // Case 1: an existing segment with the same (number, depart-date) pair — update it in place
+    // (e.g. gate/terminal change). Surface its owning Trip in `updated` so the source message
+    // also gets a provenance relation to the Trip.
+    const existingSegment = yield* findExistingFlight(db, payload);
+    if (existingSegment && existingSegment.details._tag === 'flight') {
+      Obj.update(existingSegment, (existingSegment) => {
+        if (existingSegment.details._tag !== 'flight') {
+          return;
+        }
+        if (payload.origin !== undefined) {
+          existingSegment.details.origin = payload.origin;
+        }
+        if (payload.destination !== undefined) {
+          existingSegment.details.destination = payload.destination;
+        }
+        if (payload.arriveAt !== undefined) {
+          existingSegment.details.arriveAt = payload.arriveAt;
+        }
+        if (payload.gateFrom !== undefined) {
+          existingSegment.details.gateFrom = payload.gateFrom;
+        }
+        if (payload.terminalFrom !== undefined) {
+          existingSegment.details.terminalFrom = payload.terminalFrom;
+        }
+        if (payload.seat !== undefined) {
+          existingSegment.details.seat = payload.seat;
+        }
+      });
+      const owningTrip = Obj.getParent(existingSegment);
+      const updated = Trip.instanceOf(owningTrip) ? [owningTrip, existingSegment] : [existingSegment];
+      return { created: [], updated, relations: [] };
+    }
+
+    // The provider (airline) is derived from the sender domain + flight-number prefix and linked
+    // to a matching Organization.
+    const provider = yield* resolveProvider(db, payload, message);
+
+    // Case 2: a new flight that belongs to an existing Trip (same confirmation code / PNR) —
+    // attach a fresh Segment to that Trip (and its existing Booking). Only the Trip (top-level)
+    // gets provenance; the new Segment is parented to it via `Trip.addSegment`.
+    const existingBooking = yield* findExistingBookingByConfirmation(db, payload.confirmationCode);
+    const existingTrip = existingBooking ? Obj.getParent(existingBooking) : undefined;
+    if (existingBooking && Trip.instanceOf(existingTrip)) {
+      const segment = makeSegment(payload, provider, existingBooking);
+      Trip.addSegment(existingTrip, segment);
+      widenTripRange(existingTrip, payload);
+      return { created: [segment], updated: [existingTrip], relations: [] };
+    }
+
+    // Case 3: a brand-new trip — create a Trip + Booking + flight Segment trio.
+    const booking = Booking.make({
+      provider,
+      confirmationCode: payload.confirmationCode,
+      source: 'email',
+      rawPayload: getBodyText(message),
+    });
+
+    const segment = makeSegment(payload, provider, booking);
+
+    const trip = Trip.make({
+      name: tripNameFor(payload),
+      start: payload.departAt,
+      end: payload.arriveAt,
+    });
+    Trip.addSegment(trip, segment);
+    // Anchor the Booking under the Trip so the dispatcher treats it as a child — only top-level
+    // objects (no parent) get a provenance relation back to the message, so the message header
+    // surfaces the Trip itself rather than a chip per sub-artifact.
+    Obj.setParent(booking, trip);
+
+    return { created: [trip, booking, segment], updated: [], relations: [] };
+  });
+
+/** Leading two-letter IATA code of a flight number (e.g. "AF0003" → "AF"). */
+const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
+  flightNumber?.match(/^([A-Za-z]{2})/)?.[1]?.toUpperCase();
+
+/** Title-case a domain's second-level label as a provider-name fallback (airfrance.com → Airfrance). */
+const domainToName = (domain: string): string => {
+  const label = domain.split('.')[0] ?? domain;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+/** Whether an Organization website matches the sender domain (host equality or sub-domain either way). */
+const matchesDomain = (website: string | undefined, domain: string): boolean => {
+  if (!website) {
+    return false;
+  }
+  try {
+    const host = new URL(website.startsWith('http') ? website : `https://${website}`).hostname.toLowerCase();
+    return host === domain || host.endsWith(`.${domain}`) || domain.endsWith(`.${host}`);
+  } catch (err) {
+    log.warn('parsing organization website', { website, err });
+    return false;
+  }
+};
 
 /**
- * Operation handler for the travel extractor — wraps the inline `extract` so the extractor
- * is also a first-class registered operation. Returns ExtractResult without touching the
- * database; the ExtractMessage dispatcher persists.
+ * Builds the flight provider: `domain` from the sender's email, `name` from the airline-prefix
+ * map (sender-domain fallback), and a `ref` to an existing Organization when one matches by
+ * website domain or name.
+ */
+const resolveProvider = (
+  db: Database.Database,
+  payload: FlightPayload,
+  message: Message.Message,
+): Effect.Effect<Provider.Provider, never> =>
+  Effect.gen(function* () {
+    const domain = payload.provider?.domain ?? senderDomain(message);
+    const code = airlineCodeOf(payload.number);
+    const name =
+      payload.provider?.name ??
+      (code && AIRLINES.find((airline) => airline.code === code)?.name) ??
+      (domain ? domainToName(domain) : undefined);
+    if (!domain && !name) {
+      return {};
+    }
+
+    const orgs = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run()).pipe(
+      Effect.catchAllDefect(() => Effect.succeed([] as Organization.Organization[])),
+    );
+    const match = orgs.find(
+      (org) =>
+        (!!domain && matchesDomain(org.website, domain)) || (!!name && org.name?.toLowerCase() === name.toLowerCase()),
+    );
+
+    return {
+      ...(name ? { name } : {}),
+      ...(domain ? { domain } : {}),
+      ...(match ? { ref: Ref.make(match) } : {}),
+    };
+  });
+
+const template: ExtractionTemplate = {
+  id: TEMPLATE_ID,
+  title: 'Trip',
+  description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
+  kinds: ['flight'],
+  sourceTypes: [Type.getTypename(Message.Message)!],
+  prompt: PROMPT,
+  targets: [
+    { type: Type.getTypename(Trip.Trip)! },
+    {
+      type: Type.getTypename(Segment.Segment)!,
+      parent: Type.getTypename(Trip.Trip)!,
+      identity: { fields: ['number', 'departAt'] },
+    },
+    { type: Type.getTypename(Booking.Booking)!, parent: Type.getTypename(Trip.Trip)! },
+  ],
+  tags: [{ label: 'travel', hue: 'sky' }],
+};
+
+/** Template-driven extractor — recognises airline booking confirmations. */
+export const TripMessageExtractor: ObjectExtractor = makeTemplateExtractor({
+  template,
+  operation: TripOperation.ExtractTrip,
+  payloadSchema: FlightPayload,
+  match: matchMessage,
+  getSourceText: (source) => getBodyText(source as Message.Message),
+  assemble,
+});
+
+/**
+ * Operation handler — wraps the extractor so it is also a first-class registered operation. The
+ * trip assembly does not resolve via the `Resolver` (it dedupes segments by a direct db query),
+ * so an empty resolver layer is provided to satisfy the requirement. Returns ExtractResult
+ * without touching the database; the dispatcher persists.
  */
 const handler: Operation.WithHandler<typeof TripOperation.ExtractTrip> = TripOperation.ExtractTrip.pipe(
-  Operation.withHandler(extract),
+  Operation.withHandler((input: ExtractInput) =>
+    TripMessageExtractor.extract(input).pipe(Effect.provide(fromResolvers({}))),
+  ),
 );
 
 export default handler;
-
-/** Heuristic v1 extractor — recognises United-style flight confirmations. */
-export const TripMessageExtractor: MessageExtractor.MessageExtractor = {
-  id: ID,
-  description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
-  kinds: ['flight'],
-  match: matchMessage,
-  operation: TripOperation.ExtractTrip,
-  extract,
-};

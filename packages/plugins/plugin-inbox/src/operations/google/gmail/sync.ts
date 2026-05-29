@@ -327,7 +327,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
 
         const extractorsConfig = mailbox.extractors;
         if (extractorsConfig && extractorsConfig.enabled.length > 0) {
-          const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
+          const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
           const db = Obj.getDatabase(mailbox);
           if (db) {
             for (const message of messages) {
@@ -358,9 +358,8 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
               if (best) {
                 yield* Operation.invoke(InboxOperation.ExtractMessage, {
                   db,
-                  message,
+                  source: message,
                   extractorId: best.extractor.id,
-                  targetTripId: undefined,
                 }).pipe(
                   Effect.catchAll((err) => {
                     log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
