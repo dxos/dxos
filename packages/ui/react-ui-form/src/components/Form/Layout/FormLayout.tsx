@@ -157,10 +157,7 @@ export type ResolvedLayoutField = {
  * Walks a dotted path of property names through nested struct ASTs, returning the
  * leaf `PropertySignature` (or `undefined` if any segment is missing).
  */
-const resolvePropertySignature = (
-  ast: SchemaAST.AST,
-  segments: string[],
-): SchemaAST.PropertySignature | undefined => {
+const resolvePropertySignature = (ast: SchemaAST.AST, segments: string[]): SchemaAST.PropertySignature | undefined => {
   let node: SchemaAST.AST = ast;
   for (let index = 0; index < segments.length; index++) {
     const typeLiteral = findNode(node, SchemaAST.isTypeLiteral);
@@ -189,10 +186,7 @@ const resolvePropertySignature = (
  *   `labelType` so the layout can auto-convert it to a single read-only label.
  * Returns `undefined` when the name does not resolve to a property.
  */
-export const resolveLayoutField = (
-  schema: Schema.Schema<any>,
-  name: string,
-): ResolvedLayoutField | undefined => {
+export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): ResolvedLayoutField | undefined => {
   const segments = name.split('.');
   const prop = resolvePropertySignature(schema.ast, segments);
   if (!prop) {
