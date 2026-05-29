@@ -15,12 +15,12 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
-import { useActions, useLoadDescendents } from '#hooks';
+import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemColumns } from '../NavTreeItem';
+import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
 export type L1PanelProps = {
   open?: boolean;
@@ -214,11 +214,7 @@ const MenuActions = ({
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): L1MenuActions => {
   const runAction = useActionRunner();
 
-  const { actions: actionsProp, groupedActions } = useActions(item);
-
-  const menuActions = actionsProp
-    .flatMap((action) => (Node.isAction(action) ? [action] : (groupedActions[action.id] ?? [])))
-    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
+  const menuActions = getListActions(useActions(item));
 
   const onAction = useCallback(
     (action: Node.Action, params?: Node.InvokeProps) => {

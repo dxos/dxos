@@ -4,10 +4,9 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
-import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useActions } from '#hooks';
+import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree';
@@ -20,15 +19,8 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-  const { actions: actionsProp, groupedActions } = useActions(item);
-
-  const allActions = useMemo(
-    () =>
-      actionsProp
-        .flatMap((action) => (Node.isAction(action) ? [action] : (groupedActions[action.id] ?? [])))
-        .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition)),
-    [actionsProp, groupedActions],
-  );
+  const flattenedActions = useActions(item);
+  const allActions = useMemo(() => getListActions(flattenedActions), [flattenedActions]);
 
   const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
