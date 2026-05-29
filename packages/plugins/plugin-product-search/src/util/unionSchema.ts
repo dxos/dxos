@@ -18,10 +18,20 @@ export type JsonSchemaObject = {
 };
 
 /**
+ * The minimal subset of a JSON Schema that {@link mergeJsonSchemas} reads.
+ * Both plain `JsonSchemaObject` literals and the authoritative
+ * `JsonSchema.JsonSchema` (`JsonSchemaType`) structurally satisfy this, so the
+ * merge accepts provider-supplied schemas without a cast.
+ */
+export type JsonSchemaInput = {
+  readonly properties?: Readonly<Record<string, unknown>>;
+};
+
+/**
  * Merge an array of JSON Schema objects into one by unioning their
  * `properties` maps (first definition wins on key conflict).
  */
-export const mergeJsonSchemas = (schemas: (JsonSchemaObject | undefined)[]): JsonSchemaObject => {
+export const mergeJsonSchemas = (schemas: (JsonSchemaInput | undefined)[]): JsonSchemaObject => {
   const properties: Record<string, unknown> = {};
 
   for (const schema of schemas) {
@@ -48,7 +58,7 @@ export const mergeJsonSchemas = (schemas: (JsonSchemaObject | undefined)[]): Jso
  * boundary that converts the loose provider-supplied plain object into the
  * authoritative `JsonSchemaType`.
  */
-export const buildUnionFormSchema = (schemas: (JsonSchemaObject | undefined)[]): Schema.Schema.AnyNoContext => {
+export const buildUnionFormSchema = (schemas: (JsonSchemaInput | undefined)[]): Schema.Schema.AnyNoContext => {
   const merged = mergeJsonSchemas(schemas);
   const typed = Schema.decodeUnknownSync(JsonSchema.JsonSchema)(merged);
   return JsonSchema.toEffectSchema(typed);

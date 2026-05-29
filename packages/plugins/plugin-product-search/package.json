@@ -53,6 +53,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
