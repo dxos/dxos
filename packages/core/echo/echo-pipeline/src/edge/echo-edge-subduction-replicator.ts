@@ -459,31 +459,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     switch (message.type) {
       case MESSAGE_TYPE_SUBDUCTION_CONNECTION:
         message.targetId = this._subductionServiceId as PeerId;
-        // #region DEBUG
-        {
-          const data = (message as any).data as Uint8Array | undefined;
-          if (data instanceof Uint8Array) {
-            const head = data.slice(0, 8);
-            const headHex = Array.from(head)
-              .map((b) => b.toString(16).padStart(2, '0'))
-              .join(' ');
-            const headAscii = Array.from(head)
-              .map((b) => (b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : '.'))
-              .join('');
-            const isSUH = headAscii.startsWith('SUH');
-            log.info('[DEBUG H2] outbound subduction-frame', {
-              bytes: data.length,
-              headHex,
-              headAscii,
-              isSUH,
-              connectionId: this._connectionId,
-              senderId: (message as any).senderId,
-              remotePeerId: this._remotePeerId,
-              spaceId: this._spaceId,
-            });
-          }
-        }
-        // #endregion DEBUG
         wire = {
           type: MESSAGE_TYPE_SUBDUCTION_FRAME,
           connectionId: this._connectionId,

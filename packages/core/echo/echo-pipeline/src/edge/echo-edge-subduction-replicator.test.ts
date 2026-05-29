@@ -28,8 +28,10 @@ describe('EchoEdgeSubductionReplicator', () => {
     const { context, connectionOpen, openConnections } = createMockContext();
     const replicator = await connectReplicator(client, context);
 
+    // Subscribe before connectToSpace: onConnectionOpen fires synchronously during open().
+    const waitForOpen = connectionOpen.waitForCount(1);
     await replicator.connectToSpace(Context.default(), spaceId);
-    await connectionOpen.waitForCount(1);
+    await waitForOpen;
 
     expect(openConnections.length).toBe(1);
 
@@ -43,8 +45,14 @@ describe('EchoEdgeSubductionReplicator', () => {
 
     const { context, connectionOpen } = createMockContext();
     const replicator = await connectReplicator(client, context);
-    await replicator.connectToSpace(Context.default(), spaceId);
 
+    // Subscribe before connectToSpace so we capture the initial open.
+    const waitForFirstOpen = connectionOpen.waitForCount(1);
+    await replicator.connectToSpace(Context.default(), spaceId);
+    await waitForFirstOpen;
+
+    // setIdentity triggers an async WS reconnect; waitForCount subscribes
+    // synchronously so the subscription is in place before the reconnect fires.
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
 
@@ -76,9 +84,12 @@ describe('EchoEdgeSubductionReplicator', () => {
         documentSpaceId: { [documentId]: spaceId },
       });
       const replicator = await connectReplicator(client, context);
-      await replicator.connectToSpace(Context.default(), spaceId);
 
-      await connectionOpen.waitForCount(1);
+      // Subscribe before connectToSpace so we capture the synchronous open event.
+      const waitForOpen = connectionOpen.waitForCount(1);
+      await replicator.connectToSpace(Context.default(), spaceId);
+      await waitForOpen;
+
       expect(openConnections.length).toBe(1);
       expect(await openConnections[0].shouldAdvertise({ documentId })).toBeTruthy();
     });
@@ -91,9 +102,12 @@ describe('EchoEdgeSubductionReplicator', () => {
       const remoteCollections: { [peerId: string]: { [documentId: string]: boolean } } = {};
       const { context, openConnections, connectionOpen } = createMockContext({ remoteCollections });
       const replicator = await connectReplicator(client, context);
-      await replicator.connectToSpace(Context.default(), spaceId);
 
-      await connectionOpen.waitForCount(1);
+      // Subscribe before connectToSpace so we capture the synchronous open event.
+      const waitForOpen = connectionOpen.waitForCount(1);
+      await replicator.connectToSpace(Context.default(), spaceId);
+      await waitForOpen;
+
       const connection = openConnections[0];
       expect(await connection.shouldAdvertise({ documentId })).toBeFalsy();
       remoteCollections[connection.peerId] = { [documentId]: true };
@@ -116,7 +130,16 @@ describe('EchoEdgeSubductionReplicator', () => {
     const server = await createTestEdgeWsServer(await getRandomPort());
     onTestFinished(server.cleanup);
     const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: server.endpoint });
+    // Capture the initial WS connection before open() resolves so that reconnect
+    // tests can rely on `_connectionGeneration` already being set in handlers.
+    const wsConnected = new Promise<void>((resolve) => {
+      const unsub = client.onReconnected(() => {
+        unsub();
+        resolve();
+      });
+    });
     await openAndClose(client);
+    await wsConnected;
     return { client, server };
   };
 });

@@ -817,36 +817,17 @@ describe('SubductionPolicy', () => {
     //   2. `reconnectAdapters` (full peer-disconnected +
     //      peer-candidate cycle on both sides) also does NOT deliver
     //      the doc within an additional 10s window.
-    //   3. Only a fresh `#save` on the holder AFTER the flip
-    //      reliably retriggers a push that now passes the allowing
-    //      policy.
+    //   3. `reconnectAdapters` retriggers the holder's push, which
+    //      now passes the allowing policy and lands the doc.
     //
-    // Suspected cause: a holder's push that was rejected by the
-    // receiver's `authorizePut` does not transition the holder's
-    // sync-entry into a state the bridge's recovery hooks address
-    // (heal-retry alone would eventually fire, but on a slow
-    // exponential backoff). The reconnect path also doesn't recover
-    // because — per the SKILL doc's documented fork gap —
-    // `lastSyncResult === 'all-failed'` is not retried on
-    // connection-generation bumps. A new `#save` enqueues a fresh
-    // outbound batch from scratch, sidestepping the stuck entry.
-    //
-    // Expected: kick via `shareConfigChanged()` does NOT recover;
-    // `reconnectAdapters` does NOT recover; a new local commit on the
-    // holder DOES recover.
-    //
-    // Implication: 🚨 production code that flips a client-side
-    // `authorizePut` gate from deny → allow (e.g. when a new space is
-    // authorized) must drive a fresh push from the holder side. The
-    // SKILL-doc-recommended `shareConfigChanged()` escape hatch alone
-    // is insufficient for `authorizePut` flips. This is a real bridge
-    // limitation worth filing upstream.
-    //
-    // TODO(mykola): If/when the upstream bridge starts treating
-    // post-`authorizePut`-denial entries as recoverable via
-    // `shareConfigChanged()`, simplify this test to mirror the
-    // existing `authorizeFetch` flip test.
-    test('authorizePut deny → allow needs a fresh holder commit to recover', { timeout: 20_000 }, async () => {
+    // In the patched bridge (subduction.23), `lastSyncResult ===
+    // 'all-failed'` IS retried on connection-generation bumps, so a
+    // reconnect after the policy flip recovers the doc without needing
+    // a fresh local commit. `shareConfigChanged()` alone (without a
+    // reconnect) is still insufficient — it resets the heal state but
+    // does not bump the connection generation, so the entry sits until
+    // the heal-retry backoff fires.
+    test('authorizePut deny → allow recovers on reconnect', { timeout: 20_000 }, async () => {
       let allowPut = false;
       const { repos, adapters } = await createHostClientRepoTopology({
         subductionPolicies: {
@@ -870,26 +851,21 @@ describe('SubductionPolicy', () => {
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
-      // Step 1: flip + shareConfigChanged + reconnect, both
-      // documented escape hatches. Empirically neither lands the doc.
+      // Flipping the policy + shareConfigChanged alone does not recover
+      // within a tight window (no connection-generation bump → entry sits
+      // on the heal-retry backoff).
       allowPut = true;
       host.shareConfigChanged();
       client.shareConfigChanged();
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
+      // Reconnect bumps the connection generation, which retriggers the
+      // holder's push. Policy now allows → doc lands on the client.
       await reconnectAdapters(adapters);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-
-      // Step 2: drive a new commit on the holder. The fresh `#save`
-      // sidesteps the stuck post-denial entry and pushes successfully.
-      handle.change((doc: any) => {
-        doc.text = 'after-flip';
-      });
       await expect
         .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
-        .toEqual('after-flip');
+        .toEqual('gated-put');
     });
 
     // Hypothesis: without `shareConfigChanged()`, recovery is left to
