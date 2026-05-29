@@ -59,7 +59,7 @@ export namespace QueryPlan {
     /**
      * Where to select from.
      */
-    scope: QueryAST.Scope;
+    scope: readonly QueryAST.Scope[];
 
     /**
      * Optional limit on the number of results to select.

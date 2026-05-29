@@ -34,12 +34,7 @@ describe('reconcileBoardCards (pull)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -328,12 +323,7 @@ describe('pushBoardCards (push)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -485,7 +475,7 @@ describe('findOrCreateKanbanForBoard', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
+    graph.registry.add([Kanban.Kanban, Expando.Expando]);
     return { db };
   };
 

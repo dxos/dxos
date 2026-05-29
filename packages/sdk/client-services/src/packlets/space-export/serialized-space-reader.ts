@@ -102,6 +102,11 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     meta: {
       keys: meta?.keys ?? [],
       ...(meta?.tags ? { tags: meta.tags } : {}),
+      // Preserve registry-provenance fields so persisted `Type.Type` entities
+      // round-trip with their typename / semver (see the symmetric write in
+      // `objectStructureToObjJson`).
+      ...(meta?.key !== undefined ? { key: meta.key } : {}),
+      ...(meta?.version !== undefined ? { version: meta.version } : {}),
     },
     data,
   };

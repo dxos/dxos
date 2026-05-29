@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { Filter, type Obj, Type } from '@dxos/echo';
+import { Filter, type Obj, Query, Scope, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
 import { DXN, EchoURI, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -80,16 +80,18 @@ export class SpacesDumper {
    */
   static checkIfSpacesMatchExpectedDataUsingQuery = async (client: Client, expected: SpacesDump): Promise<boolean> => {
     for (const space of client.spaces.get()) {
-      const schemas = await space.db.schemaRegistry.query({ location: ['database', 'runtime'] }).run();
-      for (const schema of schemas) {
-        const objects = await space.db.query(Filter.type(schema)).run();
-        const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, schema);
+      const types = await space.db
+        .query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
+        .run();
+      for (const type of types) {
+        const objects = await space.db.query(Filter.type(type)).run();
+        const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, type);
         const actualIds = objects.map((obj) => obj.id).sort();
         const expectedIds = expectedObjects.map((obj) => obj.id).sort();
         if (!isEqual(actualIds, expectedIds)) {
           log.warn('object ids mismatch', {
             spaceId: space.id,
-            schema: Type.getURI(schema)?.toString(),
+            schema: Type.getURI(type)?.toString(),
             actualIds,
             expectedIds,
           });

@@ -349,7 +349,7 @@ describe('CoreDatabase', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Person]);
+      graph.registry.add([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
       await db.coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.make('com.example.type.task', '0.1.0'),

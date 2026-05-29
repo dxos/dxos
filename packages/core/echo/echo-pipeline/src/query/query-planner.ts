@@ -106,7 +106,7 @@ export class QueryPlanner {
 
   private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
     if (query.from._tag === 'scope') {
-      return this._generate(query.query, { ...context, scope: query.from.scope });
+      return this._generate(query.query, { ...context, scope: query.from.scopes });
     }
 
     // Subquery from: flatten by rewriting the outer query's leaf select into a filter on the subquery.
@@ -873,7 +873,7 @@ type GenerationContext = {
   /**
    * The scope to select from (space IDs, queues, etc.).
    */
-  scope: QueryAST.Scope;
+  scope: readonly QueryAST.Scope[];
 
   /**
    * How to handle deleted objects.
@@ -888,7 +888,7 @@ type GenerationContext = {
 
 const DEFAULT_CONTEXT: GenerationContext = {
   originalQuery: null,
-  scope: {},
+  scope: [],
   deletedHandling: 'exclude',
   selectionInverted: false,
 };
@@ -956,18 +956,18 @@ const _timestampFilterToSelector = (filter: QueryAST.FilterTimestamp): QueryPlan
 
 const _mergeTimestampSelectors = (selectors: QueryPlan.TimestampSelector[]): QueryPlan.TimestampSelector => {
   const merged: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
-  for (const s of selectors) {
-    if (s.updatedAfter != null) {
-      merged.updatedAfter = Math.max(merged.updatedAfter ?? 0, s.updatedAfter);
+  for (const selector of selectors) {
+    if (selector.updatedAfter != null) {
+      merged.updatedAfter = Math.max(merged.updatedAfter ?? 0, selector.updatedAfter);
     }
-    if (s.updatedBefore != null) {
-      merged.updatedBefore = Math.min(merged.updatedBefore ?? Infinity, s.updatedBefore);
+    if (selector.updatedBefore != null) {
+      merged.updatedBefore = Math.min(merged.updatedBefore ?? Infinity, selector.updatedBefore);
     }
-    if (s.createdAfter != null) {
-      merged.createdAfter = Math.max(merged.createdAfter ?? 0, s.createdAfter);
+    if (selector.createdAfter != null) {
+      merged.createdAfter = Math.max(merged.createdAfter ?? 0, selector.createdAfter);
     }
-    if (s.createdBefore != null) {
-      merged.createdBefore = Math.min(merged.createdBefore ?? Infinity, s.createdBefore);
+    if (selector.createdBefore != null) {
+      merged.createdBefore = Math.min(merged.createdBefore ?? Infinity, selector.createdBefore);
     }
   }
   return merged;

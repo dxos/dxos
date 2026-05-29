@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag, type Type } from '@dxos/echo';
+import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -55,7 +55,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       return;
     }
 
-    const foundType = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
+    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
     if (foundType && foundType !== type) {
       setType(() => foundType);
     }
@@ -76,11 +76,15 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       }
 
       const queue = target;
-      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
+      const query = queue
+        ? Query.fromAst(newQuery).from([
+            Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`),
+          ])
+        : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newType = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
+      const newType = await resolveSchemaWithRegistry(db, query.ast);
       if (!newType) {
         return;
       }
@@ -211,7 +215,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                           readonly
                           type={type}
                           view={column.view.target}
-                          registry={db?.schemaRegistry}
+                          registry={db?.graph.registry}
                           db={db}
                           tags={tags}
                           types={types}

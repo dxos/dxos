@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   ReferenceAnnotationId,
@@ -46,20 +46,19 @@ export type RelatedSchema = {
  * @returns
  */
 export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
-  // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = await db.graph.schemaRegistry.query().run();
+  const allSchemas = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas
-    .filter((type) => {
-      const schema = Type.getSchema(type);
-      if (getTypeAnnotation(schema)?.kind !== Entity.Kind.Relation) {
+    .filter((schema) => {
+      const annotation = getTypeAnnotation(Type.getSchema(schema));
+      if (annotation?.kind !== Entity.Kind.Relation) {
         return false;
       }
 
       return (
-        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
-        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.targetSchema!)
+        isSchemaAddressableByDXN(anchor, annotation.sourceSchema!) ||
+        isSchemaAddressableByDXN(anchor, annotation.targetSchema!)
       );
     })
     .map(

@@ -30,17 +30,18 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const runtimeTypenames =
     includeRuntime && db
-      ? db.schemaRegistry
-          .query({ location: ['runtime'] })
-          .runSync()
-          .filter((type) => {
-            const schema = Type.getSchema(type);
-            const relation = getTypeAnnotation(schema)?.kind === EntityKind.Relation;
+      ? db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .filter((t) => !Type.isTypeKind(t))
+          .filter((schema) => {
+            const effectSchema = Type.getSchema(schema);
+            const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
             if (relation) {
               return includeSystemType;
             }
 
-            const system = SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
+            const system = SystemTypeAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
             if (system) {
               return includeSystemType;
             }
@@ -52,9 +53,10 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const databaseTypenames =
     includeDatabase && db
-      ? db.schemaRegistry
-          .query({ location: ['database'] })
-          .runSync()
+      ? db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .filter((t) => Type.isTypeKind(t))
           .map((schema) => Type.getTypename(schema))
       : [];
 

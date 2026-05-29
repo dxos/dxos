@@ -19,15 +19,9 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
-          .filter((type) => {
-            const schema = Type.getSchema(type);
-            return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
-          })
-          .filter((type) => {
-            const schema = Type.getSchema(type);
-            return !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
-          })
+        ...(db ? db.graph.registry.list().filter(Type.isType) : [])
+          .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+          .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),
       ),
     [db],

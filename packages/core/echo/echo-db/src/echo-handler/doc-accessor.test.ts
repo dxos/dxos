@@ -16,7 +16,7 @@ describe('diff', () => {
   it('should replace a word', async ({ expect }) => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema.Task]);
+    graph.registry.add([TestSchema.Task]);
 
     const obj = db.add(Obj.make(TestSchema.Task, { description: 'This is a document.' }));
     const accessor = createDocAccessor(obj, ['description']);

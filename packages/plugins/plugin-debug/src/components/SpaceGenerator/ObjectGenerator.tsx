@@ -4,8 +4,7 @@
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { Filter, Key, Type, View } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EchoURI, Filter, Key, Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
@@ -37,7 +36,12 @@ export const createGenerator = <S extends Type.AnyObj>(
     // Find or create table and view.
     const views = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
-    const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
+    const staticSchema = client
+      ? client.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((s) => Type.getTypename(s) === typename)
+      : undefined;
     if (!view && !staticSchema) {
       await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
     }

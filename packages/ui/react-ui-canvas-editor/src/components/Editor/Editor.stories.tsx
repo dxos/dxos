@@ -117,16 +117,18 @@ const meta = {
           const resolveType = (t: any) => (typeof t === 'function' ? t() : t);
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
-            const registeredSchema = await space.db.schemaRegistry.register([
-              ...new Set(spec.map((schema: any) => resolveType(schema.type))),
-            ] as Type.AnyEntity[]);
+            const registeredTypes = await Promise.all(
+              [...new Set(spec.map((schema: any) => resolveType(schema.type)))].map((type) =>
+                space.db.addType(type as Type.AnyEntity),
+              ),
+            );
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type))),
+              type: registeredTypes.find((s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type))),
             }));
           } else {
-            await space.db.graph.schemaRegistry.register(types);
+            space.db.graph.registry.add(types);
           }
 
           const createObjects = createObjectFactory(space.db, generator);

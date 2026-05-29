@@ -12,7 +12,6 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import type * as Collection from './Collection';
 import * as Database from './Database';
 import type * as Dataset from './Dataset';
-import type * as Entity from './Entity';
 import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
@@ -202,9 +201,20 @@ export interface Query<T> {
   'from'(query: Any): Query<T>;
 
   /**
-   * Query from a raw scope specification.
+   * Query from one or more raw scopes.
+   *
+   * Use the {@link Scope} constructors rather than raw tagged objects:
+   *
+   * ```ts
+   * Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
+   * ```
    */
-  'from'(scope: QueryAST.Scope): Query<T>;
+  'from'(...scopes: QueryAST.Scope[]): Query<T>;
+
+  /**
+   * Query from a raw scope or array of scopes.
+   */
+  'from'(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
 
   /**
    * Add options to a query.
@@ -329,18 +339,48 @@ class QueryClass implements Any {
   }
 
   from(
-    arg:
-      | Database.Database
-      | Database.Database[]
-      | Feed.Feed
-      | Feed.Feed[]
-      | Collection.Collection
-      | View.View
-      | Any
-      | QueryAST.Scope
-      | 'all-accessible-spaces',
-    options?: { includeFeeds?: boolean },
+    ...args:
+      | [
+          (
+            | Database.Database
+            | Database.Database[]
+            | Feed.Feed
+            | Feed.Feed[]
+            | Collection.Collection
+            | View.View
+            | Any
+            | QueryAST.Scope
+            | QueryAST.Scope[]
+            | 'all-accessible-spaces'
+          ),
+          { includeFeeds?: boolean }?,
+        ]
+      | QueryAST.Scope[]
   ): Any {
+    // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
+    if (args.length > 1 && args.every(_isRawScope)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: args as QueryAST.Scope[] },
+      });
+    }
+
+    const [arg, options] = args as [
+      (
+        | Database.Database
+        | Database.Database[]
+        | Feed.Feed
+        | Feed.Feed[]
+        | Collection.Collection
+        | View.View
+        | Any
+        | QueryAST.Scope
+        | QueryAST.Scope[]
+        | 'all-accessible-spaces'
+      ),
+      { includeFeeds?: boolean }?,
+    ];
     if (arg == null) {
       throw new TypeError(
         'Query.from() requires a valid data source argument (database, feed, query, scope, or "all-accessible-spaces").',
@@ -359,20 +399,23 @@ class QueryClass implements Any {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
-        },
+        from: { _tag: 'scope', scopes: [] },
       });
     }
 
-    if (_isScope(arg)) {
+    // Raw scope(s): tagged union objects with _tag 'space' | 'feed' | 'registry'.
+    if (Array.isArray(arg) && arg.every(_isRawScope)) {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: { _tag: 'scope', scope: arg },
+        from: { _tag: 'scope', scopes: arg as QueryAST.Scope[] },
+      });
+    }
+    if (_isRawScope(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: [arg] },
       });
     }
 
@@ -385,10 +428,11 @@ class QueryClass implements Any {
         query: this.ast,
         from: {
           _tag: 'scope',
-          scope: {
-            spaceIds: databases.map((db) => db.spaceId),
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
+          scopes: databases.map((db) => ({
+            _tag: 'space' as const,
+            spaceId: db.spaceId,
+            ...(options?.includeFeeds ? { includeAllFeeds: true } : {}),
+          })),
         },
       });
     }
@@ -414,24 +458,19 @@ class QueryClass implements Any {
     }
 
     const feedItems = items as Feed.Feed[];
-    const feedUris = feedItems.map((feed) => {
+    const feedScopes = feedItems.map((feed) => {
       const uri = Feed.getQueueUri(feed);
       if (!uri) {
         throw new TypeError(
           `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
-      return uri;
+      return { _tag: 'feed' as const, feedUri: String(uri) };
     });
     return new QueryClass({
       type: 'from',
       query: this.ast,
-      from: {
-        _tag: 'scope',
-        scope: {
-          feeds: feedUris,
-        },
-      },
+      from: { _tag: 'scope', scopes: feedScopes },
     });
   }
 
@@ -488,16 +527,8 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  *
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
-/**
- * Instance type for a query over `type`. Falls back to `Entity.Unknown` when the
- * type can't be narrowed — e.g. the caller passes the wide `Type.AnyEntity` — so
- * results aren't typed as the useless bare `OfKind<...>` union that
- * `Type.InstanceType<Type.AnyEntity>` produces.
- */
-type QueryInstance<T extends Type$.AnyEntity> = Type$.AnyEntity extends T ? Entity.Unknown : Type$.InstanceType<T>;
-
 export const type: {
-  <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<QueryInstance<T>>): Query<QueryInstance<T>>;
+  <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<Type$.InstanceType<T>>): Query<Type$.InstanceType<T>>;
   // Brand-narrowed schema overload — only well-known unknown schemas pass.
   <S extends internal.UnknownTypeSchema<any, any>>(
     schema: S,
@@ -555,32 +586,42 @@ export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
  * @returns Query scoped to the given source.
  */
 export const from = (
-  source:
-    | Database.Database
-    | Database.Database[]
-    | Feed.Feed
-    | Feed.Feed[]
-    | Any
-    | QueryAST.Scope
-    | 'all-accessible-spaces',
-  options?: { includeFeeds?: boolean },
+  ...args:
+    | [
+        (
+          | Database.Database
+          | Database.Database[]
+          | Feed.Feed
+          | Feed.Feed[]
+          | Any
+          | QueryAST.Scope
+          | QueryAST.Scope[]
+          | 'all-accessible-spaces'
+        ),
+        { includeFeeds?: boolean }?,
+      ]
+    | QueryAST.Scope[]
 ): Any => {
   const baseQuery: QueryAST.Query = {
     type: 'select',
     filter: Filter.everything().ast,
   };
   const wrapper = new QueryClass(baseQuery);
-  return wrapper.from(source as any, options);
+  return (wrapper.from as (...args: unknown[]) => Any)(...args);
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
+const SCOPE_TAGS = new Set<string>(['space', 'feed', 'registry']);
 
-/** Detect a raw Scope object (plain object with only Scope-valid keys). */
-const _isScope = (value: unknown): value is QueryAST.Scope => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
+/** Detect a raw Scope tagged-union object. */
+const _isRawScope = (value: unknown): value is QueryAST.Scope => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    '_tag' in value &&
+    typeof value._tag === 'string' &&
+    SCOPE_TAGS.has(value._tag)
+  );
 };
 
 /**

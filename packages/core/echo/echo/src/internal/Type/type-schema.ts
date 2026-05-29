@@ -39,7 +39,7 @@ export const TypeSchema = TypeSchemaStruct.pipe(
 
 /**
  * Persistent representation of a schema — the runtime shape that
- * `db.add(Type.makeObjectFromJsonSchema(...))` / `db.schemaRegistry.register([...])` produces
+ * `db.addType(Type.makeObjectFromJsonSchema(...))` produces
  * and `Filter.type(Type.Type).run()` returns.
  *
  * Structurally identical to a static `Type.Type` entity: the entity-handler's
