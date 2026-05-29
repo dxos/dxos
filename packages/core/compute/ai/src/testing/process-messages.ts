@@ -77,6 +77,7 @@ export const agenticLoop: {
 
     log.info('toolCalls', { toolCalls });
     const toolResults = yield* callTools(toolkit, toolCalls);
+    log.info('toolResults', { toolResults });
     history.push(
       Obj.make(Message.Message, {
         created: new Date().toISOString(),

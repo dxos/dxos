@@ -61,14 +61,14 @@ class TestImageToolkit extends Toolkit.make(
 const TestLayer = Layer.mergeAll(
   TestPdfToolkit.layer,
   TestImageToolkit.layer,
-  AiService.model('@anthropic/claude-sonnet-4-5').pipe(
+  AiService.model('@anthropic/claude-opus-4-6').pipe(
     Layer.provideMerge(AiServiceTestingPreset('direct')),
   ),
 );
 
 
-describe('ContentBlockToolResult', () => {
-  it.effect.only('return image from tool result', Effect.fn(
+describe('ContentBlockToolResult', { tags: ['llm'] }, () => {
+  it.effect('return image from tool result', Effect.fn(
     function* ({ expect }) {
       const messages = yield* agenticLoop({
         messages: [

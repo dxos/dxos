@@ -11,6 +11,7 @@ import * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
+import { Exit } from 'effect';
 
 // TODO(burdon): Not Used?
 export const callTools: <Tools extends Record<string, Tool.Any>>(
@@ -37,15 +38,19 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     log('toolCall', { toolCall: toolCall.name, input });
     const toolResult = yield* toolkit.handle(toolCall.name as any, input as any).pipe(
       Effect.map(
-        ({ result }) =>
-          ({
+        ({ result }) => {
+          if (Exit.isExit(result)) {
+            log.warn('bugcheck: tool result is an exit', { name: toolCall.name, result: JSON.stringify(result), });
+          }
+          return {
             _tag: 'toolResult',
             toolCallId: toolCall.toolCallId,
             name: toolCall.name,
             // TODO(dmaretskyi): Should we use encodedResult?
             result: ContentBlock.isContentBlockResult(result) ? result : JSON.stringify(result),
             providerExecuted: false,
-          }) satisfies ContentBlock.ToolResult,
+          } satisfies ContentBlock.ToolResult;
+        }
       ),
       Effect.catchAllCause((cause) =>
         Effect.sync(() => {
