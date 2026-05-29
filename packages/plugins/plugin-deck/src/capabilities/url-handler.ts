@@ -131,15 +131,11 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
-    // Install the sentinel (the floor entry beneath the app's working entries) before
-    // handleNavigation()/state-sync push entries on top of it. See `installLeaveTrap` below.
+    // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
 
-    // Confirm before a Back-press leaves Composer. The platform makes a traversal uncancelable
-    // shortly after a preventDefault (and we can't block it then), so rather than cancelling the
-    // traversal we let a Back land on the sentinel and decide here: Leave -> step back to the prior
-    // page; Stay -> step forward to the entry the user came from. The blocking confirm also stops
-    // rapid repeated Backs from looping. Guarded so our own back()/forward() don't re-enter.
+    // Landing on the sentinel means a Back is about to leave Composer; confirm and act on it.
+    // The guard stops our own back()/forward() from re-entering.
     let handlingSentinel = false;
     const onCurrentEntryChange = () => {
       const current = window.navigation.currentEntry;
@@ -149,9 +145,9 @@ export default Capability.makeModule(
       handlingSentinel = true;
       queueMicrotask(() => {
         if (window.confirm('Leave Composer?')) {
-          history.back(); // Sentinel -> prior page (leave Composer).
+          history.back(); // Past the sentinel to the prior page.
         } else {
-          history.forward(); // Back to the entry the user came from (stay).
+          history.forward(); // Back to where the user was.
         }
         setTimeout(() => {
           handlingSentinel = false;
