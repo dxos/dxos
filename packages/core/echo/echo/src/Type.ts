@@ -404,9 +404,21 @@ export const getTypename = (input: AnyEntity): string => {
   // Both in-memory and in-database entities carry typename in `ObjectMeta.key`
   // — the canonical registry-provenance field. In-memory entities attach meta
   // eagerly (see `makeEchoTypeSchema`), so a single meta-backed read covers
-  // both forms. Unnamed drafts fall back to the entity id.
+  // both forms.
   const meta = internal.getMetaChecked(input);
-  let typename: string = (meta.key as string | undefined) ?? (input.id as string);
+  let typename: string | undefined = meta.key as string | undefined;
+  // `meta.key` is a denormalized copy of the typename. The authoritative source
+  // for a type entity is its `jsonSchema.typename` (`getSchema` rebuilds the
+  // Effect Schema from `jsonSchema`). A type loaded from a snapshot can arrive
+  // with `meta.key` absent (the meta round-trip dropped the denormalized copy)
+  // while `jsonSchema.typename` is always present — consult it before the
+  // last-resort id fallback so callers never receive a bare object id where a
+  // typename is expected (e.g. `Filter.typename`, which rejects non-typenames).
+  if (typename == null) {
+    typename = input.jsonSchema?.typename;
+  }
+  // Unnamed drafts (no meta.key, no jsonSchema typename) fall back to the id.
+  typename ??= input.id as string;
   // Typename is a bare identifier — strip URI prefixes if a caller seeded
   // meta.key with one accidentally (or if a static entity carries a DXN-
   // style typename).
@@ -429,7 +441,11 @@ export const getTypename = (input: AnyEntity): string => {
  */
 export const getVersion = (input: AnyEntity): string => {
   const meta = internal.getMetaChecked(input);
-  const semver = (meta.version as string | undefined) ?? DRAFT_VERSION;
+  // As with `getTypename`: `meta.version` is a denormalized copy; the
+  // authoritative semver lives in `jsonSchema.version`. Prefer meta, fall back
+  // to jsonSchema (always present on persisted types, survives serialization),
+  // then to `DRAFT_VERSION` for unversioned drafts.
+  const semver = (meta.version as string | undefined) ?? input.jsonSchema?.version ?? DRAFT_VERSION;
   invariant(typeof semver === 'string' && semver.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   // In-database entities are versioned by their automerge heads; expose them as
   // the semver pre-release tag. In-memory drafts carry no heads → bare semver.

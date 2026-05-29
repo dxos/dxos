@@ -244,6 +244,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (this._registeredPersistentSchemaIds.has(schema.id)) {
       return;
     }
+    // The registry only ever holds Type entities (kind=type); the `types` graph connector and
+    // `findTypeByDXN` rely on every registry entry being a Type so `Type.getSchema()` is safe.
+    // A persisted object that matches `Filter.type(TypeSchema)` by its `@type` but materializes
+    // as kind=object (e.g. a schema stored in a pre-Type-entity format) must never enter the
+    // registry — fail loudly at this ingestion boundary rather than deep inside a UI connector.
+    invariant(
+      Type.isType(schema),
+      'persisted schema must materialize as a Type entity (kind=type); data may be in a legacy format',
+    );
     this._registeredPersistentSchemaIds.add(schema.id);
     // Register the TypeSchema entity directly — no EchoSchema wrapper needed.
     // Re-adding on core updates signals registry.changed without a dedicated touch() method.

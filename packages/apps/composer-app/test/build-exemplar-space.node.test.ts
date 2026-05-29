@@ -212,12 +212,13 @@ describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
+  const collectionTypename = Type.getTypename(Collection.Collection);
   Obj.update(space.properties, (properties) => {
-    if (!properties[Collection.Collection.typename]) {
-      properties[Collection.Collection.typename] = Ref.make(Collection.make());
+    if (!properties[collectionTypename]) {
+      properties[collectionTypename] = Ref.make(Collection.make());
     }
   });
-  const rootCollection = space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined;
+  const rootCollection = space.properties[collectionTypename]?.target as Collection.Collection | undefined;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');
   }
@@ -495,7 +496,7 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
-  const query = Query.select(Filter.typename(Organization.Organization.typename));
+  const query = Query.select(Filter.typename(Type.getTypename(Organization.Organization)));
 
   // Each view object holds its own View.View so they can be customised independently
   // (e.g. Kanban's pivot field). We share the query/jsonSchema across them.
