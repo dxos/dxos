@@ -5,9 +5,9 @@
 import type * as AiError from '@effect/ai/AiError';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
-import * as Exit from 'effect/Exit';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';

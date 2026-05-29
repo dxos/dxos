@@ -768,16 +768,16 @@ const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) =
           index !== prompt.content.length - 1
             ? message
             : {
-              ...message,
-              options: {
-                anthropic: {
-                  cacheControl: {
-                    ttl: '5m',
-                    type: 'ephemeral',
+                ...message,
+                options: {
+                  anthropic: {
+                    cacheControl: {
+                      ttl: '5m',
+                      type: 'ephemeral',
+                    },
                   },
                 },
               },
-            },
         ),
       );
     } else {

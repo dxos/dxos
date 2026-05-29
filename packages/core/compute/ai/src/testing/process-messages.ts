@@ -3,9 +3,9 @@
 //
 
 import * as AiError from '@effect/ai/AiError';
-import * as Tool from '@effect/ai/Tool';
 import type * as Chat from '@effect/ai/Chat';
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';

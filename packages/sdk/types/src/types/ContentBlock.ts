@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 import { Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
-
 export const Base = Schema.Struct({
   /**
    * In streaming mode, this is set to `true` when the block is not complete.

@@ -27,6 +27,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
+import * as AiService from '../AiService';
 import {
   AiServiceTestingPreset,
   CalculatorLayer,
@@ -35,7 +36,6 @@ import {
   hasToolCall,
   testingLayer,
 } from './index';
-import * as AiService from '../AiService';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
