@@ -15,14 +15,14 @@ import { Process } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as AgentService from './AgentService';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 //
 // Test data.

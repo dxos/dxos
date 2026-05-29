@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ObjectMeta } from '@dxos/echo-protocol';
+import { type EntityMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
 import { Ref } from '../../Ref';
@@ -61,12 +61,12 @@ export const typedJsonSerializer = function (this: any) {
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
-    invariant(EchoURI.isEchoURI(sourceDXN));
+    invariant(EID.isEID(sourceDXN));
     result[ATTR_RELATION_SOURCE] = sourceDXN;
   }
   if (this[RelationTargetDXNId]) {
     const targetDXN = this[RelationTargetDXNId];
-    invariant(EchoURI.isEchoURI(targetDXN));
+    invariant(EID.isEID(targetDXN));
     result[ATTR_RELATION_TARGET] = targetDXN;
   }
 
@@ -88,6 +88,6 @@ const serializeData = (data: unknown) => {
   });
 };
 
-const serializeMeta = (meta: ObjectMeta) => {
+const serializeMeta = (meta: EntityMeta) => {
   return deepMapValues(meta, (value, recurse) => recurse(value));
 };

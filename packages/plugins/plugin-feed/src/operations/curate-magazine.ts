@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { FeedOperation } from '../types';
 import { type Magazine, Subscription } from '../types';
 import {
-  dxnToObjectId,
+  dxnToEntityId,
   extractImageUrls,
   getSubscriptionPostState,
   makeSnippet,
@@ -39,7 +39,7 @@ import {
  * previously-curated items the user may want to keep.
  */
 export const curateMagazine = async (space: Space, magazine: Magazine.Magazine): Promise<{ added: number }> => {
-  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.uri)));
+  const seenIds = new Set(magazine.posts.map((ref) => dxnToEntityId(ref.uri)));
   const added: {
     ref: Ref.Ref<Subscription.Post>;
     id: string;
@@ -99,7 +99,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   if (added.length > 0) {
     Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
-      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.uri)));
+      const existing = new Set(mutable.posts.map((ref) => dxnToEntityId(ref.uri)));
       const fresh = added.filter((entry) => !existing.has(entry.id));
       if (fresh.length === 0) {
         appended = 0;

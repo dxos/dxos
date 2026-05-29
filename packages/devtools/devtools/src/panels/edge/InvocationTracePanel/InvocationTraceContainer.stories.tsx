@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { type InvocationSpan, InvocationOutcome } from '@dxos/functions-runtime';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -24,7 +24,7 @@ const createMockSpans = (count: number): InvocationSpan[] => {
     const isPending = index % 13 === 0;
 
     return {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       timestamp,
       duration,
       outcome: isPending ? InvocationOutcome.PENDING : isFailed ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,

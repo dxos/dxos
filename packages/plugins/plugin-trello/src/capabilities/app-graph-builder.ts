@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -47,7 +47,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === kanban.id,
+              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === kanban.id,
             ),
           );
           if (!integration) {

@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { EID, EntityId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -24,7 +24,7 @@ import {
   type MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
-  type ObjectMeta,
+  type EntityMeta,
   ObjectVersionId,
   type ParentId,
   RelationSourceDXNId,
@@ -53,18 +53,18 @@ export {
  */
 // NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
-  readonly id: ObjectId;
-  readonly [SelfURIId]: EchoURI.EchoURI;
+  readonly id: EntityId;
+  readonly [SelfURIId]: EID.EID;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
   readonly [TypeId]: URI.URI;
-  readonly [MetaId]?: ObjectMeta;
+  readonly [MetaId]?: EntityMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
-  readonly [RelationSourceDXNId]?: EchoURI.EchoURI;
-  readonly [RelationTargetDXNId]?: EchoURI.EchoURI;
+  readonly [RelationSourceDXNId]?: EID.EID;
+  readonly [RelationTargetDXNId]?: EID.EID;
   readonly [RelationSourceId]?: InternalObjectProps;
   readonly [RelationTargetId]?: InternalObjectProps;
 }
@@ -72,7 +72,7 @@ export interface InternalObjectProps {
 /**
  * Entity metadata.
  */
-export interface ObjectMetaJSON {
+export interface EntityMetaJSON {
   keys: ForeignKey[];
   tags?: string[];
   key?: string;
@@ -83,14 +83,14 @@ export interface ObjectMetaJSON {
  * JSON representation of an object or relation metadata.
  */
 export interface ObjectJSON {
-  id: ObjectId;
+  id: EntityId;
   [ATTR_TYPE]?: URI.URI;
-  [ATTR_SELF_URI]?: EchoURI.EchoURI;
-  [ATTR_PARENT]?: EchoURI.EchoURI; // Encoded reference
+  [ATTR_SELF_URI]?: EID.EID;
+  [ATTR_PARENT]?: EID.EID; // Encoded reference
   [ATTR_DELETED]?: boolean;
-  [ATTR_META]?: ObjectMetaJSON;
-  [ATTR_RELATION_SOURCE]?: EchoURI.EchoURI;
-  [ATTR_RELATION_TARGET]?: EchoURI.EchoURI;
+  [ATTR_META]?: EntityMetaJSON;
+  [ATTR_RELATION_SOURCE]?: EID.EID;
+  [ATTR_RELATION_TARGET]?: EID.EID;
 
   /**
    * Application-specific properties.
@@ -104,7 +104,7 @@ export interface ObjectJSON {
 export function assertObjectModel(obj: unknown): asserts obj is InternalObjectProps {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
-  invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
+  invariant(EntityId.isValid(obj.id), 'Invalid object model: invalid id');
   invariant(obj[TypeId] === undefined || typeof obj[TypeId] === 'string', 'Invalid object model: invalid type');
   invariant(
     obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation || obj[KindId] === EntityKind.Type,
@@ -112,9 +112,9 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   );
 
   if (obj[KindId] === EntityKind.Relation) {
-    invariant(EchoURI.isEchoURI(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
-    invariant(EchoURI.isEchoURI(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
-    invariant(!EchoURI.isEchoURI(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
-    invariant(!EchoURI.isEchoURI(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
+    invariant(EID.isEID(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
+    invariant(EID.isEID(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
+    invariant(!EID.isEID(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
+    invariant(!EID.isEID(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
   }
 }

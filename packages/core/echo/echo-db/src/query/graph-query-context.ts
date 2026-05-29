@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { type Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { QueryAST } from '@dxos/echo-protocol';
-import { type ObjectId } from '@dxos/keys';
+import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
@@ -233,7 +233,7 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
+        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),

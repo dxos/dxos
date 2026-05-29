@@ -122,14 +122,14 @@ describe('EchoSchema', () => {
     expect(queried[0].id).to.eq(object.id);
   });
 
-  test('getSchemaURI returns the schema-as-object EchoURI for stored schemas', async ({ expect }) => {
+  test('getSchemaURI returns the schema-as-object EID for stored schemas', async ({ expect }) => {
     const { db } = await setupTest();
     const schema = await db.addType(TestEmpty);
     const uri = Type.getURI(schema)!;
-    // Stored schemas resolve to their schema-as-object EchoURI (echo:/<id>) so the
+    // Stored schemas resolve to their schema-as-object EID (echo:/<id>) so the
     // schema rides along with loaded objects as a strong dependency.
     expect(uri).to.match(/^echo:\//);
-    // The typename + version live in `ObjectMeta` (the canonical registry-
+    // The typename + version live in `EntityMeta` (the canonical registry-
     // provenance pair) and are surfaced via the `Type.get*` helpers.
     expect(Type.getTypename(schema)).to.eq(Type.getTypename(TestEmpty));
     // In-database entities are versioned by their automerge heads, exposed as
@@ -159,7 +159,7 @@ describe('EchoSchema', () => {
   test('schema id stays as echo URI for stored schemas', async () => {
     const { db } = await setupTest();
     const schema = await db.addType(TestEmpty);
-    // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
+    // Stored schemas use the canonical EID form (echo:/<id>) for their type identifier.
     expect(getTypeIdentifierAnnotation(Type.getSchema(schema))).to.match(/^echo:\//);
   });
 

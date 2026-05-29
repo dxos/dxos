@@ -14,7 +14,7 @@ import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStart
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, type ObjectId } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
@@ -127,8 +127,8 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueEchoId(invocationId: ObjectId): EchoURI.EchoURI {
-    return EchoURI.make({ spaceId: this._space.id, objectId: invocationId });
+  private _getTraceQueueEchoId(invocationId: EntityId): EID.EID {
+    return EID.make({ spaceId: this._space.id, entityId: invocationId });
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {
@@ -142,7 +142,7 @@ export class QueueLogger implements SequenceLogger {
   // (no backing Feed.Feed object). Migration to Feed.append is blocked on either
   // (a) materializing a Feed object per invocation, or (b) a lower-level
   // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
-  private _getTraceEventQueue(invocationId: ObjectId): Queue<TraceEvent> {
+  private _getTraceEventQueue(invocationId: EntityId): Queue<TraceEvent> {
     const echoUri = this._getTraceQueueEchoId(invocationId);
     return this._space.queues.get(echoUri);
   }

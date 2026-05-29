@@ -5,11 +5,11 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { EchoURI, ObjectId, URI } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-// Type identifier URI — either a DXN (typename) or an EchoURI (stored-schema-as-object).
+// Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
 // Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
 // matches any type.
 const TypenameSpecifier = Schema.Union(URI.Schema, Schema.Null);
@@ -27,7 +27,7 @@ const FilterObject_ = Schema.Struct({
 
   typename: TypenameSpecifier,
 
-  id: Schema.optional(Schema.Array(ObjectId)),
+  id: Schema.optional(Schema.Array(EntityId)),
 
   /**
    * Filter by property.
@@ -185,7 +185,7 @@ export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 const FilterChildOf_ = Schema.Struct({
   type: Schema.Literal('child-of'),
   /** Parent DXNs to match children of. */
-  parents: Schema.Array(EchoURI.Schema),
+  parents: Schema.Array(EID.Schema),
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive: Schema.Boolean,
 });

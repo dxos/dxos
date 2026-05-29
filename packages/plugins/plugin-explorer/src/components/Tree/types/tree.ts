@@ -11,8 +11,8 @@ import { invariant } from '@dxos/invariant';
 // TODO(burdon): Reconcile with @dxos/graph (i.e., common types).
 
 export const TreeNodeType = Schema.Struct({
-  id: Key.ObjectId,
-  children: Schema.mutable(Schema.Array(Key.ObjectId)),
+  id: Key.EntityId,
+  children: Schema.mutable(Schema.Array(Key.EntityId)),
   data: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
   ref: Schema.optional(Ref.Ref(TestSchema.Expando)),
 }).pipe(Schema.mutable);
@@ -20,8 +20,8 @@ export const TreeNodeType = Schema.Struct({
 export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 
 export const TreeType = Schema.Struct({
-  root: Key.ObjectId,
-  nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
+  root: Key.EntityId,
+  nodes: Schema.mutable(Schema.Record({ key: Key.EntityId, value: TreeNodeType })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.tree', '0.1.0')));
 
 export type TreeType = Type.InstanceType<typeof TreeType>;
@@ -31,7 +31,7 @@ export type TreeType = Type.InstanceType<typeof TreeType>;
  */
 export class Tree {
   static create = (): TreeType => {
-    const id = Key.ObjectId.random();
+    const id = Key.EntityId.random();
     return Obj.make(TreeType, {
       root: id,
       nodes: {
@@ -72,7 +72,7 @@ export class Tree {
    */
   tranverse<T>(
     callback: (node: TreeNodeType, depth: number) => T | void,
-    root: Key.ObjectId = this._tree.root,
+    root: Key.EntityId = this._tree.root,
     depth = 0,
   ): T | void {
     const node = this._tree.nodes[root];
@@ -89,7 +89,7 @@ export class Tree {
     }
   }
 
-  getNode(id: Key.ObjectId): TreeNodeType {
+  getNode(id: Key.EntityId): TreeNodeType {
     const node = this._tree.nodes[id];
     invariant(node);
     return node;
@@ -192,7 +192,7 @@ export class Tree {
    */
   addNode(parent: TreeNodeType, node?: TreeNodeType, index?: number): TreeNodeType {
     if (!node) {
-      const id = Key.ObjectId.random();
+      const id = Key.EntityId.random();
       node = { id, children: [], data: { text: '' } }; // TODO(burdon): Generic.
     }
 
@@ -207,7 +207,7 @@ export class Tree {
   /**
    * Delete node.
    */
-  deleteNode(parent: TreeNodeType, id: Key.ObjectId): TreeNodeType | undefined {
+  deleteNode(parent: TreeNodeType, id: Key.EntityId): TreeNodeType | undefined {
     const node = this._tree.nodes[id];
     if (!node) {
       return undefined;
@@ -281,7 +281,7 @@ export class Tree {
 
     // Remove node from parent and get following siblings.
     const nodeIdx = parent.children.findIndex((id) => id === node.id);
-    let rest: Key.ObjectId[] = [];
+    let rest: Key.EntityId[] = [];
     Obj.update(this._tree, () => {
       const removed = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
       rest = removed.slice(1); // Skip the node itself.

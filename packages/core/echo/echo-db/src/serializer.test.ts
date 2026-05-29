@@ -248,7 +248,7 @@ describe('Serializer', () => {
       // brand (lives on [KindId] / SYSTEM namespace), not a data field on
       // TypeSchema. Earlier the export side was leaking it.
       // `typename` / `version` are not data fields either; they live in
-      // `ObjectMeta` (the canonical registry-provenance pair) and surface
+      // `EntityMeta` (the canonical registry-provenance pair) and surface
       // through `@meta.key` / `@meta.version` in the JSON snapshot.
       const typeRow = data.objects.find((o: any) => o['@meta']?.key === typename);
       expect(typeRow).toBeDefined();

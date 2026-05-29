@@ -12,7 +12,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -250,7 +250,7 @@ export default Capability.makeModule(
             const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
             const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
 
-            if (!spaceId || !mailboxId || !Key.ObjectId.isValid(messageId)) {
+            if (!spaceId || !mailboxId || !Key.EntityId.isValid(messageId)) {
               return null;
             }
 
@@ -337,7 +337,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === mailbox.id,
+              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
             ),
           );
           if (!integration) {
@@ -372,7 +372,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === calendar.id,
+              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === calendar.id,
             ),
           );
           if (!integration) {

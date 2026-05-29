@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/internal';
-import { type EchoURI, type SpaceId } from '@dxos/keys';
+import { type EID, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import type { ServiceContainer } from './internal';
@@ -20,8 +20,8 @@ export interface QueuesQueryResult {
  * @deprecated
  */
 export interface QueuesAPI {
-  queryQueue(queue: EchoURI.EchoURI, options?: {}): Promise<FeedProtocol.QueryResult>;
-  insertIntoQueue(queue: EchoURI.EchoURI, objects: AnyEntity[]): Promise<void>;
+  queryQueue(queue: EID.EID, options?: {}): Promise<FeedProtocol.QueryResult>;
+  insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void>;
 }
 
 /**
@@ -33,11 +33,11 @@ export class QueuesAPIImpl implements QueuesAPI {
     private readonly _spaceId: SpaceId,
   ) {}
 
-  queryQueue(queue: EchoURI.EchoURI, options?: {}): Promise<FeedProtocol.QueryResult> {
+  queryQueue(queue: EID.EID, options?: {}): Promise<FeedProtocol.QueryResult> {
     return this._serviceContainer.queryQueue(queue);
   }
 
-  insertIntoQueue(queue: EchoURI.EchoURI, objects: AnyEntity[]): Promise<void> {
+  insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void> {
     // TODO(dmaretskyi): Ugly.
     return this._serviceContainer.insertIntoQueue(queue, JSON.parse(JSON.stringify(objects)));
   }
