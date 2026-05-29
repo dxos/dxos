@@ -71,6 +71,8 @@ export class ExtractError {
  */
 export interface ObjectExtractor {
   readonly id: string;
+  /** Short human-facing label (e.g. shown on a toolbar action). */
+  readonly title: string;
   readonly description: string;
   readonly kinds: readonly string[];
   /** ECHO typename(s) of the source objects this extractor applies to (e.g. the Message typename). */

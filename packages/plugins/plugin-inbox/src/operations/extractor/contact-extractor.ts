@@ -45,6 +45,7 @@ export default handler;
  */
 export const ContactMessageExtractor: ObjectExtractor = {
   id: ID,
+  title: 'Contact',
   description: 'Create contact from message sender',
   kinds: ['contact'],
   sourceTypes: [Type.getTypename(Message.Message)!],

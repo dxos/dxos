@@ -62,6 +62,7 @@ const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations
  */
 const ImportantMessageExtractor: ObjectExtractor = {
   id: 'story.extractor.important',
+  title: 'Important',
   description: 'Mark message as important',
   kinds: ['tag'],
   sourceTypes: [Type.getTypename(MessageType.Message)!],
@@ -288,12 +289,16 @@ export const ExtractTripWithPlay: Story = {
     await userEvent.click(extractTrigger as HTMLElement);
 
     // Assert the summarize extractor is registered and matches the seeded body. The dropdown
-    // entry uses the extractor's `description` text. If the body falls below the 200-char
-    // threshold or the InboxPlugin's Startup module stops contributing the extractor, this
-    // assertion fails before "Run all" even fires — so the test catches a missing wire-up
-    // rather than passing for the wrong reason on the trip-only assertions below.
-    const summarizeItem = await waitFor(() => body.queryByText(/summarize a long email body/i));
-    void expect(summarizeItem).toBeInTheDocument();
+    // entry uses the extractor's short `title` ("Summary"). Use queryAllByText (the label text
+    // can match both the menu item and its inner text node) and require at least one match. If
+    // the body falls below the 200-char threshold or the InboxPlugin's Startup module stops
+    // contributing the extractor, this assertion fails before "Run all" even fires — so the test
+    // catches a missing wire-up rather than passing for the wrong reason on the trip assertions.
+    const summarizeItems = await waitFor(
+      () => body.queryAllByText(/^summary$/i),
+      (items) => items.length > 0,
+    );
+    void expect(summarizeItems.length).toBeGreaterThan(0);
 
     // The `Run all (N)` label includes the count of matching extractors. With contact + trip
     // + summarize + important all matching, the label must read "Run all (4)".

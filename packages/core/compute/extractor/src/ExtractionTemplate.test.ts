@@ -50,6 +50,7 @@ const PayloadSchema = Schema.Struct({ email: Schema.String, name: Schema.optiona
 
 const template: ExtractionTemplate = {
   id: 'com.example.extractor.contact',
+  title: 'Contact',
   description: 'Extract a contact from a note.',
   kinds: ['contact'],
   sourceTypes: [Type.getTypename(Note)!],

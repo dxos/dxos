@@ -61,6 +61,8 @@ export interface TagSpec extends Schema.Schema.Type<typeof TagSpec> {}
  */
 export const ExtractionTemplate = Schema.Struct({
   id: Schema.String,
+  /** Short human-facing label (e.g. shown on a toolbar action). */
+  title: Schema.String,
   description: Schema.String,
   kinds: Schema.Array(Schema.String),
   sourceTypes: Schema.Array(Schema.String),
@@ -138,6 +140,7 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
 
   return {
     id: template.id,
+    title: template.title,
     description: template.description,
     kinds: template.kinds,
     sourceTypes: template.sourceTypes,

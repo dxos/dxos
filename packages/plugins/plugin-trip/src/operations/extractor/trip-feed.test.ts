@@ -123,7 +123,11 @@ describe('trip extraction over a message feed', () => {
       await dispatch({ db, source: message }, { provenance })
         .pipe(
           Effect.provide(
-            Layer.mergeAll(fromExtractors([TripMessageExtractor]), noResolver, mockAiService({ object: payload ?? {} })),
+            Layer.mergeAll(
+              fromExtractors([TripMessageExtractor]),
+              noResolver,
+              mockAiService({ object: payload ?? {} }),
+            ),
           ),
         )
         .pipe(Effect.either)
@@ -149,7 +153,9 @@ describe('trip extraction over a message feed', () => {
     expect(numbers).toEqual(['AF-1', 'AF-2']);
 
     // The gate change updated the first leg in place (no duplicate segment).
-    const firstLeg = segments.find((segment) => segment.details._tag === 'flight' && segment.details.number === 'AF-1')!;
+    const firstLeg = segments.find(
+      (segment) => segment.details._tag === 'flight' && segment.details.number === 'AF-1',
+    )!;
     expect(firstLeg.details._tag).toBe('flight');
     if (firstLeg.details._tag !== 'flight') {
       throw new Error('expected flight details');

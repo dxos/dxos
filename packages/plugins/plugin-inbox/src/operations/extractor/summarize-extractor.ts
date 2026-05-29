@@ -99,6 +99,7 @@ export default handler;
 
 export const SummarizeMessageExtractor: ObjectExtractor = {
   id: SUMMARIZE_ID,
+  title: 'Summary',
   description: 'Summarize a long email body into a Markdown document via the AI service.',
   kinds: ['document', 'summary'],
   sourceTypes: [Type.getTypename(Message.Message)!],

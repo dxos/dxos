@@ -26,6 +26,7 @@ const stubExtractor = (opts: {
   extract?: () => Effect.Effect<ExtractResult, ExtractError>;
 }): ObjectExtractor => ({
   id: opts.id,
+  title: opts.id,
   description: opts.id,
   kinds: [],
   sourceTypes: [Type.getTypename(Message.Message)!],

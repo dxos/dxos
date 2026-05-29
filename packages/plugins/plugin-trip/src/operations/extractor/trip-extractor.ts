@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import {
   type ExtractInput,
   type ExtractResult,
@@ -16,16 +16,21 @@ import {
   fromResolvers,
   makeTemplateExtractor,
 } from '@dxos/extractor';
-import { type ContentBlock, Message } from '@dxos/types';
+import { log } from '@dxos/log';
+import { type ContentBlock, Message, Organization, type Provider } from '@dxos/types';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
 
 /**
  * Template-driven extractor for travel-booking confirmation emails. A cheap/fast LLM parses the
  * email body into a single flight segment (number, route, times, confirmation, gate/terminal/seat),
- * and the framework assembles the object graph: an existing Segment matching `(number, departAt date)`
- * is updated in place; otherwise a fresh `Trip` + `Booking` + flight `Segment` trio is created
- * (Booking + Segment hang off the Trip). The `match()` pre-filter (sender domain / subject keywords)
+ * and the framework assembles the object graph:
+ *  - an existing Segment matching `(number, departAt date)` is updated in place;
+ *  - otherwise a fresh flight Segment is created and attached to the Trip whose Booking shares the
+ *    confirmation code (PNR) — producing one Trip with multiple Segments — or, when no such Trip
+ *    exists, a new `Trip` + `Booking` + `Segment` trio.
+ * The flight provider (airline) is derived from the sender domain + flight-number prefix and
+ * linked to a matching Organization. The `match()` pre-filter (sender domain / subject keywords)
  * keeps the LLM off non-travel mail.
  */
 export const ID = 'org.dxos.plugin.trip.extractor.trip';
@@ -111,24 +116,19 @@ const findExistingFlight = (
 };
 
 /**
- * Find the Trip that already owns a Booking with this confirmation code (PNR). Flights booked
- * under one reservation share a code, so a follow-up segment attaches to the same Trip rather
- * than spawning a new one. The Booking is parented to its Trip via `Obj.setParent`, so the
- * Trip is the Booking's parent.
+ * Find an existing Booking with this confirmation code (PNR). Flights booked under one
+ * reservation share a code, so a follow-up segment attaches to that Booking's Trip rather than
+ * spawning a new one. The Booking is parented to its Trip via `Obj.setParent`.
  */
-const findExistingTripByConfirmation = (
+const findExistingBookingByConfirmation = (
   db: Database.Database,
   confirmationCode: string | undefined,
-): Effect.Effect<Trip.Trip | undefined> => {
+): Effect.Effect<Booking.Booking | undefined> => {
   if (!confirmationCode) {
     return Effect.succeed(undefined);
   }
   return Effect.promise(() => db.query(Filter.type(Booking.Booking)).run()).pipe(
-    Effect.map((bookings) => {
-      const booking = bookings.find((candidate) => candidate.confirmationCode === confirmationCode);
-      const parent = booking ? Obj.getParent(booking) : undefined;
-      return parent && Trip.instanceOf(parent) ? parent : undefined;
-    }),
+    Effect.map((bookings) => bookings.find((booking) => booking.confirmationCode === confirmationCode)),
     Effect.catchAllDefect(() => Effect.succeed(undefined)),
   );
 };
@@ -140,8 +140,9 @@ const tripNameFor = (payload: FlightPayload): string => {
   return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
 };
 
-const makeSegment = (payload: FlightPayload, provider: { name?: string; domain?: string }): Segment.Segment =>
+const makeSegment = (payload: FlightPayload, provider: Provider.Provider, booking: Booking.Booking): Segment.Segment =>
   Segment.make({
+    booking: Ref.make(booking),
     details: {
       _tag: 'flight',
       origin: payload.origin,
@@ -156,6 +157,18 @@ const makeSegment = (payload: FlightPayload, provider: { name?: string; domain?:
     },
   });
 
+/** Widen a Trip's date range to cover a newly-appended segment (ISO timestamps compare lexically). */
+const widenTripRange = (trip: Trip.Trip, payload: FlightPayload): void => {
+  Obj.update(trip, (trip) => {
+    if (payload.departAt && (!trip.start || payload.departAt < trip.start)) {
+      trip.start = payload.departAt;
+    }
+    if (payload.arriveAt && (!trip.end || payload.arriveAt > trip.end)) {
+      trip.end = payload.arriveAt;
+    }
+  });
+};
+
 const assemble = (
   payload: FlightPayload,
   { db, source }: { db: Database.Database; source: Obj.Any; template: ExtractionTemplate },
@@ -166,10 +179,7 @@ const assemble = (
       return { created: [], updated: [], relations: [] };
     }
 
-    const provider = {
-      name: payload.provider?.name ?? 'Air France',
-      domain: payload.provider?.domain ?? 'united.com',
-    };
+    const message = source as Message.Message;
 
     // Case 1: an existing segment with the same (number, depart-date) pair — update it in place
     // (e.g. gate/terminal change). Surface its owning Trip in `updated` so the source message
@@ -204,13 +214,19 @@ const assemble = (
       return { created: [], updated, relations: [] };
     }
 
+    // The provider (airline) is derived from the sender domain + flight-number prefix and linked
+    // to a matching Organization.
+    const provider = yield* resolveProvider(db, payload, message);
+
     // Case 2: a new flight that belongs to an existing Trip (same confirmation code / PNR) —
-    // attach a fresh Segment to that Trip. Only the Trip (top-level) gets provenance; the new
-    // Segment is parented to it.
-    const existingTrip = yield* findExistingTripByConfirmation(db, payload.confirmationCode);
-    if (existingTrip) {
-      const segment = makeSegment(payload, provider);
+    // attach a fresh Segment to that Trip (and its existing Booking). Only the Trip (top-level)
+    // gets provenance; the new Segment is parented to it via `Trip.addSegment`.
+    const existingBooking = yield* findExistingBookingByConfirmation(db, payload.confirmationCode);
+    const existingTrip = existingBooking ? Obj.getParent(existingBooking) : undefined;
+    if (existingBooking && Trip.instanceOf(existingTrip)) {
+      const segment = makeSegment(payload, provider, existingBooking);
       Trip.addSegment(existingTrip, segment);
+      widenTripRange(existingTrip, payload);
       return { created: [segment], updated: [existingTrip], relations: [] };
     }
 
@@ -219,10 +235,10 @@ const assemble = (
       provider,
       confirmationCode: payload.confirmationCode,
       source: 'email',
-      rawPayload: getBodyText(source as Message.Message),
+      rawPayload: getBodyText(message),
     });
 
-    const segment = makeSegment(payload, provider);
+    const segment = makeSegment(payload, provider, booking);
 
     const trip = Trip.make({
       name: tripNameFor(payload),
@@ -238,8 +254,83 @@ const assemble = (
     return { created: [trip, booking, segment], updated: [], relations: [] };
   });
 
+/** IATA airline prefix → display name. Extend as needed; falls back to the sender domain. */
+const AIRLINE_NAMES: Record<string, string> = {
+  AA: 'American Airlines',
+  AF: 'Air France',
+  BA: 'British Airways',
+  DL: 'Delta Air Lines',
+  IB: 'Iberia',
+  KL: 'KLM',
+  LH: 'Lufthansa',
+  TP: 'TAP Air Portugal',
+  UA: 'United Airlines',
+};
+
+/** Leading two-letter IATA code of a flight number (e.g. "AF0003" → "AF"). */
+const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
+  flightNumber?.match(/^([A-Za-z]{2})/)?.[1]?.toUpperCase();
+
+/** Domain part of the sender's email (e.g. "noreply@airfrance.com" → "airfrance.com"). */
+const senderDomainOf = (message: Message.Message): string | undefined =>
+  message.sender.email?.split('@')[1]?.toLowerCase();
+
+/** Title-case a domain's second-level label as a provider-name fallback (airfrance.com → Airfrance). */
+const domainToName = (domain: string): string => {
+  const label = domain.split('.')[0] ?? domain;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+/** Whether an Organization website matches the sender domain (host equality or sub-domain either way). */
+const matchesDomain = (website: string | undefined, domain: string): boolean => {
+  if (!website) {
+    return false;
+  }
+  try {
+    const host = new URL(website.startsWith('http') ? website : `https://${website}`).hostname.toLowerCase();
+    return host === domain || host.endsWith(`.${domain}`) || domain.endsWith(`.${host}`);
+  } catch (err) {
+    log.warn('parsing organization website', { website, err });
+    return false;
+  }
+};
+
+/**
+ * Builds the flight provider: `domain` from the sender's email, `name` from the airline-prefix
+ * map (sender-domain fallback), and a `ref` to an existing Organization when one matches by
+ * website domain or name.
+ */
+const resolveProvider = (
+  db: Database.Database,
+  payload: FlightPayload,
+  message: Message.Message,
+): Effect.Effect<Provider.Provider, never> =>
+  Effect.gen(function* () {
+    const domain = payload.provider?.domain ?? senderDomainOf(message);
+    const code = airlineCodeOf(payload.number);
+    const name = payload.provider?.name ?? (code && AIRLINE_NAMES[code]) ?? (domain ? domainToName(domain) : undefined);
+    if (!domain && !name) {
+      return {};
+    }
+
+    const orgs = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run()).pipe(
+      Effect.catchAllDefect(() => Effect.succeed([] as Organization.Organization[])),
+    );
+    const match = orgs.find(
+      (org) =>
+        (!!domain && matchesDomain(org.website, domain)) || (!!name && org.name?.toLowerCase() === name.toLowerCase()),
+    );
+
+    return {
+      ...(name ? { name } : {}),
+      ...(domain ? { domain } : {}),
+      ...(match ? { ref: Ref.make(match) } : {}),
+    };
+  });
+
 const template: ExtractionTemplate = {
   id: ID,
+  title: 'Trip',
   description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
   kinds: ['flight'],
   sourceTypes: [Type.getTypename(Message.Message)!],
