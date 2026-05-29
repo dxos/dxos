@@ -43,7 +43,7 @@ describe('EchoEdgeSubductionReplicator', () => {
 
     const spaceId = SpaceId.random();
 
-    const { context, connectionOpen } = createMockContext();
+    const { context, openConnections, connectionOpen } = createMockContext();
     const replicator = await connectReplicator(client, context);
 
     // Subscribe before connectToSpace so we capture the initial open.
@@ -56,19 +56,34 @@ describe('EchoEdgeSubductionReplicator', () => {
     client.setIdentity(await createEphemeralEdgeIdentity());
     await connectionOpen.waitForCount(1);
 
-    // Subduction-era restart: edge emits a `subduction-reconnect` frame on the same
-    // SUBDUCTION_REPLICATOR service id; the connection tears down and the replicator
-    // opens a fresh connection on the next mutex pass.
-    const reconnectFrame = createSubductionReconnectMessage(
-      { identityKey: client.identityKey, peerKey: client.peerKey },
-      spaceId,
+    // Subduction-era restart: edge emits an `error` frame on the SUBDUCTION_REPLICATOR
+    // service id carrying the client's current `connectionId`; the connection tears
+    // down and the replicator opens a fresh connection on the next mutex pass. The
+    // current connection lives at the tail of `openConnections` — extract its
+    // `_connectionId` (private but visible to the same-package test) so the frame
+    // matches the client-side restart guard.
+    const currentConnectionId = () => (openConnections[openConnections.length - 1] as any)._connectionId as string;
+    await server.sendMessage(
+      createSubductionErrorMessage(
+        { identityKey: client.identityKey, peerKey: client.peerKey },
+        spaceId,
+        currentConnectionId(),
+      ),
     );
-    await server.sendMessage(reconnectFrame);
     await connectionOpen.waitForCount(1);
 
-    // Double restart to check for race conditions.
+    // Double restart to check for race conditions. The error frame must carry the
+    // current connection's `_connectionId` after `setIdentity` finishes reconnecting,
+    // so wait for the post-`setIdentity` open before constructing it.
     client.setIdentity(await createEphemeralEdgeIdentity());
-    await server.sendMessage(reconnectFrame);
+    await connectionOpen.waitForCount(1);
+    await server.sendMessage(
+      createSubductionErrorMessage(
+        { identityKey: client.identityKey, peerKey: client.peerKey },
+        spaceId,
+        currentConnectionId(),
+      ),
+    );
     await connectionOpen.waitForCount(1);
 
     await replicator.disconnect();
@@ -171,11 +186,11 @@ const createMockContext = (args?: {
   return { context, openConnections, connectionOpen };
 };
 
-const createSubductionReconnectMessage = (target: Peer, spaceId: SpaceId) =>
+const createSubductionErrorMessage = (target: Peer, spaceId: SpaceId, connectionId: string) =>
   createBuf(MessageSchema, {
     target: [target],
     serviceId: compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId),
     payload: {
-      value: cbor.encode({ type: 'subduction-reconnect' }),
+      value: cbor.encode({ type: 'error', message: 'restart', connectionId }),
     },
   });

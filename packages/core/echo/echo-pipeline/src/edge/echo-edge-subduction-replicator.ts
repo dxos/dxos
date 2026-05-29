@@ -16,9 +16,9 @@ import {
   EdgeService,
   MESSAGE_TYPE_COLLECTION_QUERY,
   MESSAGE_TYPE_COLLECTION_STATE,
+  MESSAGE_TYPE_ERROR,
   MESSAGE_TYPE_SUBDUCTION_CONNECTION,
   MESSAGE_TYPE_SUBDUCTION_FRAME,
-  MESSAGE_TYPE_SUBDUCTION_RECONNECT,
   type PeerId,
   type SubductionProtocolMessage,
   type SubductionProtocolMessageEnveloped,
@@ -420,10 +420,27 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     const payload = cbor.decode(message.payload!.value) as SubductionProtocolMessageEnveloped;
 
     switch (payload.type) {
-      case MESSAGE_TYPE_SUBDUCTION_RECONNECT:
-        log.info('received subduction-reconnect signal');
+      case MESSAGE_TYPE_ERROR: {
+        // Edge → client restart signal for a specific connection lifetime.
+        // Match the edge-supplied `connectionId` against our local
+        // `_connectionId` and tear down only on an exact match; mismatches
+        // (or absent ids) refer to a sibling/prior connection and must be
+        // ignored.
+        if (payload.connectionId === undefined) {
+          log.verbose('dropping error without connectionId', { message: payload.message });
+          return;
+        }
+        if (payload.connectionId !== this._connectionId) {
+          log.verbose('dropping error for different connection', {
+            expected: this._connectionId,
+            got: payload.connectionId,
+          });
+          return;
+        }
+        log.info('received subduction error; restarting', { message: payload.message });
         this._onRestartRequested();
         return;
+      }
       case MESSAGE_TYPE_SUBDUCTION_FRAME: {
         // The edge echoes the client-supplied connectionId. Frames carrying a
         // different id are leftovers from a previous connection lifetime
@@ -470,9 +487,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         message.targetId = this._subductionServiceId as PeerId;
         wire = message;
         break;
-      case MESSAGE_TYPE_SUBDUCTION_RECONNECT:
-        // Edge → client only; the client never originates a reconnect signal.
-        log.warn('dropping unexpected subduction-reconnect outbound');
+      case MESSAGE_TYPE_ERROR:
+        // Edge → client only; the client never originates an error on the subduction channel.
+        log.warn('dropping unexpected error outbound', { message: message.message });
         return;
       default: {
         const _exhaustive: never = message;

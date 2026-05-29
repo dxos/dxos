@@ -137,6 +137,9 @@ export type EphemeralProtocolMessage = {
   metadata?: Record<string, unknown>;
 };
 
+/** Wire literal for {@link ErrorProtocolMessage}. */
+export const MESSAGE_TYPE_ERROR = 'error';
+
 /**
  * Out-of-band error reported by a peer.
  *
@@ -144,12 +147,20 @@ export type EphemeralProtocolMessage = {
  * Upstream automerge-repo: surfaces protocol-level failures (e.g. version
  * mismatch, malformed frame). `senderId` and `targetId` are optional so the
  * frame can be emitted before the handshake completes.
+ *
+ * The `connectionId` field is a DXOS extension carried on the subduction
+ * channel only. Edge → client errors with `connectionId` are restart signals
+ * for a specific {@link EdgeSubductionReplicatorConnection} lifetime; the
+ * client matches it against its local `_connectionId` and tears down only
+ * that connection. The field is optional so the same type can carry
+ * upstream-style classical-channel errors that have no connection identity.
  */
 export type ErrorProtocolMessage = {
-  type: 'error';
+  type: typeof MESSAGE_TYPE_ERROR;
   senderId?: PeerId;
   targetId?: PeerId;
   message: string;
+  connectionId?: string;
   metadata?: Record<string, unknown>;
 };
 
@@ -164,9 +175,6 @@ export const MESSAGE_TYPE_SUBDUCTION_CONNECTION = 'subduction-connection';
 
 /** Wire literal for {@link SubductionFrameEnvelope}. */
 export const MESSAGE_TYPE_SUBDUCTION_FRAME = 'subduction-frame';
-
-/** Wire literal for {@link SubductionReconnectMessage}. */
-export const MESSAGE_TYPE_SUBDUCTION_RECONNECT = 'subduction-reconnect';
 
 /**
  * Inner subduction transport frame emitted by automerge-repo's
@@ -215,21 +223,6 @@ export type SubductionFrameEnvelope = {
   type: typeof MESSAGE_TYPE_SUBDUCTION_FRAME;
   connectionId: string;
   subductionFrame: SubductionConnectionMessage;
-};
-
-/**
- * Edge-initiated restart marker.
- *
- * @remarks
- * DXOS-specific control message. Sent by the edge replicator after a DO
- * hibernation (or other state-loss event) to tell the client to tear down
- * the current `EdgeSubductionReplicatorConnection` and re-handshake under a
- * fresh `connectionId`. Always flat on the wire — never wrapped in an
- * envelope, because the edge does not know the current `connectionId` after
- * hibernation.
- */
-export type SubductionReconnectMessage = {
-  type: typeof MESSAGE_TYPE_SUBDUCTION_RECONNECT;
 };
 
 // ─── DXOS collection sync protocol ────────────────────────────────────────────
@@ -340,7 +333,8 @@ export type AutomergeProtocolMessage =
  *     by `@automerge/automerge-repo/subduction/network.ts`;
  *   - DXOS collection sync messages ({@link CollectionQueryMessage} /
  *     {@link CollectionStateMessage});
- *   - edge-initiated reconnect signals ({@link SubductionReconnectMessage}).
+ *   - edge-initiated restart signals ({@link ErrorProtocolMessage} carrying
+ *     the offending `connectionId`).
  *
  * The {@link SubductionFrameEnvelope} is intentionally NOT a member: it only
  * exists on the wire to attach a `connectionId` to a raw
@@ -351,7 +345,7 @@ export type SubductionProtocolMessage =
   | CollectionQueryMessage
   | CollectionStateMessage
   | SubductionConnectionMessage
-  | SubductionReconnectMessage;
+  | ErrorProtocolMessage;
 
 /**
  * Union of every message that flows over the **Edge subduction byte channel
@@ -375,4 +369,4 @@ export type SubductionProtocolMessageEnveloped =
   | CollectionQueryMessage
   | CollectionStateMessage
   | SubductionFrameEnvelope
-  | SubductionReconnectMessage;
+  | ErrorProtocolMessage;

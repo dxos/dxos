@@ -443,7 +443,7 @@ index f04a5cc7854844a994200ed5a3232dbdf72a76b8..c88314e5fe878760957b18ee0f49210e
                      }
 -                    else if (entry.handle.heads().length === 0 &&
 -                        !this.#anyConnectionManagerConnecting()) {
-+                    else if (!this.#anyConnectionManagerConnecting()) {
++                    else if (false && !this.#anyConnectionManagerConnecting()) { /* PATCH(DXOS): restore subduction.20 workaround from #11386 */
                          // All connections settled and sync failed — give up.
                          this.#log("marking as unavailable");
                          entry.query.sourceUnavailable("subduction");
