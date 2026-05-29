@@ -22,7 +22,9 @@ export type Kind = Schema.Schema.Type<typeof Kind>;
 export const RoadSubKind = Schema.Literal('bus', 'car', 'transfer', 'taxi', 'walk');
 export type RoadSubKind = Schema.Schema.Type<typeof RoadSubKind>;
 
-export const ServiceClass = Schema.Literal('economy', 'premium', 'business', 'first');
+export const ServiceClass = Schema.Literal('economy', 'premium', 'business', 'first').annotations({
+  title: 'Service class',
+});
 export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;
 
 //
@@ -42,7 +44,7 @@ export const TransportFields = Schema.Struct({
   destination: Schema.optional(Place).annotations({ title: 'Destination' }),
   departAt: Schema.optional(Format.DateTime).annotations({ title: 'Depart' }),
   arriveAt: Schema.optional(Format.DateTime).annotations({ title: 'Arrive' }),
-  serviceClass: Schema.optional(ServiceClass).annotations({ title: 'Class' }),
+  serviceClass: Schema.optional(ServiceClass),
   /** Single seat assignment, or a list when the booking covers multiple passengers. */
   seat: Schema.optional(Schema.Union(Schema.String, Schema.Array(Schema.String))).annotations({ title: 'Seat' }),
 });
