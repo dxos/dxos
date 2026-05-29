@@ -17,6 +17,7 @@ import { Organization } from '@dxos/types';
 import { Booking, Segment, Trip } from '../../types';
 import gateChangeRaw from './testing/files/gate-change.md?raw';
 import genericConfirmationRaw from './testing/files/generic-booking-confirmation.md?raw';
+import klmConfirmationRaw from './testing/files/klm-confirmation.md?raw';
 import unitedConfirmationRaw from './testing/files/united-confirmation.md?raw';
 import unrelatedRaw from './testing/files/unrelated.md?raw';
 import { parseFixtureMessage } from './testing/load-fixture';
@@ -96,6 +97,12 @@ describe('TripMessageExtractor', () => {
     const result = TripMessageExtractor.match(parseFixtureMessage(unitedConfirmationRaw));
     expect(result.matched).toBe(true);
     expect(result.confidence ?? 0).toBeGreaterThan(0.5);
+  });
+
+  test('match — KLM sender domain (no travel keyword in subject)', ({ expect }) => {
+    const result = TripMessageExtractor.match(parseFixtureMessage(klmConfirmationRaw));
+    expect(result.matched).toBe(true);
+    expect(result.reason).toBe('sender-domain');
   });
 
   test('match — subject-only fallback', ({ expect }) => {

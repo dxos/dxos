@@ -21,7 +21,7 @@ import { type ContentBlock, Message, Organization, type Provider } from '@dxos/t
 import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
-import { AIRLINE_NAMES } from './const';
+import { AIRLINE_DOMAINS, AIRLINE_NAMES } from './const';
 
 /**
  * Template-driven extractor for travel-booking confirmation emails. A cheap/fast LLM parses the
@@ -37,9 +37,15 @@ import { AIRLINE_NAMES } from './const';
  */
 export const TEMPLATE_ID = 'org.dxos.plugin.trip.extractor.trip';
 
-const UNITED_DOMAIN_REGEX = /@(?:[\w-]+\.)?united\.(?:com|co\.uk)$/i;
-const CONFIRMATION_SUBJECT_REGEX = /(?:flight|booking)\s+confirmation/i;
-const GATE_SUBJECT_REGEX = /gate\s+change|schedule\s+change|flight\s+update/i;
+// Travel-related subject keywords used by the cheap `match()` pre-filter. Generous on purpose —
+// the LLM returns empty fields for non-flight mail, so a false positive costs only one cheap call.
+const TRAVEL_SUBJECT_REGEX =
+  /\b(?:flight|booking|e-?ticket|itinerary|reservation|boarding|gate\s+change|schedule\s+change)\b/i;
+
+const senderDomain = (message: Message.Message): string => (message.sender?.email ?? '').split('@')[1]?.toLowerCase() ?? '';
+
+const isAirlineDomain = (domain: string): boolean =>
+  AIRLINE_DOMAINS.some((airline) => domain === airline || domain.endsWith(`.${airline}`));
 
 const getBodyText = (message: Message.Message): string =>
   message.blocks
@@ -51,10 +57,9 @@ const getSubject = (message: Message.Message): string => String(message.properti
 
 const matchMessage = (source: Obj.Any): MatchResult => {
   const message = source as Message.Message;
-  const senderEmail = message.sender?.email ?? '';
   const subject = getSubject(message);
-  const domainMatched = UNITED_DOMAIN_REGEX.test(senderEmail);
-  const subjectMatched = CONFIRMATION_SUBJECT_REGEX.test(subject) || GATE_SUBJECT_REGEX.test(subject);
+  const domainMatched = isAirlineDomain(senderDomain(message));
+  const subjectMatched = TRAVEL_SUBJECT_REGEX.test(subject);
   if (!domainMatched && !subjectMatched) {
     return { matched: false };
   }
@@ -260,10 +265,6 @@ const assemble = (
 const airlineCodeOf = (flightNumber: string | undefined): string | undefined =>
   flightNumber?.match(/^([A-Za-z]{2})/)?.[1]?.toUpperCase();
 
-/** Domain part of the sender's email (e.g. "noreply@airfrance.com" → "airfrance.com"). */
-const senderDomainOf = (message: Message.Message): string | undefined =>
-  message.sender.email?.split('@')[1]?.toLowerCase();
-
 /** Title-case a domain's second-level label as a provider-name fallback (airfrance.com → Airfrance). */
 const domainToName = (domain: string): string => {
   const label = domain.split('.')[0] ?? domain;
@@ -295,7 +296,7 @@ const resolveProvider = (
   message: Message.Message,
 ): Effect.Effect<Provider.Provider, never> =>
   Effect.gen(function* () {
-    const domain = payload.provider?.domain ?? senderDomainOf(message);
+    const domain = payload.provider?.domain ?? senderDomain(message);
     const code = airlineCodeOf(payload.number);
     const name = payload.provider?.name ?? (code && AIRLINE_NAMES[code]) ?? (domain ? domainToName(domain) : undefined);
     if (!domain && !name) {
