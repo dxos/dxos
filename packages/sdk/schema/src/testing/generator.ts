@@ -73,6 +73,12 @@ export type RelationSpec = {
   /** A relation type (created with `Type.makeRelation`). */
   type: Type.AnyEntity;
   count: number;
+  /**
+   * Static properties merged into every generated relation (e.g. a fixed `{ kind: 'friend' }`).
+   * Values here take precedence over generated ones and satisfy required properties that have no
+   * generator annotation.
+   */
+  data?: Record<string, any>;
 };
 
 /**
@@ -90,7 +96,7 @@ export const createRelationFactory =
   (db: Database.Database, generator: ValueGenerator) =>
   async (specs: RelationSpec[]): Promise<any[]> => {
     const result: any[] = [];
-    for (const { type, count } of specs) {
+    for (const { type, count, data } of specs) {
       try {
         invariant(Type.isRelation(type), 'RelationSpec.type must be a relation type');
 
@@ -111,9 +117,17 @@ export const createRelationFactory =
         }
 
         for (let i = 0; i < count; i++) {
+          const source = randomElement(sources);
+          let target = randomElement(targets);
+          // Avoid trivial self-relations when the source/target pools overlap.
+          if (target.id === source.id && targets.length > 1) {
+            target = randomElement(targets.filter((object) => object.id !== source.id));
+          }
+
           const props = createProps(generator, type as unknown as Type.AnyObj)({
-            [Relation.Source]: randomElement(sources),
-            [Relation.Target]: randomElement(targets),
+            ...data,
+            [Relation.Source]: source,
+            [Relation.Target]: target,
           } as any);
           result.push(addToDatabase(db)(Relation.make(type as any, props as any)));
         }

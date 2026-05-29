@@ -180,6 +180,10 @@ const TWEEN_MS = 500;
 /** Fade-in duration applied to labels after the layout tween completes. */
 const LABEL_FADE_MS = 200;
 
+/** Base radius shared by all plexus leaf + relation nodes; the focus node is double. */
+const PLEXUS_LEAF_RADIUS = 5;
+const PLEXUS_FOCUS_RADIUS = PLEXUS_LEAF_RADIUS * 2;
+
 /**
  * Catmull-Rom curve generator (α=0.5, "centripetal") for swarm boid trails.
  * Passes through every point and avoids the looping/overshoot artifacts a plain
@@ -306,6 +310,9 @@ const createProjector = (
           duration: TWEEN_MS,
           focus: focusId,
           relationOf: plexusRelationOf,
+          leafRadius: PLEXUS_LEAF_RADIUS,
+          relationRadius: PLEXUS_LEAF_RADIUS,
+          focusRadius: PLEXUS_FOCUS_RADIUS,
         },
         undefined,
         prev,
@@ -465,8 +472,11 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
         const obj = node.data?.data?.object as Obj.Unknown | undefined;
         const labelOptions = { delay: TWEEN_MS, duration: LABEL_FADE_MS };
 
+        // Size by node type (not node.r): the renderer bakes the circle radius at enter time
+        // from the tween's start value, so a node.r fallback would inherit the previous
+        // variant's radius. All leaves + relations share the base size; the focus is double.
         if (node.type === PLEXUS_NODE_TYPE_RELATION) {
-          const r = node.r ?? 4;
+          const r = PLEXUS_LEAF_RADIUS;
           group.append('circle').attr('r', r).style('cursor', 'default').style('fill', 'var(--color-neutral-500)');
           if (node.label) {
             appendRadialGroupLabel(group, node, node.label, r, labelOptions);
@@ -475,7 +485,7 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
         }
 
         const isFocus = node.type === PLEXUS_NODE_TYPE_FOCUS;
-        const r = node.r ?? (isFocus ? 8 : 5);
+        const r = isFocus ? PLEXUS_FOCUS_RADIUS : PLEXUS_LEAF_RADIUS;
         group
           .append('circle')
           .attr('r', r)

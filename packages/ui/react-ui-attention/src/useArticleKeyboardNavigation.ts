@@ -5,12 +5,13 @@
 import { useEffect } from 'react';
 
 import { Keyboard } from '@dxos/keyboard';
-import { useAttention } from '@dxos/react-ui-attention';
+
+import { useAttention } from './components';
 
 /**
- * Compute the id to select after pressing 'n' (delta = 1) or 'p' (delta = -1).
- * Clamps at the list ends — pressing 'n' on the last item keeps the last item
- * selected (Gmail-style), and 'p' on the first item keeps the first.
+ * Compute the id to select after pressing 'j' (delta = 1) or 'k' (delta = -1).
+ * Clamps at the list ends — pressing 'j' on the last item keeps the last item
+ * selected (vim-style), and 'k' on the first item keeps the first.
  *
  * When no current selection exists, returns the first id (for delta = 1) or the
  * last id (for delta = -1) so the user can enter the list with either key.
@@ -44,12 +45,12 @@ export type UseArticleKeyboardNavigationOptions = {
   ids: readonly string[];
   /** Currently-selected id, if any. */
   currentId: string | undefined;
-  /** Called with the id to select when the user presses 'n' or 'p'. */
+  /** Called with the id to select when the user presses 'j' or 'k'. */
   onSelect: (id: string) => void;
 };
 
 /**
- * Wire 'n' (next) and 'p' (previous) keyboard shortcuts for an article that
+ * Wire 'j' (next) and 'k' (previous) keyboard shortcuts for an article that
  * navigates a list of items (e.g., messages, events). Bindings are scoped to
  * the article's keyboard context so they only fire while the article has attention.
  *
@@ -73,7 +74,7 @@ export const useArticleKeyboardNavigation = ({
     Keyboard.singleton.setCurrentContext(articleId);
 
     const nextBinding = {
-      shortcut: 'n',
+      shortcut: 'j',
       handler: () => {
         const target = advance({ ids, currentId, delta: 1 });
         if (target !== undefined) {
@@ -84,7 +85,7 @@ export const useArticleKeyboardNavigation = ({
       disableInput: true,
     };
     const prevBinding = {
-      shortcut: 'p',
+      shortcut: 'k',
       handler: () => {
         const target = advance({ ids, currentId, delta: -1 });
         if (target !== undefined) {
@@ -99,8 +100,8 @@ export const useArticleKeyboardNavigation = ({
     context.bind(prevBinding);
 
     return () => {
-      context.unbind('n');
-      context.unbind('p');
+      context.unbind('j');
+      context.unbind('k');
       // Restore the prior context if we were the ones who set it.
       if (Keyboard.singleton.getCurrentContext() === articleId) {
         Keyboard.singleton.setCurrentContext(prevContext);

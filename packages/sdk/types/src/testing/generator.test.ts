@@ -137,9 +137,9 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
     await createObjects([{ type: Person.Person, count: 8 }]);
 
-    // Create relations between them.
+    // Create relations between them, with a static prop override.
     const createRelations = createRelationFactory(db, generator);
-    const spec: RelationSpec[] = [{ type: Knows, count: 6 }];
+    const spec: RelationSpec[] = [{ type: Knows, count: 6, data: { since: 2020 } }];
     await createRelations(spec);
 
     const relations = await db.query(Query.type(Knows)).run();
@@ -148,6 +148,8 @@ describe('Generator', () => {
     for (const relation of relations) {
       expect(Obj.getTypename(Relation.getSource(relation))).to.eq(personTypename);
       expect(Obj.getTypename(Relation.getTarget(relation))).to.eq(personTypename);
+      expect(Relation.getSource(relation).id).not.to.eq(Relation.getTarget(relation).id);
+      expect((relation as { since?: number }).since).to.eq(2020);
     }
   });
 
