@@ -740,6 +740,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-product-search/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-pwa/package.json",
           "jsonpath": "$.version"
         },

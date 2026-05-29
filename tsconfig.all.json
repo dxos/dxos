@@ -430,6 +430,9 @@
       "path": "packages/plugins/plugin-preview/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-product-search/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
