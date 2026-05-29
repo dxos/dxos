@@ -11,6 +11,9 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Provider, Result, Search } from './types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const ProductSearchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
@@ -22,6 +25,9 @@ export const ProductSearchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Provider.Provider, Search.Search, Result.Result] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 
