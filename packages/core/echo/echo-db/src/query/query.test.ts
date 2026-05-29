@@ -2417,7 +2417,10 @@ describe('Query', () => {
     // objects carry a versioned `@type`. The reactive index query must still be invalidated
     // on delete so the navtree drops the node. Mirrors the bulk-delete test above but with a
     // version-less typename filter instead of `Filter.type(StaticSchema)`.
-    test('deleting an item removes it from a version-less typename query (reactive)', async (ctx) => {
+    test('deleting an item removes it from a version-less typename query (reactive)', async ({
+      expect,
+      onTestFinished,
+    }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
 
       const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
@@ -2433,13 +2436,14 @@ describe('Query', () => {
         },
         { fire: true },
       );
-      ctx.onTestFinished(unsub);
+      onTestFinished(unsub);
       await db.flush({ indexes: true, updates: true });
 
       db.remove(bob);
       await db.flush({ indexes: true, updates: true });
 
-      // The query must reflect the deletion: Bob is gone, Alice and Charlie remain.
+      // Initial subscription sees all three; after the delete the reactive query drops Bob.
+      expect(updates.at(0)).toEqual(['Alice', 'Bob', 'Charlie']);
       expect(updates.at(-1)).toEqual(['Alice', 'Charlie']);
     });
   });

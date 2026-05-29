@@ -117,9 +117,12 @@ describe('canonicalTypename', () => {
     expect(canonicalTypename(`dxn:${PERSON_TYPENAME}`)).toBe(PERSON_TYPENAME);
   });
 
-  test('passes through non-DXN URIs unchanged', ({ expect }) => {
+  test('passes through schema-as-object (EchoURI) and other non-type URIs unchanged', ({ expect }) => {
+    // Dynamic schemas reference the schema object by EchoURI rather than a typename DXN.
     const echoUri = 'dxn:echo:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E';
     expect(canonicalTypename(echoUri)).toBe(echoUri);
+    // Arbitrary non-DXN strings are returned verbatim.
+    expect(canonicalTypename('plain-string')).toBe('plain-string');
   });
 });
 
@@ -212,7 +215,9 @@ describe('QueryExecutor.matchesHint — typed query', () => {
       withSpace(Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)))),
     );
     expect(
-      executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('com.example.unrelated') })),
+      executor.matchesHint(
+        makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('com.example.unrelated') }),
+      ),
     ).toBe(false);
   });
 
