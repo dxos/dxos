@@ -133,8 +133,12 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       return tags ? { ...result, tags } : result;
     }).pipe(
       Effect.provide(AiService.model(template.model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
-      Effect.catchAllCause((cause) =>
-        Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, cause)),
+      // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
+      // fiber interruption untouched so cancellation propagates (neither catchAll nor
+      // catchAllDefect catches interruption).
+      Effect.catchAll((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
+      Effect.catchAllDefect((defect) =>
+        Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, defect)),
       ),
     );
 

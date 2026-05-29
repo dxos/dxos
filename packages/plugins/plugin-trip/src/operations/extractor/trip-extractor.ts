@@ -21,7 +21,7 @@ import { type ContentBlock, Message, Organization, type Provider } from '@dxos/t
 import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
-import { AIRLINE_DOMAINS, AIRLINE_NAMES } from './const';
+import { AIRLINES } from './const';
 
 /**
  * Template-driven extractor for travel-booking confirmation emails. A cheap/fast LLM parses the
@@ -42,10 +42,11 @@ export const TEMPLATE_ID = 'org.dxos.plugin.trip.extractor.trip';
 const TRAVEL_SUBJECT_REGEX =
   /\b(?:flight|booking|e-?ticket|itinerary|reservation|boarding|gate\s+change|schedule\s+change)\b/i;
 
-const senderDomain = (message: Message.Message): string => (message.sender?.email ?? '').split('@')[1]?.toLowerCase() ?? '';
+const senderDomain = (message: Message.Message): string =>
+  (message.sender?.email ?? '').split('@')[1]?.toLowerCase() ?? '';
 
 const isAirlineDomain = (domain: string): boolean =>
-  AIRLINE_DOMAINS.some((airline) => domain === airline || domain.endsWith(`.${airline}`));
+  AIRLINES.some((airline) => domain === airline.domain || domain.endsWith(`.${airline.domain}`));
 
 const getBodyText = (message: Message.Message): string =>
   message.blocks
@@ -298,7 +299,10 @@ const resolveProvider = (
   Effect.gen(function* () {
     const domain = payload.provider?.domain ?? senderDomain(message);
     const code = airlineCodeOf(payload.number);
-    const name = payload.provider?.name ?? (code && AIRLINE_NAMES[code]) ?? (domain ? domainToName(domain) : undefined);
+    const name =
+      payload.provider?.name ??
+      (code && AIRLINES.find((airline) => airline.code === code)?.name) ??
+      (domain ? domainToName(domain) : undefined);
     if (!domain && !name) {
       return {};
     }

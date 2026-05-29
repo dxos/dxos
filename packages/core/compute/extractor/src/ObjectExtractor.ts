@@ -34,7 +34,10 @@ export interface ExtractInput {
  *
  * - `created`: objects the dispatcher should `db.add`.
  * - `updated`: objects the extractor already mutated in place (`Obj.update`); the dispatcher
- *   does NOT re-add them but still attaches provenance.
+ *   does NOT re-add them but still attaches provenance. NOTE: because the mutation happens
+ *   during `extract` (before the `onProposal` seam), a cancelling proposal cannot roll these
+ *   back. This is acceptable while `onProposal` is a no-op; once a preview/cancel Dialog is
+ *   wired, in-place updates should become deferred intents applied after the seam.
  * - `relations`: extra relations to persist verbatim.
  * - `tags`: opaque tag descriptors interpreted by the consuming plugin (e.g. applied to the
  *   owning Mailbox by the inbox bridge) — the core dispatcher does not interpret these.
