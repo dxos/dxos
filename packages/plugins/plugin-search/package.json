@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-search",
   "version": "0.8.3",
+  "private": true,
   "description": "Search plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -144,8 +145,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
