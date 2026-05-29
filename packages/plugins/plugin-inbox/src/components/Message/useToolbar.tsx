@@ -117,7 +117,7 @@ export const useMessageActions = ({
                 : 'message toolbar enriched message not available',
             { ns: meta.id },
           ],
-          icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
+          icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--note--regular',
         },
         () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
       );
