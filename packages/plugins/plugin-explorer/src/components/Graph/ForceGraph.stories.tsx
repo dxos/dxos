@@ -19,13 +19,12 @@ import { DxAnchorActivate } from '@dxos/react-ui';
 import { type GraphProps } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SpaceGraphEdge, type SpaceGraphNode, ViewModel } from '@dxos/schema';
-import { type ValueGenerator } from '@dxos/schema/testing';
+import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
-import { generate } from '../../testing';
 import { ForceGraph } from './ForceGraph';
 
 const generator = random as any as ValueGenerator;
@@ -95,7 +94,22 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => generate(personalSpace, generator));
+              yield* Effect.promise(() =>
+                createObjectFactory(
+                  personalSpace.db,
+                  generator,
+                )([
+                  { type: Organization.Organization, count: 20 },
+                  { type: Person.Person, count: 30 },
+                  { type: Pipeline.Pipeline, count: 10 },
+                ]),
+              );
+              yield* Effect.promise(() =>
+                createRelationFactory(
+                  personalSpace.db,
+                  generator,
+                )([{ type: HasRelationship.HasRelationship, count: 20, data: { kind: 'friend' } }]),
+              );
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({ db: personalSpace.db, typename: Type.getTypename(Graph.Graph) }),
               );

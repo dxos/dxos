@@ -10,7 +10,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
+import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore, SyncServer } from '@dxos/feed';
 import { EntityId, SpaceId } from '@dxos/keys';
@@ -49,7 +49,7 @@ const createEdgeConnection = ({
   serverRuntime: ReturnType<typeof createRuntime>;
   messageListeners: Set<(message: RouterMessage) => void>;
 }): EdgeConnection => {
-  const reconnectListeners = new Set<() => void>();
+  const reconnectListeners = new Set<ReconnectListener>();
 
   return {
     statusChanged: new Event<any>(),
@@ -77,7 +77,7 @@ const createEdgeConnection = ({
       messageListeners.add(listener);
       return () => messageListeners.delete(listener);
     },
-    onReconnected: (listener: () => void) => {
+    onReconnected: (listener: ReconnectListener) => {
       reconnectListeners.add(listener);
       return () => reconnectListeners.delete(listener);
     },

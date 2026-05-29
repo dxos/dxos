@@ -166,7 +166,9 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
 
     yield* Effect.all(
       [
-        navigateToNewIntegration(invoker, db, persistedIntegration.id),
+        // Skip navigation when the flow began from a pre-existing target (e.g. a
+        // Mailbox): the user is already on that surface and expects to stay there.
+        existingTarget ? Effect.void : navigateToNewIntegration(invoker, db, persistedIntegration.id),
         provider.getSyncTargets
           ? openSyncTargetsDialogAfterIntegrationCreated(
               invoker,

@@ -44,14 +44,14 @@ describe('Type', () => {
     test('Type.Type is branded as the type entity kind', ({ expect }) => {
       // The Type.Type entity itself is an in-memory object (KindId=Object) that
       // *declares* a type-kind schema (SchemaKindId=Type).
-      expect(Type.isTypeKindSchema(Type.Type)).toBe(true);
+      expect(Type.isTypeKind(Type.Type)).toBe(true);
       expect(Type.isObject(Type.Type)).toBe(false);
       expect(Type.isRelation(Type.Type)).toBe(false);
     });
 
     test('static object/relation types are not type-kind', ({ expect }) => {
-      expect(Type.isTypeKindSchema(TestSchema.Person)).toBe(false);
-      expect(Type.isTypeKindSchema(TestSchema.HasManager)).toBe(false);
+      expect(Type.isTypeKind(TestSchema.Person)).toBe(false);
+      expect(Type.isTypeKind(TestSchema.HasManager)).toBe(false);
     });
 
     test('Type.getMeta(Type.Type) reports key/version of the meta-schema', ({ expect }) => {
@@ -61,7 +61,7 @@ describe('Type', () => {
       const meta = Type.getMeta(Type.Type);
       expect(meta.key).toBe('org.dxos.type.schema');
       expect(meta.version).toBe('0.1.0');
-      expect(Type.isTypeKindSchema(Type.Type)).toBe(true);
+      expect(Type.isTypeKind(Type.Type)).toBe(true);
     });
 
     test('Type.getURI(Type.Type) returns the meta-schema DXN', ({ expect }) => {

@@ -32,7 +32,7 @@ import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { AnchorIconButton } from '../AnchorIconButton';
 import { UserIconButton } from '../UserIconButton';
-import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
+import { type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -43,8 +43,6 @@ type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  renderMode: RenderMode;
-  setRenderMode: (mode: RenderMode) => void;
   message: MessageType.Message;
   sender: EID.EID | undefined;
   onOpen?: () => void;
@@ -65,16 +63,14 @@ const FALLBACK_SETTINGS_ATOM = Atom.make({ loadRemoteImages: false });
 //
 
 type MessageRootProps = PropsWithChildren<
-  Omit<MessageContextValue, 'viewMode' | 'setViewMode' | 'renderMode' | 'setRenderMode'> & {
+  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & {
     viewMode?: ViewMode;
-    renderMode?: RenderMode;
   }
 >;
 
 const MessageRoot = ({
   children,
-  viewMode: viewModeProp = 'plain',
-  renderMode: renderModeProp = 'markdown',
+  viewMode: viewModeProp = 'markdown',
   onOpen,
   onReply,
   onReplyAll,
@@ -82,14 +78,11 @@ const MessageRoot = ({
   ...props
 }: MessageRootProps) => {
   const [viewMode, setViewMode] = useState(viewModeProp);
-  const [renderMode, setRenderMode] = useState(renderModeProp);
 
   return (
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
-      renderMode={renderMode}
-      setRenderMode={setRenderMode}
       onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
@@ -110,24 +103,12 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const {
-    attendableId,
-    message,
-    viewMode,
-    setViewMode,
-    renderMode,
-    setRenderMode,
-    onOpen,
-    onReply,
-    onReplyAll,
-    onForward,
-  } = useMessageContext(MESSAGE_TOOLBAR_NAME);
+  const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
+    useMessageContext(MESSAGE_TOOLBAR_NAME);
   const menuActions = useMessageActions({
     message,
     viewMode,
     setViewMode,
-    renderMode,
-    setRenderMode,
     onOpen,
     onReply,
     onReplyAll,
@@ -291,7 +272,7 @@ const MESSAGE_CONTENT_NAME = 'Message.Content';
 type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
-  const { message, viewMode, renderMode } = useMessageContext(MESSAGE_CONTENT_NAME);
+  const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
   // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
   // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
@@ -300,15 +281,10 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const settings = useAtomValue(settingsAtom ?? FALLBACK_SETTINGS_ATOM);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
-  // If we're in plain-only mode or plain view, show the first block.
-  // Otherwise show enriched content (second block).
+  // Enriched view shows the second (enriched) block; markdown and plain views show the first block.
   const content = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
-    if (viewMode === 'plain-only' || viewMode === 'plain') {
-      return textBlocks[0]?.text || '';
-    }
-
-    return textBlocks[1]?.text || '';
+    return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
   const extensions = useMemo(() => {
@@ -316,7 +292,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
       createThemeExtensions({ themeMode, slots: compactSlots }),
     ];
-    if (renderMode === 'markdown') {
+    if (viewMode !== 'plain') {
       exts.push(
         createMarkdownExtensions(),
         decorateMarkdown({
@@ -348,7 +324,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       );
     }
     return exts;
-  }, [themeMode, renderMode, loadRemoteImages]);
+  }, [themeMode, viewMode, loadRemoteImages]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 

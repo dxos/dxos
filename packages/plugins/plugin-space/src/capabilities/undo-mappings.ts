@@ -44,7 +44,7 @@ export default Capability.makeModule(
           message: (input, _output) => {
             const ns = Entity.getTypename(input.objects[0]);
             return ns && input.objects.length === 1
-              ? ['object-deleted.label', { ns }]
+              ? ['object-deleted.label', { ns: [ns, meta.id] }]
               : ['objects-deleted.label', { ns: meta.id }];
           },
         }),
