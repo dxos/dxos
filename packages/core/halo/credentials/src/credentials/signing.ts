@@ -31,14 +31,17 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
   // Proto3 omits fields equal to their default on the wire (empty arrays, 0, "", false).
   // After an encode/decode round-trip the field is absent, so the signing payload must
   // pre-strip these defaults to stay stable across round-trips.
-  const assertion = (copy.subject as any)?.assertion;
-  if (assertion) {
-    for (const key of Object.keys(assertion)) {
-      const val = assertion[key];
+  // Clone subject + assertion so we don't mutate the caller's credential.
+  const originalAssertion = (copy.subject as any)?.assertion;
+  if (originalAssertion) {
+    const normalizedAssertion = { ...originalAssertion };
+    for (const key of Object.keys(normalizedAssertion)) {
+      const val = normalizedAssertion[key];
       if ((Array.isArray(val) && val.length === 0) || val === 0 || val === '' || val === false) {
-        delete assertion[key];
+        delete normalizedAssertion[key];
       }
     }
+    copy.subject = { ...copy.subject, assertion: normalizedAssertion };
   }
 
   return Buffer.from(canonicalStringify(copy));
