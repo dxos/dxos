@@ -6,7 +6,16 @@ import { describe, test } from 'vitest';
 
 import * as Schema from 'effect/Schema';
 
-import { RequestMapping, ResultMapping } from './Provider';
+import { makeProvider, instanceOf as isProvider, RequestMapping, ResultMapping } from './Provider';
+
+describe('Provider type', () => {
+  test('make + instanceOf', ({ expect }) => {
+    const provider = makeProvider({ name: 'AutoTrader', url: 'https://autotrader.com', kind: 'scrape' });
+    expect(isProvider(provider)).toBe(true);
+    expect(provider.name).toEqual('AutoTrader');
+    expect(provider.enabled).toBe(true);
+  });
+});
 
 describe('Provider mapping schemas', () => {
   test('decodes a request mapping', ({ expect }) => {

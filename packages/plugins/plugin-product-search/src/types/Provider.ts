@@ -4,6 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo/internal';
+
 export const BLUEPRINT_KEY = 'org.dxos.plugin.product-search/blueprint/provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
@@ -43,3 +47,30 @@ export const ResultMapping = Schema.Struct({
   fields: Schema.Record({ key: Schema.String, value: FieldExtractor }),
 });
 export type ResultMapping = Schema.Schema.Type<typeof ResultMapping>;
+
+/** A configured search provider (API or scrape target). */
+export const Provider = Schema.Struct({
+  name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
+  url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+  description: Schema.optional(Schema.String),
+  kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
+  // JSONSchema describing the typed search fields. Converted to Effect Schema for the form.
+  searchSchema: Schema.optional(JsonSchema.JsonSchema),
+  request: Schema.optional(RequestMapping),
+  result: Schema.optional(ResultMapping),
+  enabled: Schema.Boolean,
+}).pipe(
+  LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({ icon: 'ph--globe--regular', hue: 'cyan' }),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.makeObject(DXN.make('org.dxos.type.productSearchProvider', '0.1.0')),
+);
+export type Provider = Type.InstanceType<typeof Provider>;
+
+/** Checks if a value is a Provider object. */
+export const instanceOf = (value: unknown): value is Provider => Obj.instanceOf(Provider, value);
+
+/** Creates a Provider with enabled defaulting to true. */
+export const makeProvider = (
+  props: Omit<Obj.MakeProps<typeof Provider>, 'enabled'> & { enabled?: boolean },
+): Provider => Obj.make(Provider, { enabled: true, ...props });
