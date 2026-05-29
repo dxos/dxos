@@ -69,12 +69,15 @@ const pickExtractor = (
   );
 
   if (extractorId !== undefined) {
+    // Explicit invocation (e.g. the user picked this extractor from a menu) bypasses `match()` —
+    // `match()` is only a heuristic pre-filter for auto-selection. Confidence is still recorded
+    // when the extractor happens to match.
     const found = candidates.find((extractor) => extractor.id === extractorId);
     if (!found) {
       return undefined;
     }
     const matchResult = found.match(source);
-    return matchResult.matched ? { extractor: found, confidence: matchResult.confidence } : undefined;
+    return { extractor: found, confidence: matchResult.matched ? matchResult.confidence : undefined };
   }
 
   let best: ObjectExtractor | undefined;

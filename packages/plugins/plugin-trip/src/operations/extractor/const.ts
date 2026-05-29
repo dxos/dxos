@@ -11,21 +11,21 @@
  * Subdomains (e.g. `email.klm.com`) match too. Extend alongside {@link AIRLINE_NAMES}.
  */
 export const AIRLINE_DOMAINS: readonly string[] = [
-  'united.com',
-  'klm.com',
-  'klm.nl',
+  'aa.com',
   'airfrance.com',
   'airfrance.fr',
-  'flyingblue.com',
-  'delta.com',
-  'lufthansa.com',
-  'britishairways.com',
-  'ba.com',
-  'iberia.com',
-  'aa.com',
   'americanairlines.com',
-  'tap.pt',
+  'ba.com',
+  'britishairways.com',
+  'delta.com',
+  'flyingblue.com',
   'flytap.com',
+  'iberia.com',
+  'klm.com',
+  'klm.nl',
+  'lufthansa.com',
+  'tap.pt',
+  'united.com',
 ];
 
 /** IATA airline prefix → display name. Extend as needed; falls back to the sender domain. */
