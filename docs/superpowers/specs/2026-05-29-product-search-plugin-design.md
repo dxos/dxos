@@ -5,7 +5,7 @@ Status: Approved (design); pending spec review.
 
 ## Summary
 
-A new Composer plugin (`@dxos/plugin-search`, id `org.dxos.plugin.search`) that lets a
+A new Composer plugin (`@dxos/plugin-product-search`, id `org.dxos.plugin.product-search`) that lets a
 user perform **structured product searches across multiple vendor sites** — general retail
 (`amazon.com`) or vertical providers (`autotrader.com`, `mobile.de`, `rightmove.co.uk`).
 
@@ -22,7 +22,7 @@ Results are stored as **linked objects** (stripped metadata + image refs) and vi
 
 The plugin is modeled structurally on `plugin-feed`:
 
-| plugin-feed  | plugin-search |
+| plugin-feed  | plugin-product-search |
 | ------------ | ------------- |
 | Subscription | Provider      |
 | Magazine     | Search        |
@@ -204,7 +204,7 @@ Registered via `AppCapabilities.BlueprintDefinition` in `capabilities/blueprint-
 Creating a Search seeds an empty config; creating a Provider opens the analyze flow (or a
 blank editable template). Optionally seed one starter Provider for demo, feed-style.
 
-## Plugin composition (`SearchPlugin.tsx`)
+## Plugin composition (`ProductSearchPlugin.tsx`)
 
 ```
 Plugin.define(meta).pipe(
@@ -220,7 +220,7 @@ Plugin.define(meta).pipe(
 )
 ```
 
-`meta.ts`: id `org.dxos.plugin.search`, name `Search`, icon (e.g. `ph--magnifying-glass--regular`),
+`meta.ts`: id `org.dxos.plugin.product-search`, name `Search`, icon (e.g. `ph--magnifying-glass--regular`),
 `private: true` package, `tags: ['labs']`. A `PLUGIN.mdl` design doc accompanies the plugin
 (per project rules, PLUGIN.mdl replaces a separate design doc for plugins).
 

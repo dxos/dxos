@@ -4,7 +4,7 @@
 >
 > **DXOS sub-skills to load before relevant tasks:** `composer-plugins` (Tasks 1, 12–18), `echo` (Tasks 2–4), `operations` (Tasks 8–11), `blueprints` (Task 11), `effect` (Tasks 6, 8–11). Run all commands from the worktree `.claude/worktrees/claude+plugin-search`. Tests use `vitest` with `describe`/`test` and `test('x', ({ expect }) => ...)`. Use single quotes. Per project rules: NO casts (`as any`, `as T`, `!`) to silence types; fix at source.
 
-**Goal:** A Composer plugin (`@dxos/plugin-search`, id `org.dxos.plugin.search`) for structured multi-vendor product search, where each vendor is an LLM-authored, user-editable template that deterministically drives an HTTP request + result extraction, with results shown as masonry master/detail cards.
+**Goal:** A Composer plugin (`@dxos/plugin-product-search`, id `org.dxos.plugin.product-search`) for structured multi-vendor product search, where each vendor is an LLM-authored, user-editable template that deterministically drives an HTTP request + result extraction, with results shown as masonry master/detail cards.
 
 **Architecture:** Three ECHO types — `Provider` (site template: JSONSchema fields + request mapping + result mapping), `Search` (multi-provider config holding criteria values + linked results), `Result` (one listing). A pure mapping interpreter turns `(criteria, request)` into an HTTP request and `(response, result-mapping)` into `Result`s. Operations (`RunSearch`, `RunProviderSearch`, `AnalyzeProvider`) run locally or on an agent. A blueprint drives `AnalyzeProvider`. UI mirrors `plugin-feed`'s `MagazineArticle` (form + masonry + `useSelected`).
 
@@ -17,7 +17,7 @@
 ## File Structure
 
 ```
-packages/plugins/plugin-search/
+packages/plugins/plugin-product-search/
   package.json                         # private:true, workspace:* deps
   moon.yml
   vite.config.ts
@@ -26,7 +26,7 @@ packages/plugins/plugin-search/
   src/
     meta.ts                            # Plugin.Meta
     plugin.ts                          # Plugin.lazy
-    SearchPlugin.tsx                   # Plugin.define(...).pipe(...)
+    ProductSearchPlugin.tsx                   # Plugin.define(...).pipe(...)
     index.ts                           # barrel
     translations.ts
     testing.ts                         # fixtures (sample provider/search/HTML)
@@ -84,13 +84,13 @@ packages/plugins/plugin-search/
 ## Task 0: Scaffold the package
 
 **Files:**
-- Create: `packages/plugins/plugin-search/package.json`
-- Create: `packages/plugins/plugin-search/moon.yml`
-- Create: `packages/plugins/plugin-search/vite.config.ts`
-- Create: `packages/plugins/plugin-search/tsconfig.json`
-- Create: `packages/plugins/plugin-search/src/meta.ts`
-- Create: `packages/plugins/plugin-search/src/plugin.ts`
-- Create: `packages/plugins/plugin-search/src/index.ts`
+- Create: `packages/plugins/plugin-product-search/package.json`
+- Create: `packages/plugins/plugin-product-search/moon.yml`
+- Create: `packages/plugins/plugin-product-search/vite.config.ts`
+- Create: `packages/plugins/plugin-product-search/tsconfig.json`
+- Create: `packages/plugins/plugin-product-search/src/meta.ts`
+- Create: `packages/plugins/plugin-product-search/src/plugin.ts`
+- Create: `packages/plugins/plugin-product-search/src/index.ts`
 
 - [ ] **Step 1: Copy scaffolding from plugin-feed.** Copy `vite.config.ts` and `tsconfig.json` verbatim from `packages/plugins/plugin-feed`. They are plugin-agnostic.
 
@@ -98,7 +98,7 @@ packages/plugins/plugin-search/
 
 ```json
 {
-  "name": "@dxos/plugin-search",
+  "name": "@dxos/plugin-product-search",
   "version": "0.8.3",
   "private": true,
   "description": "Product search plugin.",
@@ -108,7 +108,7 @@ packages/plugins/plugin-search/
   "type": "module",
   "imports": {
     "#meta": "./src/meta.ts",
-    "#plugin": "./src/SearchPlugin.tsx"
+    "#plugin": "./src/ProductSearchPlugin.tsx"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -142,7 +142,7 @@ packages/plugins/plugin-search/
 }
 ```
 
-Note: confirm each `@dxos/react-ui-*` dependency actually exists by checking `packages/plugins/plugin-feed/package.json`; mirror its exact set. If `node-html-parser` is not in the catalog, add it: `pnpm add --filter "@dxos/plugin-search" --save-catalog node-html-parser`.
+Note: confirm each `@dxos/react-ui-*` dependency actually exists by checking `packages/plugins/plugin-feed/package.json`; mirror its exact set. If `node-html-parser` is not in the catalog, add it: `pnpm add --filter "@dxos/plugin-product-search" --save-catalog node-html-parser`.
 
 - [ ] **Step 3: Write `moon.yml`** (copy from plugin-feed, adjust entryPoints).
 
@@ -160,7 +160,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/SearchPlugin.tsx'
+      - '--entryPoint=src/ProductSearchPlugin.tsx'
       - '--platform=neutral'
 ```
 
@@ -175,7 +175,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.search',
+  id: 'org.dxos.plugin.product-search',
   name: 'Search',
   author: 'DXOS',
   description: trim`
@@ -184,7 +184,7 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--magnifying-glass--regular',
   iconHue: 'cyan',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-search',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-product-search',
   spec: 'PLUGIN.mdl',
   version: '0.8.3',
   tags: ['labs'],
@@ -202,7 +202,7 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const SearchPlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const ProductSearchPlugin = Plugin.lazy(meta, () => import('#plugin'));
 ```
 
 - [ ] **Step 6: Write a minimal `src/index.ts`** (barrel; will grow).
@@ -212,7 +212,7 @@ export const SearchPlugin = Plugin.lazy(meta, () => import('#plugin'));
 // Copyright 2026 DXOS.org
 //
 
-export { SearchPlugin } from './plugin';
+export { ProductSearchPlugin } from './plugin';
 export { meta } from './meta';
 ```
 
@@ -220,14 +220,14 @@ export { meta } from './meta';
 
 - [ ] **Step 8: Install + verify the package resolves.**
 
-Run: `pnpm install` then `moon run plugin-search:compile`
-Expected: compile succeeds (no source files referenced yet beyond meta/plugin/index — `SearchPlugin.tsx` does not exist yet, so temporarily point `#plugin` import resolution by completing Task 12 before first full compile; for now just confirm `pnpm install` succeeds and the workspace recognizes `@dxos/plugin-search`).
+Run: `pnpm install` then `moon run plugin-product-search:compile`
+Expected: compile succeeds (no source files referenced yet beyond meta/plugin/index — `ProductSearchPlugin.tsx` does not exist yet, so temporarily point `#plugin` import resolution by completing Task 12 before first full compile; for now just confirm `pnpm install` succeeds and the workspace recognizes `@dxos/plugin-product-search`).
 
 - [ ] **Step 9: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search
-git commit -m "feat(plugin-search): scaffold package"
+git add packages/plugins/plugin-product-search
+git commit -m "feat(plugin-product-search): scaffold package"
 ```
 
 ---
@@ -237,8 +237,8 @@ git commit -m "feat(plugin-search): scaffold package"
 These are plain Effect Schemas (not ECHO objects) used as fields inside `Provider`.
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/types/Provider.ts` (mapping schemas portion)
-- Test: `packages/plugins/plugin-search/src/types/Provider.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/types/Provider.ts` (mapping schemas portion)
+- Test: `packages/plugins/plugin-product-search/src/types/Provider.test.ts`
 
 - [ ] **Step 1: Write the failing test** (`Provider.test.ts`).
 
@@ -278,7 +278,7 @@ describe('Provider mapping schemas', () => {
 
 - [ ] **Step 2: Run to verify it fails.**
 
-Run: `moon run plugin-search:test -- src/types/Provider.test.ts`
+Run: `moon run plugin-product-search:test -- src/types/Provider.test.ts`
 Expected: FAIL — cannot find module './Provider' / `RequestMapping` undefined.
 
 - [ ] **Step 3: Implement the mapping schemas** at the top of `src/types/Provider.ts`.
@@ -294,7 +294,7 @@ import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { JsonSchema } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-export const BLUEPRINT_KEY = 'org.dxos.plugin.search/blueprint/provider';
+export const BLUEPRINT_KEY = 'org.dxos.plugin.product-search/blueprint/provider';
 
 /** Binds a request parameter to a search-schema field, with an optional transform hint. */
 export const FieldBinding = Schema.Struct({
@@ -337,14 +337,14 @@ export type ResultMapping = Schema.Schema.Type<typeof ResultMapping>;
 
 - [ ] **Step 4: Run to verify pass.**
 
-Run: `moon run plugin-search:test -- src/types/Provider.test.ts`
+Run: `moon run plugin-product-search:test -- src/types/Provider.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/types/Provider.ts packages/plugins/plugin-search/src/types/Provider.test.ts
-git commit -m "feat(plugin-search): request/result mapping schemas"
+git add packages/plugins/plugin-product-search/src/types/Provider.ts packages/plugins/plugin-product-search/src/types/Provider.test.ts
+git commit -m "feat(plugin-product-search): request/result mapping schemas"
 ```
 
 ---
@@ -352,8 +352,8 @@ git commit -m "feat(plugin-search): request/result mapping schemas"
 ## Task 2: `Provider` ECHO type
 
 **Files:**
-- Modify: `packages/plugins/plugin-search/src/types/Provider.ts`
-- Test: `packages/plugins/plugin-search/src/types/Provider.test.ts`
+- Modify: `packages/plugins/plugin-product-search/src/types/Provider.ts`
+- Test: `packages/plugins/plugin-product-search/src/types/Provider.test.ts`
 
 - [ ] **Step 1: Add the failing test** (append to `Provider.test.ts`).
 
@@ -374,7 +374,7 @@ describe('Provider type', () => {
 
 - [ ] **Step 2: Run to verify it fails.**
 
-Run: `moon run plugin-search:test -- src/types/Provider.test.ts`
+Run: `moon run plugin-product-search:test -- src/types/Provider.test.ts`
 Expected: FAIL — `makeProvider` not exported.
 
 - [ ] **Step 3: Implement the `Provider` object** (append to `src/types/Provider.ts`).
@@ -394,7 +394,7 @@ export const Provider = Schema.Struct({
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--globe--regular', hue: 'cyan' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.search-provider', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.product-search-provider', '0.1.0')),
 );
 export type Provider = Type.InstanceType<typeof Provider>;
 
@@ -409,14 +409,14 @@ Add the import for `BlueprintsAnnotation` at the top: `import { BlueprintsAnnota
 
 - [ ] **Step 4: Run to verify pass.**
 
-Run: `moon run plugin-search:test -- src/types/Provider.test.ts`
+Run: `moon run plugin-product-search:test -- src/types/Provider.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/types/Provider.ts packages/plugins/plugin-search/src/types/Provider.test.ts
-git commit -m "feat(plugin-search): Provider type"
+git add packages/plugins/plugin-product-search/src/types/Provider.ts packages/plugins/plugin-product-search/src/types/Provider.test.ts
+git commit -m "feat(plugin-product-search): Provider type"
 ```
 
 ---
@@ -424,8 +424,8 @@ git commit -m "feat(plugin-search): Provider type"
 ## Task 3: `Result` ECHO type
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/types/Result.ts`
-- Test: `packages/plugins/plugin-search/src/types/Result.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/types/Result.ts`
+- Test: `packages/plugins/plugin-product-search/src/types/Result.test.ts`
 
 - [ ] **Step 1: Write the failing test.**
 
@@ -450,7 +450,7 @@ describe('Result type', () => {
 
 - [ ] **Step 2: Run — expect FAIL** (`makeResult` not found).
 
-Run: `moon run plugin-search:test -- src/types/Result.test.ts`
+Run: `moon run plugin-product-search:test -- src/types/Result.test.ts`
 
 - [ ] **Step 3: Implement `Result`.**
 
@@ -477,7 +477,7 @@ export const Result = Schema.Struct({
   fetchedAt: Schema.optional(Schema.String),
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--tag--regular', hue: 'cyan' }),
-  Type.makeObject(DXN.make('org.dxos.type.search-result', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.product-search-result', '0.1.0')),
 );
 export type Result = Type.InstanceType<typeof Result>;
 
@@ -493,8 +493,8 @@ Note: `Result` does not carry a back-ref to `Search`; the `Search.results` array
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/types/Result.ts packages/plugins/plugin-search/src/types/Result.test.ts
-git commit -m "feat(plugin-search): Result type"
+git add packages/plugins/plugin-product-search/src/types/Result.ts packages/plugins/plugin-product-search/src/types/Result.test.ts
+git commit -m "feat(plugin-product-search): Result type"
 ```
 
 ---
@@ -502,9 +502,9 @@ git commit -m "feat(plugin-search): Result type"
 ## Task 4: `Search` ECHO type
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/types/Search.ts`
-- Create: `packages/plugins/plugin-search/src/types/index.ts`
-- Test: `packages/plugins/plugin-search/src/types/Search.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/types/Search.ts`
+- Create: `packages/plugins/plugin-product-search/src/types/index.ts`
+- Test: `packages/plugins/plugin-product-search/src/types/Search.test.ts`
 
 - [ ] **Step 1: Write the failing test.**
 
@@ -530,7 +530,7 @@ describe('Search type', () => {
 
 - [ ] **Step 2: Run — expect FAIL.**
 
-Run: `moon run plugin-search:test -- src/types/Search.test.ts`
+Run: `moon run plugin-product-search:test -- src/types/Search.test.ts`
 
 - [ ] **Step 3: Implement `Search`.**
 
@@ -558,7 +558,7 @@ export const Search = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--magnifying-glass--regular', hue: 'cyan' }),
-  Type.makeObject(DXN.make('org.dxos.type.search', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.product-search', '0.1.0')),
 );
 export type Search = Type.InstanceType<typeof Search>;
 
@@ -599,8 +599,8 @@ export * as SearchOperation from './SearchOperation';
 - [ ] **Step 6: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/types
-git commit -m "feat(plugin-search): Search type + types barrel"
+git add packages/plugins/plugin-product-search/src/types
+git commit -m "feat(plugin-product-search): Search type + types barrel"
 ```
 
 ---
@@ -610,8 +610,8 @@ git commit -m "feat(plugin-search): Search type + types barrel"
 Pure function: `(criteria, request) -> { method, url, headers, body }`. No network.
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/util/bindRequest.ts`
-- Test: `packages/plugins/plugin-search/src/util/bindRequest.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/util/bindRequest.ts`
+- Test: `packages/plugins/plugin-product-search/src/util/bindRequest.test.ts`
 
 - [ ] **Step 1: Write the failing test.**
 
@@ -662,7 +662,7 @@ describe('bindRequest', () => {
 
 - [ ] **Step 2: Run — expect FAIL.**
 
-Run: `moon run plugin-search:test -- src/util/bindRequest.test.ts`
+Run: `moon run plugin-product-search:test -- src/util/bindRequest.test.ts`
 
 - [ ] **Step 3: Implement `bindRequest`.**
 
@@ -739,8 +739,8 @@ export const bindRequest = (criteria: Record<string, unknown>, request: RequestM
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/util/bindRequest.ts packages/plugins/plugin-search/src/util/bindRequest.test.ts
-git commit -m "feat(plugin-search): request binder"
+git add packages/plugins/plugin-product-search/src/util/bindRequest.ts packages/plugins/plugin-product-search/src/util/bindRequest.test.ts
+git commit -m "feat(plugin-product-search): request binder"
 ```
 
 ---
@@ -750,8 +750,8 @@ git commit -m "feat(plugin-search): request binder"
 Pure function: `(responseBody, ResultMapping) -> ResultData[]`. HTML via `node-html-parser`; JSON via simple dotted-path.
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/util/extractResults.ts`
-- Test: `packages/plugins/plugin-search/src/util/extractResults.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/util/extractResults.ts`
+- Test: `packages/plugins/plugin-product-search/src/util/extractResults.test.ts`
 
 - [ ] **Step 1: Write the failing test.**
 
@@ -813,7 +813,7 @@ describe('extractResults', () => {
 
 - [ ] **Step 2: Run — expect FAIL.**
 
-Run: `moon run plugin-search:test -- src/util/extractResults.test.ts`
+Run: `moon run plugin-product-search:test -- src/util/extractResults.test.ts`
 
 - [ ] **Step 3: Implement `extractResults`.**
 
@@ -900,8 +900,8 @@ export const extractResults = (body: string, mapping: ResultMapping): ResultData
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/util/extractResults.ts packages/plugins/plugin-search/src/util/extractResults.test.ts
-git commit -m "feat(plugin-search): result extractor"
+git add packages/plugins/plugin-product-search/src/util/extractResults.ts packages/plugins/plugin-product-search/src/util/extractResults.test.ts
+git commit -m "feat(plugin-product-search): result extractor"
 ```
 
 ---
@@ -909,8 +909,8 @@ git commit -m "feat(plugin-search): result extractor"
 ## Task 7: Operation definitions
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/types/SearchOperation.ts`
-- Modify: `packages/plugins/plugin-search/src/types/index.ts` (add `SearchOperation` export)
+- Create: `packages/plugins/plugin-product-search/src/types/SearchOperation.ts`
+- Modify: `packages/plugins/plugin-product-search/src/types/index.ts` (add `SearchOperation` export)
 
 - [ ] **Step 1: Write `SearchOperation.ts`.**
 
@@ -981,14 +981,14 @@ export * as SearchOperation from './SearchOperation';
 
 - [ ] **Step 3: Verify it compiles.**
 
-Run: `moon run plugin-search:compile`
+Run: `moon run plugin-product-search:compile`
 Expected: success (no handlers referenced yet).
 
 - [ ] **Step 4: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/types/SearchOperation.ts packages/plugins/plugin-search/src/types/index.ts
-git commit -m "feat(plugin-search): operation definitions"
+git add packages/plugins/plugin-product-search/src/types/SearchOperation.ts packages/plugins/plugin-product-search/src/types/index.ts
+git commit -m "feat(plugin-product-search): operation definitions"
 ```
 
 ---
@@ -996,8 +996,8 @@ git commit -m "feat(plugin-search): operation definitions"
 ## Task 8: Edge fetch util
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/util/fetch.ts`
-- Create: `packages/plugins/plugin-search/src/util/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/util/fetch.ts`
+- Create: `packages/plugins/plugin-product-search/src/util/index.ts`
 
 - [ ] **Step 1: Implement the fetch wrapper** (`fetch.ts`). (No unit test — it hits the proxy; covered indirectly by operation tests with a stubbed fetch.)
 
@@ -1049,14 +1049,14 @@ export * from './unionSchema';
 
 - [ ] **Step 3: Compile.**
 
-Run: `moon run plugin-search:compile`
+Run: `moon run plugin-product-search:compile`
 Expected: success (omit the `unionSchema` export line until Task 16).
 
 - [ ] **Step 4: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/util/fetch.ts packages/plugins/plugin-search/src/util/index.ts
-git commit -m "feat(plugin-search): edge proxy fetch util"
+git add packages/plugins/plugin-product-search/src/util/fetch.ts packages/plugins/plugin-product-search/src/util/index.ts
+git commit -m "feat(plugin-product-search): edge proxy fetch util"
 ```
 
 ---
@@ -1064,8 +1064,8 @@ git commit -m "feat(plugin-search): edge proxy fetch util"
 ## Task 9: `RunProviderSearch` handler
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/operations/run-provider-search.ts`
-- Test: `packages/plugins/plugin-search/src/operations/run-provider-search.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/operations/run-provider-search.ts`
+- Test: `packages/plugins/plugin-product-search/src/operations/run-provider-search.test.ts`
 
 - [ ] **Step 1: Write the failing test.** This test drives the *pure composition* the handler relies on by testing the extracted helper `buildResults(criteria, provider, body)`; the Effect handler wires Database + fetch around it.
 
@@ -1103,7 +1103,7 @@ describe('buildResults', () => {
 
 - [ ] **Step 2: Run — expect FAIL.**
 
-Run: `moon run plugin-search:test -- src/operations/run-provider-search.test.ts`
+Run: `moon run plugin-product-search:test -- src/operations/run-provider-search.test.ts`
 
 - [ ] **Step 3: Implement the handler + helper.**
 
@@ -1172,8 +1172,8 @@ Note: confirm the exact `Database` API for adding an object inside a handler —
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/operations/run-provider-search.ts packages/plugins/plugin-search/src/operations/run-provider-search.test.ts
-git commit -m "feat(plugin-search): run-provider-search handler"
+git add packages/plugins/plugin-product-search/src/operations/run-provider-search.ts packages/plugins/plugin-product-search/src/operations/run-provider-search.test.ts
+git commit -m "feat(plugin-product-search): run-provider-search handler"
 ```
 
 ---
@@ -1181,7 +1181,7 @@ git commit -m "feat(plugin-search): run-provider-search handler"
 ## Task 10: `RunSearch` handler
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/operations/run-search.ts`
+- Create: `packages/plugins/plugin-product-search/src/operations/run-search.ts`
 
 - [ ] **Step 1: Implement** (fan-out; no new pure logic to unit-test beyond what Task 9 covers — an operation-level test with a stubbed fetch is added in Task 19's integration note).
 
@@ -1230,14 +1230,14 @@ Note: confirm the mutation API. `plugin-feed` mutates objects directly (e.g. `ma
 
 - [ ] **Step 2: Compile.**
 
-Run: `moon run plugin-search:compile`
+Run: `moon run plugin-product-search:compile`
 Expected: success.
 
 - [ ] **Step 3: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/operations/run-search.ts
-git commit -m "feat(plugin-search): run-search handler"
+git add packages/plugins/plugin-product-search/src/operations/run-search.ts
+git commit -m "feat(plugin-product-search): run-search handler"
 ```
 
 ---
@@ -1247,10 +1247,10 @@ git commit -m "feat(plugin-search): run-search handler"
 The LLM analyzes the provider's site and fills in `searchSchema` + `request` + `result`. The operation handler fetches the site HTML (via the proxy) and asks the AI to emit the template as structured output, then writes it onto the Provider.
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/operations/analyze-provider.ts`
-- Create: `packages/plugins/plugin-search/src/operations/index.ts`
-- Create: `packages/plugins/plugin-search/src/blueprints/provider-blueprint.ts`
-- Create: `packages/plugins/plugin-search/src/blueprints/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/operations/analyze-provider.ts`
+- Create: `packages/plugins/plugin-product-search/src/operations/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/blueprints/provider-blueprint.ts`
+- Create: `packages/plugins/plugin-product-search/src/blueprints/index.ts`
 
 - [ ] **Step 1: Implement `analyze-provider.ts`.** Read the site, prompt the AI for a structured template, write it back. Use the AI-invocation pattern from `packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts` (AiContext.Binder + `Operation.invoke(AgentPrompt, ...)`), OR — simpler for a deterministic structured result — call the assistant's structured-generation operation. Because the precise AI structured-output API must be confirmed against the current `@dxos/assistant` / `@dxos/assistant-toolkit`, this task has TWO checkpoints:
 
@@ -1369,14 +1369,14 @@ export { default as ProviderBlueprint } from './provider-blueprint';
 
 - [ ] **Step 5: Compile.**
 
-Run: `moon run plugin-search:compile`
+Run: `moon run plugin-product-search:compile`
 Expected: success (with the AI call resolved per checkpoint 1).
 
 - [ ] **Step 6: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/operations packages/plugins/plugin-search/src/blueprints
-git commit -m "feat(plugin-search): analyze-provider operation + blueprint"
+git add packages/plugins/plugin-product-search/src/operations packages/plugins/plugin-product-search/src/blueprints
+git commit -m "feat(plugin-product-search): analyze-provider operation + blueprint"
 ```
 
 ---
@@ -1384,11 +1384,11 @@ git commit -m "feat(plugin-search): analyze-provider operation + blueprint"
 ## Task 12: Capabilities + plugin assembly (first runnable build)
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/capabilities/operation-handler.ts`
-- Create: `packages/plugins/plugin-search/src/capabilities/blueprint-definition.ts`
-- Create: `packages/plugins/plugin-search/src/capabilities/index.ts`
-- Create: `packages/plugins/plugin-search/src/translations.ts`
-- Create: `packages/plugins/plugin-search/src/SearchPlugin.tsx`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/operation-handler.ts`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/blueprint-definition.ts`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/translations.ts`
+- Create: `packages/plugins/plugin-product-search/src/ProductSearchPlugin.tsx`
 
 - [ ] **Step 1: `operation-handler.ts`.**
 
@@ -1495,7 +1495,7 @@ export { default as AppGraphBuilder } from './app-graph-builder';
 
 (`CreateObject`, `ReactSurface`, `AppGraphBuilder` are created in Tasks 13/17 — add their exports as those tasks complete; for this task, include only `OperationHandler` and `BlueprintDefinition`.)
 
-- [ ] **Step 5: `SearchPlugin.tsx`** (start with the modules that exist now; add surface/graph/create modules in later tasks).
+- [ ] **Step 5: `ProductSearchPlugin.tsx`** (start with the modules that exist now; add surface/graph/create modules in later tasks).
 
 ```typescript
 //
@@ -1510,7 +1510,7 @@ import { meta } from './meta';
 import { Provider, Search, Result } from './types';
 import { translations } from './translations';
 
-export const SearchPlugin = Plugin.define(meta).pipe(
+export const ProductSearchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Provider.Provider, Search.Search, Result.Result] }),
@@ -1518,19 +1518,19 @@ export const SearchPlugin = Plugin.define(meta).pipe(
   Plugin.make,
 );
 
-export default SearchPlugin;
+export default ProductSearchPlugin;
 ```
 
 - [ ] **Step 6: Build + test the whole package.**
 
-Run: `moon run plugin-search:build && moon run plugin-search:test`
+Run: `moon run plugin-product-search:build && moon run plugin-product-search:test`
 Expected: build succeeds; all unit tests pass.
 
 - [ ] **Step 7: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src
-git commit -m "feat(plugin-search): capabilities, translations, plugin assembly"
+git add packages/plugins/plugin-product-search/src
+git commit -m "feat(plugin-product-search): capabilities, translations, plugin assembly"
 ```
 
 ---
@@ -1538,10 +1538,10 @@ git commit -m "feat(plugin-search): capabilities, translations, plugin assembly"
 ## Task 13: `ResultCard` + `react-surface` (Card)
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/containers/ResultCard/ResultCard.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/ResultCard/index.ts`
-- Create: `packages/plugins/plugin-search/src/containers/index.ts`
-- Create: `packages/plugins/plugin-search/src/capabilities/react-surface.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/ResultCard/ResultCard.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/ResultCard/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/containers/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/react-surface.tsx`
 
 - [ ] **Step 1: Implement `ResultCard.tsx`** (mirror `plugin-feed/src/containers/MagazineArticle/MagazineTile.tsx`; use `@dxos/react-ui-card` `Card.*`).
 
@@ -1636,7 +1636,7 @@ export default Capability.makeModule(
 
 `SearchArticle` and `ProviderArticle` are built in Tasks 14–15; this file references them. Build those before compiling, or temporarily comment the two article surfaces and add them back in Task 14/15. Confirm exact import paths for `Surface` / `AppSurface` against `plugin-feed/src/capabilities/react-surface.tsx`.
 
-- [ ] **Step 4: Add `ReactSurface` to `SearchPlugin.tsx`** pipe + `capabilities/index.ts`:
+- [ ] **Step 4: Add `ReactSurface` to `ProductSearchPlugin.tsx`** pipe + `capabilities/index.ts`:
 
 ```typescript
 AppPlugin.addSurfaceModule({ activate: ReactSurface }),
@@ -1645,8 +1645,8 @@ AppPlugin.addSurfaceModule({ activate: ReactSurface }),
 - [ ] **Step 5: Commit** (after Tasks 14–15 make this compile; if proceeding strictly task-by-task, commit `ResultCard` now and the surface wiring after SearchArticle exists).
 
 ```bash
-git add packages/plugins/plugin-search/src/containers/ResultCard
-git commit -m "feat(plugin-search): ResultCard"
+git add packages/plugins/plugin-product-search/src/containers/ResultCard
+git commit -m "feat(plugin-product-search): ResultCard"
 ```
 
 ---
@@ -1654,10 +1654,10 @@ git commit -m "feat(plugin-search): ResultCard"
 ## Task 14: Union-schema util + `RangeField`
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/util/unionSchema.ts`
-- Modify: `packages/plugins/plugin-search/src/util/index.ts` (add export)
-- Test: `packages/plugins/plugin-search/src/util/unionSchema.test.ts`
-- Create: `packages/plugins/plugin-search/src/components/RangeField.tsx`
+- Create: `packages/plugins/plugin-product-search/src/util/unionSchema.ts`
+- Modify: `packages/plugins/plugin-product-search/src/util/index.ts` (add export)
+- Test: `packages/plugins/plugin-product-search/src/util/unionSchema.test.ts`
+- Create: `packages/plugins/plugin-product-search/src/components/RangeField.tsx`
 
 - [ ] **Step 1: Write the failing test for `unionSchema`.**
 
@@ -1688,7 +1688,7 @@ describe('mergeJsonSchemas', () => {
 
 - [ ] **Step 2: Run — expect FAIL.**
 
-Run: `moon run plugin-search:test -- src/util/unionSchema.test.ts`
+Run: `moon run plugin-product-search:test -- src/util/unionSchema.test.ts`
 
 - [ ] **Step 3: Implement `unionSchema.ts`.**
 
@@ -1772,8 +1772,8 @@ Confirm `Input.Root`/`Input.Label`/`Input.TextInput` against an existing field, 
 - [ ] **Step 7: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/util/unionSchema.ts packages/plugins/plugin-search/src/util/unionSchema.test.ts packages/plugins/plugin-search/src/util/index.ts packages/plugins/plugin-search/src/components/RangeField.tsx
-git commit -m "feat(plugin-search): union schema builder + RangeField"
+git add packages/plugins/plugin-product-search/src/util/unionSchema.ts packages/plugins/plugin-product-search/src/util/unionSchema.test.ts packages/plugins/plugin-product-search/src/util/index.ts packages/plugins/plugin-product-search/src/components/RangeField.tsx
+git commit -m "feat(plugin-product-search): union schema builder + RangeField"
 ```
 
 ---
@@ -1781,11 +1781,11 @@ git commit -m "feat(plugin-search): union schema builder + RangeField"
 ## Task 15: `SearchArticle` (master/detail)
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/containers/SearchArticle/SearchArticle.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/SearchArticle/SearchForm.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/SearchArticle/ResultTile.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/SearchArticle/ResultDetail.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/SearchArticle/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/SearchArticle.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/SearchForm.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/ResultTile.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/ResultDetail.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/index.ts`
 
 - [ ] **Step 1: `SearchForm.tsx`** — provider multi-select + union-schema form + Run button.
 
@@ -1988,14 +1988,14 @@ CRITICAL fixes the implementer must make (do NOT leave the `as any`):
 
 - [ ] **Step 6: Build.**
 
-Run: `moon run plugin-search:build`
+Run: `moon run plugin-product-search:build`
 Expected: success, zero `as any`.
 
 - [ ] **Step 7: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/containers/SearchArticle packages/plugins/plugin-search/src/containers/index.ts
-git commit -m "feat(plugin-search): SearchArticle master/detail"
+git add packages/plugins/plugin-product-search/src/containers/SearchArticle packages/plugins/plugin-product-search/src/containers/index.ts
+git commit -m "feat(plugin-product-search): SearchArticle master/detail"
 ```
 
 ---
@@ -2003,8 +2003,8 @@ git commit -m "feat(plugin-search): SearchArticle master/detail"
 ## Task 16: `ProviderArticle` (template editor)
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/containers/ProviderArticle/ProviderArticle.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/ProviderArticle/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/containers/ProviderArticle/ProviderArticle.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/ProviderArticle/index.ts`
 
 - [ ] **Step 1: Implement** — a `Form.Root` over the `Provider` schema (name/url/kind/enabled) plus a raw JSON editor for `searchSchema`/`request`/`result`, and an "Analyze" button. Reuse `Form` as in `SearchForm`. For the JSON portions, render a `<textarea>` bound to `JSON.stringify(value, null, 2)` with parse-on-blur (a richer editor is a follow-up). Include a "Re-analyze" button that triggers `AnalyzeProvider` (prefer a graph action — Task 17).
 
@@ -2049,13 +2049,13 @@ Confirm: `ProviderType.Provider` is the schema value; the form will skip `search
 
 - [ ] **Step 2: Barrels + build.**
 
-Run: `moon run plugin-search:build`
+Run: `moon run plugin-product-search:build`
 
 - [ ] **Step 3: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src/containers/ProviderArticle
-git commit -m "feat(plugin-search): ProviderArticle template editor"
+git add packages/plugins/plugin-product-search/src/containers/ProviderArticle
+git commit -m "feat(plugin-product-search): ProviderArticle template editor"
 ```
 
 ---
@@ -2063,9 +2063,9 @@ git commit -m "feat(plugin-search): ProviderArticle template editor"
 ## Task 17: App-graph (Providers branch + actions) + CreateObject
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/capabilities/app-graph-builder.ts`
-- Create: `packages/plugins/plugin-search/src/capabilities/create-object.ts`
-- Modify: `SearchPlugin.tsx` (add modules), `capabilities/index.ts`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/app-graph-builder.ts`
+- Create: `packages/plugins/plugin-product-search/src/capabilities/create-object.ts`
+- Modify: `ProductSearchPlugin.tsx` (add modules), `capabilities/index.ts`
 
 - [ ] **Step 1: `create-object.ts`** — register `CreateObjectEntry` for `Search` and `Provider` (mirror `plugin-feed/src/capabilities/create-object.ts`).
 
@@ -2170,7 +2170,7 @@ export default Capability.makeModule(
 
 This file is the most framework-specific. Read `plugin-feed/src/capabilities/app-graph-builder.ts` end-to-end and copy its exact imports (`GraphBuilder`, `Node`, the capability tag passed to `Capability.contributes`, `AppNodeMatcher`, the `createObjectNode` helper, ref-to-data conversions, and how `Operation.invoke` is passed as action `data`). Replace the `undefined as never` placeholder with the real capability tag and remove all guesses. Also add the "Providers" branch connector (like the Feeds branch) listing `Provider` objects in the space.
 
-- [ ] **Step 3: Wire modules into `SearchPlugin.tsx`** (add `AppGraphBuilder`, `CreateObject`):
+- [ ] **Step 3: Wire modules into `ProductSearchPlugin.tsx`** (add `AppGraphBuilder`, `CreateObject`):
 
 ```typescript
 AppPlugin.addAppGraphModule({
@@ -2184,14 +2184,14 @@ Import `ActivationEvent` from `@dxos/app-framework`, `AppActivationEvents`/`AppP
 
 - [ ] **Step 4: Build + test.**
 
-Run: `moon run plugin-search:build && moon run plugin-search:test`
+Run: `moon run plugin-product-search:build && moon run plugin-product-search:test`
 Expected: success.
 
 - [ ] **Step 5: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/src
-git commit -m "feat(plugin-search): app-graph actions + create-object"
+git add packages/plugins/plugin-product-search/src
+git commit -m "feat(plugin-product-search): app-graph actions + create-object"
 ```
 
 ---
@@ -2199,12 +2199,12 @@ git commit -m "feat(plugin-search): app-graph actions + create-object"
 ## Task 18: `PLUGIN.mdl` + plugin-asset module
 
 **Files:**
-- Modify: `packages/plugins/plugin-search/PLUGIN.mdl`
-- Modify: `SearchPlugin.tsx` (add `addPluginAssetModule`)
+- Modify: `packages/plugins/plugin-product-search/PLUGIN.mdl`
+- Modify: `ProductSearchPlugin.tsx` (add `addPluginAssetModule`)
 
 - [ ] **Step 1: Write `PLUGIN.mdl`** — a concise design doc for the plugin (purpose, the three types, how templates are authored by the blueprint, how search runs locally/agent, the masonry UI). Follow the structure of `packages/plugins/plugin-feed/PLUGIN.mdl`. Per project memory, `PLUGIN.mdl` is the plugin's design doc.
 
-- [ ] **Step 2: Add the asset module** to `SearchPlugin.tsx` (mirror `FeedPlugin.tsx`):
+- [ ] **Step 2: Add the asset module** to `ProductSearchPlugin.tsx` (mirror `FeedPlugin.tsx`):
 
 ```typescript
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -2218,13 +2218,13 @@ Confirm the `?raw` import + asset module shape against `FeedPlugin.tsx`.
 
 - [ ] **Step 3: Build.**
 
-Run: `moon run plugin-search:build`
+Run: `moon run plugin-product-search:build`
 
 - [ ] **Step 4: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search/PLUGIN.mdl packages/plugins/plugin-search/src/SearchPlugin.tsx
-git commit -m "feat(plugin-search): PLUGIN.mdl design doc + asset module"
+git add packages/plugins/plugin-product-search/PLUGIN.mdl packages/plugins/plugin-product-search/src/ProductSearchPlugin.tsx
+git commit -m "feat(plugin-product-search): PLUGIN.mdl design doc + asset module"
 ```
 
 ---
@@ -2232,11 +2232,11 @@ git commit -m "feat(plugin-search): PLUGIN.mdl design doc + asset module"
 ## Task 19: Stories + register in composer-app
 
 **Files:**
-- Create: `packages/plugins/plugin-search/src/containers/ResultCard/ResultCard.stories.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/SearchArticle/SearchArticle.stories.tsx`
-- Create: `packages/plugins/plugin-search/src/containers/ProviderArticle/ProviderArticle.stories.tsx`
-- Create: `packages/plugins/plugin-search/src/components/RangeField.stories.tsx`
-- Create: `packages/plugins/plugin-search/src/testing.ts`
+- Create: `packages/plugins/plugin-product-search/src/containers/ResultCard/ResultCard.stories.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/SearchArticle/SearchArticle.stories.tsx`
+- Create: `packages/plugins/plugin-product-search/src/containers/ProviderArticle/ProviderArticle.stories.tsx`
+- Create: `packages/plugins/plugin-product-search/src/components/RangeField.stories.tsx`
+- Create: `packages/plugins/plugin-product-search/src/testing.ts`
 - Modify: `packages/apps/composer-app/package.json`
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 
@@ -2259,7 +2259,7 @@ import { translations } from '../../translations';
 import { sampleResult } from '../../testing';
 
 const meta: Meta<typeof ResultCard> = {
-  title: 'plugins/plugin-search/ResultCard',
+  title: 'plugins/plugin-product-search/ResultCard',
   component: ResultCard,
   decorators: [withTheme()],
   parameters: { translations },
@@ -2275,25 +2275,25 @@ Confirm the exact `withTheme` import path and story decorator set against a curr
 - [ ] **Step 3: Register the plugin in composer-app.** Add to `packages/apps/composer-app/package.json` dependencies:
 
 ```json
-"@dxos/plugin-search": "workspace:*",
+"@dxos/plugin-product-search": "workspace:*",
 ```
 
-Then in `packages/apps/composer-app/src/plugin-defs.tsx` import and add `SearchPlugin` to the plugin list (find where `FeedPlugin` is imported and registered; add `SearchPlugin` right after, matching the exact import + array-insertion pattern).
+Then in `packages/apps/composer-app/src/plugin-defs.tsx` import and add `ProductSearchPlugin` to the plugin list (find where `FeedPlugin` is imported and registered; add `ProductSearchPlugin` right after, matching the exact import + array-insertion pattern).
 
 - [ ] **Step 4: Install + full build.**
 
-Run: `pnpm install && moon run plugin-search:build && moon run plugin-search:test && moon run composer-app:build`
+Run: `pnpm install && moon run plugin-product-search:build && moon run plugin-product-search:test && moon run composer-app:build`
 Expected: all succeed.
 
 - [ ] **Step 5: Storybook smoke check.**
 
-Run: `moon run storybook-react:serve` and open the `plugins/plugin-search/*` stories; confirm they render without console errors. (Or use `moon run plugin-search:test-storybook` if present.)
+Run: `moon run storybook-react:serve` and open the `plugins/plugin-product-search/*` stories; confirm they render without console errors. (Or use `moon run plugin-product-search:test-storybook` if present.)
 
 - [ ] **Step 6: Commit.**
 
 ```bash
-git add packages/plugins/plugin-search packages/apps/composer-app/package.json packages/apps/composer-app/src/plugin-defs.tsx pnpm-lock.yaml
-git commit -m "feat(plugin-search): stories + register in composer-app"
+git add packages/plugins/plugin-product-search packages/apps/composer-app/package.json packages/apps/composer-app/src/plugin-defs.tsx pnpm-lock.yaml
+git commit -m "feat(plugin-product-search): stories + register in composer-app"
 ```
 
 ---
@@ -2308,7 +2308,7 @@ Run: `moon run composer-app:serve --quiet` (port 5173).
 
 - [ ] **Step 3: Verify lint + format.**
 
-Run: `moon run plugin-search:lint -- --fix && pnpm format`
+Run: `moon run plugin-product-search:lint -- --fix && pnpm format`
 Expected: clean.
 
 - [ ] **Step 4: Audit for casts** (project rule).
@@ -2320,7 +2320,7 @@ Expected: no new casts except justified external-boundary ones with comments. Re
 
 ```bash
 git add -A
-git commit -m "chore(plugin-search): lint/format + cast audit"
+git commit -m "chore(plugin-product-search): lint/format + cast audit"
 ```
 
 ---
