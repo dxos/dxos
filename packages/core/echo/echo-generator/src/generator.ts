@@ -108,11 +108,11 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyEntity> {
-    if (Type.isTypeKindSchema(schema)) {
+    if (Type.isTypeKind(schema)) {
       const types = this._space.internal.db.graph.registry.list().filter(Type.isType);
       const version = Type.getVersion(schema);
       const existingSchema = types.find(
-        (t) => Type.isTypeKindSchema(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
+        (t) => Type.isTypeKind(t) && Type.getTypename(t) === typename && Type.getVersion(t) === version,
       );
       if (existingSchema != null) {
         return existingSchema;

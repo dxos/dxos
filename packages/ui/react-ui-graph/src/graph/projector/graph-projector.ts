@@ -80,10 +80,13 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
       return current;
     });
 
-    // Replace edges.
+    // Replace edges. Preserve `type` so projectors can classify edges by their source
+    // semantics (e.g. the plexus projector groups by relation vs ref); projectors that
+    // synthesize their own edges (bundle, cluster) overwrite this downstream.
     const edges = data.edges
       .map((edge) => ({
         id: edge.id,
+        type: (edge as { type?: string }).type,
         source: nodes.find((n) => n.id === edge.source),
         target: nodes.find((n) => n.id === edge.target),
         data: edge.data,

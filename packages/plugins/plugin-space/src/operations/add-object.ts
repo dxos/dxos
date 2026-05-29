@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       const types = yield* Effect.promise(() =>
         db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run(),
       );
-      const [runtimeSchema] = types.filter((t) => !Type.isTypeKindSchema(t) && Type.getTypename(t) === typename);
+      const [runtimeSchema] = types.filter((t) => !Type.isTypeKind(t) && Type.getTypename(t) === typename);
       const echoViewPath =
         runtimeSchema !== undefined
           ? ViewAnnotation.get(Type.getSchema(runtimeSchema)).pipe(Option.getOrElse(() => []))

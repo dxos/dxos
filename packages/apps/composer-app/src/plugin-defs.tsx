@@ -244,7 +244,7 @@ export const getPlugins = ({
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
-    WelcomePlugin(),
+    WelcomePlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),
