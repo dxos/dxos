@@ -188,19 +188,6 @@ export class AutomergeHost extends Resource {
   private _onHeadsChangedTask?: DeferredTask;
 
   /**
-   * Tracks in-flight {@link _afterSave} invocations so {@link flush} can wait
-   * for them to finish recording their heads into {@link _headsUpdates} before
-   * draining {@link _onHeadsChangedTask}. Without this, a concurrent
-   * `_afterSave` (e.g. a save driven by network arrival, not by the docs we
-   * just asked `_repo.flush` to persist) could be mid-flight when
-   * `runBlocking` samples — its head update would land in the *next* deferred
-   * pass and miss this flush's barrier.
-   */
-  private _inFlightAfterSaveCount = 0;
-  private _afterSaveSettled = Promise.resolve();
-  private _resolveAfterSaveSettled: (() => void) | null = null;
-
-  /**
    * Documents created in this session.
    */
   private _createdDocuments = new Set<DocumentId>();
@@ -386,11 +373,7 @@ export class AutomergeHost extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     // Drain any in-flight `_onHeadsChangedTask` before the `Resource` base
-    // disposes `this._ctx`. Without this, a concurrent `flush()` call (e.g.
-    // from a client `db.flush()` RPC racing with shutdown) hits its
-    // `runBlocking` after the ctx has been disposed and throws
-    // `ContextDisposedError`, which escapes as an unhandled rejection at the
-    // fire-and-forget originating caller.
+    // disposes `this._ctx`.
     await this._onHeadsChangedTask?.join();
 
     await this._collectionSynchronizer.close(ctx);
@@ -770,49 +753,27 @@ export class AutomergeHost extends Resource {
 
   /**
    * Called by AutomergeStorageAdapter after levelDB batch commit.
-   *
-   * Tracks itself in {@link _inFlightAfterSaveCount} so {@link flush} can
-   * await any concurrent invocations (e.g. saves triggered by network
-   * arrival) before sampling `_onHeadsChangedTask`. Per-call entry/exit
-   * accounting handles re-entrancy and overlap from `saveBatch` (which
-   * awaits `afterSave` per entry sequentially) and from concurrent saves
-   * across documents.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
-    this._inFlightAfterSaveCount++;
-    if (this._inFlightAfterSaveCount === 1) {
-      this._afterSaveSettled = new Promise<void>((resolve) => {
-        this._resolveAfterSaveSettled = resolve;
-      });
+    if (!this.isOpen) {
+      return undefined;
     }
-    try {
-      if (!this.isOpen) {
-        return undefined;
-      }
 
-      const documentId = path[0] as DocumentId;
-      const handle = this._repo.handles[documentId];
-      if (!handle) {
-        return;
-      }
-      const document = handle.doc();
-      if (!document) {
-        return;
-      }
-
-      const heads = getHeads(document);
-      this._headsUpdates.set(documentId, heads);
-      invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
-      this._onHeadsChangedTask.schedule();
-      this.documentsSaved.emit();
-    } finally {
-      this._inFlightAfterSaveCount--;
-      if (this._inFlightAfterSaveCount === 0) {
-        const resolve = this._resolveAfterSaveSettled;
-        this._resolveAfterSaveSettled = null;
-        resolve?.();
-      }
+    const documentId = path[0] as DocumentId;
+    const handle = this._repo.handles[documentId];
+    if (!handle) {
+      return;
     }
+    const document = handle.doc();
+    if (!document) {
+      return;
+    }
+
+    const heads = getHeads(document);
+    this._headsUpdates.set(documentId, heads);
+    invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
+    this._onHeadsChangedTask.schedule();
+    this.documentsSaved.emit();
   }
 
   private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
@@ -858,27 +819,12 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Flush documents to disk and drain head-change propagation.
+   * Flush documents to disk.
    *
-   * Three-stage barrier:
-   *   1. `_repo.flush(loadedDocuments)` calls `StorageSubsystem.saveDoc` per
-   *      ready handle, which goes through `LevelDBStorageAdapter.save` /
-   *      `saveBatch`. Both await `callbacks.afterSave` (i.e. `_afterSave`)
-   *      synchronously after the leveldb batch write. So when `_repo.flush`
-   *      resolves, every targeted doc's `_afterSave` has run and recorded
-   *      its new heads in `_headsUpdates`.
-   *   2. Wait for any *concurrent* `_afterSave` invocations to settle —
-   *      saves driven outside our `loadedDocuments` set (e.g. network sync)
-   *      may be mid-flight. We track these via `_inFlightAfterSaveCount`
-   *      and block until the count reaches zero.
-   *   3. `_onHeadsChangedTask.runBlocking()` drains the deferred consumer of
-   *      `_headsUpdates`, which publishes the heads into
-   *      `_collectionSynchronizer` (and emits `collectionStateUpdated`).
-   *
-   * Post-condition: every `_afterSave` invocation that began at or before
-   * the start of this `flush` has had its head update propagated into the
-   * synchronizer before this method resolves. Callers can then sample
-   * `getCollectionSyncState` and trust the local heads view.
+   * Persists ready handles via `_repo.flush`. Head updates are published into
+   * the collection synchronizer asynchronously by {@link _onHeadsChangedTask};
+   * callers needing an up-to-date sync-state view should subscribe to
+   * {@link collectionStateUpdated} rather than sampling immediately after flush.
    */
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
@@ -889,36 +835,6 @@ export class AutomergeHost extends Resource {
       (documentId): documentId is DocumentId => getHandleState(this._repo, documentId as DocumentId) === 'ready',
     );
     await this._repo.flush(loadedDocuments);
-    if (!this.isOpen) {
-      return;
-    }
-
-    // When the caller asked for a scoped flush, do NOT block on the global
-    // `_inFlightAfterSaveCount` drain or `_onHeadsChangedTask.runBlocking()`.
-    // Both are repo-wide and observe concurrent saves from background
-    // subduction sync activity on unrelated documents — each
-    // `subduction.addCommitsBatch(...)` triggers an `_afterSave` callback
-    // that re-arms `_inFlightAfterSaveCount` and `_onHeadsChangedTask`. With
-    // the post-`shareConfigChanged` bulk-sync this happens continuously on
-    // every WS reconnect across all entries, so the scoped flush ends up
-    // waiting for the entire bulk-sync to drain (~30s rust per-request
-    // timeout × N) and `DataSpaceManager.createSpace` wedges on
-    // `createSpaceRoot` for every space after the second.
-    //
-    // The unscoped form retains the strict semantics — callers that want
-    // "all repo state observed" still pay the global drain.
-    if (documentIds !== undefined) {
-      return;
-    }
-
-    while (this._inFlightAfterSaveCount > 0) {
-      await this._afterSaveSettled;
-    }
-    if (!this.isOpen) {
-      return;
-    }
-
-    await this._onHeadsChangedTask?.runBlocking();
   }
 
   /**
@@ -985,9 +901,6 @@ export class AutomergeHost extends Resource {
    * treat any single emission as authoritative; subscribe to the stream and
    * converge.
    *
-   * Callers needing a strict barrier ("all my local writes have been
-   * recorded") must call {@link flush} first — `flush` drains both
-   * `_repo.flush` and `_onHeadsChangedTask`.
    */
   async getCollectionSyncState(collectionId: string): Promise<SpaceSyncState> {
     const result: SpaceSyncState = {
