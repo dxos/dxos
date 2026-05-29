@@ -3,7 +3,7 @@
 //
 
 import { type Database, type Entity } from '@dxos/echo';
-import { type EchoURI, type ObjectId } from '@dxos/keys';
+import { type EID, type EntityId } from '@dxos/keys';
 
 /**
  * @deprecated Queues are migrating to feeds (regular ECHO objects).
@@ -23,7 +23,7 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  */
 // TODO(dmaretskyi): Remove type parameter -- all queues are untyped, and we use query to enforce type.
 export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
-  readonly uri: EchoURI.EchoURI;
+  readonly uri: EID.EID;
 
   /**
    * Subscribe to queue updates.
@@ -76,7 +76,7 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
    * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
+  getObjectsById(ids: EntityId[]): Promise<(T | undefined)[]>;
 
   /**
    * Refreshes the queue from the server.

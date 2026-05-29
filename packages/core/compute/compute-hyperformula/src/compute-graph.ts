@@ -125,7 +125,7 @@ export class ComputeGraph extends Resource {
   // TODO(burdon): Async (open node).
   //  The graph should be an extensible factory that plugins extend with model constructors.
   //  This would enable on-the-fly instantiation of new models when then are referenced.
-  //  E.g., Cross-object reference would be stored as "ObjectId!A1"
+  //  E.g., Cross-object reference would be stored as "EntityId!A1"
   //  The graph would then load the object and create a ComputeNode (model) of the appropriate type.
   getOrCreateNode(name: string): ComputeNode {
     invariant(name.length);

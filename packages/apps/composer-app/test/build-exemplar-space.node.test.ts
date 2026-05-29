@@ -44,7 +44,7 @@ import {
   Annotation,
   Collection,
   DXN,
-  EchoURI,
+  EID,
   Feed,
   Filter,
   JsonSchema,
@@ -882,7 +882,7 @@ const makeNotes = (
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
-  const localDxn = (obj: Obj.Unknown) => EchoURI.make({ objectId: obj.id });
+  const localDxn = (obj: Obj.Unknown) => EID.make({ entityId: obj.id });
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 

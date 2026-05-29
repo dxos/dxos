@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { EchoURI, parseId } from '@dxos/keys';
+import { EID, parseId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
@@ -30,8 +30,8 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
       const { transcriptionManager } = store.state;
       if (space && transcriptDXN && transcriptionManager) {
         // Resolve the feed object from its queue/echo URI.
-        const echoUri = EchoURI.tryParse(transcriptDXN);
-        const feedObjectId = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+        const echoUri = EID.tryParse(transcriptDXN);
+        const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
         const feed = feedObjectId
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
           : undefined;

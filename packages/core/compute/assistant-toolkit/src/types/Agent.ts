@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { type ObjectNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -178,7 +178,7 @@ export const makeInitialized = (
  */
 export const resetChatHistory = (
   agent: Agent,
-): Effect.Effect<void, ObjectNotFoundError, Feed.FeedService | Database.Service> =>
+): Effect.Effect<void, EntityNotFoundError, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
     invariant(agent.chat, 'Agent must have an existing chat to reset.');
 

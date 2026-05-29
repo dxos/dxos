@@ -4,7 +4,7 @@
 
 import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
@@ -13,7 +13,7 @@ import {
   EntityKind,
   KindId,
   MetaId,
-  type ObjectMeta,
+  type EntityMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
   getStaticTypeSchema,
@@ -39,7 +39,7 @@ import { attachTypedJsonSerializer } from './json-serializer';
 export type CreateObjectProps<T> = (T extends { id: string }
   ? Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
   : Omit<T, KindId | SchemaKindId | StaticTypeSchemaSlot>) & {
-  readonly [MetaId]?: Partial<ObjectMeta>;
+  readonly [MetaId]?: Partial<EntityMeta>;
 };
 
 /**
@@ -97,7 +97,7 @@ export const createObject: {
   }
 
   // Raw object.
-  const obj = { ...props, id: props.id ?? ObjectId.random() };
+  const obj = { ...props, id: props.id ?? EntityId.random() };
 
   // Metadata. Instance-kind is read from the schema's TypeAnnotation (set by
   // EchoObjectSchema / EchoRelationSchema / EchoTypeKindSchema): instances of

@@ -10,7 +10,7 @@ import { ToolId } from '@dxos/ai';
 import { DXN, Annotation, Key, Obj, Type } from '@dxos/echo';
 
 export const Step = Schema.Struct({
-  id: Key.ObjectId,
+  id: Key.EntityId,
   instructions: Schema.String,
   tools: Schema.optional(Schema.Array(ToolId)),
 });
@@ -47,7 +47,7 @@ export namespace Builder {
 
     step(instructions: string, options?: { tools?: ToolId[] }): Impl {
       this._steps.push({
-        id: Key.ObjectId.random(),
+        id: Key.EntityId.random(),
         instructions,
         tools: options?.tools ?? [],
       });

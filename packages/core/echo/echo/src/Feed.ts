@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN, EchoURI } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -116,11 +116,11 @@ export interface SyncState {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Returns the feed object's EchoURI when the feed is stored in a space.
+ * Returns the feed object's EID when the feed is stored in a space.
  *
  * Used internally by the feed service layer.
  */
-export const getQueueUri = (feed: Feed): EchoURI.EchoURI | undefined => EchoURI.tryParse(Obj.getURI(feed));
+export const getQueueUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
 
 //
 // Service
@@ -142,7 +142,7 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
     /**
      * Removes items from a feed by ID.
      */
-    // TODO(dmaretskyi): Change type to ObjectId.
+    // TODO(dmaretskyi): Change type to EntityId.
     remove(feed: Feed, ids: string[]): Promise<void>;
 
     /**

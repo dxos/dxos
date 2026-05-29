@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoURI, type ObjectId, type URI, DXN } from '@dxos/keys';
+import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -85,7 +85,7 @@ export type OfShape<Source extends Obj.Unknown, Target extends Obj.Unknown, Prop
  */
 interface BaseRelationSnapshot<Source, Target> extends internal.AnyEntity, Endpoints<Source, Target> {
   readonly [Entity.SnapshotKindId]: internal.EntityKind.Relation;
-  readonly id: ObjectId;
+  readonly id: EntityId;
 }
 
 /**
@@ -126,8 +126,8 @@ export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
  * Internal props type for relation instance creation.
  */
 type MakePropsInternal<T extends Endpoints<any, any>> = {
-  id?: ObjectId;
-  [Meta]?: internal.ObjectMeta;
+  id?: EntityId;
+  [Meta]?: internal.EntityMeta;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Entity.Properties<T>;
@@ -161,7 +161,7 @@ export const make = <T extends Type.AnyRelation>(
   );
   assertArgument(props[internal.ParentId] === undefined, 'props', 'Parent is not allowed for relations');
 
-  let meta: internal.ObjectMeta | undefined = undefined;
+  let meta: internal.EntityMeta | undefined = undefined;
 
   if (props[internal.MetaId] != null) {
     meta = props[internal.MetaId] as any;
@@ -232,11 +232,11 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
+export const getSourceURI = (value: Unknown | Snapshot): EID.EID => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const uri = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(EchoURI.isEchoURI(uri));
+  invariant(EID.isEID(uri));
   return uri;
 };
 
@@ -245,11 +245,11 @@ export const getSourceURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
+export const getTargetURI = (value: Unknown | Snapshot): EID.EID => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const uri = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(EchoURI.isEchoURI(uri));
+  invariant(EID.isEID(uri));
   return uri;
 };
 
@@ -375,8 +375,8 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the canonical URI of the relation. Returns `URI.URI` — today always an EchoURI,
- * but future entity kinds may surface other URI schemes; narrow with `EchoURI.parse(uri)`
+ * Get the canonical URI of the relation. Returns `URI.URI` — today always an EID,
+ * but future entity kinds may surface other URI schemes; narrow with `EID.parse(uri)`
  * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
  */
 export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
@@ -425,7 +425,7 @@ export const getDatabase = (entity: Unknown | Snapshot): Database.Database | und
 export const Meta = internal.MetaId;
 
 /**
- * Deeply read-only version of ObjectMeta.
+ * Deeply read-only version of EntityMeta.
  */
 export type ReadonlyMeta = internal.ReadonlyMeta;
 

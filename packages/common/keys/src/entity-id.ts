@@ -9,33 +9,33 @@ import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 // TODO(dmaretskyi): Make brand.
-// export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
-// export const ObjectIdSchema = Schema.ULID.pipe(S.brand(ObjectIdBrand));
-const ObjectIdSchema = Schema.String.pipe(Schema.pattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i)).annotations({
+// export const EntityIdBrand: unique symbol = Symbol('@dxos/echo/EntityId');
+// export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
+const EntityIdSchema = Schema.String.pipe(Schema.pattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i)).annotations({
   description: 'A Universally Unique Lexicographically Sortable Identifier',
   pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
 });
 
-export type ObjectId = typeof ObjectIdSchema.Type;
+export type EntityId = typeof EntityIdSchema.Type;
 
-export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
+export interface EntityIdClass extends Schema.SchemaClass<EntityId, string> {
   /**
-   * @returns true if the string is a valid ObjectId.
+   * @returns true if the string is a valid EntityId.
    */
-  isValid(id: string): id is ObjectId;
+  isValid(id: string): id is EntityId;
 
   /**
-   * Creates an ObjectId from a string validating the format.
+   * Creates an EntityId from a string validating the format.
    */
-  make(id: string): ObjectId;
+  make(id: string): EntityId;
 
   /**
-   * Generates a random ObjectId.
+   * Generates a random EntityId.
    */
-  random(): ObjectId;
+  random(): EntityId;
 
   /**
-   * Derives a deterministic ULID-format ObjectId from arbitrary seed values.
+   * Derives a deterministic ULID-format EntityId from arbitrary seed values.
    *
    * The same inputs always produce the same id, across processes, isolates, and workers.
    * Unlike `random()`, this method does not call `crypto.getRandomValues()` and is therefore
@@ -47,39 +47,39 @@ export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
    * `random()` when global uniqueness is required: callers must guarantee seed uniqueness
    * themselves; identical seeds yield identical ids and therefore collide.
    *
-   * The result always passes `ObjectId.isValid(...)`.
+   * The result always passes `EntityId.isValid(...)`.
    *
    * @param seed - One or more seed values; coerced to strings and joined.
    *
    * ```ts
-   * ObjectId.deterministic('org.dxos.type.person', '0.1.0'); // stable across runs
+   * EntityId.deterministic('org.dxos.type.person', '0.1.0'); // stable across runs
    * ```
    */
-  deterministic(...seed: (string | number)[]): ObjectId;
+  deterministic(...seed: (string | number)[]): EntityId;
 
   /**
    * WARNING: To be used only within tests.
    *
-   * Disables randomness in ObjectId generation, causing the same sequence of IDs to be generated.
+   * Disables randomness in EntityId generation, causing the same sequence of IDs to be generated.
    * Do not use in production code as this will cause data collisions.
    * Place this at the top of the test file to ensure that the same sequence of IDs is generated.
    *
    * ```ts
-   * ObjectId.dangerouslyDisableRandomness();
+   * EntityId.dangerouslyDisableRandomness();
    *
    * describe('suite', () => {
    *   // ...
    * });
    * ```
    *
-   * NOTE: The generated IDs depend on the order of ObjectId.random() calls, which might be affected by test order, scheduling, etc.
+   * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
   dangerouslyDisableRandomness(): void;
 
   /**
    * WARNING: To be used only within tests.
    *
-   * Pins the time component of generated ObjectIds and seeds the PRNG used for the random component,
+   * Pins the time component of generated EntityIds and seeds the PRNG used for the random component,
    * causing the same sequence of IDs to be generated across runs.
    * Do not use in production code as this will cause data collisions.
    *
@@ -87,10 +87,10 @@ export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
    * @param seed - Seed value for the PRNG used for the ULID random component.
    *
    * ```ts
-   * ObjectId.dangerouslySetSeed(new Date('2025-01-01').getTime(), 42);
+   * EntityId.dangerouslySetSeed(new Date('2025-01-01').getTime(), 42);
    * ```
    *
-   * NOTE: The generated IDs depend on the order of ObjectId.random() calls, which might be affected by test order, scheduling, etc.
+   * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
   dangerouslySetSeed(time: number, seed: number): void;
 }
@@ -100,24 +100,24 @@ export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
  *
  * Follows ULID spec.
  */
-export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
+export const EntityId: EntityIdClass = class extends EntityIdSchema {
   static #factory: ULIDFactory = monotonicFactory();
   static #seedTime: number | undefined = undefined;
 
-  static isValid(id: string): id is ObjectId {
+  static isValid(id: string): id is EntityId {
     try {
-      Schema.decodeSync(ObjectId)(id);
+      Schema.decodeSync(EntityId)(id);
       return true;
     } catch {
       return false;
     }
   }
 
-  static random(): ObjectId {
-    return this.#factory(this.#seedTime) as ObjectId;
+  static random(): EntityId {
+    return this.#factory(this.#seedTime) as EntityId;
   }
 
-  static deterministic(...seed: (string | number)[]): ObjectId {
+  static deterministic(...seed: (string | number)[]): EntityId {
     const input = seed.map((value) => String(value)).join('\0');
     // FNV-1a 32-bit ×2 → 64 bits of derived entropy, packed into the 80-bit ULID random component.
     let h1 = 0x811c9dc5 >>> 0;
@@ -136,7 +136,7 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
       rand = ALPHABET[Number(bits & 0x1fn)] + rand;
       bits >>= 5n;
     }
-    return (time + rand) as ObjectId;
+    return (time + rand) as EntityId;
   }
 
   static dangerouslyDisableRandomness() {

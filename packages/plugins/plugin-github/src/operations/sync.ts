@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
@@ -309,9 +309,9 @@ const upsertTask = Effect.fn('upsertTask')(function* (
         existing.assigned = Ref.make(assignedPerson);
       }
       const currentProjectId = existing.project
-        ? EchoURI.getObjectId(EchoURI.tryParse(existing.project.uri)!)
+        ? EID.getEntityId(EID.tryParse(existing.project.uri)!)
         : undefined;
-      const projectId = EchoURI.getObjectId(EchoURI.tryParse(Ref.make(project).uri)!);
+      const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);
       }
@@ -516,9 +516,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
         }
 
-        const integrationId = EchoURI.getObjectId(EchoURI.tryParse(integration.uri)!) ?? 'unknown';
+        const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
         const toastIdSuffix = repoRef
-          ? `${integrationId}.${EchoURI.getObjectId(EchoURI.tryParse(repoRef.uri)!) ?? 'unknown'}`
+          ? `${integrationId}.${EID.getEntityId(EID.tryParse(repoRef.uri)!) ?? 'unknown'}`
           : integrationId;
 
         const outcome = yield* Effect.either(
@@ -535,7 +535,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const reposById = new Map(allRepos.map((repo) => [String(repo.id), repo]));
 
             // Optional narrow filter to a single Project echo id.
-            const repoFilterId = repoRef ? EchoURI.getObjectId(EchoURI.tryParse(repoRef.uri)!) : undefined;
+            const repoFilterId = repoRef ? EID.getEntityId(EID.tryParse(repoRef.uri)!) : undefined;
 
             // Materialize per-target work: ensure local Project exists, wire
             // `target.object` ref, then later batch-pull each repo's owning org

@@ -6,11 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import type { ObjectId } from './object-id';
+import type { EntityId } from './entity-id';
 import type { SpaceId } from './space-id';
 import type * as URI from './URI';
 
-// Canonical-form regex covering all three EchoURI shapes.
+// Canonical-form regex covering all three EID shapes.
 //   echo://<spaceId>/<objectId>
 //   echo://<spaceId>
 //   echo:/<objectId>      (local)
@@ -38,31 +38,31 @@ const LEGACY_QUEUE_RE = /^dxn:queue:[^:]+:([^:]+):([^:]+)$/;
  * echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE
  * ```
  */
-export type EchoURI = URI.URI & { readonly __EchoURI: unique symbol };
+export type EID = URI.URI & { readonly __EID: unique symbol };
 
 /**
- * Returns true if the value is a valid EchoURI (new or legacy format).
+ * Returns true if the value is a valid EID (new or legacy format).
  */
-export const isEchoURI = (value: unknown): value is EchoURI =>
+export const isEID = (value: unknown): value is EID =>
   typeof value === 'string' &&
   (value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:'));
 
 /**
- * Parses a string to EchoURI, normalizing legacy formats to the canonical `echo:` form.
- * Throws if the (normalized) string is not a valid EchoURI.
+ * Parses a string to EID, normalizing legacy formats to the canonical `echo:` form.
+ * Throws if the (normalized) string is not a valid EID.
  */
-export const parse = (uri: string): EchoURI => {
+export const parse = (uri: string): EID => {
   const normalized = normalizeLegacy(uri);
   if (!ECHO_URI_REGEXP.test(normalized)) {
-    throw new Error(`Invalid EchoURI: ${uri}`);
+    throw new Error(`Invalid EID: ${uri}`);
   }
-  return normalized as EchoURI;
+  return normalized as EID;
 };
 
 /**
  * Like `parse` but returns undefined on failure instead of throwing.
  */
-export const tryParse = (uri: string): EchoURI | undefined => {
+export const tryParse = (uri: string): EID | undefined => {
   try {
     return parse(uri);
   } catch {
@@ -100,77 +100,77 @@ const normalizeLegacy = (uri: string): string => {
 };
 
 /**
- * Constructs an EchoURI. Validates the result via `parse`.
+ * Constructs an EID. Validates the result via `parse`.
  *
- * - `{ spaceId, objectId }` → `echo://<spaceId>/<objectId>` (fully qualified)
- * - `{ objectId }`          → `echo:/<objectId>` (local — current space)
+ * - `{ spaceId, entityId }` → `echo://<spaceId>/<entityId>` (fully qualified)
+ * - `{ entityId }`          → `echo:/<entityId>` (local — current space)
  * - `{ spaceId }`           → `echo://<spaceId>` (space-only)
  *
- * Throws if neither id is provided, or if the result is not a valid EchoURI.
+ * Throws if neither id is provided, or if the result is not a valid EID.
  */
-export const make = ({ spaceId, objectId }: { spaceId?: SpaceId; objectId?: ObjectId }): EchoURI => {
+export const make = ({ spaceId, entityId }: { spaceId?: SpaceId; entityId?: EntityId }): EID => {
   let raw: string;
-  if (spaceId != null && objectId != null) {
-    raw = `echo://${spaceId}/${objectId}`;
-  } else if (objectId != null) {
-    raw = `echo:/${objectId}`;
+  if (spaceId != null && entityId != null) {
+    raw = `echo://${spaceId}/${entityId}`;
+  } else if (entityId != null) {
+    raw = `echo:/${entityId}`;
   } else if (spaceId != null) {
     raw = `echo://${spaceId}`;
   } else {
-    throw new Error('EchoURI.make requires at least one of spaceId or objectId');
+    throw new Error('EID.make requires at least one of spaceId or entityId');
   }
   return parse(raw);
 };
 
 /**
- * Returns the SpaceId from a fully-qualified EchoURI, or undefined for local refs.
+ * Returns the SpaceId from a fully-qualified EID, or undefined for local refs.
  */
-export const getSpaceId = (uri: EchoURI): SpaceId | undefined => {
+export const getSpaceId = (uri: EID): SpaceId | undefined => {
   const normalized = parse(uri);
   const match = QUALIFIED_RE.exec(normalized) ?? SPACE_ONLY_RE.exec(normalized);
   return match?.[1] as SpaceId | undefined;
 };
 
 /**
- * Returns the ObjectId from an EchoURI, or undefined for space-only refs.
+ * Returns the EntityId from an EID, or undefined for space-only refs.
  */
-export const getObjectId = (uri: EchoURI): ObjectId | undefined => {
+export const getEntityId = (uri: EID): EntityId | undefined => {
   const normalized = parse(uri);
   const qualMatch = QUALIFIED_RE.exec(normalized);
   if (qualMatch) {
-    return qualMatch[2] as ObjectId;
+    return qualMatch[2] as EntityId;
   }
   const localMatch = LOCAL_RE.exec(normalized);
-  return localMatch?.[1] as ObjectId | undefined;
+  return localMatch?.[1] as EntityId | undefined;
 };
 
 /**
- * Returns true if the EchoURI is a local reference (no authority/space).
+ * Returns true if the EID is a local reference (no authority/space).
  */
-export const isLocal = (uri: EchoURI): boolean => {
+export const isLocal = (uri: EID): boolean => {
   const normalized = parse(uri);
   return LOCAL_RE.test(normalized);
 };
 
 /**
- * Returns true if the two EchoURIs refer to the same object, normalizing both first.
+ * Returns true if the two EIDs refer to the same object, normalizing both first.
  */
-export const equals = (a: EchoURI, b: EchoURI): boolean => parse(a) === parse(b);
+export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
 
 /**
- * Effect Schema for EchoURI validation.
+ * Effect Schema for EID validation.
  */
-// Identity-encoded schema (`Schema<EchoURI, EchoURI>`) so consumers can refine generic
+// Identity-encoded schema (`Schema<EID, EID>`) so consumers can refine generic
 // schemas without the encode/decode types diverging. `Schema.filter` produces a refinement
 // with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
 // runtime representation is identical (a branded string).
-const Schema_: Schema.Schema<EchoURI, EchoURI> = Schema.String.pipe(
-  Schema.filter((value): value is EchoURI => isEchoURI(value), {
-    message: () => 'Invalid EchoURI: must start with echo:, dxn:echo:, or dxn:queue:',
+const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
+  Schema.filter((value): value is EID => isEID(value), {
+    message: () => 'Invalid EID: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
   Schema.annotations({
-    title: 'EchoURI',
+    title: 'EID',
     description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:/<objectId>',
   }),
-) as unknown as Schema.Schema<EchoURI, EchoURI>;
+) as unknown as Schema.Schema<EID, EID>;
 export { Schema_ as Schema };

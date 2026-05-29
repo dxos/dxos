@@ -15,7 +15,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
-import { DXN, EchoURI } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -40,7 +40,7 @@ export const subscription = Command.make(
         onNone: () => selectTrigger('subscription'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.make({ objectId: triggerId });
+      const dxn = EID.make({ entityId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'subscription') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
@@ -128,7 +128,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
 
   if (!currentFn) {
     const functionId =
-      (trigger.function ? EchoURI.getObjectId(EchoURI.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
+      (trigger.function ? EID.getEntityId(EID.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 

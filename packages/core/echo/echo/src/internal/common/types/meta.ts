@@ -22,11 +22,11 @@ export const ATTR_META = '@meta';
 export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 
 //
-// ObjectMeta
+// EntityMeta
 //
 
-// TODO(dmaretskyi): Rename to ObjectMeta
-export const ObjectMetaSchema = Schema.Struct({
+// TODO(dmaretskyi): Rename to EntityMeta
+export const EntityMetaSchema = Schema.Struct({
   keys: Schema.Array(ForeignKey),
 
   /**
@@ -52,7 +52,7 @@ export const ObjectMetaSchema = Schema.Struct({
   version: Schema.optional(Schema.String),
 });
 
-export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
+export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;
 
 /*
  * Get metadata from object.
@@ -61,9 +61,9 @@ export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
  * @internal (use Obj.getMeta or Relation.getMeta)
  */
 // TODO(burdon): Refine type to BaseObj.
-export const getMeta = (obj: AnyProperties): ObjectMeta => {
+export const getMeta = (obj: AnyProperties): EntityMeta => {
   const metadata = (obj as any)[MetaId];
-  invariant(metadata, 'ObjectMeta not found.');
+  invariant(metadata, 'EntityMeta not found.');
   return metadata;
 };
 

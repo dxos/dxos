@@ -7,7 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import type * as Effect from 'effect/Effect';
 
 import type { Obj } from '@dxos/echo';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import type { EntityId, SpaceId } from '@dxos/keys';
 
 /**
  * Data describing objects returned from sources to the indexer.
@@ -18,7 +18,7 @@ export interface IndexerObject {
    * Queue id if object is from the queue.
    * If null, `documentId` must be set.
    */
-  queueId: ObjectId | null;
+  queueId: EntityId | null;
   /**
    * Queue subspace namespace (e.g. 'data', 'trace') the object lives in.
    * Set together with `queueId`; null for non-queue objects.
@@ -32,8 +32,8 @@ export interface IndexerObject {
 
   /**
    * Record id from the objectMeta index.
-   * `Null` before the object is stored in the ObjectMetaIndex.
-   * Enriched by the IndexEngine after the object is stored in the ObjectMetaIndex.
+   * `Null` before the object is stored in the EntityMetaIndex.
+   * Enriched by the IndexEngine after the object is stored in the EntityMetaIndex.
    */
   recordId: number | null;
 

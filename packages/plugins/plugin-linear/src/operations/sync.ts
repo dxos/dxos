@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Project, Task } from '@dxos/types';
 
@@ -252,9 +252,9 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       }
       if (project) {
         const currentProjectId = existing.project
-          ? EchoURI.getObjectId(EchoURI.tryParse(existing.project.uri)!)
+          ? EID.getEntityId(EID.tryParse(existing.project.uri)!)
           : undefined;
-        const projectId = EchoURI.getObjectId(EchoURI.tryParse(Ref.make(project).uri)!);
+        const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
         if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
           existing.project = Ref.make(project);
         }
@@ -456,9 +456,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
         return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
       }
 
-      const integrationId = EchoURI.getObjectId(EchoURI.tryParse(integration.uri)!) ?? 'unknown';
+      const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = teamRef
-        ? `${integrationId}.${EchoURI.getObjectId(EchoURI.tryParse(teamRef.uri)!) ?? 'unknown'}`
+        ? `${integrationId}.${EID.getEntityId(EID.tryParse(teamRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -474,7 +474,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           // Optional narrow filter to a single target by its local
           // `target.object` echo id. Linear targets don't always have a
           // materialized object until first sync, so this filter is best-effort.
-          const teamFilterEchoId = teamRef ? EchoURI.getObjectId(EchoURI.tryParse(teamRef.uri)!) : undefined;
+          const teamFilterEchoId = teamRef ? EID.getEntityId(EID.tryParse(teamRef.uri)!) : undefined;
 
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
@@ -497,7 +497,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
             }
             if (teamFilterEchoId) {
               const targetEchoId = target.object
-                ? EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!)
+                ? EID.getEntityId(EID.tryParse(target.object.uri)!)
                 : undefined;
               if (targetEchoId !== teamFilterEchoId) {
                 continue;

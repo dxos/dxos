@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { ObjectId, URI } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
@@ -33,7 +33,7 @@ export const KindSchema = internal.EntityKindSchema;
  */
 export interface OfKind<K extends Kind> {
   readonly [KindId]: K;
-  readonly id: ObjectId;
+  readonly id: EntityId;
 }
 
 /**
@@ -41,7 +41,7 @@ export interface OfKind<K extends Kind> {
  */
 export interface SnapshotOfKind<K extends Kind> {
   readonly [SnapshotKindId]: K;
-  readonly id: ObjectId;
+  readonly id: EntityId;
 }
 
 /**
@@ -185,8 +185,8 @@ export type AnyInput = Unknown | Snapshot;
 
 /**
  * Get the canonical URI of an entity (object, relation, or type). Returns `URI.URI` —
- * an `EchoURI` for object/relation instances and persisted types, or a typename
- * `DXN` for static type entities; narrow with `EchoURI.parse(uri)` or
+ * an `EID` for object/relation instances and persisted types, or a typename
+ * `DXN` for static type entities; narrow with `EID.parse(uri)` or
  * `DXN.tryMake(uri)` at the point of use.
  */
 export const getURI = (entity: AnyInput): URI.URI =>
@@ -233,9 +233,9 @@ export const getDatabase = (entity: Unknown | Snapshot): any | undefined => inte
  * Returns read-only meta when passed a regular entity or snapshot.
  */
 // TODO(wittjosiah): When passed a Snapshot, should return a snapshot of meta, not the live meta proxy.
-export function getMeta(entity: Mutable<Unknown>): internal.ObjectMeta;
+export function getMeta(entity: Mutable<Unknown>): internal.EntityMeta;
 export function getMeta(entity: Unknown | Snapshot): internal.ReadonlyMeta;
-export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.ObjectMeta | internal.ReadonlyMeta {
+export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal.EntityMeta | internal.ReadonlyMeta {
   return internal.getMetaChecked(entity);
 }
 

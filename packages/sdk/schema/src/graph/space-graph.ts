@@ -6,7 +6,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
 
@@ -214,8 +214,8 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
         const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
-          source: EchoURI.getObjectId(EchoURI.parse(Relation.getSourceURI(object)))!,
-          target: EchoURI.getObjectId(EchoURI.parse(Relation.getTargetURI(object)))!,
+          source: EID.getEntityId(EID.parse(Relation.getSourceURI(object)))!,
+          target: EID.getEntityId(EID.parse(Relation.getTargetURI(object)))!,
           data: {
             object,
           },

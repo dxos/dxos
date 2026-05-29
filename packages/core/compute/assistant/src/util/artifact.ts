@@ -7,13 +7,13 @@ import * as Schema from 'effect/Schema';
 
 import { Database, type Err, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
  * @deprecated
  */
-export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
+export const createArtifactElement = (id: EntityId) => `<artifact id=${id} />`;
 
 /**
  * A model-friendly way to reference an object.
@@ -23,11 +23,11 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  */
 // TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
-  toEchoURI: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoURI.EchoURI;
+  toEchoURI: (reference: ArtifactId, owningSpaceId?: SpaceId) => EID.EID;
   resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
-  ) => Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Database.Service>;
+  ) => Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service>;
 } = class extends Schema.String.annotations({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
@@ -43,24 +43,24 @@ export const ArtifactId: Schema.Schema<string> & {
     '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
   ],
 }) {
-  static toEchoURI(reference: ArtifactId, owningSpaceId?: SpaceId): EchoURI.EchoURI {
+  static toEchoURI(reference: ArtifactId, owningSpaceId?: SpaceId): EID.EID {
     // Allow @ prefix for compatibility with in-text references.
     const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
     if (stripped.startsWith('echo:') || stripped.startsWith('dxn:')) {
-      return EchoURI.parse(stripped);
+      return EID.parse(stripped);
     } else if (stripped.includes(':')) {
       const [spaceId, objectId] = stripped.split(':');
-      if (!SpaceId.isValid(spaceId) || !ObjectId.isValid(objectId)) {
+      if (!SpaceId.isValid(spaceId) || !EntityId.isValid(objectId)) {
         throw new Error(`Unable to parse object reference: ${reference}`);
       }
       // This is a workaround because the current Filter API doesn't work with fully qualified Echo URIs.
       // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
       // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
       return spaceId === owningSpaceId
-        ? EchoURI.make({ objectId: objectId })
-        : EchoURI.make({ spaceId: spaceId, objectId: objectId });
-    } else if (ObjectId.isValid(stripped)) {
-      return EchoURI.make({ objectId: stripped });
+        ? EID.make({ entityId: objectId })
+        : EID.make({ spaceId: spaceId, entityId: objectId });
+    } else if (EntityId.isValid(stripped)) {
+      return EID.make({ entityId: stripped });
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }
@@ -72,7 +72,7 @@ export const ArtifactId: Schema.Schema<string> & {
   static resolve<S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
-  ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Database.Service> {
+  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service> {
     const uri = ArtifactId.toEchoURI(ref);
     return Database.resolve(Ref.fromURI(uri), schema);
   }

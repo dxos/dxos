@@ -2,6 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(rename): These internal entity-wide symbols/types still use the `Object*` prefix but apply
+// to all entities (objects AND relations). Rename to `Entity*` in a follow-up pass (deferred from the
+// EchoURI→EID / ObjectId→EntityId / ObjectMeta→EntityMeta rename, which covered only public SDK API):
+//   ObjectCore, ObjectInternals, ObjectVersion, ObjectVersionId, ObjectDeletedId, ObjectDatabaseId,
+//   ObjectLoader, ObjectDocumentLoaded, ObjectUnavailable.
+// (ObjectMigration / ObjectMigrationContext intentionally excluded — object-only, not entity-wide.)
+
 /**
  * Internal symbol/string constants for the echo object model.
  * Defined in common/ so proxy/ can use them without importing from Entity/.

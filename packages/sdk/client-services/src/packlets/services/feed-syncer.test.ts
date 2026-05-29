@@ -13,7 +13,7 @@ import { Context } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore, SyncServer } from '@dxos/feed';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
@@ -151,8 +151,8 @@ describe('FeedSyncer', () => {
     const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
       spaceId,
     });
-    const serverFeedId = ObjectId.random();
-    const clientFeedId = ObjectId.random();
+    const serverFeedId = EntityId.random();
+    const clientFeedId = EntityId.random();
 
     await serverFeedStore
       .appendLocal([
@@ -214,7 +214,7 @@ describe('FeedSyncer', () => {
     const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
       spaceId,
     });
-    const clientFeedId = ObjectId.random();
+    const clientFeedId = EntityId.random();
 
     await clientFeedStore
       .appendLocal([
@@ -251,7 +251,7 @@ describe('FeedSyncer', () => {
       spaceId,
       pollingInterval: 60_000,
     });
-    const serverFeedId = ObjectId.random();
+    const serverFeedId = EntityId.random();
 
     await serverFeedStore
       .appendLocal([
@@ -327,8 +327,8 @@ describe('FeedSyncer', () => {
       spaceId,
       syncNamespaces,
     });
-    const serverDataFeedId = ObjectId.random();
-    const serverTraceFeedId = ObjectId.random();
+    const serverDataFeedId = EntityId.random();
+    const serverTraceFeedId = EntityId.random();
 
     await serverFeedStore
       .appendLocal([

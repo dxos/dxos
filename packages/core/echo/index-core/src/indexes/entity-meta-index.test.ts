@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
-import { ObjectMetaIndex } from './object-meta-index';
+import { EntityMetaIndex } from './entity-meta-index';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');
@@ -29,18 +29,18 @@ const TestLayer = Layer.merge(
   Reactivity.layer,
 );
 
-describe('ObjectMetaIndex', () => {
+describe('EntityMetaIndex', () => {
   it.effect('should match versioned types when queried by versionless type', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const objectId = ObjectId.random();
+      const objectId = EntityId.random();
 
       const item: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -67,16 +67,16 @@ describe('ObjectMetaIndex', () => {
 
   it.effect('should not treat LIKE wildcards in versionless type queries', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const objectIdMatch = ObjectId.random();
-      const objectIdFalsePositive = ObjectId.random();
+      const objectIdMatch = EntityId.random();
+      const objectIdFalsePositive = EntityId.random();
 
       const match: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -91,7 +91,7 @@ describe('ObjectMetaIndex', () => {
       // Would match prior implementation because '_' is a LIKE wildcard.
       const falsePositive: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -119,16 +119,16 @@ describe('ObjectMetaIndex', () => {
 
   it.effect('should store and update object metadata', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const objectId1 = ObjectId.random();
-      const objectId2 = ObjectId.random();
+      const objectId1 = EntityId.random();
+      const objectId2 = EntityId.random();
 
       const item1: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -150,8 +150,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: EchoURI.make({ spaceId: spaceId, objectId: ObjectId.random() }),
-          [ATTR_RELATION_TARGET]: EchoURI.make({ spaceId: spaceId, objectId: ObjectId.random() }),
+          [ATTR_RELATION_SOURCE]: EID.make({ spaceId: spaceId, entityId: EntityId.random() }),
+          [ATTR_RELATION_TARGET]: EID.make({ spaceId: spaceId, entityId: EntityId.random() }),
           [ATTR_DELETED]: false,
         },
       };
@@ -214,17 +214,17 @@ describe('ObjectMetaIndex', () => {
 
   it.effect('should support queryAll/queryTypes/queryRelations', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const objectId1 = ObjectId.random();
-      const objectId2 = ObjectId.random();
-      const relationId = ObjectId.random();
+      const objectId1 = EntityId.random();
+      const objectId2 = EntityId.random();
+      const relationId = EntityId.random();
 
       const item1: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -238,7 +238,7 @@ describe('ObjectMetaIndex', () => {
 
       const item2: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -252,7 +252,7 @@ describe('ObjectMetaIndex', () => {
 
       const relation: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: null,
@@ -260,8 +260,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: relationId,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: EchoURI.make({ objectId: objectId1 }),
-          [ATTR_RELATION_TARGET]: EchoURI.make({ objectId: objectId2 }),
+          [ATTR_RELATION_SOURCE]: EID.make({ entityId: objectId1 }),
+          [ATTR_RELATION_TARGET]: EID.make({ entityId: objectId2 }),
           [ATTR_DELETED]: false,
         },
       };
@@ -324,13 +324,13 @@ describe('ObjectMetaIndex', () => {
 
       const bySource = yield* index.queryRelations({
         endpoint: 'source',
-        anchorDxns: [EchoURI.make({ objectId: objectId1 })],
+        anchorDxns: [EID.make({ entityId: objectId1 })],
       });
       expect(bySource.map((_) => _.objectId)).toEqual([relationId]);
 
       const byTarget = yield* index.queryRelations({
         endpoint: 'target',
-        anchorDxns: [EchoURI.make({ objectId: objectId2 })],
+        anchorDxns: [EID.make({ entityId: objectId2 })],
       });
       expect(byTarget.map((_) => _.objectId)).toEqual([relationId]);
     }).pipe(Effect.provide(TestLayer)),
@@ -338,12 +338,12 @@ describe('ObjectMetaIndex', () => {
 
   it.effect('should set createdAt and updatedAt from source timestamp on insert and updatedAt on update', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const objectId = ObjectId.random();
-      const queueId = ObjectId.random();
+      const objectId = EntityId.random();
+      const queueId = EntityId.random();
 
       const insertTimestamp = 1700000000000;
       const item: IndexerObject = {
@@ -378,14 +378,14 @@ describe('ObjectMetaIndex', () => {
 
   it.effect('should query by time range', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId1 = ObjectId.random();
-      const queueId2 = ObjectId.random();
-      const objectId1 = ObjectId.random();
-      const objectId2 = ObjectId.random();
+      const queueId1 = EntityId.random();
+      const queueId2 = EntityId.random();
+      const objectId1 = EntityId.random();
+      const objectId2 = EntityId.random();
 
       const earlyTimestamp = 1700000000000;
       const midpoint = 1700000500000;
@@ -439,12 +439,12 @@ describe('ObjectMetaIndex', () => {
 
   it.effect('should round-trip queueNamespace and persist it through updates', () =>
     Effect.gen(function* () {
-      const index = new ObjectMetaIndex();
+      const index = new EntityMetaIndex();
       yield* index.migrate();
 
       const spaceId = SpaceId.random();
-      const traceQueueId = ObjectId.random();
-      const traceObjectId = ObjectId.random();
+      const traceQueueId = EntityId.random();
+      const traceObjectId = EntityId.random();
 
       // Initial insert with 'trace' namespace.
       const traceItem: IndexerObject = {

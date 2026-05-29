@@ -10,11 +10,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
-import { ObjectMetaIndex } from './object-meta-index';
+import { EntityMetaIndex } from './entity-meta-index';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
@@ -46,7 +46,7 @@ describe('FtsIndex', () => {
     'should insert snapshots and query them via MATCH',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
@@ -60,7 +60,7 @@ describe('FtsIndex', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
             title: 'Hello Effect',
             body: 'This is a message about Effect and SQL.',
@@ -90,12 +90,12 @@ describe('FtsIndex', () => {
     'should upsert objects on update',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const objectId = ObjectId.random();
+      const objectId = EntityId.random();
 
       // Initial insert.
       const obj1: IndexerObject = {
@@ -152,7 +152,7 @@ describe('FtsIndex', () => {
     'should handle non-sequential recordIds',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
@@ -166,7 +166,7 @@ describe('FtsIndex', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
             title: 'Alpha Document',
           },
@@ -179,7 +179,7 @@ describe('FtsIndex', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
             title: 'Beta Document',
           },
@@ -192,7 +192,7 @@ describe('FtsIndex', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
             title: 'Gamma Document',
           },
@@ -227,7 +227,7 @@ describe('FtsIndex', () => {
     'should query from one space only',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
@@ -242,7 +242,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Space One Content',
         },
@@ -256,7 +256,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Space Two Content',
         },
@@ -302,7 +302,7 @@ describe('FtsIndex', () => {
     'partial word matches',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
@@ -316,7 +316,7 @@ describe('FtsIndex', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
             title: 'Programming in TypeScript',
             body: 'Learn about functional programming patterns.',
@@ -330,7 +330,7 @@ describe('FtsIndex', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
             title: 'Database Design',
             body: 'Understanding program architecture.',
@@ -385,13 +385,13 @@ describe('FtsIndex', () => {
     'should query from specific queues',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const queue1 = ObjectId.random();
-      const queue2 = ObjectId.random();
+      const queue1 = EntityId.random();
+      const queue2 = EntityId.random();
 
       const spaceObj: IndexerObject = {
         spaceId,
@@ -401,7 +401,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Space Content',
         },
@@ -415,7 +415,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Queue One Content',
         },
@@ -429,7 +429,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Queue Two Content',
         },
@@ -464,12 +464,12 @@ describe('FtsIndex', () => {
     'should query with includeAllQueues',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
+      const queueId = EntityId.random();
 
       const spaceObj: IndexerObject = {
         spaceId,
@@ -479,7 +479,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Space Content',
         },
@@ -493,7 +493,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Queue Content',
         },
@@ -528,13 +528,13 @@ describe('FtsIndex', () => {
     'should OR space and queue constraints',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
-      const metaIndex = new ObjectMetaIndex();
+      const metaIndex = new EntityMetaIndex();
       yield* index.migrate();
       yield* metaIndex.migrate();
 
       const space1 = SpaceId.random();
       const space2 = SpaceId.random();
-      const queueInSpace2 = ObjectId.random();
+      const queueInSpace2 = EntityId.random();
 
       const space1Obj: IndexerObject = {
         spaceId: space1,
@@ -544,7 +544,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Space One Content',
         },
@@ -558,7 +558,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Space Two Content',
         },
@@ -572,7 +572,7 @@ describe('FtsIndex', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
           title: 'Queue Content',
         },
@@ -603,7 +603,7 @@ describe('FtsIndex', () => {
       'returns snapshots for all present recordIds',
       Effect.fnUntraced(function* () {
         const index = new FtsIndex();
-        const metaIndex = new ObjectMetaIndex();
+        const metaIndex = new EntityMetaIndex();
         yield* index.migrate();
         yield* metaIndex.migrate();
 
@@ -611,21 +611,21 @@ describe('FtsIndex', () => {
         const objects: IndexerObject[] = [
           {
             spaceId,
-            queueId: ObjectId.random(),
+            queueId: EntityId.random(),
             queueNamespace: 'data',
             documentId: null,
             recordId: null,
             updatedAt: Date.now(),
-            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+            data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
           },
           {
             spaceId,
-            queueId: ObjectId.random(),
+            queueId: EntityId.random(),
             queueNamespace: 'data',
             documentId: null,
             recordId: null,
             updatedAt: Date.now(),
-            data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
+            data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'beta' },
           },
         ];
 
@@ -647,19 +647,19 @@ describe('FtsIndex', () => {
       'omits stale recordIds not present in FTS index',
       Effect.fnUntraced(function* () {
         const index = new FtsIndex();
-        const metaIndex = new ObjectMetaIndex();
+        const metaIndex = new EntityMetaIndex();
         yield* index.migrate();
         yield* metaIndex.migrate();
 
         const spaceId = SpaceId.random();
         const object: IndexerObject = {
           spaceId,
-          queueId: ObjectId.random(),
+          queueId: EntityId.random(),
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
           updatedAt: Date.now(),
-          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'present' },
         };
 
         yield* metaIndex.update([object]);
@@ -680,7 +680,7 @@ describe('FtsIndex', () => {
       'handles more than 999 recordIds without exceeding SQLite variable limit',
       Effect.fnUntraced(function* () {
         const index = new FtsIndex();
-        const metaIndex = new ObjectMetaIndex();
+        const metaIndex = new EntityMetaIndex();
         yield* index.migrate();
         yield* metaIndex.migrate();
 
@@ -688,12 +688,12 @@ describe('FtsIndex', () => {
         const count = 1100;
         const objects: IndexerObject[] = Array.from({ length: count }, (_, i) => ({
           spaceId,
-          queueId: ObjectId.random(),
+          queueId: EntityId.random(),
           queueNamespace: 'data',
           documentId: null,
           recordId: null,
           updatedAt: Date.now(),
-          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, index: i },
         }));
 
         yield* metaIndex.update(objects);

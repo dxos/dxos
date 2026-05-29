@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import {
-  EchoURI,
+  EID,
   Entity,
   Feed,
   Filter,
@@ -56,7 +56,7 @@ export type ViewEditorProps = ThemedClassName<
     mode?: 'schema' | 'tag';
     registry?: Registry.Registry;
     showHeading?: boolean;
-    onQueryChanged?: (query: QueryAST.Query, target?: EchoURI.EchoURI) => void;
+    onQueryChanged?: (query: QueryAST.Query, target?: EID.EID) => void;
     onDelete?: (fieldId: string) => void;
   } & Pick<QueryFormProps, 'types' | 'tags'> &
     Pick<FormRootProps<any>, 'readonly' | 'db'>
@@ -171,7 +171,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const handleUpdate = useCallback(
       (values: any) => {
         const targetValue = values.target;
-        let queueDxn: EchoURI.EchoURI | undefined;
+        let queueDxn: EID.EID | undefined;
 
         if (Ref.isRef(targetValue)) {
           const feedUri = targetValue.uri;
