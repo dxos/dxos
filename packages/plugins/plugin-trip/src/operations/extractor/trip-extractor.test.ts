@@ -152,9 +152,10 @@ describe('TripMessageExtractor', () => {
       .pipe(runAndForwardErrors);
 
     expect(second.created).toEqual([]);
-    expect(second.updated).toHaveLength(1);
+    // The updated segment plus its owning Trip (so the source message links to the Trip).
+    expect(second.updated).toHaveLength(2);
 
-    const updatedSegment = second.updated![0] as Segment.Segment;
+    const updatedSegment = second.updated!.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
     expect(updatedSegment.id).toBe(firstSegment.id);
     expect(updatedSegment.details._tag).toBe('flight');
     if (updatedSegment.details._tag !== 'flight') {

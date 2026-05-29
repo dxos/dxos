@@ -110,12 +110,51 @@ const findExistingFlight = (
   );
 };
 
+/**
+ * Find the Trip that already owns a Booking with this confirmation code (PNR). Flights booked
+ * under one reservation share a code, so a follow-up segment attaches to the same Trip rather
+ * than spawning a new one. The Booking is parented to its Trip via `Obj.setParent`, so the
+ * Trip is the Booking's parent.
+ */
+const findExistingTripByConfirmation = (
+  db: Database.Database,
+  confirmationCode: string | undefined,
+): Effect.Effect<Trip.Trip | undefined> => {
+  if (!confirmationCode) {
+    return Effect.succeed(undefined);
+  }
+  return Effect.promise(() => db.query(Filter.type(Booking.Booking)).run()).pipe(
+    Effect.map((bookings) => {
+      const booking = bookings.find((candidate) => candidate.confirmationCode === confirmationCode);
+      const parent = booking ? Obj.getParent(booking) : undefined;
+      return parent && Trip.instanceOf(parent) ? parent : undefined;
+    }),
+    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+  );
+};
+
 const tripNameFor = (payload: FlightPayload): string => {
   const origin = payload.origin?.code ?? '?';
   const destination = payload.destination?.code ?? '?';
   const flight = payload.number ?? '';
   return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
 };
+
+const makeSegment = (payload: FlightPayload, provider: { name?: string; domain?: string }): Segment.Segment =>
+  Segment.make({
+    details: {
+      _tag: 'flight',
+      origin: payload.origin,
+      destination: payload.destination,
+      departAt: payload.departAt,
+      arriveAt: payload.arriveAt,
+      number: payload.number,
+      provider,
+      gateFrom: payload.gateFrom,
+      terminalFrom: payload.terminalFrom,
+      seat: payload.seat,
+    },
+  });
 
 const assemble = (
   payload: FlightPayload,
@@ -127,41 +166,55 @@ const assemble = (
       return { created: [], updated: [], relations: [] };
     }
 
-    // Update an existing segment with the same (number, depart-date) pair.
-    const existing = yield* findExistingFlight(db, payload);
-    if (existing && existing.details._tag === 'flight') {
-      Obj.update(existing, (existing) => {
-        if (existing.details._tag !== 'flight') {
-          return;
-        }
-        if (payload.origin !== undefined) {
-          existing.details.origin = payload.origin;
-        }
-        if (payload.destination !== undefined) {
-          existing.details.destination = payload.destination;
-        }
-        if (payload.arriveAt !== undefined) {
-          existing.details.arriveAt = payload.arriveAt;
-        }
-        if (payload.gateFrom !== undefined) {
-          existing.details.gateFrom = payload.gateFrom;
-        }
-        if (payload.terminalFrom !== undefined) {
-          existing.details.terminalFrom = payload.terminalFrom;
-        }
-        if (payload.seat !== undefined) {
-          existing.details.seat = payload.seat;
-        }
-      });
-      return { created: [], updated: [existing], relations: [] };
-    }
-
-    // No prior segment — create a Trip + Booking + flight Segment trio.
     const provider = {
       name: payload.provider?.name ?? 'Air France',
       domain: payload.provider?.domain ?? 'united.com',
     };
 
+    // Case 1: an existing segment with the same (number, depart-date) pair — update it in place
+    // (e.g. gate/terminal change). Surface its owning Trip in `updated` so the source message
+    // also gets a provenance relation to the Trip.
+    const existingSegment = yield* findExistingFlight(db, payload);
+    if (existingSegment && existingSegment.details._tag === 'flight') {
+      Obj.update(existingSegment, (existingSegment) => {
+        if (existingSegment.details._tag !== 'flight') {
+          return;
+        }
+        if (payload.origin !== undefined) {
+          existingSegment.details.origin = payload.origin;
+        }
+        if (payload.destination !== undefined) {
+          existingSegment.details.destination = payload.destination;
+        }
+        if (payload.arriveAt !== undefined) {
+          existingSegment.details.arriveAt = payload.arriveAt;
+        }
+        if (payload.gateFrom !== undefined) {
+          existingSegment.details.gateFrom = payload.gateFrom;
+        }
+        if (payload.terminalFrom !== undefined) {
+          existingSegment.details.terminalFrom = payload.terminalFrom;
+        }
+        if (payload.seat !== undefined) {
+          existingSegment.details.seat = payload.seat;
+        }
+      });
+      const owningTrip = Obj.getParent(existingSegment);
+      const updated = Trip.instanceOf(owningTrip) ? [owningTrip, existingSegment] : [existingSegment];
+      return { created: [], updated, relations: [] };
+    }
+
+    // Case 2: a new flight that belongs to an existing Trip (same confirmation code / PNR) —
+    // attach a fresh Segment to that Trip. Only the Trip (top-level) gets provenance; the new
+    // Segment is parented to it.
+    const existingTrip = yield* findExistingTripByConfirmation(db, payload.confirmationCode);
+    if (existingTrip) {
+      const segment = makeSegment(payload, provider);
+      Trip.addSegment(existingTrip, segment);
+      return { created: [segment], updated: [existingTrip], relations: [] };
+    }
+
+    // Case 3: a brand-new trip — create a Trip + Booking + flight Segment trio.
     const booking = Booking.make({
       provider,
       confirmationCode: payload.confirmationCode,
@@ -169,20 +222,7 @@ const assemble = (
       rawPayload: getBodyText(source as Message.Message),
     });
 
-    const segment = Segment.make({
-      details: {
-        _tag: 'flight',
-        origin: payload.origin,
-        destination: payload.destination,
-        departAt: payload.departAt,
-        arriveAt: payload.arriveAt,
-        number: payload.number,
-        provider,
-        gateFrom: payload.gateFrom,
-        terminalFrom: payload.terminalFrom,
-        seat: payload.seat,
-      },
-    });
+    const segment = makeSegment(payload, provider);
 
     const trip = Trip.make({
       name: tripNameFor(payload),
