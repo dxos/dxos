@@ -89,7 +89,7 @@ describe('ContentBlockToolResult', { tags: ['llm'] }, () => {
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect.only(
+  it.effect(
     'return pdf from tool result',
     Effect.fn(function* ({ expect }) {
       const messages = yield* agenticLoop({
