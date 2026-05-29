@@ -331,7 +331,7 @@ export const isRelation = (entity: AnyEntity): entity is AnyRelation => {
  * Type guard: narrows a `Type.AnyEntity` to the type-kind meta-schema
  * (e.g. `Type.Type`). Mirrors {@link isObject} / {@link isRelation}.
  */
-export const isTypeKindSchema = (entity: AnyEntity): entity is Type => {
+export const isTypeKind = (entity: AnyEntity): entity is Type => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Type;
 };
 
@@ -354,7 +354,7 @@ export const expectRelation = (entity: AnyEntity): AnyRelation => {
 
 /** Narrow a `Type.AnyEntity` to the `Type.Type` meta-schema, throwing otherwise. */
 export const expectTypeKind = (entity: AnyEntity): Type => {
-  invariant(isTypeKindSchema(entity), 'Expected a type-kind Type entity.');
+  invariant(isTypeKind(entity), 'Expected a type-kind Type entity.');
   return entity;
 };
 
@@ -480,7 +480,7 @@ const stripTypenamePrefix = (value: string): string => {
  * static meta `Type.Type`, or a persisted `Type.Type` returned by the database.
  *
  * All three branches stamp `[KindId] = Type`, so this is a single brand check.
- * Use {@link isObject} / {@link isRelation} / {@link isTypeKindSchema}
+ * Use {@link isObject} / {@link isRelation} / {@link isTypeKind}
  * when you need to discriminate further; use {@link getDatabase} when you mean
  * "is this a db-attached type" (vs. an in-memory declaration).
  */
