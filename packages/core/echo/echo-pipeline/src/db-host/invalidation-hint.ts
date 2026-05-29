@@ -3,13 +3,29 @@
 //
 
 import type { IndexingResult } from '@dxos/index-core';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type InvalidationHint = {
   spaceIds?: ReadonlySet<SpaceId>;
   queueIds?: ReadonlySet<ObjectId>;
+  /**
+   * Canonical typenames (version-less, no legacy `dxn:type:` prefix) — see {@link canonicalTypename}.
+   * A type filter matches every version of a typename, so invalidation keys on the bare typename.
+   * Query scopes are canonicalized the same way, so hints and scopes compare with a plain set overlap.
+   */
   typenames?: ReadonlySet<string>;
   objectIds?: ReadonlySet<ObjectId>;
+};
+
+/**
+ * Reduces a type URI to the version-less typename used as the canonical key for invalidation
+ * matching. Stored objects record a versioned `@type` (e.g. `dxn:type:foo:0.1.0`) while type
+ * filters reference a typename without a version; both collapse to the same key here. Non-DXN
+ * URIs (EchoURI schema references) have no version and pass through unchanged.
+ */
+export const canonicalTypename = (uri: string): string => {
+  const dxn = DXN.tryMake(uri);
+  return dxn != null ? DXN.getName(dxn) : uri;
 };
 
 /**
@@ -23,7 +39,7 @@ export const hintFromIndexingResult = (r: IndexingResult): InvalidationHint | un
   return {
     spaceIds: r.spaces.size > 0 ? r.spaces : undefined,
     queueIds: r.queues.size > 0 ? r.queues : undefined,
-    typenames: r.types.size > 0 ? r.types : undefined,
+    typenames: r.types.size > 0 ? new Set(Array.from(r.types, canonicalTypename)) : undefined,
     objectIds: r.objects.size > 0 ? r.objects : undefined,
   };
 };

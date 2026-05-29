@@ -27,7 +27,7 @@ import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dx
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
-import type { InvalidationHint, SpaceStateManager } from '../db-host';
+import { type InvalidationHint, type SpaceStateManager, canonicalTypename } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
@@ -330,7 +330,7 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
                 scopes.typenames = new Set();
               }
               for (const typename of step.selector.typename) {
-                scopes.typenames.add(typename as string);
+                scopes.typenames.add(canonicalTypename(typename as string));
               }
             }
             break;

@@ -2411,6 +2411,37 @@ describe('Query', () => {
       // All objects deleted.
       expect(updates.at(-1)).toEqual([]);
     });
+
+    // Regression for DX-966. The Composer navtree lists objects per type via
+    // `Filter.typename(...)`, which produces a version-less typename scope, while stored
+    // objects carry a versioned `@type`. The reactive index query must still be invalidated
+    // on delete so the navtree drops the node. Mirrors the bulk-delete test above but with a
+    // version-less typename filter instead of `Filter.type(StaticSchema)`.
+    test('deleting an item removes it from a version-less typename query (reactive)', async (ctx) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const charlie = db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
+      expect([alice, bob, charlie].filter(Boolean)).to.have.length(3);
+      await db.flush({ indexes: true, updates: true });
+
+      const updates: string[][] = [];
+      const unsub = db.query(Query.select(Filter.typename('com.example.type.person'))).subscribe(
+        (query) => {
+          updates.push([...query.results.map((obj) => obj.name!)].sort());
+        },
+        { fire: true },
+      );
+      ctx.onTestFinished(unsub);
+      await db.flush({ indexes: true, updates: true });
+
+      db.remove(bob);
+      await db.flush({ indexes: true, updates: true });
+
+      // The query must reflect the deletion: Bob is gone, Alice and Charlie remain.
+      expect(updates.at(-1)).toEqual(['Alice', 'Charlie']);
+    });
   });
 
   describe('Dynamic types', () => {
