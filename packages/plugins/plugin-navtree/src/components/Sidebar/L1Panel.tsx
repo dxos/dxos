@@ -20,7 +20,7 @@ import { meta } from '#meta';
 
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemAction, NavTreeItemColumns } from '../NavTreeItem';
+import { NavTreeItemColumns } from '../NavTreeItem';
 
 export type L1PanelProps = {
   open?: boolean;
@@ -95,7 +95,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
             path={path}
             levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
+            gridTemplateColumns='[tree-row-start] 1fr min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
@@ -119,13 +119,13 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   const title = toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = isPinnedWorkspace(item.id);
 
-  const { primaryAction, groupedActions, menuActions, onAction } = useL1MenuActions({ item, path });
+  const { menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
 
   return (
     <div
       data-tauri-drag-region
-      className='grid grid-cols-[28px_1fr_28px_28px] w-full items-center border-b border-subdued-separator dx-app-drag dx-density-lg pe-1'
+      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center border-b border-subdued-separator dx-app-drag dx-density-lg'
     >
       {backCapableWorkspace ? (
         <IconButton
@@ -144,21 +144,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
       <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
         {title}
       </h2>
-      {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div className='contents dx-app-no-drag'>
-        {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
-          <NavTreeItemAction
-            testId={primaryAction.properties?.testId}
-            label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--circle-dashed--regular'}
-            parent={item}
-            path={path}
-            monolithic={Node.isAction(primaryAction)}
-            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
-            menuType={primaryAction.properties?.menuType}
-            caller={NAV_TREE_ITEM}
-          />
-        )}
         <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open />}
       </div>
@@ -167,8 +153,6 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
 };
 
 type L1MenuActions = {
-  primaryAction: Node.ActionLike;
-  groupedActions: Record<string, Node.Action[]>;
   menuActions: Node.Action[];
   onAction: (action: Node.Action, params?: Node.InvokeProps) => void;
 };
@@ -231,12 +215,9 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): 
   const runAction = useActionRunner();
 
   const { actions: actionsProp, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = actionsProp.toSorted((a, _b) =>
-    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
-  );
 
-  const menuActions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : actionsProp)
-    .flatMap((action) => (Node.isAction(action) ? [action] : []))
+  const menuActions = actionsProp
+    .flatMap((action) => (Node.isAction(action) ? [action] : (groupedActions[action.id] ?? [])))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 
   const onAction = useCallback(
@@ -246,7 +227,7 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'item' | 'path'>): 
     [runAction, path],
   );
 
-  return { primaryAction, groupedActions, menuActions, onAction };
+  return { menuActions, onAction };
 };
 
 export const L1Panel = memo(L1Panel$);
