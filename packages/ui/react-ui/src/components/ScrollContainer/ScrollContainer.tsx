@@ -18,10 +18,10 @@ import React, {
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps, slottable } from '@dxos/ui-theme';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
+import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
@@ -55,7 +55,7 @@ const [ScrollContainerProvider, useScrollContainerContext] =
 // Root
 //
 
-type RootProps = PropsWithChildren<{
+type ScrollContainerRootProps = PropsWithChildren<{
   pin?: boolean;
   behavior?: ScrollBehavior;
 }>;
@@ -64,7 +64,7 @@ type RootProps = PropsWithChildren<{
  * Headless scroll container that provides context for scroll state.
  * Render ScrollContainer.Content and ScrollContainer.Viewport as children.
  */
-const Root = forwardRef<ScrollController, RootProps>(
+const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProps>(
   ({ children, pin, behavior: behaviorProp = 'smooth' }, forwardedRef) => {
     const scrollerRef = useRef<HTMLDivElement | null>(null);
     const autoScrollRef = useRef(false);
@@ -139,23 +139,23 @@ const Root = forwardRef<ScrollController, RootProps>(
   },
 );
 
-Root.displayName = 'ScrollContainer.Root';
+ScrollContainerRoot.displayName = 'ScrollContainer.Root';
 
 //
 // Content
 //
 
-type ContentProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type ScrollContainerContentProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
 
 /**
  * Composable wrapper around ScrollArea.Root.
  * Provides the DOM structure for the scroll container.
  */
-const Content = composable<HTMLDivElement, ContentProps>(
+const ScrollContainerContent = composable<HTMLDivElement, ScrollContainerContentProps>(
   ({ children, thin, padding, centered, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: 'relative' })}
+        {...composableProps(props, { classNames: 'relative isolate' })}
         thin={thin}
         padding={padding}
         centered={centered}
@@ -167,7 +167,7 @@ const Content = composable<HTMLDivElement, ContentProps>(
   },
 );
 
-Content.displayName = 'ScrollContainer.Content';
+ScrollContainerContent.displayName = 'ScrollContainer.Content';
 
 //
 // Viewport
@@ -175,40 +175,42 @@ Content.displayName = 'ScrollContainer.Content';
 
 const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
-type ViewportProps = SlottableProps;
+type ScrollContainerViewportProps = SlottableProps;
 
-const Viewport = slottable<HTMLDivElement, ViewportProps>(({ children, asChild, ...props }, forwardedRef) => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
-  const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
+const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewportProps>(
+  ({ children, asChild, ...props }, forwardedRef) => {
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
+    const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
 
-  // Register the scroll element with Root and set up wheel/scroll listeners.
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) {
-      return;
-    }
+    // Register the scroll element with Root and set up wheel/scroll listeners.
+    useEffect(() => {
+      const el = scrollerRef.current;
+      if (!el) {
+        return;
+      }
 
-    setViewport(el);
+      setViewport(el);
 
-    return combine(
-      addEventListener(el, 'wheel', () => setPinned(isBottom(el))),
-      addEventListener(el, 'scroll', () => setOverflow((el.scrollTop ?? 0) > 0)),
-      () => setViewport(null),
+      return combine(
+        addEventListener(el, 'wheel', () => setPinned(isBottom(el))),
+        addEventListener(el, 'scroll', () => setOverflow((el.scrollTop ?? 0) > 0)),
+        () => setViewport(null),
+      );
+    }, [setViewport, setPinned, setOverflow]);
+
+    return (
+      <>
+        <ScrollArea.Viewport asChild={asChild} {...composableProps(props)} ref={mergedRef}>
+          {children}
+        </ScrollArea.Viewport>
+        <ScrollContainerPinEffect scrollerRef={scrollerRef} />
+      </>
     );
-  }, [setViewport, setPinned, setOverflow]);
+  },
+);
 
-  return (
-    <>
-      <ScrollArea.Viewport asChild={asChild} {...composableProps(props)} ref={mergedRef}>
-        {children}
-      </ScrollArea.Viewport>
-      <PinEffect scrollerRef={scrollerRef} />
-    </>
-  );
-});
-
-Viewport.displayName = VIEWPORT_NAME;
+ScrollContainerViewport.displayName = VIEWPORT_NAME;
 
 /**
  * Isolated component that consumes pinned/controller from context.
@@ -216,7 +218,7 @@ Viewport.displayName = VIEWPORT_NAME;
  */
 const PIN_EFFECT_NAME = 'ScrollContainer.PinEffect';
 
-const PinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTMLDivElement | null> }) => {
+const ScrollContainerPinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTMLDivElement | null> }) => {
   const { pinned, controller } = useScrollContainerContext(PIN_EFFECT_NAME);
 
   // Pin scroll to bottom when content changes.
@@ -269,9 +271,9 @@ const PinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTMLDivElement | nu
 
 const FADE_NAME = 'ScrollContainer.Fade';
 
-type FadeProps = {};
+type ScrollContainerFadeProps = {};
 
-const Fade = () => {
+function ScrollContainerFade() {
   const { overflow } = useScrollContainerContext(FADE_NAME);
 
   return (
@@ -285,9 +287,9 @@ const Fade = () => {
       )}
     />
   );
-};
+}
 
-Fade.displayName = FADE_NAME;
+ScrollContainerFade.displayName = FADE_NAME;
 
 //
 // ScrollDownButton
@@ -295,9 +297,9 @@ Fade.displayName = FADE_NAME;
 
 const SCROLL_DOWN_BUTTON_NAME = 'ScrollContainer.ScrollDownButton';
 
-type ScrollDownButtonProps = ThemedClassName;
+type ScrollContainerScrollDownButtonProps = ThemedClassName;
 
-const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
+function ScrollContainerScrollDownButton({ classNames }: ScrollContainerScrollDownButtonProps) {
   const { pinned, controller } = useScrollContainerContext(SCROLL_DOWN_BUTTON_NAME);
 
   return (
@@ -318,9 +320,9 @@ const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
       />
     </div>
   );
-};
+}
 
-ScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
+ScrollContainerScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 
 //
 // ScrollContainer
@@ -329,17 +331,17 @@ ScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 export { useScrollContainerContext };
 
 export const ScrollContainer = {
-  Root,
-  Content,
-  Viewport,
-  Fade,
-  ScrollDownButton,
+  Root: ScrollContainerRoot,
+  Content: ScrollContainerContent,
+  Viewport: ScrollContainerViewport,
+  Fade: ScrollContainerFade,
+  ScrollDownButton: ScrollContainerScrollDownButton,
 };
 
 export type {
-  RootProps as ScrollContainerRootProps,
-  ContentProps as ScrollContainerContentProps,
-  ViewportProps as ScrollContainerViewportProps,
-  FadeProps as ScrollContainerFadeProps,
-  ScrollDownButtonProps as ScrollContainerScrollDownButtonProps,
+  ScrollContainerRootProps,
+  ScrollContainerContentProps,
+  ScrollContainerViewportProps,
+  ScrollContainerFadeProps,
+  ScrollContainerScrollDownButtonProps,
 };

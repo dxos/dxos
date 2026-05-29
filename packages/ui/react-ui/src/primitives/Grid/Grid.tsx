@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+
+import { composable, composableProps } from '../../util';
 
 export type GridProps = { cols?: number; rows?: number; grow?: boolean };
 

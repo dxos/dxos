@@ -13,7 +13,7 @@ import { meta } from '#meta';
 const SEARCH_OPERATION = `${meta.id}.operation`;
 
 export const OpenSearch = Operation.make({
-  meta: { key: `${SEARCH_OPERATION}.open-search`, name: 'Open Search' },
+  meta: { key: `${SEARCH_OPERATION}.open-search`, name: 'Open Search', icon: 'ph--magnifying-glass--regular' },
   input: Schema.Void,
   output: Schema.Void,
 });

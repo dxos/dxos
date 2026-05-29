@@ -35,7 +35,7 @@ export const ImportSpaceDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('import-space-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

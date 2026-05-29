@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type Notebook } from '#types';

@@ -3,32 +3,30 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo/internal';
+import { DXN, Filter, JsonSchema, Obj, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 
 import { EchoTestBuilder } from '../testing';
+
+// Helper: introspect Type.Type properties via its rebuilt Effect Schema.
+const getSchemaProperties = (type: Type.AnyEntity): SchemaAST.PropertySignature[] => {
+  const ast = Type.getSchema(type).ast;
+  invariant(SchemaAST.isTypeLiteral(ast));
+  return [...ast.propertySignatures].filter((p) => p.name !== 'id');
+};
 
 const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
 const Contact = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.person',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
 describe('schema registry', () => {
   let builder: EchoTestBuilder;
@@ -50,7 +48,8 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    // For stored schemas `$id` is the storage URI (the schema-as-object's EchoURI).
+    expect(echoSchema.jsonSchema.$id).toEqual(`echo:/${echoSchema.id}`);
   });
 
   test('add new schema from json-schema', async () => {
@@ -70,9 +69,14 @@ describe('schema registry', () => {
       },
     ]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
-    expect(echoSchema.typename).toEqual('com.example.type.person');
-    expect(echoSchema.version).toEqual('0.1.0');
+    // Storage URI form for stored schemas (see `add new schema` above).
+    expect(echoSchema.jsonSchema.$id).toEqual(`echo:/${echoSchema.id}`);
+    // Persisted `Type.Type` carries typename/version in `ObjectMeta`, not as
+    // direct fields. Read via the helpers.
+    expect(Type.getTypename(echoSchema)).toEqual('com.example.type.person');
+    // In-database entities are versioned by their automerge heads, exposed as
+    // the semver pre-release tag (`<semver>-<heads>`).
+    expect(Type.getVersion(echoSchema)).toMatch(/^0\.1\.0-[0-9a-f.]+$/);
     expect(echoSchema.jsonSchema.properties).toEqual({
       name: expect.any(Object),
     });
@@ -82,7 +86,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(Type.getTypename(echoSchema)).toEqual('com.example.type.person');
-    expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
+    expect(Type.getVersion(echoSchema)).toMatch(/^0\.1\.0-[0-9a-f.]+$/);
   });
 
   test('add new schema - preserves field order', async () => {
@@ -119,7 +123,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = await db.query(Filter.type(Type.PersistentType)).run();
+    const retrieved = await db.query(Filter.type(Type.Type)).run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -185,22 +189,22 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = Obj.make(Type.PersistentType, {
+    const schemaToStore = Type.makeObjectFromJsonSchema({
       typename: 'com.example.type.test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
-    expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
+    expect(registry.hasSchema(schemaToStore)).to.be.false;
     const persistentSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new EchoSchema(persistentSchema))).to.be.true;
+    expect(registry.hasSchema(persistentSchema)).to.be.true;
   });
 
   test('schema is invalidated on update', async () => {
     const { registry } = await setupTest();
-    const [echoSchema] = await registry.register([Contact]);
-    expect(echoSchema.getProperties().length).to.eq(1);
-    echoSchema.addFields({ newField: Schema.Number });
-    expect(echoSchema.getProperties().length).to.eq(2);
+    const [schema] = await registry.register([Contact]);
+    expect(getSchemaProperties(schema).length).to.eq(1);
+    Type.addFields(schema, { newField: Schema.Number });
+    expect(getSchemaProperties(schema).length).to.eq(2);
   });
 
   test('reactive schema query after reload', async (ctx) => {
@@ -216,7 +220,7 @@ describe('schema registry', () => {
     {
       await using db = await peer.openLastDatabase();
       const query = db.schemaRegistry.query({ typename: Type.getTypename(Contact) });
-      const schema = await new Promise<EchoSchema>((resolve) => {
+      const schema = await new Promise<Type.Type>((resolve) => {
         const immediate = query.runSync();
         if (immediate.length > 0) {
           resolve(immediate[0]);
@@ -257,13 +261,13 @@ describe('schema registry', () => {
     const { db } = await setupTest();
     const TestSchema = makeTestSchema();
     const [schema] = await db.schemaRegistry.register([TestSchema]);
-    const object = db.add(
+    const object: Obj.Any = db.add(
       Obj.make(schema, {
         name: 'Test',
       }),
     );
 
-    schema.addFields({ newField: Schema.String });
+    Type.addFields(schema, { newField: Schema.String });
     Obj.update(object, (object) => {
       object.newField = 'Test3';
     });
@@ -275,9 +279,4 @@ describe('schema registry', () => {
 const makeTestSchema = () =>
   Schema.Struct({
     name: Schema.String,
-  }).pipe(
-    Type.object({
-      typename: 'com.example.type.test',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));

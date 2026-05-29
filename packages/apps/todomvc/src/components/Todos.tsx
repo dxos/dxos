@@ -5,7 +5,7 @@
 import React, { type ChangeEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/react-client/echo';
 
 import { FILTER } from '../constants';
@@ -25,7 +25,7 @@ export const Todos = () => {
   const [spaceProperties] = useSpaceProperties(space?.id);
 
   // Get the TodoList reference from space.properties.
-  const listRef = spaceProperties?.[TodoList.typename] as Ref.Ref<TodoList> | undefined;
+  const listRef = spaceProperties?.[Type.getTypename(TodoList)] as Ref.Ref<TodoList> | undefined;
 
   // Subscribe to the list ref (handles async loading and reactive updates).
   const [listSnapshot, updateList] = useObject(listRef);
@@ -78,14 +78,14 @@ export const Todos = () => {
     const completedRefDxns = new Set<string>();
     for (let i = 0; i < todoRefs.length; i++) {
       if (loadedTodos[i]?.completed) {
-        completedRefDxns.add(todoRefs[i].dxn.toString());
+        completedRefDxns.add(todoRefs[i].uri);
       }
     }
 
     // Remove completed refs from the list (splice from end so indices stay valid).
     updateList((l) => {
       for (let i = l.todos.length - 1; i >= 0; i--) {
-        if (completedRefDxns.has(l.todos[i].dxn.toString())) {
+        if (completedRefDxns.has(l.todos[i].uri)) {
           l.todos.splice(i, 1);
         }
       }
@@ -122,18 +122,18 @@ export const Todos = () => {
           <ul className='todo-list'>
             {todoRefs.map((ref) => (
               <TodoContainer
-                key={ref.dxn.toString()}
+                key={ref.uri}
                 todo={ref}
                 completedFilter={completed}
-                editing={editing === ref.dxn.toString()}
-                onEdit={() => setEditing(ref.dxn.toString())}
+                editing={editing === ref.uri}
+                onEdit={() => setEditing(ref.uri)}
                 onSave={() => setEditing(undefined)}
                 onCancel={() => setEditing(undefined)}
                 onDestroy={async () => {
                   const todo = await ref.load();
-                  const dxn = ref.dxn.toString();
+                  const dxn = ref.uri;
                   updateList((l) => {
-                    const idx = l.todos.findIndex((r) => r.dxn.toString() === dxn);
+                    const idx = l.todos.findIndex((r) => r.uri === dxn);
                     if (idx !== -1) {
                       l.todos.splice(idx, 1);
                     }

@@ -3,3 +3,4 @@
 //
 
 export * from './FeedbackForm';
+export type { FeedbackPluginOption } from './types';

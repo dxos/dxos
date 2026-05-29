@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Entity, Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import { Card, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -46,13 +44,7 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
   const { t } = useTranslation(meta.id);
   const data = useMemo(() => ({ subject }), [subject]);
-  const icon = Function.pipe(
-    Entity.getSchema(subject),
-    Option.fromNullable,
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
-  );
+  const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
   // TODO(burdon): BUG: Includes item itself.
   const menuItems = useObjectMenuItems(subject);
@@ -60,9 +52,9 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   return (
     <Menu.Root>
       <Card.Root classNames={classNames}>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.Icon icon={icon} />
-          <Card.Title>{Entity.getLabel(subject)}</Card.Title>
+          <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Menu.Trigger asChild disabled={!menuItems?.length}>
             <Toolbar.IconButton
               iconOnly
@@ -72,10 +64,10 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
             />
           </Menu.Trigger>
           <Menu.Content items={menuItems} />
-        </Card.Toolbar>
-        <Card.Content>
+        </Card.Header>
+        <Card.Body>
           <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
-        </Card.Content>
+        </Card.Body>
       </Card.Root>
     </Menu.Root>
   );

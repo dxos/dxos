@@ -31,7 +31,7 @@
 
 ## Knowledge
 
-- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/skills/*`.
 - Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style
@@ -54,6 +54,13 @@
 - Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
 - Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
 - Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
+- For exported functions with multiple overloads, declare them as `const` with the overload signatures inline in the type annotation rather than using `export function` with repeated declarations. This keeps the implementation as an arrow function and groups all signatures together:
+  ```ts
+  export const myFn: {
+    <T extends Foo>(a: T): Bar<T>;
+    (a: string): Bar<any>;
+  } = (a): Bar<unknown> => { ... };
+  ```
 
 ### React
 
@@ -122,6 +129,7 @@ Examples:
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
   - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.
+  - **IMPORTANT**: ALWAYS surface the Composer preview URL next to the PR number/link in chat summaries AND in the final message. The `preview-deploy.yml` workflow publishes a sticky `composer-preview` comment on the PR containing a branch-alias URL of the form `https://<branch-alias>.composer-app.pages.dev` and a per-deployment URL — fetch it with `gh pr view <pr> --json comments` (or `gh api repos/dxos/dxos/issues/<pr>/comments`) and include it verbatim. If the preview comment is not yet posted (deploy still running), say "preview pending" alongside the PR link and re-check on the next status update.
 
 ## Cursor Cloud specific instructions
 

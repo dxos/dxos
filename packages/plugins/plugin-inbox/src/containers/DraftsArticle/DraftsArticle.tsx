@@ -15,7 +15,7 @@ import { Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
-import { DraftMessage, type Mailbox } from '#types';
+import { DraftMessage, Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
@@ -33,29 +33,29 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
-  const id = attendableId ?? Obj.getDXN(mailbox).toString();
+  const id = attendableId ?? Obj.getURI(mailbox);
   const currentId = useSelected(id, 'single');
 
   const db = space.db;
-  const mailboxDXN = Obj.getDXN(mailbox).toString();
+  const mailboxUri = Obj.getURI(mailbox);
 
   const draftsFilter = useMemo(
     () =>
       Filter.type(Message.Message, {
         properties: {
-          mailbox: mailboxDXN,
+          mailbox: mailboxUri,
         },
       }),
-    [mailboxDXN],
+    [mailboxUri],
   );
 
   const mailboxScopedMessages = useQuery(db, draftsFilter);
   const drafts = useMemo(
     () =>
       [...mailboxScopedMessages]
-        .filter((m) => DraftMessage.belongsTo(m, mailboxDXN))
+        .filter((m) => DraftMessage.belongsTo(m, mailboxUri))
         .sort(sortByCreated('created', true)),
-    [mailboxDXN, mailboxScopedMessages],
+    [mailboxUri, mailboxScopedMessages],
   );
 
   const handleAction = useCallback<MessageStackActionHandler>(
@@ -109,7 +109,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
             id={id}
             messages={drafts}
             currentId={currentId}
-            labels={mailbox.labels}
+            tags={Mailbox.buildMessageTagsIndex(mailbox)}
             onAction={handleAction}
           />
         )}

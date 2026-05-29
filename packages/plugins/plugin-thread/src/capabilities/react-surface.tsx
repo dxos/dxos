@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
-import { ChannelChat, ChannelArticle, ThreadCompanion, ThreadContainer } from '#containers';
+import { ChannelChat, ChannelArticle, CommentsCompanion, ThreadContainer } from '#containers';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
@@ -60,7 +60,7 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
         ),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
-        component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
+        component: ({ data }) => <CommentsCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
         id: 'plugin-settings',

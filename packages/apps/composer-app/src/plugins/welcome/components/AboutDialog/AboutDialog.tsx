@@ -6,7 +6,7 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Column, Dialog, Link, Message, Trans, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Link, Message, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
@@ -56,15 +56,14 @@ export const AboutDialog = () => {
           </h1>
         </Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
-      <Dialog.Body classNames='flex flex-col gap-3'>
-        <Message.Root valence='info'>
-          <Message.Title classNames='font-normal text-sm'>{t('technology-preview.message')}</Message.Title>
-        </Message.Root>
-        <Column.Center classNames='flex flex-col text-sm'>
-          <div className='flex items-center'>{t('version.label', { version: version ?? 'unknown' })}</div>
+      <Dialog.Body>
+        <div className='flex items-center text-description'>
+          {t('version.label', { version: version ?? 'unknown' })}
+        </div>
+        <div className='flex flex-col gap-3'>
           {timestamp && (
             <div className='flex items-center gap-1'>
               <Link href={releaseUrl} variant='neutral'>
@@ -86,7 +85,10 @@ export const AboutDialog = () => {
               }}
             />
           </p>
-        </Column.Center>
+          <Message.Root valence='warning'>
+            <Message.Title classNames='font-normal text-sm'>{t('technology-preview.message')}</Message.Title>
+          </Message.Root>
+        </div>
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>

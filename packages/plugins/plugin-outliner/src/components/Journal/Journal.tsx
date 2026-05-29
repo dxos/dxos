@@ -8,7 +8,8 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { Journal as JournalType, getDateString, parseDateString } from '#types';

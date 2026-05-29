@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -185,8 +185,8 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(
           Obj.make(Organization.Organization, { name: 'Detail Corp', description: 'A detailed organization.' }),
         );
-        const dxn = Obj.getDXN(org).toString();
-        yield* agent.submitPrompt(`Load the full details of object ${dxn}. What is its description?`);
+        const uri = Obj.getURI(org);
+        yield* agent.submitPrompt(`Load the full details of object ${uri}. What is its description?`);
         yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
@@ -237,8 +237,8 @@ describe('Database Blueprint', () => {
             role: 'Director',
           }),
         );
-        const relationDXN = Relation.getDXN(relation).toString();
-        yield* agent.submitPrompt(`Delete the relation ${relationDXN}.`);
+        const relationUri = Relation.getURI(relation);
+        yield* agent.submitPrompt(`Delete the relation ${relationUri}.`);
         yield* agent.waitForCompletion();
         expect(Relation.isDeleted(relation)).toBe(true);
       },
@@ -265,7 +265,7 @@ describe('Database Blueprint', () => {
         yield* agent.waitForCompletion();
         const tags = Obj.getMeta(org).tags ?? [];
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).toContain(Obj.getDXN(tag).toString());
+        expect([...tags]).toContain(Obj.getURI(tag));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -282,14 +282,14 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        const tagDXN = Obj.getDXN(tag).toString();
-        Entity.update(org, (org) => Entity.addTag(org, tagDXN));
-        expect(Obj.getMeta(org).tags ?? []).toContain(tagDXN);
+        const tagUri = Obj.getURI(tag);
+        Entity.update(org, (org) => Entity.addTag(org, tagUri));
+        expect(Obj.getMeta(org).tags ?? []).toContain(tagUri);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
         const tags = Obj.getMeta(org).tags ?? [];
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).not.toContain(tagDXN);
+        expect([...tags]).not.toContain(tagUri);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -329,13 +329,13 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(Obj.getDXN(org)) as Ref.Ref<any>;
+        const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
         yield* agent.addContext([ref]);
-        const dxn = Obj.getDXN(org).toString();
+        const uri = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);
         yield* agent.waitForCompletion();
         const contextRefs = yield* agent.getContext();
-        const found = contextRefs.find((contextRef) => contextRef.dxn.toString() === dxn);
+        const found = contextRefs.find((contextRef) => contextRef.uri === uri);
         expect(found).toBeUndefined();
       },
       Effect.provide(TestLayer),
@@ -517,8 +517,8 @@ describe('Database Blueprint', () => {
           `Call query tool with precisely ${JSON.stringify({
             includeContent: false,
             limit: 10,
-            typename: Organization.Organization.typename,
-            in: [Obj.getDXN(feed1).toString()],
+            typename: Type.getTypename(Organization.Organization),
+            in: [Obj.getURI(feed1)],
           })}`,
         );
         yield* agent.waitForCompletion();

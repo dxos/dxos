@@ -2,22 +2,22 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 
 import { SpaceOperation } from './definitions';
 
 /**
- * Typenames the reset operation must NOT remove. Without `SpaceProperties` (or
- * `LegacySpaceProperties`), `SpaceProxy._initializeDb` never wakes its `propertiesAvailable`
- * trigger on the next session start, so `space.properties` throws "Space is not initialized."
- * and every container that reads it crashes.
+ * Typenames the reset operation must NOT remove. Without `SpaceProperties`,
+ * `SpaceProxy._initializeDb` never wakes its `propertiesAvailable` trigger on the next
+ * session start, so `space.properties` throws "Space is not initialized." and every
+ * container that reads it crashes.
  */
-const SYSTEM_TYPENAMES = new Set<string>([SpaceProperties.typename, LegacySpaceProperties.typename]);
+const SYSTEM_TYPENAMES = new Set<string>([Type.getTypename(SpaceProperties)]);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperation.Reset.pipe(
   Operation.withHandler((input) =>
@@ -174,7 +174,7 @@ const rebuildSpaceRoot = (space: Space): void => {
     }
 
     // Re-seed the root Collection (the navtree anchor).
-    record[Collection.Collection.typename] = Ref.make(Collection.make());
+    record[Type.getTypename(Collection.Collection)] = Ref.make(Collection.make());
 
     // Make sure the migrations version still pins the schema at the latest known target so the
     // reloaded space doesn't fall into SPACE_REQUIRES_MIGRATION.

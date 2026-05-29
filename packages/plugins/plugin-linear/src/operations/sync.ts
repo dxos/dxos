@@ -4,11 +4,11 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Project, Task } from '@dxos/types';
 
@@ -95,12 +95,12 @@ type TaskSnapshot = {
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 
 /**
- * Generic foreign-key lookup. Schema is forwarded to `Filter.foreignKeys`
+ * Generic foreign-key lookup. Type is forwarded to `Filter.foreignKeys`
  * untyped — the caller supplies the result type via the explicit `T` parameter.
  */
-const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string) =>
+const findByForeignId = <T>(type: Type.AnyEntity, id: string) =>
   Effect.gen(function* () {
-    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])));
+    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(type as never, [fkFor(id)])));
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 
@@ -251,8 +251,10 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
         existing.estimate = estimateResult.value;
       }
       if (project) {
-        const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
-        const projectId = Ref.make(project).dxn.asEchoDXN()?.echoId;
+        const currentProjectId = existing.project
+          ? EchoURI.getObjectId(EchoURI.tryParse(existing.project.uri)!)
+          : undefined;
+        const projectId = EchoURI.getObjectId(EchoURI.tryParse(Ref.make(project).uri)!);
         if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
           existing.project = Ref.make(project);
         }
@@ -454,9 +456,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
         return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
       }
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const integrationId = EchoURI.getObjectId(EchoURI.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = teamRef
-        ? `${integrationId}.${teamRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        ? `${integrationId}.${EchoURI.getObjectId(EchoURI.tryParse(teamRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -472,7 +474,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           // Optional narrow filter to a single target by its local
           // `target.object` echo id. Linear targets don't always have a
           // materialized object until first sync, so this filter is best-effort.
-          const teamFilterEchoId = teamRef?.dxn.asEchoDXN()?.echoId;
+          const teamFilterEchoId = teamRef ? EchoURI.getObjectId(EchoURI.tryParse(teamRef.uri)!) : undefined;
 
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
@@ -494,7 +496,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               continue;
             }
             if (teamFilterEchoId) {
-              const targetEchoId = target.object?.dxn.asEchoDXN()?.echoId;
+              const targetEchoId = target.object
+                ? EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!)
+                : undefined;
               if (targetEchoId !== teamFilterEchoId) {
                 continue;
               }

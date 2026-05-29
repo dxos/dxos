@@ -3,8 +3,10 @@
 //
 
 export * from './Chaos';
-export * from './Hello';
+export * from './Flock';
+export * from './Morph';
 export * from './Matrix';
 export * from './Oscilloscope';
+export * from './Pulse';
 export * from './Spinner';
 export * from './Waveform';

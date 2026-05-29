@@ -25,7 +25,7 @@ export class NoHandlerError extends BaseError.extend('NoHandlerError', 'No handl
 
 export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvailable', 'Service not available') {
   constructor(service: string, options?: Omit<BaseErrorOptions, 'context'>) {
-    super({ context: { service }, ...options, message: `Service not available: ${service}` });
+    super({ context: { service }, message: `Service not available: ${service}`, ...options });
   }
 }
 

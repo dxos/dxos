@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -16,19 +16,16 @@ export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.calendar',
-    version: '0.1.0',
-  }),
   FeedAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar--regular',
     hue: 'rose',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.makeObject(DXN.make('org.dxos.type.calendar', '0.1.0')),
 );
 
-export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}
+export type Calendar = Type.InstanceType<typeof Calendar>;
 
 /** Checks if a value is a Calendar object. */
 export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);

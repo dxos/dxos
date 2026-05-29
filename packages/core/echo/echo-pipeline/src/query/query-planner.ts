@@ -5,7 +5,6 @@
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
@@ -171,7 +170,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: [filter.typename as DXN.String],
+                typename: [filter.typename],
                 inverted: false,
               },
             },
@@ -418,7 +417,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: typenames as DXN.String[],
+                typename: typenames,
                 inverted: context.selectionInverted,
               },
             },
@@ -821,6 +820,13 @@ export class QueryPlanner {
         selectStepIndex = -1;
         orderStepIndex = -1;
       }
+      // A child-of FilterStep prunes results in-memory after the SelectStep, so pushing the
+      // limit into the SelectStep would slice candidates before the filter runs and starve
+      // the result set (e.g. wildcard select of 10 random objects, then child-of leaves 0).
+      if (step._tag === 'FilterStep' && _filterContainsChildOf(step.filter)) {
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
     }
 
     if (selectStepIndex === -1 && orderStepIndex === -1) {
@@ -901,6 +907,23 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
     direction,
   },
 });
+
+/**
+ * Returns true if the filter is `child-of` or composes one via `and` / `or` / `not`.
+ */
+const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'child-of':
+      return true;
+    case 'not':
+      return _filterContainsChildOf(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
+  }
+};
 
 /**
  * Recursively flattens nested `and` filters into a single list.

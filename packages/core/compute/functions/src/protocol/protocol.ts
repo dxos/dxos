@@ -31,12 +31,7 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import {
-  configuredCredentialsLayer,
-  credentialsLayerFromDatabase,
-  FunctionInvocationService,
-  QueueService,
-} from '../services';
+import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
@@ -81,9 +76,7 @@ export const wrapFunctionHandler = (
     },
     handler: async ({ data, context }) => {
       if (
-        (serviceTags.includes(Database.Service.key) ||
-          serviceTags.includes(QueueService.key) ||
-          serviceTags.includes(Feed.FeedService.key)) &&
+        (serviceTags.includes(Database.Service.key) || serviceTags.includes(Feed.FeedService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -210,7 +203,6 @@ class FunctionContext extends Resource {
     assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
     const dbLayer = this.db ? Database.layer(this.db) : Database.notAvailable;
-    const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
     const feedLayer = this.queues ? createFeedServiceLayer(this.queues) : Feed.notAvailable;
     const credentials = dbLayer
       ? credentialsLayerFromDatabase({ caching: true }).pipe(Layer.provide(dbLayer))
@@ -248,7 +240,6 @@ class FunctionContext extends Resource {
 
     return Layer.mergeAll(
       dbLayer,
-      queuesLayer,
       feedLayer,
       credentials,
       operationServiceLayer,
@@ -337,7 +328,7 @@ const makeOperationServiceLayer = (
           outcome.error ? Effect.die(outcome.error) : Effect.succeed(outcome.data as never),
         ),
       )) as Operation.OperationService['invoke'],
-    schedule: ((op: Operation.Definition.Any, input: unknown) =>
+    schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
         invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
         // Fire and forget — schedule is intentionally non-awaiting.

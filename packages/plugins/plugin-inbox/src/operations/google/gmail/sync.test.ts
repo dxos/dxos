@@ -67,7 +67,7 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
 
       expect(objects).to.exist;
       console.log(JSON.stringify(objects, null, 2));
-      console.log((objects?.[0]?.blocks?.[0] as any)?.text);
+      console.log((objects?.[0]?.message?.blocks?.[0] as any)?.text);
     }).pipe(Effect.provide(Layer.mergeAll(TestLayer, InboxResolver.Mock()))),
   );
 });

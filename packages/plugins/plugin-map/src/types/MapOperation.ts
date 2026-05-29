@@ -14,7 +14,7 @@ import { meta } from '#meta';
 const MAP_OPERATION = `${meta.id}.operation`;
 
 export const Toggle = Operation.make({
-  meta: { key: `${MAP_OPERATION}.toggle`, name: 'Toggle Map' },
+  meta: { key: `${MAP_OPERATION}.toggle`, name: 'Toggle Map', icon: 'ph--compass--regular' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,

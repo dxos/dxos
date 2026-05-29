@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -43,21 +43,18 @@ export const Feed = Schema.Struct({
    */
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.feed',
-    version: '0.1.0',
-  }),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--rows--regular',
     hue: 'yellow',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.feed', '0.1.0')),
 );
 
 /**
  * TypeScript instance type for a Feed object.
  */
-export interface Feed extends Schema.Schema.Type<typeof Feed> {}
+export type Feed = Type.InstanceType<typeof Feed>;
 
 //
 // Types
@@ -90,6 +87,19 @@ export interface SyncOptions {
   shouldPull?: boolean;
 }
 
+/**
+ * Queue replication backlog for a feed namespace.
+ * `0` / `0` means caught up on pull and push.
+ */
+export interface SyncState {
+  /** Blocks still to pull from remote. */
+  blocksToPull: number;
+  /** Unpositioned blocks still to push to remote. */
+  blocksToPush: number;
+  /** Total blocks stored locally for the feed namespace. */
+  totalBlocks: number;
+}
+
 //
 // Factory
 //
@@ -106,18 +116,11 @@ export interface SyncOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Derives the queue DXN from the feed object's DXN.
- * Returns `undefined` when the feed is not stored in a space yet.
+ * Returns the feed object's EchoURI when the feed is stored in a space.
  *
  * Used internally by the feed service layer.
  */
-export const getQueueDxn = (feed: Feed): DXN | undefined => {
-  const self = Obj.getDXN(feed).asEchoDXN();
-  if (!self || !self.spaceId) {
-    return undefined;
-  }
-  return new DXN(DXN.kind.QUEUE, [feed.namespace ?? 'data', self.spaceId, self.echoId]);
-};
+export const getQueueUri = (feed: Feed): EchoURI.EchoURI | undefined => EchoURI.tryParse(Obj.getURI(feed));
 
 //
 // Service
@@ -154,6 +157,11 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
      * Syncs the feed with the server.
      */
     sync(feed: Feed, options?: SyncOptions): Promise<void>;
+
+    /**
+     * Returns queue replication backlog for the feed's namespace.
+     */
+    getSyncState(feed: Feed): Promise<SyncState>;
   }
 >() {}
 
@@ -166,6 +174,21 @@ export type Service = FeedService;
  * @deprecated Use `FeedService` instead.
  */
 export const Service = FeedService;
+
+/**
+ * Effect context service that holds the current feed for a scoped operation.
+ *
+ * @deprecated Prefer threading a `Feed.Feed` explicitly through function signatures
+ * over hiding it behind a context service.
+ */
+export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
+  ContextFeedService,
+  {
+    readonly feed: Feed;
+  }
+>() {
+  static layer = (feed: Feed): Layer.Layer<ContextFeedService> => Layer.succeed(ContextFeedService, { feed });
+}
 
 /**
  * Layer that provides a Feed service that throws when accessed.
@@ -184,26 +207,10 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
   sync: () => {
     throw new Error('Feed.FeedService not available');
   },
+  getSyncState: () => {
+    throw new Error('Feed.FeedService not available');
+  },
 } as Context.Tag.Service<FeedService>);
-
-//
-// Context (per-call) service
-//
-
-/**
- * Effect service exposing a single `Feed.Feed` as the "current" feed for a call site.
- *
- * @deprecated Prefer threading a `Feed.Feed` explicitly through function signatures
- * over hiding it behind a context service.
- */
-export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
-  ContextFeedService,
-  {
-    readonly feed: Feed;
-  }
->() {
-  static layer = (feed: Feed): Layer.Layer<ContextFeedService> => Layer.succeed(ContextFeedService, { feed });
-}
 
 //
 // Operations
@@ -291,6 +298,20 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
   Effect.gen(function* () {
     const service = yield* FeedService;
     yield* Effect.promise(() => service.sync(feed, options));
+  });
+
+/**
+ * Returns queue replication backlog for the feed's namespace.
+ *
+ * @example
+ * ```ts
+ * const { blocksToPull, blocksToPush } = yield* Feed.getSyncState(feed);
+ * ```
+ */
+export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, FeedService> =>
+  Effect.gen(function* () {
+    const service = yield* FeedService;
+    return yield* Effect.promise(() => service.getSyncState(feed));
   });
 
 /**

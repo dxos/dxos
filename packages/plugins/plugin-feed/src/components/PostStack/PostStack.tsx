@@ -4,9 +4,10 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Subscription } from '#types';
 
@@ -83,7 +84,7 @@ type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | '
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
   const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
-  const { t } = useTranslation(Subscription.Post.typename);
+  const { t } = useTranslation(Type.getTypename(Subscription.Post));
 
   const handleCurrentChange = useCallback(() => {
     if (post) {
@@ -101,7 +102,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef} fullWidth>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.IconBlock>
               <Card.Icon icon='ph--dot-outline--regular' />
             </Card.IconBlock>
@@ -113,8 +114,8 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
                 </a>
               </Card.IconBlock>
             )}
-          </Card.Toolbar>
-          <Card.Content>
+          </Card.Header>
+          <Card.Body>
             {post.author && (
               <Card.Row icon='ph--user--regular'>
                 <Card.Text variant='description'>{post.author}</Card.Text>
@@ -130,7 +131,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
                 <Card.Text variant='description'>{published}</Card.Text>
               </Card.Row>
             )}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>

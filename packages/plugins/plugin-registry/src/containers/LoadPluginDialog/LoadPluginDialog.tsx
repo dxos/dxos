@@ -50,7 +50,7 @@ export const LoadPluginDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('load-by-url-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton ref={closeRef} />
+          <Dialog.ActionIconButton action='close' ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

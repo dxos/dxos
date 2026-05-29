@@ -431,6 +431,9 @@
       "path": "../../plugins/plugin-trello"
     },
     {
+      "path": "../../plugins/plugin-trip"
+    },
+    {
       "path": "../../plugins/plugin-voxel"
     },
     {

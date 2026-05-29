@@ -43,6 +43,9 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-proto/tsconfig.json"
+    },
+    {
       "path": "packages/common/effect-zod/tsconfig.json"
     },
     {
@@ -161,6 +164,9 @@
     },
     {
       "path": "packages/core/compute/conductor/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/extractor/tsconfig.json"
     },
     {
       "path": "packages/core/compute/functions/tsconfig.json"
@@ -436,6 +442,9 @@
       "path": "packages/plugins/plugin-sample/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sandbox/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-script/tsconfig.json"
     },
     {
@@ -508,6 +517,9 @@
       "path": "packages/plugins/plugin-trello/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-trip/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {
@@ -578,6 +590,9 @@
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-ui/tsconfig.json"

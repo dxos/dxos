@@ -20,6 +20,7 @@ export const DescribeImage = Operation.make({
     key: `${GALLERY_OPERATION}.describe-image`,
     name: 'Describe Image',
     description: 'Generate a textual description for an image at the given index in a Gallery.',
+    icon: 'ph--image--regular',
   },
   input: Schema.Struct({
     gallery: Ref.Ref(Gallery.Gallery).annotations({

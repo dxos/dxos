@@ -40,7 +40,20 @@ import { describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Collection, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import {
+  Annotation,
+  Collection,
+  DXN,
+  EchoURI,
+  Feed,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  Type,
+  View,
+} from '@dxos/echo';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -102,13 +115,13 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object({ typename: 'example.type.roastLog', version: '0.1.0' }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
+  Type.makeObject(DXN.make('example.type.roastLog', '0.1.0')),
 );
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface RoastLog extends S.Schema.Type<typeof RoastLog> {}
+type RoastLog = Type.InstanceType<typeof RoastLog>;
 const makeRoastLog = (props: Obj.MakeProps<typeof RoastLog>): RoastLog => Obj.make(RoastLog, props);
 
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.
@@ -276,7 +289,7 @@ const makeCollection = (space: Space, name: string, objects: Ref.Ref<Obj.Unknown
   space.db.add(Obj.make(Collection.Collection, { name, objects }));
 
 const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[]) => {
-  const dxn = Feed.getQueueDxn(feed);
+  const dxn = Feed.getQueueUri(feed);
   if (!dxn) {
     throw new Error('Feed has no DXN — has the space been flushed?');
   }
@@ -867,8 +880,10 @@ const makeNotes = (
   project: Project.Project,
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
-  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${Obj.getDXN(obj).toString()})`;
-  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${Obj.getDXN(obj).toString()})`;
+  // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
+  const localDxn = (obj: Obj.Unknown) => EchoURI.make({ objectId: obj.id });
+  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
+  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 
   return [
     Markdown.make({
@@ -1097,7 +1112,7 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
  * then return the collection for wiring into the root.
  *
- * We register the schema via space.db.schemaRegistry.register() so that a PersistentType ECHO object
+ * We register the schema via space.db.schemaRegistry.register() so that a TypeSchema ECHO object
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
@@ -1107,9 +1122,9 @@ const addRoastLogCollection = async (
 ): Promise<Collection.Collection> => {
   const typename = 'example.type.roastLog';
 
-  // Register creates the PersistentType ECHO object in the space so the runtime can
+  // Register creates the TypeSchema ECHO object in the space so the runtime can
   // discover and render the schema without it being compiled into the app. Pass the
-  // explicit object form so `name` is stored on the PersistentType — passing a
+  // explicit object form so `name` is stored on the TypeSchema — passing a
   // Type.AnyEntity directly does not auto-derive a display name.
   await space.db.schemaRegistry.register([
     {

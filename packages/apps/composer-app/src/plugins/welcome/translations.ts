@@ -12,7 +12,7 @@ export const translations = [
       [meta.id]: {
         'login.title': 'Request access or login',
         'existing-identity.title': 'Sign up to access your account',
-        'beta.description': 'Drop your email below to request early access to Composer.',
+        'beta.description': 'Enter your email to request early access to Composer.',
 
         'check-email.title': 'Please check your email',
         'check-email.description':

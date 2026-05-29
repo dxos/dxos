@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
-import { assumeType, deepMapValues, visitValues } from '@dxos/util';
+import { EchoURI, ObjectId, URI } from '@dxos/keys';
+import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
-import { getTypeDXN, setTypename } from '../Annotation';
+import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   ATTR_META,
@@ -25,19 +25,21 @@ import {
   ObjectMetaSchema,
   ParentId,
   setSchema,
+  setType,
 } from '../common/types';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  ATTR_SELF_DXN,
+  ATTR_SELF_URI,
+  ATTR_SELF_URI_LEGACY,
   ObjectDatabaseId,
   type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  SelfDXNId,
+  SelfURIId,
   assertObjectModel,
 } from '../Entity';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
@@ -62,7 +64,7 @@ type SerializedObject<T extends { id: string }> = {
  * Converts object to it's JSON representation.
  */
 export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> => {
-  const typename = getTypeDXN(obj)?.toString();
+  const typename = getTypeURI(obj);
   invariant(typename && typeof typename === 'string');
   return typedJsonSerializer.call(obj);
 };
@@ -75,27 +77,27 @@ export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> =
  *
  * @param jsonData - JSON representation of the object.
  * @param options.refResolver - Resolver for references.
- * @param options.dxn - Override object DXN.
+ * @param options.uri - Override object URI.
  * @param options.database - Database to associate with the object.
  */
 export const objectFromJSON = async (
   jsonData: unknown,
   {
     refResolver,
-    dxn,
+    uri,
     database,
     parent,
-  }: { refResolver?: RefResolver; dxn?: DXN; database?: Database.Database; parent?: Obj.Unknown } = {},
+  }: { refResolver?: RefResolver; uri?: URI.URI; database?: Database.Database; parent?: Obj.Unknown } = {},
 ): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
   assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
-  const type = DXN.parse(jsonData[ATTR_TYPE]);
+  const type = URI.make(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
-  const decodedInput = stripInternalJsonKeys(jsonData);
+  const decodedInput = restoreUint8Arrays(stripInternalJsonKeys(jsonData));
 
   let obj: any;
   if (schema != null) {
@@ -112,23 +114,38 @@ export const objectFromJSON = async (
   if (schema) {
     setSchema(obj, schema);
   }
+  // Resolve and stamp the source type entity, if the resolver provides one.
+  // Lets `Obj.getType` / `Entity.getType` return a stable entity for objects
+  // loaded via `Obj.fromJSON` (serializer / queue paths).
+  if (refResolver?.resolveType) {
+    const typeEntity = await refResolver.resolveType(type);
+    if (typeEntity != null) {
+      setType(obj, typeEntity);
+    }
+  }
 
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    const sourceDXN: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
-    const targetDXN: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+    const sourceDxn = jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source'));
+    const targetDxn = jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target'));
 
-    const source = (await refResolver?.resolve(sourceDXN)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDXN)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
-    defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
-    defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
+    defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
+    defineHiddenProperty(obj, RelationTargetDXNId, targetDxn);
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
-    defineHiddenProperty(obj, KindId, EntityKind.Object);
+    // Honour the schema's TypeAnnotation kind — persisted `Type.Type` entities
+    // (e.g. dynamic schemas loaded from a snapshot import) must brand as
+    // `KindId = Type`, not Object, otherwise `Filter.type(Type.Type)` /
+    // `Type.isType` skip them and the schema registry never picks them up.
+    // Mirrors the kind resolution in `createObject` (the in-memory path).
+    const annotationKind = schema != null ? getTypeAnnotation(schema)?.kind : undefined;
+    defineHiddenProperty(obj, KindId, annotationKind === EntityKind.Type ? EntityKind.Type : EntityKind.Object);
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
@@ -142,15 +159,15 @@ export const objectFromJSON = async (
   }
 
   if (jsonData[ATTR_PARENT]) {
-    const parentDXN = DXN.parse(jsonData[ATTR_PARENT]);
-    const resolvedParent = (await refResolver?.resolve(parentDXN)) as Obj.Unknown | undefined;
+    const parentDxn = jsonData[ATTR_PARENT];
+    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);
   }
 
-  if (dxn) {
-    defineHiddenProperty(obj, SelfDXNId, dxn);
+  if (uri) {
+    defineHiddenProperty(obj, SelfURIId, uri);
   }
 
   if (database) {
@@ -161,7 +178,8 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');
-  invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_URI] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_URI_LEGACY] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
   return obj;
@@ -174,17 +192,33 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
     if (isEncodedReference(value)) {
       return refFromEncodedReference(value, options.refResolver);
     }
+    if (isEncodedUint8Array(value)) {
+      return decodeUint8ArrayFromJson(value);
+    }
 
     return visitor(value);
   });
 };
+
+/**
+ * Recursively replaces encoded `Uint8Array` JSON markers with actual `Uint8Array` instances.
+ * Runs before schema decoding so `Schema.Uint8ArrayFromSelf` sees real bytes.
+ */
+const restoreUint8Arrays = (data: unknown): any =>
+  deepMapValues(data, (value, recurse) => {
+    if (isEncodedUint8Array(value)) {
+      return decodeUint8ArrayFromJson(value);
+    }
+    return recurse(value);
+  });
 
 const stripInternalJsonKeys = (jsonData: unknown) => {
   const {
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
     [ATTR_DELETED]: _deleted,
-    [ATTR_SELF_DXN]: _selfDXN,
+    [ATTR_SELF_URI]: _selfUri,
+    [ATTR_SELF_URI_LEGACY]: _legacySelfUri,
     [ATTR_RELATION_SOURCE]: _relationSource,
     [ATTR_RELATION_TARGET]: _relationTarget,
     ...props
@@ -209,14 +243,18 @@ export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) =
  * Convert ObjectStructure to JSON data for indexing.
  * Different from {@link objectToJSON} as it takes the internal {@link ObjectStructure} representation directly
  */
-export const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStructure): Obj.JSON => {
+  const typeRef = ObjectStructure.getTypeReference(structure)?.['/'];
+  const parent = ObjectStructure.getParent(structure)?.['/'];
+  const source = ObjectStructure.getRelationSource(structure)?.['/'];
+  const target = ObjectStructure.getRelationTarget(structure)?.['/'];
   return {
     ...structure.data,
     id: objectId,
-    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
+    [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: ObjectStructure.getParent(structure)?.['/'] as DXN.String | undefined,
-    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
-    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
+    [ATTR_PARENT]: parent !== undefined ? EchoURI.tryParse(parent) : undefined,
+    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoURI.tryParse(source) : undefined,
+    [ATTR_RELATION_TARGET]: target !== undefined ? EchoURI.tryParse(target) : undefined,
   };
 };

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -24,6 +24,7 @@ export const CreateIntegration = Operation.make({
     key: `${INTEGRATION_OPERATION}.create-integration`,
     name: 'Create Integration',
     description: 'Creates a new Integration bound to an existing AccessToken.',
+    icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
     accessToken: Ref.Ref(AccessToken.AccessToken).annotations({
@@ -33,7 +34,7 @@ export const CreateIntegration = Operation.make({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
   }),
-  output: Integration.Integration,
+  output: Type.getSchema(Integration.Integration),
 });
 
 /**
@@ -44,6 +45,7 @@ export const SetIntegrationTargets = Operation.make({
     key: `${INTEGRATION_OPERATION}.set-integration-targets`,
     name: 'Set Integration Targets',
     description: "Reconciles an Integration's targets to match the chosen selection.",
+    icon: 'ph--sliders--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

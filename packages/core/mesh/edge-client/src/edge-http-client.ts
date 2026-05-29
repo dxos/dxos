@@ -113,6 +113,18 @@ export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
+/**
+ * Runtime state of the per-space TriggersDispatcher Durable Object on Edge.
+ */
+export type TriggersDispatcherStatus = {
+  isActive: boolean;
+  nextCronTaskRunTimestamp?: number;
+  registeredTriggers: string[];
+  stopAfterTimestamp?: number;
+  remainingMs?: number;
+  nextAlarmTimestamp?: number;
+};
+
 export type EdgeHttpClientOptions = {
   /**
    * Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header on every request.
@@ -405,6 +417,21 @@ export class EdgeHttpClient {
   public async getCronTriggers(ctx: Context, spaceId: SpaceId): Promise<GetCronTriggersResponse> {
     return this._call<GetCronTriggersResponse>(ctx, new URL(`/functions/${spaceId}/triggers/crons`, this.baseUrl), {
       method: 'GET',
+    });
+  }
+
+  /**
+   * Fetches TriggersDispatcher Durable Object runtime state for a space.
+   */
+  public async getTriggersDispatcherStatus(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<TriggersDispatcherStatus> {
+    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/triggers/${spaceId}/status`, this.baseUrl), {
+      ...args,
+      method: 'GET',
+      auth: true,
     });
   }
 

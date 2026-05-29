@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 
 import { Agent } from '../../../types';
 
@@ -15,6 +14,7 @@ export const AgentRules = Operation.make({
     key: 'org.dxos.function.agent-wizard.agent-rules',
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
+    icon: 'ph--book-open--regular',
   },
   input: Schema.Struct({}),
   output: Schema.String,
@@ -25,6 +25,7 @@ export const CreateAgent = Operation.make({
     key: 'org.dxos.function.agent-wizard.create-agent',
     name: 'Create agent',
     description: 'Creates a new agent.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     name: Schema.String.annotations({
@@ -42,8 +43,8 @@ export const CreateAgent = Operation.make({
       description: 'The objects to subscribe to for the agent. Can be references to mailboxes.',
     }),
   }),
-  output: Agent.Agent,
-  services: [Blueprint.RegistryService, Database.Service, QueueService, Feed.FeedService],
+  output: Type.getSchema(Agent.Agent),
+  services: [Blueprint.RegistryService, Database.Service, Feed.FeedService],
 });
 
 export const SyncTriggers = Operation.make({
@@ -52,6 +53,7 @@ export const SyncTriggers = Operation.make({
     name: 'Sync triggers',
     description:
       'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotations({

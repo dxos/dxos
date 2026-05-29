@@ -7,16 +7,14 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 
 import * as AppSurface from './app-surface';
 
-const TypeA = Schema.Struct({ name: Schema.String }).pipe(
-  Type.object({ typename: 'com.example.test.TypeA', version: '0.1.0' }),
-);
+const TypeA = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0')));
 
 const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
-  Type.object({ typename: 'com.example.test.TypeB', version: '0.1.0' }),
+  Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0')),
 );
 
 describe('AppSurface', () => {

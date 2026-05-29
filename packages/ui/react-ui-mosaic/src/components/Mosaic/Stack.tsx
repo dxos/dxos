@@ -17,7 +17,8 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import { type Axis, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 import { useMosaicContainerContext } from './Container';

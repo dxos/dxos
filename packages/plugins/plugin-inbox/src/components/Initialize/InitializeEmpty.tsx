@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 /**
  * Standard centered empty-state layout for "initialize / connect this thing"

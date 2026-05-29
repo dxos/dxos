@@ -17,11 +17,11 @@ import React, {
 
 import { mx } from '@dxos/ui-theme';
 
+import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { MediaPlayer, type MediaKind } from '../MediaPlayer';
-import { useTranslation } from '../ThemeProvider';
 
 // TODO(burdon): Move per-element class strings to `@dxos/ui-theme` (theme tokens)
 // so callers can re-theme via the same mechanism the rest of `react-ui` uses.
@@ -119,7 +119,7 @@ const CarouselRoot = ({
        * its content height. With no parent height constraint, the `1fr` row simply tracks
        * row-1 content — preserving the existing aspect-video behaviour for unbounded use.
        */}
-      {/* TODO(burdon): Move to ui-theme. */}
+      {/* TODO(burdon): Move to Carousel.theme.ts */}
       <div
         className={mx(
           'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
@@ -192,10 +192,6 @@ export type CarouselSlideProps = ThemedClassName<{
   kind?: MediaKind;
   /** Accessible label / `<img alt>` fallback. */
   alt?: string;
-  /** Class names forwarded to the inner `<img>` when MediaPlayer resolves to an image. */
-  imgClassNames?: string;
-  /** Class names forwarded to the inner `<video>` / `<audio>` / `<iframe>`. */
-  mediaClassNames?: string;
   controls?: boolean;
   autoPlay?: boolean;
   loop?: boolean;
@@ -209,8 +205,6 @@ const CarouselSlide = ({
   src,
   kind,
   alt,
-  imgClassNames,
-  mediaClassNames,
   controls,
   autoPlay,
   loop,
@@ -229,8 +223,6 @@ const CarouselSlide = ({
         kind={kind}
         alt={alt}
         classNames='w-full h-full'
-        imgClassNames={mx('object-cover', imgClassNames)}
-        mediaClassNames={mediaClassNames}
         controls={controls}
         autoPlay={autoPlay}
         loop={loop}

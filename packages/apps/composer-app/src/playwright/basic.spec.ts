@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
 // import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
-import { AppManager, INITIAL_URL } from './app-manager';
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
@@ -36,7 +36,7 @@ test.describe('Basic tests', () => {
 
   test('create space, which is displayed in tree', async () => {
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });
 
   test('create document', async () => {
@@ -58,7 +58,7 @@ test.describe('Basic tests', () => {
     }
 
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
     await host.changeStorageVersionInMetadata(9999);
     await expect(host.page.getByTestId('resetDialog').locator('p')).toContainText('9999');
@@ -66,7 +66,7 @@ test.describe('Basic tests', () => {
 
     await host.reset();
     // Wait for identity to be re-created.
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 10_000 });
   });
 
   // TODO(wittjosiah): Remove? The reset button was hidden from the app.
@@ -99,7 +99,7 @@ test.describe('Basic tests', () => {
     }
 
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
 
     await host.openUserDevices();
     await host.resetDevice();
@@ -107,6 +107,7 @@ test.describe('Basic tests', () => {
     await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
     // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
     // 30s gives ~3x headroom over the observed worst case.
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 30_000 });
+    // After reset the exemplar space is re-seeded alongside the personal space.
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
   });
 });

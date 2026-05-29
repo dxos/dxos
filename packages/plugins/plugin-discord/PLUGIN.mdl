@@ -1,0 +1,364 @@
+---
+id: org.dxos.plugin.discord
+name: DiscordPlugin
+version: 0.1.0
+---
+
+A Composer plugin that connects a Discord bot to a workspace so that server
+channels stream alongside everything else the user is working on. Messages
+from every guild the bot belongs to are synced into ECHO as `@dxos/types`
+`Message` objects inside `Channel` feeds — fully local-first and replicated
+to all peers.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type RemoteTarget
+  desc: Wire shape returned by GetDiscordChannels representing one Discord text channel.
+  fields:
+    id: string                       # Discord channel snowflake id
+    name: string                     # "#channel — Guild" display label
+    description?: string             # channel topic, if set
+    metadata?: Record<string, unknown>  # guildId, guildName, channelType, etc.
+```
+
+```mdl
+type DiscordTargetOptions
+  desc: Per-target sync options stored under IntegrationTarget.options and edited from the Integration UI.
+  fields:
+    daysOfHistory?: number           # initial backfill window in days (default 30; ignored after first sync)
+```
+
+```mdl
+type PullResult
+  desc: Summary of a completed incremental sync for one target channel.
+  fields:
+    added: number                    # number of new Message objects appended to the channel feed
+```
+
+## Services
+
+```mdl
+service DiscordREST
+  desc: >
+    dfx DiscordREST service layer. Wraps Discord's REST API v10 with an
+    in-memory rate-limit store. All HTTP traffic is routed through the edge
+    CORS proxy via makeEdgeProxyHttpClientLayer so browser-side requests work
+    without direct Discord API access.
+  loading: lazy
+  ops:
+    getMyUser() → User
+    listMyGuilds(params) → Guild[]
+    listGuildChannels(guildId: string) → Channel[]
+    listMessages(channelId: string, params) → Message[]
+  errors:
+    ErrorResponse: non-2xx Discord API error (code + message in body)
+    RatelimitedResponse: HTTP 429; cause carries retry_after seconds
+  note: >
+    The layer is constructed per-operation via makeDiscordLayer (integration ref)
+    or makeDiscordLayerFromToken (raw token for credential-form validation).
+    The CORS proxy is temporary; a future revision will route through the
+    authenticated /proxy/* edge endpoint using signed verifiable presentations.
+```
+
+## Operations
+
+```mdl
+op GetDiscordChannels
+  desc: >
+    Discovery only. Lists every text and announcement channel (type 0 and 5)
+    across all guilds the bot belongs to and returns one RemoteTarget per
+    channel. Read-only: never creates a local Channel object. Guild pagination
+    is drained in full; channel fetch failures for individual guilds are logged
+    and skipped so the rest of the discovery result remains usable.
+  input:
+    integration: Ref<Integration>
+  output: { targets: RemoteTarget[] }
+  effects: [http]
+  requires: [DiscordREST]
+  note: >
+    Channel names are rendered as "#channel — Guild" so the integration UI can
+    disambiguate same-named channels across multiple guilds without a separate
+    grouping concept.
+```
+
+```mdl
+op SyncDiscordChannel
+  desc: >
+    Pull-only incremental sync for the currently-selected Discord targets on an
+    Integration. For each selected channel: resolves (or materializes) the local
+    ECHO Channel keyed by the Discord channel snowflake id, pages through messages
+    newer than target.cursor (or from "now minus daysOfHistory" on first sync),
+    maps each Discord message to a @dxos/types Message, appends the batch to the
+    channel's ECHO Feed, then advances target.cursor to the newest id seen.
+    Targets are processed in parallel (concurrency 3). Failures on one target
+    record lastError on that target and continue; the overall op only fails if
+    the outer guild-list or Discord layer setup fails.
+  input:
+    integration: Ref<Integration>
+    channel?: Ref<Channel>           # optional: narrow to a single target channel
+  output: { pulled: PullResult }
+  effects: [http, echo:write]
+  requires: [DiscordREST]
+  note: >
+    Message mapping skips non-DEFAULT/non-REPLY types (joins, pins, calls, …)
+    to keep the feed clean. Discord embeds and attachments are not yet mapped
+    to ContentBlock — plain text only for now. A toast is emitted on success
+    or failure via LayoutOperation.AddToast.
+```
+
+## Features
+
+```mdl
+feat F-1: Bot Identity and Credential Setup
+
+  req F-1.1: User provides a bot token from the Discord developer portal via the credential form.
+  req F-1.2:
+    when: user submits the credential form
+    then: token is validated against GET /users/@me before any Integration is persisted
+    errors: [InvalidToken: Discord rejected the token with 401]
+  req F-1.3:
+    when: token is valid
+    then: bot's display name (global_name ?? username) is stored on AccessToken.account
+  req F-1.4: AccessToken is stored in ECHO and referenced by the Integration; the raw token is never re-exposed after setup.
+```
+
+```mdl
+feat F-2: Channel Discovery
+
+  req F-2.1:
+    when: user opens the Integration target picker
+    then: op:GetDiscordChannels is invoked and returns one entry per reachable text/announcement channel
+  req F-2.2: Entries are labeled "#channel — Guild" to disambiguate channels with identical names across guilds.
+  req F-2.3:
+    when: a guild's channel list cannot be fetched (bot removed, network error)
+    then: that guild's channels are omitted from results; other guilds are unaffected
+  req F-2.4: User selects one or more channels as Integration targets; unselected channels leave no trace in the space.
+```
+
+```mdl
+feat F-3: Incremental Message Sync
+
+  req F-3.1:
+    when: op:SyncDiscordChannel is invoked for an Integration
+    then: for each selected target channel, messages newer than target.cursor are fetched and appended
+  req F-3.2:
+    when: a target has no cursor (first sync)
+    then: lookback window is determined by DiscordTargetOptions.daysOfHistory (default 30, max ~3 years)
+  req F-3.3:
+    when: sync succeeds for a target
+    then: target.cursor advances to the newest message snowflake id seen; subsequent runs are incremental
+  req F-3.4:
+    when: sync fails for a target
+    then: target.lastError is set with a human-readable description; other targets continue unaffected
+  req F-3.5: System messages (joins, pins, calls) are filtered out; only DEFAULT (type 0) and REPLY (type 19) messages are stored.
+  req F-3.6: Discord bot replies carry the referenced message id in Message.threadId to enable reply-chain reconstruction.
+```
+
+```mdl
+feat F-4: Channel Materialization
+
+  req F-4.1:
+    when: a target channel is synced for the first time
+    then: a local ECHO Channel keyed by the Discord channel snowflake id is created in the space
+  req F-4.2: Channel keying uses Obj.Meta foreign-key [{source: 'discord.com', id: channelSnowflakeId}]; re-running sync on the same channel is idempotent.
+  req F-4.3:
+    when: the channel's name changes on Discord
+    then: the local Channel.name is updated to the "#channel — Guild" label on the next sync
+  req F-4.4:
+    when: a target ref exists from a legacy integration (remoteId not set)
+    then: the Discord channel id is recovered from the Channel's foreign-key metadata rather than the target entry
+```
+
+```mdl
+feat F-5: ECHO Persistence and Replication
+
+  req F-5.1: Each synced Message is appended to the Channel's ECHO Feed via Feed.append.
+  req F-5.2:
+    when: a peer receives a Message-feed update
+    then: the channel's message list reflects the new messages without additional sync
+    tags: [collaborative]
+  req F-5.3: All ECHO mutations (Channel creation, Message append, cursor update) are transacted per-target so a mid-sync crash cannot leave the space in a partially-updated state.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Valid bot token accepted
+  given: user opens the Discord integration credential form
+  when: user pastes a valid bot token and submits
+  then:
+    - GET /users/@me returns 200
+    - AccessToken created with account = bot display name
+    - Integration created with targets: []
+```
+
+```mdl
+test T-2: Invalid token rejected
+  given: user opens the credential form
+  when: user pastes an invalid token (application id, expired token, etc.)
+  then:
+    - Discord returns 401
+    - Form shows error: 'Discord rejected the token (401). Reset the bot token…'
+    - No AccessToken or Integration is persisted
+```
+
+```mdl
+test T-3: Channel discovery lists all guilds
+  given: a valid Integration whose bot belongs to two guilds, each with two text channels
+  when: op:GetDiscordChannels is invoked
+  then:
+    - output.targets contains four entries, one per channel
+    - each entry has id, name ("#channel — Guild"), and optional description
+```
+
+```mdl
+test T-4: Channel discovery skips failed guild
+  given: bot belongs to two guilds; guild B's channel list returns 403
+  when: op:GetDiscordChannels is invoked
+  then:
+    - targets contains only guild A's channels
+    - no error is raised; guild B failure is logged and skipped
+```
+
+```mdl
+test T-5: First sync materializes channel and appends messages
+  given: Integration with one selected target (no cursor); Discord returns 10 messages
+  when: op:SyncDiscordChannel is invoked
+  then:
+    - local Channel created in space with source=discord.com foreign key
+    - 10 Message objects appended to Channel.feed
+    - target.cursor set to the newest message snowflake id
+    - output.pulled.added === 10
+```
+
+```mdl
+test T-6: Incremental sync fetches only new messages
+  given: target.cursor is set to snowflake S; Discord returns 3 messages after S
+  when: op:SyncDiscordChannel is invoked
+  then:
+    - only messages with id > S are fetched
+    - 3 new Messages appended; existing Messages unchanged
+    - target.cursor advances to the newest of the 3 ids
+    - output.pulled.added === 3
+```
+
+```mdl
+test T-7: System messages filtered out
+  given: Discord returns 5 messages: 2 DEFAULT, 1 REPLY, 1 JOIN (type 7), 1 PIN (type 6)
+  when: op:SyncDiscordChannel maps the batch
+  then:
+    - 3 Messages appended (DEFAULT + REPLY only)
+    - JOIN and PIN messages discarded
+```
+
+```mdl
+test T-8: Sync failure recorded per target
+  given: Integration with two selected targets; target B's channel returns 403
+  when: op:SyncDiscordChannel is invoked
+  then:
+    - target A syncs successfully; its cursor advances
+    - target B.lastError is set with a human-readable Discord error string
+    - op returns without throwing; output.pulled.added counts only target A's messages
+```
+
+```mdl
+test T-9: Channel re-sync is idempotent
+  given: Channel already exists for discord channel id X with 5 Messages
+  when: op:SyncDiscordChannel is invoked again with same cursor
+  then:
+    - no duplicate Channel created (foreign-key lookup returns existing Channel)
+    - 0 Messages appended (no new messages beyond cursor)
+    - output.pulled.added === 0
+```
+
+```mdl
+test T-10: daysOfHistory controls initial lookback
+  given: new target with DiscordTargetOptions.daysOfHistory = 14
+  when: op:SyncDiscordChannel is invoked for the first time
+  then:
+    - after parameter is a snowflake derived from (now - 14 days)
+    - Messages older than 14 days are not fetched
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

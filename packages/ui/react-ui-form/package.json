@@ -34,6 +34,7 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/lang-xml": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
@@ -62,12 +63,15 @@
     "tabster": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect-proto": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

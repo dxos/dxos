@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { Sequence } from './Sequence';
@@ -19,19 +19,16 @@ export const Dream = Schema.Struct({
   ),
   sequences: Schema.optional(Schema.Array(Sequence)),
 }).pipe(
-  Type.object({
-    typename: 'dxos.org.type.Dream',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--moon-stars--regular',
     hue: 'violet',
   }),
+  Type.makeObject(DXN.make('dxos.org.type.Dream', '0.1.0')),
 );
 
-export interface Dream extends Schema.Schema.Type<typeof Dream> {}
+export type Dream = Type.InstanceType<typeof Dream>;
 
-export const make = ({ name, duration, sequences }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
+export const make = ({ name, duration, sequences }: Partial<Type.InstanceType<typeof Dream>> = {}) => {
   return Obj.make(Dream, { name, duration, sequences });
 };

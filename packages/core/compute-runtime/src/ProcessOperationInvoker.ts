@@ -18,7 +18,6 @@ import * as Stream from 'effect/Stream';
 
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
@@ -192,7 +191,7 @@ export const make = (opts: {
         traceMeta,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-          ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       });
       // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`,
@@ -224,8 +223,10 @@ export const make = (opts: {
     ...args: any[]
   ): Effect.Effect<void> => {
     const input = args[0] as I;
+    const options = args[1] as Operation.InvokeOptions | undefined;
+    const traceMeta = options?.tracing as Trace.Meta | undefined;
     return Effect.gen(function* () {
-      log('scheduling operation', { opKey: op.meta.key });
+      log('scheduling operation', { opKey: op.meta.key, ...options });
       yield* Ref.update(pendingCount, (count) => count + 1);
       // Scheduled operations are explicitly detached from the current process
       // — that's the whole point of `schedule` over `invoke`. Spawning without
@@ -233,7 +234,14 @@ export const make = (opts: {
       // spawning process's child set, doesn't deliver `requestChildEvent`
       // notifications, and the parent's terminal state isn't perturbed by
       // late child exits.
-      const fiber = yield* invokeFiber(op, input, { detached: true }).pipe(
+      const fiber = yield* invokeFiber(op, input, {
+        detached: true,
+        traceMeta,
+        environment: {
+          ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
+        },
+      }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.tapErrorCause((cause) =>
           Effect.sync(() => {

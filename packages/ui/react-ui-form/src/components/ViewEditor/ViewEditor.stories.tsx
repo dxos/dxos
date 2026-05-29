@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
-import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
+import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -22,15 +22,15 @@ import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Organization.Organization.typename, label: 'Organization' },
-  { value: Person.Person.typename, label: 'Person' },
-  { value: Pipeline.Pipeline.typename, label: 'Project' },
-  { value: Employer.Employer.typename, label: 'Employer' },
+  { value: Type.getTypename(Organization.Organization), label: 'Organization' },
+  { value: Type.getTypename(Person.Person), label: 'Person' },
+  { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
+  { value: Type.getTypename(Employer.Employer), label: 'Employer' },
 ];
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
-  schema: EchoSchema;
+  type: Type.AnyEntity;
   view: View.View;
   projection: ProjectionModel;
 };
@@ -39,7 +39,7 @@ type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
-  const [schema, setSchema] = useState<EchoSchema>();
+  const [type, setType] = useState<Type.AnyEntity>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 
@@ -51,23 +51,13 @@ const DefaultStory = (props: DefaultStoryProps) => {
         name: Schema.String,
         email: Format.Email,
         salary: Format.Currency(),
-      }).pipe(
-        Type.object({
-          typename: 'com.example.type.test',
-          version: '0.1.0',
-        }),
-      );
+      }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
       const AlternateSchema = Schema.Struct({
         title: Schema.String,
         description: Schema.String,
         completed: Schema.Boolean,
-      }).pipe(
-        Type.object({
-          typename: 'com.example.type.alternate',
-          version: '0.1.0',
-        }),
-      );
+      }).pipe(Type.makeObject(DXN.make('com.example.type.alternate', '0.1.0')));
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = ViewModel.make({
@@ -76,19 +66,19 @@ const DefaultStory = (props: DefaultStoryProps) => {
         jsonSchema: JsonSchema.toJsonSchema(TestSchema),
       });
 
-      setSchema(testSchema);
+      setType(testSchema);
       setView(view);
     }
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (newQuery: QueryAST.Query, target?: string) => {
-      if (!schema || !view || !space) {
+    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
+      if (!type || !view || !space) {
         return;
       }
 
       if (props.mode === 'tag') {
-        const queue = target && DXN.tryParse(target) ? target : undefined;
+        const queue = target;
         const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;
@@ -107,15 +97,14 @@ const DefaultStory = (props: DefaultStoryProps) => {
         Obj.update(view, (view) => {
           view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
         });
-        setSchema(() => newSchema);
+        setType(() => newSchema);
       } else {
         Obj.update(view, (view) => {
           view.query.ast = newQuery as Mutable<typeof newQuery>;
         });
-        schema.updateTypename(getTypenameFromQuery(newQuery));
       }
     },
-    [view, schema],
+    [view, type],
   );
 
   const handleDelete = useCallback(
@@ -125,22 +114,22 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
   // Expose objects on window for test access.
   useEffect(() => {
-    if (typeof window !== 'undefined' && schema && view && projectionRef.current) {
+    if (typeof window !== 'undefined' && type && view && projectionRef.current) {
       (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = {
-        schema,
+        type,
         view,
         projection: projectionRef.current,
       } satisfies ViewEditorDebugObjects;
     }
-  }, [schema, view]);
+  }, [type, view]);
 
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
   const json = useMemo(
-    () => JSON.parse(JSON.stringify({ schema, view, projection: projectionRef.current })),
-    [JSON.stringify(schema), JSON.stringify(view)],
+    () => JSON.parse(JSON.stringify({ schema: type, view, projection: projectionRef.current })),
+    [JSON.stringify(type), JSON.stringify(view)],
   );
 
-  if (!schema || !view) {
+  if (!type || !view) {
     return <div />;
   }
 
@@ -148,7 +137,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
     <TestLayout json={json}>
       <ViewEditor
         ref={projectionRef}
-        schema={schema}
+        type={type}
         view={view}
         registry={space?.db.schemaRegistry}
         mode={props.mode}

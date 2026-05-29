@@ -53,7 +53,7 @@ export default Query.pipe(
         return results.map((obj) => Entity.toJSON(obj));
       } else {
         return results.map((obj) => ({
-          dxn: Obj.getDXN(obj).toString(),
+          dxn: Obj.getURI(obj),
           typename: Obj.getTypename(obj),
           label: Obj.getLabel(obj),
         }));

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Routine } from '@dxos/compute';
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
@@ -36,7 +36,7 @@ export const Magazine = Schema.Struct({
   keep: Schema.Number.pipe(
     Schema.annotations({
       title: 'Keep',
-      description: 'Maximum number of curated items to keep (starred items are always preserved).',
+      description: 'Number of items to keep.',
     }),
     Schema.optional,
   ),
@@ -65,19 +65,16 @@ export const Magazine = Schema.Struct({
     }),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.magazine',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--newspaper-clipping--regular',
     hue: 'indigo',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.makeObject(DXN.make('org.dxos.type.magazine', '0.1.0')),
 );
 
-export interface Magazine extends Schema.Schema.Type<typeof Magazine> {}
+export type Magazine = Type.InstanceType<typeof Magazine>;
 
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);

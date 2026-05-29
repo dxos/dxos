@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { ObjectId, URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
@@ -41,7 +41,7 @@ export interface DatabaseDirectory {
    * Object id points to an automerge doc url where the object is embedded.
    */
   links?: {
-    [echoId: string]: string | RawString;
+    [echoUri: string]: string | RawString;
   };
 
   /**
@@ -119,9 +119,9 @@ export const ObjectStructure = Object.freeze({
   /**
    * @throws On invalid object structure.
    */
-  getEntityKind: (object: ObjectStructure): 'object' | 'relation' => {
+  getEntityKind: (object: ObjectStructure): 'object' | 'relation' | 'type' => {
     const kind = object.system?.kind ?? 'object';
-    invariant(kind === 'object' || kind === 'relation', 'Invalid kind');
+    invariant(kind === 'object' || kind === 'relation' || kind === 'type', 'Invalid kind');
     return kind;
   },
 
@@ -166,7 +166,7 @@ export const ObjectStructure = Object.freeze({
     data,
     keys,
   }: {
-    type: DXN.String;
+    type: URI.URI;
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
@@ -191,7 +191,7 @@ export const ObjectStructure = Object.freeze({
     keys,
     data,
   }: {
-    type: DXN.String;
+    type: URI.URI;
     source: EncodedReference;
     target: EncodedReference;
     deleted?: boolean;
@@ -205,6 +205,19 @@ export const ObjectStructure = Object.freeze({
         source,
         target,
         deleted: deleted ?? false,
+      },
+      meta: {
+        keys: keys ?? [],
+      },
+      data: data ?? {},
+    };
+  },
+
+  makeType: ({ type, keys, data }: { type: URI.URI; keys?: ForeignKey[]; data?: unknown }): ObjectStructure => {
+    return {
+      system: {
+        kind: 'type',
+        type: { '/': type },
       },
       meta: {
         keys: keys ?? [],
@@ -250,12 +263,22 @@ export type ObjectMeta = {
  */
 export type ObjectSystem = {
   /**
-   * Entity kind.
+   * Entity kind. `'type'` covers persisted ECHO type definitions (instances of
+   * the `Type.Type` meta-schema); `'object'` / `'relation'` cover regular ECHO
+   * instances.
    */
-  kind?: 'object' | 'relation';
+  kind?: 'object' | 'relation' | 'type';
 
   /**
-   * Object reference ('protobuf' protocol) type.
+   * Object reference ('protobuf' protocol) type — DXN of the schema this
+   * entity instantiates.
+   *
+   * - For `kind === 'object'` / `'relation'` instances, this is the URI of the
+   *   user-defined schema the entity was created from (e.g. `dxn:type:org.example.Person:1.0.0`).
+   * - For `kind === 'type'` entities (persisted Type.Type meta-instances) this
+   *   is always the URI of the `TypeSchema` meta-schema itself
+   *   (`dxn:org.dxos.type.schema:0.1.0`). The kind that the meta-instance
+   *   _describes_ (object/relation/type) lives in `data.jsonSchema.entityKind`.
    */
   type?: EncodedReference;
 

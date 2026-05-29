@@ -195,6 +195,9 @@ describe('SubductionPolicy', () => {
     // signer key up front. For DXOS this means binding subduction peer-id
     // to space-id needs out-of-band metadata (the peer-id is not in the
     // `AutomergeReplicatorConnection` today).
+    // Star-topology setup + two connection handshakes + initial doc replication
+    // can run hot on slow CI runners; give the test budget that comfortably
+    // exceeds the 5_000ms inner poll.
     test('authorizePut: selective per-requestor denial in star topology', async () => {
       const server1Signer = MemorySigner.generate();
       const server2Signer = MemorySigner.generate();
@@ -221,7 +224,7 @@ describe('SubductionPolicy', () => {
       const progress = client.findWithProgress<{ text?: string }>(docFromServer1.url);
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
-    });
+    }, 30_000);
 
     // Hypothesis: a denial on sedimentree A does not leak into the
     // entry-state machine for sedimentree B (subduction maintains

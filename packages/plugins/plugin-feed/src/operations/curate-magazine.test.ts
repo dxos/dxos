@@ -50,7 +50,7 @@ describe('curateMagazine', () => {
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDXN = Feed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueUri(echoFeed);
     invariant(feedDXN, 'Feed should have a queue DXN.');
     const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;
@@ -193,18 +193,18 @@ describe('curateMagazine', () => {
     // Queue DXN of the underlying queue item (not a synthesised ECHO DXN).
     // EchoHandler.createRef short-circuits on the Queue-kind SelfDXNId, so
     // Ref.make(queuePost) stores the canonical queue address — meaning the
-    // Post never enters `space.db` and `magazine.posts[0].dxn` equals
-    // `Obj.getDXN(queueItem)` byte-for-byte.
+    // Post never enters `space.db` and `magazine.posts[0].uri` equals
+    // `Obj.getURI(queueItem)` byte-for-byte.
     const { db, magazine, queue, space } = await setup();
     await queue.append([makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' })]);
 
     const first = await curateMagazine(space, magazine);
     expect(first.added).toBe(1);
 
-    const magDXN = magazine.posts[0].dxn.toString();
+    const magURI = magazine.posts[0].uri;
     const items = (await queue.queryObjects()) ?? [];
-    const queueDXN = Obj.getDXN(items[0] as any).toString();
-    expect(magDXN).toBe(queueDXN);
+    const queueURI = Obj.getURI(items[0] as any);
+    expect(magURI).toBe(queueURI);
 
     // Idempotent re-curate.
     await expect(curateMagazine(space, magazine)).resolves.toEqual({ added: 0 });

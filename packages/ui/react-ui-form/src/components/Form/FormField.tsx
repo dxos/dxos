@@ -29,6 +29,7 @@ import { getRefProps } from '../../util';
 import {
   ArrayField,
   BooleanField,
+  DateField,
   GeoPointField,
   MarkdownField,
   NumberField,
@@ -54,9 +55,14 @@ export type FormFieldProps = {
   type: SchemaAST.AST;
 
   /**
-   * Name of the property.
+   * Name of the property. Used to derive a default label
+   * (`title ?? capitalize(name)`) and as the projection lookup key. Pass
+   * `null` to suppress the header label entirely -- the form still renders
+   * the field/struct, but `FormFieldSet`'s top-level `<FormFieldLabel>` is
+   * skipped. Used by `ArrayField` for object-array items, where every item
+   * would otherwise repeat the array's parent name.
    */
-  name: string;
+  name: string | null;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -92,7 +98,7 @@ export type FormFieldProps = {
     | 'createInitialValuePath'
     | 'createFieldMap'
     | 'db'
-    | 'useSchema'
+    | 'useType'
     | 'getOptions'
     | 'onCreate'
   >;
@@ -115,7 +121,7 @@ export const FormField = (props: FormFieldProps) => {
     createInitialValuePath,
     createFieldMap,
     db,
-    useSchema: schemaHook,
+    useType: schemaHook,
     getOptions,
     onCreate,
   } = props;
@@ -124,36 +130,53 @@ export const FormField = (props: FormFieldProps) => {
   const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
-  const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
+  // `name === null` means "no header" -- collapse to an empty string so
+  // downstream consumers keep their `label: string` types, and the falsy
+  // value lets `FormFieldSet`'s `label && <FormFieldLabel ...>` guard skip
+  // the header.
+  const label = useMemo(() => title ?? (name == null ? '' : String.capitalize(name)), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
   );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
+  const jsonPath = createJsonPath(path ?? []);
   const fieldProps: FormFieldComponentProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
+    jsonPath,
     placeholder,
     layout,
     db,
     ...fieldState,
   };
 
+  // Omit empty fields entirely in read-only mode -- an empty value has nothing
+  // to display, so a labelled row with a blank input is just noise. This
+  // mirrors what `FormFieldWrapper` already does for `layout === 'static'`, but
+  // covers every field type (including those that bypass the wrapper:
+  // RefField, SelectField, MarkdownField, ...). Container fields
+  // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
+  // empty-value checks, but those branches only apply when the value is
+  // actually a non-null array/object, so this check doesn't interfere.
+  if (readonly && fieldState.getValue() == null) {
+    return null;
+  }
+
   //
   // Custom field.
   //
 
-  const jsonPath = createJsonPath(path ?? []);
   const CustomField = fieldMap?.[jsonPath];
   if (CustomField) {
     return <CustomField {...fieldProps} />;
   }
 
   // TODO(burdon): Expensive to create schema each time; pass AST?
-  const component = fieldProvider?.({ schema: Schema.make(type), prop: name, fieldProps });
+  const component = fieldProvider?.({ schema: Schema.make(type), prop: name ?? '', fieldProps });
   if (component) {
     return component;
   }
@@ -216,7 +239,7 @@ export const FormField = (props: FormFieldProps) => {
         createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
         createFieldMap={isCreateTarget ? createFieldMap : undefined}
         db={db}
-        useSchema={schemaHook}
+        useType={schemaHook}
         getOptions={getOptions}
         onCreate={onCreate}
       />
@@ -249,7 +272,7 @@ export const FormField = (props: FormFieldProps) => {
           createOptionIcon={createOptionIcon}
           createInitialValuePath={createInitialValuePath}
           db={db}
-          useSchema={schemaHook}
+          useType={schemaHook}
           getOptions={getOptions}
           onCreate={onCreate}
         />
@@ -272,9 +295,12 @@ const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldCompo
 
   const formatField = Match.value(format).pipe(
     Match.withReturnType<FormFieldComponent | undefined>(),
+    Match.when(Format.TypeFormat.Date, () => DateField),
+    Match.when(Format.TypeFormat.DateTime, () => DateField),
     Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
     Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
     Match.when(Format.TypeFormat.Text, () => TextAreaField),
+    Match.when(Format.TypeFormat.Time, () => DateField),
     Match.orElse(() => undefined),
   );
   if (formatField) {

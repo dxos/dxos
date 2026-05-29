@@ -13,7 +13,6 @@ import { ClientService } from '@dxos/client';
 import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import {
   AgentService,
   FeedTraceSink,
@@ -22,7 +21,6 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
 
 //
 // Capability Module
@@ -34,26 +32,6 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 // capability lists, etc.) is resolved via Effect-level requirements rather
 // than captured from an outer scope.
 //
-
-/**
- * Default application-affinity `RemoteFunctionExecutionService`. Space specs
- * (see {@link RemoteFunctionExecutionOverrideSpec}) can override this with a
- * space-scoped client.
- */
-const RemoteFunctionExecutionSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [ClientService],
-    provides: [RemoteFunctionExecutionService],
-  },
-  () =>
-    Layer.unwrapEffect(
-      Effect.gen(function* () {
-        const client = yield* ClientService;
-        return RemoteFunctionExecutionService.fromClient(client);
-      }),
-    ),
-);
 
 /**
  * Gathers contributed {@link Capabilities.OperationHandler} sets from the
@@ -167,11 +145,14 @@ const FeedTraceSinkSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped override of {@link RemoteFunctionExecutionService}. Activated
- * only when the client's `runtime.client.edgeFeatures.agents` config is set;
- * falls back to the application-level spec otherwise.
+ * Space-scoped `RemoteFunctionExecutionService`. When edge agents are enabled
+ * (`runtime.client.edgeFeatures.agents`) functions are invoked without a space
+ * binding (the edge routes them); otherwise they are scoped to the space. The
+ * config is read inside the factory — at slice-materialisation time, once
+ * `ClientService` is available — so the owning module does not need the client
+ * at activation time and can activate on `SetupProcessManager`.
  */
-const RemoteFunctionExecutionOverrideSpec = LayerSpec.make(
+const RemoteFunctionExecutionSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [ClientService],
@@ -180,9 +161,10 @@ const RemoteFunctionExecutionOverrideSpec = LayerSpec.make(
   (context) =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        invariant(context.space, 'space context required for RemoteFunctionExecutionService override');
+        invariant(context.space, 'space context required for RemoteFunctionExecutionService');
         const client = yield* ClientService;
-        return RemoteFunctionExecutionService.fromClient(client, context.space);
+        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
+        return RemoteFunctionExecutionService.fromClient(client, edgeAgents ? undefined : context.space);
       }),
     ),
 );
@@ -192,7 +174,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
     affinity: 'space',
     requires: [
       Database.Service,
-      QueueService,
+      Feed.FeedService,
       TriggerStateStore,
       ProcessManager.ProcessManagerService,
       Registry.AtomRegistry,
@@ -202,30 +184,17 @@ const TriggerDispatcherSpec = LayerSpec.make(
   () => TriggerDispatcher.layer({ timeControl: 'natural' }),
 );
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-
-    const contributions: Capability.Any[] = [
-      Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-      Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
-      Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
-      Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
-      Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
-      Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
-      Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
-      Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
-      Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
-      // Edge-mode override is conditional on runtime config, so it stays in the
-      // activation block.
-      Capability.contributes(
-        Capabilities.LayerSpec,
-        client.config.get('runtime.client.edgeFeatures.agents')
-          ? RemoteFunctionExecutionSpec
-          : RemoteFunctionExecutionOverrideSpec,
-      ),
-    ];
-
-    return contributions;
-  }),
+export default Capability.makeModule(() =>
+  Effect.succeed([
+    Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
+    Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
+    Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
+    Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
+    Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
+    Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionSpec),
+    Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
+  ]),
 );

@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EchoURI, type ObjectId, type URI } from '@dxos/keys';
+
 /**
- * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
- * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
- * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
+ * Extracts the bare ECHO object id from a URI. Robust to URI form differences
+ * — `echo:/<id>` (local), `echo://<spaceId>/<id>` (space-scoped) — by using
+ * EchoURI.getObjectId.
  */
-export const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
+export const dxnToObjectId = (uri: URI.URI): ObjectId | URI.URI => EchoURI.getObjectId(EchoURI.tryParse(uri)!) ?? uri;

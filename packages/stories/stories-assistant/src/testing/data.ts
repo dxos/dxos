@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { type Entity, Obj, Ref, Relation, type Type } from '@dxos/echo';
+import { type Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
 
@@ -48,8 +48,8 @@ export const people: (Entity.Properties<Person.Person> & { id: string })[] = [
 ];
 
 const testObjects: Record<string, any[]> = {
-  [Organization.Organization.typename]: organizations,
-  [Person.Person.typename]: people,
+  [Type.getTypename(Organization.Organization)]: organizations,
+  [Type.getTypename(Person.Person)]: people,
 };
 
 const testRelationships: Record<
@@ -59,7 +59,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [Employer.Employer.typename]: [
+  [Type.getTypename(Employer.Employer)]: [
     // prettier-ignore
     { source: 'rich_burdon', target: 'dxos', active: true },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -82,7 +82,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [HasConnection.HasConnection.typename]: [
+  [Type.getTypename(HasConnection.HasConnection)]: [
     // prettier-ignore
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },
@@ -106,6 +106,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   for (const [typename, objects] of Object.entries(testObjects)) {
     const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
+    invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
     for (const { id, ...data } of objects) {
       const object = space.internal.db.add(Obj.make(schema, data));
       objectMap.set(id, object);
@@ -115,6 +116,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   for (const [typename, relationships] of Object.entries(testRelationships)) {
     const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
+    invariant(Type.isRelation(schema), `Schema is not a relation schema: ${typename}`);
 
     for (const { source, target, ...data } of relationships) {
       const sourceObject = objectMap.get(source);

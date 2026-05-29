@@ -5,15 +5,15 @@
 import { Capabilities, type CapabilityManager } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { sleep } from '@dxos/async';
-import { type Step } from '@dxos/plugin-support';
+import { type Tour } from '@dxos/plugin-support';
 
-const ensureSidebar: Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
+const ensureSidebar: Tour.Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
   const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
   await invokePromise(LayoutOperation.UpdateSidebar, { state: 'expanded' });
   return await sleep(200);
 };
 
-const base: Partial<Step> = {
+const base: Partial<Tour.Step> = {
   disableBeacon: true,
   disableOverlay: true,
   offset: 0,
@@ -26,7 +26,7 @@ const base: Partial<Step> = {
 
 // TODO(burdon): Move text to translation object.
 // TODO(burdon): Prefer `data-joyride` over `data-testid`.
-export const steps: Step[] = [
+export const steps: Tour.Step[] = [
   {
     ...base,
     before: ensureSidebar,

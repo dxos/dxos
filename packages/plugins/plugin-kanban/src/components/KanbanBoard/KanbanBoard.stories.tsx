@@ -6,7 +6,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Filter, JsonSchema, Obj, Query, type View } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -47,7 +47,7 @@ const DefaultStory = () => {
 
   useEffect(() => {
     const view = ViewModel.make({
-      query: Query.select(Filter.typename(Organization.Organization.typename)),
+      query: Query.select(Filter.typename(Type.getTypename(Organization.Organization))),
       jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       pivotFieldName: 'status',
     });

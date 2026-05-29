@@ -55,6 +55,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/assistant"
     },
     {
@@ -65,6 +68,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-atom"
     },
     {
       "path": "../../core/echo/echo-db"

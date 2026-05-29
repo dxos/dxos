@@ -1,0 +1,76 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../plugins/plugin-trip"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-ui"
+    }
+  ]
+}

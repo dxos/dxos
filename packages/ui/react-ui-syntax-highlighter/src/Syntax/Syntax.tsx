@@ -7,7 +7,7 @@ import { JSONPath } from 'jsonpath-plus';
 import React, { type FC, type PropsWithChildren, forwardRef, useMemo, useState } from 'react';
 
 import { Input, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter';

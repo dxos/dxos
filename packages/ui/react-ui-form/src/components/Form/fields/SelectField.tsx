@@ -4,18 +4,20 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { Icon, Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export type SelectFieldOptions = FormFieldComponentProps & {
-  options?: Array<{ value: string | number; label?: string }>;
+  options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;
 };
 
 export const SelectField = ({
   type,
   readonly,
   label,
+  jsonPath,
   layout,
   placeholder,
   options,
@@ -37,7 +39,7 @@ export const SelectField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       {layout === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
@@ -47,10 +49,14 @@ export const SelectField = ({
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {options?.map(({ value, label }) => (
+                {options?.map(({ value, label, secondaryLabel, icon, iconHue }) => (
                   // NOTE: Numeric values are converted to and from strings.
                   <Select.Option key={String(value)} value={String(value)}>
-                    {label ?? String(value)}
+                    <span className='flex items-center flex-row gap-2'>
+                      {icon && <Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
+                      {label ?? String(value)}
+                      {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
+                    </span>
                   </Select.Option>
                 ))}
               </Select.Viewport>
@@ -62,4 +68,10 @@ export const SelectField = ({
       {layout === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
+};
+
+const getIconHueStyles = (iconHue?: string): string | undefined => {
+  const styles = iconHue ? getStyles(iconHue) : undefined;
+
+  return styles?.foreground;
 };

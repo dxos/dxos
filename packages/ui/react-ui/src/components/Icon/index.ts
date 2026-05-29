@@ -3,3 +3,4 @@
 //
 
 export * from './Icon';
+export * from './IconBlock';

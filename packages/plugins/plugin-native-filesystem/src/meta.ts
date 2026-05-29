@@ -9,10 +9,14 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.nativeFilesystem',
   name: 'Native Filesystem',
   author: 'DXOS',
+  spec: 'PLUGIN.mdl',
   description: trim`
-    Native filesystem access for desktop builds.
-    Open local directories as workspaces, similar to Obsidian vaults.
-    Requires the Composer desktop app.
+    Open local directories as workspaces inside the Composer desktop app, similar to an Obsidian vault.
+    Markdown files and sub-directories are surfaced in the navtree alongside ECHO spaces and objects,
+    and edits made in Composer are written back to disk in real time.
+    Workspaces can be opened, closed, and refreshed via the app graph action menu;
+    ordering is persisted in the user's personal ECHO space so the layout survives restarts.
+    Requires the Electron-based Composer desktop app — not available in browser builds.
   `,
   icon: 'ph--folder-open--regular',
   tags: ['labs'],

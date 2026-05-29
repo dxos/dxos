@@ -9,10 +9,11 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node } from '@dxos/plugin-graph';
+import { mainIntrinsicSize } from '@dxos/react-ui';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
-import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';
@@ -145,7 +146,7 @@ export const PlankComponent = memo(
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
     const classNames = [
-      'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-coarse',
+      'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-lg',
       isSolo && 'absolute inset-0',
       isSolo && mainIntrinsicSize,
       railGridHorizontal,

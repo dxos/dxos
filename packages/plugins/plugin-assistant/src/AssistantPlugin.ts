@@ -19,6 +19,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
 import {
+  AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
   AssistantState,
@@ -37,6 +38,11 @@ import {
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { AssistantEvents, AssistantOperation } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+const StateReady = AppActivationEvents.createStateEvent(meta.id);
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -77,6 +83,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [StateReady],
     activate: AssistantState,
   }),
   Plugin.addModule({
@@ -104,6 +111,15 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: AiService,
   }),
   Plugin.addModule({
+    // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+    // dispatched as their own processes (e.g. via `Operation.invoke` from
+    // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
+    // conversation-scoped services without an inline `Effect.provideService`
+    // upstream. See `capabilities/ai-context.ts` for the rationale.
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: AiContextCapability,
+  }),
+  Plugin.addModule({
     // TODO(wittjosiah): Use a different event.
     activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
@@ -113,12 +129,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       DeckEvents.StateReady,
+      StateReady,
     ),
     activate: CompanionChatProvisioner,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

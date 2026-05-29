@@ -4,11 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type, View } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof MasonrySchema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
-export const Masonry = Schema.Struct({
+const MasonrySchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -21,19 +25,18 @@ export const Masonry = Schema.Struct({
   ).pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Consider Masonry supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.masonry',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--wall--regular',
     hue: 'green',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.masonry', '0.1.0')),
 );
 
-export interface Masonry extends Schema.Schema.Type<typeof Masonry> {}
+// TODO(wittjosiah): Try to clean up this type inference.
+export interface Masonry extends Type.InstanceType<typeof MasonrySchema> {}
+export const Masonry: Type.Obj<Masonry> = MasonrySchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Masonry>>, 'view'> & {
   view: View.View;

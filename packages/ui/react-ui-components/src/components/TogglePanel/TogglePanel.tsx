@@ -6,7 +6,8 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
 
 import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 const IconBlock = ({ children }: PropsWithChildren) => {
   return <div className='grid h-[24px] w-[24px] place-items-center'>{children}</div>;

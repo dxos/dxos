@@ -45,7 +45,9 @@ export const add = Command.make(
       };
 
       const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
-      const collection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
+      const collection = yield* Database.load<Collection.Collection>(
+        properties[Type.getTypename(Collection.Collection)],
+      );
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),
@@ -85,7 +87,12 @@ const selectTypename = Effect.fn(function* (
     location: ['database', 'runtime'],
     includeSystem: false,
   }).pipe(
-    Effect.map((schemas) => schemas.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)),
+    Effect.map((schemas) =>
+      schemas.filter((type) => {
+        const schema = Type.getSchema(type);
+        return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
+      }),
+    ),
     Effect.map((schemas) => schemas.filter((schema) => !!resolve(Type.getTypename(schema)))),
   );
 

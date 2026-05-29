@@ -232,8 +232,8 @@ describe('Database', () => {
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
-    expect(Obj.getSchema(task)?.ast).to.eq(TestSchema.Task.ast);
-    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:type:com.example.type.task:0.1.0');
+    expect(Type.getSchema(Obj.getType(task)!).ast).to.eq(Type.getSchema(TestSchema.Task).ast);
+    expect(Obj.getTypeURI(task)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
     expect(Obj.getTypename(task)).to.eq('com.example.type.task');
 
     db.add(task);
@@ -382,7 +382,7 @@ describe('Database', () => {
     );
 
     expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('com.example.type.task');
-    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:com.example.type.task:0.1.0');
+    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:com.example.type.task:0.1.0');
   });
 
   test('versions', async () => {

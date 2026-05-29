@@ -247,7 +247,7 @@ const TooltipVirtualTrigger = ({
 // TooltipTrigger
 //
 
-const TRIGGER_NAME = 'TooltipTrigger';
+const TRIGGER_NAME = 'Tooltip.Trigger';
 
 type TooltipTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
@@ -327,7 +327,7 @@ TooltipTrigger.displayName = TRIGGER_NAME;
 // TooltipPortal
 //
 
-const PORTAL_NAME = 'TooltipPortal';
+const PORTAL_NAME = 'Tooltip.Portal';
 
 type PortalContextValue = { forceMount?: true };
 const [PortalProvider, usePortalContext] = createTooltipContext<PortalContextValue>(PORTAL_NAME, {
@@ -368,7 +368,7 @@ TooltipPortal.displayName = PORTAL_NAME;
 // TooltipContent
 //
 
-const CONTENT_NAME = 'TooltipContent';
+const CONTENT_NAME = 'Tooltip.Content';
 
 type TooltipContentElement = TooltipContentImplElement;
 type TooltipContentProps = TooltipContentImplProps & {
@@ -579,7 +579,7 @@ TooltipContent.displayName = CONTENT_NAME;
 // TooltipArrow
 //
 
-const ARROW_NAME = 'TooltipArrow';
+const ARROW_NAME = 'Tooltip.Arrow';
 
 type TooltipArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>;

@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Database, Filter, Key, Obj, Query, Type } from '@dxos/echo';
+import { EchoURI, URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -34,13 +34,14 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = DXN.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
-        if (!dxn) {
+        const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
+        const dxnRef = EchoURI.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
+        if (!dxnRef) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
+        const ref = db.makeRef(dxnRef);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
@@ -50,7 +51,7 @@ export default Capability.makeModule(
           {
             path: getMailboxAllMailPath(db.spaceId, object.id),
             label: (object as Mailbox.Mailbox).name ?? '',
-            type: Mailbox.Mailbox.typename,
+            type: Type.getTypename(Mailbox.Mailbox),
           },
         ];
       })) as AppCapabilities.NavigationTargetResolver;
@@ -73,8 +74,8 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxDXN = DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
-      const mailboxRef = space.db.makeRef(mailboxDXN);
+      const mailboxEchoId = EchoURI.make({ spaceId: spaceId, objectId: mailboxId as Key.ObjectId });
+      const mailboxRef = space.db.makeRef(mailboxEchoId);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
       const messageId = isMessagePath ? getLinkedVariant(qualifiedPath) : undefined;
@@ -82,17 +83,17 @@ export default Capability.makeModule(
       return Database.loadOption(mailboxRef).pipe(
         Effect.flatMap((mailboxOption) => {
           if (Option.isNone(mailboxOption) || !Mailbox.instanceOf(mailboxOption.value)) {
-            return Effect.succeed(Option.none<DXN>());
+            return Effect.succeed(Option.none<EchoURI.EchoURI>());
           }
 
           // For non-message paths, the mailbox existing is sufficient.
           if (!messageId || !Key.ObjectId.isValid(messageId)) {
-            return Effect.succeed(Option.some(mailboxDXN));
+            return Effect.succeed(Option.some(mailboxEchoId));
           }
 
           // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.
           const mailbox = mailboxOption.value as Mailbox.Mailbox;
-          const mailboxDxnString = Obj.getDXN(mailbox).toString();
+          const mailboxUriString = Obj.getURI(mailbox);
 
           return Effect.tryPromise(async () => {
             // TODO(wittjosiah): This is awkward, clean it up.
@@ -100,19 +101,19 @@ export default Capability.makeModule(
               const feed = await mailbox.feed.load();
               const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
               if (messages.length > 0) {
-                return Option.some(Obj.getDXN(messages[0]));
+                return Option.some(EchoURI.parse(Obj.getURI(messages[0])));
               }
             }
 
             const fromDb = (await space.db.query(Query.select(Filter.id(messageId))).first()) as
               | Message.Message
               | undefined;
-            if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
-              return Option.some(Obj.getDXN(fromDb));
+            if (fromDb && DraftMessage.belongsTo(fromDb, mailboxUriString)) {
+              return Option.some(EchoURI.parse(Obj.getURI(fromDb)));
             }
 
-            return Option.none<DXN>();
-          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<DXN>())));
+            return Option.none<EchoURI.EchoURI>();
+          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EchoURI.EchoURI>())));
         }),
       );
     };

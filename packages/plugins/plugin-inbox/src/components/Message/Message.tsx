@@ -2,11 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useReducer, useState } from 'react';
 
-import { type DXN } from '@dxos/echo';
-import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { Filter, Obj } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { Icon, IconBlock, Tag, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -19,9 +24,13 @@ import {
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx, toHue } from '@dxos/ui-theme';
 
+import { InboxCapabilities, Mailbox } from '#types';
+
+import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
+import { AnchorIconButton } from '../AnchorIconButton';
 import { UserIconButton } from '../UserIconButton';
 import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
@@ -37,7 +46,7 @@ type MessageContextValue = {
   renderMode: RenderMode;
   setRenderMode: (mode: RenderMode) => void;
   message: MessageType.Message;
-  sender: DXN | undefined;
+  sender: EchoURI.EchoURI | undefined;
   onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
@@ -45,6 +54,11 @@ type MessageContextValue = {
 };
 
 const [MessageContextProvider, useMessageContext] = createContext<MessageContextValue>('Message');
+
+// Fallback used when the optional InboxCapabilities.Settings capability is not installed
+// (e.g., in standalone storybook contexts). Keeps Message renderable without the plugin manager
+// providing settings.
+const FALLBACK_SETTINGS_ATOM = Atom.make({ loadRemoteImages: false });
 
 //
 // Root
@@ -96,9 +110,20 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward } =
-    useMessageContext(MESSAGE_TOOLBAR_NAME);
+  const {
+    attendableId,
+    message,
+    viewMode,
+    setViewMode,
+    renderMode,
+    setRenderMode,
+    onOpen,
+    onReply,
+    onReplyAll,
+    onForward,
+  } = useMessageContext(MESSAGE_TOOLBAR_NAME);
   const menuActions = useMessageActions({
+    message,
     viewMode,
     setViewMode,
     renderMode,
@@ -159,13 +184,46 @@ type MessageHeaderProps = ThemedClassName<{
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
+  const space = getSpace(message);
+  const db = space?.db;
+  const relationObjects = useExtractedObjects(db, message);
+  const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
+  // `useQuery` only fires when the matching set changes, not when nested fields mutate.
+  // Subscribe directly to each mailbox so a tag-only extractor run (no created objects,
+  // no relation, just a `mailbox.tags`/`mailbox.extracted` mutation) still re-renders.
+  const [, bump] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => {
+    const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [mailboxes]);
+  const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+
+  // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
+  // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),
+  // deduped by id. The recorded ids reference space-db objects resolved via `getObjectById`.
+  const objects = useMemo(() => {
+    const byId = new Map<string, Obj.Any>(relationObjects.map((object) => [object.id, object]));
+    for (const id of mailboxes.flatMap((mailbox) => Mailbox.getExtractedObjectIds(mailbox, message.id))) {
+      if (!byId.has(id)) {
+        const object = db?.getObjectById(id);
+        if (object) {
+          byId.set(id, object);
+        }
+      }
+    }
+    return [...byId.values()];
+  }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex px-2 pt-1.5 text-subdued'>
+    <div
+      data-testid='message-header'
+      className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 mb-2 border-b border-subdued-separator'
+    >
+      {/* Subject row. */}
+      <div className='col-span-2 grid grid-cols-subgrid'>
+        <IconBlock classNames='text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
-        </div>
+        </IconBlock>
         <div className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
           <div className='whitespace-nowrap text-sm text-description'>
@@ -174,22 +232,55 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         </div>
       </div>
 
+      {/* Sender row. */}
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <div>
-        <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-          <UserIconButton
-            title={message.sender.name}
-            value={sender}
-            onContactCreate={() => onContactCreate?.(message.sender)}
-          />
-          <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
-        </div>
+      <div className='col-span-2 grid grid-cols-subgrid items-center'>
+        <UserIconButton
+          title={message.sender.name}
+          value={sender}
+          onContactCreate={() => onContactCreate?.(message.sender)}
+        />
+        <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
       </div>
+
+      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+      {objects.map((object) => (
+        <ExtractedObjectRow key={Obj.getURI(object).toString()} object={object} />
+      ))}
+
+      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+      {tags.length > 0 && (
+        <div className='col-span-2 grid grid-cols-subgrid items-center'>
+          <IconBlock classNames='text-subdued'>
+            <Icon icon='ph--tag--regular' />
+          </IconBlock>
+          <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
+            {tags.map((tag) => (
+              <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
+                {tag.label}
+              </Tag>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 MessageHeader.displayName = MESSAGE_HEADER_NAME;
+
+const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
+  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
+  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
+  const echoUri = EchoURI.tryParse(Obj.getURI(object).toString());
+
+  return (
+    <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>
+      <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
+      <h3 className='truncate text-primary-text'>{label}</h3>
+    </div>
+  );
+};
 
 //
 // Content
@@ -202,6 +293,12 @@ type MessageBodyProps = ThemedClassName;
 const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode, renderMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
+  // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
+  // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
+  const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
+  const settingsAtom = settingsAtoms[0];
+  const settings = useAtomValue(settingsAtom ?? FALLBACK_SETTINGS_ATOM);
+  const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   // If we're in plain-only mode or plain view, show the first block.
   // Otherwise show enriched content (second block).
@@ -223,7 +320,18 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       exts.push(
         createMarkdownExtensions(),
         decorateMarkdown({
-          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+          skip: (node) => {
+            // Skip dxn: links and images entirely (handled by preview()).
+            if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
+              return true;
+            }
+            // When remote-image loading is disabled, suppress http(s) image rendering;
+            // the markdown source is left visible as a plain link instead.
+            if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
+              return true;
+            }
+            return false;
+          },
         }),
         preview(),
         EditorView.domEventHandlers({
@@ -240,7 +348,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       );
     }
     return exts;
-  }, [themeMode, renderMode]);
+  }, [themeMode, renderMode, loadRemoteImages]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 

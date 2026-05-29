@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
-import { Annotation, Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
+import { Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
@@ -98,26 +96,20 @@ export const MasonryContainer = ({
 
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
-  const icon = Function.pipe(
-    Obj.getSchema(data),
-    Option.fromNullable,
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
-  );
+  const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
   return (
     <Menu.Root>
       <Card.Root>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.Icon icon={icon} />
-          <Card.Title>{Obj.getLabel(data)}</Card.Title>
+          <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
-        </Card.Toolbar>
+        </Card.Header>
         <Surface.Surface
           type={AppSurface.Card}
           limit={1}

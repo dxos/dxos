@@ -61,7 +61,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         >
           <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -74,8 +74,8 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
                   />
                 </Menu.Trigger>
                 <Menu.Content items={menuItems} />
-              </Card.Toolbar>
-              <Card.Content>
+              </Card.Header>
+              <Card.Body>
                 {projection && (
                   <Surface.Surface
                     type={AppSurface.Card}
@@ -89,7 +89,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
                     }}
                   />
                 )}
-              </Card.Content>
+              </Card.Body>
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

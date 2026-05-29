@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -69,21 +69,18 @@ export const Blueprint = Schema.Struct({
    */
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.blueprint',
-    version: '0.2.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--blueprint--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.blueprint', '0.2.0')),
 );
 
 /**
  * TypeScript type for Blueprint.
  */
-export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
+export type Blueprint = Type.InstanceType<typeof Blueprint>;
 
 type MakeProps = { key: string; version?: string; name: string } & Partial<Blueprint>;
 
@@ -269,15 +266,9 @@ export const Blueprint_v0_1_0 = Schema.Struct({
   agentCanEnable: Schema.optional(Schema.Boolean),
 
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.blueprint',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.blueprint', '0.1.0')));
 
-export interface Blueprint_v0_1_0 extends Schema.Schema.Type<typeof Blueprint_v0_1_0> {}
-
+export type Blueprint_v0_1_0 = Type.InstanceType<typeof Blueprint_v0_1_0>;
 /**
  * Migration from {@link Blueprint_v0_1_0} (v0.1.0) to {@link Blueprint} (v0.2.0).
  * Moves `key` from the data section into the object meta.

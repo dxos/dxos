@@ -127,20 +127,24 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
   },
 );
 
+TabsRoot.displayName = 'Tabs.Root';
+
 type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
+function TabsViewport({ classNames, children, ...props }: TabsViewportProps) {
   const { activePart } = useTabsContext('TabsViewport');
   return (
     <div {...props} data-active={activePart} className={mx(classNames)}>
       {children}
     </div>
   );
-};
+}
+
+TabsViewport.displayName = 'Tabs.Viewport';
 
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
-const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
+function TabsTablist({ children, classNames, ...props }: TabsTablistProps) {
   const { orientation } = useTabsContext('TabsTablist');
   return (
     <TabsPrimitive.List
@@ -156,9 +160,11 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
       {children}
     </TabsPrimitive.List>
   );
-};
+}
 
-const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
+TabsTablist.displayName = 'Tabs.Tablist';
+
+function TabsBackButton({ onClick, classNames, ...props }: ButtonProps) {
   const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -169,21 +175,25 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
   );
 
   return <Button {...props} classNames={['@md:hidden text-start', classNames]} onClick={handleClick} />;
-};
+}
+
+TabsBackButton.displayName = 'Tabs.BackButton';
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
-const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
+function TabsTabGroupHeading({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) {
   return (
     <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
       {children}
     </h2>
   );
-};
+}
+
+TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 
 type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
+function TabsTab({ value, classNames, children, onClick, ...props }: TabsTabProps) {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
 
@@ -214,11 +224,13 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
       </Button>
     </TabsPrimitive.Trigger>
   );
-};
+}
+
+TabsTab.displayName = 'Tabs.Tab';
 
 type TabsIconTabProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
-const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps) => {
+function TabsIconTab({ value, classNames, onClick, ...props }: TabsIconTabProps) {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
 
@@ -247,11 +259,13 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
       />
     </TabsPrimitive.Trigger>
   );
-};
+}
+
+TabsIconTab.displayName = 'Tabs.IconTab';
 
 type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
-const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => {
+function TabsPanel({ classNames, children, ...props }: TabsPanelProps) {
   const { value: contextValue } = useTabsContext('TabsTab');
   return (
     <Activity mode={contextValue === props.value ? 'visible' : 'hidden'}>
@@ -260,7 +274,9 @@ const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => {
       </TabsPrimitive.Content>
     </Activity>
   );
-};
+}
+
+TabsPanel.displayName = 'Tabs.Panel';
 
 type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
 

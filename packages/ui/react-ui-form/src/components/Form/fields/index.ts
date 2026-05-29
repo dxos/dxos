@@ -4,6 +4,7 @@
 
 export * from './ArrayField';
 export * from './BooleanField';
+export * from './DateField';
 export * from './GeoPointField';
 export * from './MarkdownField';
 export * from './NumberField';

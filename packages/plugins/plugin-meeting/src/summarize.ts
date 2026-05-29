@@ -17,7 +17,7 @@ import {
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
@@ -32,7 +32,7 @@ export const getMeetingContent = async (
 ) => {
   const notes = await meeting.notes.load();
   const transcript = await meeting.transcript.load();
-  const textContent = textContentCapabilities.find(({ id }) => id === Transcript.Transcript.typename);
+  const textContent = textContentCapabilities.find(({ id }) => id === Type.getTypename(Transcript.Transcript));
   const content = `${await textContent?.getTextContent(transcript)}\n\n${notes.content}`;
   return content;
 };

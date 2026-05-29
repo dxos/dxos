@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/internal';
-import { type DXN, type SpaceId } from '@dxos/keys';
+import { EchoURI, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
@@ -53,17 +53,15 @@ export class ServiceContainer {
     };
   }
 
-  async queryQueue(queue: DXN): Promise<FeedProtocol.QueryResult> {
-    const parts = queue.asQueueDXN();
-    if (!parts) {
-      throw new Error('Invalid queue DXN');
+  async queryQueue(queue: EchoURI.EchoURI): Promise<FeedProtocol.QueryResult> {
+    const spaceId = EchoURI.getSpaceId(queue);
+    const queueId = EchoURI.getObjectId(queue);
+    if (!spaceId || !queueId) {
+      throw new Error('Invalid queue EchoURI');
     }
-
-    const { subspaceTag, spaceId, queueId } = parts;
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
         spaceId,
-        queuesNamespace: subspaceTag,
         queueIds: [queueId],
       },
     });
@@ -75,15 +73,15 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
-    const parts = queue.asQueueDXN();
-    if (!parts) {
-      throw new Error('Invalid queue DXN');
+  async insertIntoQueue(queue: EchoURI.EchoURI, objects: AnyEntity[]): Promise<void> {
+    const spaceId = EchoURI.getSpaceId(queue);
+    const queueId = EchoURI.getObjectId(queue);
+    if (!spaceId || !queueId) {
+      throw new Error('Invalid queue EchoURI');
     }
-
-    const { subspaceTag, spaceId, queueId } = parts;
+    // TODO(dmaretskyi): EchoURI does not encode the subspaceTag — defaulting to 'data'.
     await this._queueService.insertIntoQueue(this._executionContext, {
-      subspaceTag,
+      subspaceTag: 'data',
       spaceId,
       queueId,
       objects: objects.map((obj) => JSON.stringify(obj)),

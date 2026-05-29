@@ -21,9 +21,12 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Support, SupportOperation, type Step } from '#types';
+import { Support, SupportOperation, type Tour } from '#types';
 
-export type SupportPluginOptions = { helpSteps?: Step[] };
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -56,6 +59,9 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     id: 'settings',
     activatesOn: AppActivationEvents.SetupSettings,
     activate: SupportSettings,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

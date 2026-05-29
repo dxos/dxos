@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, PublicKey, QueueSubspaceTags } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -95,7 +95,7 @@ describe('Query', () => {
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({ types: [...Dataset.Dataset.members] }));
+      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View] }));
       createTestObjects().forEach((object) => db.add(object));
       await db.flush();
     });
@@ -578,15 +578,15 @@ describe('Query', () => {
   });
 
   describe('Queue queries', () => {
-    test('typeDXN: versionless matches any version', async () => {
+    test('typeURI: versionless matches any version', async () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -597,17 +597,13 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')))).run();
+      const both = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
-      const v1 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0'))))
-        .run();
+      const v1 = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person', '0.1.0')))).run();
       expect(v1).toEqual([contactV1]);
 
-      const v2 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0'))))
-        .run();
+      const v2 = await queue.query(Query.select(Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')))).run();
       expect(v2).toEqual([contactV2]);
     });
 
@@ -625,7 +621,7 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from({
-            feeds: [queue.dxn.toString()],
+            feeds: [queue.uri],
           }),
         )
         .first();
@@ -633,7 +629,8 @@ describe('Query', () => {
       expect(obj).toBeDefined();
       expect(obj.id).toEqual(task.id);
       expect(obj.title).toEqual('Queue type selector task');
-      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+      expect(Obj.getURI(obj)).toMatch(/^echo:\/\//);
+      expect(Obj.getURI(obj)).toContain(obj.id);
     });
 
     test('query options with 2 spaces and 2 queues', async () => {
@@ -684,7 +681,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              feeds: [queue1.dxn.toString()],
+              feeds: [queue1.uri],
             }),
           )
           .run();
@@ -698,7 +695,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              feeds: [queue2.dxn.toString()],
+              feeds: [queue2.uri],
             }),
           )
           .run();
@@ -712,7 +709,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              feeds: [queue1.dxn.toString(), queue2.dxn.toString()],
+              feeds: [queue1.uri, queue2.uri],
             }),
           )
           .run();
@@ -830,12 +827,13 @@ describe('Query', () => {
       expect(withoutFeeds[0].title).toBe('Space TypeScript Task');
     });
 
-    test('Filter.type with includeFeeds preserves trace subspace in queue DXN', async () => {
+    test('Filter.type with includeFeeds includes trace subspace queue results', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const traceQueue = queues.create({ subspaceTag: QueueSubspaceTags.TRACE });
-      expect(traceQueue.dxn.toString()).toContain(':trace:');
+      // Trace queues now use EchoURI (echo://spaceId/queueId), not a DXN with ':trace:'.
+      const traceQueue = queues.create({ subspaceTag: 'trace' });
+      expect(traceQueue.uri).toMatch(/^echo:\/\//);
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace Task' });
       await traceQueue.append([traceTask]);
@@ -847,18 +845,16 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace Task');
       expect(traceResult).toBeDefined();
-      const dxnString = Obj.getDXN(traceResult!).toString();
-      // The queue DXN should reflect the queue's actual subspace ('trace'), not be hardcoded to 'data'.
-      expect(dxnString.startsWith(traceQueue.dxn.toString())).toBe(true);
-      expect(dxnString).toContain(':trace:');
-      expect(dxnString).not.toContain(':data:');
+      const uriString = Obj.getURI(traceResult!);
+      expect(uriString).toMatch(/^echo:\/\//);
     });
 
-    test('Filter.text with includeFeeds preserves trace subspace in queue DXN', async () => {
+    test('Filter.text with includeFeeds includes trace subspace queue results', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const traceQueue = queues.create({ subspaceTag: QueueSubspaceTags.TRACE });
+      // Trace queues now use EchoURI (echo://spaceId/queueId), not a DXN with ':trace:'.
+      const traceQueue = queues.create({ subspaceTag: 'trace' });
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
       await traceQueue.append([traceTask]);
@@ -870,11 +866,8 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace TypeScript Task');
       expect(traceResult).toBeDefined();
-      const dxnString = Obj.getDXN(traceResult!).toString();
-      // FTS path also stamps queueNamespace; should not be hardcoded to 'data'.
-      expect(dxnString.startsWith(traceQueue.dxn.toString())).toBe(true);
-      expect(dxnString).toContain(':trace:');
-      expect(dxnString).not.toContain(':data:');
+      const uriString = Obj.getURI(traceResult!);
+      expect(uriString).toMatch(/^echo:\/\//);
     });
 
     test('from(all-accessible-spaces) via graph queries type across spaces', async () => {
@@ -921,7 +914,7 @@ describe('Query', () => {
 
       // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
 
       // Add items to the queue and a separate item to the space.
@@ -944,7 +937,7 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
@@ -991,7 +984,7 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -1231,11 +1224,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
@@ -1249,10 +1242,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0')), [contactV1]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeURI(DXN.make('com.example.type.person', '0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);
@@ -1660,7 +1653,7 @@ describe('Query', () => {
       const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
 
       const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
 
       // Space-only task (should NOT appear as a child of the feed).
@@ -1965,7 +1958,7 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-              feeds: [queue.dxn.toString()],
+              feeds: [queue.uri],
             }),
           )
           .run();
@@ -1976,7 +1969,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ feeds: [queue.dxn.toString()] }))
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ feeds: [queue.uri] }))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -1987,7 +1980,7 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('JavaScript', { type: 'full-text' })).from({
-              feeds: [queue.dxn.toString()],
+              feeds: [queue.uri],
             }),
           )
           .run();
@@ -2041,14 +2034,15 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-            feeds: [queue.dxn.toString()],
+            feeds: [queue.uri],
           }),
         )
         .first();
       expect(obj).toBeDefined();
-      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
-      expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
-      expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
+      expect(Obj.getURI(obj)).toMatch(/^echo:\/\//);
+      expect(Obj.getURI(obj)).toContain(obj.id);
+      expect(Obj.getTypename(obj)).toBe(Type.getTypename(TestSchema.Task));
+      expect(Obj.getType(obj)).toEqual(TestSchema.Task);
       expect(obj.id).toEqual(task.id);
       expect(Obj.isDeleted(obj)).toBe(false);
       expect(Obj.getMeta(obj).keys).toEqual([]);
@@ -2437,7 +2431,7 @@ describe('Query', () => {
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(schema, {}));
 
-      // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
+      // Filter.type matches by schema-entity object id — pass the stored Type.Type entity.
       const query = db.query(Query.type(schema));
       const result = await query.run();
       expect(result).to.have.length(1);
@@ -2572,7 +2566,7 @@ describe('Query', () => {
       const feed = db.add(Feed.make({ name: 'test-feed' }));
       await db.flush();
 
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
       await db.flush();
@@ -2595,7 +2589,7 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
       await db.flush();
@@ -2618,7 +2612,7 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDXN = Feed.getQueueDxn(feed)!;
+      const feedDXN = Feed.getQueueUri(feed)!;
       const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task from feed' })]);
       await db.flush();
@@ -2643,8 +2637,8 @@ describe('Query', () => {
       const feed2 = db.add(Feed.make({ name: 'feed-2' }));
       await db.flush();
 
-      const feedDXN1 = Feed.getQueueDxn(feed1)!;
-      const feedDXN2 = Feed.getQueueDxn(feed2)!;
+      const feedDXN1 = Feed.getQueueUri(feed1)!;
+      const feedDXN2 = Feed.getQueueUri(feed2)!;
       const queue1 = queues.get(feedDXN1);
       const queue2 = queues.get(feedDXN2);
 
@@ -2659,6 +2653,32 @@ describe('Query', () => {
       const objects2 = await db.query(Query.select(Filter.childOf(feed2)).from(db, { includeFeeds: true })).run();
       expect(objects2).toHaveLength(1);
       expect((objects2[0] as TestSchema.Task).title).toEqual('Task in feed 2');
+    });
+
+    test('childOf with limit returns feed items (regression: limit must not be pushed past child-of)', async ({
+      expect,
+    }) => {
+      // Populates the space with enough unrelated objects that, if `.limit(N)` were pushed
+      // into the wildcard SelectStep before the child-of FilterStep, the candidate set sliced
+      // before filtering would not contain any of the feed items and the result would be empty.
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const feed = db.add(Feed.make({ name: 'limited-feed' }));
+      for (let i = 0; i < 50; i++) {
+        db.add(Obj.make(TestSchema.Expando, { name: `decoy-${i}` }));
+      }
+      await db.flush();
+
+      const queue = queues.get(Feed.getQueueUri(feed)!);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'A' }), Obj.make(TestSchema.Task, { title: 'B' })]);
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.childOf(feed)).from(db, { includeFeeds: true }).limit(10))
+        .run();
+      expect(objects).toHaveLength(2);
+      expect(objects.map((obj: any) => obj.title).sort()).toEqual(['A', 'B']);
     });
 
     test('childOf with Ref argument', async () => {

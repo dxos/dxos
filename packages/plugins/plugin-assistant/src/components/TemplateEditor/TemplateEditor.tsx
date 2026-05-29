@@ -9,6 +9,7 @@ import React from 'react';
 import { type Template } from '@dxos/compute';
 import { createDocAccessor } from '@dxos/echo-db';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -17,7 +18,6 @@ import {
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';

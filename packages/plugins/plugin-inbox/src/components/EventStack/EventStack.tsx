@@ -5,9 +5,9 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
@@ -118,7 +118,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Content>
+          <Card.Body>
             <Card.Row>
               <Card.Text>{event.title}</Card.Text>
             </Card.Row>
@@ -130,7 +130,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
                 <ActorList actors={event.attendees} />
               </Card.Row>
             )}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>

@@ -48,7 +48,7 @@ const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const id = doc && Obj.getDXN(doc).toString();
+  const id = doc && Obj.getURI(doc);
   const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
   const attentionAttrs = useAttentionAttributes(id);
 
@@ -98,8 +98,8 @@ const meta = {
                     context.args.content ?? '',
                     // TODO(burdon): Popovers not currently working.
                     '## Here are some objects',
-                    `![Alice](${Obj.getDXN(kai)})`,
-                    `![DXOS](${Obj.getDXN(dxos)})`,
+                    `![Alice](${Obj.getURI(kai)})`,
+                    `![DXOS](${Obj.getURI(dxos)})`,
                     '',
                     'END',
                     '',

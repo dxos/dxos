@@ -25,6 +25,7 @@
       "browser": "./dist/src/proto/index.js",
       "import": "./dist/src/proto/index.js"
     },
+    "./proto/dxos/*.proto": "./src/proto/dxos/*.proto",
     "./proto/*": {
       "browser": "./dist/src/proto/gen/*.js",
       "import": "./dist/src/proto/gen/*.js"

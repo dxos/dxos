@@ -20,8 +20,14 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
     () =>
       Filter.or(
         ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
-          .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-          .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+          .filter((type) => {
+            const schema = Type.getSchema(type);
+            return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
+          })
+          .filter((type) => {
+            const schema = Type.getSchema(type);
+            return !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
+          })
           .map((schema) => Filter.typename(Type.getTypename(schema))),
       ),
     [db],
@@ -42,15 +48,17 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         results
           ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           .map((object: Obj.Unknown): EditorMenuItem => {
-            const schema = Obj.getSchema(object);
-            const icon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))?.icon : undefined;
+            const type = Obj.getType(object);
+            const icon = type
+              ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)))?.icon
+              : undefined;
             const label = toLocalizedString(getLabel(object), t);
             return {
               id: object.id,
               label,
               icon,
               onSelect: ({ view, head }) => {
-                const link = `[${label}](${Obj.getDXN(object)})`;
+                const link = `[${label}](${Obj.getURI(object)})`;
                 // "@@" inserts a block embed on its own line instead of an inline link.
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
@@ -64,13 +72,13 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       // Add "Create new document" option at the end.
       const createItem: EditorMenuItem = {
         id: 'create-document',
-        label: ['add-object.label', { ns: Markdown.Document.typename }],
+        label: ['add-object.label', { ns: Type.getTypename(Markdown.Document) }],
         icon: 'ph--plus--regular',
         onSelect: ({ view, head }) => {
           const doc = Markdown.make({ name: name || undefined });
           db?.add(doc);
-          const label = name || t('object-name.placeholder', { ns: Markdown.Document.typename });
-          const link = `[${label}](${Obj.getDXN(doc)})`;
+          const label = name || t('object-name.placeholder', { ns: Type.getTypename(Markdown.Document) });
+          const link = `[${label}](${Obj.getURI(doc)})`;
           if (query?.startsWith('@')) {
             insertAtLineStart(view, head, `!${link}\n`);
           } else {

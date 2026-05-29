@@ -14,9 +14,9 @@
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Input, Message, Panel, ScrollArea, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 

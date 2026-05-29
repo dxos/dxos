@@ -7,9 +7,10 @@ import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
-import { composable, composableProps, mx, slottable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { withTheme } from '../testing';
+import { composable, composableProps, slottable } from '../util';
 import { ThemedClassName } from '../util';
 
 /**

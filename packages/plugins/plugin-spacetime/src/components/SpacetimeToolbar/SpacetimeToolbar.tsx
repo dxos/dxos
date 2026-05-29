@@ -6,9 +6,9 @@ import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuBuilder, MenuRootProps, useMenuActions } from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type EditorState, getSelectedObjectIds } from '../../tools';
 import { type EditorActions, createEditorActions, createTemplateSelector } from './actions';

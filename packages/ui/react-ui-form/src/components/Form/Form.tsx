@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Annotation as EchoAnnotation } from '@dxos/echo';
+import { Annotation as EchoAnnotation, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
@@ -19,7 +19,8 @@ import {
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
+import { composable, composableProps, withColumn } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -35,15 +36,31 @@ import {
   FormFieldSet as NaturalFormFieldSet,
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
+import { FormTooltipsContext } from './FormTooltipsContext';
+import { FormLayout as NaturalFormLayout } from './Layout';
+import { type FormLayoutProps as NaturalFormLayoutProps } from './Layout/FormLayout';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
+export type ExcludeId<S extends Schema.Schema.AnyNoContext | Type.AnyEntity> = Omit<
+  S extends Type.AnyEntity
+    ? Type.InstanceType<S>
+    : S extends Schema.Schema.AnyNoContext
+      ? Schema.Schema.Type<S>
+      : never,
+  'id'
+>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
-export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
-  schema.pipe(Schema.omit('id')) as any;
+export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(
+  schemaOrType: S,
+): Schema.Schema<ExcludeId<S>, ExcludeId<S>> => {
+  const schema = Type.isType(schemaOrType)
+    ? Type.getSchema(schemaOrType)
+    : (schemaOrType as Schema.Schema.AnyNoContext);
+  return schema.pipe(Schema.omit('id')) as any;
+};
 
 /**
  * Drop fields annotated with `FormInputAnnotation.set(false)` from a schema so
@@ -70,9 +87,10 @@ type FormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
 
   /**
-   * Show debug info.
+   * Show field tooltips (currently: JSON path on each label). Defaults to
+   * `true`; pass `false` to suppress.
    */
-  debug?: boolean;
+  tooltips?: boolean;
 
   /**
    * Testing.
@@ -169,9 +187,11 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <FormContextProvider form={form} {...props}>
-      {children}
-    </FormContextProvider>
+    <FormTooltipsContext.Provider value={props.tooltips ?? true}>
+      <FormContextProvider form={form} {...props}>
+        {children}
+      </FormContextProvider>
+    </FormTooltipsContext.Provider>
   );
 };
 
@@ -240,6 +260,26 @@ const FormFieldSet = (props: FormFieldSetProps) => {
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
+
+//
+// Layout
+//
+
+const FORM_LAYOUT_NAME = 'Form.Layout';
+
+type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
+
+const FormLayout = ({ schema, ...props }: FormLayoutProps) => {
+  const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
+  const resolvedSchema = schema ?? form.schema;
+  if (!resolvedSchema) {
+    return null;
+  }
+
+  return <NaturalFormLayout schema={resolvedSchema} {...contextProps} {...props} />;
+};
+
+FormLayout.displayName = FORM_LAYOUT_NAME;
 
 //
 // Actions
@@ -369,6 +409,7 @@ export const Form = {
   Content: FormContent,
   Section: FormSection,
   FieldSet: FormFieldSet,
+  Layout: FormLayout,
   Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,
@@ -382,6 +423,7 @@ export type {
   FormContentProps,
   FormSectionProps,
   FormFieldSetProps,
+  FormLayoutProps,
   FormFieldLabelProps,
   FormActionsProps,
   FormSubmitProps,

@@ -9,7 +9,7 @@ import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
@@ -24,14 +24,9 @@ import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableSt
 
 export const Text = Schema.Struct({
   content: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.bladeRunner.text',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0')));
 
-export interface Text extends Schema.Schema.Type<typeof Text> {}
+export type Text = Type.InstanceType<typeof Text>;
 
 @trace.resource()
 export class EchoReplicant {

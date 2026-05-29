@@ -1,0 +1,541 @@
+---
+id: org.dxos.plugin.deck
+name: DeckPlugin
+version: 0.1.0
+---
+
+The Deck plugin is the core layout engine for DXOS Composer. It manages the multi-plank workspace
+("deck"), the sidebar, the complementary sidebar, dialogs, popovers, and toast notifications.
+It owns the persisted and ephemeral layout state, handles URL routing, and implements every
+`LayoutOperation` that changes what is visible on screen.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type LayoutMode
+  literals: multi | solo | solo--fullscreen
+```
+
+```mdl
+type PartAdjustment
+  literals: close | companion | solo | solo--fullscreen | increment-start | increment-end
+```
+
+```mdl
+type DeckState
+  fields:
+    initialized: boolean          # false until the deck has left solo mode for the first time
+    active: string[]              # item IDs of planks displayed in multi mode
+    inactive: string[]            # item IDs that have been closed; persisted for reopening
+    solo?: string                 # item ID of the single plank in solo or fullscreen mode
+    fullscreen: boolean           # true when the solo plank is displayed without any chrome
+    plankSizing: Record<string, number>   # persisted plank widths in rem, keyed by item ID
+    companionOpen: boolean        # whether the companion pane is visible
+    companionVariant?: string     # which companion variant to display
+    companionFrameSizing: Record<string, number>  # companion frame widths in rem
+```
+
+```mdl
+type StoredDeckState
+  desc: Persisted plugin state stored in KVS/localStorage.
+  fields:
+    sidebarState: closed | collapsed | expanded
+    complementarySidebarState: closed | collapsed | expanded
+    complementarySidebarPanel?: string
+    activeDeck: string
+    previousDeck: string
+    decks: Record<string, DeckState>
+    previousMode: Record<string, LayoutMode>
+```
+
+```mdl
+type EphemeralDeckState
+  desc: Transient plugin state that is NOT persisted across sessions.
+  fields:
+    dialogOpen: boolean
+    dialogType?: default | alert
+    dialogBlockAlign?: start | center | end
+    dialogContent?: { component: string; props?: any }
+    popoverOpen: boolean
+    popoverSide?: top | right | bottom | left
+    popoverKind?: base | card
+    popoverTitle?: string
+    popoverContentRef?: string
+    popoverContent?: { component: string } | { subject: any }
+    toasts: Toast[]
+    currentUndoId?: string
+    scrollIntoView?: string
+```
+
+```mdl
+type DeckSettings
+  fields:
+    enableDeck?: boolean          # display multiple panels side by side
+    encapsulatedPlanks?: boolean  # render each plank in an isolated container
+    showHints?: boolean           # show keyboard shortcut hints in the UI
+    enableNativeRedirect?: boolean  # redirect supported URLs to the native desktop app
+```
+
+## Components
+
+```mdl
+component Matrix
+  desc: |
+    The primary workspace canvas. Renders the active planks side by side in multi mode,
+    or a single plank in solo/fullscreen mode. Manages plank-resize handles and the
+    companion pane alongside each plank.
+  props:
+    state: StoredDeckState        # persisted layout state atom
+    ephemeral: EphemeralDeckState # transient state atom
+  state:
+    mode: LayoutMode              # current layout mode derived from state
+  actions:
+    openPlank(id: string)
+    closePlank(id: string)
+    adjustPlank(id: string, type: PartAdjustment)
+    resizePlank(id: string, size: number)
+  layout: |
+    ┌────────────┬────────────┬────────────┐
+    │  sidebar   │  plank A   │  plank B   │
+    │            │            │            │
+    │            │  [content] │  [content] │
+    │            │            │            │
+    │            ├────────────┤            │
+    │            │ companion  │            │
+    └────────────┴────────────┴────────────┘
+```
+
+```mdl
+component DeckSettings
+  desc: Settings panel rendered in the Composer settings surface.
+  props:
+    settings: DeckSettings
+  actions:
+    updateSetting(key: string, value: any)
+```
+
+## Operations
+
+```mdl
+op Open
+  desc: |
+    Opens one or more subjects (item IDs or navigation paths) in the deck.
+    In multi mode uses stack semantics: truncates after the pivot then appends.
+    In solo or uninitialised mode, replaces the current subject entirely.
+    Validates each target against the app graph and redirects to a 404 node if not found.
+    Fires ScrollIntoView, Expose, and an observability event for each newly opened item.
+  input:
+    subject: string[]             # item IDs or navigation paths to open
+    pivotId?: string              # truncate deck after this item before appending
+    key?: string                  # replace an existing plank whose ID shares this key prefix
+    workspace?: string            # switch to this workspace before opening
+    navigation?: immediate        # skip validation; expand path only
+    scrollIntoView?: boolean      # default true; set false to suppress auto-scroll
+    state?: any
+    variant?: string
+  output: string[]
+  effects: [echo:read, layout:state]
+  requires: [AppGraph, AttentionCapabilities, ClientCapabilities, DeckCapabilities]
+```
+
+```mdl
+op Close
+  desc: |
+    Removes one or more subjects from the active deck.
+    Computes which plank (if any) should receive attention after removal and
+    schedules ScrollIntoView for it.
+  input:
+    subject: string[]
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities, AttentionCapabilities]
+```
+
+```mdl
+op SetLayoutMode
+  desc: |
+    Transitions to a new layout mode (multi, solo, solo--fullscreen) or reverts
+    to the previously recorded mode. Persists the previous mode so it can be
+    restored later. Toggling solo--fullscreen flips the fullscreen flag rather
+    than unconditionally setting it.
+  input:
+    mode?: LayoutMode             # target mode; omit if reverting
+    subject?: string              # item to solo; used only for solo / solo--fullscreen
+    revert?: boolean              # revert to the previously persisted mode
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdateSidebar
+  desc: Update the sidebar visibility state (closed / collapsed / expanded).
+  input:
+    state?: closed | collapsed | expanded
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdateComplementary
+  desc: Update the complementary-sidebar visibility state and optional panel selection.
+  input:
+    state?: closed | collapsed | expanded
+    panel?: string
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdateDialog
+  desc: |
+    Show or hide the global dialog overlay. Accepts a surface component identifier
+    or a boolean state flag. Propagates to EphemeralDeckState.
+  input:
+    subject?: string              # surface component identifier to display
+    props?: any                   # props forwarded to the dialog surface
+    state?: boolean               # false to close the dialog
+    type?: default | alert
+    blockAlign?: start | center | end
+    overlayClasses?: string
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdatePopover
+  desc: |
+    Show or hide the global popover. Accepts anchor, content reference, or
+    an explicit subject reference.
+  input:
+    subject?: any                 # subject reference to pass to the popover surface
+    contentRef?: string           # surface component identifier for popover content
+    anchorId?: string             # DOM element ID for positioning the popover anchor
+    side?: top | right | bottom | left
+    kind?: base | card
+    title?: string
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdateCompanion
+  desc: Update the companion-pane open state and active variant.
+  input:
+    open?: boolean
+    variant?: string
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op AdjustPlank
+  desc: Apply a PartAdjustment to a specific plank (close, solo, move, companion).
+  input:
+    id: string
+    type: PartAdjustment
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op UpdatePlankSize
+  desc: Persist the width of a plank in rem.
+  input:
+    id: string
+    size: number
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op AddToast
+  desc: Push a toast notification into the ephemeral queue.
+  input:
+    title?: string
+    body?: string
+    duration?: number
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op ScrollIntoView
+  desc: Schedule a subject to be scrolled into view when its plank mounts.
+  input:
+    subject: string
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op SwitchWorkspace
+  desc: Switch the active workspace deck, persisting the previous workspace ID.
+  input:
+    subject: string               # workspace ID to switch to
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+```mdl
+op RevertWorkspace
+  desc: Revert to the previously active workspace.
+  input: void
+  output: void
+  effects: [layout:state]
+  requires: [DeckCapabilities]
+```
+
+## Features
+
+```mdl
+feat F-1: Multi-Plank Layout (Deck)
+
+  req F-1.1:
+    when: enableDeck setting is true
+    then: deck renders active planks side by side in a scrollable row
+
+  req F-1.2:
+    when: user opens a new subject with a pivot
+    then: deck is truncated after the pivot and the new subject is appended
+
+  req F-1.3:
+    when: subject is already present in the active deck
+    then: deck is unchanged and the existing plank scrolls into view
+
+  req F-1.4:
+    when: user resizes a plank
+    then: new width is persisted in plankSizing and restored on next load
+```
+
+```mdl
+feat F-2: Solo / Fullscreen Mode
+
+  req F-2.1:
+    when: user triggers SetLayoutMode with mode=solo
+    then: only the targeted plank is visible; other planks move to inactive
+
+  req F-2.2:
+    when: user triggers SetLayoutMode with mode=solo--fullscreen
+    then: plank fills the viewport; sidebar and heading chrome are hidden
+
+  req F-2.3:
+    when: user triggers SetLayoutMode with revert=true
+    then: layout returns to the previously persisted mode
+```
+
+```mdl
+feat F-3: Sidebar & Complementary Sidebar
+
+  req F-3.1:
+    when: UpdateSidebar is dispatched with a new state
+    then: sidebar transitions between closed / collapsed / expanded and state is persisted
+
+  req F-3.2:
+    when: UpdateComplementary is dispatched with a panel
+    then: complementary sidebar opens to the specified panel
+```
+
+```mdl
+feat F-4: Dialog & Popover Overlay
+
+  req F-4.1:
+    when: UpdateDialog is dispatched with a subject component
+    then: the matching surface is rendered inside the global dialog overlay
+
+  req F-4.2:
+    when: UpdatePopover is dispatched with an anchorId
+    then: popover is positioned relative to that DOM element
+
+  req F-4.3:
+    when: dialog or popover state is set to false
+    then: overlay is closed and content is unmounted
+```
+
+```mdl
+feat F-5: URL Navigation & Deep Linking
+
+  req F-5.1:
+    when: app loads with a URL referencing an item
+    then: DeckPlugin resolves the path and opens the item in the deck
+
+  req F-5.2:
+    when: active deck changes
+    then: browser URL is updated to reflect the current plank state
+
+  req F-5.3:
+    when: a navigation target is not found in the app graph
+    then: Open operation redirects to a 404 node
+```
+
+```mdl
+feat F-6: Toast Notifications
+
+  req F-6.1:
+    when: AddToast is dispatched
+    then: a toast is appended to the queue and displayed for its configured duration
+
+  req F-6.2:
+    when: ShowUndo is dispatched
+    then: a toast with an undo action is shown; invoking it executes the linked undo operation
+```
+
+## Acceptance
+
+```mdl
+test T-1: Open subject in multi mode
+  given: deck is in multi mode with planks A and B active
+  when: Open({ subject: ['C'] }) is dispatched
+  then:
+    - plank C is appended to the right of plank B
+    - browser URL reflects the new deck state
+    - plank C is scrolled into view
+```
+
+```mdl
+test T-2: Open with pivot truncation
+  given: deck has planks [A, B, C] active
+  when: Open({ subject: ['D'], pivotId: 'A' }) is dispatched
+  then:
+    - active deck becomes [A, D]
+    - planks B and C are moved to inactive
+```
+
+```mdl
+test T-3: Open already-visible subject
+  given: deck has plank A active
+  when: Open({ subject: ['A'] }) is dispatched
+  then:
+    - active deck is unchanged
+    - plank A scrolls into view
+```
+
+```mdl
+test T-4: Solo mode
+  given: deck is in multi mode
+  when: SetLayoutMode({ mode: 'solo', subject: 'A' }) is dispatched
+  then:
+    - only plank A is visible
+    - mode is stored as solo in StoredDeckState
+    - previousMode records 'multi' for the active deck
+```
+
+```mdl
+test T-5: Revert from solo to multi
+  given: layout mode is solo, previousMode is multi
+  when: SetLayoutMode({ revert: true }) is dispatched
+  then:
+    - deck returns to multi mode
+    - previously inactive planks are restored
+```
+
+```mdl
+test T-6: Close plank
+  given: deck has planks [A, B, C] active; B has attention
+  when: Close({ subject: ['B'] }) is dispatched
+  then:
+    - active deck becomes [A, C]
+    - attention moves to an adjacent plank
+    - ScrollIntoView is scheduled for the newly attended plank
+```
+
+```mdl
+test T-7: Toast is shown and dismissed
+  given: no toasts are in the queue
+  when: AddToast({ title: 'Saved', duration: 3000 }) is dispatched
+  then:
+    - toast appears in the UI
+    - toast is removed after 3 seconds
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

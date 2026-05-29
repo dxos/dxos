@@ -54,10 +54,10 @@ export const CommentsThread = ({
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
   const [messages] = useObject(thread, 'messages');
-  const activity = useStatus(space, Obj.getDXN(thread).toString());
+  const activity = useStatus(space, Obj.getURI(thread));
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
-  const textboxMetadata = getMessageMetadata(Obj.getDXN(thread).toString(), identity);
+  const textboxMetadata = getMessageMetadata(Obj.getURI(thread), identity);
 
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [state, setState] = useState({});
@@ -97,7 +97,7 @@ export const CommentsThread = ({
 
   return (
     <ThreadComponent.Root
-      id={Obj.getDXN(thread).toString()}
+      id={Obj.getURI(thread)}
       classNames='pt-2 border-b border-subdued-separator last:border-none'
       current={current}
       onClickCapture={handleAttend}
@@ -146,7 +146,7 @@ export const CommentsThread = ({
 
       {messages?.map((ref) => (
         <MessagePanel
-          key={ref.dxn.toString()}
+          key={ref.uri}
           editable
           message={ref}
           members={members}
@@ -156,12 +156,17 @@ export const CommentsThread = ({
       ))}
 
       {/*
-        TODO(wittjosiah): Can't autofocus this generally.
-          There can be multiple threads with inputs and they can't all be focused.
-          Also, it steals focus from documents when first rendered.
-          Need to find a way to autofocus in one scenario only: when a new thread is created.
+        Autofocus only newly-created (draft) threads. Once the first message is
+        posted the thread transitions from 'staged' → 'active' and stops stealing
+        focus, satisfying the "one scenario only" constraint flagged in the
+        previous TODO (multiple active threads no longer fight for focus).
       */}
-      <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
+      <MessageTextbox
+        autoFocus={thread.status === 'staged'}
+        extensions={extensions}
+        onSend={handleComment}
+        {...textboxMetadata}
+      />
 
       <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
 

@@ -4,34 +4,24 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
 export const Todo = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.todo',
-    version: '0.1.0',
-  }),
-);
-export type Todo = Schema.Schema.Type<typeof Todo>;
+}).pipe(Type.makeObject(DXN.make('com.example.type.todo', '0.1.0')));
+export type Todo = Type.InstanceType<typeof Todo>;
 
 export const TodoList = Schema.Struct({
   todos: Schema.Array(Ref.Ref(Todo)),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.todo-list',
-    version: '0.1.0',
-  }),
-);
-export type TodoList = Schema.Schema.Type<typeof TodoList>;
+}).pipe(Type.makeObject(DXN.make('com.example.type.todoList', '0.1.0')));
+export type TodoList = Type.InstanceType<typeof TodoList>;
 
 export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));
   Obj.update(space.properties, (props: any) => {
-    props[TodoList.typename] = Ref.make(list);
+    props[Type.getTypename(TodoList)] = Ref.make(list);
   });
   return list;
 };

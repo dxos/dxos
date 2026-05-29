@@ -4,10 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Ref } from '@dxos/echo';
+import { Filter, Ref, Type } from '@dxos/echo';
 import { ObjectStructure } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type MatchedObject, filterMatchObject } from './filter-match';
 
@@ -85,7 +85,7 @@ describe('filterMatch', () => {
   });
 
   test('refs', () => {
-    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromDXN(DXN.fromLocalObjectId(OBJECT_1.id)) });
+    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromURI(EchoURI.make({ objectId: OBJECT_1.id })) });
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;
@@ -106,7 +106,7 @@ const OBJECT_1: MatchedObject = {
   id: ObjectId.make('01JVS9YYT5VMVJW0GGTM1YHCCH'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: DXN.fromTypenameAndVersion(TestSchema.Expando.typename, '0.1.0').toString(),
+    type: DXN.make(Type.getTypename(TestSchema.Expando), '0.1.0'),
     data: {
       title: 'test',
       value: 100,
@@ -122,7 +122,7 @@ const OBJECT_2: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: DXN.fromTypenameAndVersion(TestSchema.Expando.typename, '0.1.0').toString(),
+    type: DXN.make(Type.getTypename(TestSchema.Expando), '0.1.0'),
     data: { title: 'test', value: 100, complete: true },
     deleted: true,
   }),
@@ -132,7 +132,7 @@ const OBJECT_3: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: DXN.fromTypenameAndVersion(TestSchema.Expando.typename, '0.1.0').toString(),
-    data: { title: 'test', value: 100, complete: true, parent: { '/': DXN.fromLocalObjectId(OBJECT_1.id).toString() } },
+    type: DXN.make(Type.getTypename(TestSchema.Expando), '0.1.0'),
+    data: { title: 'test', value: 100, complete: true, parent: { '/': EchoURI.make({ objectId: OBJECT_1.id }) } },
   }),
 };

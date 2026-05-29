@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Collection, Obj } from '@dxos/echo';
+import { Collection, Obj, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -16,7 +16,7 @@ import { SPACE_TYPE } from '#types';
 
 import { SPACES } from '../util';
 
-const COLLECTION_TYPE = Collection.Collection.typename;
+const COLLECTION_TYPE = Type.getTypename(Collection.Collection);
 
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';

@@ -22,7 +22,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useType, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -92,35 +92,32 @@ const DefaultComponent = () => {
   const viewRef = kanban && kanban.spec.kind === 'view' ? kanban.spec.view : undefined;
   const view = viewRef?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(space?.db, typename);
-  const projection = useProjectionModel(schema, kanban, registry);
+  const type = useType(space?.db, typename);
+  const projection = useProjectionModel(type, kanban, registry);
 
   const data = useMemo(() => (kanban ? { subject: kanban, attendableId: 'story' } : undefined), [kanban]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
-      invariant(schema);
+      invariant(type);
       invariant(view);
-      if (Type.isMutable(schema)) {
-        schema.updateTypename(getTypenameFromQuery(newQuery));
-      }
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });
     },
-    [view, schema],
+    [view, type],
   );
 
   const handleDeleteField = useCallback(
     (fieldId: string) => {
-      if (schema && Type.isMutable(schema) && projection) {
+      if (type && Type.getDatabase(type) != null && projection) {
         projection.deleteFieldProjection(fieldId);
       }
     },
-    [schema, projection],
+    [type, projection],
   );
 
-  if (!schema || !view) {
+  if (!type || !view) {
     return null;
   }
 
@@ -130,12 +127,12 @@ const DefaultComponent = () => {
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
-          schema={schema}
+          type={type}
           view={view}
           onQueryChanged={handleUpdateQuery}
-          onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
+          onDelete={type && Type.getDatabase(type) != null ? handleDeleteField : undefined}
         />
-        <Syntax.Root data={{ view, schema }}>
+        <Syntax.Root data={{ view, schema: Type.getSchema(type) }}>
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>
@@ -178,7 +175,7 @@ export const Default: Story = {
       onSpaceCreated: async (space) => {
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: Organization.Organization.typename,
+          typename: Type.getTypename(Organization.Organization),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });
@@ -222,7 +219,7 @@ export const Default: Story = {
     await expect(activeCards.length).toBeGreaterThan(0);
     await expect(prospectCards.length).toBeGreaterThan(0);
 
-    // Verify cards have drag handles (Card.Toolbar includes drag handle).
+    // Verify cards have drag handles (Card.Header includes drag handle).
     const firstActiveCard = activeCards[0];
     const buttons = firstActiveCard.querySelectorAll('button');
     await expect(buttons.length).toBeGreaterThan(0);
@@ -239,7 +236,7 @@ export const Default: Story = {
 };
 
 /**
- * Story variant that uses a mutable database schema (EchoSchema).
+ * Story variant that uses a database-stored Type.Type entity (mutable schema).
  * This allows testing schema mutations like adding/removing fields.
  */
 // TODO(wittjosiah): Card previews (e.g., OrganizationCard) are type-specific and hard-coded.
@@ -250,12 +247,12 @@ export const MutableSchema: Story = {
   decorators: [
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
-        // Register schema in the database to make it mutable (EchoSchema).
+        // Register schema in the database to make it mutable (stored Type.Type).
         const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: schema.typename,
+          typename: Type.getTypename(schema),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });

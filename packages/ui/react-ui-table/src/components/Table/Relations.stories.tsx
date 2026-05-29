@@ -66,7 +66,9 @@ const useTestModel = <S extends Type.AnyObj>(schema: S, count: number) => {
 
     const objectGenerator = createAsyncGenerator(generator, schema, { db: space?.db, force: true });
     void objectGenerator.createObjects(count).then((objects) => {
-      model.setRows(objects);
+      // TODO(wittjosiah): Remove cast. Type.InstanceType is now strict (no index signature),
+      //  so it isn't assignable to TableRow (Record<JsonProp, any>); reconcile the row model type.
+      model.setRows(objects as unknown as TableRow[]);
     });
   }, [model, space]);
 
@@ -88,7 +90,7 @@ const DefaultStory = () => {
 
   const handleCreate = useCallback(
     (schema: Type.AnyEntity, values: any) => {
-      invariant(Type.isObjectSchema(schema));
+      invariant(Type.isObject(schema));
       invariant(space);
       return space.db.add(Obj.make(schema, values));
     },

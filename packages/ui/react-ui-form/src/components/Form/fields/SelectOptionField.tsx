@@ -19,6 +19,7 @@ export const SelectOptionField = ({
   type,
   readonly,
   label,
+  jsonPath,
   getStatus,
   getValue,
   onValueChange,
@@ -119,7 +120,7 @@ export const SelectOptionField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} />
+      <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
       <div>
         {options && (
           <List.Root
@@ -153,8 +154,8 @@ export const SelectOptionField = ({
                         />
                       </div>
                       {selected === item.id && (
-                        <div className='flex flex-col p-form-padding gap-form-gap dx-density-fine'>
-                          <Input.Label classNames='text-xs'>{t('select-option.label')}</Input.Label>
+                        <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
+                          <Input.Label classNames='text-sm'>{t('select-option.label')}</Input.Label>
                           <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
                             <Input.TextInput
                               disabled={!!readonly}

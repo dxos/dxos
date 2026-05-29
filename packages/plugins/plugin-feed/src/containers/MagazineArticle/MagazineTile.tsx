@@ -69,7 +69,7 @@ export const MagazineTile = ({ post, magazine, current, feedName, published, onO
         {imageUrl && (
           <Card.Poster alt={post.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
-        <Card.Toolbar>
+        <Card.Header>
           <Card.IconBlock padding>
             <IconButton
               variant='ghost'
@@ -83,8 +83,8 @@ export const MagazineTile = ({ post, magazine, current, feedName, published, onO
           </Card.IconBlock>
           {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div />}
           <Card.IconBlock />
-        </Card.Toolbar>
-        <Card.Content>
+        </Card.Header>
+        <Card.Body>
           {snippet && (
             <Card.Row>
               <Card.Text variant='description' classNames='line-clamp-3'>
@@ -98,7 +98,7 @@ export const MagazineTile = ({ post, magazine, current, feedName, published, onO
               <span className='text-end shrink-0'>{published ?? ''}</span>
             </div>
           </Card.Row>
-        </Card.Content>
+        </Card.Body>
       </Card.Root>
     </Focus.Item>
   );

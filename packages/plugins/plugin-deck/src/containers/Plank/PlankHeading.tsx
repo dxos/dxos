@@ -61,7 +61,7 @@ export const PlankHeading = memo(
     const { graph, onAdjust, onUpdateCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
     const breakpoint = useBreakpoints();
-    const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
+    const icon = node?.properties?.icon ?? 'ph--circle-dashed--regular';
     const label = pending
       ? t('pending.heading')
       : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.id }], t);
@@ -143,7 +143,7 @@ export const PlankHeading = memo(
         data-plank-heading
         style={iconSize(5)}
         classNames={[
-          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
+          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-lg',
           part === 'solo'
             ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
             : 'px-1',

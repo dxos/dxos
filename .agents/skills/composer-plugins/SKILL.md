@@ -212,13 +212,17 @@ See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
 **Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
 
-- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for article layout structure.
+- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for container (article, companion, etc.) layout structure.
 - `ScrollArea.Root` + `ScrollArea.Viewport` inside `Panel.Content asChild` for scrollable content.
 - `Input.Root` / `Input.Label` / `Input.TextInput` for form fields.
 - `Button` (with `variant`) for actions.
 - `Clipboard.IconButton` for copy-to-clipboard.
 - `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
 - `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
+- `List.Root` for navigable lists that track current (`dx-current`) and selected (`dx-selected`) item states.
+- use `react-tabster` for navigation.
+
+IMPORTANT: Any deviation from standard UI components should require permission from the user.
 
 The only acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g., `p-4 space-y-4`) or responsive `@container` queries. If you find yourself writing custom styles, you are probably missing an existing UI component.
 
@@ -259,9 +263,64 @@ Conventions:
 - **Hard-fail with `invariant` on missing space context or missing space records.** Space-affinity specs that receive a `context` argument should `invariant(context.space, …)` and `invariant(space, …)` on the client lookup — returning a `notAvailable` fallback hides configuration bugs in the layer graph.
 - **Activation-conditional specs stay inside the `makeModule` body.** Specs that only apply when a runtime config flag is set (e.g. `runtime.client.edgeFeatures.agents`) can still read that config from the `Client` and conditionally append themselves to the contributions list.
 
+#### Affinity and `LayerSpec.LayerContext`
+
+A spec's `affinity` determines the slice it lives in and which fields of `LayerContext` are populated when its factory runs (see `packages/core/compute/compute/src/LayerSpec.ts`):
+
+| Affinity      | Lifetime                                        | `LayerContext` fields available          |
+| ------------- | ----------------------------------------------- | ---------------------------------------- |
+| `application` | Process-manager runtime                         | (none — `{}`)                            |
+| `space`       | Per space, reused across all processes in space | `space`                                  |
+| `process`     | Per spawned process                             | `space`, `conversation`, `process` (pid) |
+
+`conversation` and `process` are **process-affinity only** — a `space`-affinity factory cannot see them. If a service is keyed on `conversation` (e.g. `AiContext.Service`, `AiSession.Service`), it must be `process`-affinity even though it depends on space-affinity services like `Database.Service` and `Feed.FeedService`. The `LayerStack` initialises lower-affinity slices first, so process specs can require space services without issue.
+
+The `LayerContext.conversation` field is fed from the spawn `environment.conversation`, which in turn comes from `Operation.invoke(..., { conversation })` or `Operation.withInvocationOptions({ conversation })`. Operations dispatched by `TriggerDispatcher` also inherit `space`/`conversation` from the parent spawn environment.
+
+#### Handling missing context fields
+
+`LayerSpec.make`'s factory must return `Layer<Provides, never, Requires>` — the error channel is `never`, so the layer body cannot use typed `Effect.fail` to signal "this context is invalid". Use `Effect.die(new ServiceNotAvailableError(tag.key))` inside the `Layer.scoped` body when a required `LayerContext` field is missing:
+
+```ts
+LayerSpec.make(
+  { affinity: 'process', requires: [Database.Service, Feed.FeedService], provides: [AiContext.Service] },
+  (context) =>
+    Layer.scoped(
+      AiContext.Service,
+      Effect.gen(function* () {
+        if (!context.conversation) {
+          return yield* Effect.die(new ServiceNotAvailableError(AiContext.Service.key));
+        }
+        const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+        return { binder };
+      }),
+    ),
+);
+```
+
+The die surfaces as a defect through `LayerStack`, and the dispatcher's `causeToError` extracts the original `ServiceNotAvailableError` message for logs. Do NOT widen the spec output type with `as unknown as` casts to return `Layer.empty` — that hides the fact that the slice failed to materialise.
+
+#### `LayerStack` pruning of unsatisfiable specs
+
+A slice contains every spec at its affinity, but the `LayerStack` prunes specs whose `requires` aren't satisfied by the parent slice (or by earlier specs in this slice). The slice still initialises with the surviving specs; lookups for tags from dropped specs fail with a precise `ServiceNotAvailable` at resolve time. This lets a conversation-scoped `process` spec (like `AiContextSpec` requiring `Database.Service`) coexist with `process` ops that spawn without a `space`/`conversation` context.
+
+Practical consequences:
+
+- Declare each spec's true `requires` — there is no penalty for an unsatisfied requirement when nobody is asking for what the spec provides.
+- Don't bundle unrelated services in one spec just to share a factory. A spec is the unit of pruning; bundling forces all-or-nothing.
+- A failure for tag `X` will report `ServiceNotAvailable: X`, not the missing transitive dependency. If you need to debug WHY a spec was dropped, check the `pruned layer specs with unsatisfied requirements` log line emitted by `Slice.init` (`packages/core/compute-runtime/src/LayerStack.ts`).
+
+See the `process slice initialises even when an unrelated process-affinity spec has unsatisfied requirements` test in `LayerStack.test.ts` for the canonical scenario.
+
+#### Inline `Effect.provideService` is not enough
+
+Providing a service inline (`Effect.provideService(AiContext.Service, …)` or `Layer.succeed(AiContext.Service, …)` via `Effect.provide(...)`) only applies to the calling fiber. The moment `Operation.invoke(child)` crosses a process boundary, the child spawn uses its own `ServiceResolver`/`LayerStack` and the inline provider is invisible. If any code path can `Operation.invoke` (or `schedule`) an op that requires the service, register a production `LayerSpec` for it — don't rely on inline providers alone.
+
 ### Schema (`src/types/`)
 
-ECHO type definitions using Effect Schema with `Type.object()`, `LabelAnnotation`, and `Annotation.IconAnnotation`. Use namespace re-exports (e.g., `export * as Chess from './Chess'`). Include a `make()` factory function using `Obj.make()`.
+ECHO type definitions using Effect Schema with `Type.makeObject()`, `LabelAnnotation`, and `Annotation.IconAnnotation`. Use namespace re-exports (e.g., `export * as Chess from './Chess'`). Include a `make()` factory function using `Obj.make()`.
 
 See: `plugin-chess/src/types/Chess.ts`
 

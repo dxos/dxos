@@ -8,9 +8,9 @@ import React, { type ComponentType, type PropsWithChildren, type ReactNode, useE
 import { type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { File } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -138,9 +138,7 @@ const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((prop
           items={items}
           // Use the ref DXN as the stable per-tile key — index-based keys would
           // shift after a deletion and force unrelated tiles to remount.
-          getId={(data?: { ref: Ref.Ref<File.File>; index: number }) =>
-            data?.ref.dxn.toString() ?? String(data?.index ?? '')
-          }
+          getId={(data?: { ref: Ref.Ref<File.File>; index: number }) => data?.ref.uri ?? String(data?.index ?? '')}
         />
       </Masonry.Content>
     </Masonry.Root>

@@ -41,5 +41,8 @@
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

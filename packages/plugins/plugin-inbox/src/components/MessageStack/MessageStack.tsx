@@ -6,11 +6,10 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
-
-import { type Mailbox as MailboxType } from '#types';
+import { getHashStyles } from '@dxos/ui-theme';
 
 import { GoogleMail } from '../../apis';
 import { getMessageProps } from '../../util';
@@ -28,10 +27,23 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
 // MessageStack
 //
 
+/**
+ * One entry per tag applied to a message. The shape mirrors the value side of
+ * `Mailbox.tags` (label + hue) plus a stable `id` so the UI can dedupe / key chips.
+ */
+export type MessageStackTag = { id: string; label: string; hue?: string };
+
+/**
+ * Inverted index `messageId → tags`. Built by `Mailbox.buildMessageTagsIndex` in the parent
+ * (MailboxArticle) so each tile can look up its tags by message id with no extra query.
+ */
+export type MessageTagsIndex = Record<string, MessageStackTag[]>;
+
 export type MessageStackProps = {
   id: string;
   messages?: Message.Message[];
-  labels?: MailboxType.Labels;
+  /** Per-message tag list, indexed by message id. */
+  tags?: MessageTagsIndex;
   currentId?: string;
   /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
@@ -47,7 +59,7 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
+  ({ messages, tags, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const threadGroups = useMemo(() => {
@@ -79,13 +91,13 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         return Array.from(threadGroups.entries(), ([threadId, threadMessages]) => ({
           threadId,
           messages: threadMessages,
-          labels,
+          tags,
           onAction,
         }));
       }
 
-      return messages?.map((message) => ({ message, labels, onAction }));
-    }, [threadGroups, messages, labels, onAction]);
+      return messages?.map((message) => ({ message, tags: tags?.[message.id], onAction }));
+    }, [threadGroups, messages, tags, onAction]);
 
     // In threaded view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by thread ID.
@@ -167,14 +179,14 @@ MessageStack.displayName = 'MessageStack';
 
 type MessageTileData = {
   message: Message.Message;
-  labels?: MailboxType.Labels;
+  tags?: MessageStackTag[];
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, labels, onAction } = data;
+  const { message, tags, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
 
@@ -203,19 +215,19 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   );
 
   const messageLabels = useMemo(() => {
-    if (!labels || !Array.isArray(message.properties?.labels)) {
+    if (!tags || tags.length === 0) {
       return [];
     }
-
-    return message.properties.labels
-      .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
-      .map((labelId: string) => ({
-        id: labelId,
-        hue: getHashStyles(labelId).hue,
-        label: labels[labelId],
+    return tags
+      .filter((tag) => !GoogleMail.isSystemLabel(tag.id))
+      .map((tag) => ({
+        id: tag.id,
+        // Tag's own `hue` wins; otherwise hash the id for a stable colour like before.
+        hue: tag.hue ?? getHashStyles(tag.id).hue,
+        label: tag.label,
       }))
       .filter((item) => item.label);
-  }, [labels, message.properties?.labels]);
+  }, [tags]);
 
   return (
     <Mosaic.Tile
@@ -227,7 +239,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.IconBlock>
               <DxAvatar
                 hue={hue}
@@ -243,8 +255,8 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
               <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
             </Card.Title>
             <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
+          </Card.Header>
+          <Card.Body>
             <Card.Row icon='ph--user--regular'>
               <Card.Text>{from}</Card.Text>
             </Card.Row>
@@ -271,7 +283,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
                 </div>
               </Card.Row>
             )}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -287,7 +299,7 @@ MessageTile.displayName = 'MessageTile';
 type ThreadTileData = {
   threadId: string;
   messages: Message.Message[];
-  labels?: MailboxType.Labels;
+  tags?: MessageTagsIndex;
   onAction?: MessageStackActionHandler;
 };
 
@@ -335,7 +347,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
             </Card.IconBlock>
@@ -343,8 +355,8 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
               <span className='grow truncate font-medium'>{subject}</span>
             </Card.Title>
             <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
+          </Card.Header>
+          <Card.Body>
             {/* TODO(burdon): Currently limits to last n messages. */}
             {messages.slice(0, 4).map((message) => {
               const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
@@ -373,7 +385,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
                 </Card.Row>
               );
             })}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>

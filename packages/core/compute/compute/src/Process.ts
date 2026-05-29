@@ -14,8 +14,8 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
+import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ObjectId } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -138,9 +138,9 @@ export interface Params {
   readonly name: string | null;
 
   /**
-   * Target object that this process is assigned to.
+   * URI of the target this process is assigned to.
    */
-  readonly target: ObjectId | null;
+  readonly target: URI.URI | null;
 }
 
 //
@@ -261,6 +261,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
               });
               // Emit ephemeral operation input event for live subscribers
               // (history tracker, devtools) without persisting raw input.
@@ -293,6 +294,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
                 outcome: 'success',
               });
             }).pipe(
@@ -303,6 +305,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
+                    icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
                   });

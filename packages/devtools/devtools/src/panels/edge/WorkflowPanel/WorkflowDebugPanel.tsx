@@ -10,13 +10,13 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
+import { makeFeedService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -57,7 +57,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   useAsyncEffect(async () => {
     setInputTemplate('');
     await props.loader
-      .load(DXN.fromLocalObjectId(props.graph.id))
+      .load(EchoURI.make({ objectId: props.graph.id }))
       .then((workflow) => {
         const workflowMeta = workflow.resolveMeta();
         if (workflowMeta.inputs.length) {
@@ -128,7 +128,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
       if (props.mode === WorkflowDebugPanelMode.REMOTE) {
         response = await edgeClient.executeWorkflow(Context.default(), space.id, props.graph.id, requestBody);
       } else {
-        const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
+        const compiled = await props.loader.load(EchoURI.make({ objectId: props.graph.id }));
         response = await runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))
@@ -240,7 +240,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
         },
       },
       database: Database.makeService(space.db),
-      queues: QueueService.make(space.queues),
+      feeds: makeFeedService(space.queues),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();

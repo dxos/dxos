@@ -20,8 +20,8 @@
   .dx-hover {
     @apply cursor-pointer
       hover:bg-hover-surface! hover:text-hover-foreground!
-      hover:aria-selected:bg-selected-surface-hover! hover:aria-selected:text-selected-foreground!
-      hover:aria-[current=true]:bg-current-surface-hover! hover:aria-[current=true]:text-current-foreground!;
+      hover:aria-selected:bg-selected-surface-hover hover:aria-selected:text-selected-foreground
+      hover:aria-[current=true]:bg-current-surface-hover hover:aria-[current=true]:text-current-foreground;
   }
   .dx-hover-row {
     @apply group-hover/row:bg-hover-surface! group-hover/row:text-hover-foreground!

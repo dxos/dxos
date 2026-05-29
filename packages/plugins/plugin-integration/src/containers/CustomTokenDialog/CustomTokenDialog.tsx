@@ -75,7 +75,7 @@ export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: Cu
         <Dialog.Header>
           <Dialog.Title>{providerLabel ?? providerId}</Dialog.Title>
           <Dialog.Close asChild>
-            <Dialog.CloseIconButton />
+            <Dialog.ActionIconButton action='close' />
           </Dialog.Close>
         </Dialog.Header>
         <Dialog.Body>
@@ -98,7 +98,7 @@ export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: Cu
       <Dialog.Header>
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

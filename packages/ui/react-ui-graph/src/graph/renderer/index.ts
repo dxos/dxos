@@ -3,5 +3,6 @@
 //
 
 export * from './graph-renderer';
+export * from './labels';
 export * from './linker';
 export * from './renderer';

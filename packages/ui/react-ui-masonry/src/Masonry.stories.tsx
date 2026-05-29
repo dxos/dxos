@@ -19,15 +19,15 @@ import { Masonry, MasonryRootProps } from './Masonry';
 const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
     <Card.Root>
-      <Card.Toolbar>
+      <Card.Header>
         <Card.Icon icon='ph--building-office--regular' />
         <Card.Title>{name}</Card.Title>
-      </Card.Toolbar>
+      </Card.Header>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       {description && (
-        <Card.Section classNames='px-2 pb-2'>
+        <Card.Row fullWidth classNames='px-2 pb-2'>
           <Card.Text variant='description'>{description}</Card.Text>
-        </Card.Section>
+        </Card.Row>
       )}
     </Card.Root>
   );

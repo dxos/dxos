@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
@@ -35,10 +35,6 @@ export const State = Schema.Struct({
     description: 'AI difficulty level.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.tictactoe.state',
-    version: '0.1.0',
-  }),
   Annotation.IconAnnotation.set({
     icon: 'ph--hash-straight--regular',
     hue: 'cyan',
@@ -47,9 +43,10 @@ export const State = Schema.Struct({
   // same reasoning). Keeps the state out of the navtree's typed branches so an orphaned
   // state doesn't reappear after the wrapping Game is deleted.
   SystemTypeAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.tictactoe.state', '0.1.0')),
 );
 
-export interface State extends Schema.Schema.Type<typeof State> {}
+export type State = Type.InstanceType<typeof State>;
 
 /**
  * Build a fresh Tic-Tac-Toe variant state with an empty board.

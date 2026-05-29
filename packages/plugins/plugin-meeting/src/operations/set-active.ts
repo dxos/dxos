@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.SetActive> = Meetin
       const callManager = yield* Capability.get(CallsCapabilities.Manager);
       store.updateState((current) => ({ ...current, activeMeeting: object }));
       callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-        meetingId: object ? Obj.getDXN(object).toString() : '',
+        meetingId: object ? Obj.getURI(object) : '',
       });
       return { object };
     }),

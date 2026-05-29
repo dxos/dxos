@@ -12,7 +12,8 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
-import { ThreadCapabilities } from '../types';
+import { shouldTriggerAgent } from '../should-trigger-agent';
+import { AgentIdentity, ThreadCapabilities } from '../types';
 import { ThreadOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = ThreadOperation.AddMessage.pipe(
@@ -21,7 +22,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = Thread
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const subjectId = Obj.getDXN(subject).toString();
+      const subjectId = Obj.getURI(subject);
       const db = Obj.getDatabase(subject);
       invariant(db, 'Database not found');
 
@@ -74,6 +75,18 @@ const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = Thread
           messageLength: text.length,
         },
       });
+
+      // Gate the comment-thread agent. Identity is optional — if no capability
+      // is contributed we simply never trigger. Schedule (not invoke) so the
+      // user's message commit returns immediately and the agent runs out-of-band.
+      const identities = yield* Capability.getAll(AgentIdentity);
+      const identity = identities[0];
+      if (identity && shouldTriggerAgent(thread, message, identity.name)) {
+        yield* Operation.schedule(ThreadOperation.RespondToThread, {
+          thread: Ref.make(thread),
+          subject: Ref.make(subject),
+        });
+      }
     }),
   ),
 );

@@ -7,7 +7,8 @@ import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateFi
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { type Database, DXN, Entity } from '@dxos/echo';
+import { type Database, Entity } from '@dxos/echo';
+import { EchoURI, URI } from '@dxos/keys';
 
 export type PreviewBlock = {
   link: PreviewLinkRef;
@@ -78,12 +79,13 @@ const resolveLabel = (
   dxnStr: string,
   viewRef: { current: EditorView | undefined },
 ): string | undefined => {
-  const dxn = DXN.tryParse(dxnStr);
-  if (!dxn) {
+  const echoUri = EchoURI.tryParse(dxnStr);
+  const dxnRef = echoUri ?? (dxnStr.startsWith('dxn:') ? URI.make(dxnStr) : undefined);
+  if (!dxnRef) {
     return;
   }
 
-  const ref = db.makeRef(dxn);
+  const ref = db.makeRef(dxnRef);
   const target = ref.target;
   if (target) {
     return Entity.getLabel(target);
@@ -229,7 +231,7 @@ class PreviewBlockWidget extends WidgetType {
 
   override toDOM(_view: EditorView) {
     const root = document.createElement('div');
-    root.classList.add('cm-preview-block', 'dx-density-fine');
+    root.classList.add('cm-preview-block', 'dx-density-md');
     this._options.addBlockContainer?.({ link: this._link, el: root });
     return root;
   }

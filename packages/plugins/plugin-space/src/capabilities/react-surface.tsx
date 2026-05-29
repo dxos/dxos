@@ -11,7 +11,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -30,9 +30,9 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
+  EntityRenamePopover,
   ObjectCardStack,
   ObjectProperties,
-  ObjectRenamePopover,
   RecordArticle,
   RelatedArticle,
   SchemaContainer,
@@ -59,7 +59,7 @@ import {
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
-  OBJECT_RENAME_POPOVER,
+  ENTITY_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../constants';
 
@@ -160,15 +160,19 @@ export default Capability.makeModule(
             return false;
           }
 
-          const schema = Obj.getSchema(data.companionTo);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.companionTo);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           return !!viewTarget;
         },
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
-          const schema = Obj.getSchema(data.companionTo);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.companionTo);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           if (!view) {
             return null;
@@ -176,8 +180,8 @@ export default Capability.makeModule(
 
           return (
             <ObjectCardStack
-              key={Obj.getDXN(data.companionTo).toString()}
-              objectId={Obj.getDXN(data.companionTo).toString()}
+              key={Obj.getURI(data.companionTo)}
+              objectId={Obj.getURI(data.companionTo)}
               view={view}
               ref={ref}
             />
@@ -300,14 +304,18 @@ export default Capability.makeModule(
             return false;
           }
 
-          const schema = Obj.getSchema(data.subject);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.subject);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
           return !!viewTarget;
         },
         component: ({ data }) => {
-          const schema = Obj.getSchema(data.subject);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.subject);
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
 
           if (!view) {
@@ -324,11 +332,11 @@ export default Capability.makeModule(
         component: ({ data }) => <SpaceRenamePopover space={data.props} />,
       }),
       Surface.create({
-        id: OBJECT_RENAME_POPOVER,
+        id: ENTITY_RENAME_POPOVER,
         role: 'popover',
-        filter: (data): data is { props: Obj.Unknown } =>
-          data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
-        component: ({ data }) => <ObjectRenamePopover object={data.props} />,
+        filter: (data): data is { props: Entity.Unknown } =>
+          data.component === ENTITY_RENAME_POPOVER && Entity.isEntity(data.props),
+        component: ({ data }) => <EntityRenamePopover entity={data.props} />,
       }),
       Surface.create({
         id: 'menu-footer',
@@ -369,7 +377,7 @@ export default Capability.makeModule(
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
             ? data.subject.state.get() === SpaceState.SPACE_READY
-              ? (space?.properties[Collection.Collection.typename]?.target as Collection.Collection)
+              ? (space?.properties[Type.getTypename(Collection.Collection)]?.target as Collection.Collection)
               : undefined
             : data.subject;
 

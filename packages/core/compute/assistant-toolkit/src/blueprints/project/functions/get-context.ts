@@ -36,7 +36,7 @@ export default GetContext.pipe(
                 Effect.map(Obj.getTypename),
                 Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('Artifact not found.')),
               ),
-              dxn: artifact.data.dxn.toString(),
+              dxn: artifact.data.uri,
             };
           }),
         ),

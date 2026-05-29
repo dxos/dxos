@@ -9,25 +9,34 @@ import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Tag, type Type } from '@dxos/echo';
-import { AssistantBlueprint } from '@dxos/plugin-assistant';
-import { Chess, ChessBlueprint } from '@dxos/plugin-chess';
+// Narrow subpath imports (`/blueprints` and `/types`) so the CLI's
+// `bun run --conditions=source` only walks plugin source files that are free of
+// React-component imports. The plugin root barrels re-export the whole tree
+// (including React components that transitively pull `react-aria-components` —
+// whose `source` export condition advertises a TS file that isn't shipped in
+// its dist, causing Bun resolution to fail).
+import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
+import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { ChessOperationHandlerSet } from '@dxos/plugin-chess/plugin';
-import { Game } from '@dxos/plugin-game';
-import { Calendar, CalendarBlueprint, InboxBlueprint, InboxSendBlueprint, Mailbox } from '@dxos/plugin-inbox';
+import { Chess } from '@dxos/plugin-chess/types';
+import { Game } from '@dxos/plugin-game/types';
+import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
-import { KanbanBlueprint } from '@dxos/plugin-kanban';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
+import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
 import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/plugin';
-import { MapBlueprint } from '@dxos/plugin-map';
+import { MapBlueprint } from '@dxos/plugin-map/blueprints';
 import { MapOperationHandlerSet } from '@dxos/plugin-map/plugin';
-import { Markdown, MarkdownBlueprint } from '@dxos/plugin-markdown';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
-import { ScriptBlueprint } from '@dxos/plugin-script';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { ScriptBlueprint } from '@dxos/plugin-script/blueprints';
 import { ScriptOperationHandlerSet } from '@dxos/plugin-script/plugin';
-import { TableBlueprint } from '@dxos/plugin-table';
+import { TableBlueprint } from '@dxos/plugin-table/blueprints';
 import { TableOperationHandlerSet } from '@dxos/plugin-table/plugin';
-import { ThreadBlueprint } from '@dxos/plugin-thread';
+import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/plugin';
-import { TranscriptionBlueprint } from '@dxos/plugin-transcription';
+import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/plugin';
 import { DataTypes } from '@dxos/schema';
 import {

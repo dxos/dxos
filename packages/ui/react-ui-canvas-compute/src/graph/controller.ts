@@ -32,7 +32,6 @@ import {
 import { Resource } from '@dxos/context';
 import type { Database, Feed } from '@dxos/echo';
 import { unwrapExit } from '@dxos/effect';
-import { type QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -95,7 +94,6 @@ export type ComputeServices =
   | AiService.AiService
   | Database.Service
   | Feed.FeedService
-  | QueueService
   | Credential.CredentialsService
   | Operation.Service
   | OperationRegistry.Service;

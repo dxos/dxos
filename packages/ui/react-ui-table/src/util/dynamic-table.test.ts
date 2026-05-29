@@ -11,13 +11,14 @@ import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '.
 
 describe('makeDynamicTable', () => {
   /**
-   * Base case: plain jsonSchema (not from Echo / JsonSchema.toJsonSchema). Does not exercise the path
-   * where projection or schema are reactive, so this does not reproduce the Obj.update regression.
-   * Confirms makeDynamicTable + setProperties (title) works with plain objects.
+   * Builds the Type entity from a JSON schema, then makes the table.
+   * Confirms makeDynamicTable + setProperties (title) works for the jsonSchema path.
    */
-  test('makeDynamicTable with plain jsonSchema and properties with title does not throw', () => {
+  test('makeDynamicTable from a jsonSchema with properties with title does not throw', () => {
     const registry = Registry.make();
     const jsonSchema = {
+      typename: 'com.example.type.dynamicTablePlain',
+      version: '0.1.0',
       type: 'object' as const,
       properties: {
         id: { type: 'string' as const },
@@ -31,11 +32,8 @@ describe('makeDynamicTable', () => {
     ];
 
     expect(() => {
-      const { projection, object } = makeDynamicTable({
-        registry,
-        jsonSchema,
-        properties,
-      });
+      const { type } = getBaseSchema({ jsonSchema });
+      const { projection, object } = makeDynamicTable({ registry, type, properties });
       expect(projection).toBeDefined();
       expect(object).toBeDefined();
       expect(projection.getFields().length).toBeGreaterThan(0);
@@ -43,25 +41,20 @@ describe('makeDynamicTable', () => {
   });
 
   /**
-   * Regression test for the path where jsonSchema comes from getBaseSchema(typename, properties).
-   * That path uses Echo (ViewModel.make, JsonSchema.toJsonSchema); mutations must run inside Obj.update and on a
-   * cloned schema. This test ensures that flow does not throw.
+   * Builds the Type entity from property definitions, then makes the table.
+   * Confirms makeDynamicTable + setProperties (title) works for the property-definitions path.
    */
-  test('makeDynamicTable with jsonSchema from getBaseSchema(typename, properties) and properties with title does not throw', () => {
+  test('makeDynamicTable from getBaseSchema(typename, properties) with properties with title does not throw', () => {
     const registry = Registry.make();
     const typename = 'com.example.type.dynamicTableTest';
     const properties: TablePropertyDefinition[] = [
       { name: 'id', format: Format.TypeFormat.String },
       { name: 'name', format: Format.TypeFormat.String, title: 'Name' },
     ];
-    const { jsonSchema } = getBaseSchema({ typename, properties });
 
     expect(() => {
-      const { projection, object } = makeDynamicTable({
-        registry,
-        jsonSchema,
-        properties,
-      });
+      const { type } = getBaseSchema({ typename, properties });
+      const { projection, object } = makeDynamicTable({ registry, type, properties });
       expect(projection).toBeDefined();
       expect(object).toBeDefined();
       expect(projection.getFields().length).toBeGreaterThan(0);

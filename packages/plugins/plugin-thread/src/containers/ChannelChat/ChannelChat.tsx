@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type Channel, Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Chat } from '#components';
 import { useStatus } from '#hooks';
@@ -33,7 +33,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
   ({ space, channel, ...props }, forwardedRef) => {
     const identity = useIdentity()!;
     const members = useMembers(space.id);
-    const id = Obj.getDXN(channel).toString();
+    const id = Obj.getURI(channel);
     const activity = useStatus(space, id);
     const { invokePromise } = useOperationInvoker();
 

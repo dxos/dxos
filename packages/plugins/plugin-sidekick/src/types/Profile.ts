@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 export const Profile = Schema.Struct({
   subject: Ref.Ref(Obj.Unknown),
@@ -16,17 +16,14 @@ export const Profile = Schema.Struct({
   researchEnabled: Schema.optional(Schema.Boolean),
   lastUpdated: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.sidekick.profile',
-    version: '0.1.0',
-  }),
   Annotation.IconAnnotation.set({
     icon: 'ph--user-circle--regular',
     hue: 'cyan',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.sidekick.profile', '0.1.0')),
 );
 
-export interface Profile extends Schema.Schema.Type<typeof Profile> {}
+export type Profile = Type.InstanceType<typeof Profile>;
 
 /** Creates a sidekick profile with default capability flags and timestamp metadata. */
 export const make = (props: { subject: Ref.Ref<Obj.Unknown>; document: Ref.Ref<Obj.Unknown> }) =>

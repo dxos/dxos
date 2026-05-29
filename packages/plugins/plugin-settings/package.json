@@ -63,5 +63,8 @@
   "peerDependencies": {
     "effect": "catalog:",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

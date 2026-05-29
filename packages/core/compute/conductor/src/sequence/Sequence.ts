@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Key, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Key, Obj, Type } from '@dxos/echo';
 
 export const Step = Schema.Struct({
   id: Key.ObjectId,
@@ -15,14 +15,12 @@ export const Step = Schema.Struct({
   tools: Schema.optional(Schema.Array(ToolId)),
 });
 
-export interface Step extends Schema.Schema.Type<typeof Step> {}
-
+export type Step = Schema.Schema.Type<typeof Step>;
 export const Definition = Schema.Struct({
   steps: Schema.Array(Step.pipe(Schema.omit('id'))),
 });
 
-export interface Definition extends Schema.Schema.Type<typeof Definition> {}
-
+export type Definition = Schema.Schema.Type<typeof Definition>;
 /**
  * @deprecated
  */
@@ -30,18 +28,14 @@ export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
   steps: Schema.Array(Step),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.sequence',
-    version: '0.1.0',
-  }),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.sequence', '0.1.0')),
 );
 
-export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}
-
+export type Sequence = Type.InstanceType<typeof Sequence>;
 /**
  * Sequence builder API.
  */

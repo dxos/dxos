@@ -2,34 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);
-  // Obj.getSchema fails for database-registered (dynamic) schemas due to DXN mismatch;
-  // fall back to typename query which matches PersistentSchema.typename.
+  // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
+  // fall back to typename query which matches TypeSchema.typename.
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const schema =
-    Obj.getSchema(subject) ?? (typename && db ? db.schemaRegistry.query({ typename }).runSync()[0] : undefined);
+    Obj.getType(subject) ?? (typename && db ? db.schemaRegistry.query({ typename }).runSync()[0] : undefined);
   const icon =
-    schema && Type.isMutable(schema)
+    schema && Type.getDatabase(schema) != null
       ? 'ph--cube--regular'
-      : Function.pipe(
-          Option.fromNullable(schema),
-          Option.flatMap(Annotation.IconAnnotation.get),
-          Option.map(({ icon }) => icon),
-          Option.getOrElse(() => 'ph--placeholder--regular'),
-        );
+      : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
 
   return (
     <Panel.Root role={role}>
@@ -40,13 +33,13 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root classNames='dx-card-max-width'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.Icon icon={icon} />
-                <Card.Title>{Obj.getLabel(subject)}</Card.Title>
-              </Card.Toolbar>
-              <Card.Content>
+                <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
+              </Card.Header>
+              <Card.Body>
                 <Surface.Surface type={AppSurface.Card} data={{ subject }} limit={1} />
-              </Card.Content>
+              </Card.Body>
             </Card.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}

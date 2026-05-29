@@ -26,9 +26,9 @@ const generator = random as any as ValueGenerator;
 
 random.seed(7);
 
-type StoryArgs = { variant: ExplorerArticleVariant };
+type DefaultStoryProps = { variant: ExplorerArticleVariant };
 
-const DefaultStory = ({ variant }: StoryArgs) => {
+const DefaultStory = ({ variant }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const [graph] = useQuery(space?.db, Filter.type(Graph.Graph));
   if (!space || !graph) {
@@ -38,7 +38,7 @@ const DefaultStory = ({ variant }: StoryArgs) => {
   return <ExplorerArticle role='article' subject={graph as any} attendableId={graph.id} variant={variant} />;
 };
 
-const meta: Meta<StoryArgs> = {
+const meta: Meta<DefaultStoryProps> = {
   title: 'plugins/plugin-explorer/containers/ExplorerArticle',
   render: DefaultStory,
   decorators: [
@@ -93,44 +93,34 @@ const meta: Meta<StoryArgs> = {
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
+type Story = StoryObj<typeof meta>;
 
-/**
- * Default force-directed view (the production layout).
- */
 export const Force: Story = {
   args: {
     variant: 'force',
   },
 };
 
-/**
- * Radial cluster: every object on the perimeter, grouped by its schema, all under a single database root.
- * Inspired by https://observablehq.com/@d3/radial-cluster.
- */
 export const Cluster: Story = {
   args: {
     variant: 'cluster',
   },
 };
 
-/**
- * Hierarchical edge bundling: same hierarchy as `cluster`, with bundled curves
- * routed through the lowest common ancestor for every relation / ref in the space.
- * Inspired by https://observablehq.com/@d3/hierarchical-edge-bundling.
- */
 export const Bundle: Story = {
   args: {
     variant: 'bundle',
   },
 };
 
-/**
- * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
- * objects of the same type cluster together. Each cell is colored by its typename.
- */
 export const Lattice: Story = {
   args: {
     variant: 'lattice',
+  },
+};
+
+export const Swarm: Story = {
+  args: {
+    variant: 'swarm',
   },
 };

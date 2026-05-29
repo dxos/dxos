@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, type Collection, Obj } from '@dxos/echo';
+import { type Collection, Obj } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Toolbar } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -68,8 +67,8 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
 
   return (
     <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
-      <Card.Toolbar>
-        <Card.ToolbarIconButton
+      <Card.Header>
+        <Toolbar.IconButton
           variant='ghost'
           label={label}
           icon={item.icon}
@@ -78,7 +77,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
         />
         <Card.Title>{label}</Card.Title>
         <Card.Menu />
-      </Card.Toolbar>
+      </Card.Header>
     </Card.Root>
   );
 };
@@ -95,15 +94,14 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
   const items = useMemo(
     () =>
       objects.map((obj) => {
-        const schema = Obj.getSchema(obj);
-        const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+        const iconAnnotation = Obj.getIcon(obj);
         const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
 
         return {
-          id: Obj.getDXN(obj).toString(),
+          id: Obj.getURI(obj),
           object: obj,
           targetPath,
-          icon: iconAnnotation?.icon ?? 'ph--placeholder--regular',
+          icon: iconAnnotation?.icon ?? 'ph--circle-dashed--regular',
           iconHue: iconAnnotation?.hue,
         } satisfies ObjectItem;
       }),

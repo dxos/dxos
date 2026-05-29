@@ -81,6 +81,12 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -90,17 +96,24 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -150,10 +163,12 @@
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
     "@effect/experimental": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -176,5 +191,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

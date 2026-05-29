@@ -7,22 +7,23 @@ import React, { useCallback } from 'react';
 import { type Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { composable, composableProps, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type ActionProperties } from '#types';
 
-const fallbackIcon = 'ph--placeholder--regular';
+const fallbackIcon = 'ph--circle-dashed--regular';
 
-const fineActionButtonProps = {
+const mdActionButtonProps = {
   size: 4 as const,
-  density: 'fine' as const,
+  density: 'md' as const,
 };
 
-const coarseActionButtonProps = {
+const lgActionButtonProps = {
   size: 5 as const,
-  density: 'coarse' as const,
+  density: 'lg' as const,
 };
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
@@ -47,7 +48,7 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
       <Menu.Root caller={caller} onAction={handleAction}>
         <Menu.Trigger asChild>
           <IconButton
-            {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
+            {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
             {...composableProps(props)}
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
@@ -84,7 +85,7 @@ export const NavTreeItemMonolithicAction = (
   const runAction = useActionRunner();
   return (
     <IconButton
-      {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
+      {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
       variant={variant}
       classNames={[
         'shrink-0',

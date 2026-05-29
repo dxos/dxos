@@ -11,3 +11,4 @@ export * from './useSpaceInvitations';
 export * from './useSpaceProperties';
 export * from './useSubscription';
 export * from './useSyncState';
+export * from './useFeedSyncState';

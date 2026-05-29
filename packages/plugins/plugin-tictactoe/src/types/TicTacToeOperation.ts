@@ -17,6 +17,7 @@ export const MakeMove = Operation.make({
     key: 'org.dxos.function.tictactoe.move',
     name: 'Make Move',
     description: 'Places a marker on the board and updates game state.',
+    icon: 'ph--x--regular',
   },
   input: Schema.Struct({
     game: GameRef(TicTacToe.State).annotations({
@@ -42,6 +43,7 @@ export const AiMove = Operation.make({
     key: 'org.dxos.function.tictactoe.ai-move',
     name: 'AI Move',
     description: 'Uses the AI engine to play the next move.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     game: GameRef(TicTacToe.State).annotations({
@@ -72,6 +74,7 @@ export const Print = Operation.make({
     key: 'org.dxos.function.tictactoe.print',
     name: 'Print board',
     description: 'Prints the Tic-Tac-Toe board to ASCII.',
+    icon: 'ph--terminal--regular',
   },
   input: Schema.Struct({
     board: Schema.String.annotations({

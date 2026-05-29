@@ -10,7 +10,8 @@ import { Event } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from '../testing';
 import { createFeedServiceLayer } from './feed-service';
@@ -247,10 +248,10 @@ describe('Feed', () => {
       });
       yield* Database.flush();
 
-      // The stored ref must be a Queue DXN — not a synthesized ECHO DXN.
+      // The stored ref must be a queue EchoURI — not a synthesized ECHO URI.
       const ref = container.objects![0];
-      expect(ref.dxn.kind).toBe(DXN.kind.QUEUE);
-      expect(ref.dxn.asQueueDXN()?.objectId).toBe((queuePost as any).id);
+      expect(EchoURI.isEchoURI(ref.uri)).toBe(true);
+      expect(EchoURI.getObjectId(EchoURI.parse(ref.uri))).toBe((queuePost as any).id);
 
       // The queue item must NOT have been added to space.db.
       const dbResults = yield* Database.runQuery(Filter.type(TestSchema.Person));
@@ -260,5 +261,101 @@ describe('Feed', () => {
       const resolved = yield* Effect.promise(() => ref.load());
       expect((resolved as any).name).toBe('alice');
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  describe('feed namespaces', () => {
+    test('Feed.append assigns data and trace namespaces in feed store', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+      let dataFeed!: Feed.Feed;
+      let traceFeed!: Feed.Feed;
+      await Effect.gen(function* () {
+        dataFeed = yield* Database.add(Feed.make({ name: 'data-feed' }));
+        traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
+
+        yield* Feed.append(dataFeed, [Obj.make(TestSchema.Person, { name: 'data-item' })]);
+        yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
+      }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+      const feeds = await peer.host.getAllFeedsForSpace(db.spaceId);
+
+      expect(
+        feeds.find(
+          (feed) => feed.feedId === dataFeed.id && feed.feedNamespace === FeedProtocol.WellKnownNamespaces.data,
+        )?.blocks.length ?? 0,
+      ).toBe(1);
+      expect(
+        feeds.find(
+          (feed) => feed.feedId === traceFeed.id && feed.feedNamespace === FeedProtocol.WellKnownNamespaces.trace,
+        )?.blocks.length ?? 0,
+      ).toBe(1);
+      expect(
+        feeds.find(
+          (feed) => feed.feedId === traceFeed.id && feed.feedNamespace === FeedProtocol.WellKnownNamespaces.data,
+        )?.blocks.length ?? 0,
+      ).toBe(0);
+    });
+
+    test('Feed.query reads trace feed items from trace namespace', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+      let traceFeed!: Feed.Feed;
+      await Effect.gen(function* () {
+        traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
+        yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
+        const results = yield* Feed.runQuery(traceFeed, Filter.type(TestSchema.Person));
+        expect(results).toHaveLength(1);
+        expect((results[0] as TestSchema.Person).name).toBe('trace-item');
+      }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+      const feeds = await peer.host.getAllFeedsForSpace(db.spaceId);
+      expect(
+        feeds.find(
+          (feed) => feed.feedId === traceFeed.id && feed.feedNamespace === FeedProtocol.WellKnownNamespaces.trace,
+        )?.blocks.length ?? 0,
+      ).toBe(1);
+      expect(
+        feeds.find(
+          (feed) => feed.feedId === traceFeed.id && feed.feedNamespace === FeedProtocol.WellKnownNamespaces.data,
+        )?.blocks.length ?? 0,
+      ).toBe(0);
+    });
+
+    test('queue service reads trace feed items from trace namespace', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+      let traceFeed!: Feed.Feed;
+      await Effect.gen(function* () {
+        traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
+        yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
+      }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+
+      const traceResult = await peer.host.queuesService.queryQueue({
+        query: {
+          spaceId: db.spaceId,
+          queueIds: [traceFeed.id],
+          queuesNamespace: FeedProtocol.WellKnownNamespaces.trace,
+        },
+      });
+      expect(traceResult.objects?.length).toBe(1);
+
+      const dataResult = await peer.host.queuesService.queryQueue({
+        query: {
+          spaceId: db.spaceId,
+          queueIds: [traceFeed.id],
+          queuesNamespace: FeedProtocol.WellKnownNamespaces.data,
+        },
+      });
+      expect(dataResult.objects?.length).toBe(0);
+    });
   });
 });

@@ -25,7 +25,8 @@ export const GetBlueskyTargets = Operation.make({
   meta: {
     key: `${BLUESKY_OPERATION}.get-bluesky-targets`,
     name: 'Get Bluesky Targets',
-    description: 'List the user’s Bluesky timeline / likes / bookmarks plus saved custom feeds.',
+    description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
+    icon: 'ph--butterfly--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
@@ -45,6 +46,7 @@ export const SyncBlueskyTargets = Operation.make({
     key: `${BLUESKY_OPERATION}.sync-bluesky-targets`,
     name: 'Sync Bluesky',
     description: 'Pull posts for currently-selected Bluesky targets in an Integration.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],

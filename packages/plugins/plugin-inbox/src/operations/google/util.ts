@@ -43,19 +43,51 @@ const preprocessHtml = (html: string): string => {
 
 const toMarkdown = (html: string): string => turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
 
+/**
+ * Strip residual HTML/XML tags that survive turndown conversion (e.g., MS Office namespaced
+ * tags like <o:p>, <v:shape>, conditional comments, stray <span style=...>).
+ *
+ * Namespaced tags and MS conditional comments are stripped unconditionally — they have no
+ * meaning in genuine plaintext bodies. The generic inline-tag pass (<span>, <font>, <u>,
+ * <div>) is opt-in via `fromHtml` so we don't eat literal angle-bracketed text in plaintext
+ * messages.
+ */
+const stripResidualTags = (str: string, { fromHtml = false }: { fromHtml?: boolean } = {}): string => {
+  const cleaned = str
+    // 1. Conditional comments: <!--[if mso]>...<![endif]-->.
+    .replace(/<!--\s*\[if[^\]]*\][\s\S]*?<!\[endif\]\s*-->/gi, '')
+    // 2. Namespaced tags (<o:p>, <v:shape>, <w:WordDocument/>, <m:mathPr>, etc.).
+    .replace(/<\/?[a-zA-Z][\w-]*:[^>]*>/g, '');
+
+  // 3. Stray known-bad inline tags that survive turndown in edge cases — HTML pipeline only.
+  return fromHtml ? cleaned.replace(/<\/?(span|font|u|div)\b[^>]*>/gi, '') : cleaned;
+};
+
 const stripWhitespace = (str: string): string => {
+  // Invisible/whitespace characters that newsletters use to pad preview text:
+  // soft hyphen (U+00AD), combining grapheme joiner (U+034F), zero-width
+  // space/non-joiner/joiner (U+200B-U+200D), word joiner (U+2060), and BOM/
+  // ZWNBSP (U+FEFF), plus regular space, tab, and NBSP.
+  const INVISIBLE = ' \\t\\u00A0\\u00AD\\u034F\\u200B-\\u200D\\u2060\\uFEFF';
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return (
     str
       .trim()
-      // Blank out setext-underline / horizontal-rule lines (entirely `=` or `-`).
-      .replace(/^[ \t\u00A0]*[=-]+[ \t\u00A0]*$/gm, '')
+      // Blank out lines that contain only invisible/whitespace characters (newsletter padding).
+      .replace(new RegExp(`^[${INVISIBLE}]+$`, 'gm'), '')
+      // Convert setext-underline / horizontal-rule lines (3+ `=` or `-`) to a markdown HR.
+      .replace(/^[ \t\u00A0]*[=-]{3,}[ \t\u00A0]*$/gm, '---')
+      // Replace old-school sign-off dash with horizontal rule.
+      .replace(/\\--/g, '---')
+      // Blank out lines that contain no letter or digit (e.g., junk separators like `*****`,
+      // `,,,,`). Uses Unicode property escapes so non-Latin scripts (Cyrillic, CJK, etc.) are
+      // preserved. Empty lines are preserved as paragraph breaks; the `---` HR we just inserted
+      // is exempted so it survives.
+      .replace(/^(?!---$)[^\p{L}\p{N}\n]*$/gmu, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
       // Trim trailing whitespace from every line.
       .replace(/[ \t\u00A0]+$/gm, '')
-      // Replace old-school sign-off dash with horizontal rule.
-      .replace(/\\--/g, '---')
   );
 };
 
@@ -64,7 +96,9 @@ export const normalizeText = (text: string): string => {
   // Collapse runs of blank lines for both HTML (after markdown conversion) and
   // plain-text emails so the rendered message never shows more than one blank
   // line between paragraphs.
-  return stripWhitespace(isHTML(text) ? toMarkdown(text) : text);
+  const fromHtml = isHTML(text);
+  const converted = fromHtml ? toMarkdown(text) : text;
+  return stripWhitespace(stripResidualTags(converted, { fromHtml }));
 };
 
 // TODO(burdon): Customizable parser for plaintext.

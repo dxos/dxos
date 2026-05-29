@@ -8,7 +8,6 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 
 import { Agent } from '../../../types';
 
@@ -17,6 +16,7 @@ export const AgentWorker = Operation.make({
     key: 'org.dxos.function.agent.worker',
     name: 'Agent Worker',
     description: 'Agentic worker that drives the agent autonomously.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
@@ -27,13 +27,12 @@ export const AgentWorker = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    QueueService,
     Feed.FeedService,
     OperationRegistry.Service,
     Trace.TraceService,
     OpaqueToolkit.OpaqueToolkitProvider,
   ],
-}).pipe(Operation.intrinsic);
+});
 
 export const Qualifier = Operation.make({
   meta: {
@@ -41,6 +40,7 @@ export const Qualifier = Operation.make({
     name: 'Agent Qualifier',
     description:
       'Qualifier that determines if the event is relevant to the agent. Puts the data into the input queue of the agent.',
+    icon: 'ph--funnel--regular',
   },
   input: Schema.Struct({
     agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
@@ -48,13 +48,14 @@ export const Qualifier = Operation.make({
   }),
   output: Schema.Void,
   services: [AiService.AiService, Database.Service, Feed.FeedService],
-}).pipe(Operation.intrinsic);
+});
 
 export const GetContext = Operation.make({
   meta: {
     key: 'org.dxos.function.agent.get-context',
     name: 'Get Agent Context',
     description: 'Get the context of an agent.',
+    icon: 'ph--info--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
@@ -71,13 +72,14 @@ export const GetContext = Operation.make({
     ),
   }),
   services: [AiContext.Service, Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const AddArtifact = Operation.make({
   meta: {
     key: 'org.dxos.function.agent.add-artifact',
     name: 'Add artifact',
     description: 'Adds a new artifact.',
+    icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
     name: Schema.String.annotations({
@@ -89,4 +91,4 @@ export const AddArtifact = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContext.Service, Database.Service],
-}).pipe(Operation.intrinsic);
+});

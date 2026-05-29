@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
-import { Annotation, type Database, Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { Icon, IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -25,16 +24,13 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
   return (
     <ul className={mx('flex', classNames)}>
       {objects.map((obj) => {
-        const dxn = Obj.getDXN(obj);
+        const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
         const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
-        const { icon, hue } = Option.fromNullable(Obj.getSchema(obj)).pipe(
-          Option.flatMap(Annotation.IconAnnotation.get),
-          Option.getOrElse(() => ({ icon: DEFAULT_OBJECT_ICON, hue: undefined as string | undefined })),
-        );
+        const { icon, hue } = Obj.getIcon(obj) ?? { icon: DEFAULT_OBJECT_ICON, hue: undefined };
         const styles = hue ? getStyles(hue) : undefined;
         return (
-          <li key={dxn.toString()} className='dx-tag py-0 ps-2 flex items-center gap-1' data-hue='neutral'>
+          <li key={uri.toString()} className='dx-tag py-0 ps-2 flex items-center gap-1' data-hue='neutral'>
             <Icon icon={icon} size={4} classNames={styles?.foreground} />
             {toLocalizedString(label, t)}
             <IconButton
@@ -44,7 +40,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
               label={t('remove-object.label')}
               classNames='p-0 hover:bg-transparent'
               size={3}
-              onClick={() => onUpdateObject?.(dxn, false)}
+              onClick={() => onUpdateObject?.(uri, false)}
             />
           </li>
         );

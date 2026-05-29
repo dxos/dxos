@@ -17,6 +17,7 @@ export const Move = Operation.make({
     key: 'org.dxos.function.chess.move',
     name: 'Move',
     description: 'Makes a move in the given chess game.',
+    icon: 'ph--play--regular',
   },
   input: Schema.Struct({
     game: GameRef(Chess.State).annotations({
@@ -40,6 +41,7 @@ export const Play = Operation.make({
     key: 'org.dxos.function.chess.play',
     name: 'Play',
     description: 'Uses the chess engine to play the next move.',
+    icon: 'ph--play--regular',
   },
   input: Schema.Struct({
     game: GameRef(Chess.State).annotations({
@@ -66,6 +68,7 @@ export const Print = Operation.make({
     key: 'org.dxos.function.chess.print',
     name: 'Print game',
     description: 'Prints the chess game to ASCII.',
+    icon: 'ph--clipboard-text--regular',
   },
   input: Schema.Struct({
     pgn: Schema.optional(

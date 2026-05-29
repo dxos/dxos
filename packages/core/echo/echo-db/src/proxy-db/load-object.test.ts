@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -164,12 +164,12 @@ describe.skip('loadObjectReferences', () => {
 
   test('loads as array of non-nullable items', async () => {
     const Nested = Schema.Struct({ value: Schema.Number }).pipe(
-      Type.object({ typename: 'com.example.nested', version: '0.1.0' }),
+      Type.makeObject(DXN.make('com.example.nested', '0.1.0')),
     );
 
     const TestSchema = Schema.Struct({
       nested: Schema.Array(Ref.Ref(Nested)),
-    }).pipe(Type.object({ typename: 'com.example.test', version: '0.1.0' }));
+    }).pipe(Type.makeObject(DXN.make('com.example.test', '0.1.0')));
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);

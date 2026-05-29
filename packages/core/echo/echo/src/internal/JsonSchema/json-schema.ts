@@ -13,17 +13,24 @@ import type * as Types from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
+import type * as Type from '../../Type';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
 } from '../Annotation';
-import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../common/types';
+import {
+  ANY_OBJECT_TYPENAME,
+  ANY_OBJECT_VERSION,
+  EntityKind,
+  EntityKindSchema,
+  getStaticTypeSchema,
+} from '../common/types';
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
@@ -81,11 +88,22 @@ export type JsonSchemaOptions = {
 //  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
 // TODO(wittjosiah): This is mutable because its a pojo, perhaps should be left as readonly at type level though?
 export const toJsonSchema = (
-  schema: Schema.Schema.All,
+  schema: Schema.Schema.All | Type.AnyEntity,
   options: JsonSchemaOptions = {},
 ): Types.DeepMutable<JsonSchemaType> => {
+  // Allow passing a `Type.Type` entity — use its hidden source schema (or its
+  // already-built jsonSchema as a fallback).
+  const slot = getStaticTypeSchema(schema);
+  if (slot != null) {
+    schema = slot;
+  } else if (!Schema.isSchema(schema)) {
+    const entityJsonSchema = (schema as { jsonSchema?: JsonSchemaType }).jsonSchema;
+    if (entityJsonSchema != null) {
+      return entityJsonSchema as Types.DeepMutable<JsonSchemaType>;
+    }
+  }
   assertArgument(Schema.isSchema(schema), 'schema');
-  let jsonSchema = _toJsonSchemaAST(schema.ast);
+  let jsonSchema = _toJsonSchemaAST((schema as Schema.Schema.All).ast);
   if (options.strict) {
     // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
     jsonSchema = removeProperties(jsonSchema, (key, value) => {
@@ -340,9 +358,9 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
-    const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
+    const echoUri = root.$id.startsWith('echo:') || root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
     return createEchoReferenceSchema(
-      echoId,
+      echoUri,
       (echoRefinement as any).reference.typename,
       (echoRefinement as any).reference.version,
     );
@@ -363,14 +381,11 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
     throw new Error('Invalid reference field in ref schema');
   }
 
-  const targetSchemaDXN = DXN.parse(reference.schema.$ref);
-  invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
+  const ref = reference.schema.$ref;
+  const targetSchemaDXN = DXN.tryMake(ref);
+  invariant(targetSchemaDXN, `Expected a type DXN, got: ${ref}`);
 
-  return createEchoReferenceSchema(
-    targetSchemaDXN.toString(),
-    targetSchemaDXN.kind === DXN.kind.TYPE ? targetSchemaDXN.parts[0] : undefined,
-    reference.schemaVersion,
-  );
+  return createEchoReferenceSchema(ref, DXN.getName(targetSchemaDXN), reference.schemaVersion);
 };
 
 //
@@ -391,10 +406,11 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
     schemaFields[ECHO_ANNOTATIONS_NS_KEY] = echoAnnotations;
   }
 
+  // For stored schemas the storage URI is the definitive identifier — it overrides
+  // the typename `$id` written above.
   const echoIdentifier = annotations[TypeIdentifierAnnotationId];
   if (echoIdentifier) {
-    schemaFields[ECHO_ANNOTATIONS_NS_KEY] ??= {};
-    schemaFields[ECHO_ANNOTATIONS_NS_KEY].schemaId = echoIdentifier;
+    schemaFields.$id = echoIdentifier;
   }
 
   // Custom (at end).
@@ -409,14 +425,14 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
 };
 
 const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefined => {
-  // Limit to dxn:echo: URIs.
-  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
+  // For stored schemas `$id` IS the storage URI (echo:/… or legacy dxn:echo:…).
+  if (schema.$id && (schema.$id.startsWith('echo:') || schema.$id.startsWith('dxn:echo:'))) {
     return schema.$id;
-  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
-    const id = schema?.echo?.type?.schemaId;
-    if (ObjectId.isValid(id)) {
-      return DXN.fromLocalObjectId(id).toString();
-    }
+  }
+  // Legacy: older serializations stored the EchoURI on echo.type.schemaId.
+  const legacySchemaId = schema.echo?.type?.schemaId;
+  if (legacySchemaId) {
+    return ObjectId.isValid(legacySchemaId) ? EchoURI.make({ objectId: legacySchemaId }) : legacySchemaId;
   }
   return undefined;
 };
@@ -433,8 +449,8 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
     if (annotation.kind === EntityKind.Relation) {
       const source = schema.relationSource?.$ref ?? raise(new Error('Relation source not set'));
       const target = schema.relationTarget?.$ref ?? raise(new Error('Relation target not set'));
-      annotation.sourceSchema = DXN.parse(source).toString();
-      annotation.targetSchema = DXN.parse(target).toString();
+      annotation.sourceSchema = DXN.tryMake(source) ?? raise(new Error(`Invalid relation source: ${source}`));
+      annotation.targetSchema = DXN.tryMake(target) ?? raise(new Error(`Invalid relation target: ${target}`));
     }
 
     return annotation;
@@ -470,7 +486,9 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   if (typeAnnotation) {
     annotations[TypeAnnotationId] = typeAnnotation;
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
-      identifier: typeIdentifier,
+      // $id is the typename DXN — the schema's type identity. The storage EchoURI (if any)
+      // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
+      identifier: DXN.make(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,

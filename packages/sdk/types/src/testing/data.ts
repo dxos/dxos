@@ -535,7 +535,7 @@ export const seedTestData = async (space: Space) => {
 
   // for (const document of TestData.documents) {
   //   const obj = space.db.add(Obj.make(Document, document));
-  //   const dxn = Ref.make(obj).dxn.toString();
+  //   const dxn = Ref.make(obj).uri;
   //   document.dxn = dxn;
   // }
 

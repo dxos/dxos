@@ -196,8 +196,8 @@ export class ComputeGraph extends Resource {
   }
 
   /**
-   * Map from binding to fully qualified ECHO DXN (to store).
-   * E.g., HELLO() => dxn:echo:spaceId:objectId()
+   * Map from binding to fully qualified ECHO URI (to store).
+   * E.g., HELLO() => echo://spaceId/objectId()
    */
   mapFunctionBindingToId(formula: string): string {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
@@ -207,8 +207,8 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = Obj.getDXN(fn).toString();
-        return `${id}(${args})`;
+        const uri = Obj.getURI(fn);
+        return `${uri}(${args})`;
       } else {
         return match;
       }
@@ -216,21 +216,20 @@ export class ComputeGraph extends Resource {
   }
 
   /**
-   * Map from fully qualified ECHO DXN to binding (from store).
-   * E.g., dxn:echo:spaceId:objectId() => HELLO()
+   * Map from fully qualified ECHO URI to binding (from store).
+   * E.g., echo://spaceId/objectId() => HELLO()
    */
   mapFunctionBindingFromId(formula: string): string | undefined {
-    const binding = formula.replace(
-      /dxn:([^:]+):([^:(]+):([a-zA-Z0-9]+)\((.*)\)/g,
-      (_match, kind, spaceTag, objectId, args) => {
-        const dxn = `dxn:${kind}:${spaceTag}:${objectId}`;
-        const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === dxn);
-        if (fn?.binding) {
-          return `${fn.binding}(${args})`;
-        } else {
-          return UNKNOWN_BINDING;
-        }
-      },
+    const replaceMatch = (uri: string, args: string) => {
+      const fn = this._remoteFunctions.find((fn) => Obj.getURI(fn) === uri);
+      if (fn?.binding) {
+        return `${fn.binding}(${args})`;
+      }
+      return UNKNOWN_BINDING;
+    };
+
+    const binding = formula.replace(/echo:\/\/([^/(]+)\/([a-zA-Z0-9]+)\((.*)\)/g, (_match, spaceId, objectId, args) =>
+      replaceMatch(`echo://${spaceId}/${objectId}`, args),
     );
 
     if (binding.startsWith(`=${UNKNOWN_BINDING}`)) {

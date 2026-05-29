@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({
-  message: Message.Message,
+  message: Type.getSchema(Message.Message),
   objects: Schema.optional(Schema.Array(Obj.Unknown)),
   options: Schema.optional(
     Schema.Struct({
@@ -19,14 +19,12 @@ export const ExtractionInput = Schema.Struct({
     }),
   ),
 });
-export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> {}
-
+export type ExtractionInput = Schema.Schema.Type<typeof ExtractionInput>;
 export const ExtractionOutput = Schema.Struct({
-  message: Message.Message,
+  message: Type.getSchema(Message.Message),
   timeElapsed: Schema.Number,
 });
-export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> {}
-
+export type ExtractionOutput = Schema.Schema.Type<typeof ExtractionOutput>;
 export type ProcessTranscriptMessageProps = {
   input: ExtractionInput;
   function: Operation.Definition<ExtractionInput, ExtractionOutput>;
@@ -57,6 +55,7 @@ export const extractionAnthropicFunction = Operation.make({
     key: 'org.dxos.function.extraction.anthropic',
     name: 'Entity Extraction (Anthropic)',
     description: 'Extract entities from transcript using Anthropic LLM.',
+    icon: 'ph--text-t--regular',
   },
   input: ExtractionInput,
   output: ExtractionOutput,
@@ -71,6 +70,7 @@ export const extractionNerFunction = Operation.make({
     key: 'org.dxos.function.extraction.ner',
     name: 'Entity Extraction (NER)',
     description: 'Extract entities from transcript using Named Entity Recognition.',
+    icon: 'ph--text-t--regular',
   },
   input: ExtractionInput,
   output: ExtractionOutput,

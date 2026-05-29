@@ -12,9 +12,10 @@ import { createPortal } from 'react-dom';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
@@ -22,7 +23,6 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -262,7 +262,7 @@ MarkdownEditorBlocks.displayName = MARKDOWN_EDITOR_BLOCKS_NAME;
 
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
-  const dxn = DXN.parse(link.dxn);
+  const dxn = URI.make(link.dxn);
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 

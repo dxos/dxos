@@ -4,8 +4,10 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
+import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -15,14 +17,14 @@ import { Process, Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { EchoURI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
@@ -36,20 +38,23 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
-    const { branches, commits, spanTree, details } = useExecutionGraph(space);
-    const monitor = useCapability(Capabilities.ProcessMonitor);
-    const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+
+    // `useDeferredValue` batches update bursts, works together with `React.memo`.
+    // See the comment in `ProcessTreeContainer` for more details.
+    const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
     const handleCommitSelect = useCallback(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
-          const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
-          if (dxn?.spaceId && dxn.echoId) {
+          const echoUri = EchoURI.tryParse(commit.link);
+          const spaceId = echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
+          const objectId = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+          if (spaceId && objectId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
             void invokePromise(LayoutOperation.Open, {
-              subject: [`${dxn.spaceId}:${dxn.echoId}`],
+              subject: [`${spaceId}:${objectId}`],
             });
           }
         }
@@ -82,11 +87,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         })}
         ref={forwardedRef}
       >
-        <ProcessTree
-          processes={processes}
-          onProcessSelect={handleProcessSelect}
-          onProcessTerminate={onProcessTerminate}
-        />
+        <ProcessTreeContainer onProcessSelect={handleProcessSelect} onProcessTerminate={onProcessTerminate} />
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
@@ -137,11 +138,11 @@ type UseExecutionGraphOptions = {
 
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
-  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
   const atom = useMemo(
-    () => getExecutionGraph(space, activeProcesses, { eventLimit }),
-    [space, activeProcesses, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { eventLimit }),
+    [space, processesAtom, eventLimit],
   );
 
   return useAtomValue(atom);
@@ -149,29 +150,64 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 
 const getExecutionGraph = (
   space: Space,
-  activeProcesses: readonly Process.Info[] = [],
-  { eventLimit = 300 }: UseExecutionGraphOptions = {},
+  processesAtom: Atom.Atom<readonly Process.Info[]>,
+  { eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
-  return pipe(
+  const traceMessages = pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
-    Atom.map((feeds) => {
-      log('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
+    Atom.map((feeds) =>
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-      return AtomQuery.make(
+      AtomQuery.make(
         space.db,
         feeds.length > 0
           ? Query.type(Trace.Message).from(feeds[0])
           : (Query.select(Filter.nothing()) as Query.Query<never>),
-      );
-    }),
-    (_) => Atom.make((get) => get(get(_))),
-    (_) =>
-      Atom.make((get) =>
-        buildExecutionGraph({
-          traceMessages: [...get(_)],
-          activeProcesses,
-          eventLimit,
-        }),
       ),
+    ),
+    (atom) => Atom.make((get) => get(get(atom))),
+  );
+
+  const activeProcesses = pipe(
+    processesAtom,
+    Atom.debounce(Duration.millis(100)),
+    Atom.map((processes) =>
+      // `Data.array` does structural comparison on the array elements.
+      Data.array(
+        processes
+          .filter((process) => process.state === Process.State.RUNNING || process.state === Process.State.HYBERNATING)
+          .map(Data.struct),
+      ),
+    ),
+  );
+
+  return Atom.make((get) =>
+    buildExecutionGraph({
+      traceMessages: get(traceMessages),
+      activeProcesses: get(activeProcesses),
+      eventLimit,
+    }),
+  );
+};
+TracePanel.displayName = 'TracePanel';
+
+// Isolate `ProcessTree` updates from the rest of the panel.
+// TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
+const ProcessTreeContainer = ({
+  onProcessSelect,
+  onProcessTerminate,
+}: Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'>) => {
+  const monitor = useCapability(Capabilities.ProcessMonitor);
+  const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+
+  // `processes` updates in bursts (about 14 updates per navigation).
+  // `useDeferredValue` will debounce update propagation, returning stale value for short periods.
+  // NOTE: `ProcessTree` MUST use `React.memo`, otherwise this will not work.
+  const processesDeferred = useDeferredValue(processes);
+  return (
+    <ProcessTree
+      processes={processesDeferred}
+      onProcessSelect={onProcessSelect}
+      onProcessTerminate={onProcessTerminate}
+    />
   );
 };

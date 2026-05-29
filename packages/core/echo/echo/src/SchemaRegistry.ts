@@ -72,22 +72,21 @@ export type RegisterSchemaInput =
       name?: string;
     };
 
-export type ExtractQueryResult<Query> = Query extends { location: ('database' | 'runtime')[] }
-  ? Type.AnyEntity
-  : Type.RuntimeType;
-
 // TODO(dmaretskyi): Rename TypeRegistry
 export interface SchemaRegistry {
   /**
    * Checks if the provided schema is registered.
    */
-  // TODO(burdon): Type?
   hasSchema(schema: Type.AnyEntity): boolean;
 
   /**
-   * Registers the provided schema.
+   * Registers the provided schema(s).
    *
-   * @returns Mutable runtime instances of schemas that were registered.
+   * @returns The persisted type entities. The entity kind of each input is
+   * preserved (an object schema comes back as `Type.AnyObj`), so the result can
+   * be chained into `Obj.make` / `Relation.make` without casts. Each stored
+   * schema is also a `Type.Type` record, so its `Ref` targets a
+   * `Ref(Type.Type)` field.
    *
    * The behavior of this method depends on the state of the database.
    * The general principle is that the schema will be upserted into the space.
@@ -95,12 +94,8 @@ export interface SchemaRegistry {
    * If a different schema with the same name and version exists, the method throws an error.
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
-  register(input: RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
+  register<T extends Type.AnyEntity>(input: T[]): Promise<T[]>;
+  register(input: RegisterSchemaInput[]): Promise<Type.Type[]>;
 
-  /**
-   *
-   */
-  query<Q extends Types.NoExcessProperties<Query, Q>>(
-    query?: Q & Query,
-  ): QueryResult.QueryResult<ExtractQueryResult<Q>>;
+  query<Q extends Types.NoExcessProperties<Query, Q>>(query?: Q & Query): QueryResult.QueryResult<Type.Type>;
 }

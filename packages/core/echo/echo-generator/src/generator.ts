@@ -3,8 +3,7 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, type Type } from '@dxos/echo';
-import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
@@ -36,10 +35,10 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   getSchema(type: T): Type.AnyObj | undefined {
-    return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
+    return this.schemas.find((schema) => Type.getTypename(schema) === type);
   }
 
-  protected setSchema(type: T, schema: Type.AnyObj): void {
+  protected setSchema(type: T, schema: Type.AnyEntity): void {
     this._schemas[type] = schema;
   }
 
@@ -90,7 +89,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   async addSchemas() {
-    const result: Type.AnyObj[] = [];
+    const result: Type.AnyEntity[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
       const echoSchema = await this._maybeRegisterSchema(typename, schema as Type.AnyObj);
       this.setSchema(typename as T, echoSchema);
@@ -108,8 +107,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyObj> {
-    if (schema instanceof EchoSchema) {
+  private async _maybeRegisterSchema(typename: string, schema: Type.AnyEntity): Promise<Type.AnyEntity> {
+    if (Type.getDatabase(schema) != null) {
       const existingSchema = this._space.internal.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;
@@ -128,7 +127,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: Obj.Any, params: MutationsProviderProps): Promise<void> {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getTypeAnnotation(Obj.getSchema(object)!)!.typename as T;
+    const type = Type.getTypename(Obj.getType(object)!) as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);

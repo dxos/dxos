@@ -19,6 +19,7 @@ export const AttachImage = Operation.make({
   meta: {
     key: 'org.dxos.function.plugin-crm.attach-image',
     name: 'Attach image',
+    icon: 'ph--image--regular',
     description: trim`
       Downloads an external image URL and stores it on the DXOS image service,
       then writes the canonical URL onto the subject's \`image\` field.

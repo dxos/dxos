@@ -6,7 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import { Trigger } from '@dxos/compute';
 import { Process } from '@dxos/compute';
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof ...EventSchema>`
+// in the emitted .d.ts; the namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Feed, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
@@ -104,14 +107,9 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.invocationTraceStart',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceStart', '0.1.0')));
 
-export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> {}
+export interface InvocationTraceStartEvent extends Type.InstanceType<typeof InvocationTraceStartEvent> {}
 
 export const InvocationTraceEndEvent = Schema.Struct({
   /**
@@ -132,14 +130,9 @@ export const InvocationTraceEndEvent = Schema.Struct({
   outcome: Schema.Enums(InvocationOutcome),
 
   error: Schema.optional(SerializedError),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.invocationTraceEnd',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0')));
 
-export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> {}
+export interface InvocationTraceEndEvent extends Type.InstanceType<typeof InvocationTraceEndEvent> {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
@@ -159,9 +152,9 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.object({ typename: 'org.dxos.type.traceEvent', version: '0.1.0' }));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.traceEvent', '0.1.0')));
 
-export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
+export type TraceEvent = Type.InstanceType<typeof TraceEvent>;
 
 /**
  * InvocationTrace event format.

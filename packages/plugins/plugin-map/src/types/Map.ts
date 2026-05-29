@@ -4,34 +4,35 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Obj, Ref, Type, View } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof MapSchema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, Format, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
-export const Map = Schema.Struct({
+const MapSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
-
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
-
   center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
   zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
   //   e.g., points, lines, polygons, etc.
   coordinates: Schema.Array(Format.GeoPoint).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.map',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--compass--regular',
     hue: 'green',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.map', '0.1.0')),
 );
 
-export interface Map extends Schema.Schema.Type<typeof Map> {}
+// TODO(wittjosiah): Try to clean up this type inference.
+export interface Map extends Type.InstanceType<typeof MapSchema> {}
+export const Map: Type.Obj<Map> = MapSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
   view?: View.View;

@@ -31,6 +31,7 @@ export const MarkdownField = ({
   type,
   readonly,
   label,
+  jsonPath,
   placeholder,
   layout,
   db,
@@ -80,7 +81,7 @@ export const MarkdownField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       {layout === 'static' ? renderStatic() : renderEditor()}
       {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
@@ -104,8 +105,7 @@ type RefMarkdownEditorProps = {
 const RefMarkdownEditor = ({ reference, placeholder }: RefMarkdownEditorProps) => {
   const text = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
   const dataExtensions = useMemo(
-    () =>
-      text ? [createDataExtensions({ id: reference.dxn.toString(), text: createDocAccessor(text, ['content']) })] : [],
+    () => (text ? [createDataExtensions({ id: reference.uri, text: createDocAccessor(text, ['content']) })] : []),
     [text, reference],
   );
   const extensions = useBasicMarkdownExtensions({ placeholder, extensions: dataExtensions });

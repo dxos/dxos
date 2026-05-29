@@ -5,6 +5,7 @@
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useEffect, useMemo } from 'react';
 
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
@@ -16,7 +17,6 @@ import {
   createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 

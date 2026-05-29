@@ -209,6 +209,42 @@ describe('FeedSyncer', () => {
     });
   });
 
+  test('pushes unpositioned backlog on open without new local writes', async () => {
+    const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+    });
+    const clientFeedId = ObjectId.random();
+
+    await clientFeedStore
+      .appendLocal([
+        {
+          spaceId,
+          feedId: clientFeedId,
+          feedNamespace: syncNamespace,
+          data: new Uint8Array([9, 8, 7]),
+        },
+      ])
+      .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+
+    await syncer.open(new Context());
+
+    await vi.waitFor(async () => {
+      const { blocks } = await serverFeedStore
+        .query({
+          spaceId,
+          feedNamespace: syncNamespace,
+          position: -1,
+          query: { feedIds: [clientFeedId] },
+        })
+        .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
+      expect(blocks[0].position).toBeDefined();
+    });
+  });
+
   test('requestPoll triggers best-effort pull for a space', async () => {
     const spaceId = SpaceId.random();
     const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({

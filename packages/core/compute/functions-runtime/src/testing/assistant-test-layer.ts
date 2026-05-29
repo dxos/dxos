@@ -29,10 +29,10 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Tag, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
-import { configuredCredentialsLayer, QueueService } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
@@ -77,7 +77,6 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | QueueService
   | Blueprint.RegistryService
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
@@ -133,7 +132,7 @@ export const AssistantTestLayer = ({
                 if (!context.conversation) {
                   return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
                 }
-                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const binder = yield* acquireReleaseResource(
                   () =>
@@ -150,7 +149,7 @@ export const AssistantTestLayer = ({
                 if (!context.conversation) {
                   return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
                 }
-                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const session = yield* acquireReleaseResource(
                   () =>
@@ -169,7 +168,6 @@ export const AssistantTestLayer = ({
               AiService.AiService,
               OperationRegistry.Service,
               Blueprint.RegistryService,
-              QueueService,
             ),
           );
         }),

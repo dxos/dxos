@@ -12,10 +12,10 @@ import { Event } from '@dxos/async';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 

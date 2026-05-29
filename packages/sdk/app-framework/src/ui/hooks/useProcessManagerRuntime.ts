@@ -4,9 +4,10 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
-import { ServiceResolver } from '@dxos/compute';
+import { Operation, ServiceResolver } from '@dxos/compute';
 import { unwrapExit } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 
@@ -26,6 +27,12 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * The `tags` tuple must list every service the effect requires (beyond the
  * fixed {@link Capabilities.ProcessManagerRuntimeServices}); these services are
  * resolved for the given `spaceId` through the runtime's service resolver.
+ *
+ * Nested `Operation.invoke` / `Operation.schedule` calls within the effect
+ * inherit `spaceId` as a default {@link Operation.InvokeOptions} so that
+ * spawned operation processes have a space context (and therefore can resolve
+ * space-scoped services like `Database.Service`) without each call site having
+ * to thread the id through manually.
  */
 export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, any>[], T>(
   spaceId: SpaceId | undefined,
@@ -38,7 +45,10 @@ export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, an
     if (spaceId === undefined) {
       throw new TypeError('Space not provided to useSpaceCallback');
     }
-    const layer = ServiceResolver.provide({ space: spaceId }, ...tags);
+    const layer = Layer.merge(
+      ServiceResolver.provide({ space: spaceId }, ...tags),
+      Operation.withInvocationOptions({ spaceId }),
+    );
     return runtime.runPromise(fn().pipe(Effect.provide(layer)) as Effect.Effect<T, any, any>);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runtime, spaceId, ...(deps ?? [])]);

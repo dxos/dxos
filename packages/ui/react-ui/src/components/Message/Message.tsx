@@ -92,7 +92,7 @@ type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primi
   onClose?: () => void;
 };
 
-const MESSAGE_TITLE_NAME = 'MessageTitle';
+const MESSAGE_TITLE_NAME = 'Message.Title';
 
 const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
   ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
@@ -132,7 +132,7 @@ type MessageContentProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Pri
   asChild?: boolean;
 };
 
-const MESSAGE_CONTENT_NAME = 'MessageContent';
+const MESSAGE_CONTENT_NAME = 'Message.Content';
 
 const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {

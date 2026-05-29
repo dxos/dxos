@@ -65,7 +65,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
           <NavTreeItemAction
             testId={primaryAction.properties?.testId}
             label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
+            icon={primaryAction.properties?.icon ?? 'ph--circle-dashed--regular'}
             parent={item}
             path={path}
             monolithic={Node.isAction(primaryAction)}

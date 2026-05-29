@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import { type GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -25,7 +25,7 @@ import { createDefectLogger, pickProperty } from '../util';
 // TODO(burdon): Rename.
 export class Workflow {
   constructor(
-    private readonly _dxn: DXN,
+    private readonly _uri: URI.URI,
     private readonly _graph: ComputeGraphModel,
     private readonly _executor: GraphExecutor,
     private readonly _resolvedNodeById: Map<string, Executable>,
@@ -34,7 +34,7 @@ export class Workflow {
   run(input: ValueBag<any>): ComputeResult<ValueBag<any>> {
     const inputNodes = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
     if (inputNodes.length !== 1) {
-      throw new Error(`Ambiguous workflow(${this._dxn.toString()}) entrypoint, use runFrom(inputNodeId, args) method.`);
+      throw new Error(`Ambiguous workflow(${this._uri}) entrypoint, use runFrom(inputNodeId, args) method.`);
     }
     return this.runFrom(inputNodes[0].id, input);
   }
@@ -54,7 +54,7 @@ export class Workflow {
     }
 
     if (!inputExists) {
-      throw new Error(`No ${inputNodeId} node exists in workflow ${this._dxn.toString()}.`);
+      throw new Error(`No ${inputNodeId} node exists in workflow ${this._uri}.`);
     }
 
     const allAffectedNodes = executor.getAllDependantNodes(inputNodeId);
@@ -64,7 +64,7 @@ export class Workflow {
         const executable = this._requireResolved(nodeId);
         const computingOutputs = executable.exec != null;
         const effect = computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId);
-        return effect.pipe(Effect.withSpan('workflowNode', { attributes: { workflowDXN: this._dxn, nodeId } }));
+        return effect.pipe(Effect.withSpan('workflowNode', { attributes: { workflowUri: this._uri, nodeId } }));
       });
 
       const results = yield* Effect.all(tasks);
@@ -74,7 +74,7 @@ export class Workflow {
       return outputNodeIndex >= 0 ? results[outputNodeIndex] : ValueBag.make({});
     })
       .pipe(createDefectLogger())
-      .pipe(Effect.withSpan('workflow', { attributes: { workflowDXN: this._dxn } }));
+      .pipe(Effect.withSpan('workflow', { attributes: { workflowUri: this._uri } }));
   }
 
   getResolvedNode(nodeId: string): Executable | undefined {
@@ -112,12 +112,12 @@ export class Workflow {
   async asExecutable(): Promise<Executable> {
     const inputNodes = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
     if (inputNodes.length !== 1) {
-      throw new Error(`Workflow(${this._dxn.toString()}) can't be an executable: no unique input node.`);
+      throw new Error(`Workflow(${this._uri}) can't be an executable: no unique input node.`);
     }
 
     const outputNodes = this._graph.nodes.filter((node) => node.type === NODE_OUTPUT);
     if (outputNodes.length !== 1) {
-      throw new Error(`Workflow(${this._dxn.toString()}) can't be an executable: no unique output node.`);
+      throw new Error(`Workflow(${this._uri}) can't be an executable: no unique output node.`);
     }
 
     return compileOrThrow({
@@ -137,7 +137,7 @@ export class Workflow {
   private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
-      throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);
+      throw new Error(`Node ${nodeId} was not resolved in ${this._uri}.`);
     }
     return resolved;
   }

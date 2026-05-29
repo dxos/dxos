@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-sidekick",
   "version": "0.8.3",
+  "private": true,
   "description": "Personal companion agent plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -60,6 +61,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -108,8 +110,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

@@ -171,6 +171,16 @@ export const palette = {
   hues: styles,
 };
 
+const validHues: ReadonlySet<Hue> = new Set<Hue>([neutral.hue, ...styles.map((s) => s.hue)]);
+
+/**
+ * Normalise an arbitrary string into a known `Hue`, falling back to `'neutral'` when the
+ * input doesn't match one of the catalogued palette entries. Useful when accepting hue
+ * values from user-authored data (e.g. ECHO objects, plugin settings) that need to be
+ * forwarded to a hue-keyed prop like `Tag`'s `palette`.
+ */
+export const toHue = (hue: string | undefined): Hue => (hue && validHues.has(hue as Hue) ? (hue as Hue) : 'neutral');
+
 // TODO(burdon): Rename getClassNames.
 export const getStyles = (hue: string): ColorStyles => {
   return styles.find((color) => color.hue === hue) || neutral;

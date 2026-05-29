@@ -4,20 +4,20 @@
 
 import { type ObjectMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import { deepMapValues } from '@dxos/util';
+import { EchoURI } from '@dxos/keys';
+import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
 import { Ref } from '../../Ref';
 import {
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  ATTR_SELF_DXN,
+  ATTR_SELF_URI,
   ATTR_TYPE,
   MetaId,
   RelationSourceDXNId,
   RelationTargetDXNId,
-  SelfDXNId,
+  SelfURIId,
   TypeId,
 } from '../types';
 
@@ -48,26 +48,26 @@ export const typedJsonSerializer = function (this: any) {
   };
 
   if (this[TypeId]) {
-    result[ATTR_TYPE] = this[TypeId].toString();
+    result[ATTR_TYPE] = this[TypeId];
   }
 
   if (this[MetaId]) {
     result[ATTR_META] = serializeMeta(this[MetaId]);
   }
 
-  if (this[SelfDXNId]) {
-    result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
+  if (this[SelfURIId]) {
+    result[ATTR_SELF_URI] = this[SelfURIId];
   }
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
-    invariant(sourceDXN instanceof DXN);
-    result[ATTR_RELATION_SOURCE] = sourceDXN.toString();
+    invariant(EchoURI.isEchoURI(sourceDXN));
+    result[ATTR_RELATION_SOURCE] = sourceDXN;
   }
   if (this[RelationTargetDXNId]) {
     const targetDXN = this[RelationTargetDXNId];
-    invariant(targetDXN instanceof DXN);
-    result[ATTR_RELATION_TARGET] = targetDXN.toString();
+    invariant(EchoURI.isEchoURI(targetDXN));
+    result[ATTR_RELATION_TARGET] = targetDXN;
   }
 
   Object.assign(result, serializeData(rest));
@@ -79,6 +79,9 @@ const serializeData = (data: unknown) => {
     if (Ref.isRef(value)) {
       // TODO(dmaretskyi): Should this be configurable?
       return value.noInline().encode();
+    }
+    if (value instanceof Uint8Array) {
+      return encodeUint8ArrayToJson(value);
     }
 
     return recurse(value);

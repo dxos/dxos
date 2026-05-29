@@ -56,7 +56,9 @@ export interface OperationInvoker {
    */
   schedule: <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<void>;
   invokePromise: <I, O>(
     op: Operation.Definition<I, O>,
@@ -148,8 +150,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   // Arrow function to preserve `this` context when destructured.
   schedule = <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
-  ): Effect.Effect<void> => this._followupScheduler.schedule(op, ...(args as [I]));
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
+  ): Effect.Effect<void> => this._followupScheduler.schedule(op, ...(args as [I, Operation.InvokeOptions?]));
 
   // Arrow function to preserve `this` context when destructured.
   invoke = <I, O>(

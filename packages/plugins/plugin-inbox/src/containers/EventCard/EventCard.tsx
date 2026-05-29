@@ -14,7 +14,7 @@ export type EventCardProps = AppSurface.ObjectCardProps<Event.Event>;
 
 export const EventCard = ({ subject: event }: EventCardProps) => {
   return (
-    <Card.Content>
+    <Card.Body>
       <Card.Row icon='ph--calendar--regular'>
         <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
       </Card.Row>
@@ -28,6 +28,6 @@ export const EventCard = ({ subject: event }: EventCardProps) => {
           <Card.Text>{attendee.name}</Card.Text>
         </Card.Row>
       ))}
-    </Card.Content>
+    </Card.Body>
   );
 };

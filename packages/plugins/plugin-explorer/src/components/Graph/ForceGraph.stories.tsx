@@ -48,15 +48,15 @@ const DefaultStory = () => {
       if (!obj) {
         return;
       }
-      const dxn = Obj.getDXN(obj)?.toString();
-      if (!dxn) {
+      const uri = Obj.getURI(obj);
+      if (!uri) {
         return;
       }
       const target = event.target as HTMLElement;
       target.dispatchEvent(
         new DxAnchorActivate({
-          dxn,
-          label: Obj.getLabel(obj) ?? dxn,
+          dxn: uri,
+          label: Obj.getLabel(obj) ?? uri,
           trigger: target,
           kind: 'card',
         }),

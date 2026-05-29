@@ -4,7 +4,18 @@
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type ForwardRefExoticComponent,
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
@@ -33,10 +44,121 @@ import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
+import {
+  SegmentedDate,
+  type SegmentedDateProps,
+  SegmentedDateTime,
+  type SegmentedDateTimeProps,
+  SegmentedTime,
+  type SegmentedTimeProps,
+} from './SegmentedInput';
 
 type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
+
+//
+// Trigger context — lets a sibling `Input.TriggerIcon` open a picker registered by a field inside
+// the same `Input.Root`. Each registered handler is keyed; the most recent registration wins.
+//
+
+type InputTriggerHandler = () => void;
+
+type InputTriggerContextValue = {
+  registerTrigger: (handler: InputTriggerHandler) => () => void;
+  trigger: () => void;
+  hasTrigger: boolean;
+};
+
+const InputTriggerContext = createContext<InputTriggerContextValue | undefined>(undefined);
+
+/**
+ * Field hook. Pass an opener function; while the field is mounted, an `Input.TriggerIcon`
+ * sibling will call this opener on press. Returns a no-op when used outside `Input.Root`.
+ */
+const useInputTrigger = (handler: InputTriggerHandler | undefined) => {
+  const ctx = useContext(InputTriggerContext);
+  useEffect(() => {
+    if (!ctx || !handler) {
+      return;
+    }
+    return ctx.registerTrigger(handler);
+  }, [ctx, handler]);
+};
+
+//
+// Root — wraps the @dxos/react-input primitive root with the trigger registry.
+//
+
+const Root = (props: InputRootProps) => {
+  const handlerRef = useRef<InputTriggerHandler | null>(null);
+  const [hasTrigger, setHasTrigger] = useState(false);
+
+  const registerTrigger = useCallback((handler: InputTriggerHandler) => {
+    handlerRef.current = handler;
+    setHasTrigger(true);
+    return () => {
+      if (handlerRef.current === handler) {
+        handlerRef.current = null;
+        setHasTrigger(false);
+      }
+    };
+  }, []);
+
+  const trigger = useCallback(() => {
+    handlerRef.current?.();
+  }, []);
+
+  const value = useMemo(() => ({ registerTrigger, trigger, hasTrigger }), [registerTrigger, trigger, hasTrigger]);
+
+  return (
+    <InputTriggerContext.Provider value={value}>
+      <InputRoot {...props} />
+    </InputTriggerContext.Provider>
+  );
+};
+
+Root.displayName = 'Input.Root';
+
+//
+// TriggerIcon — sibling button that opens the picker of the registered field. Renders nothing
+// when no field in the surrounding `Input.Root` has registered an opener.
+//
+
+type TriggerIconProps = ThemedClassName<
+  Omit<ComponentPropsWithRef<'button'>, 'children' | 'onClick'> & {
+    icon?: string;
+  }
+>;
+
+const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
+  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, ...props }, forwardedRef) => {
+    const ctx = useContext(InputTriggerContext);
+    const { tx } = useThemeContext();
+    if (!ctx?.hasTrigger) {
+      return null;
+    }
+
+    return (
+      <button
+        type='button'
+        ref={forwardedRef}
+        aria-label={ariaLabel ?? 'Open picker'}
+        {...props}
+        onClick={ctx.trigger}
+        className={tx('input.triggerIcon', {}, classNames) ?? undefined}
+      >
+        <Icon size={4} icon={icon} />
+      </button>
+    );
+  },
+);
+
+TriggerIcon.displayName = 'Input.TriggerIcon';
+
+//
+// Label
+//
 
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
@@ -48,6 +170,12 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, 
     </LabelPrimitive>
   );
 });
+
+Label.displayName = 'Input.Label';
+
+//
+// Description
+//
 
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
@@ -61,6 +189,12 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
     );
   },
 );
+
+Description.displayName = 'Input.Description';
+
+//
+// Validation
+//
 
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
@@ -80,6 +214,12 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
   },
 );
 
+Validation.displayName = 'Input.Validation';
+
+//
+// DescriptionAndValidation
+//
+
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
@@ -96,6 +236,12 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
     );
   },
 );
+
+DescriptionAndValidation.displayName = 'Input.DescriptionAndValidation';
+
+//
+// PinInput
+//
 
 type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
@@ -120,7 +266,12 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   },
 );
 
+PinInput.displayName = 'Input.PinInput';
+
+//
+// TextInput
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
+//
 
 type AutoFillProps = {
   noAutoFill?: boolean;
@@ -162,6 +313,30 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
   },
 );
 
+TextInput.displayName = 'Input.TextInput';
+
+//
+// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
+// spinbutton semantics, and immutable separators. ISO string API:
+//   - Date     `YYYY-MM-DD`
+//   - Time     `HH:mm`
+//   - DateTime `YYYY-MM-DDTHH:mm`
+// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
+// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
+//
+
+const Time = SegmentedTime;
+const Date_ = SegmentedDate;
+const DateTime = SegmentedDateTime;
+
+type TimeProps = SegmentedTimeProps;
+type DateInputProps = SegmentedDateProps;
+type DateTimeInputProps = SegmentedDateTimeProps;
+
+//
+// TextArea
+//
+
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
@@ -192,6 +367,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
     );
   },
 );
+
+TextArea.displayName = 'Input.TextArea';
+
+//
+// Checkbox
+//
 
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
   size?: Size;
@@ -246,6 +427,12 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   },
 );
 
+Checkbox.displayName = 'Input.Checkbox';
+
+//
+// Switch
+//
+
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
 >;
@@ -291,11 +478,21 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   },
 );
 
+Switch.displayName = 'Input.Switch';
+
+//
+// Input
+//
+
 export const Input = {
-  Root: InputRoot,
+  Root,
+  TriggerIcon,
   PinInput,
   TextInput,
   TextArea,
+  Time,
+  Date: Date_,
+  DateTime,
   Checkbox,
   Switch,
   Label,
@@ -304,6 +501,8 @@ export const Input = {
   DescriptionAndValidation,
 };
 
+export { useInputTrigger };
+
 export type {
   InputVariant,
   InputRootProps,
@@ -311,6 +510,9 @@ export type {
   PinInputProps,
   TextInputProps,
   TextAreaProps,
+  TimeProps,
+  DateInputProps,
+  DateTimeInputProps,
   CheckboxProps,
   SwitchProps,
   LabelProps,

@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj, Type } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -90,18 +88,20 @@ export const object: {
     token: TToken,
     schema: S,
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S> }>;
   <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
-  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
+  ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S[number]> }>;
 } = (
   token: Surface.RoleToken<any>,
   schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
-  const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
+  const schemas = (Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas]) as Array<
+    Type.AnyObj | Type.AnyRelation
+  >;
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -117,7 +117,7 @@ export const object: {
     ) {
       return false;
     }
-    if (!schemas.some((schema) => Obj.instanceOf(schema, subject))) {
+    if (!schemas.some((schema) => Entity.instanceOf(schema, subject))) {
       return false;
     }
     return predicate ? predicate(data) : true;
@@ -178,11 +178,11 @@ export const subject: {
  * Filter: matches when `data.subject` is an ECHO snapshot of the given schema.
  * Preserves the token's other data fields (e.g. Article/Section `attendableId`).
  */
-export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
+export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.Obj<any>>(
   token: TToken,
   schema: S,
 ): Surface.Filter<
-  Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Schema.Schema.Type<S>> }
+  Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Obj.Snapshot<Type.InstanceType<S>> }
 > => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -221,7 +221,7 @@ export const companion: {
   <TToken extends Surface.RoleToken<any>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
-  ): Surface.Filter<{ companionTo: Schema.Schema.Type<S> }>;
+  ): Surface.Filter<{ companionTo: Type.InstanceType<S> }>;
   <TToken extends Surface.RoleToken<any>, T extends string>(
     token: TToken,
     value: T,
@@ -238,7 +238,7 @@ export const companion: {
     if (typeof schemaOrValue === 'string') {
       return companionTo === schemaOrValue;
     }
-    return Obj.instanceOf(schemaOrValue, companionTo);
+    return Entity.instanceOf(schemaOrValue as Type.AnyObj | Type.AnyRelation, companionTo);
   };
   return { bindings: [{ role: token.role, guard }] };
 };

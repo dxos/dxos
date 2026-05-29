@@ -179,7 +179,7 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
       draggable={draggable}
       renderColumns={() => (
         <div className='flex items-center'>
-          <Icon icon='ph--placeholder--regular' />
+          <Icon icon='ph--circle-dashed--regular' />
         </div>
       )}
       onOpenChange={handleOpenChange}

@@ -7,7 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
 import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { ObjectId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
@@ -35,14 +35,9 @@ const KanbanTaskSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.kanban-task',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0')));
 
-type KanbanTask = Schema.Schema.Type<typeof KanbanTaskSchema>;
+type KanbanTask = Type.InstanceType<typeof KanbanTaskSchema>;
 
 describe('useKanbanBoardModel', () => {
   let registry: Registry.Registry;

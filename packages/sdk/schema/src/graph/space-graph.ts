@@ -6,6 +6,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
 
@@ -43,7 +44,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
-  private _schema?: Type.RuntimeType[];
+  private _schema?: Type.AnyEntity[];
   private _objects?: Entity.Unknown[];
   private _extraItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
@@ -107,7 +108,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     const schemaaQuery = db.schemaRegistry.query({});
     this._schemaSubscription = schemaaQuery.subscribe(
-      ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results),
+      ({ results }: { results: Type.AnyEntity[] }) => (this._schema = results),
       { fire: true },
     );
 
@@ -176,7 +177,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     // Schema nodes.
     if (this._options?.showSchema) {
       this._schema?.forEach((schema) => {
-        const typename = Type.getDXN(schema)?.typename;
+        const typename = Type.getTypename(schema);
         if (typename) {
           let node = currentNodes.find((node) => node.id === typename);
           if (!node) {
@@ -203,15 +204,16 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     ];
 
     objects.forEach((object) => {
-      const schema = Entity.getSchema(object);
+      const type = Entity.getType(object);
+      const schema = type != null ? Type.getSchema(type) : undefined;
 
       // Relations.
       if (Relation.isRelation(object)) {
         const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
-          source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
-          target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
+          source: EchoURI.getObjectId(EchoURI.parse(Relation.getSourceURI(object)))!,
+          target: EchoURI.getObjectId(EchoURI.parse(Relation.getTargetURI(object)))!,
           data: {
             object,
           },
@@ -266,7 +268,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
             }
 
             newEdges.push({
-              id: `${object.id}-${ref.dxn.toString()}`,
+              id: `${object.id}-${ref.uri}`,
               type: 'ref',
               source: object.id,
               target: ref.target.id,

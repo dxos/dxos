@@ -17,6 +17,7 @@ export const TupleField = ({
   type,
   readonly,
   label,
+  jsonPath,
   getStatus,
   getValue,
   onValueChange,
@@ -31,7 +32,7 @@ export const TupleField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} />
+      <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
       <div className={mx('grid gap-form-gap', gridCols[binding.length - 1])}>
         {binding.map((prop) => (
           <Input.TextInput

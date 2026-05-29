@@ -5,7 +5,7 @@ import * as Option from 'effect/Option';
 
 import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
@@ -36,7 +36,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const [runtimeSchema] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
+      const [runtimeType] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
+      const runtimeSchema = runtimeType && Type.getSchema(runtimeType);
       const echoViewPath =
         runtimeSchema !== undefined ? ViewAnnotation.get(runtimeSchema).pipe(Option.getOrElse(() => [])) : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
@@ -50,7 +51,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       });
 
       return {
-        id: Obj.getDXN(object).toString(),
+        id: Obj.getURI(object),
         subject: [subject],
         object,
       };
@@ -70,7 +71,7 @@ const getSubjectPathForNewObject = (props: {
   if (typeof nodeId === 'string') {
     return `${nodeId}/${objectId}`;
   }
-  if (typename === Collection.Collection.typename) {
+  if (typename === Type.getTypename(Collection.Collection)) {
     return getCollectionsPath(spaceId, objectId);
   }
   if (viewTargetTypename) {

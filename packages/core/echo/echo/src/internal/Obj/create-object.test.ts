@@ -6,13 +6,14 @@ import * as Schema from 'effect/Schema';
 import { inspect } from 'util';
 import { describe, expect, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 
 import { Relation } from '../../index';
 import { TestSchema } from '../../testing';
-import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../Annotation';
+import * as Type from '../../Type';
+import { getTypeURI } from '../Annotation';
 import { ATTR_META, ATTR_TYPE, getSchema } from '../common/types';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../Entity';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, isInstanceOf } from '../Entity';
 import { createObject } from './create-object';
 import { objectToJSON } from './json-serializer';
 
@@ -40,7 +41,7 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getTypeDXN(contact)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
+    expect(getTypeURI(contact)?.toString()).toBe(Type.getURI(TestSchema.Person).toString());
     expect(isInstanceOf(TestSchema.Person, contact)).toBe(true);
   });
 
@@ -53,7 +54,7 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': DXN.fromTypenameAndVersion(TestSchema.Person.typename, TestSchema.Person.version).toString(),
+      '@type': DXN.make(Type.getTypename(TestSchema.Person), Type.getVersion(TestSchema.Person)),
       '@meta': {
         keys: [],
       },
@@ -81,9 +82,9 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(manager));
     expect(json).toEqual({
       id: manager.id,
-      [ATTR_TYPE]: DXN.fromTypenameAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version).toString(),
-      [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(person1.id).toString(),
-      [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(person2.id).toString(),
+      [ATTR_TYPE]: DXN.make(Type.getTypename(TestSchema.HasManager), Type.getVersion(TestSchema.HasManager)),
+      [ATTR_RELATION_SOURCE]: EchoURI.make({ objectId: person1.id }),
+      [ATTR_RELATION_TARGET]: EchoURI.make({ objectId: person2.id }),
       [ATTR_META]: {
         keys: [],
       },
@@ -96,7 +97,7 @@ describe('create (static version)', () => {
       email: 'bot@example.com',
     });
 
-    expect(getSchema(contact)).toBe(TestSchema.Person);
+    expect(getSchema(contact)).toBe(Type.getSchema(TestSchema.Person));
   });
 
   test('inspect', () => {

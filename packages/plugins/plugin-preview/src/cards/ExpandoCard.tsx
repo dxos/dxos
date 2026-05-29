@@ -63,7 +63,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
   );
 
   return (
-    <Card.Content>
+    <Card.Body>
       <Form.Root schema={schema} values={subject} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
@@ -71,6 +71,6 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Card.Content>
+    </Card.Body>
   );
 };

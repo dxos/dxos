@@ -8,7 +8,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # NOTE: killall uses the actual executable name, not argv[0], so use pkill instead:
 # pkill -TERM dx
 #
-# `--conditions=source` makes bun prefer the `source` export condition on
-# workspace packages (e.g. @dxos/plugin-registry/cli) so we load directly
-# from TypeScript sources without requiring each dependency to be built first.
-exec -a dx bun run --conditions=source "$DIR/../src/bin.ts" "$@"
+# `--conditions=source` (opt-in via `DX_SOURCE=1`) makes bun prefer the `source`
+# export condition on workspace packages — useful when iterating on TS sources
+# without a build, but broken by third-party packages like `react-aria-components`
+# that advertise a `source` field pointing at a file they don't ship in their
+# npm tarball. Default to the standard resolution path (built dist).
+if [ "${DX_SOURCE:-}" = "1" ]; then
+  exec -a dx bun run --conditions=source "$DIR/../src/bin.ts" "$@"
+else
+  exec -a dx bun run "$DIR/../src/bin.ts" "$@"
+fi

@@ -11,7 +11,7 @@ import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

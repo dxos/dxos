@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, Type } from '@dxos/echo';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 import { trim } from '@dxos/util';
 
@@ -35,6 +35,7 @@ export const Create = Operation.make({
     key: 'org.dxos.function.markdown.create',
     name: 'Create',
     description: 'Creates a new markdown document and adds it to the space.',
+    icon: 'ph--file-text--regular',
   },
   input: Schema.Struct({
     name: Schema.String,
@@ -49,14 +50,14 @@ export const Create = Operation.make({
 });
 
 export const CreateMarkdown = Operation.make({
-  meta: { key: `${MARKDOWN_OPERATION}.create`, name: 'Create Markdown Document' },
+  meta: { key: `${MARKDOWN_OPERATION}.create`, name: 'Create Markdown Document', icon: 'ph--file-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     content: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
-    object: Markdown.Document,
+    object: Type.getSchema(Markdown.Document),
   }),
 });
 
@@ -65,6 +66,7 @@ export const Open = Operation.make({
     key: 'org.dxos.function.markdown.open',
     name: 'Open',
     description: 'Opens and reads the contents of a new markdown document.',
+    icon: 'ph--arrow-square-out--regular',
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotations({
@@ -78,7 +80,7 @@ export const Open = Operation.make({
 });
 
 export const ScrollToAnchor = Operation.make({
-  meta: { key: `${MARKDOWN_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor' },
+  meta: { key: `${MARKDOWN_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor', icon: 'ph--anchor-simple--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),
@@ -90,7 +92,7 @@ export const ScrollToAnchor = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const SetViewMode = Operation.make({
-  meta: { key: `${MARKDOWN_OPERATION}.set-view-mode`, name: 'Set View Mode' },
+  meta: { key: `${MARKDOWN_OPERATION}.set-view-mode`, name: 'Set View Mode', icon: 'ph--layout--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     id: Schema.String,
@@ -106,6 +108,7 @@ export const Update = Operation.make({
     description: trim`
       Applies a set of edits to the markdown document.
     `,
+    icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
     doc: Ref.Ref(Markdown.Document).annotations({

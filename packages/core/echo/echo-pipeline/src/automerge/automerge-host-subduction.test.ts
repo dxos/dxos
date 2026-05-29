@@ -460,7 +460,8 @@ describe('AutomergeHost with Subduction', () => {
 
     test(
       'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
-      { timeout: 15_000 },
+      // 3s deny window + up to 10s convergence poll + teardown — give CI headroom.
+      { timeout: 25_000 },
       async ({ expect }) => {
         const host1 = await setupAutomergeHost({ level: await createLevel() });
         const host2 = await setupAutomergeHost({ level: await createLevel() });
@@ -479,7 +480,7 @@ describe('AutomergeHost with Subduction', () => {
 
           allowOnHost1 = true;
 
-          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 5_000 }).toBe(true);
+          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 10_000 }).toBe(true);
         } finally {
           await host1.close();
           await host2.close();

@@ -7,38 +7,61 @@ import type * as Schema from 'effect/Schema';
 import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation';
-import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
+import {
+  type AnyProperties,
+  KindId,
+  MetaId,
+  type ObjectMeta,
+  ObjectMetaSchema,
+  ParentId,
+  SchemaKindId,
+  StaticTypeSchemaSlot,
+} from '../types';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
-import { TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-handler';
+import { TypeSource, TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-handler';
 
 /**
  *
  */
 // TODO(burdon): Make internal
-export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
+// Omits the brand slots — those get stamped on the instance by the entity
+// handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
+// from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
+// proxy), not supplied by the caller.
+export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot>;
 
 /**
  * Creates a reactive object from a plain Javascript object.
  * Requires a TS-effect schema.
+ *
+ * Callers that have a `Type.Type` entity (not a raw schema) must unwrap it
+ * themselves — `Obj.make` / `Relation.make` do this via `Type.getSchema(...)`
+ * and pass the entity through as `typeSource` so the instance carries a
+ * back-reference for `Obj.getType` and resolves the live source schema
+ * uniformly via the entity's `[StaticTypeSchemaSlot]`.
  */
 // TODO(burdon): Make internal
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
-export const makeObject: {
-  <T extends AnyProperties>(
-    schema: Schema.Schema<T, any, never>,
-    obj: NoInfer<MakeObjectProps<T>>,
-    meta?: ObjectMeta,
-  ): T;
-} = <T extends AnyProperties>(schema: Schema.Schema<T, any>, obj: MakeObjectProps<T>, meta?: ObjectMeta): T => {
+export const makeObject = <T extends AnyProperties>(
+  schema: Schema.Schema<T, any, never>,
+  obj: NoInfer<MakeObjectProps<T>>,
+  meta?: ObjectMeta,
+  typeSource?: TypeSource,
+): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema);
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema as Schema.Schema<T, any>, typeSource);
 };
 
-const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta, schema?: Schema.Schema<T>): T => {
+const createReactiveObject = <T extends AnyProperties>(
+  obj: T,
+  meta?: ObjectMeta,
+  schema?: Schema.Schema<T>,
+  typeSource?: TypeSource,
+): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
@@ -62,7 +85,7 @@ const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta
   if (parent !== undefined) {
     defineHiddenProperty(obj, ParentId, parent);
   }
-  prepareTypedTarget(obj, schema);
+  prepareTypedTarget(obj, schema, typeSource);
   attachTypedJsonSerializer(obj);
   const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);
 

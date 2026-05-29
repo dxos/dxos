@@ -21,6 +21,9 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
+// Personal space + exemplar space seeded on every new identity.
+export const INITIAL_SPACE_COUNT = 2;
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;

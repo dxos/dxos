@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Support } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Support.Ticket.typename]: {
+      [Type.getTypename(Support.Ticket)]: {
         'typename.label': 'Support ticket',
         'typename.label_zero': 'Support tickets',
         'typename.label_one': 'Support ticket',
@@ -47,10 +48,18 @@ export const translations = [
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
         'send-feedback.label': 'Send Feedback',
+        'create-github-issue.label': 'Create GitHub Issue',
+        'github-issue-toast.label': 'GitHub issue draft opened',
+        'github-issue-toast.description': 'Finish the submission in the GitHub tab.',
+        'github-issue-toast-no-screenshot.description':
+          'Finish the submission in the GitHub tab. (Screenshot could not be attached.)',
+        'github-issue-popup-blocked-toast.label': "Couldn't open the GitHub tab",
+        'github-issue-popup-blocked-toast.description':
+          'Your browser blocked the popup. Allow popups for this site and click Create GitHub Issue again.',
         'ask-for-help.label': 'Ask for Help on Discord',
         'discord-presence-team.label': '{{count}} team',
-        'discord-presence-community.label': '{{count}} community',
-        'discord-presence-online.label': 'online',
+        'discord-presence-members.label': '{{count}} members',
+        'discord-presence-online.label': 'Online:',
         'download-logs.label': 'Download logs',
         'feedback-toast.label': 'Thank you for your feedback!',
         'feedback-toast.description': 'We will review your feedback and get back to you as soon as possible.',

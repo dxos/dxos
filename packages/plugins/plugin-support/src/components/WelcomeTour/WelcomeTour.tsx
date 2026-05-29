@@ -9,7 +9,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { HelpContext, type Step } from '#types';
+import { Tour } from '#types';
 
 import { Tooltip, floaterProps } from '../Tooltip';
 
@@ -27,14 +27,14 @@ const removeTargetClass = (target: string | HTMLElement) => {
   }
 };
 
-const getTarget = (step: Step) => {
+const getTarget = (step: Tour.Step) => {
   return typeof step.target === 'string' ? document.querySelector(step.target) : step.target;
 };
 
 /**
  * Wait for the target element to be in the document.
  */
-const waitForTarget = async (step: Step) => {
+const waitForTarget = async (step: Tour.Step) => {
   if (typeof step.target === 'string') {
     const target = step.target;
     const element = document.querySelector(target);
@@ -61,7 +61,7 @@ const waitForTarget = async (step: Step) => {
 };
 
 export type WelcomeTourProps = {
-  steps: Step[];
+  steps: Tour.Step[];
   running?: boolean;
   onRunningChanged?: (state: boolean) => any;
 };
@@ -140,7 +140,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   };
 
   return (
-    <HelpContext.Provider
+    <Tour.Context.Provider
       value={{
         running: running && !paused,
         steps,
@@ -165,6 +165,6 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
         tooltipComponent={Tooltip}
         spotlightPadding={0}
       />
-    </HelpContext.Provider>
+    </Tour.Context.Provider>
   );
 };

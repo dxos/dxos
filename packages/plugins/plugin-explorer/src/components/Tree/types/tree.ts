@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
@@ -17,19 +17,14 @@ export const TreeNodeType = Schema.Struct({
   ref: Schema.optional(Ref.Ref(TestSchema.Expando)),
 }).pipe(Schema.mutable);
 
-export interface TreeNodeType extends Schema.Schema.Type<typeof TreeNodeType> {}
+export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 
 export const TreeType = Schema.Struct({
   root: Key.ObjectId,
   nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.tree',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.tree', '0.1.0')));
 
-export interface TreeType extends Schema.Schema.Type<typeof TreeType> {}
+export type TreeType = Type.InstanceType<typeof TreeType>;
 
 /**
  * Wrapper object for tree.

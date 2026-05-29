@@ -1,0 +1,595 @@
+---
+id: org.dxos.plugin.trip
+name: TripPlugin
+version: 0.1.0
+---
+
+A Composer plugin for managing travel itineraries. A `Trip` is an ordered
+list of typed `Segment`s (Flight, Train, Boat, Road, Lodging, Activity),
+each of which may be associated with a `Booking` (the actual ticket / reservation). 
+Trips can be browsed individually or in aggregate via existing Table and Map views, 
+presented as Articles, or embedded as surfaces inside Markdown documents.
+
+Phase 1 shipped the data model, `TripArticle` surface (with a calendar
+mini-view and `SegmentStack`), `SegmentArticle` companion surface, and
+plugin wiring.
+
+Phase 2 (this milestone) adds inbox integration: a generic
+`MessageExtractor` contract in plugin-inbox plus a
+`TravelMessageExtractor` impl in plugin-trip that converts
+confirmation emails into `Booking`s + `Segment`s and attaches them to
+a Trip.
+
+Planned cross-plugin integrations (follow-up phases):
+
+- A `TripCalendarSource` that plugs into plugin-inbox's
+  `CalendarEventSource` contract to project `Segment`s as calendar
+  events, so trips render directly on the calendar without a dual
+  write to materialised events.
+
+Future work (deferred from v1):
+
+- `SegmentRequest` — a "desired multi-leg travel" shape that feeds a
+  search provider and produces candidate `Segment`s + `Booking`s.
+- A `BookingFor` ECHO relation linking `Booking` → `Trip` (queries
+  currently reach bookings via `Trip.segments[].booking`).
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term     | URI                          |
+| -------- | ---------------------------- |
+| `type`   | `org.dxos.mdl.type@1.0`      |
+| `feat`   | `org.dxos.mdl.feat@1.0`      |
+| `op`     | `org.dxos.mdl.op@1.0`        |
+| `test`   | `org.dxos.mdl.test@1.0`      |
+
+## Cross-package additions
+
+Some types and contracts referenced here are added outside `plugin-trip` because they are generally useful:
+
+| Symbol                | Package                | Notes                                                                                              |
+| --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `Provider`            | `@dxos/types`          | New plain `Schema.Struct`. Parallel to `Actor`. Used wherever a third-party service is referenced. |
+| `Account`             | `@dxos/types`          | New ECHO object (`org.dxos.type.account`). Loyalty / membership accounts at providers.             |
+| `MessageExtractor`    | `plugin-inbox`         | New generic contract. plugin-trip registers `TravelMessageExtractor`.                              |
+| `ExtractedFrom`       | `plugin-inbox`         | New ECHO relation. Source = extracted object, target = source `Message`.                           |
+| `CalendarEventSource` | `plugin-inbox`         | New generic contract. plugin-trip registers `TripCalendarSource`.                                  |
+| `CalendarEventLike`   | `plugin-inbox`         | Uniform projection shape returned by `CalendarEventSource` impls.                                  |
+
+## Types
+
+### Existing types used by this plugin
+
+| Type           | Source                  | Typename                       | Role                                                  |
+| -------------- | ----------------------- | ------------------------------ | ----------------------------------------------------- |
+| `Organization` | `@dxos/types`           | `org.dxos.type.organization`   | Optional rich link target for `Provider.ref`.         |
+| `Person`       | `@dxos/types`           | `org.dxos.type.person`         | Optional link for passengers on a `Booking`.          |
+| `File`         | `@dxos/types`           | `org.dxos.type.file`           | Attachment target for booking PDFs / e-tickets.       |
+| `GeoPoint`     | `@dxos/echo` (`Format`) | (system)                       | Optional geometry on `Place`.                         |
+| `DateTime`     | `@dxos/echo` (`Format`) | (system)                       | Used for `departAt`, `arriveAt`, `checkIn`, etc.      |
+| `Hostname`     | `@dxos/echo` (`Format`) | (system)                       | Used for `Provider.domain`.                           |
+
+### New shared types (added to `@dxos/types`)
+
+```mdl
+type Provider
+  desc: >
+    Reference to an external service or company — airline, hotel chain,
+    rail operator, ticketing platform, etc. Parallel to Actor: a human
+    label + machine identifier + optional Ref to a rich object. Plain
+    Schema.Struct (not a Type.object); embedded inline by callers.
+  fields:
+    name?: string                   # e.g. "Air France"
+    domain?: Hostname               # e.g. "united.com"
+    ref?: Ref<Organization>         # rich link once an Organization exists
+```
+
+```mdl
+type Account
+  typename: org.dxos.type.account
+  desc: >
+    A user's account / membership with an external service. Used for
+    loyalty programs (frequent flyer, hotel rewards), travel profiles,
+    ticketing accounts, and any non-credential identity at a third-party
+    provider. Distinct from AccessToken, which holds the credential to
+    call APIs on behalf of an account.
+  fields:
+    provider: Provider              # who the account is with
+    kind?: 'airline' | 'rail' | 'hotel' | 'car' | 'cruise' | 'travel' | 'other'
+    accountNumber?: string          # loyalty / membership number
+    displayName?: string            # name on account, e.g. "R. Burdon"
+    tier?: string                   # "Gold", "1K", "Diamond"
+    status?: 'active' | 'expired'
+    notes?: string
+    accessTokens?: Ref<AccessToken>[]  # optional credential link
+  annotations:
+    icon: ph--identification-card--regular
+    label: [displayName, provider.name]
+```
+
+### New plugin-trip types
+
+```mdl
+type Place
+  desc: >
+    Generic location shape used as origin / destination on every Segment.
+    Embedded inline. Uniform across modes so Table and Map views can
+    consume Segments without per-variant branching.
+  fields:
+    name?: string                   # "London Heathrow", "Hotel Costes", ...
+    code?: string                   # IATA / IBNR / port / property code
+    city?: string
+    country?: string                # ISO 3166 alpha-2 preferred
+    geo?: GeoPoint
+```
+
+```mdl
+type SegmentCore
+  desc: >
+    Shared fields present on every Segment variant. Not a standalone
+    type — embedded by each variant in the Segment union below.
+  fields:
+    id: string                      # stable per-trip id (survives status changes)
+    # tentative: user-authored placeholder ("we'll fly Tuesday-ish").
+    # proposed:  extractor / agent suggestion awaiting user accept.
+    # confirmed: backed by a real Booking.
+    # cancelled: kept for history; rendered de-emphasised.
+    status: 'tentative' | 'proposed' | 'confirmed' | 'cancelled'
+    origin?: Place
+    destination?: Place
+    departAt?: DateTime
+    arriveAt?: DateTime
+    booking?: Ref<Booking>          # absent for tentative / proposed
+    notes?: string
+```
+
+```mdl
+type FlightSegment
+  desc: Air travel leg.
+  fields:
+    ...SegmentCore
+    kind: 'flight'
+    airline?: Provider
+    flightNumber?: string
+    cabin?: 'economy' | 'premium' | 'business' | 'first'
+    terminalFrom?: string
+    terminalTo?: string
+    gateFrom?: string
+    gateTo?: string
+    seat?: string
+```
+
+```mdl
+type TrainSegment
+  desc: Rail travel leg.
+  fields:
+    ...SegmentCore
+    kind: 'train'
+    operator?: Provider
+    trainNumber?: string
+    class?: string
+    coach?: string
+    seat?: string
+```
+
+```mdl
+type BoatSegment
+  desc: Water travel leg. Covers ferry and cruise (split deferred to v2).
+  fields:
+    ...SegmentCore
+    kind: 'boat'
+    operator?: Provider
+    vessel?: string
+    cabin?: string
+```
+
+```mdl
+type RoadSegment
+  desc: >
+    Road travel leg. subKind discriminates the mode while keeping the
+    union small. "transfer" covers private cars / shuttles; "walk" lets
+    itineraries express walking legs without a separate variant.
+  fields:
+    ...SegmentCore
+    kind: 'road'
+    subKind: 'bus' | 'car' | 'transfer' | 'taxi' | 'walk'
+    operator?: Provider             # bus line, rental company, transfer co
+    vehicleClass?: string
+```
+
+```mdl
+type LodgingSegment
+  desc: >
+    Accommodation — a "stationary" segment. checkIn / checkOut mirror
+    departAt / arriveAt so uniform time-range queries work, but are
+    surfaced explicitly for clarity in UIs. origin and destination both
+    point at the property location.
+  fields:
+    ...SegmentCore
+    kind: 'lodging'
+    operator?: Provider             # hotel chain / platform
+    propertyName?: string           # specific property name
+    roomType?: string
+    checkIn?: DateTime
+    checkOut?: DateTime
+```
+
+```mdl
+type ActivitySegment
+  desc: Tour, dinner reservation, ticketed event, etc. Point in time at a venue.
+  fields:
+    ...SegmentCore
+    kind: 'activity'
+    title: string
+    operator?: Provider             # tour company / venue operator
+    venue?: Place
+```
+
+```mdl
+type Segment
+  desc: Tagged union of all segment variants. Discriminated by `kind`.
+  union:
+    - FlightSegment
+    - TrainSegment
+    - BoatSegment
+    - RoadSegment
+    - LodgingSegment
+    - ActivitySegment
+```
+
+```mdl
+type Trip
+  typename: org.dxos.type.trip
+  desc: >
+    Itinerary container. Segments are stored inline in itinerary order.
+    No tags field — uses Obj.getMeta(trip).tags like all ECHO objects.
+    No travellers / currency on the Trip — those live on each Booking,
+    since per-segment travellers (e.g., colleagues joining for one leg)
+    are common.
+  fields:
+    name?: string
+    summary?: string                # short markdown description
+    startDate?: DateTime            # explicit so a Trip can exist before any segments
+    endDate?: DateTime
+    segments: Segment[]             # inline, ordered = itinerary order
+  annotations:
+    icon: ph--airplane-takeoff--regular
+    label: [name]
+```
+
+```mdl
+type Booking
+  typename: org.dxos.type.trip.booking
+  desc: >
+    A purchased ticket / reservation. One Booking may back multiple
+    Segments (e.g., round-trip under a single PNR, or a multi-leg
+    journey on one record locator).
+  fields:
+    provider?: Provider             # carrier / lodging chain / ticketing platform
+    confirmationCode?: string       # PNR / record locator
+    bookedUnder?: Ref<Account>      # account the booking was made under
+    passengers?: { name: string; account?: Ref<Account>; person?: Ref<Person> }[]
+    currency?: string               # ISO 4217
+    totalPrice?: number
+    purchasedAt?: DateTime
+    source?: 'manual' | 'email' | 'agent' | 'import'
+    rawPayload?: string             # original JSON / parsed email body
+    attachments?: Ref<File>[]       # PDFs, e-tickets, boarding passes
+  annotations:
+    icon: ph--ticket--regular
+    label: [confirmationCode, provider.name]
+```
+
+## Contracts consumed (new in plugin-inbox)
+
+These are generic — defined in plugin-inbox so any plugin can implement
+them. plugin-trip provides one impl of each. The `MessageExtractor`
+contract and `ExtractedFrom` relation ship as part of Phase 2 alongside
+`TravelMessageExtractor`; `CalendarEventSource` is described here for
+context but is a follow-up phase.
+
+```mdl
+type MessageExtractor
+  desc: >
+    Pluggable handler invoked by plugin-inbox on Messages. Each
+    extractor advertises a cheap match predicate and an extract step
+    that produces ECHO objects (e.g., Booking + Segments) and links
+    them back to the source Message via an ExtractedFrom relation.
+    Registered via a Composer capability so any plugin can contribute
+    extractors; resolved at runtime.
+  fields:
+    id: string                      # stable identifier, e.g. "trip-travel"
+    description: string             # shown in inbox UI / extractor picker
+    kinds: string[]                 # coarse hints, e.g. ["flight", "hotel"]
+    match: (msg: Message) => MatchResult
+    extract: (ctx: ExtractCtx, msg: Message) => Effect<ExtractResult, ExtractError>
+  notes:
+    - match is sync and cheap (sender domain + subject regex); used to
+      filter the registered list before showing extractor menu items.
+    - extract is an Effect so future agent-backed impls can use AiService
+      without breaking the contract.
+```
+
+```mdl
+type MatchResult
+  fields:
+    matched: boolean
+    confidence?: number             # 0–1; used to rank multiple matches and gate auto-on-arrival
+    reason?: string
+
+type ExtractCtx
+  fields:
+    space: Space
+    database: Database
+
+type ExtractResult
+  fields:
+    created: AnyEchoObject[]        # objects created in the space
+    relations: AnyRelation[]        # e.g. ExtractedFrom relations
+    summary?: string                # for activity log / toast
+```
+
+```mdl
+type ExtractedFrom
+  desc: >
+    ECHO relation. Source = extracted object; target = source Message.
+    One relation is created per extracted object so callers can walk
+    Booking → Message and Segment → Message independently.
+  fields:
+    extractorId: string
+    extractedAt: DateTime
+    confidence?: number             # mirrors the MatchResult confidence at extraction time
+  relation:
+    source: Obj                     # the extracted object (Booking, Segment, ...)
+    target: Message                 # org.dxos.type.message
+```
+
+```mdl
+type MailboxExtractorConfig
+  desc: >
+    Optional Mailbox-level config for the auto-on-arrival dispatch mode.
+    Default is unset (no auto-extraction). Added as an optional field on
+    the existing Mailbox ECHO type; no UI in v1 (developer-set).
+  fields:
+    enabled: string[]               # extractor ids opted in for auto-run
+    threshold: number               # 0–1 confidence floor; default 0.8
+```
+
+```mdl
+type CalendarEventSource
+  desc: >
+    Pluggable contract used by calendar views. plugin-inbox queries every
+    registered source for a time range and merges the results. Avoids
+    dual-writing materialised CalendarEvents.
+  fields:
+    id: string                      # e.g. "trip-segments"
+    description: string
+    query: (range: { from: DateTime; to: DateTime }) => CalendarEventLike[]
+```
+
+```mdl
+type CalendarEventLike
+  desc: Uniform shape returned by CalendarEventSource implementations.
+  fields:
+    id: string                      # source-stable, e.g. "trip:<trip>:seg:<seg>"
+    title: string                   # "UA 904  SFO → LHR"
+    start: DateTime
+    end?: DateTime
+    location?: Place
+    sourceObject?: Ref<Obj>         # the underlying Segment / Booking / etc.
+    kind?: string                   # 'travel-flight' | 'travel-hotel' | ...
+    color?: string                  # optional theming hint
+```
+
+### Inbox dispatch modes
+
+plugin-inbox supports three dispatch modes for `MessageExtractor`s.
+All three ship in Phase 2.
+
+- **manual** — user picks an extractor from a message action menu on an
+  opened message. Always available; the menu lists every registered
+  extractor whose `match()` returned `matched: true` for the message.
+  Implemented as a `MessageActions` surface in plugin-inbox that queries
+  the `MessageExtractor` capability registry.
+- **agent-assisted** — the `ExtractMessage` operation is exposed as a
+  tool via the inbox blueprint's `toolDefinitions`. The agent invokes
+  it with `{ message, extractorId?, target? }`; when `extractorId` is
+  omitted, the operation picks the highest-confidence match.
+- **auto-on-arrival** — gated by `Mailbox.extractors`. After each
+  message append in `GoogleMailSync` (and any other future ingestion
+  paths), the inbox iterates every enabled extractor's `match()` and
+  dispatches the top match if `confidence >= threshold`. Off by default;
+  opt-in per Mailbox.
+
+All three modes funnel through the single `ExtractMessage` operation,
+so the only differences are how the operation is invoked and whether a
+user-facing toast is shown.
+
+```mdl
+op ExtractMessage
+  desc: >
+    Dispatches a Message to a registered MessageExtractor and persists
+    the result. Used by the manual menu, the inbox blueprint tool, and
+    the auto-on-arrival ingestion hook.
+  inputs:
+    message: Message                # the source message
+    extractorId?: string            # if omitted, picks highest-confidence match()
+    target?: Ref<Trip>              # passed through to the extractor; opaque here
+  outputs:
+    created: AnyEchoObject[]        # echoes ExtractResult.created
+    relations: AnyRelation[]        # echoes ExtractResult.relations
+    summary?: string
+  errors:
+    - NoMatchingExtractor — no registered extractor returned matched=true.
+    - ExtractError — bubbled from the extractor; no partial writes.
+  notes:
+    - On success, all `created` objects and `relations` are written
+      atomically via the Database service in the handler's Effect.
+    - The handler exposes itself as an agent tool through the inbox
+      blueprint's toolDefinitions.
+```
+
+## Implementations contributed by this plugin
+
+```mdl
+feat TravelMessageExtractor
+  desc: >
+    plugin-trip's MessageExtractor impl. Matches confirmation emails for
+    travel providers, dispatches to a per-provider parser, produces a
+    Booking and one or more Segments, links them back to the source
+    Message via ExtractedFrom, and appends them to a Trip.
+  inputs:
+    message: Message
+    target?: Ref<Trip>              # optional Trip to append into
+  outputs:
+    booking: Booking
+    segments: Segment[]
+    extracted: ExtractedFrom[]      # one per created object
+    trip: Trip                      # resolved per Trip resolution rules below
+  v1 parser coverage:
+    - Air France flight confirmations (sender ending in @united.com)
+      → Booking + one Flight Segment.
+    - Booking.com hotel confirmations (sender ending in @booking.com)
+      → Booking + one Accommodation Segment.
+    Other providers / kinds (train, road, activity) are deferred.
+  parser contract:
+    - Each parser is a pure function: (Message) => { booking, segments } | null.
+    - Lives under src/extractors/ alongside fixture-based unit tests.
+    - Returns null when required fields are missing; extractor then
+      falls through to the next parser or returns matched=false.
+  confidence:
+    - 0.9 when all required fields parsed.
+    - 0.6 when subject matches but key fields are missing (signals to
+      auto-on-arrival NOT to fire; manual / agent may still try).
+  trip resolution:
+    - If `target` is provided, append to that Trip.
+    - Otherwise pick the most-recently-updated Trip in the current Space.
+    - If no Trip exists, create a new one wrapping the extracted dates.
+    - Smarter detection (date-range overlap, traveller match, etc.) is a
+      follow-up.
+  account & provider:
+    - Populates Provider.domain from sender email host; Provider.name
+      from a known-domain lookup table.
+    - Dedupes Account by (provider.domain, accountNumber); creates
+      Account on first encounter.
+  follow-ups:
+    - Agent-backed parser variant (uses AiService over message body
+      with a JSON schema); behind the same MessageExtractor contract.
+    - Additional carriers (BA, Lufthansa, …) and kinds (Eurostar, Avis).
+```
+
+### Phase 2 file layout
+
+```text
+packages/plugins/plugin-inbox/src/
+  types/
+    ExtractedFrom.ts            # ECHO relation (new)
+    Mailbox.ts                  # add optional `extractors` config (edit)
+  capabilities/
+    MessageExtractor.ts         # capability + MatchResult/ExtractResult types (new)
+  operations/
+    extract-message.ts          # operation handler used by all three modes (new)
+    google/gmail/sync.ts        # auto-on-arrival dispatch hook (edit)
+  blueprints/
+    inbox.ts                    # append ExtractMessage to toolDefinitions (edit)
+  components/
+    MessageActions.tsx          # menu surface; queries MessageExtractor registry (new)
+
+packages/plugins/plugin-trip/src/
+  extractors/
+    TravelMessageExtractor.ts   # the MessageExtractor impl (new)
+    parseUnitedFlight.ts        # pure parser for @united.com (new)
+    parseBookingComHotel.ts     # pure parser for @booking.com (new)
+    providers.ts                # known-domain → Provider lookup (new)
+    __fixtures__/               # raw email bodies used in tests
+  capabilities/
+    index.ts                    # register TravelMessageExtractor (edit)
+```
+
+### Tests
+
+```mdl
+test parseUnitedFlight
+  desc: Parser unit tests against fixture emails (canonical + edge cases).
+  cases:
+    - canonical eTicket itinerary → expected Booking + Flight Segment.
+    - missing confirmation code → returns null.
+
+test parseBookingComHotel
+  desc: Parser unit tests against fixture emails.
+  cases:
+    - canonical hotel confirmation → expected Booking + Accommodation Segment.
+    - missing check-in/check-out → returns null.
+
+test TravelMessageExtractor
+  desc: Dispatch, Trip resolution, and Account dedup.
+  cases:
+    - flight email + no existing Trip → creates new Trip wrapping flight dates.
+    - flight email + one existing Trip → appends to most-recently-updated Trip.
+    - flight email + target Trip ref → appends to target.
+    - same provider + account number twice → reuses existing Account.
+
+test extract-message operation
+  desc: Operation handler integrates with the capability registry.
+  cases:
+    - manual mode: extractorId passed → calls exactly that extractor.
+    - agent mode: no extractorId → picks highest-confidence match.
+    - extractor throws → operation returns typed ExtractError; no partial writes.
+```
+
+```mdl
+feat TripCalendarSource
+  desc: >
+    plugin-trip's CalendarEventSource impl. Projects Segments into
+    CalendarEventLike values on demand; no materialised events are
+    written. Tentative segments are included with a "tentative" hint
+    (color / opacity left to the renderer).
+  outputs (per Segment kind):
+    - flight | train | boat | road: start = departAt, end = arriveAt
+    - lodging: start = checkIn, end = checkOut
+    - activity: start = departAt; end optional
+  notes:
+    - id format: `trip:<trip-id>:seg:<seg-id>` so projections are stable across query calls.
+    - sourceObject is set to a Ref of the underlying Segment so consumers can navigate to it.
+```
+
+## Out of scope for Phase 1
+
+- View definitions for Table / Map. The existing Table and Map view
+  configurations are sufficient — Segments and Trips become queryable
+  data sources for those views without new type contributions here.
+- Markdown embedding surfaces. Trips and Segments use the generic
+  article / embedded-surface mechanisms; no plugin-specific surface
+  types are added.
+- Currency conversion and price roll-ups. These are derived and live in
+  view-side logic.
+- `SegmentRequest` — multi-leg "desired travel" search input. Added when
+  a real search provider is wired.
+- `BookingFor` relation linking `Booking` → `Trip`. Added when a query
+  needs Bookings without walking Segments.
+- Splitting `BoatSegment` into ferry vs. cruise, and `RoadSegment` into
+  per-mode variants. Revisit when usage demands richer per-mode typing.
+
+## Out of scope for Phase 2
+
+- Agent-backed extractor variants. The contract supports them (`extract`
+  returns an `Effect`); a concrete impl is a follow-up.
+- Additional carrier parsers (BA, Lufthansa, Eurostar, Avis, …). The v1
+  parser registry is intentionally narrow (UA + Booking.com); new
+  carriers are additive parser modules and unit tests.
+- A UI for editing `Mailbox.extractors`. Developer-set in v1; UI lands
+  when the auto-on-arrival mode gets validated in real mailboxes.
+- A Trip picker in the manual extraction flow. v1 always resolves to
+  most-recently-updated-or-new; a picker is a follow-up.
+- `TripCalendarSource` (described above) — separate slice.
+
+## Open follow-ups
+
+- Confirm whether `Provider` should also replace `AccessToken.source`
+  (currently `Hostname`); out of scope here but worth a follow-up to
+  keep the model uniform.
+- Smarter Trip resolution (date-range overlap, traveller match) for
+  auto-on-arrival ingestion; v1 uses last-updated as a stand-in.

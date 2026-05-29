@@ -11,7 +11,6 @@ import { AiService } from '@dxos/ai';
 import { Credential, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { raise } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -358,7 +357,6 @@ export class GraphExecutor {
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(Credential.CredentialsService, yield* Credential.CredentialsService),
         Layer.succeed(Database.Service, yield* Database.Service),
-        Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(Feed.FeedService, yield* Feed.FeedService),
         Layer.succeed(Operation.Service, yield* Operation.Service),
         Layer.succeed(OperationRegistry.Service, yield* OperationRegistry.Service),

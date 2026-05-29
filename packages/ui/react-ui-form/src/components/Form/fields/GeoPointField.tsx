@@ -15,6 +15,7 @@ import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldCompon
 export const GeoPointField = ({
   type,
   label,
+  jsonPath,
   readonly,
   layout,
   getStatus,
@@ -59,7 +60,9 @@ export const GeoPointField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} asChild />}
+      {layout !== 'inline' && (
+        <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} asChild />
+      )}
       {layout === 'static' ? (
         <LatLng {...value} />
       ) : (

@@ -7,8 +7,8 @@ import React from 'react';
 import { Plan } from '@dxos/assistant-toolkit';
 import { useObject } from '@dxos/react-client/echo';
 import { Icon, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Row, RowList } from '@dxos/react-ui-list';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 export type TaskListProps = ThemedClassName<{
   plan: Plan.Plan;

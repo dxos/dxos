@@ -20,7 +20,7 @@ export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 /**
  * Compact preview of a {@link Subscription.Post}. Rendered into the
  * `AppSurface.Card` slot — Card.Root is supplied by the surface host
- * (popovers, sections, related-objects), so the body emits Card.Content only.
+ * (popovers, sections, related-objects), so the body emits Card.Body only.
  */
 export const PostCard = ({ subject }: PostCardProps) => {
   const [post] = useObject(subject);
@@ -37,11 +37,11 @@ export const PostCard = ({ subject }: PostCardProps) => {
   const db = Obj.getDatabase(post);
   const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
   const feedName = useMemo(() => {
-    const dxn = post.source?.dxn.toString();
+    const dxn = post.source?.uri;
     if (!dxn) {
       return undefined;
     }
-    return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
+    return allFeeds.find((feed) => Obj.getURI(feed) === dxn)?.name;
   }, [post.source, allFeeds]);
 
   const published = formatDate(post.published);
@@ -58,11 +58,11 @@ export const PostCard = ({ subject }: PostCardProps) => {
   }, [post.description]);
 
   return (
-    <Card.Content>
+    <Card.Body>
       {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Card.Row>
-          <Card.Heading classNames='line-clamp-2'>{post.title}</Card.Heading>
+          <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title>
         </Card.Row>
       )}
       {snippet && (
@@ -81,6 +81,6 @@ export const PostCard = ({ subject }: PostCardProps) => {
         </Card.Row>
       )}
       {post.link && <Card.Link label={post.link} href={post.link} />}
-    </Card.Content>
+    </Card.Body>
   );
 };

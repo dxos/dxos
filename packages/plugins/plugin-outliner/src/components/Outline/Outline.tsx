@@ -18,6 +18,7 @@ import React, {
 
 import { createDocAccessor } from '@dxos/echo-db';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -35,7 +36,6 @@ import {
   hashtag,
   outliner,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 

@@ -5,8 +5,8 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, slottable } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composableProps, slottable } from '@dxos/ui-theme';
 
 type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 
@@ -19,7 +19,7 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>
-              <Syntax.Code testId='debug' classNames='text-xs' />
+              <Syntax.Code testId='debug' classNames='text-sm' />
             </Syntax.Viewport>
           </Syntax.Content>
         </Syntax.Root>
@@ -30,7 +30,7 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
 
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
-const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
+export const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
     <div {...composableProps({ classNames: 'dx-container bg-modal-surface rounded-md' })} ref={forwardedRef}>
       {children}

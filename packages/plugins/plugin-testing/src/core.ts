@@ -20,7 +20,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 import { ThemePlugin } from '@dxos/plugin-theme/testing';
-import { defaultTx } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
 
 /**
  * Core plugins for testing/storybook environments.

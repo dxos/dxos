@@ -35,7 +35,7 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Collection, Feed, Obj } from '@dxos/echo';
+import { Collection, Feed, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
@@ -120,7 +120,7 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                data.subject.space.properties[Collection.Collection.typename]?.target;
+                data.subject.space.properties[Type.getTypename(Collection.Collection)]?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
@@ -397,7 +397,7 @@ export default Capability.makeModule(
           }
 
           const feed = space.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
+          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
           return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
         },
       }),

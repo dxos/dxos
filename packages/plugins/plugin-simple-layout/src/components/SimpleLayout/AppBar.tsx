@@ -6,8 +6,9 @@ import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -48,11 +49,11 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider density='fine'>
+      <DensityProvider density='md'>
         <Toolbar.Root
           {...composableProps(props, {
             role: 'banner',
-            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
+            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md',
           })}
           ref={forwardedRef}
         >

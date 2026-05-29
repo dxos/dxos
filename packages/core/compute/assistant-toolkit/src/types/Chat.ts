@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -17,47 +17,40 @@ export const Chat = Schema.Struct({
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   view: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.assistant.chat',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--sparkle--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
 );
 
-export interface Chat extends Schema.Schema.Type<typeof Chat> {}
-
+export type Chat = Type.InstanceType<typeof Chat>;
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
 
 /** @deprecated Use CompanionTo instead. */
 export const LegacyCompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
-  Type.relation({
-    typename: 'org.dxos.relation.assistant.companion-to',
-    version: '0.1.0',
+  Type.makeRelation({
+    dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,
   }),
 );
 
-export interface LegacyCompanionTo extends Schema.Schema.Type<typeof LegacyCompanionTo> {}
-
+export type LegacyCompanionTo = Type.InstanceType<typeof LegacyCompanionTo>;
 /**
  * Relation between a Chat and companion objects (e.g., artifacts).
  */
 export const CompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
-  Type.relation({
-    typename: 'org.dxos.relation.assistant.companionTo',
-    version: '0.1.0',
+  Type.makeRelation({
+    dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,
   }),
 );
 
-export interface CompanionTo extends Schema.Schema.Type<typeof CompanionTo> {}
+export type CompanionTo = Type.InstanceType<typeof CompanionTo>;

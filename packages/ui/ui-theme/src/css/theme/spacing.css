@@ -34,7 +34,7 @@
   --spacing-form-section-gap: var(--spacing-trim-lg);
 
   /**
-   * Density: fine
+   * Density: md (default).
    */
   --spacing-form-padding: var(--spacing-trim-sm);
   --spacing-icon-button-padding: var(--spacing-trim-xs);
@@ -43,15 +43,31 @@
 
 @layer dx-tokens {
   /**
-   * TODO(burdon): Density: coarse
+   * Density: lg — large touch targets (~40px controls).
    */
-  /*
-  .dx-density-coarse {
+  .dx-density-lg {
     --spacing-form-padding: var(--spacing-trim-md);
     --spacing-icon-button-padding: var(--spacing-trim-sm);
     --spacing-scroll-padding: 8px;
   }
-  */
+
+  /**
+   * Density: sm — compact (~28px controls).
+   */
+  .dx-density-sm {
+    --spacing-form-padding: var(--spacing-trim-xs);
+    --spacing-icon-button-padding: var(--spacing-trim-xs);
+    --spacing-scroll-padding: 2px;
+  }
+
+  /**
+   * Density: xs — ultra-compact (~24px controls).
+   */
+  .dx-density-xs {
+    --spacing-form-padding: var(--spacing-trim-xs);
+    --spacing-icon-button-padding: var(--spacing-trim-xs);
+    --spacing-scroll-padding: 2px;
+  }
 }
 
 /**
@@ -69,9 +85,9 @@
     --dx-lacuna-6: 0.75rem;
 
     --dx-gutter-xs: 0.25rem; /* Input rings */
-    --dx-gutter-sm: 1rem;
-    --dx-gutter-md: 2rem; /* 32px (fine card) */
-    --dx-gutter-lg: 2.5rem; /* 40px (dialog, coarse card) */
+    --dx-gutter-sm: 1rem; /* 16px (sm density card) */
+    --dx-gutter-md: 2rem; /* 32px (md density card — default) */
+    --dx-gutter-lg: 2.5rem; /* 40px (dialog, lg density card) */
   }
 
   :root {
@@ -91,8 +107,9 @@
     --dx-modal-line: var(--dx-hair-line);
     --dx-grid-focus-indicator-width: var(--dx-hair-line);
 
-    --dx-input-fine: var(--dx-lacuna-3);
-    --dx-input-coarse: var(--dx-lacuna-4);
+    --dx-input-md: var(--dx-lacuna-3);
+    --dx-input-lg: var(--dx-lacuna-4);
+    --dx-input-sm: var(--dx-lacuna-3);
 
     --dx-default-icons-size: 1rem; /* size=4 */
   }

@@ -8,8 +8,8 @@ import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { Panel, Flex } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isTauri } from '@dxos/util';
 
 import { SketchComponent } from '#components';
@@ -23,7 +23,7 @@ export type SketchArticleProps = AppSurface.ObjectArticleProps<
 >;
 
 export const SketchArticle = ({ role, attendableId, subject: sketch, settings }: SketchArticleProps) => {
-  const id = Obj.getDXN(sketch).toString();
+  const id = Obj.getURI(sketch);
   const { hasAttention } = useAttention(attendableId);
 
   const props = {

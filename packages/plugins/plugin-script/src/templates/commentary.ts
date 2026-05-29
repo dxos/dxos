@@ -15,7 +15,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -125,10 +125,10 @@ export default Commentary.pipe(
               // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
               try {
                 log.info('relation', {
-                  source: Obj.getDXN(Relation.getTarget(relation)).toString(),
-                  game: Obj.getDXN(chessGame).toString(),
+                  source: Obj.getURI(Relation.getTarget(relation)),
+                  game: Obj.getURI(chessGame),
                 });
-                return Obj.getDXN(Relation.getTarget(relation)).toString() === Obj.getDXN(chessGame).toString();
+                return Obj.getURI(Relation.getTarget(relation)) === Obj.getURI(chessGame);
               } catch {
                 return false;
               }
@@ -159,7 +159,7 @@ export default Commentary.pipe(
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
           const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
           const rootCollection = yield* Database.load<Collection.Collection>(
-            properties[Collection.Collection.typename],
+            properties[Type.getTypename(Collection.Collection)],
           );
 
           log.info('rootCollection', { rootCollection });
@@ -197,12 +197,12 @@ export default Commentary.pipe(
           });
         }
 
-        log.info('result', { documentId: Obj.getDXN(document).toString(), commentary });
+        log.info('result', { documentId: Obj.getURI(document), commentary });
 
         yield* Database.flush();
 
         return {
-          documentId: Obj.getDXN(document).toString(),
+          documentId: Obj.getURI(document),
           commentary,
         };
       },

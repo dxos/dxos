@@ -9,9 +9,13 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.script',
   name: 'Scripts',
   author: 'DXOS',
+  spec: 'PLUGIN.mdl',
   description: trim`
-    Write and deploy custom JavaScript functions that extend your workspace capabilities.
-    Create AI agent tools, spreadsheet formulas, and automation scripts that integrate seamlessly with other plugins.
+    Write, deploy, and run custom TypeScript functions as ECHO objects directly inside your Composer spaces.
+    Scripts execute on the Cloudflare Workers-based EDGE runtime and have access to the full DXOS SDK,
+    Effect-TS, and a curated set of third-party libraries including HTTP, JSON, CSV, and date utilities.
+    An AI Script assistant wires CRUD, deploy, invoke, and invocation-inspection operations as tools
+    so an agent can scaffold, iterate, and test functions entirely within a chat session.
   `,
   icon: 'ph--code--regular',
   iconHue: 'sky',

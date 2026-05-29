@@ -6,16 +6,17 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 
 export const QueryBlueprints = Operation.make({
   meta: {
     key: 'org.dxos.function.blueprint-manager.query-blueprints',
     name: 'Query blueprints',
     description: 'Queries available blueprints.',
+    icon: 'ph--blueprint--regular',
   },
   input: Schema.Struct({}),
-  output: Schema.Array(Blueprint.Blueprint),
+  output: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
   services: [Blueprint.RegistryService],
 });
 
@@ -25,6 +26,7 @@ export const EnableBlueprints = Operation.make({
     name: 'Enable blueprints',
     description:
       'Enables blueprints in the current conversation by their keys. Only blueprints with agentCanEnable=true can be enabled. Always call [query-blueprints] first to discover available blueprint keys.',
+    icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
     keys: Schema.Array(Schema.String).annotations({
@@ -33,7 +35,7 @@ export const EnableBlueprints = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    enabled: Schema.Array(Blueprint.Blueprint),
+    enabled: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
     rejected: Schema.Array(
       Schema.Struct({
         key: Schema.String,
@@ -50,6 +52,7 @@ export const UpdateBlueprints = Operation.make({
     name: 'Refresh blueprints',
     description:
       'Updates the blueprints saved to the database with the latest version from the registry. Sometimes blueprints in the database can become outdated. Use this function to pull in the latest versions.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Void,

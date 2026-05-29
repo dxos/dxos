@@ -111,7 +111,20 @@ describe('AutomergeRepo with Subduction', () => {
         .toEqual('Hello world');
     });
 
-    test('replication through a 4 peer chain', async () => {
+    // 4-peer chain (A→B→C→D) waits sequentially on each hop instead of opening all
+    // three downstream queries at once. Calling `findInStates` opens a
+    // `SubductionSource` that proactively does `syncWithAllPeers`, and a `find`
+    // issued on C or D before B has the doc causes the fetch to fail-fast at the
+    // configured `syncMs` (2 s). Recovery then waits for the heal scheduler's
+    // exponential backoff (100 → 200 → 400 → 800 → 1600 → 3200 ms ...), which
+    // can stack across hops and consume the test's wall-clock budget — that is
+    // exactly the failure mode observed in CI: 5002 ms timeout with multiple
+    // `connection/managed.rs:278 request RequestId { ... } timed out` errors.
+    //
+    // Sequencing the waits keeps each hop on the happy path (upstream peer has
+    // the doc by the time the next downstream peer opens its source), avoiding
+    // the cascading heal backoffs while still exercising the full chain.
+    test('replication through a 4 peer chain', { timeout: 15_000 }, async () => {
       const { repos, adapters } = await createRepoTopology({
         peers: ['A', 'B', 'C', 'D'],
         connections: [
@@ -129,17 +142,17 @@ describe('AutomergeRepo with Subduction', () => {
       });
       await waitForSubductionSave();
 
-      const [docB, docC, docD] = await Promise.all([
-        findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES),
-        findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES),
-        findInStates<{ text?: string }>(repoD, docA.url, FIND_STATES),
-      ]);
-      await expect
-        .poll(() => [docB.doc()?.text, docC.doc()?.text, docD.doc()?.text], { timeout: 5_000 })
-        .toEqual(['Hello world', 'Hello world', 'Hello world']);
+      const docB = await findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES);
+      await expect.poll(() => docB.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
+
+      const docC = await findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES);
+      await expect.poll(() => docC.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
+
+      const docD = await findInStates<{ text?: string }>(repoD, docA.url, FIND_STATES);
+      await expect.poll(() => docD.doc()?.text, { timeout: 10_000 }).toEqual('Hello world');
     });
 
-    test('documents loaded from disk get replicated', async () => {
+    test('documents loaded from disk get replicated', { timeout: 15_000 }, async () => {
       const storage = await createLevelAdapter();
       let url: AutomergeUrl | undefined;
 
@@ -160,7 +173,10 @@ describe('AutomergeRepo with Subduction', () => {
       await hostHandle.whenReady();
       await expect.poll(() => hostHandle.doc()?.text, { timeout: 5_000 }).toEqual('foo');
       const peer2Handle = await findInStates<any>(peer2, hostHandle.url, FIND_STATES);
-      await expect.poll(() => peer2Handle.doc(), { timeout: 5_000 }).toEqual(hostHandle.doc());
+      // Bumped from 5_000 to 10_000: on a loaded CI box, the subduction RequestId
+      // round-trip can hit its internal timeout (~5 s) and only the heal retry succeeds,
+      // pushing past the original 5 s window. See the same fix on `accept/connect syncs`.
+      await expect.poll(() => peer2Handle.doc(), { timeout: 10_000 }).toEqual(hostHandle.doc());
     });
 
     test('client creates doc and Repo persists it to disk', async () => {

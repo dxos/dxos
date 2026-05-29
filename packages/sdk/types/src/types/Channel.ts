@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -20,19 +20,15 @@ export const Channel = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.channel',
-    version: '0.1.0',
-  }),
   Annotation.IconAnnotation.set({
     icon: 'ph--hash--regular',
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.channel', '0.1.0')),
 );
 
-export interface Channel extends Schema.Schema.Type<typeof Channel> {}
-
+export type Channel = Type.InstanceType<typeof Channel>;
 export const instanceOf = (value: unknown): value is Channel => Obj.instanceOf(Channel, value);
 
 type ChannelProps = Omit<Obj.MakeProps<typeof Channel>, 'feed'>;

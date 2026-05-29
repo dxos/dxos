@@ -8,9 +8,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadRootProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { Chat } from '#components';
@@ -31,7 +31,7 @@ export type ThreadContainerProps = ThemedClassName<
  */
 export const ThreadContainer = composable<HTMLDivElement, ThreadContainerProps>(
   ({ space, thread, context, autoFocusTextbox, current, ...props }, forwardedRef) => {
-    const id = Obj.getDXN(thread).toString();
+    const id = Obj.getURI(thread);
     const identity = useIdentity()!;
     const members = useMembers(space?.id);
     const activity = useStatus(space, id);

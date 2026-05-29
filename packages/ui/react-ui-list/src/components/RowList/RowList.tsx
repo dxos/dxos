@@ -79,7 +79,7 @@ import React, { type FocusEvent, type ForwardedRef, type MouseEvent, type PropsW
 
 import { List, ListItem } from '@dxos/react-list';
 import { ScrollArea, type ScrollAreaRootProps } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const ROW_LIST_NAME = 'RowList';
 const ROW_LIST_ROOT_NAME = 'RowList.Root';

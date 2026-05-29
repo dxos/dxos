@@ -9,11 +9,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Filter, Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 import { focusField } from '@dxos/ui-editor';
-import { defaultTx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import { FileCapabilities, File } from '#types';
@@ -103,20 +103,20 @@ const buildDecorations = ({
 
       const hide = state.readOnly || cursor < node.from || cursor > node.to;
       const urlText = state.sliceDoc(urlNode.from, urlNode.to);
-      if (!urlText.startsWith('dxn:')) {
+      if (!EchoURI.isEchoURI(urlText)) {
         return;
       }
 
-      let echoId: string | undefined;
+      let echoUri: string | undefined;
       let echoSpaceId: string | undefined;
       try {
-        const dxn = DXN.parse(urlText).asEchoDXN();
-        echoId = dxn?.echoId;
-        echoSpaceId = dxn?.spaceId;
+        const parsed = EchoURI.parse(urlText);
+        echoUri = EchoURI.getObjectId(parsed);
+        echoSpaceId = EchoURI.getSpaceId(parsed);
       } catch {
         return;
       }
-      if (!echoId) {
+      if (!echoUri) {
         return;
       }
 
@@ -127,7 +127,7 @@ const buildDecorations = ({
 
       const cacheKey = urlText;
       const blobUrlPromise = (async () => {
-        const matched = await space.db.query(Filter.id(echoId!)).first();
+        const matched = await space.db.query(Filter.id(echoUri!)).first();
         if (!matched || !Obj.instanceOf(File.File, matched)) {
           return undefined;
         }

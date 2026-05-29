@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -97,19 +97,15 @@ export const Agent = Schema.Struct({
    */
   feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.agent',
-    version: '0.1.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--drone--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.agent', '0.1.0')),
 );
 
-export interface Agent extends Schema.Schema.Type<typeof Agent> {}
-
+export type Agent = Type.InstanceType<typeof Agent>;
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
@@ -127,16 +123,17 @@ export const makeInitialized = (
   blueprint: Blueprint.Blueprint,
 ): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
-    const agent = Obj.make(Agent, {
-      ...props,
-      instructions: Ref.make(Text.make({ content: props.instructions })),
-      plan: Ref.make(Plan.makePlan({ tasks: [] })),
-      artifacts: props.artifacts ?? [],
-      subscriptions: props.subscriptions ?? [],
-      filterEvents: props.filterEvents ?? true,
-      enabled: props.enabled ?? true,
-    });
-    yield* Database.add(agent);
+    const agent = yield* Database.add(
+      Obj.make(Agent, {
+        ...props,
+        instructions: Ref.make(Text.make({ content: props.instructions })),
+        plan: Ref.make(Plan.makePlan({ tasks: [] })),
+        artifacts: props.artifacts ?? [],
+        subscriptions: props.subscriptions ?? [],
+        filterEvents: props.filterEvents ?? true,
+        enabled: props.enabled ?? true,
+      }),
+    );
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Feed.FeedService>();
     const contextBinder = new AiContext.Binder({ feed, runtime });

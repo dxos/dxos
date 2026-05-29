@@ -31,7 +31,6 @@ import {
 } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -45,7 +44,6 @@ import { AssistantOperation } from '#types';
 export type AiChatServices =
   | Credential.CredentialsService
   | Database.Service
-  | QueueService
   | AiService.AiService
   | Trace.TraceService;
 
@@ -56,7 +54,6 @@ export type AiChatServices =
  */
 export type SpaceServices =
   | Database.Service
-  | QueueService
   | Feed.FeedService
   | Credential.CredentialsService
   | AiService.AiService
@@ -209,7 +206,7 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        log.info('init agent session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
+        log.info('init agent session', { feed: Obj.getURI(this._feed), model: this._options.model });
         const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
@@ -298,9 +295,15 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return;
+    }
     unwrapExit(
       await this._runtime.runPromiseExit(
-        Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(this._spaceLayer)),
+        Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
+          Effect.provide(this._spaceLayer),
+        ),
       ),
     );
   }
@@ -387,8 +390,12 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    // TODO(dmaretskyi): Operation.schedule didn't work.
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return Effect.void;
+    }
+
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(AssistantOperation.UpdateChatName, { chat });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat }, { spaceId });
   }
 }

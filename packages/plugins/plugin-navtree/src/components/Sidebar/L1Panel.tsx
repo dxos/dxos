@@ -83,7 +83,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider density='fine'>
+    <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
@@ -125,21 +125,21 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   return (
     <div
       data-tauri-drag-region
-      className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'
+      className='grid grid-cols-[28px_1fr_28px_28px] w-full items-center border-b border-subdued-separator dx-app-drag dx-density-lg pe-1'
     >
       {backCapableWorkspace ? (
         <IconButton
-          density='coarse'
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+          classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
+          size={4}
           label={t('button-back.button')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
         />
       ) : (
-        <div data-tauri-drag-region className='w-6' />
+        <div />
       )}
       <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
         {title}
@@ -150,7 +150,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           <NavTreeItemAction
             testId={primaryAction.properties?.testId}
             label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
+            icon={primaryAction.properties?.icon ?? 'ph--circle-dashed--regular'}
             parent={item}
             path={path}
             monolithic={Node.isAction(primaryAction)}
@@ -194,11 +194,11 @@ const MenuActions = ({
   if (menuActions.length === 1) {
     return (
       <IconButton
-        density='coarse'
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
-        icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
+        icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
+        size={4}
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as Node.Action)}
@@ -210,11 +210,11 @@ const MenuActions = ({
     <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
       <Menu.Trigger asChild>
         <IconButton
-          density='coarse'
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           iconOnly
+          size={4}
           label={t('tree-item-actions.label')}
           data-testid='navtree.treeItem.actionsLevel0'
         />

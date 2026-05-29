@@ -5,6 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
+import * as Obj from '../../../Obj';
 import { TestSchema } from '../../../testing';
 import { EchoObjectSchema } from '../../Entity';
 import { setValue } from '../../Obj';
@@ -39,15 +42,13 @@ describe('complex schema validations', () => {
 
   test('references', () => {
     const Foo = Schema.Struct({ field: Schema.String }).pipe(
-      EchoObjectSchema({ typename: 'com.example.type.foo', version: '0.1.0' }),
+      EchoObjectSchema(DXN.make('com.example.type.foo', '0.1.0')),
     );
-    const Bar = Schema.Struct({ fooRef: Ref(Foo) }).pipe(
-      EchoObjectSchema({ typename: 'com.example.type.bar', version: '0.1.0' }),
-    );
+    const Bar = Schema.Struct({ fooRef: Ref(Foo) }).pipe(EchoObjectSchema(DXN.make('com.example.type.bar', '0.1.0')));
     const field = 'hello';
-    expect(() => makeObject(Bar, { fooRef: { id: '1', field } as any })).to.throw();
-    expect(() => makeObject(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
-    const bar = makeObject(Bar, { fooRef: Ref.make(makeObject(Foo, { field })) });
+    expect(() => Obj.make(Bar, { fooRef: { id: '1', field } as any })).to.throw();
+    expect(() => Obj.make(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
+    const bar = Obj.make(Bar, { fooRef: Ref.make(Obj.make(Foo, { field })) });
     expect(bar.fooRef.target?.field).to.eq(field);
   });
 
@@ -79,7 +80,7 @@ describe('complex schema validations', () => {
   // Untyped reactive objects are no longer supported - use Atoms for untyped reactive state.
 
   test('creating an object with data from another object', () => {
-    const contact = makeObject(TestSchema.Person, {
+    const contact = Obj.make(TestSchema.Person, {
       name: 'Robert Smith',
       email: 'robert@example.com',
     });
@@ -94,9 +95,9 @@ describe('complex schema validations', () => {
 
   test('subscribe', () => {
     const TestSchema = Schema.Struct({ field: Schema.String }).pipe(
-      EchoObjectSchema({ typename: 'Test', version: '0.1.0' }),
+      EchoObjectSchema(DXN.make('com.test.type.test', '0.1.0')),
     );
-    const object = makeObject(TestSchema, { field: 'value' });
+    const object = Obj.make(TestSchema, { field: 'value' });
     let called = 0;
     const unsubscribe = subscribe(object as any, () => {
       called++;

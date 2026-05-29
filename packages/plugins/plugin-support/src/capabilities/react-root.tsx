@@ -10,10 +10,10 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 
 import { WelcomeTour } from '#components';
 import { meta } from '#meta';
-import { HelpCapabilities, type Step } from '#types';
+import { HelpCapabilities, type Tour } from '#types';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (steps?: Step[]) {
+  Effect.fnUntraced(function* (steps?: Tour.Step[]) {
     return Capability.contributes(Capabilities.ReactRoot, {
       id: meta.id,
       root: () => {

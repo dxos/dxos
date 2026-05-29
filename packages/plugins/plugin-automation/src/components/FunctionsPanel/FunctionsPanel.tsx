@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Operation, Script } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -74,7 +74,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
       {functions.length > 0 && (
         <List.Root<Operation.PersistentOperation>
           items={functions}
-          isItem={Schema.is(Operation.PersistentOperation)}
+          isItem={Schema.is(Type.getSchema(Operation.PersistentOperation))}
           getId={(func) => func.id}
         >
           {({ items }) => (

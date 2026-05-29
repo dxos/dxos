@@ -13,7 +13,6 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
@@ -38,7 +37,7 @@ export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.Canva
 
 export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
   const [canvas] = useObject(subject);
-  const id = Obj.getDXN(canvas).toString();
+  const id = Obj.getURI(canvas);
   const graph = useMemo(
     () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
     [subject, canvas.layout],
@@ -99,7 +98,6 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
       AiService.AiService,
       Database.Service,
       Feed.FeedService,
-      QueueService,
       Credential.CredentialsService,
       Operation.Service,
       OperationRegistry.Service,

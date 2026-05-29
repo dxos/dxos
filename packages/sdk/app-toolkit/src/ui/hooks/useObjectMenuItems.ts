@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
@@ -26,8 +26,8 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
     return false;
   }
 
-  const schema = Obj.getSchema(subject);
-  return !(schema != null && Option.getOrElse(Annotation.SystemTypeAnnotation.get(schema), () => false));
+  const type = Obj.getType(subject);
+  return !(type != null && Option.getOrElse(Annotation.SystemTypeAnnotation.get(Type.getSchema(type)), () => false));
 };
 
 /**

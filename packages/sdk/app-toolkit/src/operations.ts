@@ -26,6 +26,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.update-sidebar`,
       name: 'Update Sidebar',
       description: 'Update the sidebar state.',
+      icon: 'ph--sidebar--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -40,13 +41,14 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   export const UpdateComplementary = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.update-complementary`,
       name: 'Update Complementary Sidebar',
       description: 'Update the complementary sidebar state.',
+      icon: 'ph--sidebar--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -61,7 +63,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   //
   // Dialog Operations
@@ -72,6 +74,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.update-dialog`,
       name: 'Update Dialog',
       description: 'Open, close, or update the dialog.',
+      icon: 'ph--app-window--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -99,7 +102,7 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   //
   // Popover Operations
@@ -146,6 +149,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.update-popover`,
       name: 'Update Popover',
       description: 'Open, close, or update a popover.',
+      icon: 'ph--chat-text--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -170,7 +174,7 @@ export namespace LayoutOperation {
       ),
     ),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   //
   // Toast Operations
@@ -199,12 +203,13 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.add-toast`,
       name: 'Add Toast',
       description: 'Add a toast notification.',
+      icon: 'ph--broadcast--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
     input: Toast,
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   //
   // Layout Mode Operations
@@ -215,6 +220,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.set-layout-mode`,
       name: 'Set Layout Mode',
       description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
+      icon: 'ph--layout--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -230,7 +236,7 @@ export namespace LayoutOperation {
       }),
     ),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   //
   // Workspace Operations
@@ -241,6 +247,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.switch-workspace`,
       name: 'Switch Workspace',
       description: 'Switch to a different workspace.',
+      icon: 'ph--arrows-clockwise--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -248,13 +255,14 @@ export namespace LayoutOperation {
       subject: Schema.String.annotations({ description: 'The id of the workspace to switch to.' }),
     }),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   export const RevertWorkspace = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.revert-workspace`,
       name: 'Revert Workspace',
       description: 'Revert to the previous workspace.',
+      icon: 'ph--clock-counter-clockwise--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -273,6 +281,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.open`,
       name: 'Open',
       description: 'Open items in the main content area. Takes navigation paths as subjects.',
+      icon: 'ph--arrow-square-out--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -309,13 +318,14 @@ export namespace LayoutOperation {
       ),
     }),
     output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
-  }).pipe(Operation.intrinsic);
+  });
 
   export const Close = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.close`,
       name: 'Close',
       description: 'Close items in the main content area.',
+      icon: 'ph--x--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -323,13 +333,14 @@ export namespace LayoutOperation {
       subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to close.' })),
     }),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   export const Set = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.set`,
       name: 'Set',
       description: 'Override items in the main content area.',
+      icon: 'ph--layout--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],
@@ -348,6 +359,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.scroll-into-view`,
       name: 'Scroll Into View',
       description: 'Scroll an item into view.',
+      icon: 'ph--eye--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -356,13 +368,14 @@ export namespace LayoutOperation {
       ref: Schema.optional(Schema.String.annotations({ description: 'A reference id for the scroll target.' })),
     }),
     output: Schema.Void,
-  }).pipe(Operation.intrinsic);
+  });
 
   export const Expose = Operation.make({
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.expose`,
       name: 'Expose',
       description: 'Expose an item in the navigation area.',
+      icon: 'ph--eye--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -380,6 +393,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.update-companion`,
       name: 'Update Companion',
       description: 'Update the companion plank for a primary plank.',
+      icon: 'ph--sidebar--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -397,6 +411,7 @@ export namespace LayoutOperation {
       key: `${LAYOUT_PLUGIN}.operation.select`,
       name: 'Select',
       description: 'Select items in an attention context.',
+      icon: 'ph--check--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -419,6 +434,7 @@ export namespace SettingsOperation {
       key: `${SETTINGS_OPERATION}.open`,
       name: 'Open Settings',
       description: 'Open the settings panel.',
+      icon: 'ph--gear--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -432,6 +448,7 @@ export namespace SettingsOperation {
       key: `${SETTINGS_OPERATION}.open-plugin-registry`,
       name: 'Open Plugin Registry',
       description: 'Open the plugin registry.',
+      icon: 'ph--plugs--regular',
     },
     services: [Capability.Service],
     input: Schema.Void,

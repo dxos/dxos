@@ -90,6 +90,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect-proto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/effect-zod/package.json",
           "jsonpath": "$.version"
         },
@@ -286,6 +291,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/extractor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -750,6 +760,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sandbox/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-script/package.json",
           "jsonpath": "$.version"
         },
@@ -870,6 +885,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-trip/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-voxel/package.json",
           "jsonpath": "$.version"
         },
@@ -986,6 +1006,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-inbox/package.json",
           "jsonpath": "$.version"
         },
         {

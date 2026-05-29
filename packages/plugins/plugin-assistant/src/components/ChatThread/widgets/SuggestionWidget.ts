@@ -26,7 +26,7 @@ export class SuggestionWidget extends WidgetType {
         Domino.of('button')
           .attributes({
             'data-action': 'submit',
-            'data-density': 'fine',
+            'data-density': 'md',
             'data-value': this.text,
           })
           .classNames(mx('dx-button gap-2 w-full overflow-hidden'))

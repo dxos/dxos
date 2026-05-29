@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database, View } from '@dxos/echo';
+import { Database, Type, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 
@@ -32,25 +32,25 @@ export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 const TABLE_OPERATION = `${meta.id}.operation`;
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.on-create-space`, name: 'On Create Space' },
+  meta: { key: `${TABLE_OPERATION}.on-create-space`, name: 'On Create Space', icon: 'ph--table--regular' },
   input: Schema.Struct({
     space: SpaceSchema,
   }),
   output: Schema.Void,
 });
 
-export const OnSchemaAdded = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.on-schema-added`, name: 'On Schema Added' },
+export const OnTypeAdded = Operation.make({
+  meta: { key: `${TABLE_OPERATION}.on-type-added`, name: 'On Type Added', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
-    schema: Schema.Any,
+    type: Schema.Any,
     show: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
 });
 
 export const Create = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.create`, name: 'Create Table' },
+  meta: { key: `${TABLE_OPERATION}.create`, name: 'Create Table', icon: 'ph--table--regular' },
   input: Schema.extend(
     Schema.Struct({
       db: Database.Database,
@@ -58,15 +58,15 @@ export const Create = Operation.make({
     CreateTableSchema,
   ),
   output: Schema.Struct({
-    object: Table.Table,
+    object: Type.getSchema(Table.Table),
   }),
 });
 
 // TODO(wittjosiah): This appears to be unused.
 export const AddRow = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.add-row`, name: 'Add Row' },
+  meta: { key: `${TABLE_OPERATION}.add-row`, name: 'Add Row', icon: 'ph--plus--regular' },
   input: Schema.Struct({
-    view: View.View,
+    view: Type.getSchema(View.View),
     data: Schema.Any,
   }),
   output: Schema.Void,

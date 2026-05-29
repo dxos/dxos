@@ -39,7 +39,7 @@ describe('Projection', () => {
     });
     assert(view.query.ast.type === 'select');
     assert(view.query.ast.filter.type === 'object');
-    expect(view.query.ast.filter.typename).to.eq(Type.getDXN(schema)?.toString());
+    expect(view.query.ast.filter.typename).to.eq(Type.getURI(schema)?.toString());
     const visibleFields = view.projection.fields.filter((f) => f.visible);
     expect(visibleFields.map((f) => f.path)).to.deep.eq(['name', 'image', 'email', 'organization']);
 
@@ -84,12 +84,12 @@ describe('Projection', () => {
       contact: JsonSchema.toJsonSchema(TestSchema.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(TestSchema.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(TestSchema.Person.typename);
+    expect(Obj.getTypename(organization)).to.eq(Type.getTypename(TestSchema.Organization));
+    expect(Obj.getTypename(contact)).to.eq(Type.getTypename(TestSchema.Person));
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = Obj.make(Type.PersistentType, {
+    const schema = Type.makeObjectFromJsonSchema({
       typename: 'com.example.type.person',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(
@@ -102,7 +102,7 @@ describe('Projection', () => {
     });
 
     const view = ViewModel.make({
-      query: Query.select(Filter.typename(schema.typename)),
+      query: Query.select(Filter.typename(Type.getTypename(schema)!)),
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
     });
