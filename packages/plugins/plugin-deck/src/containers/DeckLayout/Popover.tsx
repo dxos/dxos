@@ -74,6 +74,9 @@ export const PopoverContent = () => {
   const objectMenuItems = useObjectMenuItems(popoverSubject);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
+  const content = state.popoverContent;
+  // A base popover renders a plugin-provided component; everything else falls through to the card.
+  const isBasePopover = state.popoverKind === 'base' && !!content && 'component' in content;
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -112,13 +115,17 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {/* Base popover */}
-          {state.popoverKind === 'base' && state.popoverContent && 'component' in state.popoverContent && (
-            <Surface.Surface type={AppSurface.Popover} data={state.popoverContent} limit={1} />
-          )}
-
-          {/* Card popover */}
-          {state.popoverKind === 'card' && (
+          {isBasePopover && content && 'component' in content ? (
+            /* Base popover: a plugin-provided component (e.g. editor link preview). */
+            <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
+          ) : (
+            /*
+             * Card popover (default). Rendered for any open popover that isn't an explicit
+             * base-component popover so the popover can never collapse to a bare 1px frame: the
+             * header (icon + title + menu) always renders, and the body falls back to a fixed-
+             * height "no preview" row when no subject resolves a card Surface (e.g. system-type
+             * objects like a raw Feed that have no registered card and no renderable fields).
+             */
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
@@ -139,8 +146,14 @@ export const PopoverContent = () => {
                   </Card.IconBlock>
                 </Card.Header>
 
-                {state.popoverContent && 'subject' in state.popoverContent && (
-                  <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
+                {content && 'subject' in content ? (
+                  <Surface.Surface type={AppSurface.Card} data={content} limit={1} />
+                ) : (
+                  <Card.Body classNames='min-bs-8'>
+                    <Card.Row>
+                      <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
+                    </Card.Row>
+                  </Card.Body>
                 )}
               </Card.Root>
             </Menu.Root>

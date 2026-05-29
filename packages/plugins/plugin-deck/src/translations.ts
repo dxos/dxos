@@ -53,6 +53,7 @@ export const translations = [
         'close-all.label': 'Close all planks',
         'close-navigation-sidebar.button': 'Close',
         'companion-plank-heading-fallback.label': 'Related',
+        'popover-no-preview.message': 'No preview available.',
       },
     },
   },
