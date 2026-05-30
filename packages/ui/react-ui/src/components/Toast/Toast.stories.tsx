@@ -73,16 +73,10 @@ export const Default: Story = {
     title: 'This is a toast',
     description: 'This goes away on its own with a timer.',
     duration: 100_000,
-    actionTriggers: [
-      {
-        altText: 'Press F5 to reload the page',
-        trigger: <Button variant='primary'>Reload</Button>,
-      },
-    ],
   },
 };
 
-export const NoAction: Story = {
+export const WithAction: Story = {
   args: {
     defaultOpen: true,
     openTrigger: 'Open toast',
@@ -90,5 +84,11 @@ export const NoAction: Story = {
     title: 'This is a toast',
     description: 'This goes away on its own with a timer.',
     duration: 100_000,
+    actionTriggers: [
+      {
+        altText: 'Press F5 to reload the page',
+        trigger: <Button variant='primary'>Reload</Button>,
+      },
+    ],
   },
 };
