@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RenderPage> = Search
         length: body.length,
         via: hasWindow && crxAvailable ? 'crx' : 'proxy',
         title,
-        looksLikeChallenge: /just a moment|are you a robot|px-captcha|datadome|\/cdn-cgi\/challenge|enable javascript/.test(lower),
+        looksLikeChallenge: /just a moment\.\.\.|are you a robot|px-captcha|datadome|\/cdn-cgi\/challenge/.test(lower),
         looksLikeConsent: /onetrust|sourcepoint|sp_message|accept all cookies|manage consent/.test(lower),
         testIds,
       });
