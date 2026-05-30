@@ -51,6 +51,7 @@ import {
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
+  RegistryPanel,
   SpaceGenerator,
   Wireframe,
 } from '#containers';
@@ -148,6 +149,11 @@ export default Capability.makeModule(
         id: 'tools-explorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
+      }),
+      Surface.create({
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Registry),
+        component: () => <RegistryPanel />,
       }),
       Surface.create({
         id: 'wireframe',
