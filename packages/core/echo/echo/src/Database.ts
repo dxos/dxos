@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Effectable from 'effect/Effectable';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -321,16 +322,18 @@ export const flush = (opts?: FlushOptions) =>
  * Creates a `QueryResult` object that can be subscribed to.
  */
 export const query: {
-  <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
-  <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
+  <Q extends Query.Any>(query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Service>;
+  <F extends Filter.Any>(filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Service>;
 } = (queryOrFilter: Query.Any | Filter.Any) =>
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
+    makeQueryResultEffect,
   );
 
 /**
  * Executes the query once and returns the results.
+ * @deprecated Use `yield* query(...).run` instead.
  */
 export const runQuery: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
@@ -343,6 +346,7 @@ export const runQuery: {
 
 /**
  * Executes the query once and returns the first result as or None.
+ * @deprecated Use `yield* query(...).first` instead.
  */
 export const runQueryFirst: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
@@ -354,3 +358,20 @@ export const runQueryFirst: {
     ),
     Effect.withSpan('Database.runQueryFirst'),
   );
+
+const makeQueryResultEffect = <T>(
+  eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
+): QueryResult.QueryResultEffect<T, never, Service> => {
+  return {
+    run: Effect.flatMap(eff, (result) => promiseWithCauseCapture(() => result.run())),
+    first: Effect.flatMap(eff, (result) =>
+      promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
+    ),
+
+    // Effect internals
+    ...Effectable.CommitPrototype,
+    commit() {
+      return eff;
+    },
+  } as any;
+};
