@@ -2,20 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { useObject } from '@dxos/react-client/echo';
+import { Filter, Obj, Query, Tag } from '@dxos/echo';
+import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
 import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '../../meta';
-import { type Result, type Search } from '../../types';
+import { Result, Search } from '../../types';
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
 
@@ -29,7 +28,10 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const [search] = useObject(subject);
+  // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
+  // the view re-renders when results/tags change.
+  const search = subject;
+  useObject(subject);
 
   const id = attendableId ?? Obj.getURI(search);
   const currentId = useSelected(id, 'single');
@@ -37,26 +39,30 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   // Result filter: all vs starred-only (ephemeral view state).
   const [view, setView] = useState<'all' | 'starred'>('all');
 
-  // Kick off load for any Result refs that aren't yet resolved so `ref.target`
-  // becomes populated reactively on the next render cycle.
-  useEffect(() => {
-    for (const ref of search.results) {
-      if (!ref.target) {
-        void ref.load().catch((err) => log.catch(err));
-      }
-    }
-  }, [search.results]);
+  const db = getSpace(search)?.db;
 
-  // Resolve the result refs to live objects (skip unresolved refs).
-  const results = useMemo<Result.Result[]>(() => {
-    const resolved: Result.Result[] = [];
-    for (const ref of search.results) {
-      if (ref.target) {
-        resolved.push(ref.target);
+  // Results are immutable entries in the Search's feed queue.
+  const echoFeed = search.feed?.target;
+  const results = useQuery(
+    db,
+    echoFeed ? Query.select(Filter.type(Result.Result)).from(echoFeed) : Query.select(Filter.nothing()),
+  );
+
+  // Resolve the `starred` Tag uri (if any Result has ever been starred) for the filter/toggle.
+  const [starredTag] = useQuery(db, Filter.foreignKeys(Tag.Tag, [Search.STARRED_TAG]));
+  const starredUri = starredTag ? Obj.getURI(starredTag).toString() : undefined;
+  const starredOf = useCallback(
+    (result: Result.Result) => Search.isStarred(search, result.id, starredUri),
+    [search, starredUri],
+  );
+  const handleToggleStar = useCallback(
+    (result: Result.Result) => {
+      if (db) {
+        void Search.setStarred(search, result.id, db, !Search.isStarred(search, result.id, starredUri));
       }
-    }
-    return resolved;
-  }, [search.results, search.results.length]);
+    },
+    [search, db, starredUri],
+  );
 
   // Select a result by URI — updates attention context so useSelected returns the new id.
   const handleSelect = useCallback(
@@ -77,8 +83,8 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   }, [id, invokePromise]);
 
   const visibleResults = useMemo(
-    () => (view === 'starred' ? results.filter((result) => result.starred) : results),
-    [results, view],
+    () => (view === 'starred' ? results.filter((result) => starredOf(result)) : results),
+    [results, view, starredOf],
   );
 
   const tileItems = useMemo<TileData[]>(
@@ -86,9 +92,11 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
       visibleResults.map((result) => ({
         result,
         current: Obj.getURI(result) === currentId,
+        starred: starredOf(result),
         onSelect: handleSelect,
+        onToggleStar: handleToggleStar,
       })),
-    [visibleResults, currentId, handleSelect],
+    [visibleResults, currentId, handleSelect, starredOf, handleToggleStar],
   );
 
   const selectedResult = useMemo(
@@ -119,7 +127,14 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        {(selectedResult && <ResultDetail result={selectedResult} onClose={handleClose} />) ||
+        {(selectedResult && (
+          <ResultDetail
+            result={selectedResult}
+            starred={starredOf(selectedResult)}
+            onToggleStar={() => handleToggleStar(selectedResult)}
+            onClose={handleClose}
+          />
+        )) ||
           (visibleResults.length === 0 ? (
             <div className='flex items-center justify-center h-full text-subdued text-sm'>
               {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
@@ -139,7 +154,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 type TileData = {
   result: Result.Result;
   current: boolean;
+  starred: boolean;
   onSelect: (id: string) => void;
+  onToggleStar: (result: Result.Result) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -147,5 +164,13 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <ResultTile result={data.result} current={data.current} onSelect={data.onSelect} />;
+  return (
+    <ResultTile
+      result={data.result}
+      current={data.current}
+      starred={data.starred}
+      onSelect={data.onSelect}
+      onToggleStar={data.onToggleStar}
+    />
+  );
 };

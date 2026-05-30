@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, useCallback } from 'react';
+import React, { Fragment } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Carousel, IconButton, useTranslation } from '@dxos/react-ui';
 
@@ -13,21 +12,17 @@ import { type Result } from '../../types';
 
 export type ResultDetailProps = {
   result?: Result.Result;
+  /** Star state and toggle owned by the Search container (the immutable Result has no `starred`). */
+  starred?: boolean;
+  onToggleStar?: () => void;
   onClose?: () => void;
 };
 
 /** Detail pane for the selected search result. */
-export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) => {
+export const ResultDetail = ({ result: subject, starred = false, onToggleStar, onClose }: ResultDetailProps) => {
   const { t } = useTranslation(meta.id);
-  // Subscribe so the pane re-renders when the result mutates (e.g. star toggle).
+  // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
-  const handleToggleStar = useCallback(() => {
-    if (subject) {
-      Obj.update(subject, (subject) => {
-        subject.starred = !subject.starred;
-      });
-    }
-  }, [subject]);
 
   if (!result) {
     return (
@@ -38,7 +33,6 @@ export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) =>
   }
 
   const properties = Object.entries(result.properties ?? {});
-  const starred = Boolean(result.starred);
 
   return (
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
@@ -49,7 +43,7 @@ export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) =>
           variant='ghost'
           icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
           label={starred ? t('unstar.label') : t('star.label')}
-          onClick={handleToggleStar}
+          onClick={onToggleStar}
         />
         {onClose && (
           <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />

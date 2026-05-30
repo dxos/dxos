@@ -20,8 +20,8 @@ export const Result = Schema.Struct({
   // Stripped key/value metadata.
   properties: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
   fetchedAt: Schema.optional(Schema.String),
-  // User-applied star/tag (ephemeral to the run that produced it).
-  starred: Schema.optional(Schema.Boolean),
+  // Note: user state (e.g. `starred`) is NOT on the immutable Result — it lives on the Search's tag
+  // index keyed by Result id (see Search.STARRED_TAG / Search.setStarred).
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--tag--regular', hue: 'cyan' }),

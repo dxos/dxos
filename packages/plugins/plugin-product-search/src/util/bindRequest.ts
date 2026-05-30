@@ -15,9 +15,9 @@ export type HttpRequest = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-/** Resolve a binding against a criteria value, applying min/max transforms for ranges. */
-const resolveBinding = (criteria: Record<string, unknown>, binding: FieldBinding): string | undefined => {
-  const raw = criteria[binding.field];
+/** Resolve a binding against a params value, applying min/max transforms for ranges. */
+const resolveBinding = (params: Record<string, unknown>, binding: FieldBinding): string | undefined => {
+  const raw = params[binding.field];
   if (raw == null) {
     return undefined;
   }
@@ -34,24 +34,24 @@ const resolveBinding = (criteria: Record<string, unknown>, binding: FieldBinding
   return String(raw);
 };
 
-const fillTemplate = (template: string, criteria: Record<string, unknown>): string =>
+const fillTemplate = (template: string, params: Record<string, unknown>): string =>
   template.replace(/\{(\w+)\}/g, (_match, key: string) => {
-    const value = criteria[key];
+    const value = params[key];
     return value == null || isRecord(value) ? '' : encodeURIComponent(String(value));
   });
 
-/** Build an HTTP request descriptor from criteria values and a provider request mapping. */
-export const bindRequest = (criteria: Record<string, unknown>, request: RequestMapping): HttpRequest => {
-  const base = fillTemplate(request.urlTemplate, criteria);
+/** Build an HTTP request descriptor from params values and a provider request mapping. */
+export const bindRequest = (params: Record<string, unknown>, request: RequestMapping): HttpRequest => {
+  const base = fillTemplate(request.urlTemplate, params);
 
-  const params = new URLSearchParams();
+  const searchParams = new URLSearchParams();
   for (const [param, binding] of Object.entries(request.query ?? {})) {
-    const value = resolveBinding(criteria, binding);
+    const value = resolveBinding(params, binding);
     if (value !== undefined) {
-      params.set(param, value);
+      searchParams.set(param, value);
     }
   }
-  const queryString = params.toString();
+  const queryString = searchParams.toString();
   // The urlTemplate may already carry a static query string (e.g. the blueprint bakes in
   // `?advertising-location=at_cars`), so join with `&` in that case rather than a second `?`.
   const separator = base.includes('?') ? '&' : '?';
@@ -61,7 +61,7 @@ export const bindRequest = (criteria: Record<string, unknown>, request: RequestM
   if (request.body) {
     const bodyObject: Record<string, string> = {};
     for (const [key, binding] of Object.entries(request.body)) {
-      const value = resolveBinding(criteria, binding);
+      const value = resolveBinding(params, binding);
       if (value !== undefined) {
         bodyObject[key] = value;
       }

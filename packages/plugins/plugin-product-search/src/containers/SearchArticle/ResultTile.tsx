@@ -13,11 +13,13 @@ import { ResultCard } from '../ResultCard';
 export type ResultTileProps = {
   result: Result.Result;
   current?: boolean;
+  starred?: boolean;
   onSelect?: (id: string) => void;
+  onToggleStar?: (result: Result.Result) => void;
 };
 
 /** Selectable masonry tile wrapping a {@link ResultCard}. */
-export const ResultTile = ({ result, current, onSelect }: ResultTileProps) => {
+export const ResultTile = ({ result, current, starred, onSelect, onToggleStar }: ResultTileProps) => {
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   const handleCurrentChange = useCallback(() => {
     onSelect?.(Obj.getURI(result));
@@ -25,7 +27,12 @@ export const ResultTile = ({ result, current, onSelect }: ResultTileProps) => {
 
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <ResultCard subject={result} current={current} />
+      <ResultCard
+        subject={result}
+        current={current}
+        starred={starred}
+        onToggleStar={onToggleStar ? () => onToggleStar(result) : undefined}
+      />
     </Focus.Item>
   );
 };

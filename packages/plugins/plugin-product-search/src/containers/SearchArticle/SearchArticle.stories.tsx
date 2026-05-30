@@ -8,7 +8,8 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
-import { Filter } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/client/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -40,9 +41,14 @@ const seedSpace = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.waitUntilReady());
 
     const provider = space.db.add(makeSampleProvider());
-    const results = makeSampleResults(provider).map((result) => space.db.add(result));
-    space.db.add(makeSampleSearch(provider, results));
+    const search = space.db.add(makeSampleSearch(provider));
     yield* Effect.promise(() => space.db.flush());
+
+    // Results are immutable feed entries.
+    const feed = search.feed?.target;
+    if (feed) {
+      yield* Feed.append(feed, makeSampleResults(provider)).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+    }
   });
 
 const meta: Meta<typeof DefaultStory> = {
@@ -54,7 +60,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Provider.Provider, Result.Result, Search.Search],
+          types: [Feed.Feed, Provider.Provider, Result.Result, Search.Search],
           onClientInitialized: seedSpace,
         }),
         SpacePlugin({}),
