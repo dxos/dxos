@@ -3,17 +3,69 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { sampleResult } from '../../testing';
+import { ProductSearchPlugin } from '../../plugin';
+import { makeSampleProvider, makeSampleResults } from '../../testing';
 import { translations } from '../../translations';
+import { Provider, Result } from '../../types';
 import { ResultCard } from './ResultCard';
 
-const meta: Meta<typeof ResultCard> = {
+// `ResultCard` subscribes to its subject via `useObject`, so the story renders a live ECHO object
+// from a seeded space (a detached fixture throws in the chromium storybook run).
+const DefaultStory = ({ current }: { current?: boolean }) => {
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
+  const results = useQuery(space?.db, Filter.type(Result.Result));
+  const result = results[0];
+  if (!result) {
+    return <Loading />;
+  }
+
+  return <ResultCard subject={result} current={current} />;
+};
+
+const seedSpace = ({ client }: { client: Client }) =>
+  Effect.gen(function* () {
+    yield* initializeIdentity(client);
+    const space = (yield* Effect.promise(() => client.spaces.create())) as Space;
+    yield* Effect.promise(() => space.waitUntilReady());
+
+    const provider = space.db.add(makeSampleProvider());
+    // The second sample is starred — exercises the star toggle's filled state.
+    space.db.add(makeSampleResults(provider)[1]);
+    yield* Effect.promise(() => space.db.flush());
+  });
+
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-product-search/ResultCard',
-  component: ResultCard,
-  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[20rem]' })],
+  render: DefaultStory,
+  decorators: [
+    withLayout({ layout: 'centered', classNames: 'w-[20rem]' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Provider.Provider, Result.Result],
+          onClientInitialized: seedSpace,
+        }),
+        SpacePlugin({}),
+        StorybookPlugin({}),
+        ProductSearchPlugin(),
+      ],
+    }),
+  ],
   parameters: {
     translations,
   },
@@ -23,15 +75,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    subject: sampleResult,
-  },
-};
+export const Default: Story = {};
 
 export const Current: Story = {
   args: {
-    subject: sampleResult,
     current: true,
   },
 };
