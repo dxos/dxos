@@ -26,6 +26,7 @@ export * as Ref from './Ref';
 export * as Registry from './Registry';
 export * as Relation from './Relation';
 export * as Scope from './Scope';
+export * as StateMap from './StateMap';
 export * as Tag from './Tag';
 export * as TagIndex from './TagIndex';
 export * as Tagging from './Tagging';
