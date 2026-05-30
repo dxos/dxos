@@ -43,8 +43,17 @@ const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.
  * regenerate with `ALLOW_LLM_GENERATION=1`, do not normalize here.
  */
 
+const TIMESTAMP_PLACEHOLDER = '<memoized-timestamp>';
+
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
-  deepMapValues(prompt, (value, recurse) => {
+  deepMapValues(prompt, (value, recurse, key) => {
+    // Message metadata `timestamp` fields are stamped with the live clock as each turn completes and
+    // are fed back verbatim into the prompt of every subsequent turn. They carry no meaning for the
+    // model's reasoning, so collapse them — otherwise no multi-turn conversation can ever replay on a
+    // different run/day. (This is NOT id redaction; see the note above — ids are left intact.)
+    if (key === 'timestamp') {
+      return TIMESTAMP_PLACEHOLDER;
+    }
     if (typeof value === 'string') {
       return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER);
     }
