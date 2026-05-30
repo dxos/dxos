@@ -2,16 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { Fragment } from 'react';
+
+import { Carousel } from '@dxos/react-ui';
 
 import { type Result } from '../../types';
 
 export type ResultDetailProps = {
   result?: Result.Result;
+  onClose?: () => void;
 };
 
 /** Detail pane for the selected search result. */
-export const ResultDetail = ({ result }: ResultDetailProps) => {
+export const ResultDetail = ({ result, onClose }: ResultDetailProps) => {
   if (!result) {
     return <div className='flex items-center justify-center h-full text-subdued text-sm'>No result selected.</div>;
   }
@@ -36,20 +39,25 @@ export const ResultDetail = ({ result }: ResultDetailProps) => {
       )}
 
       {result.images.length > 0 && (
-        <div className='flex flex-col gap-2'>
-          {result.images.map((image, index) => (
-            <img key={index} src={image} alt={result.title ?? 'Product'} className='w-full rounded-xs' />
-          ))}
-        </div>
+        <Carousel.Root count={result.images.length} classNames='rounded-xs overflow-hidden'>
+          <Carousel.Previous />
+          <Carousel.Viewport>
+            {result.images.map((image, index) => (
+              <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? 'Product'} />
+            ))}
+          </Carousel.Viewport>
+          <Carousel.Next />
+          <Carousel.Indicators />
+        </Carousel.Root>
       )}
 
       {properties.length > 0 && (
         <dl className='grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm'>
           {properties.map(([key, value]) => (
-            <React.Fragment key={key}>
+            <Fragment key={key}>
               <dt className='text-description'>{key}</dt>
               <dd className='truncate'>{String(value)}</dd>
-            </React.Fragment>
+            </Fragment>
           ))}
         </dl>
       )}
