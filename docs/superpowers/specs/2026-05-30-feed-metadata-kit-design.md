@@ -14,15 +14,25 @@ What shipped (this branch):
   (`setTag`/`unsetTag`/`objects`/`tags`/`tagIds`). No embedded labels.
 - **`@dxos/echo` `Tagging`** — unifies tagging across mutable objects (`Obj.getMeta(obj).tags`) and
   immutable feed objects (host `TagIndex` via `{ host }`); `get`/`set`/`unset`/`resolve`.
+- **`@dxos/echo` `StateMap`** — the (A) primitive: generic per-object metadata side-map
+  `Record<objectId, S>` (`field`/`bind` with `get`/`patch`/`remove`/`ids`/`entries`). For non-tag
+  metadata (read-marker, image, snippet); boolean labels go to `TagIndex`/`Tagging` instead.
 - **`@dxos/plugin-inbox` Mailbox retrofit** — `Mailbox.tags` is now a `TagIndex`; labels/hues live on
   `@dxos/echo` `Tag` objects (user tags by label, Gmail provider tags by foreign key). The whole
   inbox tag path keys on tag **URIs**.
 
 What's still planned:
 
-- **`@dxos/schema` `Metadata`** (A) and **`FeedCollection`** (B) primitives (below).
-- **`plugin-product-search`** adopter (feed-stored `Result` + `Metadata` for `starred`).
-- Retrofits of `Subscription`/`Magazine`/etc. (see *Retrofit candidates*).
+- **`FeedCollection`** (B) primitive (below) — `@dxos/schema` or `@dxos/echo`.
+- **`plugin-feed`** retrofit: `starred`/`archived` → tags; `readAt`/`imageUrl` → `StateMap`; consolidate
+  per-post state on **Magazine** (not Subscription) to avoid duplication.
+- **`plugin-product-search`** adopter: feed-stored `Result`; `starred` → tag; other metadata →
+  `StateMap`.
+- Other tag retrofits (assistant/thread/discord/slack — follow-up; see *Retrofit candidates*).
+
+> The (A) primitive shipped as **`StateMap` in `@dxos/echo`** (not `Metadata` in `@dxos/schema`) for
+> cohesion with `TagIndex`/`Tagging`. Name is provisional (`StateMap` avoids collision with
+> `Obj.getMeta`/`ObjectMeta`).
 
 > Note: the (C) primitive landed as a **tag-specific `TagIndex` in `@dxos/echo`**, not a generic
 > `Index` with embedded per-group `extra` in `@dxos/schema`. Tags reference `@dxos/echo` `Tag`
