@@ -45,6 +45,13 @@ export type FetchPageOptions = {
  */
 export const fetchPage = (request: HttpRequest, options: FetchPageOptions = {}): Effect.Effect<string, FetchError> => {
   const canRender = options.render && request.method === 'GET' && isCrxRenderAvailable();
+  log.info('fetchPage', {
+    url: request.url,
+    method: request.method,
+    renderRequested: Boolean(options.render),
+    crxAvailable: isCrxRenderAvailable(),
+    via: canRender ? 'crx' : 'proxy',
+  });
   if (!canRender) {
     return fetchViaProxy(request);
   }

@@ -18,6 +18,25 @@ import { Search } from './Search';
 
 const SEARCH_OPERATION = `${meta.id}.operation`;
 
+/**
+ * Fetches a page's HTML, rendering via the composer-crx extension when available. Hosted by the
+ * plugin (main thread), it is the render bridge: scrape fetches inside the agent spawn (which has no
+ * DOM, so cannot drive the extension) invoke this so the render happens where the extension lives.
+ */
+export const RenderPage = Operation.make({
+  meta: {
+    key: `${SEARCH_OPERATION}.render-page`,
+    name: 'Render Page',
+    description: 'Fetches a page, rendering it via the browser extension when available.',
+    icon: 'ph--browser--regular',
+  },
+  input: Schema.Struct({
+    url: Schema.String,
+    waitForSelector: Schema.optional(Schema.String),
+  }),
+  output: Schema.String,
+});
+
 /** Executes one provider template against a search and returns result objects. */
 export const RunProviderSearch = Operation.make({
   meta: {

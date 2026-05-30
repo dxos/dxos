@@ -28,12 +28,16 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       }
 
       const request = bindRequest({ ...search.criteria }, provider.request);
-      // Scrape targets render in a real browser when the extension is present; wait for the listing
-      // selector so client-rendered results are in the DOM before we read it.
-      const body = yield* fetchPage(request, {
-        render: provider.kind === 'scrape',
-        waitForSelector: provider.result.responseType === 'html' ? provider.result.itemLocator : undefined,
-      });
+      // Scrape targets render in a real browser via RenderPage (hosted where the extension lives),
+      // waiting for the listing selector so client-rendered results are in the DOM before reading.
+      // API providers (GET/POST against an endpoint) fetch directly through the edge proxy.
+      const body =
+        provider.kind === 'scrape' && request.method === 'GET'
+          ? yield* Operation.invoke(SearchOperation.RenderPage, {
+              url: request.url,
+              waitForSelector: provider.result.responseType === 'html' ? provider.result.itemLocator : undefined,
+            })
+          : yield* fetchPage(request);
       const rows = buildResults(provider, body);
 
       const refs: Ref.Ref<Result.Result>[] = [];

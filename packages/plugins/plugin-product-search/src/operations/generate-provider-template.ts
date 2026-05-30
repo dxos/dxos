@@ -100,6 +100,12 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         );
 
         const fieldCount = Object.keys(updated.searchSchema?.properties ?? {}).length;
+        log.info('generate-provider-template: done', {
+          url: updated.url,
+          searchFields: fieldCount,
+          hasRequest: updated.request != null,
+          hasResult: updated.result != null,
+        });
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--check-circle--regular',
