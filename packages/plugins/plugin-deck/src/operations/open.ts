@@ -37,7 +37,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // Validate navigation targets, redirecting to 404 if not found.
       const capabilities = yield* Capability.Service;
       const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
-      const client = yield* Capability.get(ClientCapabilities.Client).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+      const client = yield* Capability.get(ClientCapabilities.Client).pipe(
+        Effect.catchAll(() => Effect.succeed(undefined)),
+      );
       // Existence checkers for the resolved EID: local (loadOption) first, then remote (edge).
       const checkLocalExistence = client
         ? (id: EID.EID) => {
