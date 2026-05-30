@@ -114,22 +114,33 @@ const watchForComplete = (api: RenderBrowserApi, signal: AbortSignal) => {
 };
 
 /**
- * Poll for a CSS selector to appear in the rendered page. Resolves once the
- * selector matches (or is gone-but-waited); rejects on abort.
+ * Poll for a CSS selector to appear in the rendered page, best-effort. Resolves `true` once it
+ * matches, or `false` once `deadlineMs` elapses without a match — so a wrong/late selector (lazy
+ * load, anti-bot, schema drift) does NOT sink the whole render; the caller reads whatever rendered.
  */
-const waitForSelector = async (api: RenderBrowserApi, tabId: number, selector: string, signal: AbortSignal) => {
+const waitForSelector = async (
+  api: RenderBrowserApi,
+  tabId: number,
+  selector: string,
+  signal: AbortSignal,
+  deadlineMs: number,
+): Promise<boolean> => {
   const probe = (...args: unknown[]): boolean => {
     const [sel] = args;
     return typeof sel === 'string' && document.querySelector(sel) !== null;
   };
+  const start = Date.now();
   while (!signal.aborted) {
     const [entry] = await api.scripting.executeScript({ target: { tabId }, func: probe, args: [selector] });
     if (entry?.result === true) {
-      return;
+      return true;
+    }
+    if (Date.now() - start >= deadlineMs) {
+      return false;
     }
     await delay(100);
   }
-  throw new Error('aborted');
+  return false;
 };
 
 /**
@@ -165,7 +176,10 @@ export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): 
       await watcher.wait();
 
       if (selector) {
-        await waitForSelector(api, tabId, selector, controller.signal);
+        // Reserve headroom to actually read the page even if the selector never appears; never let
+        // the selector wait consume the whole budget.
+        const selectorDeadline = Math.max(1_000, timeoutMs - 4_000);
+        await waitForSelector(api, tabId, selector, controller.signal, selectorDeadline);
       }
       if (typeof waitForMs === 'number' && waitForMs > 0) {
         await delay(waitForMs);

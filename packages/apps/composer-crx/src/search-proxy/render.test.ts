@@ -99,4 +99,27 @@ describe('renderUrl', () => {
     expect(ack).toEqual({ version: 1, id: 'r4', ok: false, error: 'timeout' });
     expect(removed).toEqual([1]);
   });
+
+  test('reads the page best-effort when the selector never matches', async ({ expect }) => {
+    // The probe returns a non-true value, so waitForSelector gives up at its deadline and the
+    // render reads whatever is there rather than failing.
+    const { api, removed } = createMockApi();
+
+    const ack = await renderUrl(api, {
+      version: 1,
+      id: 'r5',
+      url: 'https://example.com/',
+      waitForSelector: 'div.never-matches',
+      timeoutMs: 1_500,
+    });
+
+    expect(ack).toEqual({
+      version: 1,
+      id: 'r5',
+      ok: true,
+      html: '<html></html>',
+      finalUrl: 'https://example.com/final',
+    });
+    expect(removed).toEqual([1]);
+  });
 });
