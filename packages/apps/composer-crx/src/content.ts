@@ -7,10 +7,19 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
+import { isComposerUrl } from './bridge/urls';
 import { CLIP_ACK_EVENT, CLIP_EVENT, type Clip, type ClipAck } from './clip/types';
 import { DEVELOPER_MODE_PROP, getProp } from './config';
 import { pickAndHarvest } from './picker';
 import { showDebugPreview } from './picker/debug-preview';
+import {
+  type RenderAck,
+  RENDER_ACK_EVENT,
+  RENDER_EVENT,
+  RENDER_MESSAGE_TYPE,
+  decodeRenderAck,
+  decodeRenderRequest,
+} from './search-proxy';
 
 /**
  * Content script — loaded on every page at document_start. Hosts the DOM
@@ -84,10 +93,59 @@ const deliverToBackground = async (clip: Clip): Promise<void> => {
   }
 };
 
+/**
+ * Re-emit a render ack as a same-origin CustomEvent the page listens for.
+ */
+const emitRenderAck = (ack: RenderAck): void => {
+  window.dispatchEvent(new CustomEvent(RENDER_ACK_EVENT, { detail: ack }));
+};
+
+/**
+ * Page-side relay for the search render-proxy. Installed only on Composer
+ * origins: listen for the page's `composer:search-proxy:render` CustomEvent,
+ * validate it, forward it to the background worker, and re-emit the decoded
+ * ack as `composer:search-proxy:render:ack` (correlated by `id`).
+ *
+ * On non-Composer pages the relay is never installed, so the page's events
+ * are inert.
+ */
+const installSearchProxyRelay = async (): Promise<void> => {
+  if (!(await isComposerUrl(window.location.href))) {
+    return;
+  }
+
+  window.addEventListener(RENDER_EVENT, (event: Event) => {
+    // `CustomEvent#detail` is not typed for an arbitrary event name; read it
+    // via a structural guard rather than casting, then decode/validate.
+    const detail = 'detail' in event ? event.detail : undefined;
+    const request = decodeRenderRequest(detail);
+    if (!request) {
+      log.warn('search-proxy relay: ignoring malformed render request');
+      return;
+    }
+
+    void (async () => {
+      try {
+        const response = await browser.runtime.sendMessage({ type: RENDER_MESSAGE_TYPE, request });
+        const ack = decodeRenderAck(response);
+        if (ack) {
+          emitRenderAck(ack);
+        } else {
+          emitRenderAck({ version: 1, id: request.id, ok: false, error: 'invalidAck' });
+        }
+      } catch (err) {
+        log.catch(err);
+        emitRenderAck({ version: 1, id: request.id, ok: false, error: 'transportError' });
+      }
+    })();
+  });
+};
+
 const main = async () => {
   log.info('content-script');
 
   installBridge();
+  void installSearchProxyRelay();
 
   onMessage('ping', async ({ sender, data }) => {
     log.info('ping', { sender, data });

@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 import { createThumbnail } from './actions';
 import { deliverClip, openComposerTab } from './bridge';
 import type { Clip } from './clip/types';
+import { installSearchProxy } from './search-proxy';
 
 const NOTIFY_ICON = 'assets/img/icon-128.png';
 
@@ -81,6 +82,10 @@ const main = async () => {
   onMessage('open-composer', async () => {
     await openComposerTab();
   });
+
+  // Render-proxy: lets Composer pages request a JS-rendered URL via a
+  // background tab. Additive to the clip flow above.
+  installSearchProxy();
 
   // Create the context menu item.
   browser.runtime.onInstalled.addListener(() => {
