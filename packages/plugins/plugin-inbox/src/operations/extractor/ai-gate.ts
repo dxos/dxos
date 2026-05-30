@@ -22,8 +22,8 @@ export const isAiServiceUnavailable = (error: unknown): boolean => {
 
   const key = AiService.AiService.key;
 
-  const context = (error as { context?: { service?: unknown } }).context;
-  if (context !== undefined && context.service === key) {
+  const context = (error as { context?: { service?: unknown } | null }).context;
+  if (context != null && typeof context === 'object' && context.service === key) {
     return true;
   }
 

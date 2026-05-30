@@ -15,9 +15,7 @@ describe('isAiServiceUnavailable', () => {
     expect(isAiServiceUnavailable(error)).toBe(true);
   });
 
-  test('true for an error whose message carries the AiService key (context lost across the boundary)', ({
-    expect,
-  }) => {
+  test('true for an error whose message carries the AiService key (context lost across the boundary)', ({ expect }) => {
     // The process-invocation boundary can flatten a structured error to a plain Error; the gate
     // must still recognise it from the formatted message the LayerStack produces.
     const error = new Error(
@@ -38,5 +36,11 @@ describe('isAiServiceUnavailable', () => {
   test('false for non-error values', ({ expect }) => {
     expect(isAiServiceUnavailable(undefined)).toBe(false);
     expect(isAiServiceUnavailable('nope')).toBe(false);
+  });
+
+  test('does not throw when context is null', ({ expect }) => {
+    // The predicate runs inside catch handlers — a deref on a null `context` would convert the
+    // intended soft skip into an unhandled failure.
+    expect(isAiServiceUnavailable({ context: null, message: 'unrelated' })).toBe(false);
   });
 });
