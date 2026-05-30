@@ -13,7 +13,10 @@ import { cleanHtml, fetchPage, isCrxRenderAvailable } from '../util';
 
 // Bound the cleaned page handed to the LLM (≈ token budget). Rendered SPA pages can be multiple MB
 // raw; `cleanHtml` strips scripts/styles/noise so the model sees the repeating listing structure.
-const MAX_BODY_LENGTH = 64_000;
+// Generous cap: client-rendered listing pages put 50–100 KB of nav/filters/header before the first
+// result card, so a small cap truncates the listings out of the LLM's view and it hallucinates the
+// itemLocator. The model needs to actually see a few cards to author a real selector.
+const MAX_BODY_LENGTH = 200_000;
 
 const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = SearchOperation.AnalyzeProvider.pipe(
   Operation.withHandler(
@@ -39,7 +42,13 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
           : yield* fetchPage({ method: 'GET', url: provider.url });
 
       const cleaned = cleanHtml(body, { maxLength: MAX_BODY_LENGTH });
-      log.info('analyze-provider: fetched', { url: provider.url, rawLength: body.length, cleanedLength: cleaned.length });
+      log.info('analyze-provider: fetched', {
+        url: provider.url,
+        rawLength: body.length,
+        cleanedLength: cleaned.length,
+        // Whether the LLM actually sees listing markers within the cap (else it will hallucinate).
+        cleanedHasListing: /data-testid="(search-listing-title|advertCard)/.test(cleaned) || cleaned.includes('data-advertid'),
+      });
       return cleaned;
     }),
   ),
