@@ -78,6 +78,7 @@ export const makeSampleResults = (provider: Provider.Provider): Result.Result[] 
     images: ['https://placehold.co/600x400?text=911+Turbo+S'],
     provider: Ref.make(provider),
     properties: { mileage: 9500, year: 2019, location: 'Manchester' },
+    starred: true,
   }),
   Result.makeResult({
     title: '2021 Porsche 718 Cayman GT4',

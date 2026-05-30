@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -33,6 +33,9 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 
   const id = attendableId ?? Obj.getURI(search);
   const currentId = useSelected(id, 'single');
+
+  // Result filter: all vs starred-only (ephemeral view state).
+  const [view, setView] = useState<'all' | 'starred'>('all');
 
   // Kick off load for any Result refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle.
@@ -66,14 +69,26 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
     [id, invokePromise],
   );
 
+  const handleClose = useCallback(() => {
+    void invokePromise(LayoutOperation.Select, {
+      contextId: id,
+      subject: { mode: 'single', id: undefined },
+    });
+  }, [id, invokePromise]);
+
+  const visibleResults = useMemo(
+    () => (view === 'starred' ? results.filter((result) => result.starred) : results),
+    [results, view],
+  );
+
   const tileItems = useMemo<TileData[]>(
     () =>
-      results.map((result) => ({
+      visibleResults.map((result) => ({
         result,
         current: Obj.getURI(result) === currentId,
         onSelect: handleSelect,
       })),
-    [results, currentId, handleSelect],
+    [visibleResults, currentId, handleSelect],
   );
 
   const selectedResult = useMemo(
@@ -82,32 +97,38 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   );
 
   return (
-    <Panel.Root classNames='border' role={role}>
-      <Panel.Content>
-        <div className='flex flex-col h-full overflow-hidden'>
-          <div className='border-be border-separator shrink-0'>
-            <SearchForm search={subject} />
-          </div>
-          <div className='grid grid-cols-[minmax(0,1fr)_24rem] flex-1 min-h-0 overflow-hidden'>
-            <div className='overflow-hidden'>
-              {results.length === 0 ? (
-                <div className='flex items-center justify-center h-full text-subdued text-sm'>No results.</div>
-              ) : (
-                <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-                  <Masonry.Content thin centered padding>
-                    <Masonry.Viewport
-                      classNames='py-2'
-                      items={tileItems}
-                      getId={(data) => (data?.result ? Obj.getURI(data.result) : '')}
-                    />
-                  </Masonry.Content>
-                </Masonry.Root>
-              )}
-            </div>
-            <div className='border-is border-separator overflow-hidden'>
-              <ResultDetail result={selectedResult} />
-            </div>
-          </div>
+    <Panel.Root role={role}>
+      <Panel.Toolbar>
+        <Toolbar.Root>
+          <Toolbar.ToggleGroup
+            type='single'
+            value={view}
+            onValueChange={(value) => setView(value === 'starred' ? 'starred' : 'all')}
+          >
+            <Toolbar.ToggleGroupItem value='all' aria-label='All results' title='All'>
+              <Icon icon='ph--list--regular' size={4} />
+            </Toolbar.ToggleGroupItem>
+            <Toolbar.ToggleGroupItem value='starred' aria-label='Starred results' title='Starred'>
+              <Icon icon={view === 'starred' ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
+            </Toolbar.ToggleGroupItem>
+          </Toolbar.ToggleGroup>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content classNames='grid grid-cols-1 md:grid-cols-[25rem_1fr]'>
+        <SearchForm search={subject} />
+        <div className='dx-container'>
+          {(selectedResult && <ResultDetail result={selectedResult} onClose={handleClose} />) ||
+            (visibleResults.length === 0 ? (
+              <div className='flex items-center justify-center h-full text-subdued text-sm'>
+                {view === 'starred' ? 'No starred results.' : 'No results.'}
+              </div>
+            ) : (
+              <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
+                <Masonry.Content thin centered padding>
+                  <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
+                </Masonry.Content>
+              </Masonry.Root>
+            ))}
         </div>
       </Panel.Content>
     </Panel.Root>

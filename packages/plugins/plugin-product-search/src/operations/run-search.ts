@@ -23,8 +23,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchO
         collected.push(...results);
       }
 
+      // Replace prior results so each run reflects the current criteria (rather than accumulating).
       Obj.update(search, (search) => {
-        search.results = [...search.results, ...collected];
+        search.results = collected;
         search.lastRunAt = new Date().toISOString();
       });
     }),

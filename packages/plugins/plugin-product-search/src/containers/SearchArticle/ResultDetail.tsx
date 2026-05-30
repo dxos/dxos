@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment } from 'react';
+import React, { Fragment, useCallback } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Carousel, IconButton } from '@dxos/react-ui';
 
 import { type Result } from '../../types';
@@ -15,16 +16,32 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result, onClose }: ResultDetailProps) => {
+  const handleToggleStar = useCallback(() => {
+    if (result) {
+      Obj.update(result, (result) => {
+        result.starred = !result.starred;
+      });
+    }
+  }, [result]);
+
   if (!result) {
     return <div className='flex items-center justify-center h-full text-subdued text-sm'>No result selected.</div>;
   }
 
   const properties = Object.entries(result.properties ?? {});
+  const starred = Boolean(result.starred);
 
   return (
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
-      <div className='grid grid-cols-[minmax(0,1fr)_min-content] items-start gap-2'>
+      <div className='grid grid-cols-[minmax(0,1fr)_min-content_min-content] items-start gap-2'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
+        <IconButton
+          iconOnly
+          variant='ghost'
+          icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
+          label={starred ? 'Unstar' : 'Star'}
+          onClick={handleToggleStar}
+        />
         {onClose && <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close' onClick={onClose} />}
       </div>
 

@@ -13,13 +13,15 @@ import { Provider } from './Provider';
 export const Result = Schema.Struct({
   title: Schema.String.pipe(Schema.annotations({ title: 'Title' })),
   url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
+  images: Schema.Array(Schema.String),
   price: Schema.optional(Schema.Number),
   currency: Schema.optional(Schema.String),
-  images: Schema.Array(Schema.String),
   provider: Schema.optional(Ref.Ref(Provider)),
   // Stripped key/value metadata.
   properties: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
   fetchedAt: Schema.optional(Schema.String),
+  // User-applied star/tag (ephemeral to the run that produced it).
+  starred: Schema.optional(Schema.Boolean),
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--tag--regular', hue: 'cyan' }),
