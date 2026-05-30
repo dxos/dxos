@@ -159,10 +159,10 @@ export class SwarmNetworkManager {
       label,
     }: SwarmOptions,
   ): Promise<SwarmConnection> {
-    invariant(PublicKey.isPublicKey(topic));
+    assertArgument(PublicKey.isPublicKey(topic), 'topic');
     invariant(topology);
     invariant(this._peerInfo);
-    assertArgument(typeof protocol === 'function', 'protocol');
+    assertArgument(typeof protocol === 'function', 'protocolProvider');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }

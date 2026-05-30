@@ -26,7 +26,7 @@ export class ModuleSpecifier {
     public readonly name: string,
     public readonly contextPath: string,
   ) {
-    assertArgument(isAbsolute(contextPath), 'contextPath');
+    assertArgument(isAbsolute(contextPath), 'contextPath', 'must be an absolute path');
   }
 
   isAbsolute(): boolean {
