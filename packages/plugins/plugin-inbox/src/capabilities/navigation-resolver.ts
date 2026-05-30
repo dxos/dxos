@@ -7,15 +7,13 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { Database, Filter, Key, Obj, Query, Type } from '@dxos/echo';
+import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
-import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { DraftMessage, Mailbox } from '#types';
+import { Mailbox } from '#types';
 
 import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
 
@@ -56,10 +54,9 @@ export default Capability.makeModule(
         ];
       })) as AppCapabilities.NavigationTargetResolver;
 
-    // Resolve mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) to DXNs.
-    // For message paths (~<messageId>), validates the message exists in the mailbox feed or as a draft in the DB.
-    // For mailbox paths, validates the mailbox exists.
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    // Parse mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) into EIDs (structure only;
+    // existence is checked by the caller). A message path (.../~<messageId>) resolves to the message;
+    // any other mailbox path resolves to the mailbox itself.
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
       const spaceId = getSpaceIdFromPath(qualifiedPath);
@@ -69,53 +66,9 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const space = client.spaces.get(spaceId);
-      if (!space) {
-        return Effect.succeed(Option.none());
-      }
-
-      const mailboxEchoId = EID.make({ spaceId: spaceId, entityId: mailboxId as Key.EntityId });
-      const mailboxRef = space.db.makeRef(mailboxEchoId);
-
-      const isMessagePath = isLinkedSegment(qualifiedPath);
-      const messageId = isMessagePath ? getLinkedVariant(qualifiedPath) : undefined;
-
-      return Database.loadOption(mailboxRef).pipe(
-        Effect.flatMap((mailboxOption) => {
-          if (Option.isNone(mailboxOption) || !Mailbox.instanceOf(mailboxOption.value)) {
-            return Effect.succeed(Option.none<EID.EID>());
-          }
-
-          // For non-message paths, the mailbox existing is sufficient.
-          if (!messageId || !Key.EntityId.isValid(messageId)) {
-            return Effect.succeed(Option.some(mailboxEchoId));
-          }
-
-          // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.
-          const mailbox = mailboxOption.value as Mailbox.Mailbox;
-          const mailboxUriString = Obj.getURI(mailbox);
-
-          return Effect.tryPromise(async () => {
-            // TODO(wittjosiah): This is awkward, clean it up.
-            if (mailbox.feed) {
-              const feed = await mailbox.feed.load();
-              const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
-              if (messages.length > 0) {
-                return Option.some(EID.parse(Obj.getURI(messages[0])));
-              }
-            }
-
-            const fromDb = (await space.db.query(Query.select(Filter.id(messageId))).first()) as
-              | Message.Message
-              | undefined;
-            if (fromDb && DraftMessage.belongsTo(fromDb, mailboxUriString)) {
-              return Option.some(EID.parse(Obj.getURI(fromDb)));
-            }
-
-            return Option.none<EID.EID>();
-          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EID.EID>())));
-        }),
-      );
+      const messageId = isLinkedSegment(qualifiedPath) ? getLinkedVariant(qualifiedPath) : undefined;
+      const objectId = messageId && Key.EntityId.isValid(messageId) ? messageId : mailboxId;
+      return Effect.succeed(Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId })));
     };
 
     return [
