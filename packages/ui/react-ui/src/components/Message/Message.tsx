@@ -16,6 +16,7 @@ import { translationKey } from '#translations';
 import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
+import { Column } from '../Column';
 import { Icon } from '../Icon';
 
 const messageIcons: Record<MessageValence, string> = {
@@ -62,20 +63,20 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     const titleId = useId('message__title', propsTitleId);
     const descriptionId = useId('message__description', propsDescriptionId);
     const elevation = useElevationContext(propsElevation);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
       <MessageProvider {...{ titleId, descriptionId, valence }}>
-        <Comp
+        <Column.Root
+          asChild={asChild}
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
-          {...props}
-          className={tx('message.root', { valence, elevation }, classNames)}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
+          {...props}
+          classNames={tx('message.root', { valence, elevation }, classNames)}
           ref={forwardedRef}
         >
           {children}
-        </Comp>
+        </Column.Root>
       </MessageProvider>
     );
   },
@@ -94,30 +95,33 @@ type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primi
 
 const MESSAGE_TITLE_NAME = 'Message.Title';
 
-const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
+const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
   ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
     const icon = iconProp ?? messageIcons[valence];
     return (
-      <div className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+      <Column.Row classNames={tx('message.header', {}, classNames)} ref={forwardedRef}>
         {icon && (
           <div className={tx('message.icon', { valence })}>
             <Icon icon={icon} />
           </div>
         )}
-        <h2 className={tx('message.title', {}, classNames)}>{children}</h2>
+        <h2 className={tx('message.title', {}, classNames)} id={titleId}>
+          {children}
+        </h2>
         {onClose && (
           <IconButton
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
             label={t('toolbar-close.label')}
+            classNames={tx('message.close', {})}
             onClick={onClose}
           />
         )}
-      </div>
+      </Column.Row>
     );
   },
 );

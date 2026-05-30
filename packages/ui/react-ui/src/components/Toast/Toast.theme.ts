@@ -5,9 +5,7 @@
 import { mx, surfaceShadow } from '@dxos/ui-theme';
 import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-export type ToastStyleProps = Partial<{
-  srOnly: boolean;
-}>;
+export type ToastStyleProps = {};
 
 const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
@@ -19,7 +17,7 @@ const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
 
 const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-modal-surface rounded-md flex p-2 gap-2',
+    'dx-modal-surface rounded-md p-1',
     surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
@@ -30,23 +28,29 @@ const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-const body: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
-  mx('grow flex flex-col gap-1 justify-center pl-2', ...etc);
+const grid: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('gap-y-1 pbe-1', ...etc);
 
-const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
-  mx('shrink-0 flex flex-col gap-1 justify-center', ...etc);
+const header: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-const title: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx('shrink-0 font-medium', srOnly && 'sr-only', ...etc);
+const icon: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-1 grid place-items-center', ...etc);
 
-const description: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
-  mx('text-description', 'shrink-0', srOnly && 'sr-only', ...etc);
+const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+  mx('col-start-2 overflow-hidden truncate font-medium', ...etc);
+
+const close: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-3', ...etc);
+
+const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 text-description', ...etc);
+
+const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('flex gap-2 mbs-1', ...etc);
 
 export const toastTheme: Theme<ToastStyleProps> = {
   viewport,
   root,
-  body,
+  grid,
+  header,
+  icon,
   title,
+  close,
   description,
   actions,
 };
