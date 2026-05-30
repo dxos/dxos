@@ -68,16 +68,16 @@ describe('proto3 defaults on decode', () => {
   const schema = new Schema<any>(root, {});
   const codec = schema.getCodecForType('example.defaults.Msg');
 
-  test('restores zero-value enum and scalar fields', () => {
-    const decoded: any = codec.decode(codec.encode({ kind: 0, count: 0, name: '', flag: false }));
+  test('restores zero-value enum and scalar fields', ({ expect }) => {
+    const decoded = codec.decode(codec.encode({ kind: 0, count: 0, name: '', flag: false }));
     expect(decoded.kind).to.equal(0);
     expect(decoded.count).to.equal(0);
     expect(decoded.name).to.equal('');
     expect(decoded.flag).to.equal(false);
   });
 
-  test('preserves non-default enum values', () => {
-    const decoded: any = codec.decode(codec.encode({ kind: 1, count: 7 }));
+  test('preserves non-default enum values', ({ expect }) => {
+    const decoded = codec.decode(codec.encode({ kind: 1, count: 7 }));
     expect(decoded.kind).to.equal(1);
     expect(decoded.count).to.equal(7);
   });
