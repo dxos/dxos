@@ -17,15 +17,23 @@ type StorybookToastProps = Partial<{
   actionTriggers: ActionTriggerProps[];
   openTrigger: string;
   closeTrigger: ReactNode;
+  defaultOpen: boolean;
 }>;
 
-const DefaultStory = ({ title, description, actionTriggers, openTrigger, closeTrigger }: StorybookToastProps) => {
-  const [open, setOpen] = useState(true);
+const DefaultStory = ({
+  title,
+  description,
+  actionTriggers,
+  openTrigger,
+  closeTrigger,
+  defaultOpen = true,
+}: StorybookToastProps) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <Toast.Provider>
       <Button onClick={() => setOpen(true)}>{openTrigger}</Button>
       <Toast.Viewport />
-      <Toast.Root open={open} onOpenChange={setOpen} defaultOpen>
+      <Toast.Root open={open} onOpenChange={setOpen} defaultOpen={defaultOpen}>
         <Toast.Body>
           <Toast.Title>{title}</Toast.Title>
           <Toast.Description>{description}</Toast.Description>
@@ -56,6 +64,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    defaultOpen: true,
     openTrigger: 'Open toast',
     icon: 'ph--sparkle--regular',
     title: 'This is a toast',
