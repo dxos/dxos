@@ -9,7 +9,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { Provider, Result, SearchOperation } from '../types';
-import { type ResultData, bindRequest, extractResults, fetchPage, structureCandidates } from '../util';
+import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */
 export const buildResults = (provider: Provider.Provider, body: string): ResultData[] => {
@@ -44,27 +44,24 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
           : yield* fetchPage(request);
       let rows = buildResults(provider, body);
 
-      // Self-heal: if the authored itemLocator matched nothing (LLM selector mis-generalization),
-      // fall back to the detected top repeating container that actually yields titled rows, persist
-      // the correction onto the provider, and re-extract. Removes LLM selector-roulette as a blocker.
+      // Self-heal: if the authored mapping extracted nothing (LLM selector mis-generalization),
+      // derive a complete working mapping (container + fields) directly from the rendered DOM,
+      // persist it onto the provider, and re-extract. Removes LLM selector-roulette as a blocker.
       if (rows.length === 0 && provider.result.responseType === 'html') {
-        for (const candidate of structureCandidates(body).slice(0, 6)) {
-          const healed = extractResults(body, { ...provider.result, itemLocator: candidate.selector }).filter(
-            (row) => row.title.length > 0,
-          );
+        const derived = deriveResultMapping(body);
+        if (derived) {
+          const healed = extractResults(body, derived).filter((row) => row.title.length > 0);
           if (healed.length > 0) {
-            log.info('run-provider-search: itemLocator self-heal', {
+            log.info('run-provider-search: result-mapping self-heal', {
               from: provider.result.itemLocator,
-              to: candidate.selector,
+              to: derived.itemLocator,
+              fields: Object.keys(derived.fields).join(','),
               rows: healed.length,
             });
             Obj.update(provider, (provider) => {
-              if (provider.result) {
-                provider.result.itemLocator = candidate.selector;
-              }
+              provider.result = derived;
             });
             rows = healed;
-            break;
           }
         }
       }
