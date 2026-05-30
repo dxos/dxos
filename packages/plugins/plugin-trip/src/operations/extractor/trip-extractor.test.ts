@@ -68,6 +68,18 @@ const SECOND_LEG_PAYLOAD = {
   confirmationCode: 'ABC123',
 };
 
+// The SAME booking as UNITED_PAYLOAD, but a second email's LLM pass returns the PNR with
+// different casing/whitespace ("abc 123" vs "ABC123"). Two related emails for one booking must
+// still resolve to a single Trip — the confirmation-code dedup has to be representation-insensitive.
+const SECOND_LEG_PNR_VARIANT_PAYLOAD = {
+  number: 'AF-9',
+  origin: { code: 'JFK', name: 'New York' },
+  destination: { code: 'LAX', name: 'Los Angeles' },
+  departAt: '2026-06-10T12:00:00.000Z',
+  arriveAt: '2026-06-10T15:00:00.000Z',
+  confirmationCode: 'abc 123',
+};
+
 describe('TripMessageExtractor', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
@@ -245,6 +257,33 @@ describe('TripMessageExtractor', () => {
     // The Trip date range widens to cover the appended leg (depart 2026-06-01, arrive 2026-06-10).
     expect(trips[0].start).toBe('2026-06-01T15:30:00.000Z');
     expect(trips[0].end).toBe('2026-06-10T15:00:00.000Z');
+  });
+
+  test('extract — a second email whose PNR differs only in case/whitespace appends to the same Trip', async ({
+    expect,
+  }) => {
+    // Email 1 creates a Trip under PNR "ABC123"; persist it.
+    const first = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
+    for (const obj of first.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trip = first.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
+
+    // Email 2: the SAME booking, but the LLM returned the PNR as "abc 123". This is one booking
+    // across two emails — it must append to the existing Trip, not spawn a duplicate.
+    const second = await extract(unitedConfirmationRaw, SECOND_LEG_PNR_VARIANT_PAYLOAD);
+    expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(false);
+    expect(second.updated).toHaveLength(1);
+    expect((second.updated![0] as Trip.Trip).id).toBe(trip.id);
+
+    for (const obj of second.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trips = await db.query(Filter.type(Trip.Trip)).run();
+    expect(trips).toHaveLength(1);
+    expect(trips[0].segments).toHaveLength(2);
   });
 });
 
