@@ -7,11 +7,11 @@ First adopter: `@dxos/plugin-product-search`
 
 ## Problem
 
-Several plugins share a recurring shape: a collection of **immutable** objects paired with
-**mutable per-item metadata** kept in a side-map indexed by object id. The pattern is currently
-hand-rolled per plugin, with duplicated read/patch helpers and no shared primitive.
+Several plugins hang **mutable, indexed state off a host object** alongside (often immutable)
+collections. Today each plugin hand-rolls the read/patch/index helpers, with no shared primitive.
+Three related-but-distinct shapes recur:
 
-Existing instances:
+**A. Per-item metadata side-map** — `Record<objectId, S>`, one metadata struct per item:
 
 - `Subscription.postState` — `Record<postId, { imageUrl?, readAt?, archived?, starred?, starredAt? }>`,
   with Posts living in `Subscription.feed` (an ECHO Feed queue). Has a `keep`-bound prune that
@@ -22,28 +22,43 @@ Existing instances:
 - `plugin-product-search` (target) — wants `Search.Result` objects stored in a feed, with `starred`
   moved off the (now immutable) Result into a side-map.
 
-`Mailbox.tags` is **explicitly out of scope**: it is keyed by *tagId* and each value holds an array
-of message Refs (an inverted tag→messages index), structurally different from per-object metadata.
+**B. Immutable feed collection** — an ECHO Feed queue of immutable items: `Subscription.feed`,
+`Mailbox.feed`, and the new product-search results feed.
+
+**C. Group / inverse index** — `Record<groupKey, ID[]>` (or `Ref[]`), grouping object ids under a
+key. Distinct from (A): the value is a *membership array*, not per-object metadata. Existing
+instances:
+
+- `Mailbox.tags` — `Record<tagId, { label, hue?, source?, messages: Ref<Message>[] }>`: tag → message
+  Refs, with extra per-tag metadata.
+- `Kanban.arrangement.columns` — `Record<columnValue, { ids: Obj.ID[], hidden? }>`: column → card ids.
+- `plugin-trello` sync snapshot — `Record<listName, { ids: string[] }>`: list → card ids.
+
+`Mailbox.tags` is **in scope** as the motivating case for (C), but the **tag-specific handling**
+(label/hue, provider-vs-user source, Gmail-label sync, `applyTag`/`removeTag` UX) is **implemented
+separately** on top of the generic index primitive — the kit provides only the indexing building
+block.
 
 ## Goals
 
-- A reusable, composable kit covering the existing per-object-metadata use cases, retrofittable onto
-  them.
-- Two **independent** primitives: a metadata side-map and an immutable feed collection. Neither
-  depends on the other (Magazine uses the side-map with no feed).
-- Convert `plugin-product-search` as the first adopter.
+- A reusable, composable kit covering the existing use cases, retrofittable onto them.
+- Three **independent** primitives — a metadata side-map (A), an immutable feed collection (B), and a
+  group/inverse index (C). Each stands alone; plugins compose only what they need (Magazine uses the
+  side-map with no feed; Kanban uses the index with no feed).
+- Convert `plugin-product-search` as the first adopter (exercises A + B).
 
 ## Non-goals
 
-- Modeling `Mailbox.tags` (inverted index).
+- Tag-specific UX/semantics (labels, hues, provider sync, `applyTag`). The `Index` primitive is
+  generic; Mailbox's tag handling is a **separate module** built on it.
 - A unified "AnnotatedFeed" object that forces a feed where none exists.
 - Bounded/pruned feeds for product-search (it accumulates unbounded — see below). `prune` exists in
   the kit for Subscription's benefit but product-search does not call it.
 
 ## API
 
-The kit lives in `@dxos/schema` under `src/feed/` and is exposed as two `// @import-as-namespace`
-modules.
+The kit lives in `@dxos/schema` under `src/feed/` and is exposed as three `// @import-as-namespace`
+modules (`Metadata`, `FeedCollection`, `Index`).
 
 ### `Metadata` — per-item side-map (pure)
 
@@ -103,6 +118,38 @@ to match existing objects." `pin` is exactly Subscription's "preserve starred wh
 A small `ensure(host, key)` helper (lazily create + attach a `Feed` Ref when missing, like the
 existing `ensureContentFeed`) may accompany the module for hosts that adopt a feed after creation.
 
+### `Index` — group / inverse index (pure)
+
+In-document `Record<groupKey, ID[]>`, a membership index grouping object ids under a key. Pure
+(`Obj.update`). The value defaults to a bare `ID[]`, but is **parametric over an optional per-group
+metadata struct** so a group can carry its own fields (e.g. Kanban's `hidden`, Mailbox's `label`/
+`hue`) alongside `ids`.
+
+```ts
+// @import-as-namespace  → imported as `Index`
+
+// Schema fragment. `extra` adds per-group fields stored beside the membership array.
+// Default value shape: { ids: ID[] }. With `extra`: { ids: ID[] } & Extra.
+export const field: <Extra = {}>(options?: { extra?: Schema.Struct.Fields }) => /* optional Record */;
+
+// Bound accessor over host[key]; all mutations via Obj.update.
+export interface Accessor<Extra = {}> {
+  members(group: string): readonly string[];          // [] when absent
+  groupsOf(id: string): string[];                     // inverse lookup: groups containing id
+  add(group: string, id: string, extra?: Partial<Extra>): void;
+  remove(group: string, id: string): void;            // prunes the group when it empties
+  meta(group: string): Partial<Extra>;                // per-group fields (sans `ids`)
+  setMeta(group: string, patch: Partial<Extra>): void;
+  groups(): string[];
+}
+export const bind: <H, K extends keyof H>(host: H, key: K) => Accessor</* inferred Extra */>;
+```
+
+Reference instances: `Mailbox.tags` (Extra = `{ label, hue?, source? }`, ids = message ids/Refs),
+`Kanban.arrangement.columns` (Extra = `{ hidden? }`), `plugin-trello` snapshot (no extra). Refs vs
+bare ids: the index stores `Obj.ID` strings; callers resolve to Refs/objects as needed (matches
+Kanban). A Ref-valued variant can follow if a retrofit needs it.
+
 ## First adopter — `plugin-product-search`
 
 Schema:
@@ -133,12 +180,17 @@ UI (`ResultCard`, `ResultDetail`, `SearchArticle`):
 
 Land kit + product-search adopter first; retrofit the rest incrementally to keep PRs reviewable.
 
-| Host | side-map → `Metadata` | feed → `FeedCollection` |
-| --- | --- | --- |
-| `Subscription.postState` | yes | yes (`feed`, `keep`-prune via `pin: starred`) |
-| `Magazine.postState` | yes | — (Ref array, no feed) |
-| `Mailbox.extracted` | yes | `Mailbox.feed` (optional) |
-| `Mailbox.tags` | out of scope (inverted index) | — |
+| Host                          | `Metadata` (A) | `FeedCollection` (B)                          | `Index` (C)                       |
+| ----------------------------- | -------------- | --------------------------------------------- | --------------------------------- |
+| `Subscription.postState`      | yes            | yes (`feed`, `keep`-prune via `pin: starred`) | —                                 |
+| `Magazine.postState`          | yes            | — (Ref array, no feed)                        | —                                 |
+| `Mailbox.extracted`           | yes            | `Mailbox.feed` (optional)                     | —                                 |
+| `Mailbox.tags`                | —              | —                                             | yes (tag handling separate)       |
+| `Kanban.arrangement.columns`  | —              | —                                             | yes (Extra = `{ hidden? }`)       |
+| `plugin-trello` sync snapshot | —              | —                                             | candidate                         |
+
+`Mailbox.tags` retrofit lands the generic `Index` first; the tag-specific module
+(`applyTag`/`removeTag`, label/hue, Gmail-source sync) is a separate change built on it.
 
 ## Data flow (product-search run)
 
@@ -155,6 +207,8 @@ Land kit + product-search adopter first; retrofit the rest incrementally to keep
 - `FeedCollection`: queue-backed tests using the `createDatabase` builder pattern from
   `plugin-feed/src/operations/curate-magazine.test.ts` — `appendUnique` dedupes by identity, `list`
   order, `prune` keeps most-recent + pinned.
+- `Index`: pure unit tests — `add`/`remove` membership, `groupsOf` inverse lookup, empty-group
+  pruning on `remove`, `meta`/`setMeta` round-trip with `extra` fields.
 - product-search: update `run-provider-search` / `autotrader-search` tests for feed semantics; add a
   test that `starred` persists across a re-run (append-once preserves the side-map entry).
 
@@ -171,5 +225,8 @@ Land kit + product-search adopter first; retrofit the rest incrementally to keep
 ## Open items
 
 - **Names** are provisional. `Metadata` risks confusion with `Obj.getMeta`; `FeedCollection` overlaps
-  with echo's `Feed`. Candidates to revisit before finalizing: `ItemState` / `StateMap`, `FeedLog`.
+  with echo's `Feed`; `Index` is generic. Candidates to revisit before finalizing: `ItemState` /
+  `StateMap`, `FeedLog`, `GroupIndex` / `TagIndex`.
+- **`Index` value shape** — bare `Obj.ID[]` vs Ref-valued (`Mailbox.tags` uses Refs today). Proposed:
+  ids by default, Ref variant added only if a retrofit needs it.
 - **Module path** within `@dxos/schema/src` (proposed `src/feed/`).
