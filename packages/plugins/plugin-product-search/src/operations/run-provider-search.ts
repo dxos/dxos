@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
         return [];
       }
 
-      const request = bindRequest({ ...search.criteria }, provider.request);
+      const request = bindRequest({ ...search.params }, provider.request);
       // Scrape targets render in a real browser via RenderPage (hosted where the extension lives),
       // waiting for the listing selector so client-rendered results are in the DOM before reading.
       // API providers (GET/POST against an endpoint) fetch directly through the edge proxy.

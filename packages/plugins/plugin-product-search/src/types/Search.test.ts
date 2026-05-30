@@ -12,6 +12,6 @@ describe('Search type', () => {
     expect(Search.instanceOf(search)).toBe(true);
     expect(search.providers).toEqual([]);
     expect(search.results).toEqual([]);
-    expect(search.criteria).toEqual({});
+    expect(search.params).toEqual({});
   });
 });

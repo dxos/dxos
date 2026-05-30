@@ -105,7 +105,7 @@ export const makeSampleSearch = (provider: Provider.Provider, results: Result.Re
   Search.make({
     name: 'Porsche 911 under £150k',
     providers: [Ref.make(provider)],
-    criteria: { make: 'Porsche', model: '911', priceTo: 150000 },
+    params: { make: 'Porsche', model: '911', priceTo: 150000 },
     results: results.map((result) => Ref.make(result)),
   });
 
