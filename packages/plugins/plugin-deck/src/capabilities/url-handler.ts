@@ -131,14 +131,35 @@ export default Capability.makeModule(
 
     const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
+    // Install before handleNavigation()/state-sync push entries on top of the sentinel.
+    const sentinelKey = installLeaveTrap();
+
+    // Landing on the sentinel means a Back is about to leave Composer; confirm and act on it.
+    // The guard stops our own back()/forward() from re-entering.
+    let handlingSentinel = false;
+    const onCurrentEntryChange = () => {
+      const current = window.navigation.currentEntry;
+      if (handlingSentinel || !current || current.key !== sentinelKey) {
+        return;
+      }
+      handlingSentinel = true;
+      queueMicrotask(() => {
+        if (window.confirm('Leave Composer?')) {
+          history.back(); // Past the sentinel to the prior page.
+        } else {
+          history.forward(); // Back to where the user was.
+        }
+        setTimeout(() => {
+          handlingSentinel = false;
+        });
+      });
     };
 
-    // Initial navigation.
     yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
-    window.addEventListener('beforeunload', onBeforeUnload);
+    if ('navigation' in window) {
+      window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
+    }
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
@@ -197,13 +218,57 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
-        window.removeEventListener('beforeunload', onBeforeUnload);
+        if ('navigation' in window) {
+          window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
+        }
         unsubscribe();
         unlistenDeepLink?.();
       }),
     );
   }),
 );
+
+/**
+ * sessionStorage key holding the sentinel history entry's key. The entry is identified by its
+ * (reload-stable) Navigation API key rather than by entry state, because the deck overwrites
+ * history state via replaceState during URL sync — which would erase a state marker. sessionStorage
+ * survives reloads within the tab and the deck never touches it.
+ */
+const SENTINEL_STORAGE_KEY = 'dxos.composer.deck.leaveTrap.sentinelKey';
+
+/**
+ * Insert a "sentinel" history entry beneath the app's working entries, so a Back-press that would
+ * leave Composer instead lands on the sentinel — where `onCurrentEntryChange` confirms the exit. A
+ * cross-document back is uncancelable and `beforeunload` cannot distinguish reload from leave, so
+ * this same-document floor is required; reload fires no traversal and is never trapped. Requires the
+ * Navigation API (Chromium); no-op otherwise. Idempotent across reloads via the sessionStorage-held
+ * entry key, so the sentinel is not duplicated. Returns the sentinel entry's key, or undefined.
+ */
+const installLeaveTrap = (): string | undefined => {
+  if (!('navigation' in window)) {
+    return undefined;
+  }
+  const saved = sessionStorage.getItem(SENTINEL_STORAGE_KEY);
+  if (saved && window.navigation.entries().some((entry) => entry.key === saved)) {
+    // The sentinel survived (reload, or the user returned to Composer after leaving). If we are
+    // sitting ON it — e.g. the user left via the sentinel then came back Forward onto it — push a
+    // working entry above so the user is above the floor again and the trap re-arms.
+    if (window.navigation.currentEntry?.key === saved) {
+      history.pushState(null, '', window.location.pathname + window.location.search);
+    }
+    return saved;
+  }
+  // history.length > 1 (not navigation.canGoBack, which is false for a cross-origin prior entry)
+  // means there is somewhere to leave to; otherwise Back can't exit and no sentinel is needed.
+  const key = window.navigation.currentEntry?.key;
+  if (key && window.history.length > 1) {
+    // Record the current (landing) entry as the sentinel, then push the working entry above it.
+    sessionStorage.setItem(SENTINEL_STORAGE_KEY, key);
+    history.pushState(null, '', window.location.pathname + window.location.search);
+    return key;
+  }
+  return undefined;
+};
 
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
