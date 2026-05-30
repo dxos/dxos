@@ -13,7 +13,7 @@ export const meta: Plugin.Meta = {
     Structured product search across configurable vendor sites.
     Each vendor is described by an editable template that drives search and result extraction.
   `,
-  icon: 'ph--magnifying-glass--regular',
+  icon: 'ph--shopping-cart--regular',
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-product-search',
   spec: 'PLUGIN.mdl',

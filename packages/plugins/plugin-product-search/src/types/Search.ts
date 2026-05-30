@@ -21,7 +21,7 @@ export const Search = Schema.Struct({
   lastRunAt: Schema.optional(Schema.String),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--magnifying-glass--regular', hue: 'cyan' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
   Type.makeObject(DXN.make('org.dxos.type.productSearch', '0.1.0')),
 );
 export type Search = Type.InstanceType<typeof Search>;

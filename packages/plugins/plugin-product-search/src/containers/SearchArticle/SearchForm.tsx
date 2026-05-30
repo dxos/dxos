@@ -110,7 +110,7 @@ export const SearchForm = ({ search }: SearchFormProps) => {
       )}
 
       <IconButton
-        icon='ph--magnifying-glass--regular'
+        icon='ph--shopping-cart--regular'
         label='Run'
         disabled={selectedProviders.length === 0}
         onClick={handleRun}

@@ -65,7 +65,7 @@ export default Capability.makeModule(
               data: () => Operation.invoke(SearchOperation.RunSearch, { search: Ref.make(search) }),
               properties: {
                 label: ['run-search.label', { ns: meta.id }],
-                icon: 'ph--magnifying-glass--regular',
+                icon: 'ph--shopping-cart--regular',
                 disposition: 'list-item',
               },
             },

@@ -40,7 +40,7 @@ export const RunSearch = Operation.make({
     key: `${SEARCH_OPERATION}.run-search`,
     name: 'Run Search',
     description: 'Runs all enabled providers for a search and links the results.',
-    icon: 'ph--magnifying-glass--regular',
+    icon: 'ph--shopping-cart--regular',
   },
   input: Schema.Struct({ search: Ref.Ref(Search) }),
   output: Schema.Void,
