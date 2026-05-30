@@ -7,7 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
+import type { ForeignKey } from '@dxos/echo-protocol';
 
+import type * as Database from './Database';
+import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
@@ -37,4 +40,40 @@ export const createTagList = (tags: Map): Tag[] =>
 export const findTagByLabel = (tags: Map | undefined, name: string): Tag | undefined => {
   const entry = Object.entries(tags ?? {}).find(([_, tag]) => tag.label.toLowerCase() === name.toLowerCase());
   return entry ? { ...entry[1], id: entry[0] } : undefined;
+};
+
+/**
+ * Finds or creates a {@link Tag} object in the database.
+ *
+ * - With a foreign `key` (system/provider tags): matched by that key; the label is kept current on
+ *   re-sync. Use a stable key (e.g. `{ source: 'google.com/gmail/label', id }`) for tags whose
+ *   identity is external or well-known.
+ * - Without a key (user tags): matched by case-insensitive label among tags that carry **no**
+ *   foreign key, so it never collides with a keyed system/provider tag of the same label.
+ */
+export const findOrCreate = async (
+  db: Pick<Database.Database, 'query' | 'add'>,
+  options: { label: string; hue?: string; key?: ForeignKey },
+): Promise<Tag> => {
+  const { label, hue, key } = options;
+  const withHue = hue ? { hue } : {};
+  if (key) {
+    const [existing] = await db.query(Filter.foreignKeys(Tag, [key])).run();
+    if (existing) {
+      if (existing.label !== label) {
+        Obj.update(existing, (tag) => {
+          tag.label = label;
+        });
+      }
+      return existing;
+    }
+    return db.add(Obj.make(Tag, { [Obj.Meta]: { keys: [key] }, label, ...withHue }));
+  }
+
+  const lowered = label.toLowerCase();
+  const candidates = await db.query(Filter.type(Tag)).run();
+  const existing = candidates.find(
+    (tag) => tag.label.toLowerCase() === lowered && (Obj.getMeta(tag).keys ?? []).length === 0,
+  );
+  return existing ?? db.add(make({ label, ...withHue }));
 };

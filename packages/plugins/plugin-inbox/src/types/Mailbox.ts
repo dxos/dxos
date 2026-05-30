@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, type Database, Feed, Filter, Obj, Ref, Tag, TagIndex, Tagging, Type } from '@dxos/echo';
+import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, TagIndex, Tagging, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -117,41 +117,13 @@ export const make = (props: MailboxProps = {}) => {
 //
 
 /**
- * Finds an existing user {@link Tag} object by case-insensitive label, or creates one. User tags
- * are those without a Gmail foreign key (provider tags carry one — see {@link findOrCreateGmailTag}).
- */
-const findOrCreateUserTag = async (
-  db: Database.Database,
-  { label, hue }: { label: string; hue?: string },
-): Promise<Tag.Tag> => {
-  const lowered = label.toLowerCase();
-  const candidates = await db.query(Filter.type(Tag.Tag)).run();
-  const existing = candidates.find(
-    (tag) => tag.label.toLowerCase() === lowered && Obj.getKeys(tag, GMAIL_TAG_SOURCE).length === 0,
-  );
-  return existing ?? db.add(Tag.make({ label, ...(hue ? { hue } : {}) }));
-};
-
-/**
  * Finds an existing Gmail provider {@link Tag} object by its Gmail label-id foreign key, or creates
  * one carrying that key. Keeps the label in sync with Gmail's dictionary on re-sync.
  */
-export const findOrCreateGmailTag = async (
+export const findOrCreateGmailTag = (
   db: Database.Database,
   { id, name }: { id: string; name: string },
-): Promise<Tag.Tag> => {
-  const key = { source: GMAIL_TAG_SOURCE, id };
-  const [existing] = await db.query(Filter.foreignKeys(Tag.Tag, [key])).run();
-  if (existing) {
-    if (existing.label !== name) {
-      Obj.update(existing, (tag) => {
-        tag.label = name;
-      });
-    }
-    return existing;
-  }
-  return db.add(Obj.make(Tag.Tag, { [Obj.Meta]: { keys: [key] }, label: name }));
-};
+): Promise<Tag.Tag> => Tag.findOrCreate(db, { key: { source: GMAIL_TAG_SOURCE, id }, label: name });
 
 /** Returns the URI used to index a {@link Tag} object on a Mailbox. */
 export const tagUri = (tag: Tag.Tag): string => Obj.getURI(tag).toString();
@@ -166,7 +138,7 @@ export const applyTag = async (
   message: Message.Message,
   db: Database.Database,
 ): Promise<string> => {
-  const tag = await findOrCreateUserTag(db, { label, hue });
+  const tag = await Tag.findOrCreate(db, { label, hue });
   const uri = tagUri(tag);
   Tagging.set(message, uri, { host: mailbox });
   return uri;
