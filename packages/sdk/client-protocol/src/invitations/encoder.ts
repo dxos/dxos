@@ -22,11 +22,6 @@ export class InvitationEncoder {
       decodedInvitation.type = Invitation.Type.INTERACTIVE;
       decodedInvitation.multiUse = true;
     }
-    // proto3 omits zero-value fields on decode; restore defaults explicitly.
-    decodedInvitation.type ??= Invitation.Type.INTERACTIVE;
-    decodedInvitation.kind ??= Invitation.Kind.DEVICE;
-    decodedInvitation.authMethod ??= Invitation.AuthMethod.NONE;
-    decodedInvitation.state ??= Invitation.State.INIT;
     return decodedInvitation;
   }
 
