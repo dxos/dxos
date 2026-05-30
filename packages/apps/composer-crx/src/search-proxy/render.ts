@@ -154,7 +154,7 @@ const waitForSelector = async (
  * `AbortController`.
  */
 export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): Promise<RenderAck> => {
-  const { id, url, waitForSelector: selector, waitForMs, timeoutMs = DEFAULT_RENDER_TIMEOUT_MS } = request;
+  const { id, url, waitForSelector: selector, waitForMs, timeoutMs = DEFAULT_RENDER_TIMEOUT_MS, active = false } = request;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -166,7 +166,7 @@ export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): 
   let tabId: number | undefined;
   try {
     const run = async (): Promise<RenderAck> => {
-      const tab = await api.tabs.create({ url, active: false });
+      const tab = await api.tabs.create({ url, active });
       tabId = tab.id;
       if (tabId === undefined) {
         return { version: 1, id, ok: false, error: 'noTab' };

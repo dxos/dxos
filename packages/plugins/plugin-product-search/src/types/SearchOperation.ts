@@ -33,6 +33,8 @@ export const RenderPage = Operation.make({
   input: Schema.Struct({
     url: Schema.String,
     waitForSelector: Schema.optional(Schema.String),
+    // Render in a focused (foreground) tab — helps sites that gate background tabs (anti-bot).
+    active: Schema.optional(Schema.Boolean),
   }),
   output: Schema.String,
 });

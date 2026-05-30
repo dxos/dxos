@@ -34,6 +34,8 @@ export type FetchPageOptions = {
   render?: boolean;
   // CSS selector to await before reading rendered HTML (only when rendering).
   waitForSelector?: string;
+  // Render in a focused (foreground) tab — helps sites that gate background tabs.
+  active?: boolean;
 };
 
 /**
@@ -55,7 +57,7 @@ export const fetchPage = (request: HttpRequest, options: FetchPageOptions = {}):
   if (!canRender) {
     return fetchViaProxy(request);
   }
-  return renderViaCrx(request.url, { waitForSelector: options.waitForSelector }).pipe(
+  return renderViaCrx(request.url, { waitForSelector: options.waitForSelector, active: options.active }).pipe(
     Effect.catchAll((error) => {
       log.info('render-proxy failed; falling back to edge proxy', { url: request.url, error: error.message });
       return fetchViaProxy(request);

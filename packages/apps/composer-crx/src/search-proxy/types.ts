@@ -60,6 +60,8 @@ export type RenderRequest = {
   waitForMs?: number;
   /** Overall ceiling (ms) before the render is aborted. */
   timeoutMs?: number;
+  /** Render in a focused (foreground) tab. Helps sites that gate background tabs. Default false. */
+  active?: boolean;
 };
 
 /**
@@ -118,6 +120,9 @@ export const decodeRenderRequest = (value: unknown): RenderRequest | undefined =
   if (value.timeoutMs !== undefined && typeof value.timeoutMs !== 'number') {
     return undefined;
   }
+  if (value.active !== undefined && typeof value.active !== 'boolean') {
+    return undefined;
+  }
 
   const request: RenderRequest = { version: 1, id: value.id, url: value.url };
   if (typeof value.waitForSelector === 'string') {
@@ -128,6 +133,9 @@ export const decodeRenderRequest = (value: unknown): RenderRequest | undefined =
   }
   if (typeof value.timeoutMs === 'number') {
     request.timeoutMs = value.timeoutMs;
+  }
+  if (typeof value.active === 'boolean') {
+    request.active = value.active;
   }
   return request;
 };

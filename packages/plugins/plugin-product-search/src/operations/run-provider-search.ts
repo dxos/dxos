@@ -36,6 +36,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
           ? yield* Operation.invoke(SearchOperation.RenderPage, {
               url: request.url,
               waitForSelector: provider.result.responseType === 'html' ? provider.result.itemLocator : undefined,
+              // Render search runs in a focused tab: anti-bot sites (e.g. AutoTrader) gate background
+              // tabs, so a visible tab using the user's own session has a better chance of loading.
+              active: true,
             })
           : yield* fetchPage(request);
       const rows = buildResults(provider, body);

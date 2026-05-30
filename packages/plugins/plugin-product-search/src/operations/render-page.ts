@@ -17,12 +17,12 @@ import { fetchPage, isCrxRenderAvailable } from '../util';
  */
 const handler: Operation.WithHandler<typeof SearchOperation.RenderPage> = SearchOperation.RenderPage.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ url, waitForSelector }) {
+    Effect.fnUntraced(function* ({ url, waitForSelector, active }) {
       const hasWindow = typeof window !== 'undefined';
       const crxAvailable = isCrxRenderAvailable();
-      log.info('render-page: context', { url, hasWindow, crxAvailable, waitForSelector });
+      log.info('render-page: context', { url, hasWindow, crxAvailable, waitForSelector, active });
 
-      const body = yield* fetchPage({ method: 'GET', url }, { render: true, waitForSelector });
+      const body = yield* fetchPage({ method: 'GET', url }, { render: true, waitForSelector, active });
 
       // Diagnostics: what actually rendered? Reveals consent/anti-bot interstitials vs real listings,
       // and the data-testid vocabulary present (so a wrong itemLocator is obvious).

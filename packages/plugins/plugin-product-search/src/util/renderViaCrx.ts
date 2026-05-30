@@ -27,6 +27,7 @@ type RenderRequest = {
   waitForSelector?: string;
   waitForMs?: number;
   timeoutMs?: number;
+  active?: boolean;
 };
 
 type RenderAck =
@@ -37,6 +38,7 @@ export type RenderOptions = {
   waitForSelector?: string;
   waitForMs?: number;
   timeoutMs?: number;
+  active?: boolean;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
@@ -119,6 +121,9 @@ export const renderViaCrx = (url: string, options: RenderOptions = {}): Effect.E
     }
     if (options.waitForMs != null) {
       request.waitForMs = options.waitForMs;
+    }
+    if (options.active != null) {
+      request.active = options.active;
     }
     window.dispatchEvent(new CustomEvent(RENDER_EVENT, { detail: request }));
 
