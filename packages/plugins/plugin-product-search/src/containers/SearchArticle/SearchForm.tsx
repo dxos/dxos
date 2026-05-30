@@ -72,10 +72,12 @@ export const SearchForm = ({ search }: SearchFormProps) => {
 
   const handleRun = useCallback(() => {
     setRunning(true);
-    void invokePromise(SearchOperation.RunSearch, { search: Ref.make(search) })
+    // Pass the spaceId so the invoker resolves Database.Service for the operation's spawn
+    // environment (a bare Ref carries no space, so process-affinity services can't resolve).
+    void invokePromise(SearchOperation.RunSearch, { search: Ref.make(search) }, { spaceId: database?.spaceId })
       .catch((err) => log.catch(err))
       .finally(() => setRunning(false));
-  }, [invokePromise, search]);
+  }, [invokePromise, search, database]);
 
   return (
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>

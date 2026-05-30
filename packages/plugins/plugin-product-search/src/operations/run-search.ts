@@ -12,14 +12,17 @@ import { Result, SearchOperation } from '../types';
 const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchOperation.RunSearch.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ search: searchRef }) {
+      const { db } = yield* Database.Service;
       const search = yield* Database.load(searchRef);
 
       const collected: Ref.Ref<Result.Result>[] = [];
       for (const providerRef of search.providers) {
-        const results = yield* Operation.invoke(SearchOperation.RunProviderSearch, {
-          search: searchRef,
-          provider: providerRef,
-        }).pipe(Effect.catchAll(() => Effect.succeed<Ref.Ref<Result.Result>[]>([])));
+        // Thread the spaceId so the child operation's spawn environment can resolve Database.Service.
+        const results = yield* Operation.invoke(
+          SearchOperation.RunProviderSearch,
+          { search: searchRef, provider: providerRef },
+          { spaceId: db.spaceId },
+        ).pipe(Effect.catchAll(() => Effect.succeed<Ref.Ref<Result.Result>[]>([])));
         collected.push(...results);
       }
 
