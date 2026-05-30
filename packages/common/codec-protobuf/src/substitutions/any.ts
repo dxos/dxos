@@ -64,7 +64,8 @@ export const anySubstitutions = {
         };
       }
       const codec = schema.tryGetCodecForType(value.type_url);
-      let data = codec.decode(value.value);
+      // proto3 omits empty bytes fields from wire format; default to empty Uint8Array for empty messages.
+      let data = codec.decode(value.value ?? new Uint8Array(0));
 
       if (value.type_url === 'google.protobuf.Struct') {
         data = structSubstitutions['google.protobuf.Struct'].decode(data);
