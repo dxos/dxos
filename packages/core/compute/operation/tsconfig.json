@@ -17,9 +17,6 @@
       "path": "../../../common/test-utils"
     },
     {
-      "path": "../../../ui/ui-types"
-    },
-    {
       "path": "../../echo/echo"
     },
     {

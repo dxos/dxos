@@ -13,7 +13,6 @@ import type * as Types from 'effect/Types';
 
 import { DXN, Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
 import type { URI } from '@dxos/keys';
-import type { Label } from '@dxos/ui-types/translations';
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
@@ -408,6 +407,13 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
     }
   });
 };
+
+/**
+ * Translatable label — a plain string or an i18next-style `[key, options]` tuple.
+ * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
+ * the app-level `Label` type so values flow into UI toasts unchanged.
+ */
+export type Label = string | [string, { ns: string | readonly string[]; count?: number; defaultValue?: string }];
 
 /**
  * Per-phase user notification messages for an invocation.

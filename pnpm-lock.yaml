@@ -4997,9 +4997,6 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
-      '@dxos/ui-types':
-        specifier: workspace:*
-        version: link:../../../ui/ui-types
       '@dxos/vendor-kbn-handlebars':
         specifier: workspace:*
         version: link:../../../../vendor/kbn-handlebars
@@ -5539,9 +5536,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@dxos/ui-types':
-        specifier: workspace:*
-        version: link:../../../ui/ui-types
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*

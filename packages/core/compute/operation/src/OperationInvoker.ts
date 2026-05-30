@@ -14,7 +14,6 @@ import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Label } from '@dxos/ui-types/translations';
 
 import * as Scheduler from './scheduler';
 
@@ -26,7 +25,7 @@ import * as Scheduler from './scheduler';
  */
 export type UndoInfo = {
   /** Message shown in the undo toast. */
-  message?: Label;
+  message?: Operation.Label;
   /** Inverse operation that undoes the original invocation. */
   inverse: Operation.Definition.Any;
   /** Input for the inverse operation, derived from the original input and output. */
