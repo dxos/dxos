@@ -58,4 +58,20 @@ describe('Invitation utils', () => {
     expect(decoded.identityKey).to.not.exist;
     expect(decoded).to.deep.eq(invitation);
   });
+
+  test('encodes and decodes a device invitation', () => {
+    const invitation: Invitation = {
+      invitationId: PublicKey.random().toHex(),
+      type: Invitation.Type.INTERACTIVE,
+      kind: Invitation.Kind.DEVICE,
+      authMethod: Invitation.AuthMethod.NONE,
+      state: Invitation.State.INIT,
+      swarmKey: PublicKey.random(),
+      created: CREATED,
+      lifetime: 86400,
+    };
+    const encoded = InvitationEncoder.encode(invitation);
+    const decoded = InvitationEncoder.decode(encoded);
+    expect(decoded).to.deep.eq(invitation);
+  });
 });
