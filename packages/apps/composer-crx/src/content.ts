@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 
 import { CLIP_ACK_EVENT, CLIP_EVENT, type Clip, type ClipAck } from './clip/types';
 import { DEVELOPER_MODE_PROP, getProp } from './config';
+import { installDevtoolsBridge } from './devtools/bridge';
 import { pickAndHarvest } from './picker';
 import { showDebugPreview } from './picker/debug-preview';
 
@@ -88,6 +89,7 @@ const main = async () => {
   log.info('content-script');
 
   installBridge();
+  installDevtoolsBridge();
 
   onMessage('ping', async ({ sender, data }) => {
     log.info('ping', { sender, data });

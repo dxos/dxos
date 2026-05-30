@@ -38,6 +38,7 @@ export default defineConfig({
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
         panel: path.resolve(dirname, 'panel.html'),
+        devtools: path.resolve(dirname, 'devtools.html'),
       },
       output: {
         sourcemap: true,
@@ -111,6 +112,7 @@ export default defineConfig({
           pages: ['sandbox.html'],
         },
         options_page: 'options.html',
+        devtools_page: 'devtools.html',
         background: {
           service_worker: 'src/background.ts',
         },

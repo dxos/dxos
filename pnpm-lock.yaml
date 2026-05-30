@@ -1011,6 +1011,9 @@ catalogs:
     columnify:
       specifier: ^1.6.0
       version: 1.6.0
+    comlink:
+      specifier: ^4.4.2
+      version: 4.4.2
     command-score:
       specifier: 0.1.2
       version: 0.1.2
@@ -3215,6 +3218,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/composer-devtools-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/composer-devtools-protocol
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -3260,6 +3266,9 @@ importers:
       ai:
         specifier: 'catalog:'
         version: 6.0.97(zod@4.3.6)
+      comlink:
+        specifier: 'catalog:'
+        version: 4.4.2
       react:
         specifier: ~19.2.3
         version: 19.2.6
@@ -17302,6 +17311,12 @@ importers:
       get-port-please:
         specifier: 'catalog:'
         version: 3.1.1
+
+  packages/sdk/composer-devtools-protocol:
+    dependencies:
+      comlink:
+        specifier: 'catalog:'
+        version: 4.4.2
 
   packages/sdk/config:
     dependencies:
