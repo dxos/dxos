@@ -30,23 +30,22 @@ export const SearchForm = ({ search }: SearchFormProps) => {
   // which of these are linked into `search.providers`.
   const allProviders = useQuery(database, Filter.type(Provider.Provider));
 
-  // Bare object ids of the providers currently linked to the search.
-  const selectedIds = useMemo(
-    () => new Set(search.providers.map((ref) => ref.uri.split(':').pop() ?? '')),
-    [search.providers],
-  );
+  // URIs of the providers currently linked to the search. Match on the full ref URI
+  // (=== Obj.getURI), matching how feed compares refs to loaded objects.
+  const selectedUris = useMemo(() => new Set(search.providers.map((ref) => ref.uri)), [search.providers]);
 
   const selectedProviders = useMemo(
-    () => allProviders.filter((provider) => selectedIds.has(provider.id)),
-    [allProviders, selectedIds],
+    () => allProviders.filter((provider) => selectedUris.has(Obj.getURI(provider))),
+    [allProviders, selectedUris],
   );
 
   const handleToggleProvider = useCallback(
     (provider: Provider.Provider) => {
+      const uri = Obj.getURI(provider);
       Obj.update(search, (search) => {
-        const exists = search.providers.some((ref) => (ref.uri.split(':').pop() ?? '') === provider.id);
+        const exists = search.providers.some((ref) => ref.uri === uri);
         search.providers = exists
-          ? search.providers.filter((ref) => (ref.uri.split(':').pop() ?? '') !== provider.id)
+          ? search.providers.filter((ref) => ref.uri !== uri)
           : [...search.providers, Ref.make(provider)];
       });
     },
@@ -89,7 +88,7 @@ export const SearchForm = ({ search }: SearchFormProps) => {
             <Input.Root key={provider.id}>
               <div className='flex items-center gap-2'>
                 <Input.Checkbox
-                  checked={selectedIds.has(provider.id)}
+                  checked={selectedUris.has(Obj.getURI(provider))}
                   onCheckedChange={() => handleToggleProvider(provider)}
                 />
                 <Input.Label>{provider.name}</Input.Label>
