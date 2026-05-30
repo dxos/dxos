@@ -4,8 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { DeviceKind, Invitation, Platform } from './gen/dxos/client/services.js';
-import { AdmittedFeed, MembershipPolicy } from './gen/dxos/halo/credentials.js';
 import {
   normalizeAdmittedFeedDesignation,
   normalizeDeviceKind,
@@ -14,6 +12,8 @@ import {
   normalizeMembershipPolicy,
   normalizePlatformType,
 } from './enum-normalizers.js';
+import { DeviceKind, Invitation, Platform } from './gen/dxos/client/services.js';
+import { AdmittedFeed, MembershipPolicy } from './gen/dxos/halo/credentials.js';
 
 describe('enum normalizers', () => {
   test('normalizeMembershipPolicy maps legacy wire values', ({ expect }) => {

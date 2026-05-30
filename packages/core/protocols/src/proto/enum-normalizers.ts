@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AdmittedFeed, MembershipPolicy } from './gen/dxos/halo/credentials.js';
 import { DeviceKind, Invitation, Platform } from './gen/dxos/client/services.js';
+import { AdmittedFeed, MembershipPolicy } from './gen/dxos/halo/credentials.js';
 
 /**
  * Normalizes pre-sentinel and unspecified wire values for {@link MembershipPolicy}.
