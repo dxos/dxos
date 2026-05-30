@@ -76,20 +76,47 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
         bodyHasSearchListingTitle: body.includes('data-testid="search-listing-title"'),
       });
 
+      // Upsert by URL: reuse existing Result objects so re-runs don't duplicate listings or discard
+      // user state (e.g. `starred`). Resolve the search's current results into a url -> object map.
+      const existingByUrl = new Map<string, Result.Result>();
+      for (const ref of search.results) {
+        const existing = yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
+        if (existing && !existingByUrl.has(existing.url)) {
+          existingByUrl.set(existing.url, existing);
+        }
+      }
+
+      const now = new Date().toISOString();
       const refs: Ref.Ref<Result.Result>[] = [];
       for (const row of rows) {
-        const result = Result.make({
-          title: row.title,
-          url: row.url,
-          price: row.price,
-          currency: row.currency,
-          images: [...row.images],
-          properties: row.properties,
-          provider: Ref.make(provider),
-          fetchedAt: new Date().toISOString(),
-        });
-        const persisted = yield* Database.add(result);
-        refs.push(Ref.make(persisted));
+        const existing = existingByUrl.get(row.url);
+        if (existing) {
+          // Update the snapshot in place (price/title/images can change); preserve identity + starred.
+          Obj.update(existing, (existing) => {
+            existing.title = row.title;
+            existing.price = row.price;
+            existing.currency = row.currency;
+            existing.images = [...row.images];
+            existing.properties = row.properties;
+            existing.provider = Ref.make(provider);
+            existing.fetchedAt = now;
+          });
+          refs.push(Ref.make(existing));
+        } else {
+          const persisted = yield* Database.add(
+            Result.make({
+              title: row.title,
+              url: row.url,
+              price: row.price,
+              currency: row.currency,
+              images: [...row.images],
+              properties: row.properties,
+              provider: Ref.make(provider),
+              fetchedAt: now,
+            }),
+          );
+          refs.push(Ref.make(persisted));
+        }
       }
       return refs;
     }),
