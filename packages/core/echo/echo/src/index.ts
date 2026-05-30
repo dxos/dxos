@@ -27,6 +27,7 @@ export * as Registry from './Registry';
 export * as Relation from './Relation';
 export * as Scope from './Scope';
 export * as Tag from './Tag';
+export * as TagIndex from './TagIndex';
 export * as Type from './Type';
 export * as Collection from './Collection';
 export * as View from './View';
