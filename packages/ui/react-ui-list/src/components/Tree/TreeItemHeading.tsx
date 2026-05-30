@@ -17,14 +17,16 @@ export type TreeItemHeadingProps = {
   iconHue?: string;
   disabled?: boolean;
   current?: boolean;
-  /** Optional item count rendered as a badge directly after the label. */
+  /** Optional item count rendered as a neutral badge directly after the label. */
   count?: number;
+  /** Optional count of new/modified items; when greater than zero it replaces {@link count} with a rose badge. */
+  modifiedCount?: number;
   onSelect?: (option: boolean) => void;
 };
 
 export const TreeItemHeading = memo(
   forwardRef<HTMLButtonElement, TreeItemHeadingProps>(
-    ({ label, className, icon, iconHue, disabled, current, count, onSelect }, forwardedRef) => {
+    ({ label, className, icon, iconHue, disabled, current, count, modifiedCount, onSelect }, forwardedRef) => {
       const { t } = useTranslation();
       const styles = iconHue ? getStyles(iconHue) : undefined;
 
@@ -74,14 +76,34 @@ export const TreeItemHeading = memo(
             <span className='min-w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>
-            {typeof count === 'number' && (
-              <Tag palette='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
-                {count}
-              </Tag>
-            )}
+            <CountBadge count={count} modifiedCount={modifiedCount} />
           </Button>
         </TextTooltip>
       );
     },
   ),
 );
+
+/**
+ * Renders the count badge after a tree item label.
+ * A positive `modifiedCount` (e.g. new/unread items) shows as a rose badge in place of the neutral total `count`.
+ */
+const CountBadge = ({ count, modifiedCount }: Pick<TreeItemHeadingProps, 'count' | 'modifiedCount'>) => {
+  if (typeof modifiedCount === 'number' && modifiedCount > 0) {
+    return (
+      <Tag palette='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+        {modifiedCount}
+      </Tag>
+    );
+  }
+
+  if (typeof count === 'number') {
+    return (
+      <Tag palette='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+        {count}
+      </Tag>
+    );
+  }
+
+  return null;
+};

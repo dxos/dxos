@@ -56,6 +56,8 @@ export type Tags = Schema.Schema.Type<typeof Tags>;
 /** Mailbox object schema. */
 export const Mailbox = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
+  // ISO timestamp of when the mailbox was last viewed. Messages with a later `created` time are counted as new.
+  viewedAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Unified tag map covering both Gmail-synced provider labels (`source: 'provider'`,
   // keyed by Gmail's label-id) and user-applied tags (`source: 'user'`, keyed by EntityId).
@@ -91,6 +93,26 @@ export type Mailbox = Type.InstanceType<typeof Mailbox>;
 
 /** Checks if a value is a Mailbox object. */
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
+
+/** Number of messages created after the mailbox was last viewed (see {@link markViewed}). */
+export const getNewMessageCount = (
+  mailbox: Mailbox | Obj.Snapshot<Mailbox>,
+  messages: readonly Message.Message[],
+): number => {
+  const viewedAt = mailbox.viewedAt;
+  if (!viewedAt) {
+    return messages.length;
+  }
+  return messages.reduce((count, message) => (message.created > viewedAt ? count + 1 : count), 0);
+};
+
+/** Advances the `viewedAt` cursor to now, clearing the new-message count. */
+export const markViewed = (mailbox: Mailbox): void => {
+  const now = new Date().toISOString();
+  Obj.update(mailbox, (mailbox) => {
+    mailbox.viewedAt = now;
+  });
+};
 
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),

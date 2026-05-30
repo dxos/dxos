@@ -43,8 +43,10 @@ export type NodeProperties = SharedProperties & {
   error?: string;
   modified?: boolean;
   palette?: string;
-  /** Optional item count rendered as a badge before the action column. */
+  /** Optional item count rendered as a neutral badge after the label. */
   count?: number;
+  /** Optional count of new/modified items; when greater than zero it shows as a rose badge in place of `count`. */
+  modifiedCount?: number;
 };
 
 export type ActionProperties = SharedProperties & {
