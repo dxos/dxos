@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { Provider, Result, SearchOperation } from '../types';
 import { type ResultData, bindRequest, extractResults, fetchPage } from '../util';
@@ -42,6 +43,15 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
             })
           : yield* fetchPage(request);
       const rows = buildResults(provider, body);
+      // Decisive extraction diagnostic (primitives so the console never truncates them): what
+      // selector ran, whether the real listing markers are present, and how many rows matched.
+      log.info('run-provider-search: extracted', {
+        itemLocator: provider.result.itemLocator,
+        rows: rows.length,
+        bodyLength: body.length,
+        bodyHasAdvertCard: body.includes('data-testid="advertCard-'),
+        bodyHasSearchListingTitle: body.includes('data-testid="search-listing-title"'),
+      });
 
       const refs: Ref.Ref<Result.Result>[] = [];
       for (const row of rows) {
