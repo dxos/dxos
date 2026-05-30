@@ -31,7 +31,11 @@ const make = () =>
            to a search-schema field (use the 'min' / 'max' transform hints for range fields).
         5. Derive the result mapping: choose responseType ('html' or 'json'), an itemLocator that
            selects each listing, and per-field extractors for title, url, price, and image
-           (CSS selector + attribute for html, JSONPath for json).
+           (CSS selector + attribute for html, JSONPath for json). The page source begins with a
+           "Repeating elements" summary listing candidate container selectors with their frequency;
+           use the top candidate (the element that wraps the fields and repeats once per result) as
+           the itemLocator, and prefer the exact selector shown — e.g. a "^=" prefix selector when
+           container ids are indexed (advertCard-0, advertCard-1), not an exact match.
         6. Call setProviderTemplate with the Provider's ref, the request and result mappings, and
            the searchSchema as a JSON string (a JSON Schema object serialized with JSON.stringify,
            e.g. '{"type":"object","properties":{"make":{"type":"string","title":"Make"}}}').

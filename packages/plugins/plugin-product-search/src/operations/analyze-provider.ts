@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { SearchOperation } from '../types';
-import { cleanHtml, fetchPage, isCrxRenderAvailable } from '../util';
+import { cleanHtml, fetchPage, isCrxRenderAvailable, summarizeStructure } from '../util';
 
 // Bound the cleaned page handed to the LLM (≈ token budget). Rendered SPA pages can be multiple MB
 // raw; `cleanHtml` strips scripts/styles/noise so the model sees the repeating listing structure.
@@ -42,14 +42,18 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
           : yield* fetchPage({ method: 'GET', url: provider.url });
 
       const cleaned = cleanHtml(body, { maxLength: MAX_BODY_LENGTH });
+      // Distil the repeating structure from the FULL rendered DOM (not the truncated slice) so the
+      // summary reflects ALL results — a strong, lossless signal for the itemLocator even though the
+      // HTML slice below is truncated. Prepended so the model reads the hints first.
+      const structure = summarizeStructure(body);
+      const output = structure.length > 0 ? `${structure}\n\n## Page source (cleaned, truncated)\n${cleaned}` : cleaned;
       log.info('analyze-provider: fetched', {
         url: provider.url,
         rawLength: body.length,
         cleanedLength: cleaned.length,
-        // Whether the LLM actually sees listing markers within the cap (else it will hallucinate).
-        cleanedHasListing: /data-testid="(search-listing-title|advertCard)/.test(cleaned) || cleaned.includes('data-advertid'),
+        hasStructure: structure.length > 0,
       });
-      return cleaned;
+      return output;
     }),
   ),
 );
