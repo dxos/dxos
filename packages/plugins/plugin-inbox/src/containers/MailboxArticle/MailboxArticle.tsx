@@ -94,6 +94,13 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [filteredMessages, sortDescending.value],
   );
 
+  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
+  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
+  // the mailbox id so it runs once per opened mailbox rather than on every update.
+  useEffect(() => {
+    Mailbox.markViewed(subject);
+  }, [subject.id]);
+
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.
   const [isEmpty, setEmpty] = useState<boolean>(false);
