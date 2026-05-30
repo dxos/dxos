@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 import { RangeField, type RangeValue } from './RangeField';
 
 const DefaultStory = (props: { label?: string; value?: RangeValue }) => {
