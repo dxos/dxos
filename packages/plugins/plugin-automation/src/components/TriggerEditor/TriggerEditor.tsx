@@ -84,6 +84,9 @@ type UseCustomInputsProps = {
 
 const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
   const client = useClient();
+  // TODO(dmaretskyi): 1 - can't query db + registry together
+  // TODO(dmaretskyi): 2 - infinite render loop for some reason
+  
   const functions = useQuery(
     client.graph.registry,
     // Query.select(Filter.type(Operation.PersistentOperation)).from(db),
