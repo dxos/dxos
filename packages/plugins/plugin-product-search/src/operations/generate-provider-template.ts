@@ -12,8 +12,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { meta } from '../meta';
 import { ProviderBlueprint } from '../blueprints';
+import { meta } from '../meta';
 import { Provider, SearchOperation } from '../types';
 
 const TOAST_ID = `${meta.id}/regenerate`;
@@ -35,7 +35,6 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--sparkle--regular',
-          duration: 120_000,
           title: ['regenerate.toast.pending.title', { ns: meta.id }],
         });
 
@@ -44,40 +43,40 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           const provider = yield* Database.load(providerRef);
 
           // Materialize the static blueprint definition as an ECHO Blueprint object in the space
-        // (cloned once and reused thereafter), keyed by `Provider.BLUEPRINT_KEY`.
-        const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-        let blueprint = blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY);
-        if (!blueprint) {
-          blueprint = db.add(ProviderBlueprint.make());
-        }
-        invariant(blueprint, 'Provider blueprint not found.');
+          // (cloned once and reused thereafter), keyed by `Provider.BLUEPRINT_KEY`.
+          const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
+          let blueprint = blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY);
+          if (!blueprint) {
+            blueprint = db.add(ProviderBlueprint.make());
+          }
+          invariant(blueprint, 'Provider blueprint not found.');
 
-        // The AgentPrompt routine loads `blueprints`/`context` and binds them to its own session,
-        // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
-        // available to the agent without a pre-bound chat.
-        const routine = Routine.make({
-          name: 'Generate Provider Template',
-          instructions: trim`
+          // The AgentPrompt routine loads `blueprints`/`context` and binds them to its own session,
+          // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
+          // available to the agent without a pre-bound chat.
+          const routine = Routine.make({
+            name: 'Generate Provider Template',
+            instructions: trim`
             Analyze the provider at ${provider.url} and populate its search template by calling the
             available tools: first analyzeProvider to fetch the vendor site, then setProviderTemplate
             to persist the result. Derive the typed search fields (search schema), the request mapping,
             and the result mapping. Only include fields and selectors you can justify from the page source.
           `,
-          blueprints: [Ref.make(blueprint)],
-          context: [Ref.make(provider)],
-        });
+            blueprints: [Ref.make(blueprint)],
+            context: [Ref.make(provider)],
+          });
 
-        // Create the conversation feed in the space so the spawned AgentPrompt environment inherits
-        // space affinity (without it, AgentPrompt creates a space-less feed and Database.Service is
-        // unavailable in the spawn). Mirrors the assistant e2e harness.
-        const conversationFeed = yield* Database.add(Feed.make());
+          // Create the conversation feed in the space so the spawned AgentPrompt environment inherits
+          // space affinity (without it, AgentPrompt creates a space-less feed and Database.Service is
+          // unavailable in the spawn). Mirrors the assistant e2e harness.
+          const conversationFeed = yield* Database.add(Feed.make());
 
-        yield* Database.flush();
-        yield* Operation.invoke(
-          AgentPrompt,
-          { prompt: Ref.make(routine), input: {} },
-          { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
-        );
+          yield* Database.flush();
+          yield* Operation.invoke(
+            AgentPrompt,
+            { prompt: Ref.make(routine), input: {} },
+            { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
+          );
 
           // Reload so the mutation persisted by setProviderTemplate is reflected.
           const updated = yield* Database.load(providerRef);
@@ -91,7 +90,6 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
               yield* Operation.invoke(LayoutOperation.AddToast, {
                 id: TOAST_ID,
                 icon: 'ph--warning--regular',
-                duration: 8_000,
                 title: ['regenerate.toast.error.title', { ns: meta.id }],
                 description: ['regenerate.toast.error.description', { ns: meta.id }],
               });
@@ -109,9 +107,11 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--check-circle--regular',
-          duration: 5_000,
           title: ['regenerate.toast.success.title', { ns: meta.id }],
-          description: [fieldCount > 0 ? 'regenerate.toast.success.description' : 'regenerate.toast.empty.description', { ns: meta.id, count: fieldCount }],
+          description: [
+            fieldCount > 0 ? 'regenerate.toast.success.description' : 'regenerate.toast.empty.description',
+            { ns: meta.id, count: fieldCount },
+          ],
         });
 
         return Ref.make(updated);
