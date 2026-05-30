@@ -2,27 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card, composable } from '@dxos/react-ui';
 
 import { type Result } from '../../types/Result';
 
-export type ResultCardProps = { subject: Result; current?: boolean } & Omit<
-  ComponentPropsWithoutRef<typeof Card.Root>,
-  'children'
->;
+export type ResultCardProps = { subject: Result; current?: boolean };
 
 /**
  * Presentational card for a search {@link Result}.
  *
- * Composable: forwards `ref` + props onto `Card.Root` so it can be the child of
- * `Focus.Item asChild` (a Radix Slot that injects current/keyboard/click wiring).
+ * Created with `composable()` so it carries the COMPOSABLE marker and can be the child of
+ * `Focus.Item asChild` (a DXOS Slot that injects current/keyboard/click wiring + forwards ref).
  *
  * `Card.Header` is a 3-slot subgrid (icon · content · action); title + price live inside the
  * centre content slot so they occupy the `1fr` column rather than the narrow leading icon slot.
  */
-export const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
+export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, classNames, ...props }, forwardedRef) => {
     const imageUrl = subject.images?.[0];
     const price =

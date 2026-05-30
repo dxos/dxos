@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Carousel } from '@dxos/react-ui';
+import { Carousel, IconButton } from '@dxos/react-ui';
 
 import { type Result } from '../../types';
 
@@ -23,7 +23,10 @@ export const ResultDetail = ({ result, onClose }: ResultDetailProps) => {
 
   return (
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
-      <h2 className='text-lg font-medium'>{result.title}</h2>
+      <div className='grid grid-cols-[minmax(0,1fr)_min-content] items-start gap-2'>
+        <h2 className='text-lg font-medium'>{result.title}</h2>
+        {onClose && <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close' onClick={onClose} />}
+      </div>
 
       {(result.price != null || result.currency) && (
         <div className='text-sm text-description'>
