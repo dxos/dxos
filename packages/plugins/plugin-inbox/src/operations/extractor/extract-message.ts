@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       // A LIVE, reactive ECHO proxy (`isProxy`) is needed to use the source as a relation/tag
       // endpoint. The operation runs in a separate process, so `source` is a snapshot; re-resolve
       // it from the space db via `getObjectById` (live proxy, or undefined for feed-stored items).
-      const live = db.getObjectById(source.id);
+      const live = db.getObjectById<Message.Message>(source.id);
       const sourceIsLive = live !== undefined;
 
       // Resolve the owning Mailbox (feed membership via the source id; no live proxy required).
@@ -78,9 +78,9 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
 
       if (owningMailbox && result) {
         // Apply tags. Requires a live message (Ref) — skipped for feed messages.
-        if (sourceIsLive && result.tags && result.tags.length > 0) {
+        if (live && result.tags && result.tags.length > 0) {
           for (const tag of result.tags) {
-            yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live as Message.Message, db));
+            yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live, db));
           }
         }
 
