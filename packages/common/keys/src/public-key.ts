@@ -14,7 +14,7 @@ import {
   inspectCustom,
   truncateKey,
 } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 
 import { randomBytes } from './random-bytes';
 
@@ -149,7 +149,7 @@ export class PublicKey implements Equatable {
    * @deprecated All keys should be represented as instances of PublicKey.
    */
   static bufferize(str: string): Buffer {
-    invariant(typeof str === 'string', 'Invalid type');
+    assertArgument(typeof str === 'string', 'str', 'Invalid type');
     const buffer = Buffer.from(str, 'hex');
     // invariant(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
     //   `Invalid key length: ${buffer.length}`);

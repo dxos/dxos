@@ -26,7 +26,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -441,7 +441,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Remove reactive object.
    */
   remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
-    invariant(isEchoObject(obj));
+    assertArgument(isEchoObject(obj), 'obj');
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
