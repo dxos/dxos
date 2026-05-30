@@ -94,8 +94,8 @@ export const Subscription = Schema.Struct({
       imageUrl: Schema.optional(Schema.String),
       readAt: Schema.optional(Schema.String),
       archived: Schema.optional(Schema.Boolean),
-      starred: Schema.optional(Schema.Boolean),
-      starredAt: Schema.optional(Schema.String),
+      starred: Schema.optional(Schema.Boolean), // TODO(burdon): Model using tags.
+      starredAt: Schema.optional(Schema.String), // TODO(burdon): Can we remove this?
     }),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(

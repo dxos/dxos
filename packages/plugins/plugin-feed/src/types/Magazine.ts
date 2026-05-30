@@ -57,6 +57,7 @@ export const Magazine = Schema.Struct({
    * Per-Post state shared across magazines (readAt, archived, starred,
    * content, imageUrl) lives on `Subscription.postState` keyed by Post id.
    */
+  // TODO(burdon): Reconcile with Subscription.
   postState: Schema.Record({
     key: Schema.String,
     value: Schema.Struct({
