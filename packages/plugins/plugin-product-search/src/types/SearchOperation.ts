@@ -60,6 +60,19 @@ export const AnalyzeProvider = Operation.make({
   services: [Database.Service],
 });
 
+/** Runs the provider blueprint agent to analyze the site and populate the search template. */
+export const GenerateProviderTemplate = Operation.make({
+  meta: {
+    key: `${SEARCH_OPERATION}.generate-provider-template`,
+    name: 'Generate Provider Template',
+    description: 'Runs the provider blueprint agent to analyze the site and populate the search template.',
+    icon: 'ph--sparkle--regular',
+  },
+  input: Schema.Struct({ provider: Ref.Ref(Provider) }),
+  output: Ref.Ref(Provider),
+  services: [Database.Service, Capability.Service],
+});
+
 /** Persists a derived provider template (search schema + request + result mappings). */
 export const SetProviderTemplate = Operation.make({
   meta: {

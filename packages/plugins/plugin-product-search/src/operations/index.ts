@@ -9,4 +9,5 @@ export const SearchOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./run-provider-search'),
   () => import('./analyze-provider'),
   () => import('./set-provider-template'),
+  () => import('./generate-provider-template'),
 );
