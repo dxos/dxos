@@ -20,6 +20,13 @@ export type EdgeModelResolverCapabilities = Capability.Capability<typeof AppCapa
 
 const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilities>(
   Effect.fnUntraced(function* () {
+    const clients = yield* Capability.getAll(ClientCapabilities.Client);
+    const hasClientCapability = clients.length > 0;
+    const edgeUrlConfigured = hasClientCapability
+      ? Boolean(clients[0].config.values.runtime?.services?.edge?.url)
+      : false;
+    log('edge model resolver activating', { hasClientCapability, edgeUrlConfigured });
+
     const client = yield* Capability.get(ClientCapabilities.Client);
     const edgeUrl = client.config.values.runtime?.services?.edge?.url;
     if (!edgeUrl) {
@@ -47,7 +54,7 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
             // Host-only sentinel; `EdgeAiHttpClient` re-bases the request onto the EDGE
             // `/generate/anthropic` route and signs it with the verifiable presentation.
             apiUrl: 'http://edge',
-          }).pipe(Layer.provide(EdgeAiHttpClient.layer(edgeClient))),
+          }).pipe(Layer.provide(EdgeAiHttpClient.layer(() => edgeClient))),
         ),
       ),
       () => Effect.sync(() => subscription.unsubscribe()),

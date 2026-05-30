@@ -15,6 +15,8 @@ import { log } from '@dxos/log';
 
 import { type EdgeHttpClient } from './edge-http-client';
 
+export type GetEdgeHttpClient = () => EdgeHttpClient;
+
 /**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
  */
@@ -26,14 +28,15 @@ export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions'
  * fetching the AI service directly.
  *
  * Provide this layer in place of `FetchHttpClient.layer` when constructing an Anthropic client,
- * e.g. `AnthropicClient.layer({ apiUrl: 'http://edge' }).pipe(Layer.provide(EdgeAiHttpClient.layer(edgeClient)))`.
+ * e.g. `AnthropicClient.layer({ apiUrl: 'http://edge' }).pipe(Layer.provide(EdgeAiHttpClient.layer(() => edgeClient)))`.
  * The `apiUrl` host is a sentinel; only the request path is forwarded (see `anthropicAiRequest`).
  *
  * Modeled on `FunctionsAiHttpClient` in `@dxos/functions`.
  */
 export class EdgeAiHttpClient {
-  static make = (edgeClient: EdgeHttpClient) =>
+  static make = (getClient: GetEdgeHttpClient) =>
     HttpClient.make((request, url, signal, fiber) => {
+      const edgeClient = getClient();
       const context = fiber.getFiberRef(FiberRef.currentContext);
       const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
       const headers = options.headers
@@ -75,6 +78,6 @@ export class EdgeAiHttpClient {
       return send(undefined);
     });
 
-  static layer = (edgeClient: EdgeHttpClient) =>
-    Layer.succeed(HttpClient.HttpClient, EdgeAiHttpClient.make(edgeClient));
+  static layer = (getClient: GetEdgeHttpClient) =>
+    Layer.succeed(HttpClient.HttpClient, EdgeAiHttpClient.make(getClient));
 }
