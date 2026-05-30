@@ -5,6 +5,7 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Card, IconButton, composable } from '@dxos/react-ui';
 
 import { type Result } from '../../types/Result';
@@ -22,10 +23,12 @@ export type ResultCardProps = { subject: Result; current?: boolean };
  */
 export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, classNames, ...props }, forwardedRef) => {
-    const imageUrl = subject.images?.[0];
+    // Subscribe so the card re-renders when the result mutates (e.g. star toggle).
+    const [result] = useObject(subject);
+    const imageUrl = result.images?.[0];
     const price =
-      subject.price != null ? [subject.currency, subject.price.toLocaleString()].filter(Boolean).join(' ') : undefined;
-    const starred = Boolean(subject.starred);
+      result.price != null ? [result.currency, result.price.toLocaleString()].filter(Boolean).join(' ') : undefined;
+    const starred = Boolean(result.starred);
 
     // Stop propagation so the star toggle doesn't trigger the tile's Focus.Item selection.
     const handleToggleStar = useCallback(
@@ -46,7 +49,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
         {...props}
       >
         {imageUrl && (
-          <Card.Poster alt={subject.title ?? 'Product'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster alt={result.title ?? 'Product'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
           <Card.IconBlock padding>
@@ -61,7 +64,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
             />
           </Card.IconBlock>
           <div className='flex flex-col gap-0.5 min-w-0 py-2'>
-            <Card.Title classNames='line-clamp-2'>{subject.title}</Card.Title>
+            <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>
             {price && <span className='text-sm text-description'>{price}</span>}
           </div>
           <Card.IconBlock />

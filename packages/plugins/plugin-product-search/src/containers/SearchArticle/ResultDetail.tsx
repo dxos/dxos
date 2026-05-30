@@ -5,6 +5,7 @@
 import React, { Fragment, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Carousel, IconButton } from '@dxos/react-ui';
 
 import { type Result } from '../../types';
@@ -15,14 +16,16 @@ export type ResultDetailProps = {
 };
 
 /** Detail pane for the selected search result. */
-export const ResultDetail = ({ result, onClose }: ResultDetailProps) => {
+export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) => {
+  // Subscribe so the pane re-renders when the result mutates (e.g. star toggle).
+  const [result] = useObject(subject);
   const handleToggleStar = useCallback(() => {
-    if (result) {
-      Obj.update(result, (result) => {
-        result.starred = !result.starred;
+    if (subject) {
+      Obj.update(subject, (subject) => {
+        subject.starred = !subject.starred;
       });
     }
-  }, [result]);
+  }, [subject]);
 
   if (!result) {
     return <div className='flex items-center justify-center h-full text-subdued text-sm'>No result selected.</div>;
