@@ -204,6 +204,30 @@ bypass validation. Two rules:
    guessing, and pass class arrays to `classNames` on react-ui components rather than styling raw
    elements.
 
+### Cards: 3-slot subgrid + `asChild` composability
+
+`Card.Header` and `Card.Row` are **3-slot subgrids** (`grid-cols-subgrid`: leading icon · content `1fr` · trailing action). Children are placed by ORDER. A lone `<Card.Title>` as the only child lands in the narrow leading icon slot and gets clamped (e.g. a title renders as "20…"). Put real content in the CENTRE slot: bracket it with the icon slots, or wrap the content in a single element that occupies slot 2:
+
+```tsx
+<Card.Header>
+  <Card.IconBlock />                {/* slot 1 (icon) — empty placeholder */}
+  <div className='flex flex-col gap-0.5 min-w-0'>   {/* slot 2 (1fr content) */}
+    <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
+    {price && <span className='text-sm text-description'>{price}</span>}
+  </div>
+  <Card.IconBlock />                {/* slot 3 (action) — empty placeholder */}
+</Card.Header>
+```
+
+A component used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asChild`) MUST be composable — a single element that forwards `ref` and spreads injected props. A plain function component silently drops the Slot's `ref`/handlers, so current/keyboard/click wiring never attaches. Make presentational cards `forwardRef` and spread:
+
+```tsx
+export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, current, classNames, ...props }, ref) => (
+  <Card.Root ref={ref} classNames={['dx-hover', current && 'dx-current', classNames]} {...props}>…</Card.Root>
+));
+// then: <Focus.Item asChild current={current} onCurrentChange={…}><FooCard subject={x} current={current} /></Focus.Item>
+```
+
 ### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
 
 Always thread `attendableId` from `AppSurface.ObjectArticleProps` into `<Menu.Root>`. Don't underscore it as unused — without it, attention-driven contributions don't target the right surface.

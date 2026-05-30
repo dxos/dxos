@@ -30,22 +30,22 @@ export const SearchForm = ({ search }: SearchFormProps) => {
   // which of these are linked into `search.providers`.
   const allProviders = useQuery(database, Filter.type(Provider.Provider));
 
-  // URIs of the providers currently linked to the search. Match on the full ref URI
-  // (=== Obj.getURI), matching how feed compares refs to loaded objects.
-  const selectedUris = useMemo(() => new Set(search.providers.map((ref) => ref.uri)), [search.providers]);
+  // Match by object id (the DXN tail). DXN URIs separate the id with `/` — `echo:/<id>` for a
+  // local ref vs `echo://<space>/<id>` for a space-qualified one — so split on `/`, not `:`.
+  const refId = (ref: { uri: string }) => ref.uri.split('/').pop() ?? '';
+  const selectedIds = useMemo(() => new Set(search.providers.map(refId)), [search.providers]);
 
   const selectedProviders = useMemo(
-    () => allProviders.filter((provider) => selectedUris.has(Obj.getURI(provider))),
-    [allProviders, selectedUris],
+    () => allProviders.filter((provider) => selectedIds.has(provider.id)),
+    [allProviders, selectedIds],
   );
 
   const handleToggleProvider = useCallback(
     (provider: Provider.Provider) => {
-      const uri = Obj.getURI(provider);
       Obj.update(search, (search) => {
-        const exists = search.providers.some((ref) => ref.uri === uri);
+        const exists = search.providers.some((ref) => refId(ref) === provider.id);
         search.providers = exists
-          ? search.providers.filter((ref) => ref.uri !== uri)
+          ? search.providers.filter((ref) => refId(ref) !== provider.id)
           : [...search.providers, Ref.make(provider)];
       });
     },
@@ -88,7 +88,7 @@ export const SearchForm = ({ search }: SearchFormProps) => {
             <Input.Root key={provider.id}>
               <div className='flex items-center gap-2'>
                 <Input.Checkbox
-                  checked={selectedUris.has(Obj.getURI(provider))}
+                  checked={selectedIds.has(provider.id)}
                   onCheckedChange={() => handleToggleProvider(provider)}
                 />
                 <Input.Label>{provider.name}</Input.Label>

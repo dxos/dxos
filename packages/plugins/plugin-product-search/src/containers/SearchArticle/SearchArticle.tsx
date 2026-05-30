@@ -84,27 +84,29 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   return (
     <Panel.Root classNames='border' role={role}>
       <Panel.Content>
-        <div className='grid grid-cols-[20rem_minmax(0,1fr)_24rem] h-full overflow-hidden'>
-          <div className='border-ie border-separator overflow-hidden'>
+        <div className='flex flex-col h-full overflow-hidden'>
+          <div className='border-be border-separator shrink-0'>
             <SearchForm search={subject} />
           </div>
-          <div className='overflow-hidden'>
-            {results.length === 0 ? (
-              <div className='flex items-center justify-center h-full text-subdued text-sm'>No results.</div>
-            ) : (
-              <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-                <Masonry.Content thin centered padding>
-                  <Masonry.Viewport
-                    classNames='py-2'
-                    items={tileItems}
-                    getId={(data) => (data?.result ? Obj.getURI(data.result) : '')}
-                  />
-                </Masonry.Content>
-              </Masonry.Root>
-            )}
-          </div>
-          <div className='border-is border-separator overflow-hidden'>
-            <ResultDetail result={selectedResult} />
+          <div className='grid grid-cols-[minmax(0,1fr)_24rem] flex-1 min-h-0 overflow-hidden'>
+            <div className='overflow-hidden'>
+              {results.length === 0 ? (
+                <div className='flex items-center justify-center h-full text-subdued text-sm'>No results.</div>
+              ) : (
+                <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
+                  <Masonry.Content thin centered padding>
+                    <Masonry.Viewport
+                      classNames='py-2'
+                      items={tileItems}
+                      getId={(data) => (data?.result ? Obj.getURI(data.result) : '')}
+                    />
+                  </Masonry.Content>
+                </Masonry.Root>
+              )}
+            </div>
+            <div className='border-is border-separator overflow-hidden'>
+              <ResultDetail result={selectedResult} />
+            </div>
           </div>
         </div>
       </Panel.Content>

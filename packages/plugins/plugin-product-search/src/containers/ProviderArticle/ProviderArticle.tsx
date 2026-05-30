@@ -72,15 +72,7 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
       <Panel.Content>
         <Form.Root
           schema={schema}
-          values={{
-            name: provider.name,
-            url: provider.url,
-            kind: provider.kind,
-            description: provider.description,
-            enabled: provider.enabled,
-            request: provider.request,
-            result: provider.result,
-          }}
+          values={provider}
           autoSave
           onSave={handleSave}
         >
