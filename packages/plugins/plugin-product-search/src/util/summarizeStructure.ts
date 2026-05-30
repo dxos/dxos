@@ -18,14 +18,21 @@ const stripIndex = (value: string): string | undefined => {
   return match ? match[1] : undefined;
 };
 
+export type StructureCandidate = {
+  selector: string;
+  // Number of elements the selector matches.
+  count: number;
+  // How many `data-testid` fields the first match wraps (containers wrap many; leaf fields wrap 0).
+  fields: number;
+};
+
 /**
- * Distil the repeating structure of a listings page into a compact, ranked list of candidate
- * item-container selectors — a far stronger signal for authoring an `itemLocator` than a raw HTML
- * dump (which is lossy after truncation and easy to mis-generalize, e.g. `advertCard` vs the
- * indexed `advertCard-0`). Candidates are ranked by how many fields they wrap, so the listing card
- * outranks individual repeated fields (images, prices). Deterministic output (stable sort).
+ * Rank candidate repeating-container selectors in a listings page. Candidates are ranked by how
+ * many fields they wrap (so the listing card outranks individual repeated fields like images),
+ * then by repetition. Deterministic (stable sort). The basis for both the LLM-facing summary and
+ * the runtime itemLocator self-heal.
  */
-export const summarizeStructure = (html: string, options: SummarizeOptions = {}): string => {
+export const structureCandidates = (html: string, options: SummarizeOptions = {}): StructureCandidate[] => {
   const limit = options.limit ?? 15;
   const minCount = options.minCount ?? 3;
 
@@ -33,7 +40,7 @@ export const summarizeStructure = (html: string, options: SummarizeOptions = {})
   try {
     root = parse(html);
   } catch {
-    return '';
+    return [];
   }
 
   // selector -> { count, sample first-matching element }.
@@ -62,7 +69,7 @@ export const summarizeStructure = (html: string, options: SummarizeOptions = {})
     }
   }
 
-  const ranked = [...candidates.entries()]
+  return [...candidates.entries()]
     .filter(([, value]) => value.count >= minCount)
     .map(([selector, value]) => ({
       selector,
@@ -72,7 +79,15 @@ export const summarizeStructure = (html: string, options: SummarizeOptions = {})
     // Containers (wrap many fields) first, then by repetition, then stable by selector.
     .sort((a, b) => b.fields - a.fields || b.count - a.count || a.selector.localeCompare(b.selector))
     .slice(0, limit);
+};
 
+/**
+ * Render {@link structureCandidates} as a compact, ranked text block for the LLM — a far stronger
+ * signal for authoring an `itemLocator` than a raw HTML dump (which is lossy after truncation and
+ * easy to mis-generalize, e.g. `advertCard` vs the indexed `advertCard-0`).
+ */
+export const summarizeStructure = (html: string, options: SummarizeOptions = {}): string => {
+  const ranked = structureCandidates(html, options);
   if (ranked.length === 0) {
     return '';
   }

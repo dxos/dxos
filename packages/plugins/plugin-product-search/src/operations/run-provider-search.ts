@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { Provider, Result, SearchOperation } from '../types';
-import { type ResultData, bindRequest, extractResults, fetchPage } from '../util';
+import { type ResultData, bindRequest, extractResults, fetchPage, structureCandidates } from '../util';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */
 export const buildResults = (provider: Provider.Provider, body: string): ResultData[] => {
@@ -42,7 +42,33 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
               active: false,
             })
           : yield* fetchPage(request);
-      const rows = buildResults(provider, body);
+      let rows = buildResults(provider, body);
+
+      // Self-heal: if the authored itemLocator matched nothing (LLM selector mis-generalization),
+      // fall back to the detected top repeating container that actually yields titled rows, persist
+      // the correction onto the provider, and re-extract. Removes LLM selector-roulette as a blocker.
+      if (rows.length === 0 && provider.result.responseType === 'html') {
+        for (const candidate of structureCandidates(body).slice(0, 6)) {
+          const healed = extractResults(body, { ...provider.result, itemLocator: candidate.selector }).filter(
+            (row) => row.title.length > 0,
+          );
+          if (healed.length > 0) {
+            log.info('run-provider-search: itemLocator self-heal', {
+              from: provider.result.itemLocator,
+              to: candidate.selector,
+              rows: healed.length,
+            });
+            Obj.update(provider, (provider) => {
+              if (provider.result) {
+                provider.result.itemLocator = candidate.selector;
+              }
+            });
+            rows = healed;
+            break;
+          }
+        }
+      }
+
       // Decisive extraction diagnostic (primitives so the console never truncates them): what
       // selector ran, whether the real listing markers are present, and how many rows matched.
       log.info('run-provider-search: extracted', {
