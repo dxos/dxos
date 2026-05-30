@@ -60,19 +60,16 @@ export const Provider = Schema.Struct({
   // Mapping structs are Effect Schemas and render as nested form fields in the Provider editor.
   request: Schema.optional(RequestMapping),
   result: Schema.optional(ResultMapping),
-  enabled: Schema.Boolean,
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({ icon: 'ph--globe--regular', hue: 'cyan' }),
+  Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.makeObject(DXN.make('org.dxos.type.productSearchProvider', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.product-search.Provider', '0.1.0')),
 );
 export type Provider = Type.InstanceType<typeof Provider>;
 
 /** Checks if a value is a Provider object. */
 export const instanceOf = (value: unknown): value is Provider => Obj.instanceOf(Provider, value);
 
-/** Creates a Provider with enabled defaulting to true. */
-export const makeProvider = (
-  props: Omit<Obj.MakeProps<typeof Provider>, 'enabled'> & { enabled?: boolean },
-): Provider => Obj.make(Provider, { enabled: true, ...props });
+/** Creates a Provider. */
+export const make = (props: Obj.MakeProps<typeof Provider>): Provider => Obj.make(Provider, props);

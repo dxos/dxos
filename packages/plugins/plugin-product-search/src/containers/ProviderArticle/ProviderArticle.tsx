@@ -40,7 +40,6 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         subject.url = values.url;
         subject.kind = values.kind;
         subject.description = values.description;
-        subject.enabled = values.enabled;
         subject.request = values.request;
         subject.result = values.result;
       });

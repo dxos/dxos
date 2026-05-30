@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
     Effect.fnUntraced(function* ({ search: searchRef, provider: providerRef }) {
       const search = yield* Database.load(searchRef);
       const provider = yield* Database.load(providerRef);
-      if (!provider.enabled || !provider.request || !provider.result) {
+      if (!provider.request || !provider.result) {
         return [];
       }
 
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
 
       const refs: Ref.Ref<Result.Result>[] = [];
       for (const row of rows) {
-        const result = Result.makeResult({
+        const result = Result.make({
           title: row.title,
           url: row.url,
           price: row.price,

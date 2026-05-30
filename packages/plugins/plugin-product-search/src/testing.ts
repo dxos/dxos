@@ -61,7 +61,7 @@ export const makeSampleProvider = (): Provider.Provider =>
 
 /** Creates fresh sample {@link Result.Result} objects (AutoTrader UK used cars) linked to `provider`. */
 export const makeSampleResults = (provider: Provider.Provider): Result.Result[] => [
-  Result.makeResult({
+  Result.make({
     title: '2020 Porsche 911 Carrera S',
     url: 'https://www.autotrader.co.uk/car-details/1',
     price: 89950,
@@ -70,7 +70,7 @@ export const makeSampleResults = (provider: Provider.Provider): Result.Result[] 
     provider: Ref.make(provider),
     properties: { mileage: 18200, year: 2020, location: 'London' },
   }),
-  Result.makeResult({
+  Result.make({
     title: '2019 Porsche 911 Turbo S',
     url: 'https://www.autotrader.co.uk/car-details/2',
     price: 124000,
@@ -80,7 +80,7 @@ export const makeSampleResults = (provider: Provider.Provider): Result.Result[] 
     properties: { mileage: 9500, year: 2019, location: 'Manchester' },
     starred: true,
   }),
-  Result.makeResult({
+  Result.make({
     title: '2021 Porsche 718 Cayman GT4',
     url: 'https://www.autotrader.co.uk/car-details/3',
     price: 78990,
@@ -89,7 +89,7 @@ export const makeSampleResults = (provider: Provider.Provider): Result.Result[] 
     provider: Ref.make(provider),
     properties: { mileage: 6400, year: 2021, location: 'Bristol' },
   }),
-  Result.makeResult({
+  Result.make({
     title: '2018 Porsche Panamera 4S',
     url: 'https://www.autotrader.co.uk/car-details/4',
     price: 52495,
