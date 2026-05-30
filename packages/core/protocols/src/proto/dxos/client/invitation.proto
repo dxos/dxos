@@ -71,22 +71,31 @@ enum SpaceState {
  */
 message Invitation {
   enum Type {
+    TYPE_UNSPECIFIED = 0;
+    /// Pre-sentinel wire value for DELEGATED. Decode only.
+    LEGACY_DELEGATED = 1;
+    /**
+     * Pre-sentinel wire value for MULTIUSE. Decode only.
+     * @deprecated use multiUse flag with type=interactive instead.
+     */
+    LEGACY_MULTIUSE = 2;
     /// Requires both to be online to complete key exchange.
-    INTERACTIVE = 0;
-
+    INTERACTIVE = 3;
     /// Invitation can be accepted by any valid peer.
-    DELEGATED = 1;
-
+    DELEGATED = 4;
     /**
      * Multi-use interactive invitations.
      * @deprecated use multiUse flag with type=interactive instead.
      */
-    MULTIUSE = 2;
+    MULTIUSE = 5;
   }
 
   enum Kind {
-    DEVICE = 0;
-    SPACE = 1;
+    KIND_UNSPECIFIED = 0;
+    /// Pre-sentinel wire value for SPACE. Decode only.
+    LEGACY_SPACE = 1;
+    DEVICE = 2;
+    SPACE = 3;
   }
 
   enum AuthMethod {

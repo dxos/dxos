@@ -5,6 +5,10 @@
 import base from 'base-x';
 
 import { schema } from '@dxos/protocols/proto';
+import {
+  normalizeInvitationKind,
+  normalizeInvitationType,
+} from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // Encode with URL-safe alpha-numeric characters.
@@ -18,6 +22,8 @@ const codec = schema.getCodecForType('dxos.client.services.Invitation');
 export class InvitationEncoder {
   static decode(text: string): Invitation {
     const decodedInvitation = codec.decode(base62.decode(text));
+    decodedInvitation.type = normalizeInvitationType(decodedInvitation.type);
+    decodedInvitation.kind = normalizeInvitationKind(decodedInvitation.kind);
     if (decodedInvitation.type === Invitation.Type.MULTIUSE) {
       decodedInvitation.type = Invitation.Type.INTERACTIVE;
       decodedInvitation.multiUse = true;

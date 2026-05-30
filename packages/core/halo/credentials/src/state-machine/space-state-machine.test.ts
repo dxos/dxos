@@ -427,8 +427,7 @@ describe('SpaceStateMachine', () => {
 
     const spaceState = new SpaceStateMachine(space);
 
-    // MembershipPolicy.INVITE is the proto zero-value default.
-    // Existing spaces without the field will have this value.
+    // Pre-sentinel wire value 0 (INVITE) and UNSPECIFIED both normalize to INVITE.
     await spaceState.process(
       await createCredential({
         issuer: space,

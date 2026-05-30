@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError } from '@dxos/protocols';
+import { normalizeDeviceKind } from '@dxos/protocols/proto';
 import {
   type Contact,
   type Device,
@@ -213,8 +214,13 @@ export class HaloProxy implements Halo {
     });
     devicesStream.subscribe((data) => {
       if (data.devices) {
-        this._devicesChanged.emit(data.devices);
-        const current = data.devices.find((device) => device.kind === DeviceKind.CURRENT);
+        this._devicesChanged.emit(
+          data.devices.map((device) => ({
+            ...device,
+            kind: normalizeDeviceKind(device.kind),
+          })),
+        );
+        const current = data.devices.find((device) => normalizeDeviceKind(device.kind) === DeviceKind.CURRENT);
         log.trace('dxos.halo.device', {
           deviceKey: current?.deviceKey,
           profile: current?.profile,

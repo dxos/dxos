@@ -4,6 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { normalizeAdmittedFeedDesignation } from '@dxos/protocols/proto';
 import { type AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
@@ -47,10 +48,15 @@ export class FeedStateMachine {
     invariant(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
     invariant(assertion.spaceKey.equals(this._spaceKey));
 
+    const normalizedAssertion: AdmittedFeed = {
+      ...assertion,
+      designation: normalizeAdmittedFeedDesignation(assertion.designation),
+    };
+
     const info: FeedInfo = {
       key: credential.subject.id,
       credential,
-      assertion,
+      assertion: normalizedAssertion,
       parent: fromFeed,
     };
 
