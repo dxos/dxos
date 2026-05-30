@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -47,15 +48,25 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
     [subject],
   );
 
-  // Read-only preview of the blueprint-derived search fields.
+  // Read-only preview of the blueprint-derived search fields. Key the memo on the SERIALIZED schema
+  // rather than the object reference: ECHO keeps the nested `searchSchema` proxy reference stable
+  // when a Regenerate (run in another context) populates it, so a reference-keyed memo would never
+  // recompute and the pane would stay empty until reload.
   const searchSchema = provider?.searchSchema;
+  const searchSchemaKey = JSON.stringify(searchSchema ?? null);
   const searchFieldsSchema = useMemo(() => {
     const properties = searchSchema?.properties;
     if (properties == null || Object.keys(properties).length === 0) {
       return undefined;
     }
-    return buildUnionFormSchema([searchSchema]);
-  }, [searchSchema]);
+    try {
+      return buildUnionFormSchema([searchSchema]);
+    } catch (error) {
+      log.warn('failed to build search-fields form from provider schema', { error });
+      return undefined;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchSchemaKey]);
 
   if (!provider) {
     return null;
