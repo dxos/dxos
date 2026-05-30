@@ -109,7 +109,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
             id={id}
             messages={drafts}
             currentId={currentId}
-            tags={Mailbox.buildMessageTagsIndex(mailbox)}
+            tags={{}}
             onAction={handleAction}
           />
         )}

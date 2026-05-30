@@ -80,7 +80,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         // Apply tags. Requires a live message (Ref) — skipped for feed messages.
         if (sourceIsLive && result.tags && result.tags.length > 0) {
           for (const tag of result.tags) {
-            Mailbox.applyTag(owningMailbox, tag, live as Message.Message);
+            yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, { label: tag }, live as Message.Message, db));
           }
         }
 
