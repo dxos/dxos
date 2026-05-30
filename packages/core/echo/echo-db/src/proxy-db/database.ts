@@ -14,7 +14,7 @@ import {
   type AnyProperties,
   EntityKind,
   MetaId,
-  type ObjectMeta,
+  type EntityMeta,
   TypeSchema as PersistentSchema,
   type TypeAnnotation,
   TypeAnnotationId,
@@ -250,7 +250,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       const entity = schemaInput;
       schema = Type.getSchema(entity).annotations({ [TypeIdentifierAnnotationId]: undefined });
       // Prefer the annotation embedded in the schema; fall back to the entity's
-      // ObjectMeta-derived accessors for entities built via `makeObjectFromJsonSchema`
+      // EntityMeta-derived accessors for entities built via `makeObjectFromJsonSchema`
       // (whose `jsonSchema` carries no `TypeAnnotation`).
       meta =
         getTypeAnnotation(schema) ??
@@ -265,7 +265,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
     // Create a TypeSchema entity using the internal createObject utility.
-    // We pass typename/version via ObjectMeta (MetaId) since TypeSchema no longer
+    // We pass typename/version via EntityMeta (MetaId) since TypeSchema no longer
     // has them as own data fields.
     const schemaToStore = createPersistentObject(PersistentSchema, {
       [MetaId]: { keys: [], key: meta.typename, version: meta.version },
@@ -382,7 +382,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
     invariant(Type.isType(type), 'addType expects a Type entity');
     const typename = Type.getTypename(type);
-    // Compare the canonical (head-free) ObjectMeta version on both sides — `Type.getVersion`
+    // Compare the canonical (head-free) EntityMeta version on both sides — `Type.getVersion`
     // appends automerge heads for db-attached entities and would never match a fresh draft.
     const version = Type.getMeta(type).version ?? Type.getVersion(type);
 
@@ -466,7 +466,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         const before = JSON.parse(JSON.stringify(object));
 
         const output = (await migration.transform(object, { db: this })) as any;
-        const metaPatch = output?.[MetaId] as Partial<ObjectMeta> | undefined;
+        const metaPatch = output?.[MetaId] as Partial<EntityMeta> | undefined;
         if (metaPatch !== undefined && output != null) {
           delete output[MetaId];
         }
@@ -547,7 +547,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
   // `typename` on a persisted `Type.Type` entity is no longer a direct field —
-  // it lives in `ObjectMeta.key`. Read it through the helper so this error
+  // it lives in `EntityMeta.key`. Read it through the helper so this error
   // path keeps surfacing a typename for both schema flavours (static
   // `Type.Obj` constants, where `.typename` is a real field, and persisted
   // entities, where it isn't).

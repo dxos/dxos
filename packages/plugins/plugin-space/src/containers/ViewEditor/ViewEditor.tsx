@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoURI, Filter, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
+import { EID, Filter, Obj, Query, type QueryAST, Scope, Tag, Type, type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -45,7 +45,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   }, [client, db, view, type]);
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
+    async (newQuery: QueryAST.Query, target?: EID.EID) => {
       if (!view || !db) {
         return;
       }
@@ -53,7 +53,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target;
       const query = queue
         ? Query.fromAst(newQuery).from([
-            Scope.feed(`dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}`),
+            Scope.feed(`dxn:queue:data:${EID.getSpaceId(queue)}:${EID.getEntityId(queue)}`),
           ])
         : Query.fromAst(newQuery);
       Obj.update(view, (view) => {

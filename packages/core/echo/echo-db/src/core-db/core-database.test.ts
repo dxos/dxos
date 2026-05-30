@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, ObjectId, PublicKey } from '@dxos/keys';
+import { DXN, EntityId, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -93,7 +93,7 @@ describe('CoreDatabase', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
       const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
-      const newObject = addObjectToDoc(newRootDocHandle, { id: ObjectId.random(), title: 'title ' });
+      const newObject = addObjectToDoc(newRootDocHandle, { id: EntityId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url!);
       const retrievedObject = db.getObjectById(newObject.id);
       expect((retrievedObject as any).title).to.eq(newObject.title);
@@ -194,8 +194,8 @@ describe('CoreDatabase', () => {
       const obj = Obj.make(TestSchema.Expando, {});
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
-      const id1 = ObjectId.random();
-      const id2 = ObjectId.random();
+      const id1 = EntityId.random();
+      const id2 = EntityId.random();
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: id1, title: 'test' });
       expect((await db.query(Query.type(TestSchema.Expando, { id: beforeUpdate.id })).first()).title).to.eq(
         beforeUpdate.title,

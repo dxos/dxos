@@ -10,7 +10,7 @@ import { type Database, Entity, Query, type Filter, type QueryResult, Registry, 
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI, PublicKey, URI } from '@dxos/keys';
+import { DXN, EID, PublicKey, URI } from '@dxos/keys';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.
@@ -240,12 +240,12 @@ const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
 /**
  * Normalizes a URI string to the canonical key form used by `#typesByURI`.
  * Tries `DXN.tryMake` first (strips the legacy `dxn:type:` prefix and validates
- * the type-DXN grammar); falls back to `EchoURI.tryParse` for echo identifier
+ * the type-DXN grammar); falls back to `EID.tryParse` for echo identifier
  * URIs (`dxn:echo:@:<objectId>`, normalized to canonical `echo:` form), and
- * finally passes unrecognized strings through unchanged. Both `DXN` and `EchoURI`
+ * finally passes unrecognized strings through unchanged. Both `DXN` and `EID`
  * are branded URIs, so the result is always a {@link URI.URI} key.
  */
-const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EchoURI.tryParse(uri) ?? URI.make(uri);
+const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(uri) ?? URI.make(uri);
 
 /**
  * Executes a {@link Query.Query} against a {@link Registry.Registry}.

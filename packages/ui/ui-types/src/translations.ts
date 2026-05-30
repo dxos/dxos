@@ -5,7 +5,7 @@
 import { type TFunction } from 'i18next';
 
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
-export type Label = string | [string, { ns: string; count?: number; defaultValue?: string }];
+export type Label = string | [string, { ns: string | readonly string[]; count?: number; defaultValue?: string }];
 
 export const isLabel = (o: any): o is Label =>
   typeof o === 'string' ||
@@ -15,7 +15,7 @@ export const isLabel = (o: any): o is Label =>
     !!o[1] &&
     typeof o[1] === 'object' &&
     'ns' in o[1] &&
-    typeof o[1].ns === 'string');
+    (typeof o[1].ns === 'string' || Array.isArray(o[1].ns)));
 
 /**
  * Convert a label to a localized string.

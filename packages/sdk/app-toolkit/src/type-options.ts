@@ -33,7 +33,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
       ? db.graph.registry
           .list()
           .filter(Type.isType)
-          .filter((t) => !Type.isTypeKindSchema(t))
+          .filter((t) => !Type.isTypeKind(t))
           .filter((schema) => {
             const effectSchema = Type.getSchema(schema);
             const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
@@ -56,7 +56,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
       ? db.graph.registry
           .list()
           .filter(Type.isType)
-          .filter((t) => Type.isTypeKindSchema(t))
+          .filter((t) => Type.isTypeKind(t))
           .map((schema) => Type.getTypename(schema))
       : [];
 

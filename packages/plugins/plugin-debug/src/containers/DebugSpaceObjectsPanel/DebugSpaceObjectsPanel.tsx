@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Query } from '@dxos/echo';
-import { type ObjectId } from '@dxos/keys';
+import { type EntityId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -15,7 +15,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps;
 
 export const DebugSpaceObjectsPanel = ({ space }: DebugSpaceObjectsPanelProps) => {
-  const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
+  const [selectedId, setSelectedId] = useState<EntityId | null>(null);
   const [selectedObject] = useQuery(
     space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),

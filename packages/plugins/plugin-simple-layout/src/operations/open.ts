@@ -1,6 +1,7 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import {
@@ -11,6 +12,7 @@ import {
 } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
+import { Database, EID } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -27,12 +29,26 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       // Validate navigation target, redirecting to 404 if not found.
       const capabilities = yield* Capability.Service;
       const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
-      const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
-        Effect.map((client) =>
-          createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body)),
-        ),
+      const client = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
+      // Existence checkers for the resolved EID: local (loadOption) first, then remote (edge).
+      const checkLocalExistence = client
+        ? (uri: EID.EID) => {
+            const spaceId = EID.getSpaceId(uri);
+            const space = spaceId ? client.spaces.get(spaceId) : undefined;
+            if (!space) {
+              return Effect.succeed(false);
+            }
+            return Database.loadOption(space.db.makeRef(uri)).pipe(
+              Effect.map(Option.isSome),
+              Effect.catchAll(() => Effect.succeed(false)),
+            );
+          }
+        : undefined;
+      const checkRemoteExistence = client
+        ? createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body))
+        : undefined;
 
       const validatedId =
         input.navigation === 'immediate'
@@ -41,6 +57,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
               graph,
               subjectId: id,
               pathResolvers,
+              checkLocalExistence,
               checkRemoteExistence,
             });
 

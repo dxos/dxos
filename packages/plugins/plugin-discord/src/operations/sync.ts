@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
@@ -211,9 +211,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         const space = client.spaces.get(db.spaceId);
         invariant(space, 'Space not found');
 
-        const integrationId = EchoURI.getObjectId(EchoURI.parse(integration.uri)) ?? 'unknown';
+        const integrationId = EID.getEntityId(EID.parse(integration.uri)) ?? 'unknown';
         const toastIdSuffix = channelRef
-          ? `${integrationId}.${EchoURI.getObjectId(EchoURI.parse(channelRef.uri)) ?? 'unknown'}`
+          ? `${integrationId}.${EID.getEntityId(EID.parse(channelRef.uri)) ?? 'unknown'}`
           : integrationId;
 
         const outcome = yield* Effect.either(
@@ -272,7 +272,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               }
             }
 
-            const channelFilterId = channelRef ? EchoURI.getObjectId(EchoURI.parse(channelRef.uri)) : undefined;
+            const channelFilterId = channelRef ? EID.getEntityId(EID.parse(channelRef.uri)) : undefined;
             type TargetEntry = {
               entry: (typeof integrationObj.targets)[number];
               channel: Channel.Channel;
@@ -325,7 +325,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 });
               }
 
-              const targetEchoId = EchoURI.getObjectId(EchoURI.parse(Obj.getURI(localObj)));
+              const targetEchoId = EID.getEntityId(EID.parse(Obj.getURI(localObj)));
               if (channelFilterId && targetEchoId !== channelFilterId) {
                 continue;
               }

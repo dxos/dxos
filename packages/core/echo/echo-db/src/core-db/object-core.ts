@@ -11,13 +11,13 @@ import { inspectCustom } from '@dxos/debug';
 import {
   type DatabaseDirectory,
   EncodedReference,
-  type ObjectStructure,
+  type EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
+import { EntityKind, type EntityMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -35,7 +35,7 @@ const SYSTEM_NAMESPACE = 'system';
 
 export type ObjectCoreOptions = {
   type?: EncodedReference;
-  meta?: ObjectMeta;
+  meta?: EntityMeta;
   immutable?: boolean;
 };
 
@@ -50,7 +50,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = ObjectId.random();
+  public id = EntityId.random();
 
   /**
    * Set if when the object is bound to a database.
@@ -60,7 +60,7 @@ export class ObjectCore {
   /**
    * Set if when the object is not bound to a database.
    */
-  public doc?: Doc<ObjectStructure> | undefined;
+  public doc?: Doc<EntityStructure> | undefined;
 
   /**
    * Set if when the object is bound to a database.
@@ -69,7 +69,7 @@ export class ObjectCore {
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
-   * The value at path must be of type `ObjectStructure`.
+   * The value at path must be of type `EntityStructure`.
    */
   public mountPath: KeyPath = [];
 
@@ -94,7 +94,7 @@ export class ObjectCore {
 
     initialProps ??= {};
 
-    this.doc = A.from<ObjectStructure>({
+    this.doc = A.from<EntityStructure>({
       data: this.encode(initialProps as any),
       meta: this.encode({
         keys: [],
@@ -141,8 +141,8 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
-  getObjectStructure(): ObjectStructure {
-    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
+  getObjectStructure(): EntityStructure {
+    return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
   }
 
   /**
@@ -337,7 +337,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
+  private _getRaw(path: KeyPath): Doc<EntityStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -441,11 +441,11 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
   }
 
-  getMeta(): ObjectMeta {
-    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
+  getMeta(): EntityMeta {
+    return this.getDecoded([META_NAMESPACE]) as EntityMeta;
   }
 
-  setMeta(meta: ObjectMeta): void {
+  setMeta(meta: EntityMeta): void {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
@@ -461,9 +461,9 @@ export class ObjectCore {
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
         const parentDXN = EncodedReference.toURI(parentRef);
-        const parentEchoUri = EchoURI.tryParse(parentDXN);
-        const spaceId = parentEchoUri ? EchoURI.getSpaceId(parentEchoUri) : undefined;
-        const parentId = parentEchoUri ? EchoURI.getObjectId(parentEchoUri) : undefined;
+        const parentEchoUri = EID.tryParse(parentDXN);
+        const spaceId = parentEchoUri ? EID.getSpaceId(parentEchoUri) : undefined;
+        const parentId = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
         if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
@@ -483,18 +483,18 @@ export class ObjectCore {
   }
 
   /**
-   * EchoURIs of objects that this object strongly depends on.
+   * EIDs of objects that this object strongly depends on.
    * Strong references are loaded together with the source object — only ECHO-scheme refs
    * (object refs) qualify; type DXNs are resolved separately via the schema registry.
    * Currently this is the schema reference (when stored as an object), source/target for
    * relations, and the parent ref.
    */
-  getStrongDependencies(): EchoURI.EchoURI[] {
-    const res: EchoURI.EchoURI[] = [];
+  getStrongDependencies(): EID.EID[] {
+    const res: EID.EID[] = [];
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeEchoUri = EchoURI.tryParse(EncodedReference.toURI(typeRef));
+      const typeEchoUri = EID.tryParse(EncodedReference.toURI(typeRef));
       if (typeEchoUri) {
         res.push(typeEchoUri);
       }
@@ -503,14 +503,14 @@ export class ObjectCore {
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        const id = EchoURI.tryParse(EncodedReference.toURI(sourceRef));
+        const id = EID.tryParse(EncodedReference.toURI(sourceRef));
         if (id) {
           res.push(id);
         }
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        const id = EchoURI.tryParse(EncodedReference.toURI(targetRef));
+        const id = EID.tryParse(EncodedReference.toURI(targetRef));
         if (id) {
           res.push(id);
         }
@@ -519,7 +519,7 @@ export class ObjectCore {
 
     const parentRef = this.getParent();
     if (parentRef) {
-      const id = EchoURI.tryParse(EncodedReference.toURI(parentRef));
+      const id = EID.tryParse(EncodedReference.toURI(parentRef));
       if (id) {
         res.push(id);
       }
@@ -570,11 +570,11 @@ const convertLegacyProtoReference = (value: {
     uri = DXN.make(value.objectId);
   } else if (value.host) {
     invariant(SpaceId.isValid(value.host), 'Invalid space id');
-    invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
-    uri = EchoURI.make({ spaceId: value.host, objectId: value.objectId });
+    invariant(EntityId.isValid(value.objectId), 'Invalid object id');
+    uri = EID.make({ spaceId: value.host, entityId: value.objectId });
   } else {
-    invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
-    uri = EchoURI.make({ objectId: value.objectId });
+    invariant(EntityId.isValid(value.objectId), 'Invalid object id');
+    uri = EID.make({ entityId: value.objectId });
   }
   return EncodedReference.fromURI(uri);
 };

@@ -31,12 +31,8 @@ random.seed(1234);
 
 const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
 
-// TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
-// TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
-
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
-// TODO(burdon): Factor out PlankHeader.
 const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   console.log('hasAttention', hasAttention);

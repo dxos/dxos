@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
@@ -37,12 +37,12 @@ const RESTORE_YIELD_EVERY_N_FILES = 25;
  * `ref.tryLoad()` because objects in linked documents may not be hydrated until async load.
  */
 const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): Promise<Text.Text | undefined> => {
-  const echoUri = EchoURI.tryParse(dxnStr);
+  const echoUri = EID.tryParse(dxnStr);
   if (!echoUri) {
     return undefined;
   }
-  const spaceId = EchoURI.getSpaceId(echoUri);
-  const objectId = EchoURI.getObjectId(echoUri);
+  const spaceId = EID.getSpaceId(echoUri);
+  const objectId = EID.getEntityId(echoUri);
   if (!spaceId || !objectId) {
     return undefined;
   }
@@ -340,7 +340,7 @@ export const createMarkdownDocuments = (
           continue;
         }
 
-        const parsedDxn = EchoURI.tryParse(dxnStr);
+        const parsedDxn = EID.tryParse(dxnStr);
         if (!parsedDxn) {
           continue;
         }
