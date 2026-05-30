@@ -23,7 +23,21 @@ const handler: Operation.WithHandler<typeof SearchOperation.RenderPage> = Search
       log.info('render-page: context', { url, hasWindow, crxAvailable, waitForSelector });
 
       const body = yield* fetchPage({ method: 'GET', url }, { render: true, waitForSelector });
-      log.info('render-page: fetched', { url, length: body.length, via: hasWindow && crxAvailable ? 'crx' : 'proxy' });
+
+      // Diagnostics: what actually rendered? Reveals consent/anti-bot interstitials vs real listings,
+      // and the data-testid vocabulary present (so a wrong itemLocator is obvious).
+      const lower = body.toLowerCase();
+      const title = body.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim().slice(0, 100);
+      const testIds = [...new Set([...body.matchAll(/data-testid="([^"]+)"/g)].map((match) => match[1]))].slice(0, 25);
+      log.info('render-page: fetched', {
+        url,
+        length: body.length,
+        via: hasWindow && crxAvailable ? 'crx' : 'proxy',
+        title,
+        looksLikeChallenge: /just a moment|are you a robot|px-captcha|datadome|\/cdn-cgi\/challenge|enable javascript/.test(lower),
+        looksLikeConsent: /onetrust|sourcepoint|sp_message|accept all cookies|manage consent/.test(lower),
+        testIds,
+      });
       return body;
     }),
   ),
