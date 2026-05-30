@@ -9,7 +9,7 @@ import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
@@ -342,19 +342,19 @@ export const isTypeKind = (entity: AnyEntity): entity is Type => {
  * `Filter.type`, or other object-only APIs.
  */
 export const assertObject = (entity: AnyEntity): AnyObj => {
-  invariant(isObject(entity), 'Expected an object-kind Type entity.');
+  assertArgument(isObject(entity), 'entity', 'Expected an object-kind Type entity.');
   return entity;
 };
 
 /** Narrow a `Type.AnyEntity` to `AnyRelation`, throwing otherwise. */
 export const expectRelation = (entity: AnyEntity): AnyRelation => {
-  invariant(isRelation(entity), 'Expected a relation-kind Type entity.');
+  assertArgument(isRelation(entity), 'entity', 'Expected a relation-kind Type entity.');
   return entity;
 };
 
 /** Narrow a `Type.AnyEntity` to the `Type.Type` meta-schema, throwing otherwise. */
 export const expectTypeKind = (entity: AnyEntity): Type => {
-  invariant(isTypeKind(entity), 'Expected a type-kind Type entity.');
+  assertArgument(isTypeKind(entity), 'entity', 'Expected a type-kind Type entity.');
   return entity;
 };
 
@@ -538,7 +538,7 @@ export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutabl
   // The `Mutable` overload accepts the narrowed view passed to `Type.update`
   // callbacks; at runtime that draft IS the underlying persisted Type entity,
   // so the same `MetaId` lookup works.
-  invariant(isType(entity), 'Expected a Type entity.');
+  assertArgument(isType(entity), 'entity', 'Expected a Type entity.');
   // Both persisted and in-memory type entities carry runtime `EntityMeta` via
   // `[MetaId]`, so the lookup is uniform.
   return internal.getMetaChecked(entity);
@@ -623,7 +623,7 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
   if (staticSchema != null) {
     return staticSchema;
   }
-  invariant(isType(type), 'Expected a Type entity.');
+  assertArgument(isType(type), 'type', 'Expected a Type entity.');
   // Persisted `Type.Type` entity — build the Effect Schema from its stored
   // jsonSchema and re-attach the TypeIdentifierAnnotation so the rebuilt
   // schema's URI (via getSchemaURI) matches the entity's local EID.

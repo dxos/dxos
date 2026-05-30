@@ -24,7 +24,7 @@ import {
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -489,7 +489,7 @@ export class SheetModel extends Resource {
    * Map from indices to A1 notation.
    */
   mapFormulaIndicesToRefs(formula: string): string {
-    invariant(isFormula(formula));
+    assertArgument(isFormula(formula), 'formula');
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
       return addressToA1Notation(addressFromIndex(this._sheet, idx));
     });

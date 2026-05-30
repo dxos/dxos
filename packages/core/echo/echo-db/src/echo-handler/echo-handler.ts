@@ -1350,7 +1350,7 @@ const metaNotEmpty = (meta: EntityMeta) =>
  */
 // TODO(burdon): Call and remove subscriptions.
 export const destroyObject = <T extends Obj.Unknown>(proxy: T) => {
-  invariant(isEchoObject(proxy));
+  assertArgument(isEchoObject(proxy), 'proxy');
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
   for (const unsubscribe of internals.subscriptions) {
