@@ -88,12 +88,12 @@ export default Capability.makeModule(
         actions: (provider) =>
           Effect.succeed([
             {
-              id: 'analyze',
-              data: () => Operation.invoke(SearchOperation.AnalyzeProvider, { provider: Ref.make(provider) }),
+              id: 'regenerate',
+              data: () => Operation.invoke(SearchOperation.GenerateProviderTemplate, { provider: Ref.make(provider) }),
               properties: {
-                label: ['analyze-provider.label', { ns: meta.id }],
-                icon: 'ph--brain--regular',
-                disposition: 'list-item',
+                label: ['regenerate.label', { ns: meta.id }],
+                icon: 'ph--sparkle--regular',
+                disposition: 'toolbar',
               },
             },
             {

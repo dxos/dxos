@@ -82,7 +82,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   );
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root classNames='border' role={role}>
       <Panel.Content>
         <div className='grid grid-cols-[20rem_minmax(0,1fr)_24rem] h-full overflow-hidden'>
           <div className='border-ie border-separator overflow-hidden'>
