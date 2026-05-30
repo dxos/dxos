@@ -259,10 +259,6 @@ export class AppManager {
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
     if (nth !== undefined) {
-      // The inline primary-action column was removed from navtree items; object actions now live
-      // in the actions dropdown menu, so reveal it on hover, open it, and select the create action.
-      // The actions testId is suffixed with the tree depth (`...actionsLevel${level}`), so match
-      // any level to support nested objects.
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
       await object
