@@ -13,9 +13,6 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchO
   Operation.withHandler(
     Effect.fnUntraced(function* ({ search: searchRef }) {
       const search = yield* Database.load(searchRef);
-      Obj.update(search, (search) => {
-        search.status = 'running';
-      });
 
       const collected: Ref.Ref<Result.Result>[] = [];
       for (const providerRef of search.providers) {
@@ -28,7 +25,6 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchO
 
       Obj.update(search, (search) => {
         search.results = [...search.results, ...collected];
-        search.status = 'idle';
         search.lastRunAt = new Date().toISOString();
       });
     }),

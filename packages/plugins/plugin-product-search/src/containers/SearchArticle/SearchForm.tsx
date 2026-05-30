@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -68,8 +68,14 @@ export const SearchForm = ({ search }: SearchFormProps) => {
     [search],
   );
 
+  // Run progress is ephemeral UI state, not a persisted property on the Search.
+  const [running, setRunning] = useState(false);
+
   const handleRun = useCallback(() => {
-    void invokePromise(SearchOperation.RunSearch, { search: Ref.make(search) }).catch((err) => log.catch(err));
+    setRunning(true);
+    void invokePromise(SearchOperation.RunSearch, { search: Ref.make(search) })
+      .catch((err) => log.catch(err))
+      .finally(() => setRunning(false));
   }, [invokePromise, search]);
 
   return (
@@ -111,8 +117,8 @@ export const SearchForm = ({ search }: SearchFormProps) => {
 
       <IconButton
         icon='ph--shopping-cart--regular'
-        label='Run'
-        disabled={selectedProviders.length === 0}
+        label={running ? 'Running…' : 'Run'}
+        disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />
     </div>

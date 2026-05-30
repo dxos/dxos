@@ -17,8 +17,9 @@ export const Search = Schema.Struct({
   // Values for the union of provider fields, keyed by field name.
   criteria: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
   results: Schema.Array(Ref.Ref(Result)).pipe(FormInputAnnotation.set(false)),
-  status: Schema.optional(Schema.Literal('idle', 'running', 'error')),
-  lastRunAt: Schema.optional(Schema.String),
+  // Timestamp of the last run; persisted metadata, hidden from forms. Run progress
+  // itself is ephemeral UI state (see SearchForm), not a persisted property.
+  lastRunAt: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
