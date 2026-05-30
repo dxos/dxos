@@ -28,7 +28,7 @@ const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-const grid: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('gap-y-1 pbe-2', ...etc);
+const grid: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('gap-y-1 pbe-1', ...etc);
 
 const header: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
