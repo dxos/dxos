@@ -3,12 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { Operation } from '@dxos/compute';
-import { Database, type JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 
 import { Provider, SearchOperation } from '../types';
+
+const decodeSearchSchema = Schema.decodeUnknownSync(JsonSchema.JsonSchema);
 
 /**
  * Pure: applies a derived template (search schema + request + result mappings)
@@ -39,7 +42,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.SetProviderTemplate>
     Operation.withHandler(
       Effect.fnUntraced(function* ({ provider: providerRef, searchSchema, request, result }) {
         const provider = yield* Database.load(providerRef);
-        applyProviderTemplate(provider, { searchSchema, request, result });
+        // `searchSchema` arrives as a JSON string (a JSON Schema object); parse + validate it.
+        const decoded = decodeSearchSchema(JSON.parse(searchSchema));
+        applyProviderTemplate(provider, { searchSchema: decoded, request, result });
         return Ref.make(provider);
       }),
     ),

@@ -32,8 +32,9 @@ const make = () =>
         5. Derive the result mapping: choose responseType ('html' or 'json'), an itemLocator that
            selects each listing, and per-field extractors for title, url, price, and image
            (CSS selector + attribute for html, JSONPath for json).
-        6. Call setProviderTemplate with the Provider's ref and the derived searchSchema, request,
-           and result to persist the template.
+        6. Call setProviderTemplate with the Provider's ref, the request and result mappings, and
+           the searchSchema as a JSON string (a JSON Schema object serialized with JSON.stringify,
+           e.g. '{"type":"object","properties":{"make":{"type":"string","title":"Make"}}}').
 
         Be conservative: only include fields and selectors you can justify from the page source.
       `,

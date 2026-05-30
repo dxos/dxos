@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, JsonSchema, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -83,7 +83,11 @@ export const SetProviderTemplate = Operation.make({
   },
   input: Schema.Struct({
     provider: Ref.Ref(Provider),
-    searchSchema: JsonSchema.JsonSchema,
+    // Passed as a JSON string (a JSON Schema draft 2020-12 object). Modelling the recursive
+    // JSONSchema meta-type directly produces a tool input_schema the LLM provider rejects.
+    searchSchema: Schema.String.annotations({
+      description: 'The typed search fields as a JSON Schema (draft 2020-12) object, serialized to a JSON string.',
+    }),
     request: RequestMapping,
     result: ResultMapping,
   }),
