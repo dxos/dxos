@@ -46,7 +46,6 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
-import { normalizeMembershipPolicy } from '@dxos/protocols/proto';
 import {
   type Contact,
   CreateEpochRequest,
@@ -236,7 +235,9 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   get membershipPolicy(): MembershipPolicy {
-    return normalizeMembershipPolicy(this._data.membershipPolicy);
+    return this._data.membershipPolicy != null && this._data.membershipPolicy !== MembershipPolicy.UNSPECIFIED
+      ? this._data.membershipPolicy
+      : MembershipPolicy.INVITE;
   }
 
   get db(): EchoDatabase {

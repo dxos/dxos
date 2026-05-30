@@ -70,16 +70,10 @@ message GetDiagnosticsResponse {
 message Platform {
   enum PLATFORM_TYPE {
     UNSPECIFIED = 0;
-    /// Pre-sentinel wire value for SHARED_WORKER. Decode only.
-    LEGACY_SHARED_WORKER = 1;
-    /// Pre-sentinel wire value for NODE. Decode only.
-    LEGACY_NODE = 2;
-    /// Pre-sentinel wire value for DEDICATED_WORKER. Decode only.
-    LEGACY_DEDICATED_WORKER = 3;
-    BROWSER = 4;
-    SHARED_WORKER = 5;
-    NODE = 6;
-    DEDICATED_WORKER = 7;
+    BROWSER = 1;
+    SHARED_WORKER = 2;
+    NODE = 3;
+    DEDICATED_WORKER = 4;
   }
 
   PLATFORM_TYPE type = 1;
@@ -210,10 +204,8 @@ service IdentityService {
 
 enum DeviceKind {
   UNSPECIFIED = 0;
-  /// Pre-sentinel wire value for TRUSTED. Decode only.
-  LEGACY_TRUSTED = 1;
-  CURRENT = 2;
-  TRUSTED = 3;
+  CURRENT = 1;
+  TRUSTED = 2;
 }
 
 // TODO(burdon): Preferences (in database).

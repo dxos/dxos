@@ -7,7 +7,6 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TypedMessage } from '@dxos/protocols/proto';
-import { normalizeAdmittedFeedDesignation, normalizeMembershipPolicy } from '@dxos/protocols/proto';
 import { type Credential, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
@@ -193,7 +192,10 @@ export class SpaceStateMachine implements SpaceState {
         }
         this._genesisCredential = credential;
         this._tags = assertion.tags ?? [];
-        this._membershipPolicy = normalizeMembershipPolicy(assertion.membershipPolicy);
+        this._membershipPolicy =
+          assertion.membershipPolicy != null && assertion.membershipPolicy !== MembershipPolicy.UNSPECIFIED
+            ? assertion.membershipPolicy
+            : MembershipPolicy.INVITE;
         break;
       }
 

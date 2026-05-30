@@ -4,4 +4,3 @@
 
 export { schema, schemaJson, type TYPES } from './gen/index.ts';
 export type * from './types.ts';
-export * from './enum-normalizers.ts';

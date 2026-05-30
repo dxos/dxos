@@ -11,7 +11,6 @@ import { DeviceKind } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { normalizePlatformType } from '@dxos/protocols/proto';
 import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type DataProvider } from '../observability';
@@ -126,7 +125,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     invariant(platform, 'platform is required');
 
     observability.setTags({
-      platformType: Platform.PLATFORM_TYPE[normalizePlatformType(platform.type)].toLowerCase(),
+      platformType: Platform.PLATFORM_TYPE[platform.type as number].toLowerCase(),
       platform: platform.platform,
       arch: platform.arch,
       runtime: platform.runtime,

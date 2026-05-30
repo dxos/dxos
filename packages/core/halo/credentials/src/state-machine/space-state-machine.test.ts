@@ -427,7 +427,7 @@ describe('SpaceStateMachine', () => {
 
     const spaceState = new SpaceStateMachine(space);
 
-    // Pre-sentinel wire value 0 (INVITE) and UNSPECIFIED both normalize to INVITE.
+    // UNSPECIFIED is the proto3 default when the field is omitted.
     await spaceState.process(
       await createCredential({
         issuer: space,
