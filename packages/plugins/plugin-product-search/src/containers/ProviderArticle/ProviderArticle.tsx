@@ -5,66 +5,49 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { Obj, Type } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 import { Provider } from '../../types';
-import { buildUnionFormSchema } from '../../util';
 
 export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provider>;
 
 /**
- * Article view for editing a {@link Provider} template. The whole template — scalar fields plus
- * the nested `request` / `result` mapping structs — is rendered by a single schema-driven Form;
- * `searchSchema` is blueprint-authored and hidden from the form. The toolbar surfaces the Provider
- * node's graph actions (e.g. Regenerate, which runs the blueprint agent), and the derived search
- * fields are shown beneath the form as a read-only preview.
+ * Article view for a {@link Provider}. The editable template fields live in the properties
+ * companion; this surface previews the blueprint-derived search fields (read-only) and exposes the
+ * Provider node's graph actions (e.g. Regenerate, which runs the blueprint agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
   const { t } = useTranslation(meta.id);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
-  // Strip `id` from the schema; remaining hidden fields (searchSchema) are omitted via their annotation.
-  const schema = useMemo(() => omitId(Type.getSchema(Provider.Provider)), []);
-
-  const handleSave = useCallback(
-    (values: Omit<Provider.Provider, 'id'>) => {
-      Obj.update(subject, (subject) => {
-        subject.name = values.name;
-        subject.url = values.url;
-        subject.kind = values.kind;
-        subject.description = values.description;
-        subject.request = values.request;
-        subject.result = values.result;
-      });
-    },
-    [subject],
-  );
-
-  // Read-only preview of the blueprint-derived search fields. Key the memo on the SERIALIZED schema
-  // rather than the object reference: ECHO keeps the nested `searchSchema` proxy reference stable
-  // when a Regenerate (run in another context) populates it, so a reference-keyed memo would never
-  // recompute and the pane would stay empty until reload.
+  // Read-only preview of the blueprint-derived search fields, read directly from the schema's
+  // `properties` and rendered as a plain list (a preview, not an editable form). Keyed on the
+  // SERIALIZED schema, not the object reference: ECHO keeps the nested `searchSchema` proxy reference
+  // stable when a Regenerate (run in another context) populates it, so a reference-keyed memo would
+  // never recompute.
   const searchSchema = provider?.searchSchema;
   const searchSchemaKey = JSON.stringify(searchSchema ?? null);
-  const searchFieldsSchema = useMemo(() => {
+  const searchFields = useMemo(() => {
     const properties = searchSchema?.properties;
-    if (properties == null || Object.keys(properties).length === 0) {
-      return undefined;
+    if (!properties) {
+      return [];
     }
-    try {
-      return buildUnionFormSchema([searchSchema]);
-    } catch (error) {
-      log.warn('failed to build search-fields form from provider schema', { error });
-      return undefined;
-    }
+    return Object.entries(properties).map(([key, value]) => ({
+      key,
+      title:
+        typeof value === 'object' && value !== null && 'title' in value && typeof value.title === 'string'
+          ? value.title
+          : key,
+      type:
+        typeof value === 'object' && value !== null && 'type' in value && typeof value.type === 'string'
+          ? value.type
+          : undefined,
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchSchemaKey]);
 
@@ -79,27 +62,20 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-2'>
-        <Form.Root schema={schema} defaultValues={provider} autoSave onSave={handleSave}>
-          <Form.Viewport>
-            <Form.Content>
-              <Form.FieldSet />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-
-        <div className='flex flex-col gap-1 p-3'>
-          <span className='text-sm text-description'>{t('search-fields.label')}</span>
-          {searchFieldsSchema ? (
-            <Form.Root key={JSON.stringify(provider.searchSchema)} schema={searchFieldsSchema} values={{}} readonly>
-              <Form.Content>
-                <Form.FieldSet />
-              </Form.Content>
-            </Form.Root>
-          ) : (
-            <span className='text-sm text-subdued'>{t('search-fields.message')}</span>
-          )}
-        </div>
+      <Panel.Content classNames='flex flex-col gap-2 p-3'>
+        <span className='text-sm text-description'>{t('search-fields.label')}</span>
+        {searchFields.length > 0 ? (
+          <dl className='flex flex-col gap-1'>
+            {searchFields.map((field) => (
+              <div key={field.key} className='flex items-baseline justify-between gap-2'>
+                <dt className='text-sm'>{field.title}</dt>
+                {field.type && <dd className='text-xs text-description'>{field.type}</dd>}
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <span className='text-sm text-subdued'>{t('search-fields.message')}</span>
+        )}
       </Panel.Content>
     </Panel.Root>
   );
