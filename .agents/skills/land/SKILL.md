@@ -12,6 +12,7 @@ You are in **Land Mode** — your job is to take an existing pull request, get i
 ## Step 1 — Parse the PR reference
 
 The user invoked `/land` with arguments. Extract:
+
 - **PR number**: from a bare integer (`7342`) or a GitHub URL (`.../pull/7342`).
 - **Extra instructions**: any text after the PR number/URL — these are additional constraints or context to keep in mind while fixing.
 
@@ -22,6 +23,7 @@ If no PR reference was given, ask the user for one before proceeding.
 ## Step 2 — Fetch PR metadata
 
 Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNumber: <number> }` to retrieve:
+
 - `headRefName` — the branch you will work on.
 - `baseRefName` — usually `main`.
 - Current state (open/merged/closed), draft status, merge-ability.
@@ -55,6 +57,7 @@ git merge origin/main --no-edit
 ```
 
 If there are merge conflicts, resolve them. After resolving:
+
 ```bash
 git add -A
 git commit -m "chore: merge main into branch"
@@ -62,6 +65,7 @@ git push -u origin <headRefName>
 ```
 
 If `git merge` is clean, push only if there are new commits:
+
 ```bash
 git push -u origin <headRefName>
 ```
@@ -72,7 +76,7 @@ git push -u origin <headRefName>
 
 ## Step 5 — Assess current CI status
 
-Use `mcp__github__pull_request_read` again (or search recent check runs) to understand which checks are failing. 
+Use `mcp__github__pull_request_read` again (or search recent check runs) to understand which checks are failing.
 
 Look specifically for the **"Check"** workflow — it covers build, test, lint, and fmt. Any red check is YOUR responsibility to fix.
 
@@ -108,6 +112,7 @@ For each failing check:
 5. Commit with a conventional commit message and push.
 
 **Prohibited shortcuts:**
+
 - `as any`, `as unknown`, non-null `!` to silence type errors.
 - `--no-verify` to skip hooks.
 - Commenting out failing tests.
@@ -121,6 +126,7 @@ After each push, re-examine CI to confirm the fix landed correctly.
 ## Step 7 — Address review comments
 
 Use `mcp__github__pull_request_read` to check for unresolved review threads. For each unresolved thread:
+
 - If the comment requests a code change and you agree, apply it.
 - If you disagree or need clarification, reply explaining why.
 - If already addressed by your commits, reply confirming.
@@ -150,6 +156,7 @@ Then **end your turn** — do NOT poll or sleep. You will receive `<github-webho
 On each event:
 
 ### CI failure event
+
 1. Check which job failed.
 2. Fetch logs to diagnose.
 3. Apply fix locally, test locally, commit, push.
@@ -157,17 +164,20 @@ On each event:
 5. If the same check fails repeatedly (3+ times) with no progress, ask the user.
 
 ### Review comment event
+
 1. Read the comment.
 2. If it requests a change: apply it, commit, push, optionally reply.
 3. If it approves: note it in checklist, check if auto-merge can now be enabled.
 4. If it requests changes that are out of scope or incorrect: reply explaining why.
 
 ### PR merged event
+
 1. Print final success message with PR URL.
 2. Call `mcp__github__unsubscribe_pr_activity`.
 3. Stop.
 
 ### PR closed (not merged) event
+
 Ask the user what happened and whether to reopen.
 
 ---
@@ -208,6 +218,7 @@ export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/b
 ```
 
 This project uses:
+
 - `moon` for task running (`moon run <package>:task`)
 - `pnpm` for package management
 - `mcp__github__*` tools for all GitHub operations (no `gh` CLI in remote environments)
@@ -227,7 +238,7 @@ Branch: <headRefName>
 
 Checks:
 - [x/○] Build
-- [x/○] Tests  
+- [x/○] Tests
 - [x/○] Lint
 - [x/○] Fmt
 - [x/○] No merge conflicts
