@@ -352,6 +352,9 @@
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-extension/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {

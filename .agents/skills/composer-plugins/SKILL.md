@@ -210,12 +210,14 @@ bypass validation. Two rules:
 
 ```tsx
 <Card.Header>
-  <Card.IconBlock />                {/* slot 1 (icon) — empty placeholder */}
-  <div className='flex flex-col gap-0.5 min-w-0'>   {/* slot 2 (1fr content) */}
+  <Card.IconBlock /> {/* slot 1 (icon) — empty placeholder */}
+  <div className='flex flex-col gap-0.5 min-w-0'>
+    {' '}
+    {/* slot 2 (1fr content) */}
     <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
     {price && <span className='text-sm text-description'>{price}</span>}
   </div>
-  <Card.IconBlock />                {/* slot 3 (action) — empty placeholder */}
+  <Card.IconBlock /> {/* slot 3 (action) — empty placeholder */}
 </Card.Header>
 ```
 
@@ -223,7 +225,9 @@ A component used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asCh
 
 ```tsx
 export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, current, classNames, ...props }, ref) => (
-  <Card.Root ref={ref} classNames={['dx-hover', current && 'dx-current', classNames]} {...props}>…</Card.Root>
+  <Card.Root ref={ref} classNames={['dx-hover', current && 'dx-current', classNames]} {...props}>
+    …
+  </Card.Root>
 ));
 // then: <Focus.Item asChild current={current} onCurrentChange={…}><FooCard subject={x} current={current} /></Focus.Item>
 ```

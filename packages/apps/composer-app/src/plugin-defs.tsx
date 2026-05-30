@@ -25,6 +25,7 @@ import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
+import { ExtensionPlugin } from '@dxos/plugin-extension/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
@@ -194,6 +195,7 @@ export const getPlugins = ({
     DiscordPlugin(),
     DoctorPlugin(),
     ExplorerPlugin(),
+    !isTauri && ExtensionPlugin(),
     FeedPlugin(),
     GamePlugin(),
     GeneratorPlugin(),

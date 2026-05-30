@@ -81,8 +81,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           classNames: mx(
             'h-full grid divide-y divide-separator',
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[minmax(0,4lh)_1fr]',
+              ? 'grid-rows-[minmax(0,8lh)_1fr_minmax(0,206px)]'
+              : 'grid-rows-[minmax(0,8lh)_1fr]',
           ),
         })}
         ref={forwardedRef}
