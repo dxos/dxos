@@ -21,8 +21,9 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
-// Personal space + exemplar space seeded on every new identity.
-export const INITIAL_SPACE_COUNT = 2;
+// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// localhost (see WelcomePlugin `generateExemplarSpace`), which is where e2e tests run.
+export const INITIAL_SPACE_COUNT = 1;
 
 export class AppManager {
   page!: Page;
@@ -258,9 +259,16 @@ export class AppManager {
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
     if (nth !== undefined) {
+      // The inline primary-action column was removed from navtree items; object actions now live
+      // in the actions dropdown menu, so reveal it on hover, open it, and select the create action.
+      // The actions testId is suffixed with the tree depth (`...actionsLevel${level}`), so match
+      // any level to support nested objects.
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
-      await object.getByTestId('spacePlugin.createObject').click();
+      await object.getByTestId(/navtree\.treeItem\.actionsLevel\d+/).first().click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.getByTestId('spacePlugin.createObject').last().focus();
+      await this.page.keyboard.press('Enter');
     } else {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
