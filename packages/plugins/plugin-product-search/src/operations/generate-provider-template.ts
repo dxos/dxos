@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
@@ -52,8 +52,17 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           context: [Ref.make(provider)],
         });
 
+        // Create the conversation feed in the space so the spawned AgentPrompt environment inherits
+        // space affinity (without it, AgentPrompt creates a space-less feed and Database.Service is
+        // unavailable in the spawn). Mirrors the assistant e2e harness.
+        const conversationFeed = yield* Database.add(Feed.make());
+
         yield* Database.flush();
-        yield* Operation.invoke(AgentPrompt, { prompt: Ref.make(routine), input: {} }, { spaceId: db.spaceId });
+        yield* Operation.invoke(
+          AgentPrompt,
+          { prompt: Ref.make(routine), input: {} },
+          { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
+        );
 
         // Reload so the mutation persisted by setProviderTemplate is reflected.
         const updated = yield* Database.load(providerRef);
