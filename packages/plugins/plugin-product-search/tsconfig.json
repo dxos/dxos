@@ -45,6 +45,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -66,10 +69,16 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

@@ -2638,6 +2638,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../../plugins/plugin-preview
+      '@dxos/plugin-product-search':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-product-search
       '@dxos/plugin-pwa':
         specifier: workspace:*
         version: link:../../plugins/plugin-pwa
@@ -12934,6 +12937,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -12952,6 +12958,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -12986,6 +12995,9 @@ importers:
         specifier: ~19.2.3
         version: 19.2.6
     devDependencies:
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
