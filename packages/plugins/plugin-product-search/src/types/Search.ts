@@ -4,11 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, type Database, DXN, Feed, Filter, Obj, Ref, Tag, TagIndex, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import { Provider } from './Provider';
 import { Result } from './Result';
+
+/** System {@link Tag} foreign key for the user-applied star flag on a Result (within a Search). */
+export const STARRED_TAG = { source: 'org.dxos.plugin.product-search', id: 'starred' };
 
 /** A user's saved product search configuration. */
 export const Search = Schema.Struct({
@@ -16,7 +19,10 @@ export const Search = Schema.Struct({
   providers: Schema.Array(Ref.Ref(Provider)),
   /** Values for the union of provider fields, keyed by field name. */
   params: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
-  results: Schema.Array(Ref.Ref(Result)).pipe(FormInputAnnotation.set(false)),
+  /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+  /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */
+  tags: TagIndex.field(),
   /**
    * Timestamp of the last run; persisted metadata, hidden from forms.
    * Run progress itself is ephemeral UI state (see SearchForm), not a persisted property.
@@ -32,17 +38,47 @@ export type Search = Type.InstanceType<typeof Search>;
 /** Checks if a value is a Search object. */
 export const instanceOf = (value: unknown): value is Search => Obj.instanceOf(Search, value);
 
-/** Creates a Search with providers, params, and results defaulting to empty. */
+/** Creates a Search with a backing results feed; providers and params default to empty. */
 export const make = (
-  props: Omit<Obj.MakeProps<typeof Search>, 'providers' | 'params' | 'results'> & {
+  props: Omit<Obj.MakeProps<typeof Search>, 'providers' | 'params' | 'feed' | 'tags'> & {
     providers?: Ref.Ref<Provider>[];
     params?: Record<string, unknown>;
-    results?: Ref.Ref<Result>[];
-  },
-): Search =>
-  Obj.make(Search, {
+  } = {},
+): Search => {
+  const feed = Feed.make();
+  const search = Obj.make(Search, {
     ...props,
     providers: props.providers ?? [],
     params: props.params ?? {},
-    results: props.results ?? [],
+    feed: Ref.make(feed),
   });
+  Obj.setParent(feed, search);
+  return search;
+};
+
+/** Resolves the uri of the `starred` {@link Tag} if it exists (does not create one). Async. */
+export const findStarredUri = async (db: Pick<Database.Database, 'query'>): Promise<string | undefined> => {
+  const [tag] = await db.query(Filter.foreignKeys(Tag.Tag, [STARRED_TAG])).run();
+  return tag ? Obj.getURI(tag).toString() : undefined;
+};
+
+/** Whether a Result is starred in this Search (pure; resolve the uri first via {@link findStarredUri}). */
+export const isStarred = (search: Search, resultId: string, starredUri: string | undefined): boolean =>
+  starredUri ? TagIndex.bind(search, 'tags').objects(starredUri).includes(resultId) : false;
+
+/** Sets/clears the `starred` tag on a Result in this Search (find-or-creates the Tag object). Async. */
+export const setStarred = async (
+  search: Search,
+  resultId: string,
+  db: Pick<Database.Database, 'query' | 'add'>,
+  value: boolean,
+): Promise<void> => {
+  const tag = await Tag.findOrCreate(db, { key: STARRED_TAG, label: 'Starred', hue: 'amber' });
+  const uri = Obj.getURI(tag).toString();
+  const tags = TagIndex.bind(search, 'tags');
+  if (value) {
+    tags.setTag(uri, resultId);
+  } else {
+    tags.unsetTag(uri, resultId);
+  }
+};

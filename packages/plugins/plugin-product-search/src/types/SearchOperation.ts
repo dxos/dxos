@@ -44,14 +44,15 @@ export const RunProviderSearch = Operation.make({
   meta: {
     key: `${SEARCH_OPERATION}.run-provider-search`,
     name: 'Run Provider Search',
-    description: 'Executes one provider template against a search and returns result objects.',
+    description: 'Executes one provider template against a search, appending new results to its feed.',
     icon: 'ph--play--regular',
   },
   input: Schema.Struct({
     search: Ref.Ref(Search),
     provider: Ref.Ref(Provider),
   }),
-  output: Schema.Array(Ref.Ref(Result)),
+  // Count of newly-appended (previously unseen) results.
+  output: Schema.Number,
   services: [Database.Service],
 });
 

@@ -78,7 +78,6 @@ export const makeSampleResults = (provider: Provider.Provider): Result.Result[] 
     images: ['https://placehold.co/600x400?text=911+Turbo+S'],
     provider: Ref.make(provider),
     properties: { mileage: 9500, year: 2019, location: 'Manchester' },
-    starred: true,
   }),
   Result.make({
     title: '2021 Porsche 718 Cayman GT4',
@@ -100,13 +99,15 @@ export const makeSampleResults = (provider: Provider.Provider): Result.Result[] 
   }),
 ];
 
-/** Creates a fresh sample {@link Search.Search} referencing `provider` and `results`. */
-export const makeSampleSearch = (provider: Provider.Provider, results: Result.Result[]): Search.Search =>
+/**
+ * Creates a fresh sample {@link Search.Search} referencing `provider`. Results live in the search's
+ * feed; callers append {@link makeSampleResults} to `search.feed` (via the space's queues).
+ */
+export const makeSampleSearch = (provider: Provider.Provider): Search.Search =>
   Search.make({
     name: 'Porsche 911 under £150k',
     providers: [Ref.make(provider)],
     params: { make: 'Porsche', model: '911', priceTo: 150000 },
-    results: results.map((result) => Ref.make(result)),
   });
 
 //
@@ -120,4 +121,4 @@ export const sampleResults: Result.Result[] = makeSampleResults(sampleProvider);
 
 export const sampleResult: Result.Result = sampleResults[0];
 
-export const sampleSearch: Search.Search = makeSampleSearch(sampleProvider, sampleResults);
+export const sampleSearch: Search.Search = makeSampleSearch(sampleProvider);
