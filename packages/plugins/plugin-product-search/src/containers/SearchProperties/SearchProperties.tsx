@@ -83,7 +83,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   }, [invokePromise, search, database]);
 
   return (
-    <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
+    <div className='flex flex-col'>
       <div className='flex flex-col gap-1'>
         <span className='text-sm text-description'>{t('providers.label')}</span>
         {allProviders.length === 0 ? (
@@ -103,6 +103,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         )}
       </div>
 
+      {/* TODO(burdon): Fix indentation; is this the right way to extend properties? */}
       {selectedProviders.length > 0 && (
         // Re-key the form on the set of selected providers so the merged schema
         // re-initialises when the provider selection changes.
