@@ -100,9 +100,11 @@ export const ProviderArticle = ({ role, subject }: ProviderArticleProps) => {
           autoSave
           onSave={handleSave}
         >
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+            </Form.Content>
+          </Form.Viewport>
         </Form.Root>
 
         <div className='flex flex-col gap-1 p-3'>
