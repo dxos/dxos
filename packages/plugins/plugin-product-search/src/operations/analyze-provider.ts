@@ -32,9 +32,10 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
       // extension lives. API providers (plain HTML/JSON) fetch directly via the edge proxy.
       const body =
         provider.kind === 'scrape'
-          ? // Foreground render: anti-bot sites gate background tabs, so analyzing in a focused tab
-            // (user's own session) lets the LLM author selectors from the REAL listings DOM.
-            yield* Operation.invoke(SearchOperation.RenderPage, { url: provider.url, active: true })
+          ? // Render in an (unfocused) popup window so the LLM authors selectors from the REAL
+            // listings DOM. A separate window stays `visible` without stealing focus, getting past
+            // visibility-gated anti-bot that blocks background tabs.
+            yield* Operation.invoke(SearchOperation.RenderPage, { url: provider.url, active: false })
           : yield* fetchPage({ method: 'GET', url: provider.url });
 
       const cleaned = cleanHtml(body, { maxLength: MAX_BODY_LENGTH });

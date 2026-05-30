@@ -12,9 +12,20 @@ import { DEFAULT_RENDER_TIMEOUT_MS, type RenderAck, type RenderRequest } from '.
  * mockable in tests. Only the members actually used are declared.
  */
 export interface RenderBrowserApi {
+  windows: {
+    // Render in a separate popup window rather than a tab: an unfocused window still reports
+    // `document.visibilityState: 'visible'` (a background tab is `hidden`), so visibility-gated
+    // anti-bot checks pass without stealing focus from Composer.
+    create(createData: {
+      url?: string;
+      type?: 'normal' | 'popup' | 'panel' | 'detached_panel';
+      focused?: boolean;
+      width?: number;
+      height?: number;
+    }): Promise<{ id?: number; tabs?: { id?: number }[] }>;
+    remove(windowId: number): Promise<void>;
+  };
   tabs: {
-    create(createProperties: { url?: string; active?: boolean }): Promise<{ id?: number }>;
-    remove(tabId: number): Promise<void>;
     onUpdated: {
       addListener(callback: (tabId: number, changeInfo: { status?: string }) => void): void;
       removeListener(callback: (tabId: number, changeInfo: { status?: string }) => void): void;
@@ -144,14 +155,14 @@ const waitForSelector = async (
 };
 
 /**
- * Render a URL in a background tab and return its rendered HTML.
+ * Render a URL in a separate popup window and return its rendered HTML.
  *
- * Flow: create a background (inactive) tab → await load `complete` → optional
- * `waitForSelector` poll and/or `waitForMs` delay → read
- * `document.documentElement.outerHTML` + `document.location.href` via an
- * injected script → ALWAYS remove the tab. The whole flow is bounded by
- * `timeoutMs` (default {@link DEFAULT_RENDER_TIMEOUT_MS}) through an
- * `AbortController`.
+ * Flow: open a popup window (unfocused unless `active`) → await its tab's load `complete` →
+ * optional `waitForSelector` poll and/or `waitForMs` delay → read
+ * `document.documentElement.outerHTML` + `document.location.href` via an injected script → ALWAYS
+ * remove the window. A separate window stays `document.visibilityState: 'visible'` even unfocused
+ * (a background tab is `hidden`), so visibility-gated anti-bot checks pass without stealing focus.
+ * The whole flow is bounded by `timeoutMs` (default {@link DEFAULT_RENDER_TIMEOUT_MS}).
  */
 export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): Promise<RenderAck> => {
   const { id, url, waitForSelector: selector, waitForMs, timeoutMs = DEFAULT_RENDER_TIMEOUT_MS, active = false } = request;
@@ -163,11 +174,15 @@ export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): 
   });
 
   const watcher = watchForComplete(api, controller.signal);
-  let tabId: number | undefined;
+  let windowId: number | undefined;
   try {
     const run = async (): Promise<RenderAck> => {
-      const tab = await api.tabs.create({ url, active });
-      tabId = tab.id;
+      // Unfocused (when !active) so it never steals focus from Composer; still `visible` (not
+      // `hidden` like a background tab), which is what visibility-gated anti-bot keys on. `active`
+      // is the focused fallback for sites that also check focus.
+      const win = await api.windows.create({ url, type: 'popup', focused: active, width: 1280, height: 1024 });
+      windowId = win.id;
+      const tabId = win.tabs?.[0]?.id;
       if (tabId === undefined) {
         return { version: 1, id, ok: false, error: 'noTab' };
       }
@@ -201,8 +216,8 @@ export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): 
   } finally {
     clearTimeout(timer);
     watcher.dispose();
-    if (tabId !== undefined) {
-      await api.tabs.remove(tabId).catch(() => undefined);
+    if (windowId !== undefined) {
+      await api.windows.remove(windowId).catch(() => undefined);
     }
   }
 };

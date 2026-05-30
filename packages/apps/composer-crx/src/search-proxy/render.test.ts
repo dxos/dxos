@@ -22,23 +22,27 @@ const createMockApi = (options: MockOptions = {}) => {
   const listeners = new Set<Listener>();
   const removed: number[] = [];
   let nextTabId = 1;
+  let nextWindowId = 100;
 
   const api: RenderBrowserApi = {
-    tabs: {
+    windows: {
       create: async () => {
-        const id = nextTabId++;
+        const tabId = nextTabId++;
+        const windowId = nextWindowId++;
         if (autoComplete) {
           queueMicrotask(() => {
             for (const listener of listeners) {
-              listener(id, { status: 'complete' });
+              listener(tabId, { status: 'complete' });
             }
           });
         }
-        return { id };
+        return { id: windowId, tabs: [{ id: tabId }] };
       },
-      remove: async (tabId) => {
-        removed.push(tabId);
+      remove: async (windowId) => {
+        removed.push(windowId);
       },
+    },
+    tabs: {
       onUpdated: {
         addListener: (cb) => listeners.add(cb),
         removeListener: (cb) => listeners.delete(cb),
@@ -65,7 +69,7 @@ describe('renderUrl', () => {
       html: '<html></html>',
       finalUrl: 'https://example.com/final',
     });
-    expect(removed).toEqual([1]);
+    expect(removed).toEqual([100]);
   });
 
   test('returns invalidAck when the injected reader returns an unexpected shape', async ({ expect }) => {
@@ -74,14 +78,16 @@ describe('renderUrl', () => {
     const ack = await renderUrl(api, { version: 1, id: 'r2', url: 'https://example.com/' });
 
     expect(ack).toEqual({ version: 1, id: 'r2', ok: false, error: 'invalidAck' });
-    expect(removed).toEqual([1]);
+    expect(removed).toEqual([100]);
   });
 
-  test('returns noTab when the created tab has no id', async ({ expect }) => {
+  test('returns noTab when the created window has no tab', async ({ expect }) => {
     const api: RenderBrowserApi = {
-      tabs: {
-        create: async () => ({}),
+      windows: {
+        create: async () => ({ id: 1 }),
         remove: async () => {},
+      },
+      tabs: {
         onUpdated: { addListener: () => {}, removeListener: () => {} },
       },
       scripting: { executeScript: async () => [] },
@@ -97,7 +103,7 @@ describe('renderUrl', () => {
     const ack = await renderUrl(api, { version: 1, id: 'r4', url: 'https://example.com/', timeoutMs: 20 });
 
     expect(ack).toEqual({ version: 1, id: 'r4', ok: false, error: 'timeout' });
-    expect(removed).toEqual([1]);
+    expect(removed).toEqual([100]);
   });
 
   test('reads the page best-effort when the selector never matches', async ({ expect }) => {
@@ -120,6 +126,6 @@ describe('renderUrl', () => {
       html: '<html></html>',
       finalUrl: 'https://example.com/final',
     });
-    expect(removed).toEqual([1]);
+    expect(removed).toEqual([100]);
   });
 });
