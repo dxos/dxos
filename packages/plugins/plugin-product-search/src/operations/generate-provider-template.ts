@@ -4,14 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
+import { meta } from '../meta';
 import { ProviderBlueprint } from '../blueprints';
 import { Provider, SearchOperation } from '../types';
+
+const TOAST_ID = `${meta.id}/regenerate`;
 
 /**
  * Runs the provider blueprint agent: materializes the {@link ProviderBlueprint} as an ECHO
@@ -25,10 +30,20 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
   SearchOperation.GenerateProviderTemplate.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ provider: providerRef }) {
-        const { db } = yield* Database.Service;
-        const provider = yield* Database.load(providerRef);
+        // Surface progress: this runs a render fetch + an LLM agent turn and can take a minute, so
+        // without feedback the toolbar action looks inert. Toasts share an id so they update in place.
+        yield* Operation.invoke(LayoutOperation.AddToast, {
+          id: TOAST_ID,
+          icon: 'ph--sparkle--regular',
+          duration: 120_000,
+          title: ['regenerate.toast.pending.title', { ns: meta.id }],
+        });
 
-        // Materialize the static blueprint definition as an ECHO Blueprint object in the space
+        const program = Effect.gen(function* () {
+          const { db } = yield* Database.Service;
+          const provider = yield* Database.load(providerRef);
+
+          // Materialize the static blueprint definition as an ECHO Blueprint object in the space
         // (cloned once and reused thereafter), keyed by `Provider.BLUEPRINT_KEY`.
         const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
         let blueprint = blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY);
@@ -64,8 +79,35 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
         );
 
-        // Reload so the mutation persisted by setProviderTemplate is reflected.
-        const updated = yield* Database.load(providerRef);
+          // Reload so the mutation persisted by setProviderTemplate is reflected.
+          const updated = yield* Database.load(providerRef);
+          return updated;
+        });
+
+        const updated = yield* program.pipe(
+          Effect.tapError((error) =>
+            Effect.gen(function* () {
+              log.catch(error);
+              yield* Operation.invoke(LayoutOperation.AddToast, {
+                id: TOAST_ID,
+                icon: 'ph--warning--regular',
+                duration: 8_000,
+                title: ['regenerate.toast.error.title', { ns: meta.id }],
+                description: ['regenerate.toast.error.description', { ns: meta.id }],
+              });
+            }),
+          ),
+        );
+
+        const fieldCount = Object.keys(updated.searchSchema?.properties ?? {}).length;
+        yield* Operation.invoke(LayoutOperation.AddToast, {
+          id: TOAST_ID,
+          icon: 'ph--check-circle--regular',
+          duration: 5_000,
+          title: ['regenerate.toast.success.title', { ns: meta.id }],
+          description: [fieldCount > 0 ? 'regenerate.toast.success.description' : 'regenerate.toast.empty.description', { ns: meta.id, count: fieldCount }],
+        });
+
         return Ref.make(updated);
       }),
     ),
