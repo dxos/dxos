@@ -25,6 +25,7 @@ import { Message } from '@dxos/types';
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
+import { isAiServiceUnavailable } from '../../extractor/ai-gate';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -362,7 +363,15 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
                   extractorId: best.extractor.id,
                 }).pipe(
                   Effect.catchAll((err) => {
-                    log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    // The AI service can be momentarily absent from the process-manager LayerStack
+                    // during startup (the assistant plugin's `AiService` LayerSpec races the
+                    // runtime build). Treat that as a deferrable skip — a later sync (or app load,
+                    // once the stack carries the spec) re-attempts — rather than a hard failure.
+                    if (isAiServiceUnavailable(err)) {
+                      log.info('auto-on-arrival extract skipped: AI service not ready', { messageId: message.id });
+                    } else {
+                      log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    }
                     return Effect.void;
                   }),
                 );

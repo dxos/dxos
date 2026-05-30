@@ -124,6 +124,14 @@ const findExistingFlight = (
 };
 
 /**
+ * Normalise a confirmation code (PNR) for comparison. Airline record locators are case-insensitive
+ * alphanumerics; an LLM pass over a second email may return the same code with different casing or
+ * stray whitespace (e.g. "abc 123" vs "ABC123"). Comparing the normalised form keeps two emails for
+ * one booking on a single Trip instead of spawning a duplicate.
+ */
+const normalizeConfirmationCode = (code: string): string => code.replace(/\s+/g, '').toUpperCase();
+
+/**
  * Find an existing Booking with this confirmation code (PNR). Flights booked under one
  * reservation share a code, so a follow-up segment attaches to that Booking's Trip rather than
  * spawning a new one. The Booking is parented to its Trip via `Obj.setParent`.
@@ -135,8 +143,14 @@ const findExistingBookingByConfirmation = (
   if (!confirmationCode) {
     return Effect.succeed(undefined);
   }
+  const normalized = normalizeConfirmationCode(confirmationCode);
   return Effect.promise(() => db.query(Filter.type(Booking.Booking)).run()).pipe(
-    Effect.map((bookings) => bookings.find((booking) => booking.confirmationCode === confirmationCode)),
+    Effect.map((bookings) =>
+      bookings.find(
+        (booking) =>
+          booking.confirmationCode !== undefined && normalizeConfirmationCode(booking.confirmationCode) === normalized,
+      ),
+    ),
     Effect.catchAllDefect(() => Effect.succeed(undefined)),
   );
 };

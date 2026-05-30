@@ -58,6 +58,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
     void handleClose();
   }, [id, handleClose, invokePromise]);
 
+  // TODO(burdon): Why are we not using LayoutOperation.AddToast?
   return (
     <Toast.Root open={open} duration={TOAST_TIMEOUT} onOpenChange={setOpen}>
       <Toast.Body>

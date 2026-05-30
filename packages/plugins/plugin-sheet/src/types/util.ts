@@ -12,7 +12,7 @@ import {
 } from '@dxos/compute-hyperformula';
 import { randomBytes } from '@dxos/crypto';
 import { type Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { assertArgument } from '@dxos/invariant';
 
 import { type Sheet } from '../types';
 
@@ -122,7 +122,7 @@ export const compareIndexPositions = (sheet: Sheet.Sheet, indexA: string, indexB
  * Map from A1 notation to indices.
  */
 export const mapFormulaRefsToIndices = (sheet: Sheet.Sheet, formula: string): string => {
-  invariant(isFormula(formula));
+  assertArgument(isFormula(formula), 'formula');
   return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
     return addressToIndex(sheet, addressFromA1Notation(match));
   });
@@ -132,7 +132,7 @@ export const mapFormulaRefsToIndices = (sheet: Sheet.Sheet, formula: string): st
  * Map from indices to A1 notation.
  */
 export const mapFormulaIndicesToRefs = (sheet: Sheet.Sheet, formula: string): string => {
-  invariant(isFormula(formula));
+  assertArgument(isFormula(formula), 'formula');
   return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
     return addressToA1Notation(addressFromIndex(sheet, idx));
   });

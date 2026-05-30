@@ -61,7 +61,7 @@ export const TreeItemHeading = memo(
             data-testid='treeItem.heading'
             variant='ghost'
             classNames={[
-              'grow justify-start gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
+              'grow shrink min-w-0 justify-start gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
               'disabled:cursor-default disabled:opacity-100',
               className,
             ]}
