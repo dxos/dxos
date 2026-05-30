@@ -9,7 +9,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Ref } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -17,7 +17,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { ProductSearchPlugin } from '../../plugin';
-import { sampleProvider, sampleResults } from '../../testing';
+import { makeSampleProvider, makeSampleResults, makeSampleSearch } from '../../testing';
 import { translations } from '../../translations';
 import { Provider, Result, Search } from '../../types';
 import { SearchArticle } from './SearchArticle';
@@ -30,6 +30,7 @@ const DefaultStory = () => {
   if (!search) {
     return <Loading />;
   }
+
   return <SearchArticle role='article' subject={search} attendableId='story' />;
 };
 
@@ -39,16 +40,9 @@ const seedSpace = ({ client }: { client: Client }) =>
     const space = (yield* Effect.promise(() => client.spaces.create())) as Space;
     yield* Effect.promise(() => space.waitUntilReady());
 
-    const provider = space.db.add(sampleProvider);
-    const results = sampleResults.map((result) => space.db.add(result));
-    space.db.add(
-      Search.makeSearch({
-        name: 'Compact cars under $25k',
-        providers: [Ref.make(provider)],
-        criteria: { make: 'Toyota', priceMax: 25000 },
-        results: results.map((result) => Ref.make(result)),
-      }),
-    );
+    const provider = space.db.add(makeSampleProvider());
+    const results = makeSampleResults(provider).map((result) => space.db.add(result));
+    space.db.add(makeSampleSearch(provider, results));
     yield* Effect.promise(() => space.db.flush());
   });
 

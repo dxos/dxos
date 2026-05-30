@@ -17,7 +17,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { ProductSearchPlugin } from '../../plugin';
-import { sampleProvider } from '../../testing';
+import { makeSampleProvider } from '../../testing';
 import { translations } from '../../translations';
 import { Provider } from '../../types';
 import { ProviderArticle } from './ProviderArticle';
@@ -38,7 +38,7 @@ const seedSpace = ({ client }: { client: Client }) =>
     yield* initializeIdentity(client);
     const space = (yield* Effect.promise(() => client.spaces.create())) as Space;
     yield* Effect.promise(() => space.waitUntilReady());
-    space.db.add(sampleProvider);
+    space.db.add(makeSampleProvider());
     yield* Effect.promise(() => space.db.flush());
   });
 
