@@ -1,38 +1,50 @@
 # Feed + Metadata Kit — Design
 
 Date: 2026-05-30
-Status: In progress — tag primitives landed; metadata/feed primitives + product-search adopter pending.
-Packages: `@dxos/echo` (`TagIndex`, `Tagging` — landed); `@dxos/schema` (`Metadata`, `FeedCollection` — planned).
-First adopters: `@dxos/plugin-inbox` (tags — landed), `@dxos/plugin-product-search` (planned).
+Status: Implemented — kit primitives + three adopters landed. (`FeedCollection` not built; inlined where needed.)
+Packages: `@dxos/echo` (`TagIndex`, `Tagging`, `StateMap`, `Tag.findOrCreate`).
+Adopters: `@dxos/plugin-inbox`, `@dxos/plugin-product-search`, `@dxos/plugin-feed`.
 
 ## Implementation status
 
-What shipped (this branch):
+Kit (all in `@dxos/echo`):
 
-- **`@dxos/echo` `TagIndex`** — inverse tag index `Record<tagId, objectId[]>` for immutable feed
-  objects (the (C) primitive below, specialised to tags). `field()` + `bind()` accessor
-  (`setTag`/`unsetTag`/`objects`/`tags`/`tagIds`). No embedded labels.
-- **`@dxos/echo` `Tagging`** — unifies tagging across mutable objects (`Obj.getMeta(obj).tags`) and
-  immutable feed objects (host `TagIndex` via `{ host }`); `get`/`set`/`unset`/`resolve`.
-- **`@dxos/echo` `StateMap`** — the (A) primitive: generic per-object metadata side-map
-  `Record<objectId, S>` (`field`/`bind` with `get`/`patch`/`remove`/`ids`/`entries`). For non-tag
-  metadata (read-marker, image, snippet); boolean labels go to `TagIndex`/`Tagging` instead.
-- **`@dxos/plugin-inbox` Mailbox retrofit** — `Mailbox.tags` is now a `TagIndex`; labels/hues live on
-  `@dxos/echo` `Tag` objects (user tags by label, Gmail provider tags by foreign key). The whole
-  inbox tag path keys on tag **URIs**.
+- **`TagIndex`** — inverse tag index `Record<tagId, objectId[]>` for immutable feed objects. `field()`
+  + `bind()` (`setTag`/`unsetTag`/`objects`/`tags`/`tagIds`). No embedded labels.
+- **`Tagging`** — unifies tagging across mutable objects (`Obj.getMeta(obj).tags`) and immutable feed
+  objects (host `TagIndex` via `{ host }`); `get`/`set`/`unset`/`resolve`.
+- **`StateMap`** — the (A) primitive: generic per-object metadata side-map `Record<objectId, S>`
+  (`field`/`bind` with `get`/`patch`/`remove`/`ids`/`entries`). For non-tag metadata.
+- **`Tag.findOrCreate(db, { label, hue?, key? })`** — find-or-create a `Tag` object by foreign key
+  (system/provider tags) or by label (user tags). Shared by all adopters.
 
-What's still planned:
+Adopters (all landed):
 
-- **`FeedCollection`** (B) primitive (below) — `@dxos/schema` or `@dxos/echo`.
-- **`plugin-feed`** retrofit: `starred`/`archived` → tags; `readAt`/`imageUrl` → `StateMap`; consolidate
-  per-post state on **Magazine** (not Subscription) to avoid duplication.
-- **`plugin-product-search`** adopter: feed-stored `Result`; `starred` → tag; other metadata →
-  `StateMap`.
-- Other tag retrofits (assistant/thread/discord/slack — follow-up; see *Retrofit candidates*).
+- **`plugin-inbox`** — `Mailbox.tags` is a `TagIndex`; labels/hues on `Tag` objects (user tags by
+  label, Gmail provider tags by foreign key). The inbox tag path keys on tag **URIs**.
+- **`plugin-product-search`** — `Search.results` → `Search.feed` (immutable `Result` queue;
+  append-once by url); `Result.starred` → a `Tag` indexed on `Search.tags`. `SearchArticle` owns the
+  tag state; `ResultCard`/`ResultDetail` are presentational.
+- **`plugin-feed`** — per-Post state hosted on the **Subscription** (so every surface resolves it via
+  `post.source.target`): `Subscription.postState = StateMap({ readAt })` + `tags = TagIndex`
+  (starred/archived as system `Tag` objects, `STARRED_TAG`/`ARCHIVED_TAG`). `Magazine.postState =
+  StateMap({ rank })`. `snippet`/`imageUrl` are **not stored** — derived from `post.description`, or
+  the refined values written to `PostContent` (contentFeed) by `LoadPostContent`. A `useSystemTags`
+  hook resolves the star/archive uris for sync render/filter.
 
-> The (A) primitive shipped as **`StateMap` in `@dxos/echo`** (not `Metadata` in `@dxos/schema`) for
-> cohesion with `TagIndex`/`Tagging`. Name is provisional (`StateMap` avoids collision with
-> `Obj.getMeta`/`ObjectMeta`).
+Not built: **`FeedCollection`** (B). The product-search feed append-once was inlined in
+`run-provider-search` (list-existing-by-url → append-new); extract `FeedCollection` if a second feed
+adopter needs it.
+
+> Naming notes: the (A) primitive shipped as **`StateMap`** (not `Metadata`) to avoid collision with
+> `Obj.getMeta`/`ObjectMeta`; the (C) primitive shipped as tag-specific **`TagIndex`** (not a generic
+> `Index` with embedded `extra`) since labels live on `Tag` objects. The generic `Index`/`extra`
+> design below is retained for historical context.
+
+> Earlier-considered alternative for `plugin-feed`: consolidating per-Post state on the **Magazine**.
+> Rejected because Post-keyed surfaces (`PostArticle`/`PostCard`/`PostContent`) lack magazine context
+> (and a Post can be in multiple magazines); hosting on the **Subscription** lets every surface
+> resolve the state via `post.source.target`, with no UI degrade.
 
 > Note: the (C) primitive landed as a **tag-specific `TagIndex` in `@dxos/echo`**, not a generic
 > `Index` with embedded per-group `extra` in `@dxos/schema`. Tags reference `@dxos/echo` `Tag`
