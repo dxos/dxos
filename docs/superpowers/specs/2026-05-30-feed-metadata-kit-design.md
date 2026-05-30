@@ -222,31 +222,31 @@ arrangement.columns` / `plugin-trello` snapshots remain candidates for a generic
 `Record<groupKey, { ids: ID[] } & Extra>` with `members`/`groupsOf`/`add`/`remove`/`meta`/`setMeta`.
 Superseded for tags by `TagIndex` (which drops `extra`, since tag metadata lives on `Tag` objects).
 
-## First adopter — `plugin-product-search`
+## Adopter — `plugin-product-search` (as shipped)
+
+> The original design here proposed a `Search.resultState` (`Metadata`) side-map for `starred`. As
+> shipped, `starred` is a **tag** (no side-map) — matching the `Tag`-object model used elsewhere.
 
 Schema:
 
-- `Search.results: Ref<Result>[]` → **`Search.feed: Ref<Feed>`**.
-- Add **`Search.resultState: Metadata.field(ResultState)`** where
-  `ResultState = Schema.Struct({ starred: Schema.optional(Schema.Boolean), starredAt: Schema.optional(Schema.String) })`.
+- `Search.results: Ref<Result>[]` → **`Search.feed: Ref<Feed>`** (immutable `Result` queue).
+- Add **`Search.tags: TagIndex.field()`** and **`STARRED_TAG`** (`Search.STARRED_TAG`).
 - Remove **`Result.starred`**.
 
 Operations:
 
-- `run-provider-search`: replace upsert-by-URL with
-  `FeedCollection.appendUnique(feed, rows.map(Result.make), { identity })`. Matched rows **keep their
-  original (stale) snapshot** — append-once, no in-place mutation. **Per-Provider override**:
-  `Provider` gains an optional declarative identity hint (property name; default `url`); the operation
-  builds the `identity` closure from it. (The kit only takes the function; the per-Provider wiring is
-  product-search glue.)
+- `run-provider-search`: append-once by url — list existing feed `Result`s, append only previously
+  unseen rows (matched rows keep their original snapshot). Provides the `FeedService` layer via
+  `createFeedServiceLayer(space.queues)`. (Inlined; `FeedCollection` not extracted.)
 - `run-search`: stop replacing results — the feed **accumulates, unbounded**. Update `lastRunAt` only.
 
 UI (`ResultCard`, `ResultDetail`, `SearchArticle`):
 
-- Star toggle → `Metadata.bind(search, 'resultState').patch(result.id, { starred })`.
-- "Starred" filter → `resultState` ids (`Metadata.bind(...).ids(s => !!s.starred)`).
-- A hook resolves feed entries (via `FeedCollection.list` / queue) and merges `resultState` for
-  rendering (analogous to `plugin-feed`'s `use-post-content`).
+- `SearchArticle` owns the tag state: it queries the feed for `Result`s, resolves the `starred` tag
+  uri (`Search.findStarredUri`), and passes `starred` + `onToggleStar` down to the presentational
+  `ResultCard`/`ResultDetail`.
+- Star toggle → `Search.setStarred(search, result.id, db, value)` (find-or-create `Tag` →
+  `TagIndex.set/unsetTag`). "Starred" filter → `Search.isStarred` (a `TagIndex` membership test).
 
 ## Retrofit (staged, follow-up PRs)
 

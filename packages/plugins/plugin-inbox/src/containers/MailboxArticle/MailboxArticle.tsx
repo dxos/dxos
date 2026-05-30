@@ -207,7 +207,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
                   db={db}
-                  tags={tags}
+                  tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
                   ref={filterEditorRef}

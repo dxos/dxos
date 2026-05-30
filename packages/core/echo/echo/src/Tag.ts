@@ -60,9 +60,14 @@ export const findOrCreate = async (
   if (key) {
     const [existing] = await db.query(Filter.foreignKeys(Tag, [key])).run();
     if (existing) {
-      if (existing.label !== label) {
-        Obj.update(existing, (existing) => {
-          existing.label = label;
+      // Keep label (and hue, when provided) current on re-sync. `hue` is only touched when supplied,
+      // so a label-only re-sync (e.g. Gmail) doesn't wipe a user-set colour.
+      if (existing.label !== label || (hue !== undefined && existing.hue !== hue)) {
+        Obj.update(existing, (tag) => {
+          tag.label = label;
+          if (hue !== undefined) {
+            tag.hue = hue;
+          }
         });
       }
       return existing;

@@ -135,6 +135,7 @@ const syncSingleMailbox = (input: {
       defaultLabel,
       existingGmailIds,
       restrictedMode,
+      labelMap,
       targetOptions.filter,
     );
     log('sync complete', { newMessages: newMessagesCount });
@@ -266,6 +267,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
   label: string,
   existingGmailIds: Set<string>,
   restricted: boolean,
+  labelMap: Map<string, string>,
   searchFilter?: string,
 ) {
   const config: DateRangeConfig = {

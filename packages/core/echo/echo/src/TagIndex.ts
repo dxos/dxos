@@ -87,11 +87,11 @@ export const bind = (host: Obj.Any, key: string): Accessor => {
     },
     setTag: (tagId, objectId) =>
       write((record) => {
-        const objects = record[tagId];
-        if (!objects) {
+        // Use `has` (not `record[tagId]`) for absence — the proxy auto-vivifies missing keys.
+        if (!has(record, tagId)) {
           record[tagId] = [objectId];
-        } else if (!objects.includes(objectId)) {
-          record[tagId] = [...objects, objectId];
+        } else if (!record[tagId].includes(objectId)) {
+          record[tagId] = [...record[tagId], objectId];
         }
       }),
     unsetTag: (tagId, objectId) =>

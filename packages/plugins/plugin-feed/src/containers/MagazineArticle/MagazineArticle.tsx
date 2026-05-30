@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -78,6 +78,16 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
 
+  // Per-Post read/star/archive state lives on the source Subscriptions (postState/tags). `useQuery`
+  // only re-fires on result-set changes, not nested mutations, so subscribe directly and bump a
+  // revision counter — threaded into the derived memos below so they recompute when a `setTag` /
+  // `setReadAt` mutates a Subscription.
+  const [revision, bumpRevision] = useReducer((value: number) => value + 1, 0);
+  useEffect(() => {
+    const unsubs = allFeeds.map((feed) => Obj.subscribe(feed, bumpRevision));
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [allFeeds]);
+
   // Index feeds by bare object id (last DXN segment) — `Obj.getURI(feed)`
   // returns the space-scoped form (`uri:echo:<spaceId>:<id>`), but
   // `post.feed.uri` from a `Ref.make` carries the local-id form
@@ -98,7 +108,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   }, [allFeeds]);
 
   // Compute posts.
-  const posts = useMagazinePosts(subject, sort, view, starredUri, archivedUri);
+  const posts = useMagazinePosts(subject, sort, view, starredUri, archivedUri, revision);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle. Also pre-load each
@@ -269,7 +279,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           onOpen: handleOpen,
         };
       }),
-    [posts, currentId, handleOpen, handleToggleStar, starredUri, feedNamesById],
+    [posts, currentId, handleOpen, handleToggleStar, starredUri, feedNamesById, revision],
   );
 
   return (
@@ -348,6 +358,8 @@ const useMagazinePosts = (
   view: MagazineView,
   starredUri: string | undefined,
   archivedUri: string | undefined,
+  // Bumped when a source Subscription's tags/read state mutate (the filter reads them).
+  revision: number,
 ) => {
   const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
@@ -441,5 +453,6 @@ const useMagazinePosts = (
     subject.postState,
     starredUri,
     archivedUri,
+    revision,
   ]);
 };
