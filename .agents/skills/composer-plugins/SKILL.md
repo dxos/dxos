@@ -179,6 +179,31 @@ const handleDelete = (i: number) =>
 
 The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
 
+### Forms, inputs, and theming
+
+NEVER hand-roll native form controls (`<textarea>`, `<input>`, `<select>`) in a plugin. They
+don't inherit the theme — a bare `<textarea>` renders as a white box in dark mode — and they
+bypass validation. Two rules:
+
+1. **Edit ECHO objects with `Form` + schema, not raw inputs.** Render
+   `<Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={...}>` from
+   `@dxos/react-ui-form` and let it generate inputs from the Effect Schema — it handles strings,
+   numbers, booleans, enums (`Schema.Literal` / `Format`), nested `Schema.Struct`, `Schema.Array`,
+   and `Schema.Record`. Hide non-editable fields with `FormInputAnnotation.set(false)`. For a field
+   that needs a bespoke editor, register it via the Form's `fieldMap` / `fieldProvider` (see
+   `plugin-kanban` `KanbanSettings`) — never a native element. If you must edit an opaque
+   document (e.g. a stored JSON Schema), model it with typed sub-schemas (the mapping structs are
+   already Effect Schemas — render `request`/`result` as nested form fields) rather than dropping
+   to a `<textarea>`.
+
+2. **Never invent Tailwind color tokens.** `bg-input` and `text-primary` are NOT valid tokens and
+   render wrong (e.g. white-on-white). Use the themed `@dxos/react-ui` primitives (`Input.*`,
+   `Card.*`, `Button`, `IconButton`) or real semantic tokens from `@dxos/react-ui-theme`
+   (`text-baseText`, `bg-base`, `bg-modalSurface`, `text-description`, `text-subdued`,
+   `border-separator`, …). When unsure, copy classes from an existing themed component instead of
+   guessing, and pass class arrays to `classNames` on react-ui components rather than styling raw
+   elements.
+
 ### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
 
 Always thread `attendableId` from `AppSurface.ObjectArticleProps` into `<Menu.Root>`. Don't underscore it as unused — without it, attention-driven contributions don't target the right surface.
@@ -394,6 +419,7 @@ See: `plugin-chess/moon.yml`
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
 - All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
+- Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See "Forms, inputs, and theming".
 
 ## Build & Test
 

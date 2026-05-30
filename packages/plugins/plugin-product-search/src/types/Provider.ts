@@ -54,10 +54,12 @@ export const Provider = Schema.Struct({
   url: Schema.String.pipe(Schema.annotations({ title: 'URL' })),
   description: Schema.optional(Schema.String),
   kind: Schema.Literal('api', 'scrape').pipe(Schema.annotations({ title: 'Kind' })),
-  // JSONSchema describing the typed search fields. Converted to Effect Schema for the form.
+  // Raw JSONSchema of the typed search fields; authored by the blueprint and hidden from forms
+  // (it is converted to an Effect Schema to drive the Search criteria form).
   searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),
-  request: RequestMapping.pipe(FormInputAnnotation.set(false), Schema.optional),
-  result: ResultMapping.pipe(FormInputAnnotation.set(false), Schema.optional),
+  // Mapping structs are Effect Schemas and render as nested form fields in the Provider editor.
+  request: Schema.optional(RequestMapping),
+  result: Schema.optional(ResultMapping),
   enabled: Schema.Boolean,
 }).pipe(
   LabelAnnotation.set(['name']),
