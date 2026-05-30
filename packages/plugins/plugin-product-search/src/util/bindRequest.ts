@@ -52,7 +52,10 @@ export const bindRequest = (criteria: Record<string, unknown>, request: RequestM
     }
   }
   const queryString = params.toString();
-  const url = queryString.length > 0 ? `${base}?${queryString}` : base;
+  // The urlTemplate may already carry a static query string (e.g. the blueprint bakes in
+  // `?advertising-location=at_cars`), so join with `&` in that case rather than a second `?`.
+  const separator = base.includes('?') ? '&' : '?';
+  const url = queryString.length > 0 ? `${base}${separator}${queryString}` : base;
 
   let body: string | undefined;
   if (request.body) {

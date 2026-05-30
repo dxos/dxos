@@ -39,4 +39,16 @@ describe('bindRequest', () => {
     );
     expect(req.url).toEqual('https://x.com/s');
   });
+
+  test('appends with & when the url template already has a query string', ({ expect }) => {
+    const req = bindRequest(
+      { make: 'Porsche', model: '911' },
+      {
+        method: 'GET',
+        urlTemplate: 'https://x.com/search?channel=cars',
+        query: { make: { field: 'make' }, model: { field: 'model' } },
+      },
+    );
+    expect(req.url).toEqual('https://x.com/search?channel=cars&make=Porsche&model=911');
+  });
 });
