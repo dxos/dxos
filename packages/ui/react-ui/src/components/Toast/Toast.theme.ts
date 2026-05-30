@@ -41,7 +41,7 @@ const close: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-st
 
 const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 text-description', ...etc);
 
-const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('flex gap-2 mbs-1', ...etc);
+const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('flex gap-2 mbs-1 pbe-2', ...etc);
 
 export const toastTheme: Theme<ToastStyleProps> = {
   viewport,

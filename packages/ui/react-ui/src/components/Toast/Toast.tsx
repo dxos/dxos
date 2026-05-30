@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks';
-import { ElevationProvider } from '../../primitives';
+import { DensityProvider, ElevationProvider } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
@@ -72,7 +72,7 @@ const ToastTitle = forwardRef<HTMLHeadingElement, ToastTitleProps>(
       <Column.Row classNames={tx('toast.header', {})}>
         {icon && (
           <div className={tx('toast.icon', {})}>
-            <Icon icon={icon} />
+            <Icon icon={icon} size={5} />
           </div>
         )}
         <ToastPrimitive.Title {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef}>
@@ -125,7 +125,7 @@ const ToastActions = forwardRef<HTMLDivElement, ToastActionsProps>(
     const { tx } = useThemeContext();
     return (
       <Column.Center classNames={tx('toast.actions', {}, classNames)} ref={forwardedRef} {...props}>
-        {children}
+        <DensityProvider density='sm'>{children}</DensityProvider>
       </Column.Center>
     );
   },
