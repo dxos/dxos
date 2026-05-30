@@ -69,13 +69,8 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
-      <Panel.Content>
-        <Form.Root
-          schema={schema}
-          values={provider}
-          autoSave
-          onSave={handleSave}
-        >
+      <Panel.Content classNames='grid grid-cols-2'>
+        <Form.Root schema={schema} defaultValues={provider} autoSave onSave={handleSave}>
           <Form.Viewport>
             <Form.Content>
               <Form.FieldSet />

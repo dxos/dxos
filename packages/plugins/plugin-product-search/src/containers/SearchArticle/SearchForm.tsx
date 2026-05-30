@@ -104,7 +104,7 @@ export const SearchForm = ({ search }: SearchFormProps) => {
         <Form.Root
           key={selectedProviders.map((provider) => provider.id).join()}
           schema={schema}
-          values={{ ...search.criteria }}
+          defaultValues={{ ...search.criteria }}
           autoSave
           onSave={handleSave}
         >
