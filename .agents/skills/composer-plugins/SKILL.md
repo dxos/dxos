@@ -179,6 +179,59 @@ const handleDelete = (i: number) =>
 
 The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
 
+### Forms, inputs, and theming
+
+NEVER hand-roll native form controls (`<textarea>`, `<input>`, `<select>`) in a plugin. They
+don't inherit the theme — a bare `<textarea>` renders as a white box in dark mode — and they
+bypass validation. Two rules:
+
+1. **Edit ECHO objects with `Form` + schema, not raw inputs.** Render
+   `<Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={...}>` from
+   `@dxos/react-ui-form` and let it generate inputs from the Effect Schema — it handles strings,
+   numbers, booleans, enums (`Schema.Literal` / `Format`), nested `Schema.Struct`, `Schema.Array`,
+   and `Schema.Record`. Hide non-editable fields with `FormInputAnnotation.set(false)`. For a field
+   that needs a bespoke editor, register it via the Form's `fieldMap` / `fieldProvider` (see
+   `plugin-kanban` `KanbanSettings`) — never a native element. If you must edit an opaque
+   document (e.g. a stored JSON Schema), model it with typed sub-schemas (the mapping structs are
+   already Effect Schemas — render `request`/`result` as nested form fields) rather than dropping
+   to a `<textarea>`.
+
+2. **Never invent Tailwind color tokens.** `bg-input` and `text-primary` are NOT valid tokens and
+   render wrong (e.g. white-on-white). Use the themed `@dxos/react-ui` primitives (`Input.*`,
+   `Card.*`, `Button`, `IconButton`) or real semantic tokens from `@dxos/react-ui-theme`
+   (`text-baseText`, `bg-base`, `bg-modalSurface`, `text-description`, `text-subdued`,
+   `border-separator`, …). When unsure, copy classes from an existing themed component instead of
+   guessing, and pass class arrays to `classNames` on react-ui components rather than styling raw
+   elements.
+
+### Cards: 3-slot subgrid + `asChild` composability
+
+`Card.Header` and `Card.Row` are **3-slot subgrids** (`grid-cols-subgrid`: leading icon · content `1fr` · trailing action). Children are placed by ORDER. A lone `<Card.Title>` as the only child lands in the narrow leading icon slot and gets clamped (e.g. a title renders as "20…"). Put real content in the CENTRE slot: bracket it with the icon slots, or wrap the content in a single element that occupies slot 2:
+
+```tsx
+<Card.Header>
+  <Card.IconBlock /> {/* slot 1 (icon) — empty placeholder */}
+  <div className='flex flex-col gap-0.5 min-w-0'>
+    {' '}
+    {/* slot 2 (1fr content) */}
+    <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
+    {price && <span className='text-sm text-description'>{price}</span>}
+  </div>
+  <Card.IconBlock /> {/* slot 3 (action) — empty placeholder */}
+</Card.Header>
+```
+
+A component used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asChild`) MUST be composable — a single element that forwards `ref` and spreads injected props. A plain function component silently drops the Slot's `ref`/handlers, so current/keyboard/click wiring never attaches. Make presentational cards `forwardRef` and spread:
+
+```tsx
+export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, current, classNames, ...props }, ref) => (
+  <Card.Root ref={ref} classNames={['dx-hover', current && 'dx-current', classNames]} {...props}>
+    …
+  </Card.Root>
+));
+// then: <Focus.Item asChild current={current} onCurrentChange={…}><FooCard subject={x} current={current} /></Focus.Item>
+```
+
 ### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
 
 Always thread `attendableId` from `AppSurface.ObjectArticleProps` into `<Menu.Root>`. Don't underscore it as unused — without it, attention-driven contributions don't target the right surface.
@@ -394,6 +447,7 @@ See: `plugin-chess/moon.yml`
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
 - All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
+- Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See "Forms, inputs, and theming".
 
 ## Build & Test
 

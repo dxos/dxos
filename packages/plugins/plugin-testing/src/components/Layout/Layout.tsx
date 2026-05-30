@@ -13,6 +13,7 @@ import {
   Button,
   Dialog,
   Icon,
+  IconButton,
   Main,
   Popover,
   type PopoverContentInteractOutsideEvent,
@@ -59,7 +60,7 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
         )}
         {toast.closeLabel && (
           <Toast.Close asChild>
-            <Button>{toLocalizedString(toast.closeLabel, t)}</Button>
+            <IconButton icon='ph--x--regular' iconOnly label={toLocalizedString(toast.closeLabel, t)} />
           </Toast.Close>
         )}
       </Toast.Actions>

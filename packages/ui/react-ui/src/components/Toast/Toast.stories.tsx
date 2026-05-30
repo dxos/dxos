@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
 import { withTheme } from '../../testing';
-import { Button } from '../Button';
+import { Button, IconButton } from '../Button';
 import { Toast } from './Toast';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
@@ -25,7 +25,7 @@ const DefaultStory = ({ title, description, actionTriggers, openTrigger, closeTr
     <Toast.Provider>
       <Button onClick={() => setOpen(true)}>{openTrigger}</Button>
       <Toast.Viewport />
-      <Toast.Root open={open} onOpenChange={setOpen}>
+      <Toast.Root open={open} onOpenChange={setOpen} defaultOpen>
         <Toast.Body>
           <Toast.Title>{title}</Toast.Title>
           <Toast.Description>{description}</Toast.Description>
@@ -57,17 +57,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     openTrigger: 'Open toast',
+    icon: 'ph--sparkle--regular',
     title: 'This is a toast',
     description: 'This goes away on its own with a timer.',
+    duration: 10_000,
     actionTriggers: [
       {
         altText: 'Press F5 to reload the page',
         trigger: <Button variant='primary'>Reload</Button>,
       },
     ],
-    closeTrigger: <Button>Close</Button>,
-  },
-  parameters: {
-    chromatic: { delay: 800 },
+    closeTrigger: <IconButton icon='ph--x--regular' iconOnly label='Close' />,
   },
 };

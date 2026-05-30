@@ -1,0 +1,451 @@
+---
+id: org.dxos.plugin.product-search
+name: ProductSearchPlugin
+version: 0.1.0
+---
+
+A Composer plugin for structured product search across configurable vendor sites.
+Users configure **Providers** (search site templates), compose a **Search** across
+one or more of them, and get back a list of **Results**. Providers are authored
+once — either by the user or via an LLM blueprint that derives the template by
+inspecting the vendor site — and reused across many searches.
+
+Supported verticals include retail (products), automotive listings, real estate,
+or any site whose results can be reached by HTTP GET/POST and parsed from HTML
+or JSON.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## Types
+
+```mdl
+type Provider
+  desc: >
+    A configured search site. Contains a typed search-field schema plus the
+    request and result mappings needed to turn criteria into listings.
+    Providers of kind 'api' call a JSON endpoint; kind 'scrape' parse HTML.
+    Templates are authored by the AnalyzeProvider blueprint or edited manually
+    via ProviderArticle.
+  fields:
+    name: string
+    url: string
+    description?: string
+    kind: 'api' | 'scrape'
+    enabled: boolean
+    searchSchema?: JsonSchema       # typed fields the user fills in (criteria form)
+    request?: RequestMapping        # binds criteria values to HTTP request
+    result?: ResultMapping          # extracts result rows from the HTTP response
+  annotations:
+    icon: ph--globe--regular
+    hue: cyan
+    label: name
+    blueprint: org.dxos.plugin.product-search/blueprint/provider
+```
+
+```mdl
+type RequestMapping
+  desc: Describes how to build the HTTP request from criteria values.
+  fields:
+    method: 'GET' | 'POST'
+    urlTemplate: string             # may embed {field} tokens
+    query?: Record<string, FieldBinding>
+    body?: Record<string, FieldBinding>
+    headers?: Record<string, string>
+```
+
+```mdl
+type FieldBinding
+  desc: Maps one criteria field to one request parameter with an optional transform hint.
+  fields:
+    field: string
+    transform?: string              # e.g. 'min', 'max', '{value}/page'
+```
+
+```mdl
+type ResultMapping
+  desc: Describes how to extract listing rows from the HTTP response.
+  fields:
+    responseType: 'html' | 'json'
+    itemLocator: string             # CSS selector (html) or JSONPath (json)
+    fields: Record<string, FieldExtractor>
+```
+
+```mdl
+type FieldExtractor
+  desc: Extracts one field value relative to a located item.
+  fields:
+    selector?: string               # CSS selector relative to item (html)
+    attr?: string                   # HTML attribute to read; omit for text content
+    path?: string                   # JSONPath relative to item (json)
+```
+
+```mdl
+type Search
+  desc: >
+    A saved search configuration. Holds provider refs and the typed criteria
+    values (keyed by field name from the union of provider schemas). Results
+    are stored as Ref<Result> links — running the search replaces them.
+  fields:
+    name: string
+    providers: Ref<Provider>[]
+    criteria: Record<string, unknown>   # typed values keyed by field name
+    results: Ref<Result>[]
+    status?: 'idle' | 'running' | 'error'
+    lastRunAt?: string                  # ISO 8601
+  annotations:
+    icon: ph--magnifying-glass--regular
+    hue: cyan
+    label: name
+```
+
+```mdl
+type Result
+  desc: >
+    A single product listing returned by a provider search. Linked back to the
+    Search via Search.results. Stores extracted fields plus the raw key/value
+    properties map for any extra data the mapping produces.
+  fields:
+    title: string
+    url: string
+    price?: number
+    currency?: string
+    images: string[]
+    provider?: Ref<Provider>
+    properties: Record<string, unknown>
+    fetchedAt?: string              # ISO 8601
+  annotations:
+    icon: ph--tag--regular
+    hue: cyan
+    label: title
+```
+
+## Components
+
+```mdl
+component SearchArticle
+  desc: >
+    Master/detail article surface for a Search object. Left pane has a
+    provider-select multi-checkbox and a dynamic criteria form built from the
+    union of selected provider schemas. Right pane shows a Masonry grid of
+    ResultCard tiles. Detail opens in a companion pane when a tile is clicked.
+  props:
+    search: Search
+  state:
+    running: boolean
+    selectedResult?: Result
+  actions:
+    runSearch()                     # invokes RunSearch operation
+  layout: |
+    ┌──────────────────────────────────────────────────────┐
+    │ Providers (checkboxes)  │  [🔍 Search]               │
+    │ [field1] [field2] ...   │                            │
+    │ ─────────────────────── │                            │
+    │ Criteria form           │  Masonry grid of tiles     │
+    │                         │                            │
+    └──────────────────────────────────────────────────────┘
+```
+
+```mdl
+component ResultCard
+  desc: >
+    Masonry tile for a single Result. Shows the first image (if any), title,
+    price, and a selection of key properties. Click opens ResultDetail.
+  props:
+    result: Result
+    provider?: Provider             # resolved for display name
+  emits:
+    onOpen(result: Result)
+  layout: |
+    ┌─────────────────────────┐
+    │ [image if present]      │
+    ├─────────────────────────┤
+    │ Title (2-line clamp)    │
+    │ Price                   │
+    │ key: value …            │
+    └─────────────────────────┘
+```
+
+```mdl
+component ProviderArticle
+  desc: >
+    Article surface for editing a Provider. Shows name/url/kind fields plus
+    a code-editor region for the raw searchSchema, request, and result
+    mappings. An 'Analyze' toolbar button triggers the AnalyzeProvider blueprint
+    to auto-derive the template from the live site.
+  props:
+    provider: Provider
+  actions:
+    analyze()                       # invokes AnalyzeProvider → SetProviderTemplate
+```
+
+## Services
+
+```mdl
+service AnalyzeProviderBlueprint
+  desc: >
+    LLM blueprint that derives a Provider's template from the live vendor site.
+    Triggered by the Analyze button in ProviderArticle or by a user chat message.
+    The agent calls AnalyzeProvider (which fetches the page source), then calls
+    SetProviderTemplate to persist the derived schema + mappings.
+  key: org.dxos.plugin.product-search/blueprint/provider
+  ops:
+    # Tools exposed to the agent:
+    # - AnalyzeProvider    (fetch page source)
+    # - SetProviderTemplate (persist template)
+```
+
+## Operations
+
+```mdl
+op AnalyzeProvider
+  desc: >
+    Fetches the provider's vendor site via the edge proxy and returns the
+    page HTML/JSON source. Pure read — does not mutate the Provider. Used by
+    the blueprint agent as the inspection step before deriving the template.
+  input:
+    provider: Ref<Provider>
+  output: string                    # raw page source
+  effects: [http, echo:read]
+```
+
+```mdl
+op SetProviderTemplate
+  desc: >
+    Persists a derived template onto a Provider: sets searchSchema, request
+    mapping, and result mapping in one atomic write.
+  input:
+    provider: Ref<Provider>
+    searchSchema: JsonSchema
+    request: RequestMapping
+    result: ResultMapping
+  output: Ref<Provider>
+  effects: [echo:write]
+```
+
+```mdl
+op RunProviderSearch
+  desc: >
+    Executes one provider template against a Search's criteria. Binds the
+    criteria values to the request mapping, fetches the endpoint via the edge
+    proxy, parses the response with the result mapping, and persists the
+    resulting Result objects in the space.
+  input:
+    search: Ref<Search>
+    provider: Ref<Provider>
+  output: Ref<Result>[]
+  effects: [http, echo:write]
+  note: >
+    Skips providers where enabled === false or where request/result mappings
+    are absent (template not yet derived).
+```
+
+```mdl
+op RunSearch
+  desc: >
+    Fan-out orchestrator. Clears the Search's existing results, then invokes
+    RunProviderSearch in parallel for each enabled provider reference. Writes
+    the union of returned Result refs back onto Search.results. Sets
+    Search.status and Search.lastRunAt. Runs deterministically — no LLM needed.
+    Can be triggered from the UI or by an agent (scheduleable).
+  input:
+    search: Ref<Search>
+  output: void
+  effects: [echo:write, echo:read]
+```
+
+## Features
+
+```mdl
+feat F-1: Provider Templates
+  desc: Users configure Provider objects with typed search fields and HTTP mappings.
+
+  req F-1.1: User can create a Provider object via the plugin's create menu.
+  req F-1.2: Provider.kind is 'api' or 'scrape'.
+  req F-1.3: Provider.searchSchema is a JSONSchema describing criteria fields; drives the form.
+  req F-1.4: Provider.request maps criteria values to HTTP request parameters.
+  req F-1.5: Provider.result maps the HTTP response to a list of result rows.
+  req F-1.6: Provider.enabled defaults to true; disabled providers are skipped by RunSearch.
+```
+
+```mdl
+feat F-2: Blueprint-Derived Templates
+  desc: LLM agent derives Provider template from the live site.
+
+  req F-2.1: AnalyzeProvider fetches the vendor site and returns page source.
+  req F-2.2: SetProviderTemplate persists searchSchema + request + result in one write.
+  req F-2.3: ProviderArticle Analyze button triggers the blueprint flow.
+  req F-2.4: After SetProviderTemplate, the provider is ready for RunProviderSearch.
+```
+
+```mdl
+feat F-3: Search Execution
+  desc: RunSearch fans out to all enabled providers and links results.
+
+  req F-3.1: SearchArticle toolbar includes a Run Search button.
+  req F-3.2: Clicking Run Search sets Search.status to 'running' and disables the button.
+  req F-3.3: RunSearch invokes RunProviderSearch for each enabled provider in the Search.
+  req F-3.4: Results from all providers are merged into Search.results (refs).
+  req F-3.5: After completion Search.status returns to 'idle' and Search.lastRunAt is set.
+  req F-3.6: Provider failures are non-fatal; the search continues with remaining providers.
+  req F-3.7: Empty Search.providers disables the Run Search button.
+```
+
+```mdl
+feat F-4: Criteria Form
+  desc: Dynamic form built from the union of selected providers' search schemas.
+
+  req F-4.1: SearchArticle computes the union of searchSchema fields from selected providers.
+  req F-4.2: The criteria form renders one input per union field using the field type from JSONSchema.
+  req F-4.3: Range fields (min/max) render as a RangeField component.
+  req F-4.4: Criteria values are stored in Search.criteria keyed by field name.
+  req F-4.5: Changing provider selection recomputes the union; orphaned criteria values are preserved.
+```
+
+```mdl
+feat F-5: Results Display
+  desc: Masonry grid of ResultCard tiles; detail pane for selected result.
+
+  req F-5.1: SearchArticle renders Search.results as a Masonry grid of ResultCard tiles.
+  req F-5.2: Each tile shows the first image (if any), title, price, and key properties.
+  req F-5.3: Clicking a tile opens ResultDetail in a companion/detail pane.
+  req F-5.4: Empty state shown when Search.results is empty.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create Provider
+  given: user is in a space in Composer
+  when: user creates a Provider via the plugin's create menu
+  then:
+    - Provider object created in space with enabled = true
+    - searchSchema, request, result are undefined (template not yet set)
+```
+
+```mdl
+test T-2: SetProviderTemplate persists template
+  given: a Provider with no template
+  when: SetProviderTemplate is called with searchSchema, request, result
+  then:
+    - Provider.searchSchema equals the input schema
+    - Provider.request equals the input mapping
+    - Provider.result equals the input mapping
+```
+
+```mdl
+test T-3: RunProviderSearch skips untemplate'd provider
+  given: a Provider where request and result are undefined
+  when: RunProviderSearch is called
+  then: returns an empty result array without making any HTTP request
+```
+
+```mdl
+test T-4: RunSearch fans out and links results
+  given: a Search with two enabled providers, both with valid templates
+  when: RunSearch is called
+  then:
+    - RunProviderSearch invoked once per provider
+    - Search.results contains refs to all returned Result objects
+    - Search.status is 'idle'
+    - Search.lastRunAt is set to an ISO timestamp
+```
+
+```mdl
+test T-5: RunSearch is non-fatal on provider error
+  given: a Search with two providers; one returns an HTTP 500
+  when: RunSearch is called
+  then:
+    - Results from the successful provider appear in Search.results
+    - Search.status is 'idle' (not 'error')
+```
+
+```mdl
+test T-6: Criteria form union
+  given: a Search with two providers whose schemas share one field and each add one unique field
+  when: SearchArticle renders the criteria form
+  then:
+    - Form shows three fields total (one shared + two unique)
+    - No duplicate field rendered
+```
+
+```mdl
+test T-7: Run Search button disabled without providers
+  given: a Search with an empty providers array
+  when: SearchArticle renders
+  then: Run Search button is disabled
+```
+
+---
+
+## Design Notes
+
+### Template Authoring
+
+Provider templates are the central configuration artifact. Two authoring paths
+exist:
+
+- **Blueprint path (agent-assisted).** The `AnalyzeProvider` blueprint fetches
+  the vendor site and derives `searchSchema`, `request`, and `result` mappings
+  via an LLM. The agent uses two tools (`AnalyzeProvider` for fetch, then
+  `SetProviderTemplate` to persist). Triggered from ProviderArticle's Analyze
+  button or via chat.
+- **Manual path.** The user edits the raw mappings directly in ProviderArticle.
+  Useful when the vendor site is behind auth or when the user knows the API
+  structure precisely.
+
+### Request Binding
+
+`bindRequest` compiles `RequestMapping` against `Search.criteria` to produce a
+concrete `{ method, url, headers, body }` request descriptor. Field tokens are
+resolved from criteria; transforms (`min`, `max`, format templates) are applied
+at binding time. Unknown criteria keys that don't appear in the mapping are
+silently ignored.
+
+### Result Extraction
+
+`extractResults` accepts the raw HTTP response body and a `ResultMapping`. For
+`html` responses, CSS selectors locate items and fields; for `json` responses,
+JSONPath expressions are used. The result is an array of `ResultData` objects
+with well-known fields (`title`, `url`, `price`, `currency`, `images`) plus a
+`properties` bag for extras. Extraction errors for individual items are silently
+skipped (partial results are better than no results).
+
+### Edge Proxy
+
+All outbound HTTP requests are routed through the DXOS edge proxy via
+`fetchViaProxy`. This avoids CORS restrictions when searches run client-side and
+provides a uniform path for rate-limiting or credential injection in a future
+revision.
+
+### Criteria Union
+
+`buildUnionSchema` computes the union of `searchSchema` fields from the
+selected providers. Fields with matching names are merged (first-seen type
+wins). This is how a cross-provider criteria form is possible: providers
+covering the same vertical tend to share field names (`make`, `model`,
+`minPrice`, `maxPrice`).
+
+### Scheduleable Searches
+
+`RunSearch` is a pure operation (no UI dependency). It can be invoked by an
+agent on a schedule — the user creates a Search, configures providers and
+criteria, and asks the agent to run it periodically. Results accumulate across
+runs (dedup by URL is an optional future extension).
+
+### Out of Scope
+
+- Result deduplication across providers or runs.
+- Authenticated vendor requests (would require credential storage in Provider).
+- Pagination — first page only per provider per run.
+- Saved result snapshots / history (results are replaced on each run).

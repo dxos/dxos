@@ -25,6 +25,7 @@ import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
+import { ExtensionPlugin } from '@dxos/plugin-extension/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
@@ -51,6 +52,7 @@ import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
+import { ProductSearchPlugin } from '@dxos/plugin-product-search/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
@@ -138,6 +140,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
+      ProductSearchPlugin.meta.id,
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
@@ -192,6 +195,7 @@ export const getPlugins = ({
     DiscordPlugin(),
     DoctorPlugin(),
     ExplorerPlugin(),
+    !isTauri && ExtensionPlugin(),
     FeedPlugin(),
     GamePlugin(),
     GeneratorPlugin(),
@@ -218,6 +222,7 @@ export const getPlugins = ({
     PresenterPlugin(),
     PreviewPlugin(),
     ProcessManagerPlugin(),
+    ProductSearchPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),
