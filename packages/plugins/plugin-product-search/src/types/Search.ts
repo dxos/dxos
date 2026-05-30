@@ -12,7 +12,7 @@ import { Result } from './Result';
 
 /** A user's saved product search configuration. */
 export const Search = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotations({ title: 'Name' })),
+  name: Schema.String.pipe(Schema.annotations({ title: 'Name' }), Schema.optional),
   providers: Schema.Array(Ref.Ref(Provider)),
   // Values for the union of provider fields, keyed by field name.
   criteria: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
@@ -23,7 +23,7 @@ export const Search = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--shopping-cart--regular', hue: 'cyan' }),
-  Type.makeObject(DXN.make('org.dxos.type.productSearch', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.product-search.Search', '0.1.0')),
 );
 export type Search = Type.InstanceType<typeof Search>;
 
@@ -31,7 +31,7 @@ export type Search = Type.InstanceType<typeof Search>;
 export const instanceOf = (value: unknown): value is Search => Obj.instanceOf(Search, value);
 
 /** Creates a Search with providers, criteria, and results defaulting to empty. */
-export const makeSearch = (
+export const make = (
   props: Omit<Obj.MakeProps<typeof Search>, 'providers' | 'criteria' | 'results'> & {
     providers?: Ref.Ref<Provider>[];
     criteria?: Record<string, unknown>;
