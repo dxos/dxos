@@ -72,7 +72,7 @@ All types use the established pattern: `// @import-as-namespace`, `Schema.Struct
 
 A site template.
 
-```
+```text
 name: string
 url: string                         // base site URL
 description?: string
@@ -115,7 +115,7 @@ for JSON. Exact shapes finalized during planning; both are declarative and edita
 
 What the user is looking for.
 
-```
+```text
 name: string
 providers: Ref<Provider>[]                  // multi-vendor target
 criteria: Record<string, unknown>           // values for the union of provider fields, keyed by field name
@@ -129,7 +129,7 @@ lastRunAt?: string
 
 One listing.
 
-```
+```text
 title: string
 url: string
 price?: number
@@ -207,7 +207,7 @@ blank editable template). Optionally seed one starter Provider for demo, feed-st
 
 ## Plugin composition (`ProductSearchPlugin.tsx`)
 
-```
+```ts
 Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder, activatesOn: ... }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -243,6 +243,6 @@ Plugin.define(meta).pipe(
 4. Range fields use a **schema annotation** + a `react-ui-form` field component that resolves
    it; confirm whether a range input component already exists or must be added.
 
-```
+```text
 
 ```

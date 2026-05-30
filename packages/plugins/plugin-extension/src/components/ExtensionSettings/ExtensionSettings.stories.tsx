@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ExtensionSettings } from './ExtensionSettings';
 import { translations } from '../../translations';
 import { Settings } from '../../types';
+import { ExtensionSettings } from './ExtensionSettings';
 
 const DefaultStory = (props: { initial?: Settings.Settings; readonly?: boolean }) => {
   const [settings, setSettings] = useState<Settings.Settings>(props.initial ?? Settings.defaults);

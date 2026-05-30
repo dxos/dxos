@@ -69,16 +69,18 @@ export const structureCandidates = (html: string, options: SummarizeOptions = {}
     }
   }
 
-  return [...candidates.entries()]
-    .filter(([, value]) => value.count >= minCount)
-    .map(([selector, value]) => ({
-      selector,
-      count: value.count,
-      fields: value.sample.querySelectorAll('[data-testid]').length,
-    }))
-    // Containers (wrap many fields) first, then by repetition, then stable by selector.
-    .sort((a, b) => b.fields - a.fields || b.count - a.count || a.selector.localeCompare(b.selector))
-    .slice(0, limit);
+  return (
+    [...candidates.entries()]
+      .filter(([, value]) => value.count >= minCount)
+      .map(([selector, value]) => ({
+        selector,
+        count: value.count,
+        fields: value.sample.querySelectorAll('[data-testid]').length,
+      }))
+      // Containers (wrap many fields) first, then by repetition, then stable by selector.
+      .sort((a, b) => b.fields - a.fields || b.count - a.count || a.selector.localeCompare(b.selector))
+      .slice(0, limit)
+  );
 };
 
 /**

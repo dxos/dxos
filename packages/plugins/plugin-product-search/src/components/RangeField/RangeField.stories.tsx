@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -12,6 +12,8 @@ import { RangeField, type RangeValue } from './RangeField';
 
 const DefaultStory = (props: { label?: string; value?: RangeValue }) => {
   const [value, setValue] = useState<RangeValue | undefined>(props.value);
+  // Sync when the `value` control changes (useState only reads the initial arg).
+  useEffect(() => setValue(props.value), [props.value]);
   return <RangeField label={props.label} value={value} onValueChange={setValue} />;
 };
 

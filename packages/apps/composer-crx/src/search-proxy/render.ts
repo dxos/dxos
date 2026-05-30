@@ -165,7 +165,14 @@ const waitForSelector = async (
  * The whole flow is bounded by `timeoutMs` (default {@link DEFAULT_RENDER_TIMEOUT_MS}).
  */
 export const renderUrl = async (api: RenderBrowserApi, request: RenderRequest): Promise<RenderAck> => {
-  const { id, url, waitForSelector: selector, waitForMs, timeoutMs = DEFAULT_RENDER_TIMEOUT_MS, active = false } = request;
+  const {
+    id,
+    url,
+    waitForSelector: selector,
+    waitForMs,
+    timeoutMs = DEFAULT_RENDER_TIMEOUT_MS,
+    active = false,
+  } = request;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

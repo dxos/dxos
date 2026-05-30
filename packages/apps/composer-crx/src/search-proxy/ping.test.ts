@@ -19,9 +19,9 @@ describe('ping codecs', () => {
   });
 
   test('decodes an ok ack with extension identity', ({ expect }) => {
-    expect(decodePingAck({ version: 1, id: 'x', ok: true, extensionVersion: '0.8.3', extensionName: 'Composer' })).toEqual(
-      { version: 1, id: 'x', ok: true, extensionVersion: '0.8.3', extensionName: 'Composer' },
-    );
+    expect(
+      decodePingAck({ version: 1, id: 'x', ok: true, extensionVersion: '0.8.3', extensionName: 'Composer' }),
+    ).toEqual({ version: 1, id: 'x', ok: true, extensionVersion: '0.8.3', extensionName: 'Composer' });
   });
 
   test('rejects an ok ack missing identity fields', ({ expect }) => {

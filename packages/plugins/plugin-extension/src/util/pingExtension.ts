@@ -59,7 +59,11 @@ export const pingExtension = (timeoutMs: number = DEFAULT_PING_TIMEOUT_MS): Prom
       }
       settled = true;
       cleanup();
-      if (detail.ok === true && typeof detail.extensionVersion === 'string' && typeof detail.extensionName === 'string') {
+      if (
+        detail.ok === true &&
+        typeof detail.extensionVersion === 'string' &&
+        typeof detail.extensionName === 'string'
+      ) {
         resolve({ extensionVersion: detail.extensionVersion, extensionName: detail.extensionName });
       } else {
         const error = typeof detail.error === 'string' ? detail.error : 'unknown';

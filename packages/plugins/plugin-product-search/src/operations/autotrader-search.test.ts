@@ -72,7 +72,10 @@ const makeAutoTraderProvider = (): Provider.Provider =>
 describe('AutoTrader template -> search', () => {
   test('binds criteria to the AutoTrader search URL', ({ expect }) => {
     const provider = makeAutoTraderProvider();
-    const request = bindRequest({ make: 'Porsche', model: '911', priceTo: 150000 }, provider.request!);
+    if (!provider.request) {
+      throw new Error('fixture provider is missing a request mapping');
+    }
+    const request = bindRequest({ make: 'Porsche', model: '911', priceTo: 150000 }, provider.request);
     expect(request.method).toEqual('GET');
     expect(request.url).toEqual('https://www.autotrader.co.uk/car-search?make=Porsche&model=911&price-to=150000');
   });

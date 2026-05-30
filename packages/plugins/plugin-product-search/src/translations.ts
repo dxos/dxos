@@ -40,7 +40,8 @@ export const translations = [
         'regenerate.toast.success.title': 'Search template generated',
         'regenerate.toast.success.description_one': 'Authored {{count}} search field.',
         'regenerate.toast.success.description_other': 'Authored {{count}} search fields.',
-        'regenerate.toast.empty.description': 'No search fields derived — the page may not have rendered. Check the URL and load the extension for SPA sites.',
+        'regenerate.toast.empty.description':
+          'No search fields derived — the page may not have rendered. Check the URL and load the extension for SPA sites.',
         'regenerate.toast.error.title': 'Template generation failed',
         'regenerate.toast.error.description': 'Could not analyze the provider. See the console for details.',
         'search-fields.label': 'Search fields',

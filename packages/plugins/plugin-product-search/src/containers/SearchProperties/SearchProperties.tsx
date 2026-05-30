@@ -74,10 +74,13 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   const [running, setRunning] = useState(false);
 
   const handleRun = useCallback(() => {
+    // The operation's process-affinity Database.Service can only be resolved with a real spaceId
+    // (a bare Ref carries no space), so skip the run if the search isn't attached to a space yet.
+    if (!database) {
+      return;
+    }
     setRunning(true);
-    // Pass the spaceId so the invoker resolves Database.Service for the operation's spawn
-    // environment (a bare Ref carries no space, so process-affinity services can't resolve).
-    void invokePromise(SearchOperation.RunSearch, { search: Ref.make(search) }, { spaceId: database?.spaceId })
+    void invokePromise(SearchOperation.RunSearch, { search: Ref.make(search) }, { spaceId: database.spaceId })
       .catch((err) => log.catch(err))
       .finally(() => setRunning(false));
   }, [invokePromise, search, database]);

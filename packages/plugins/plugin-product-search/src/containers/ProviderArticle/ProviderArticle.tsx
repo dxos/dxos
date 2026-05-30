@@ -111,6 +111,9 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
+      // Boundary: the menu's ActionExecutor surfaces a structural menu-action node, while the graph
+      // runner needs the nominal `Node.Action`. The objects are the same graph actions the builder
+      // produced (filtered to `disposition: 'toolbar'`), so the coercion is safe here.
       void runAction(action as Node.Action, { caller: meta.id });
     },
     [runAction],

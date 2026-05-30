@@ -18,7 +18,7 @@ fetches through the `@dxos/composer-crx` browser extension.
 
 ## Why not just `window.open` a window from the app?
 
-The app *can* open a window, but the **same-origin policy** forbids it from **reading** that window:
+The app _can_ open a window, but the **same-origin policy** forbids it from **reading** that window:
 
 ```js
 const win = window.open('https://vendor.com/...');
@@ -32,10 +32,10 @@ execute a script in another origin's tab/window and read its rendered HTML.
 
 ## The two real options
 
-| Approach | Renders JS? | Passes anti-bot? | Needs a server? |
-|---|---|---|---|
-| **Browser extension (CRX)** | ✅ (real browser) | ✅ (user's IP + session) | ❌ |
-| Server-side headless browser | ✅ | ❌ (datacenter IP, no session) | ✅ |
+| Approach                     | Renders JS?       | Passes anti-bot?               | Needs a server? |
+| ---------------------------- | ----------------- | ------------------------------ | --------------- |
+| **Browser extension (CRX)**  | ✅ (real browser) | ✅ (user's IP + session)       | ❌              |
+| Server-side headless browser | ✅                | ❌ (datacenter IP, no session) | ✅              |
 
 The CRX wins for client-rendered / anti-bot sites because it renders in the **user's own browser** —
 residential IP, their cookies/session, real JS execution. It isn't bypassing bot detection; it's the
@@ -49,7 +49,7 @@ background tabs) without stealing focus from Composer.
 - **Not needed:** server-rendered HTML or a real JSON API — the edge proxy alone works.
 
 `fetchPage` encodes this: it prefers the CRX render-proxy when the extension is present and falls
-back to the edge proxy otherwise. So the extension is an *enhancement* for hard sites, not a hard
+back to the edge proxy otherwise. So the extension is an _enhancement_ for hard sites, not a hard
 dependency for every provider.
 
 ## Where this lives in the code

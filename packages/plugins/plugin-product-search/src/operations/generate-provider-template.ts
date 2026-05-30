@@ -8,7 +8,6 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
@@ -45,11 +44,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
           // Materialize the static blueprint definition as an ECHO Blueprint object in the space
           // (cloned once and reused thereafter), keyed by `Provider.BLUEPRINT_KEY`.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let blueprint = blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY);
-          if (!blueprint) {
-            blueprint = db.add(ProviderBlueprint.make());
-          }
-          invariant(blueprint, 'Provider blueprint not found.');
+          const blueprint =
+            blueprints.find((candidate) => Obj.getMeta(candidate).key === Provider.BLUEPRINT_KEY) ??
+            db.add(ProviderBlueprint.make());
 
           // The AgentPrompt routine loads `blueprints`/`context` and binds them to its own session,
           // so the blueprint tools (analyzeProvider, setProviderTemplate) and the provider object are
@@ -58,7 +55,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
             name: 'Generate Provider Template',
             instructions: trim`
             Analyze the provider at ${provider.url} and populate its search template by calling the
-            available tools: first analyzeProvider to fetch the vendor site, then setProviderTemplate
+            available tools: first analyze-provider to fetch the vendor site, then set-provider-template
             to persist the result. Derive the typed search fields (search schema), the request mapping,
             and the result mapping. Only include fields and selectors you can justify from the page source.
           `,

@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       // waiting for the listing selector so client-rendered results are in the DOM before reading.
       // API providers (GET/POST against an endpoint) fetch directly through the edge proxy.
       const body =
-        provider.kind === 'scrape' && request.method === 'GET'
+        provider.kind === 'scrape' && request.method === 'GET' && provider.result.responseType === 'html'
           ? yield* Operation.invoke(SearchOperation.RenderPage, {
               url: request.url,
               waitForSelector: provider.result.responseType === 'html' ? provider.result.itemLocator : undefined,

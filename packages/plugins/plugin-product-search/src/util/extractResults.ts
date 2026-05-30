@@ -53,7 +53,13 @@ const toResultData = (raw: Record<string, string | undefined>): ResultData => {
 
 export const extractResults = (body: string, mapping: ResultMapping): ResultData[] => {
   if (mapping.responseType === 'json') {
-    const parsed: unknown = JSON.parse(body);
+    // `body` is an external/scraped response; a non-JSON payload must yield no results, not throw.
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      return [];
+    }
     const items = getByPath(parsed, mapping.itemLocator);
     const array = Array.isArray(items) ? items : [];
     return array.map((item: unknown) => {

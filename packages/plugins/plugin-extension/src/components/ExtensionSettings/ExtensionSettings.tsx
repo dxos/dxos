@@ -56,9 +56,21 @@ export const ExtensionSettings = ({ settings, onSettingsChange }: ExtensionSetti
             <Icon icon='ph--plug--regular' size={4} classNames='mie-2' />
             {t('test.button.label')}
           </Button>
-          {test.kind === 'ok' && <span className='text-sm text-success'>{test.message}</span>}
-          {test.kind === 'error' && <span className='text-sm text-error'>{test.message}</span>}
-          {test.kind === 'pending' && <span className='text-sm text-description'>{t('test.pending.message')}</span>}
+          {/* role=status + aria-live so screen readers announce the async outcome. */}
+          <span
+            role='status'
+            aria-live='polite'
+            className={
+              test.kind === 'ok'
+                ? 'text-sm text-success'
+                : test.kind === 'error'
+                  ? 'text-sm text-error'
+                  : 'text-sm text-description'
+            }
+          >
+            {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
+            {test.kind === 'pending' ? t('test.pending.message') : ''}
+          </span>
         </div>
       </SettingsForm.Section>
     </SettingsForm.Viewport>

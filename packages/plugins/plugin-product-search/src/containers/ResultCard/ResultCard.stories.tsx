@@ -8,7 +8,6 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -39,7 +38,7 @@ const DefaultStory = ({ current }: { current?: boolean }) => {
 const seedSpace = ({ client }: { client: Client }) =>
   Effect.gen(function* () {
     yield* initializeIdentity(client);
-    const space = (yield* Effect.promise(() => client.spaces.create())) as Space;
+    const space = yield* Effect.promise(() => client.spaces.create());
     yield* Effect.promise(() => space.waitUntilReady());
 
     const provider = space.db.add(makeSampleProvider());

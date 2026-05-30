@@ -14,10 +14,13 @@ export type RangeFieldProps = {
   onValueChange?: (value: RangeValue) => void;
 };
 
+/** Paired min/max numeric inputs for a range search field (e.g. price from/to, year from/to). */
 export const RangeField = ({ label, value, onValueChange }: RangeFieldProps) => {
   const update = (key: 'min' | 'max') => (event: ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value;
-    onValueChange?.({ ...value, [key]: raw === '' ? undefined : Number(raw) });
+    // Guard against transient non-numeric input (e.g. a lone '-'): treat NaN as cleared.
+    const parsed = raw === '' ? undefined : Number(raw);
+    onValueChange?.({ ...value, [key]: parsed != null && Number.isNaN(parsed) ? undefined : parsed });
   };
   return (
     <Input.Root>

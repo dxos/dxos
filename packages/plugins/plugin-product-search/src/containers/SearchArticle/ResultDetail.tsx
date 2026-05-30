@@ -56,10 +56,10 @@ export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) =>
         )}
       </div>
 
-      {(result.price != null || result.currency) && (
+      {result.price != null && (
+        // Match ResultCard: currency-first, locale-grouped.
         <div className='text-sm text-description'>
-          {result.price != null ? result.price : ''}
-          {result.currency ? ` ${result.currency}` : ''}
+          {[result.currency, result.price.toLocaleString()].filter(Boolean).join(' ')}
         </div>
       )}
 

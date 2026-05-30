@@ -54,7 +54,13 @@ describe('renderViaCrx', () => {
   test('renderViaCrx resolves with the rendered HTML on a successful ack', async () => {
     setAvailable(true);
     const { renderViaCrx } = await import('./renderViaCrx');
-    const uninstall = installFakeRelay((id) => ({ version: 1, id, ok: true, html: '<html>RENDERED</html>', finalUrl: 'https://x' }));
+    const uninstall = installFakeRelay((id) => ({
+      version: 1,
+      id,
+      ok: true,
+      html: '<html>RENDERED</html>',
+      finalUrl: 'https://x',
+    }));
 
     const html = await runAndForwardErrors(renderViaCrx('https://example.com'));
     expect(html).toEqual('<html>RENDERED</html>');
