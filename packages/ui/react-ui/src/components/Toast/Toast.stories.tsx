@@ -81,3 +81,14 @@ export const Default: Story = {
     ],
   },
 };
+
+export const NoAction: Story = {
+  args: {
+    defaultOpen: true,
+    openTrigger: 'Open toast',
+    icon: 'ph--sparkle--regular',
+    title: 'This is a toast',
+    description: 'This goes away on its own with a timer.',
+    duration: 100_000,
+  },
+};
