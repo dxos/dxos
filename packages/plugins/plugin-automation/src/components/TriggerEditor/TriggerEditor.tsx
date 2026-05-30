@@ -8,8 +8,10 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
+import { Annotation, type Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { dbg } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -81,7 +83,13 @@ type UseCustomInputsProps = {
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
-  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
+  const client = useClient();
+  const functions = useQuery(
+    client.graph.registry,
+    // Query.select(Filter.type(Operation.PersistentOperation)).from(db),
+    Query.select(Filter.everything()).from(Scope.registry()),
+  );
+  dbg(functions);
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
   const feeds = useQuery(db, Filter.type(Feed.Feed));
