@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
 import { SearchOperation } from '../types';
-import { cleanHtml, fetchViaProxy } from '../util';
+import { cleanHtml, fetchPage } from '../util';
 
 // Bound the cleaned page handed to the LLM (≈ token budget). Rendered SPA pages can be multiple MB
 // raw; `cleanHtml` strips scripts/styles/noise so the model sees the repeating listing structure.
@@ -18,7 +18,9 @@ const handler: Operation.WithHandler<typeof SearchOperation.AnalyzeProvider> = S
   Operation.withHandler(
     Effect.fnUntraced(function* ({ provider: providerRef }) {
       const provider = yield* Database.load(providerRef);
-      const body = yield* fetchViaProxy({ method: 'GET', url: provider.url });
+      // Render scrape targets in a real browser when the extension is available — server HTML for an
+      // SPA like AutoTrader is an empty shell, so the LLM needs the rendered DOM to author a parser.
+      const body = yield* fetchPage({ method: 'GET', url: provider.url }, { render: provider.kind === 'scrape' });
       return cleanHtml(body, { maxLength: MAX_BODY_LENGTH });
     }),
   ),

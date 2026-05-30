@@ -6,13 +6,12 @@ import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Provider, Result, Search } from './types';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const ProductSearchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

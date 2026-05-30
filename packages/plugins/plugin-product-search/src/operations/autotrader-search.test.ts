@@ -74,9 +74,7 @@ describe('AutoTrader template -> search', () => {
     const provider = makeAutoTraderProvider();
     const request = bindRequest({ make: 'Porsche', model: '911', priceTo: 150000 }, provider.request!);
     expect(request.method).toEqual('GET');
-    expect(request.url).toEqual(
-      'https://www.autotrader.co.uk/car-search?make=Porsche&model=911&price-to=150000',
-    );
+    expect(request.url).toEqual('https://www.autotrader.co.uk/car-search?make=Porsche&model=911&price-to=150000');
   });
 
   test('extracts 10 results from the AutoTrader results page using the template', ({ expect }) => {

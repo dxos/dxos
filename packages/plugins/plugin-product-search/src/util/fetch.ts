@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
+import { log } from '@dxos/log';
 
 import { type HttpRequest } from './bindRequest';
+import { isCrxRenderAvailable, renderViaCrx } from './renderViaCrx';
 
 export class FetchError extends Error {}
 
@@ -26,3 +28,30 @@ export const fetchViaProxy = (request: HttpRequest): Effect.Effect<string, Fetch
     },
     catch: (error) => (error instanceof FetchError ? error : new FetchError(String(error))),
   });
+
+export type FetchPageOptions = {
+  // Prefer rendering the page in a real browser (via the Composer extension) when available.
+  render?: boolean;
+  // CSS selector to await before reading rendered HTML (only when rendering).
+  waitForSelector?: string;
+};
+
+/**
+ * Fetch a page body, choosing the best available transport:
+ *   - when `render` is requested and the Composer render-proxy extension is present, render the
+ *     page in a real browser tab (handles client-rendered / anti-bot SPA targets);
+ *   - otherwise (or if the render fails) fall back to the edge HTTP proxy.
+ * GET-only requests can be rendered; POST requests always use the proxy.
+ */
+export const fetchPage = (request: HttpRequest, options: FetchPageOptions = {}): Effect.Effect<string, FetchError> => {
+  const canRender = options.render && request.method === 'GET' && isCrxRenderAvailable();
+  if (!canRender) {
+    return fetchViaProxy(request);
+  }
+  return renderViaCrx(request.url, { waitForSelector: options.waitForSelector }).pipe(
+    Effect.catchAll((error) => {
+      log.info('render-proxy failed; falling back to edge proxy', { url: request.url, error: error.message });
+      return fetchViaProxy(request);
+    }),
+  );
+};

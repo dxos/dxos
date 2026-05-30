@@ -34,6 +34,14 @@ export const RENDER_ACK_EVENT = 'composer:search-proxy:render:ack';
 export const RENDER_MESSAGE_TYPE = 'composer-crx:search-proxy:render';
 
 /**
+ * `documentElement` dataset key the content relay sets once it is listening on
+ * a Composer page (`document.documentElement.dataset.composerSearchProxy`).
+ * Lets the page detect render-proxy availability synchronously rather than
+ * waiting for a request to time out.
+ */
+export const RENDER_READY_DATASET_KEY = 'composerSearchProxy';
+
+/**
  * Default ceiling for a single render before it is aborted.
  */
 export const DEFAULT_RENDER_TIMEOUT_MS = 20_000;

@@ -8,7 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 
 import { Provider, Result, SearchOperation } from '../types';
-import { type ResultData, bindRequest, extractResults, fetchViaProxy } from '../util';
+import { type ResultData, bindRequest, extractResults, fetchPage } from '../util';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */
 export const buildResults = (provider: Provider.Provider, body: string): ResultData[] => {
@@ -28,7 +28,12 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       }
 
       const request = bindRequest({ ...search.criteria }, provider.request);
-      const body = yield* fetchViaProxy(request);
+      // Scrape targets render in a real browser when the extension is present; wait for the listing
+      // selector so client-rendered results are in the DOM before we read it.
+      const body = yield* fetchPage(request, {
+        render: provider.kind === 'scrape',
+        waitForSelector: provider.result.responseType === 'html' ? provider.result.itemLocator : undefined,
+      });
       const rows = buildResults(provider, body);
 
       const refs: Ref.Ref<Result.Result>[] = [];

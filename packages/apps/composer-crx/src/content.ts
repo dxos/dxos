@@ -17,6 +17,7 @@ import {
   RENDER_ACK_EVENT,
   RENDER_EVENT,
   RENDER_MESSAGE_TYPE,
+  RENDER_READY_DATASET_KEY,
   decodeRenderAck,
   decodeRenderRequest,
 } from './search-proxy';
@@ -113,6 +114,9 @@ const installSearchProxyRelay = async (): Promise<void> => {
   if (!(await isComposerUrl(window.location.href))) {
     return;
   }
+
+  // Advertise availability so the page can route to the render-proxy without a timeout probe.
+  document.documentElement.dataset[RENDER_READY_DATASET_KEY] = '1';
 
   window.addEventListener(RENDER_EVENT, (event: Event) => {
     // `CustomEvent#detail` is not typed for an arbitrary event name; read it
