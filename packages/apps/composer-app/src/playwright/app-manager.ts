@@ -265,7 +265,10 @@ export class AppManager {
       // any level to support nested objects.
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
-      await object.getByTestId(/navtree\.treeItem\.actionsLevel\d+/).first().click();
+      await object
+        .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+        .first()
+        .click();
       await this.page.keyboard.press('ArrowDown');
       await this.page.getByTestId('spacePlugin.createObject').last().focus();
       await this.page.keyboard.press('Enter');
