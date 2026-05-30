@@ -81,6 +81,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
 
   const archived = hasTag(subscription, postId, archivedUri);
   const starred = hasTag(subscription, postId, starredUri);
+  const read = subscription ? getReadAt(subscription, postId) !== undefined : false;
 
   const handleOpenOriginal = useCallback(() => {
     if (post.link) {
@@ -156,7 +157,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
             iconOnly
             onClick={handleToggleArchive}
           />
-          {userState.readAt && (
+          {read && (
             <Toolbar.IconButton
               label={t('mark-unread.label')}
               icon='ph--envelope--regular'

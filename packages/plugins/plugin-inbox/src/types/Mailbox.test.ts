@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Feed, Filter, Obj, Tag, TagIndex } from '@dxos/echo';
+import { Feed, Filter, Tag, TagIndex } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';

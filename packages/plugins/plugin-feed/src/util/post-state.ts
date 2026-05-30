@@ -93,11 +93,11 @@ export const setRank = (magazine: Magazine.Magazine, postId: string, rank: numbe
 //
 
 /** Plain-text snippet: the refined contentFeed value if loaded, else derived from `post.description`. */
-export const getSnippet = (post: Subscription.Post, content?: Subscription.PostContent): string =>
+export const getSnippet = (post: { description?: string }, content?: Subscription.PostContent): string =>
   content?.snippet ?? makeSnippet(stripHtml(post.description ?? ''));
 
 /** Hero image url: the refined contentFeed value if loaded, else derived from `post.description`. */
-export const getImageUrl = (post: Subscription.Post, content?: Subscription.PostContent): string | undefined =>
+export const getImageUrl = (post: { description?: string }, content?: Subscription.PostContent): string | undefined =>
   content?.imageUrl ?? extractImageUrls(post.description ?? '')[0];
 
 //

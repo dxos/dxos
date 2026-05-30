@@ -4,8 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import { createFeedServiceLayer, getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Provider, Result, SearchOperation } from '../types';
@@ -80,7 +82,10 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
       // listings (identity = url); a matched listing keeps its original snapshot, and its `starred`
       // tag (keyed by Result id on the Search) survives because the Result object is never recreated.
       const feed = yield* Database.load(search.feed);
-      const existing = yield* Feed.runQuery(feed, Filter.type(Result.Result));
+      const space = getSpace(search);
+      invariant(space, 'Search is not in a space.');
+      const feedServiceLayer = createFeedServiceLayer(space.queues);
+      const existing = yield* Feed.runQuery(feed, Filter.type(Result.Result)).pipe(Effect.provide(feedServiceLayer));
       const seen = new Set(existing.map((result) => result.url));
 
       const now = new Date().toISOString();
@@ -104,7 +109,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.RunProviderSearch> =
         );
       }
       if (fresh.length > 0) {
-        yield* Feed.append(feed, fresh);
+        yield* Feed.append(feed, fresh).pipe(Effect.provide(feedServiceLayer));
       }
       return fresh.length;
     }),

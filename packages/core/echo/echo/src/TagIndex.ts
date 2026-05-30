@@ -60,8 +60,8 @@ export const bind = (host: Obj.Any, key: string): Accessor => {
   // plain object tree bypasses ECHO's schema-aware conversion and stores arrays as numeric-keyed
   // objects. Mutating the typed proxy (and assigning real arrays to its values) preserves arrays.
   const write = (mutate: (record: Record_) => void): void => {
-    Obj.update(host, (draft) => {
-      const view = asView(draft);
+    Obj.update(host, (host) => {
+      const view = asView(host);
       if (view[key] === undefined) {
         view[key] = {};
       }

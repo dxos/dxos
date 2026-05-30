@@ -13,7 +13,6 @@ import { Database, Ref } from '@dxos/echo';
 import { meta } from '#meta';
 
 import { Provider, RequestMapping, ResultMapping } from './Provider';
-import { Result } from './Result';
 import { Search } from './Search';
 
 const SEARCH_OPERATION = `${meta.id}.operation`;

@@ -48,8 +48,8 @@ export const set = (object: Obj.Any, tagId: string, options: Options = {}): void
     TagIndex.bind(host, key).setTag(tagId, object.id);
     return;
   }
-  Obj.update(object, (draft) => {
-    const meta = Obj.getMeta(draft);
+  Obj.update(object, (object) => {
+    const meta = Obj.getMeta(object);
     const tags = meta.tags ?? [];
     if (!tags.includes(tagId)) {
       meta.tags = [...tags, tagId];
@@ -64,8 +64,8 @@ export const unset = (object: Obj.Any, tagId: string, options: Options = {}): vo
     TagIndex.bind(host, key).unsetTag(tagId, object.id);
     return;
   }
-  Obj.update(object, (draft) => {
-    const meta = Obj.getMeta(draft);
+  Obj.update(object, (object) => {
+    const meta = Obj.getMeta(object);
     if (meta.tags) {
       meta.tags = meta.tags.filter((id) => id !== tagId);
     }

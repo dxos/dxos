@@ -61,8 +61,8 @@ export const findOrCreate = async (
     const [existing] = await db.query(Filter.foreignKeys(Tag, [key])).run();
     if (existing) {
       if (existing.label !== label) {
-        Obj.update(existing, (tag) => {
-          tag.label = label;
+        Obj.update(existing, (existing) => {
+          existing.label = label;
         });
       }
       return existing;

@@ -28,7 +28,10 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const [search] = useObject(subject);
+  // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
+  // the view re-renders when results/tags change.
+  const search = subject;
+  useObject(subject);
 
   const id = attendableId ?? Obj.getURI(search);
   const currentId = useSelected(id, 'single');

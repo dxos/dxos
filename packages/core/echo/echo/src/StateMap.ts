@@ -52,8 +52,8 @@ export const bind = <S extends object = Record<string, unknown>>(host: Obj.Any, 
   // Mutate the live typed record in place (do NOT reassign the whole tree); assigning a detached
   // plain object tree bypasses ECHO's schema-aware conversion. Mutating the typed proxy preserves it.
   const write = (mutate: (record: Record<string, Entry>) => void): void => {
-    Obj.update(host, (draft) => {
-      const view = asView(draft);
+    Obj.update(host, (host) => {
+      const view = asView(host);
       if (view[key] === undefined) {
         view[key] = {};
       }

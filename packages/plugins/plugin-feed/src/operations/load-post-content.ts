@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '../types';
-import { appendPostContent, extractImageUrls, fetchArticle, findPostContent, makeSnippet, stripHtml } from '../util';
+import { appendPostContent, fetchArticle, findPostContent, makeSnippet, stripHtml } from '../util';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
