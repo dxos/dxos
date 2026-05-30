@@ -157,3 +157,74 @@ export const decodeRenderAck = (value: unknown): RenderAck | undefined => {
   }
   return undefined;
 };
+
+/**
+ * Window CustomEvent name the page dispatches to probe the extension.
+ */
+export const PING_EVENT = 'composer:search-proxy:ping';
+
+/**
+ * Window CustomEvent name the content script dispatches with the ping ack.
+ */
+export const PING_ACK_EVENT = 'composer:search-proxy:ping:ack';
+
+/**
+ * Runtime message `type` discriminator the content script forwards for a ping.
+ */
+export const PING_MESSAGE_TYPE = 'composer-crx:search-proxy:ping';
+
+/**
+ * Health-check round-trip: the page asks the extension to identify itself. Exercises the same
+ * page → content-script → background path the render-proxy uses, so a successful ack proves the
+ * messaging path (not just that the content script loaded).
+ */
+export type PingRequest = {
+  version: 1;
+  /** Correlation id; the ack echoes it back. */
+  id: string;
+};
+
+/**
+ * Reply to a {@link PingRequest}, carrying the extension's manifest identity.
+ */
+export type PingAck =
+  | { version: 1; id: string; ok: true; extensionVersion: string; extensionName: string }
+  | { version: 1; id: string; ok: false; error: RenderError };
+
+/**
+ * Validate and narrow an unknown value to a {@link PingRequest}.
+ */
+export const decodePingRequest = (value: unknown): PingRequest | undefined => {
+  if (!isRecord(value) || value.version !== 1 || typeof value.id !== 'string') {
+    return undefined;
+  }
+  return { version: 1, id: value.id };
+};
+
+/**
+ * Validate and narrow an unknown value to a {@link PingAck}.
+ */
+export const decodePingAck = (value: unknown): PingAck | undefined => {
+  if (!isRecord(value) || value.version !== 1 || typeof value.id !== 'string') {
+    return undefined;
+  }
+  if (value.ok === true) {
+    if (typeof value.extensionVersion !== 'string' || typeof value.extensionName !== 'string') {
+      return undefined;
+    }
+    return {
+      version: 1,
+      id: value.id,
+      ok: true,
+      extensionVersion: value.extensionVersion,
+      extensionName: value.extensionName,
+    };
+  }
+  if (value.ok === false) {
+    if (!isRenderError(value.error)) {
+      return undefined;
+    }
+    return { version: 1, id: value.id, ok: false, error: value.error };
+  }
+  return undefined;
+};

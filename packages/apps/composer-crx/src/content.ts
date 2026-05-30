@@ -13,11 +13,17 @@ import { DEVELOPER_MODE_PROP, getProp } from './config';
 import { pickAndHarvest } from './picker';
 import { showDebugPreview } from './picker/debug-preview';
 import {
+  type PingAck,
   type RenderAck,
+  PING_ACK_EVENT,
+  PING_EVENT,
+  PING_MESSAGE_TYPE,
   RENDER_ACK_EVENT,
   RENDER_EVENT,
   RENDER_MESSAGE_TYPE,
   RENDER_READY_DATASET_KEY,
+  decodePingAck,
+  decodePingRequest,
   decodeRenderAck,
   decodeRenderRequest,
 } from './search-proxy';
@@ -102,6 +108,13 @@ const emitRenderAck = (ack: RenderAck): void => {
 };
 
 /**
+ * Re-emit a ping ack as a same-origin CustomEvent the page listens for.
+ */
+const emitPingAck = (ack: PingAck): void => {
+  window.dispatchEvent(new CustomEvent(PING_ACK_EVENT, { detail: ack }));
+};
+
+/**
  * Page-side relay for the search render-proxy. Installed only on Composer
  * origins: listen for the page's `composer:search-proxy:render` CustomEvent,
  * validate it, forward it to the background worker, and re-emit the decoded
@@ -140,6 +153,30 @@ const installSearchProxyRelay = async (): Promise<void> => {
       } catch (err) {
         log.catch(err);
         emitRenderAck({ version: 1, id: request.id, ok: false, error: 'transportError' });
+      }
+    })();
+  });
+
+  window.addEventListener(PING_EVENT, (event: Event) => {
+    const detail = 'detail' in event ? event.detail : undefined;
+    const request = decodePingRequest(detail);
+    if (!request) {
+      log.warn('search-proxy relay: ignoring malformed ping request');
+      return;
+    }
+
+    void (async () => {
+      try {
+        const response = await browser.runtime.sendMessage({ type: PING_MESSAGE_TYPE, request });
+        const ack = decodePingAck(response);
+        if (ack) {
+          emitPingAck(ack);
+        } else {
+          emitPingAck({ version: 1, id: request.id, ok: false, error: 'invalidAck' });
+        }
+      } catch (err) {
+        log.catch(err);
+        emitPingAck({ version: 1, id: request.id, ok: false, error: 'transportError' });
       }
     })();
   });
