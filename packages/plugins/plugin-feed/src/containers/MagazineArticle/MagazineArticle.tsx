@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { type Magazine, Subscription } from '#types';
 
-import { dxnToEntityId, getSubscriptionPostState, updateSubscriptionPostState } from '../../util';
+import { dxnToEntityId, getReadAt, hasTag, setReadAt, setTag, useSystemTags } from '../../util';
 import { MagazineTile, formatPublished } from './MagazineTile';
 import { MagazineSort, type CurateState } from './MagazineToolbar';
 import { MagazineToolbar, type MagazineView } from './MagazineToolbar';
@@ -36,6 +36,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const [sort, setSort] = useState<MagazineSort>('date');
   const [view, setView] = useState<MagazineView>('default');
   const db = Obj.getDatabase(magazine);
+  const { starredUri, archivedUri } = useSystemTags(db);
+
+  const handleToggleStar = useCallback(
+    (post: Subscription.Post) => {
+      const subscription = post.source?.target;
+      if (db && subscription) {
+        void setTag(subscription, (post as { id: string }).id, db, 'starred', !hasTag(subscription, post.id, starredUri));
+      }
+    },
+    [db, starredUri],
+  );
 
   // Sync feeds → curate magazine → apply per-feed keep.
   // State machine wraps the {@link FeedOperation.RefreshMagazine} invocation.
@@ -81,7 +92,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   }, [allFeeds]);
 
   // Compute posts.
-  const posts = useMagazinePosts(subject, sort, view);
+  const posts = useMagazinePosts(subject, sort, view, starredUri, archivedUri);
 
   // Kick off load for any Post refs that aren't yet resolved so `ref.target`
   // becomes populated reactively on the next render cycle. Also pre-load each
@@ -143,7 +154,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         return false;
       }
       const subscription = post.source?.target;
-      return Boolean(getSubscriptionPostState(subscription, (post as { id: string }).id).starred);
+      return hasTag(subscription, (post as { id: string }).id, starredUri);
     });
 
     if (next.length === magazine.posts.length) {
@@ -153,16 +164,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     Obj.update(subject, (subject) => {
       subject.posts = next;
     });
-  }, [subject, magazine.posts, db]);
+  }, [subject, magazine.posts, db, starredUri]);
 
   const handleOpen = useCallback(
     (post: Subscription.Post) => {
       const subscription = post.source?.target;
       const postId = (post as { id: string }).id;
-      const state = getSubscriptionPostState(subscription, postId);
-
-      if (subscription && !state.readAt) {
-        updateSubscriptionPostState(subscription, postId, { readAt: new Date().toISOString() });
+      if (subscription && !getReadAt(subscription, postId)) {
+        setReadAt(subscription, postId, new Date().toISOString());
       }
 
       // Fetch the full article content in the background. The operation
@@ -242,16 +251,19 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         // Match the post's source feed by bare object id; `post.feed.uri` is local-id form,
         // while `feedNamesById` is keyed by id directly.
         const feedId = post.source ? (post.source.uri.split(':').pop() ?? '') : '';
+        const subscription = post.source?.target;
         return {
           post,
-          magazine: subject,
           current: post.id === currentId,
+          read: subscription ? getReadAt(subscription, post.id) !== undefined : false,
+          starred: hasTag(subscription, post.id, starredUri),
+          onToggleStar: handleToggleStar,
           feedName: feedId ? feedNamesById.get(feedId) : undefined,
           published: formatPublished(post),
           onOpen: handleOpen,
         };
       }),
-    [posts, currentId, handleOpen, feedNamesById, subject],
+    [posts, currentId, handleOpen, handleToggleStar, starredUri, feedNamesById],
   );
 
   return (
@@ -296,8 +308,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
 type TileData = {
   post: Subscription.Post;
-  magazine: Magazine.Magazine;
   current: boolean;
+  read: boolean;
+  starred: boolean;
+  onToggleStar: (post: Subscription.Post) => void;
   feedName?: string;
   published?: string;
   onOpen: (post: Subscription.Post) => void;
@@ -311,8 +325,10 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   return (
     <MagazineTile
       post={data.post}
-      magazine={data.magazine}
       current={data.current}
+      read={data.read}
+      starred={data.starred}
+      onToggleStar={data.onToggleStar}
       feedName={data.feedName}
       published={data.published}
       onOpen={data.onOpen}
@@ -320,7 +336,13 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   );
 };
 
-const useMagazinePosts = (subject: Magazine.Magazine, sort: MagazineSort, view: MagazineView) => {
+const useMagazinePosts = (
+  subject: Magazine.Magazine,
+  sort: MagazineSort,
+  view: MagazineView,
+  starredUri: string | undefined,
+  archivedUri: string | undefined,
+) => {
   const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
   return useMemo<Subscription.Post[]>(() => {
@@ -362,21 +384,18 @@ const useMagazinePosts = (subject: Magazine.Magazine, sort: MagazineSort, view: 
     // - 'archived'  → only archived posts.
     // - 'starred'   → only starred (non-archived) posts.
     // - 'default'   → everything except archived.
-    const stateFor = (post: Subscription.Post) =>
-      getSubscriptionPostState(post.source?.target, (post as { id: string }).id);
+    const isArchived = (post: Subscription.Post) => hasTag(post.source?.target, post.id, archivedUri);
+    const isStarred = (post: Subscription.Post) => hasTag(post.source?.target, post.id, starredUri);
     let visible: Subscription.Post[];
     switch (view) {
       case 'archived':
-        visible = resolved.filter((post) => stateFor(post).archived);
+        visible = resolved.filter((post) => isArchived(post));
         break;
       case 'starred':
-        visible = resolved.filter((post) => {
-          const state = stateFor(post);
-          return !state.archived && state.starred;
-        });
+        visible = resolved.filter((post) => !isArchived(post) && isStarred(post));
         break;
       default:
-        visible = resolved.filter((post) => !stateFor(post).archived);
+        visible = resolved.filter((post) => !isArchived(post));
         break;
     }
 
@@ -414,5 +433,7 @@ const useMagazinePosts = (subject: Magazine.Magazine, sort: MagazineSort, view: 
     sort,
     view,
     subject.postState,
+    starredUri,
+    archivedUri,
   ]);
 };

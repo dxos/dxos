@@ -11,7 +11,7 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Subscription } from '#types';
 
 import { formatDate } from '../../util/format-date';
-import { getSubscriptionPostState } from '../../util/post-state';
+import { getImageUrl } from '../../util/post-state';
 import { usePostContent } from '../../util/use-post-content';
 
 export type PostContentProps = {
@@ -74,9 +74,9 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
     const title = post.title;
     const subscription = post.source?.target;
     const postId = (post as { id: string }).id;
-    const userState = getSubscriptionPostState(subscription, postId);
-    const imageUrl = userState.imageUrl;
-    const fetchedText = usePostContent(subscription, postId);
+    const postContent = usePostContent(subscription, postId);
+    const imageUrl = getImageUrl(post, postContent);
+    const fetchedText = postContent?.text;
 
     // Drop duplicate images from the article body — and remove any image
     // that matches the hero `imageUrl` so it doesn't appear stacked immediately
