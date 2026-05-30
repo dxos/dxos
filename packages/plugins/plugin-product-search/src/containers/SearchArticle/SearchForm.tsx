@@ -8,9 +8,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Input } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
+import { meta } from '../../meta';
 import { Provider, Search, SearchOperation } from '../../types';
 import { buildUnionFormSchema } from '../../util';
 
@@ -23,6 +24,7 @@ export type SearchFormProps = {
  * providers' search schemas) + a Run control.
  */
 export const SearchForm = ({ search }: SearchFormProps) => {
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const database = Obj.getDatabase(search);
 
@@ -82,9 +84,9 @@ export const SearchForm = ({ search }: SearchFormProps) => {
   return (
     <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
       <div className='flex flex-col gap-1'>
-        <span className='text-sm text-description'>Providers</span>
+        <span className='text-sm text-description'>{t('providers.label')}</span>
         {allProviders.length === 0 ? (
-          <span className='text-sm text-subdued'>No providers in this space.</span>
+          <span className='text-sm text-subdued'>{t('no-providers.message')}</span>
         ) : (
           allProviders.map((provider) => (
             <Input.Root key={provider.id}>
@@ -118,7 +120,7 @@ export const SearchForm = ({ search }: SearchFormProps) => {
 
       <IconButton
         icon='ph--shopping-cart--regular'
-        label={running ? 'Running…' : 'Run'}
+        label={running ? t('running.label') : t('run.label')}
         disabled={selectedProviders.length === 0 || running}
         onClick={handleRun}
       />

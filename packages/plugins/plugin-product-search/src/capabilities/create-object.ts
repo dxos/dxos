@@ -31,7 +31,7 @@ export default Capability.makeModule(
         inputSchema: CreateSearchSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Search.makeSearch({ name: props.name ?? 'New search' });
+            const object = Search.make({ name: props.name ?? 'New search' });
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
@@ -44,7 +44,7 @@ export default Capability.makeModule(
         inputSchema: CreateProviderSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Provider.makeProvider({
+            const object = Provider.make({
               name: props.name ?? 'New provider',
               url: props.url ?? '',
               kind: 'scrape',

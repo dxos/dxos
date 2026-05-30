@@ -33,4 +33,4 @@ export type Result = Type.InstanceType<typeof Result>;
 export const instanceOf = (value: unknown): value is Result => Obj.instanceOf(Result, value);
 
 /** Creates a Result object. */
-export const makeResult = (props: Obj.MakeProps<typeof Result>): Result => Obj.make(Result, props);
+export const make = (props: Obj.MakeProps<typeof Result>): Result => Obj.make(Result, props);

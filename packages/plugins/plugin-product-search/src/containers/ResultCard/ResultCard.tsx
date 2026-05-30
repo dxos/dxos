@@ -6,8 +6,9 @@ import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, IconButton, composable } from '@dxos/react-ui';
+import { Card, IconButton, composable, useTranslation } from '@dxos/react-ui';
 
+import { meta } from '../../meta';
 import { type Result } from '../../types/Result';
 
 export type ResultCardProps = { subject: Result; current?: boolean };
@@ -23,6 +24,7 @@ export type ResultCardProps = { subject: Result; current?: boolean };
  */
 export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, classNames, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
     // Subscribe so the card re-renders when the result mutates (e.g. star toggle).
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];
@@ -49,7 +51,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
         {...props}
       >
         {imageUrl && (
-          <Card.Poster alt={result.title ?? 'Product'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster alt={result.title ?? t('product.label')} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
           <Card.IconBlock padding>
@@ -58,7 +60,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
               iconOnly
               square
               size={4}
-              label={starred ? 'Unstar' : 'Star'}
+              label={starred ? t('unstar.label') : t('star.label')}
               icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
               onClick={handleToggleStar}
             />

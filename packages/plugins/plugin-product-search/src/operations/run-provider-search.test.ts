@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { makeProvider } from '../types/Provider';
+import { make } from '../types/Provider';
 import { buildResults } from './run-provider-search';
 
 const HTML = '<div class="c"><h2>Item A</h2><a href="/a">x</a></div>';
 
 describe('buildResults', () => {
   test('produces ResultData from a provider mapping + body', ({ expect }) => {
-    const provider = makeProvider({
+    const provider = make({
       name: 'Test',
       url: 'https://x',
       kind: 'scrape',

@@ -4,12 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { makeSearch, instanceOf as isSearch } from './Search';
+import * as Search from './Search';
 
 describe('Search type', () => {
   test('make + instanceOf with defaults', ({ expect }) => {
-    const search = makeSearch({ name: 'Cars' });
-    expect(isSearch(search)).toBe(true);
+    const search = Search.make({ name: 'Cars' });
+    expect(Search.instanceOf(search)).toBe(true);
     expect(search.providers).toEqual([]);
     expect(search.results).toEqual([]);
     expect(search.criteria).toEqual({});

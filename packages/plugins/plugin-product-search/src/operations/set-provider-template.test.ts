@@ -4,12 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { makeProvider } from '../types/Provider';
+import { make } from '../types/Provider';
 import { applyProviderTemplate } from './set-provider-template';
 
 describe('applyProviderTemplate', () => {
   test('writes the derived search schema, request, and result onto the provider', ({ expect }) => {
-    const provider = makeProvider({ name: 'Test', url: 'https://x', kind: 'scrape' });
+    const provider = make({ name: 'Test', url: 'https://x', kind: 'scrape' });
 
     applyProviderTemplate(provider, {
       searchSchema: { type: 'object', properties: { q: { type: 'string' } } },

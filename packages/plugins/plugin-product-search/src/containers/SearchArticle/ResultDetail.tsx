@@ -6,8 +6,9 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Carousel, IconButton } from '@dxos/react-ui';
+import { Carousel, IconButton, useTranslation } from '@dxos/react-ui';
 
+import { meta } from '../../meta';
 import { type Result } from '../../types';
 
 export type ResultDetailProps = {
@@ -17,6 +18,7 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) => {
+  const { t } = useTranslation(meta.id);
   // Subscribe so the pane re-renders when the result mutates (e.g. star toggle).
   const [result] = useObject(subject);
   const handleToggleStar = useCallback(() => {
@@ -28,7 +30,11 @@ export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) =>
   }, [subject]);
 
   if (!result) {
-    return <div className='flex items-center justify-center h-full text-subdued text-sm'>No result selected.</div>;
+    return (
+      <div className='flex items-center justify-center h-full text-subdued text-sm'>
+        {t('no-result-selected.message')}
+      </div>
+    );
   }
 
   const properties = Object.entries(result.properties ?? {});
@@ -42,10 +48,12 @@ export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) =>
           iconOnly
           variant='ghost'
           icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-          label={starred ? 'Unstar' : 'Star'}
+          label={starred ? t('unstar.label') : t('star.label')}
           onClick={handleToggleStar}
         />
-        {onClose && <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close' onClick={onClose} />}
+        {onClose && (
+          <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
+        )}
       </div>
 
       {(result.price != null || result.currency) && (
@@ -66,7 +74,7 @@ export const ResultDetail = ({ result: subject, onClose }: ResultDetailProps) =>
           <Carousel.Previous />
           <Carousel.Viewport>
             {result.images.map((image, index) => (
-              <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? 'Product'} />
+              <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
             ))}
           </Carousel.Viewport>
           <Carousel.Next />

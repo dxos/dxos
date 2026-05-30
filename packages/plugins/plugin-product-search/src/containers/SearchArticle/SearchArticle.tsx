@@ -10,10 +10,11 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
-import { Icon, Panel, Toolbar } from '@dxos/react-ui';
+import { Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
+import { meta } from '../../meta';
 import { type Result, type Search } from '../../types';
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
@@ -28,6 +29,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * - right: detail pane for the selected result.
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [search] = useObject(subject);
 
@@ -105,10 +107,14 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
             value={view}
             onValueChange={(value) => setView(value === 'starred' ? 'starred' : 'all')}
           >
-            <Toolbar.ToggleGroupItem value='all' aria-label='All results' title='All'>
+            <Toolbar.ToggleGroupItem value='all' aria-label={t('view-all.label')} title={t('view-all.title')}>
               <Icon icon='ph--list--regular' size={4} />
             </Toolbar.ToggleGroupItem>
-            <Toolbar.ToggleGroupItem value='starred' aria-label='Starred results' title='Starred'>
+            <Toolbar.ToggleGroupItem
+              value='starred'
+              aria-label={t('view-starred.label')}
+              title={t('view-starred.title')}
+            >
               <Icon icon={view === 'starred' ? 'ph--star--fill' : 'ph--star--regular'} size={4} />
             </Toolbar.ToggleGroupItem>
           </Toolbar.ToggleGroup>
@@ -120,7 +126,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           {(selectedResult && <ResultDetail result={selectedResult} onClose={handleClose} />) ||
             (visibleResults.length === 0 ? (
               <div className='flex items-center justify-center h-full text-subdued text-sm'>
-                {view === 'starred' ? 'No starred results.' : 'No results.'}
+                {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
               </div>
             ) : (
               <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
