@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -62,7 +62,12 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'run',
-              data: () => Operation.invoke(SearchOperation.RunSearch, { search: Ref.make(search) }),
+              data: () =>
+                Operation.invoke(
+                  SearchOperation.RunSearch,
+                  { search: Ref.make(search) },
+                  { spaceId: Obj.getDatabase(search)?.spaceId },
+                ),
               properties: {
                 label: ['run-search.label', { ns: meta.id }],
                 icon: 'ph--shopping-cart--regular',
@@ -89,7 +94,12 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'regenerate',
-              data: () => Operation.invoke(SearchOperation.GenerateProviderTemplate, { provider: Ref.make(provider) }),
+              data: () =>
+                Operation.invoke(
+                  SearchOperation.GenerateProviderTemplate,
+                  { provider: Ref.make(provider) },
+                  { spaceId: Obj.getDatabase(provider)?.spaceId },
+                ),
               properties: {
                 label: ['regenerate.label', { ns: meta.id }],
                 icon: 'ph--sparkle--regular',
