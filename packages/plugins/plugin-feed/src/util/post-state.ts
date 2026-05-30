@@ -8,8 +8,8 @@ import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { type Database, Feed as EchoFeed, Filter, Obj, Ref, StateMap, Tag, TagIndex } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { extractImageUrls, makeSnippet, stripHtml } from './extract';
 import { type Magazine, Subscription } from '../types';
+import { extractImageUrls, makeSnippet, stripHtml } from './extract';
 
 /**
  * Per-Post state helpers. Posts live immutably in a Subscription's `feed` queue; their mutable state

@@ -42,7 +42,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     (post: Subscription.Post) => {
       const subscription = post.source?.target;
       if (db && subscription) {
-        void setTag(subscription, (post as { id: string }).id, db, 'starred', !hasTag(subscription, post.id, starredUri));
+        void setTag(
+          subscription,
+          (post as { id: string }).id,
+          db,
+          'starred',
+          !hasTag(subscription, post.id, starredUri),
+        );
       }
     },
     [db, starredUri],

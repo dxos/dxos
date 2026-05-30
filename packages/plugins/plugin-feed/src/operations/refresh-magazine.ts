@@ -83,8 +83,7 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  * inside one change block trips ECHO's deep-mapper dedup invariant.
  */
 const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string | undefined): void => {
-  const isStarred = (post: Subscription.Post) =>
-    hasTag(post.source?.target, (post as { id: string }).id, starredUri);
+  const isStarred = (post: Subscription.Post) => hasTag(post.source?.target, (post as { id: string }).id, starredUri);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {

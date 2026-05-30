@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
 import type { ForeignKey } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import * as Filter from './Filter';

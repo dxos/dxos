@@ -10,7 +10,7 @@ Adopters: `@dxos/plugin-inbox`, `@dxos/plugin-product-search`, `@dxos/plugin-fee
 Kit (all in `@dxos/echo`):
 
 - **`TagIndex`** — inverse tag index `Record<tagId, objectId[]>` for immutable feed objects. `field()`
-  + `bind()` (`setTag`/`unsetTag`/`objects`/`tags`/`tagIds`). No embedded labels.
+  - `bind()` (`setTag`/`unsetTag`/`objects`/`tags`/`tagIds`). No embedded labels.
 - **`Tagging`** — unifies tagging across mutable objects (`Obj.getMeta(obj).tags`) and immutable feed
   objects (host `TagIndex` via `{ host }`); `get`/`set`/`unset`/`resolve`.
 - **`StateMap`** — the (A) primitive: generic per-object metadata side-map `Record<objectId, S>`
@@ -28,7 +28,7 @@ Adopters (all landed):
 - **`plugin-feed`** — per-Post state hosted on the **Subscription** (so every surface resolves it via
   `post.source.target`): `Subscription.postState = StateMap({ readAt })` + `tags = TagIndex`
   (starred/archived as system `Tag` objects, `STARRED_TAG`/`ARCHIVED_TAG`). `Magazine.postState =
-  StateMap({ rank })`. `snippet`/`imageUrl` are **not stored** — derived from `post.description`, or
+StateMap({ rank })`. `snippet`/`imageUrl` are **not stored** — derived from `post.description`, or
   the refined values written to `PostContent` (contentFeed) by `LoadPostContent`. A `useSystemTags`
   hook resolves the star/archive uris for sync render/filter.
 
@@ -72,7 +72,7 @@ Three related-but-distinct shapes recur:
 `Mailbox.feed`, and the new product-search results feed.
 
 **C. Group / inverse index** — `Record<groupKey, ID[]>` (or `Ref[]`), grouping object ids under a
-key. Distinct from (A): the value is a *membership array*, not per-object metadata. Existing
+key. Distinct from (A): the value is a _membership array_, not per-object metadata. Existing
 instances:
 
 - `Mailbox.tags` — `Record<tagId, { label, hue?, source?, messages: Ref<Message>[] }>`: tag → message
@@ -194,7 +194,10 @@ One entry point for "the tags on an object", regardless of where they live:
 ```ts
 // @import-as-namespace  → imported as `Tagging`
 
-export interface Options { host?: Obj.Any; key?: string /* default 'tags' */; }
+export interface Options {
+  host?: Obj.Any;
+  key?: string /* default 'tags' */;
+}
 
 // host present → immutable feed object: read/write the host's TagIndex.
 // host absent  → mutable db object: read/write Obj.getMeta(obj).tags.
@@ -211,7 +214,7 @@ Tag identity is the **`Tag` object URI** everywhere — the same id space as `me
 `TagIndex.objects(uri)` (they're queue items, not db rows).
 
 > The generic `Index` (group → ids + `extra`) below is the original, pre-tag design. `Kanban.
-> arrangement.columns` / `plugin-trello` snapshots remain candidates for a generic `Index` if one is
+arrangement.columns` / `plugin-trello` snapshots remain candidates for a generic `Index` if one is
 > later needed; tags use `TagIndex`.
 
 #### (historical) generic `Index` — group / inverse index
@@ -249,13 +252,13 @@ UI (`ResultCard`, `ResultDetail`, `SearchArticle`):
 
 Retrofit incrementally to keep PRs reviewable.
 
-| Host                          | `Metadata` (A) | `FeedCollection` (B)                          | `TagIndex` (C)              |
-| ----------------------------- | -------------- | --------------------------------------------- | --------------------------- |
-| `Mailbox.tags`                | —              | —                                             | **done**                    |
-| `Subscription.postState`      | yes            | yes (`feed`, `keep`-prune via `pin: starred`) | `starred` → tag (candidate) |
-| `Magazine.postState`          | yes            | — (Ref array, no feed)                        | —                           |
-| `Mailbox.extracted`           | yes            | `Mailbox.feed` (optional)                     | —                           |
-| `plugin-product-search`       | `starred` (A)  | results feed (B)                              | (or `starred` → tag)        |
+| Host                     | `Metadata` (A) | `FeedCollection` (B)                          | `TagIndex` (C)              |
+| ------------------------ | -------------- | --------------------------------------------- | --------------------------- |
+| `Mailbox.tags`           | —              | —                                             | **done**                    |
+| `Subscription.postState` | yes            | yes (`feed`, `keep`-prune via `pin: starred`) | `starred` → tag (candidate) |
+| `Magazine.postState`     | yes            | — (Ref array, no feed)                        | —                           |
+| `Mailbox.extracted`      | yes            | `Mailbox.feed` (optional)                     | —                           |
+| `plugin-product-search`  | `starred` (A)  | results feed (B)                              | (or `starred` → tag)        |
 
 ### Tag retrofit candidates (other plugins)
 
