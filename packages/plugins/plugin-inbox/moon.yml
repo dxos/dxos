@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - ts-test-storybook
+  - ts-test-workerd
   - pack
   - storybook
 tasks:

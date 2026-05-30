@@ -1,0 +1,29 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test-workerd:
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=workerd
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - vite-plugin-log:compile
+      - ^:compile
+    inputs:
+      - '@group(sources)'
+      - /vitest.base.config.ts
+      - /vitest/workerd-setup.mjs
+      - /vitest/chalk-stub.mjs
+      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
+      - vitest.config.ts
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/workerd/**
+      - /test-results/$project/workerd/**
+    options:
+      timeout: 600
+
+inheritedBy:
+  tags: ts-test-workerd
