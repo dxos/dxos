@@ -3,13 +3,13 @@
 //
 
 import type { IndexingResult } from '@dxos/index-core';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import type { EntityId, SpaceId } from '@dxos/keys';
 
 export type InvalidationHint = {
   spaceIds?: ReadonlySet<SpaceId>;
-  queueIds?: ReadonlySet<ObjectId>;
+  queueIds?: ReadonlySet<EntityId>;
   typenames?: ReadonlySet<string>;
-  objectIds?: ReadonlySet<ObjectId>;
+  objectIds?: ReadonlySet<EntityId>;
 };
 
 /**

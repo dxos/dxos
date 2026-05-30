@@ -78,7 +78,7 @@ export const isInstanceOf = <S>(
   }
 
   if (!DXN.isDXN(schemaURI)) {
-    // EchoURI-based schema URI — no typename match possible.
+    // EID-based schema URI — no typename match possible.
     return false;
   }
 

@@ -180,5 +180,5 @@ longer in the barrel:
 - `getSpace` call sites split into "DB-only" (migrated to `Obj.getDatabase`) vs "Needs Space" (kept).
 - `Filter`, `Query`, `Ref`, `Entity`, `Relation`, `Type`, `Database` re-exports removed; callers migrated to `@dxos/echo`.
 - `SpaceId`, `parseId`, `SPACE_ID_LENGTH`, `OBJECT_ID_LENGTH`, `FQ_ID_LENGTH` removed; `parseId` + the length constants moved into `@dxos/keys`.
-- `defineObjectMigration`, `compareForeignKeys`, `createQueueDXN`, `ObjectMeta`, `RefArray` re-exports removed.
-- Public `Ref.hasObjectId` promoted in `@dxos/echo` so `Ref.*` access continues to work after dropping the alias.
+- `defineObjectMigration`, `compareForeignKeys`, `createQueueDXN`, `EntityMeta`, `RefArray` re-exports removed.
+- Public `Ref.hasEntityId` promoted in `@dxos/echo` so `Ref.*` access continues to work after dropping the alias.

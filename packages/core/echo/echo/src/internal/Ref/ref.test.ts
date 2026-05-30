@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EchoURI, ObjectId, DXN } from '@dxos/keys';
+import { EID, EntityId, DXN } from '@dxos/keys';
 
 import * as Type from '../../Type';
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity';
@@ -28,7 +28,7 @@ type Contact = Type.InstanceType<typeof Contact>;
 
 describe('Ref', () => {
   test('Schema is', () => {
-    Ref(Contact).pipe(Schema.is)(Ref.fromURI(EchoURI.make({ objectId: ObjectId.random() })));
+    Ref(Contact).pipe(Schema.is)(Ref.fromURI(EID.make({ entityId: EntityId.random() })));
   });
 
   test('ref ast', () => {
@@ -77,9 +77,9 @@ describe('Ref', () => {
   });
 
   test('decode object', () => {
-    const id = ObjectId.random();
+    const id = EntityId.random();
     const contactData = {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       name: 'John Doe',
       tasks: [{ '/': `dxn:echo:@:${id}` }],
     };

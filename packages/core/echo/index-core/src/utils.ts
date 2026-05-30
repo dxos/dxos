@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-export type ObjectPropPath = string[];
+export type EntityPropPath = string[];
 
 /**
  * Escaped property path within an object.
@@ -18,14 +18,14 @@ export type ObjectPropPath = string[];
  * - contact with .
  */
 export const EscapedPropPath: Schema.SchemaClass<string, string> & {
-  escape: (path: ObjectPropPath) => EscapedPropPath;
-  unescape: (path: EscapedPropPath) => ObjectPropPath;
+  escape: (path: EntityPropPath) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => EntityPropPath;
 } = class extends Schema.String.annotations({ title: 'EscapedPropPath' }) {
-  static escape(path: ObjectPropPath): EscapedPropPath {
+  static escape(path: EntityPropPath): EscapedPropPath {
     return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
   }
 
-  static unescape(path: EscapedPropPath): ObjectPropPath {
+  static unescape(path: EscapedPropPath): EntityPropPath {
     const parts: string[] = [];
     let current = '';
 

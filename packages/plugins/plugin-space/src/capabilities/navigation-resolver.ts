@@ -14,7 +14,7 @@ import {
   type AppCapabilities as AppCaps,
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
@@ -35,7 +35,7 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = EchoURI.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
+        const dxn = EID.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
         if (!dxn) {
           return [];
         }
@@ -70,7 +70,7 @@ export default Capability.makeModule(
       const segments = qualifiedPath.split('/');
       const spaceId = getSpaceIdFromPath(qualifiedPath);
       const objectId = segments[segments.length - 1];
-      if (!spaceId || !objectId || !Key.ObjectId.isValid(objectId)) {
+      if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
         return Effect.succeed(Option.none());
       }
 
@@ -79,10 +79,10 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const echoUri = EchoURI.make({ spaceId: spaceId, objectId: objectId as Key.ObjectId });
+      const echoUri = EID.make({ spaceId: spaceId, entityId: objectId as Key.EntityId });
       const ref = space.db.makeRef(echoUri);
       return Database.loadOption(ref).pipe(
-        Effect.map((option) => (Option.isSome(option) ? Option.some(echoUri) : Option.none<EchoURI.EchoURI>())),
+        Effect.map((option) => (Option.isSome(option) ? Option.some(echoUri) : Option.none<EID.EID>())),
       );
     };
 

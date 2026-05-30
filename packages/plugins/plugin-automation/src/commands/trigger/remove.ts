@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Trigger } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import { TriggerId } from './options';
 import { printTriggerRemoved, selectTrigger } from './util';
@@ -29,7 +29,7 @@ export const remove = Command.make(
         onNone: () => selectTrigger(),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.make({ objectId: triggerId });
+      const dxn = EID.make({ entityId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       yield* Database.remove(trigger);
       if (json) {

@@ -12,7 +12,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -82,7 +82,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         // After the identifier refactor, message DXNs are ECHO-kind (dxn:echo:spaceId:itemId)
         // and no longer embed the queue/feed ID. We locate the feed via the mailbox object.
         // Accept new `@uri` and legacy `@dxn` field name for backward compat with old snapshots.
-        const messageEchoId = EchoURI.tryParse((message as any)['@uri'] ?? (message as any)['@dxn']);
+        const messageEchoId = EID.tryParse((message as any)['@uri'] ?? (message as any)['@dxn']);
         if (!messageEchoId) {
           return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }

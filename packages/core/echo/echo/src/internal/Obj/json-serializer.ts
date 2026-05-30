@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, EntityStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, URI } from '@dxos/keys';
+import { EID, EntityId, URI } from '@dxos/keys';
 import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -22,7 +22,7 @@ import {
   EntityKind,
   KindId,
   MetaId,
-  ObjectMetaSchema,
+  EntityMetaSchema,
   ParentId,
   setSchema,
   setType,
@@ -109,7 +109,7 @@ export const objectFromJSON = async (
     obj = decodeGeneric(decodedInput, { refResolver });
   }
 
-  invariant(ObjectId.isValid(obj.id), 'Invalid object id');
+  invariant(EntityId.isValid(obj.id), 'Invalid object id');
   setTypename(obj, type);
   if (schema) {
     setSchema(obj, schema);
@@ -149,7 +149,7 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await ObjectMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
+    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {
@@ -240,21 +240,21 @@ export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) =
 };
 
 /**
- * Convert ObjectStructure to JSON data for indexing.
- * Different from {@link objectToJSON} as it takes the internal {@link ObjectStructure} representation directly
+ * Convert EntityStructure to JSON data for indexing.
+ * Different from {@link objectToJSON} as it takes the internal {@link EntityStructure} representation directly
  */
-export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStructure): Obj.JSON => {
-  const typeRef = ObjectStructure.getTypeReference(structure)?.['/'];
-  const parent = ObjectStructure.getParent(structure)?.['/'];
-  const source = ObjectStructure.getRelationSource(structure)?.['/'];
-  const target = ObjectStructure.getRelationTarget(structure)?.['/'];
+export const objectStructureToJson = (objectId: EntityId, structure: EntityStructure): Obj.JSON => {
+  const typeRef = EntityStructure.getTypeReference(structure)?.['/'];
+  const parent = EntityStructure.getParent(structure)?.['/'];
+  const source = EntityStructure.getRelationSource(structure)?.['/'];
+  const target = EntityStructure.getRelationTarget(structure)?.['/'];
   return {
     ...structure.data,
     id: objectId,
     [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
-    [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: parent !== undefined ? EchoURI.tryParse(parent) : undefined,
-    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoURI.tryParse(source) : undefined,
-    [ATTR_RELATION_TARGET]: target !== undefined ? EchoURI.tryParse(target) : undefined,
+    [ATTR_DELETED]: EntityStructure.isDeleted(structure),
+    [ATTR_PARENT]: parent !== undefined ? EID.tryParse(parent) : undefined,
+    [ATTR_RELATION_SOURCE]: source !== undefined ? EID.tryParse(source) : undefined,
+    [ATTR_RELATION_TARGET]: target !== undefined ? EID.tryParse(target) : undefined,
   };
 };

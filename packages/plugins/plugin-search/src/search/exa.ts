@@ -186,7 +186,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
 
   return entries
     .map((entry) => {
-      idMap.set(entry.data.id, Key.ObjectId.random());
+      idMap.set(entry.data.id, Key.EntityId.random());
       entry.data.id = idMap.get(entry.data.id);
       return entry;
     })

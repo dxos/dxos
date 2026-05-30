@@ -13,12 +13,12 @@ import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } f
 import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
 import { AssistantTestLayer } from './testing';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const ReadName = Operation.make({
   meta: {

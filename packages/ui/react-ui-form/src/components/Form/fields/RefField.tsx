@@ -107,14 +107,14 @@ export const RefField = (props: RefFieldProps) => {
     // form (`dxn:echo:<spaceId>:<id>`). String-comparing the two never
     // matches, so the just-created Ref's option lookup fails and the slot
     // displays as empty even though the underlying form value IS set.
-    const dxnToObjectId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
+    const dxnToEntityId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
         const dxnString = isRef ? value.uri : value['/'];
-        const objectId = dxnToObjectId(dxnString);
-        const matchingOption = options.find((option) => dxnToObjectId(option.id) === objectId);
+        const objectId = dxnToEntityId(dxnString);
+        const matchingOption = options.find((option) => dxnToEntityId(option.id) === objectId);
         if (matchingOption) {
           return matchingOption;
         }

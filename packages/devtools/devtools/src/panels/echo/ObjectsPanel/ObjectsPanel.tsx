@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-db';
-import { EchoURI, type URI } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -59,9 +59,9 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
   const onNavigate = (dxn: URI.URI) => {
-    const echoUri = EchoURI.tryParse(dxn);
-    if (echoUri && EchoURI.isLocal(echoUri)) {
-      const id = EchoURI.getObjectId(echoUri);
+    const echoUri = EID.tryParse(dxn);
+    if (echoUri && EID.isLocal(echoUri)) {
+      const id = EID.getEntityId(echoUri);
       const object = id ? items.find((item) => item.id === id) : undefined;
       if (object) {
         setSelectedVersionObject(null);

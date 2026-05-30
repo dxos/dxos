@@ -221,12 +221,12 @@ export const getEchoRoot = (target: object, depth = 0): object => {
 
   // Root ECHO objects (those created with Obj.make or Relation.make) have KindId set.
   // They maintain their own change context identity even when nested inside another object.
-  // Nested helper objects like ObjectMeta don't have KindId and should follow their owner.
+  // Nested helper objects like EntityMeta don't have KindId and should follow their owner.
   if (KindId in target) {
     return target;
   }
 
-  // For non-root objects (nested records, ObjectMeta, etc.), follow the owner chain.
+  // For non-root objects (nested records, EntityMeta, etc.), follow the owner chain.
   const owner = getOwner(target);
   if (owner) {
     return getEchoRoot(owner, depth + 1);

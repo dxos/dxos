@@ -9,7 +9,7 @@ import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
 import { Format, FormatAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Kanban } from '#types';
@@ -154,15 +154,15 @@ describe('useKanbanBoardModel', () => {
 
   test('getItems returns items in column ordered by arrangement ids', ({ expect }) => {
     const item1 = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const item2 = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const item3 = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const items: KanbanTask[] = [item1, item2, item3];
@@ -195,11 +195,11 @@ describe('useKanbanBoardModel', () => {
 
   test('subscribing to one column items atom does not fire when another column changes', ({ expect }) => {
     const itemA = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'a',
     });
     const itemB = Obj.make(KanbanTaskSchema, {
-      id: ObjectId.random(),
+      id: EntityId.random(),
       status: 'b',
     });
     const items: KanbanTask[] = [itemA, itemB];

@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -33,7 +33,7 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
+      const queueId = EntityId.random();
       const object1 = { id: 'obj1', data: 'test1' };
       const object2 = { id: 'obj2', data: 'test2' };
 
@@ -64,8 +64,8 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
-      const object1Id = ObjectId.random();
+      const queueId = EntityId.random();
+      const object1Id = EntityId.random();
       const object1 = { id: object1Id, data: 'test1' };
 
       yield* Effect.promise(() =>
@@ -102,7 +102,7 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
       const service = new LocalQueueServiceImpl(runtime, feedStore);
       const spaceId = 'space-1' as SpaceId;
-      const queueId = ObjectId.random();
+      const queueId = EntityId.random();
 
       // Insert 10 items
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
@@ -151,7 +151,7 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
+      const queueId = EntityId.random();
       yield* Effect.promise(() =>
         service.insertIntoQueue({
           subspaceTag: FeedProtocol.WellKnownNamespaces.data,

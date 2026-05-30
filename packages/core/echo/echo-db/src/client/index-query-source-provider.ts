@@ -11,7 +11,7 @@ import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/ech
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -233,13 +233,13 @@ export class IndexQuerySource implements QuerySource {
     }
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
-    invariant(ObjectId.isValid(result.id), 'Invalid id');
+    invariant(EntityId.isValid(result.id), 'Invalid id');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
-      invariant(ObjectId.isValid(result.queueId), 'Invalid queueId');
+      invariant(EntityId.isValid(result.queueId), 'Invalid queueId');
       const json = JSON.parse(result.documentJson);
-      const queueEchoUri = EchoURI.make({ spaceId: result.spaceId, objectId: result.queueId });
+      const queueEchoUri = EID.make({ spaceId: result.spaceId, entityId: result.queueId });
       const refResolver = this._params.graph.createRefResolver({
         context: { space: result.spaceId, feed: queueEchoUri },
       });
@@ -248,7 +248,7 @@ export class IndexQuerySource implements QuerySource {
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          uri: EchoURI.make({ spaceId: result.spaceId, objectId: result.id }),
+          uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
           database,
         });
       } catch (err) {

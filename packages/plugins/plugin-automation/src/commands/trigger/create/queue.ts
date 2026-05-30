@@ -15,7 +15,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Feed as FeedNs, Filter, JsonSchema, Ref } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import { Enabled, Feed, Input } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectFeed } from '../util';
@@ -45,7 +45,7 @@ export const queue = Command.make(
 
       const feed = yield* Option.match(options.feed, {
         onNone: () => selectFeed(),
-        onSome: (uri) => Database.resolve(EchoURI.parse(uri), FeedNs.Feed),
+        onSome: (uri) => Database.resolve(EID.parse(uri), FeedNs.Feed),
       });
 
       const input = yield* Option.match(options.input, {

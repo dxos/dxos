@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { EchoURI, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder } from '../testing';
@@ -35,8 +35,8 @@ describe('Query pipeline strong-dependency stalls', () => {
     await openAndClose(testBuilder);
     const { peer, db } = await testBuilder.createDatabase();
 
-    const mainObjectId = ObjectId.random();
-    const depObjectId = ObjectId.random();
+    const mainObjectId = EntityId.random();
+    const depObjectId = EntityId.random();
 
     // 1. Plant the "main" object's document on the worker's disk. Its
     //    `system.type` references depObjectId via a local-space DXN, which
@@ -50,7 +50,7 @@ describe('Query pipeline strong-dependency stalls', () => {
           data: { title: 'main' },
           system: {
             kind: 'object',
-            type: { '/': EchoURI.make({ objectId: depObjectId }) },
+            type: { '/': EID.make({ entityId: depObjectId }) },
           },
         },
       },
@@ -122,8 +122,8 @@ describe('Query pipeline strong-dependency stalls', () => {
     await openAndClose(testBuilder);
     const { peer, db } = await testBuilder.createDatabase();
 
-    const mainObjectId = ObjectId.random();
-    const depObjectId = ObjectId.random();
+    const mainObjectId = EntityId.random();
+    const depObjectId = EntityId.random();
 
     const mainDocHandle = await peer.host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
@@ -134,7 +134,7 @@ describe('Query pipeline strong-dependency stalls', () => {
           data: { title: 'main' },
           system: {
             kind: 'object',
-            type: { '/': EchoURI.make({ objectId: depObjectId }) },
+            type: { '/': EID.make({ entityId: depObjectId }) },
           },
         },
       },
@@ -179,9 +179,9 @@ describe('Query pipeline strong-dependency stalls', () => {
     await openAndClose(testBuilder);
     const { peer, db } = await testBuilder.createDatabase();
 
-    const aId = ObjectId.random();
-    const bId = ObjectId.random();
-    const cId = ObjectId.random();
+    const aId = EntityId.random();
+    const bId = EntityId.random();
+    const cId = EntityId.random();
 
     // A depends on B (via system.type); B depends on C (same).
     const aHandle = await peer.host.createDoc<DatabaseDirectory>({
@@ -191,7 +191,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         [aId]: {
           meta: { keys: [] },
           data: { title: 'A' },
-          system: { kind: 'object', type: { '/': EchoURI.make({ objectId: bId }) } },
+          system: { kind: 'object', type: { '/': EID.make({ entityId: bId }) } },
         },
       },
     });
@@ -202,7 +202,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         [bId]: {
           meta: { keys: [] },
           data: { title: 'B' },
-          system: { kind: 'object', type: { '/': EchoURI.make({ objectId: cId }) } },
+          system: { kind: 'object', type: { '/': EID.make({ entityId: cId }) } },
         },
       },
     });

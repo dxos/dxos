@@ -101,7 +101,7 @@ export const make = refInternal.Ref.make;
 // TODO(dmaretskyi): Consider just allowing `make` to accept URI.
 export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
 
-export const hasObjectId = refInternal.Ref.hasObjectId;
+export const hasEntityId = refInternal.Ref.hasEntityId;
 
 // TODO(wittjosiah): Factor out?
 export const isRefType = (ast: SchemaAST.AST): boolean => {

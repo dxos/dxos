@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
@@ -266,9 +266,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
 
-      const integrationId = EchoURI.getObjectId(EchoURI.tryParse(integration.uri)!) ?? 'unknown';
+      const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = channelRef
-        ? `${integrationId}.${EchoURI.getObjectId(EchoURI.tryParse(channelRef.uri)!) ?? 'unknown'}`
+        ? `${integrationId}.${EID.getEntityId(EID.tryParse(channelRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -281,7 +281,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           const allConversations = yield* SlackApi.fetchConversations();
           const conversationsById = new Map(allConversations.map((c) => [c.id, c]));
 
-          const channelFilterId = channelRef ? EchoURI.getObjectId(EchoURI.tryParse(channelRef.uri)!) : undefined;
+          const channelFilterId = channelRef ? EID.getEntityId(EID.tryParse(channelRef.uri)!) : undefined;
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
             channel: Channel.Channel;
@@ -314,7 +314,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               });
             }
 
-            const targetEchoId = EchoURI.getObjectId(EchoURI.tryParse(Ref.make(localObj).uri)!);
+            const targetEchoId = EID.getEntityId(EID.tryParse(Ref.make(localObj).uri)!);
             if (channelFilterId && targetEchoId !== channelFilterId) {
               continue;
             }

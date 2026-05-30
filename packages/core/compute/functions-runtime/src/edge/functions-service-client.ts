@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient, type TriggersDispatcherStatus } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
@@ -179,7 +179,7 @@ export class FunctionsServiceClient {
     }
   }
 
-  async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
+  async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: EntityId): Promise<InvokeResult> {
     return (await this.#edgeClient.forceRunCronTrigger(ctx, spaceId, triggerId)) as InvokeResult;
   }
 

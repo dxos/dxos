@@ -9,7 +9,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
 import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -100,7 +100,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 
         const handleOnValueChange = useCallback(
           (_type: any, uriString: string) => {
-            const uri = EchoURI.tryParse(uriString);
+            const uri = EID.tryParse(uriString);
             if (uri) {
               props.onValueChange(props.type, Ref.fromURI(uri));
             }
@@ -133,7 +133,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const uri = EchoURI.tryParse(dxnString);
+            const uri = EID.tryParse(dxnString);
             if (uri) {
               props.onValueChange(props.type, Ref.fromURI(uri));
             }

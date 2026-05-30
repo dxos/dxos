@@ -22,7 +22,7 @@ export default SyncTriggers.pipe(
 );
 
 /**
- * Foreign key {@link AGENT_TRIGGER_EXTENSION_KEY} => <agent id : ObjectId>.
+ * Foreign key {@link AGENT_TRIGGER_EXTENSION_KEY} => <agent id : EntityId>.
  */
 const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
 
