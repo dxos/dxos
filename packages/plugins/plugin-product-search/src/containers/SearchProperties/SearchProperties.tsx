@@ -15,15 +15,16 @@ import { meta } from '../../meta';
 import { Provider, Search, SearchOperation } from '../../types';
 import { buildUnionFormSchema } from '../../util';
 
-export type SearchFormProps = {
+export type SearchPropertiesProps = {
   search: Search.Search;
 };
 
 /**
- * Left pane: provider multi-select + criteria form (union of the selected
- * providers' search schemas) + a Run control.
+ * Properties companion for a {@link Search}: provider multi-select + criteria form (union of the
+ * selected providers' search schemas) + a Run control. Surfaced in the object's Properties panel
+ * (the masonry results live in the article).
  */
-export const SearchForm = ({ search }: SearchFormProps) => {
+export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const database = Obj.getDatabase(search);

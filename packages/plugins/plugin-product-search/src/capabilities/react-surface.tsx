@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ProviderArticle, ResultCard, SearchArticle } from '../containers';
+import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '../containers';
 import { Provider, Result, Search } from '../types';
 
 export default Capability.makeModule(() =>
@@ -27,6 +27,12 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />
         ),
+      }),
+      Surface.create({
+        id: 'search-object-properties',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
+        component: ({ data }) => <SearchProperties search={data.subject} />,
       }),
       Surface.create({
         id: 'provider-article',

@@ -18,15 +18,13 @@ import { meta } from '../../meta';
 import { type Result, type Search } from '../../types';
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
-import { SearchForm } from './SearchForm';
 
 export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 
 /**
- * 3-pane master/detail view for a {@link Search}.
- * - left: provider selection + criteria form + Run.
- * - center: masonry grid of result cards.
- * - right: detail pane for the selected result.
+ * Master/detail view for a {@link Search}: a masonry grid of result cards with a detail pane for the
+ * selected result. Provider selection, the criteria form, and Run live in the Search properties
+ * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
   const { t } = useTranslation(meta.id);
@@ -120,22 +118,19 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-1 md:grid-cols-[25rem_1fr]'>
-        <SearchForm search={subject} />
-        <div className='dx-container'>
-          {(selectedResult && <ResultDetail result={selectedResult} onClose={handleClose} />) ||
-            (visibleResults.length === 0 ? (
-              <div className='flex items-center justify-center h-full text-subdued text-sm'>
-                {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-              </div>
-            ) : (
-              <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-                <Masonry.Content thin centered padding>
-                  <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
-                </Masonry.Content>
-              </Masonry.Root>
-            ))}
-        </div>
+      <Panel.Content>
+        {(selectedResult && <ResultDetail result={selectedResult} onClose={handleClose} />) ||
+          (visibleResults.length === 0 ? (
+            <div className='flex items-center justify-center h-full text-subdued text-sm'>
+              {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
+            </div>
+          ) : (
+            <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
+              <Masonry.Content thin centered padding>
+                <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
+              </Masonry.Content>
+            </Masonry.Root>
+          ))}
       </Panel.Content>
     </Panel.Root>
   );
