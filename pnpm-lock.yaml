@@ -13004,12 +13004,24 @@ importers:
         specifier: ~19.2.3
         version: 19.2.6
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14

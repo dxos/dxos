@@ -71,8 +71,12 @@
     "react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@effect/vitest": "catalog:",
     "@types/react": "catalog:"
   },
   "peerDependencies": {
