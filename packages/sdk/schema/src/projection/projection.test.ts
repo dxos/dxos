@@ -2,20 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import type * as Types from 'effect/Types';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
-import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
+import { makeRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   type JsonPath,
   type JsonProp,
-  type JsonSchemaType,
   Ref,
   TypeEnum,
   getPropertyMetaAnnotation,
@@ -37,11 +35,11 @@ const getFieldId = (projection: View.Projection, path: string): string => {
 
 describe('ProjectionModel', () => {
   let builder: EchoTestBuilder;
-  let atomRegistry: Registry.Registry;
+  let atomRegistry: AtomRegistry.Registry;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    atomRegistry = Registry.make();
+    atomRegistry = AtomRegistry.make();
   });
 
   afterEach(async () => {
@@ -50,14 +48,13 @@ describe('ProjectionModel', () => {
 
   test('gets and updates projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
 
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
@@ -138,8 +135,8 @@ describe('ProjectionModel', () => {
   });
 
   test('gets and updates references', async ({ expect }) => {
-    const registry = new RuntimeSchemaRegistry();
-    await registry.register([TestSchema.Organization]);
+    const registry = makeRegistry();
+    registry.add([TestSchema.Organization]);
 
     const typename = 'com.example.type.person';
     const schema = Schema.Struct({
@@ -193,14 +190,13 @@ describe('ProjectionModel', () => {
 
   test('deletes field projections', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -226,7 +222,6 @@ describe('ProjectionModel', () => {
 
   test('field projection delete and restore', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.optional(Schema.Number),
@@ -234,7 +229,7 @@ describe('ProjectionModel', () => {
       description: Schema.optional(Schema.String),
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -275,14 +270,13 @@ describe('ProjectionModel', () => {
 
   test('property rename', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
       email: Format.Email,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -324,7 +318,6 @@ describe('ProjectionModel', () => {
 
   test('property rename updates schema propertyOrder and required arrays', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -332,7 +325,7 @@ describe('ProjectionModel', () => {
       age: Schema.Number,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -381,13 +374,12 @@ describe('ProjectionModel', () => {
 
   test('single select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       status: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -490,13 +482,12 @@ describe('ProjectionModel', () => {
 
   test('multi select format', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       tags: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -622,7 +613,6 @@ describe('ProjectionModel', () => {
 
   test('hidden fields are tracked in hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -630,7 +620,7 @@ describe('ProjectionModel', () => {
       createdAt: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
 
     // Create view with only name and email fields.
     const view = ViewModel.make({
@@ -724,7 +714,6 @@ describe('ProjectionModel', () => {
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     // Create schema with three properties.
     const schema = Schema.Struct({
@@ -733,7 +722,7 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
 
     // Create view with no explicit fields.
     const view = ViewModel.make({
@@ -764,14 +753,13 @@ describe('ProjectionModel', () => {
 
   test('normalizeView syncs fields with schema changes', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     // Create initial schema with a single field.
     const initialSchema = Schema.Struct({
       title: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-    const [mutable] = await registry.register([initialSchema]);
+    const mutable = await db.addType(initialSchema);
 
     // Create empty view (no fields).
     const view = ViewModel.make({
@@ -795,7 +783,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     Type.update(mutable, (draft) => {
-      (draft.jsonSchema as Types.DeepMutable<JsonSchemaType>).properties!.status = { type: 'string' };
+      draft.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 
@@ -810,7 +798,6 @@ describe('ProjectionModel', () => {
 
   test('deleted fields should not appear in hidden properties after reinitialization', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const schema = Schema.Struct({
       name: Schema.String,
@@ -818,7 +805,7 @@ describe('ProjectionModel', () => {
       phone: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-    const [mutable] = await registry.register([schema]);
+    const mutable = await db.addType(schema);
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
@@ -916,7 +903,6 @@ describe('ProjectionModel', () => {
 
   test('property that is an array of objects', async () => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     const ContactWithArrayOfEmails = Schema.Struct({
       name: Schema.String,
@@ -930,7 +916,7 @@ describe('ProjectionModel', () => {
       ),
     }).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
-    const [mutable] = await registry.register([ContactWithArrayOfEmails]);
+    const mutable = await db.addType(ContactWithArrayOfEmails);
 
     const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
@@ -966,14 +952,13 @@ describe('ProjectionModel', () => {
     for (const { format, expectedType, fieldName } of testCases) {
       // Arrange.
       const { db } = await builder.createDatabase();
-      const registry = new DatabaseSchemaRegistry(db);
 
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
       const schema = Schema.Struct({
         [fieldName]: schemaType,
       }).pipe(Type.makeObject(DXN.make('com.example.type.testObject', '0.1.0')));
 
-      const [mutable] = await registry.register([schema]);
+      const mutable = await db.addType(schema);
       const view = ViewModel.make({
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
@@ -1012,7 +997,6 @@ describe('ProjectionModel', () => {
 
   test('Email validation persists after schema registration round-trip', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new DatabaseSchemaRegistry(db);
 
     // Verify Format.Email has validation
     expect(() => Schema.validateSync(Format.Email)('valid@example.com')).not.toThrow();
@@ -1027,7 +1011,7 @@ describe('ProjectionModel', () => {
     expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '1', email: 'valid@example.com' })).not.toThrow();
     expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '2', email: 'invalid-email' })).toThrow();
 
-    const [registeredSchema] = await registry.register([schema]);
+    const registeredSchema = await db.addType(schema);
 
     // Verify JSON schema preserves the validation constraint
     const emailJsonSchema = registeredSchema.jsonSchema.properties?.email;

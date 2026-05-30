@@ -6,7 +6,7 @@ import { Context } from '@dxos/context';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import type { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import type {
   DeleteFromQueueRequest,
@@ -47,7 +47,7 @@ export class QueueServiceImpl implements QueueService {
       ctx,
       request.subspaceTag!,
       request.spaceId as SpaceId,
-      request.queueId as ObjectId,
+      request.queueId as EntityId,
       (request.objects ?? []).map((encoded) => JSON.parse(encoded)),
     );
   }
@@ -58,8 +58,8 @@ export class QueueServiceImpl implements QueueService {
       ctx,
       request.subspaceTag!,
       request.spaceId as SpaceId,
-      request.queueId as ObjectId,
-      request.objectIds as ObjectId[],
+      request.queueId as EntityId,
+      request.objectIds as EntityId[],
     );
   }
 
@@ -76,14 +76,14 @@ export class QueueServiceImpl implements QueueService {
  * Mock implementation for testing.
  */
 export class MockQueueService implements QueueService {
-  private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], ObjectJSON[]>(
+  private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: EntityId], ObjectJSON[]>(
     ([subspaceTag, spaceId, queueId]) => compositeKey(subspaceTag, spaceId, queueId),
   );
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     const { query } = request;
     const objects =
-      this._queues.get([request.query.queuesNamespace!, query!.spaceId as SpaceId, query!.queueIds![0] as ObjectId]) ??
+      this._queues.get([request.query.queuesNamespace!, query!.spaceId as SpaceId, query!.queueIds![0] as EntityId]) ??
       [];
     return {
       objects: objects.map((obj) => JSON.stringify(obj)),
@@ -94,7 +94,7 @@ export class MockQueueService implements QueueService {
 
   async insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objects } = request;
-    const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
+    const key: [string, SpaceId, EntityId] = [subspaceTag!, spaceId as SpaceId, queueId as EntityId];
     const array = this._queues.get(key) ?? [];
     this._queues.set(key, array);
     for (const encoded of objects ?? []) {
@@ -106,7 +106,7 @@ export class MockQueueService implements QueueService {
 
   async deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
     const { subspaceTag, spaceId, queueId, objectIds } = request;
-    const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
+    const key: [string, SpaceId, EntityId] = [subspaceTag!, spaceId as SpaceId, queueId as EntityId];
     const existing = this._queues.get(key) ?? [];
     this._queues.set(
       key,

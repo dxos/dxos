@@ -93,6 +93,9 @@ const DefaultStory = ({ draggable }: { draggable?: boolean }) => {
             icon: parent.icon,
             ...((parent.items?.length ?? 0) > 0 && {
               parentOf: parent.items!.map(({ id }) => id),
+              count: parent.items!.length,
+              // Demonstrate the rose "new/modified" badge on a subset of branches (replaces the neutral count).
+              ...(parent.name.length % 3 === 0 && { modifiedCount: (parent.name.length % 5) + 1 }),
             }),
           };
         }).pipe(Atom.keepAlive);

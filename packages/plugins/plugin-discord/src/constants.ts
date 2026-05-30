@@ -2,8 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Stable id used by `plugin-integration` to look up the Discord provider entry. */
+/** Stable id used by `plugin-integration` to look up the Discord Bot provider entry. */
 export const DISCORD_PROVIDER_ID = 'discord';
+
+/** Stable id used by `plugin-integration` to look up the Discord User OAuth provider entry. */
+export const DISCORD_USER_PROVIDER_ID = 'discord-user';
+
+/** Display label for the Discord Bot (manual bot-token) integration. */
+export const DISCORD_BOT_LABEL = 'Discord Bot';
+
+/** Display label for the Discord User (OAuth) integration. */
+export const DISCORD_USER_LABEL = 'Discord User';
 
 /** Source string used in `AccessToken.source` and `Obj.Meta.keys[i].source` for Discord. */
 export const DISCORD_SOURCE = 'discord.com';

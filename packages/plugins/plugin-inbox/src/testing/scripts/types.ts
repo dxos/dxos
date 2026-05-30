@@ -6,7 +6,7 @@
 
 // TODO(dmaretskyi): Move to @dxos/functions
 declare module 'dxos:functions' {
-  export const ObjectId: any; // typeof import('@dxos/functions-sdk').ObjectId;
+  export const EntityId: any; // typeof import('@dxos/functions-sdk').EntityId;
 
   export const create: any; // typeof import('@dxos/functions-sdk').create;
 

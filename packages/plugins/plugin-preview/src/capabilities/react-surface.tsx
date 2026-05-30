@@ -88,7 +88,14 @@ export default Capability.makeModule(() =>
           try {
             const db = Obj.getDatabase(data.subject);
             const typename = Obj.getTypename(data.subject);
-            return !!db && !!typename && db.schemaRegistry.query({ typename }).runSync().length > 0;
+            return (
+              !!db &&
+              !!typename &&
+              db.graph.registry
+                .list()
+                .filter(Type.isType)
+                .some((t) => Type.getTypename(t) === typename)
+            );
           } catch {
             return false;
           }

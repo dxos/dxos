@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -98,7 +98,7 @@ export interface Any extends BaseObj, internal.AnyProperties {}
  */
 interface BaseSnapshot extends internal.AnyEntity {
   readonly [Entity.SnapshotKindId]: typeof Entity.Kind.Object;
-  readonly id: ObjectId;
+  readonly id: EntityId;
 }
 
 /**
@@ -119,7 +119,7 @@ export interface BaseObjJson {
   id: string;
 }
 
-const defaultMeta: internal.ObjectMeta = {
+const defaultMeta: internal.EntityMeta = {
   keys: [],
 };
 
@@ -135,8 +135,8 @@ const defaultMeta: internal.ObjectMeta = {
  * caller can pass arbitrary fields without a cast.
  */
 export type MakeProps<S extends Type.AnyObj> = {
-  id?: ObjectId;
-  [Meta]?: Partial<internal.ObjectMeta>;
+  id?: EntityId;
+  [Meta]?: Partial<internal.EntityMeta>;
   [Parent]?: Unknown;
   // When the resolved instance has no known data keys, widen to a permissive
   // record (the `Obj<unknown>` case); otherwise use the precise property shape.
@@ -151,7 +151,7 @@ export type MakeProps<S extends Type.AnyObj> = {
  * Creates a new echo object of the given schema or `Type.Type`.
  *
  * @param typeOrSchema - A static object schema (`Type.makeObject(...)`) or a
- *   `Type.Type` entity (e.g. one returned by `db.schemaRegistry.register`).
+ *   `Type.Type` entity (e.g. one returned by `db.addType(schemaEntity)`).
  * @param props - Object properties.
  *
  * Meta can be passed as a symbol in `props`.
@@ -176,7 +176,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     'Expected an object schema',
   );
 
-  let meta: internal.ObjectMeta | undefined = undefined;
+  let meta: internal.EntityMeta | undefined = undefined;
 
   // Set default fields on meta on creation.
   if (props[internal.MetaId] != null) {
@@ -418,9 +418,8 @@ export const setValue: (obj: Mutable<Unknown>, path: readonly (string | number)[
 // Type
 //
 
-// TODO(burdon): To discuss: prefer over ObjectId or Key.ObjectId or Type.ID?
-export const ID = ObjectId;
-export type ID = ObjectId;
+export const ID = EntityId;
+export type ID = EntityId;
 
 /**
  * Test if an object is an instance of a given object type.
@@ -495,9 +494,9 @@ export const snapshotOf: {
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical URI of the object. Returns `URI.URI` (today always an EchoURI,
+ * Get the canonical URI of the object. Returns `URI.URI` (today always an EID,
  * but future entity kinds may surface other URI schemes — narrow with
- * `EchoURI.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
+ * `EID.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
  * Accepts both reactive objects and snapshots.
  */
 export const getURI = (entity: Unknown | Snapshot): URI.URI => {
@@ -557,7 +556,7 @@ export const getDatabase = (entity: Entity.Unknown | Entity.Snapshot): Database.
 export const Meta = internal.MetaId;
 
 /**
- * Deeply read-only version of ObjectMeta.
+ * Deeply read-only version of EntityMeta.
  * Prevents mutation at all nesting levels (e.g., `meta.keys.push()` is a TypeScript error).
  */
 export type ReadonlyMeta = internal.ReadonlyMeta;
@@ -581,7 +580,7 @@ export type Meta = internal.Meta;
  *
  * // Mutable access inside change callback
  * Obj.update(person, (obj) => {
- *   const meta = Obj.getMeta(obj);     // ObjectMeta (mutable)
+ *   const meta = Obj.getMeta(obj);     // EntityMeta (mutable)
  *   meta.tags ??= [];
  *   meta.tags.push('important');
  * });

@@ -40,20 +40,20 @@ export const MasonryContainer = ({
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema);
+      return;
     }
-    if (!staticSchema && typename && db) {
-      const query = db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setCardSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
+    if (typename && db) {
+      const findInRegistry = () =>
+        db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((t) => Type.getTypename(t) === typename);
+      setCardSchema(() => findInRegistry());
+      return db.graph.registry.changed.on(() => {
+        setCardSchema(() => findInRegistry());
+      });
     }
+    setCardSchema(undefined);
   }, [schemas, typename, db]);
 
   const baseFilter = useSchemaFilter(cardSchema);

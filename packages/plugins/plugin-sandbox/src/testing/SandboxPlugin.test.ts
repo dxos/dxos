@@ -9,14 +9,14 @@ import { Blueprint, Operation } from '@dxos/compute';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
 import { TestContextService } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
 import { SandboxHandlers, CreateSandbox, Exec, UploadFile, DownloadFile } from '../blueprints/functions';
 import SandboxBlueprint from '../blueprints/sandbox-blueprint';
 import * as Sandbox from '../types/Sandbox';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: SandboxHandlers,

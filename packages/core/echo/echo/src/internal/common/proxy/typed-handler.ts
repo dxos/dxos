@@ -8,7 +8,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 
 import { getSchemaURI } from '../../Annotation';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
@@ -143,7 +143,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private constructor() {}
 
   init(target: ProxyTarget): void {
-    invariant(typeof target === 'object' && target !== null);
+    assertArgument(typeof target === 'object' && target !== null, 'target');
     invariant(SchemaId in target, 'Schema is not defined for the target');
 
     // Only set EventId on root objects (those without an owner).

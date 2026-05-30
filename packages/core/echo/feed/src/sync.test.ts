@@ -5,7 +5,7 @@
 import { describe, expect, test } from '@effect/vitest';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { range } from '@dxos/util';
 
@@ -17,7 +17,7 @@ describe('Sync', () => {
   const LOG_SQL = false;
 
   const spaceId = SpaceId.random();
-  const feedId = ObjectId.random();
+  const feedId = EntityId.random();
 
   test('pull blocks from server', async () => {
     await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();

@@ -14,15 +14,13 @@ import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
-import { useArticleKeyboardNavigation } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox } from '#types';
@@ -96,6 +94,13 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [filteredMessages, sortDescending.value],
   );
 
+  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
+  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
+  // the mailbox id so it runs once per opened mailbox rather than on every update.
+  useEffect(() => {
+    Mailbox.markViewed(subject);
+  }, [subject.id]);
+
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.
   const [isEmpty, setEmpty] = useState<boolean>(false);
@@ -111,8 +116,6 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     setFilter(builder.build(filterProp ?? '').filter);
   }, [filterProp, builder]);
 
-  // n / p keyboard navigation: clamp at the ends of the sorted message list.
-  const messageIds = useMemo(() => sortedMessages.map((message) => message.id), [sortedMessages]);
   const handleNavigate = useCallback(
     (messageId: string) => {
       const message = sortedMessages.find((m) => m.id === messageId);
@@ -128,6 +131,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     },
     [db, id, mailbox.id, sortedMessages, showItem],
   );
+
+  const messageIds = useMemo(() => sortedMessages.map((message) => message.id), [sortedMessages]);
   useArticleKeyboardNavigation({ articleId: id, ids: messageIds, currentId, onSelect: handleNavigate });
 
   const handleAction = useCallback<MessageStackActionHandler>(

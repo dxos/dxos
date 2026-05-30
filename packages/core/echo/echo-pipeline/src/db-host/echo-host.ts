@@ -14,7 +14,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
@@ -518,10 +518,10 @@ type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
   spaces: Set<SpaceId>;
-  queues: Set<ObjectId>;
+  queues: Set<EntityId>;
   documents: Set<string>;
   types: Set<string>;
-  objects: Set<ObjectId>;
+  objects: Set<EntityId>;
 };
 
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({

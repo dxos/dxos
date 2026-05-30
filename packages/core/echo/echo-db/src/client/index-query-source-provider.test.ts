@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type Hypergraph } from '@dxos/echo';
+import { type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { DXN, SpaceId } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -27,9 +27,7 @@ const makeQuery = (): QueryAST.Query => ({
   },
   from: {
     _tag: 'scope',
-    scope: {
-      spaceIds: [SpaceId.random()],
-    },
+    scopes: [Scope.space(SpaceId.random())],
   },
 });
 

@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   ReferenceAnnotationId,
@@ -22,7 +22,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
-import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -46,20 +46,19 @@ export type RelatedSchema = {
  * @returns
  */
 export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
-  // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = await db.graph.schemaRegistry.query().run();
+  const allSchemas = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas
-    .filter((type) => {
-      const schema = Type.getSchema(type);
-      if (getTypeAnnotation(schema)?.kind !== Entity.Kind.Relation) {
+    .filter((schema) => {
+      const annotation = getTypeAnnotation(Type.getSchema(schema));
+      if (annotation?.kind !== Entity.Kind.Relation) {
         return false;
       }
 
       return (
-        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
-        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.targetSchema!)
+        isSchemaAddressableByDXN(anchor, annotation.sourceSchema!) ||
+        isSchemaAddressableByDXN(anchor, annotation.targetSchema!)
       );
     })
     .map(
@@ -212,18 +211,18 @@ export const sanitizeObjects = (
       .flat();
 
     const idMap = new Map<string, string>();
-    const existingIds = new Set<ObjectId>();
-    const enitties = new Map<ObjectId, Entity.Unknown>();
+    const existingIds = new Set<EntityId>();
+    const enitties = new Map<EntityId, Entity.Unknown>();
 
-    const resolveId = (id: string): EchoURI.EchoURI | undefined => {
-      if (ObjectId.isValid(id)) {
+    const resolveId = (id: string): EID.EID | undefined => {
+      if (EntityId.isValid(id)) {
         existingIds.add(id);
-        return EchoURI.make({ objectId: id });
+        return EID.make({ entityId: id });
       }
 
       const mappedId = idMap.get(id);
-      if (mappedId && ObjectId.isValid(mappedId)) {
-        return EchoURI.make({ objectId: mappedId });
+      if (mappedId && EntityId.isValid(mappedId)) {
+        return EID.make({ entityId: mappedId });
       }
 
       return undefined;
@@ -232,11 +231,11 @@ export const sanitizeObjects = (
     const res = entries
       .map((entry) => {
         // This entry mutates existing object.
-        if (ObjectId.isValid(entry.data.id)) {
+        if (EntityId.isValid(entry.data.id)) {
           return entry;
         }
 
-        idMap.set(entry.data.id, ObjectId.random());
+        idMap.set(entry.data.id, EntityId.random());
         entry.data.id = idMap.get(entry.data.id);
         return entry;
       })
@@ -258,8 +257,8 @@ export const sanitizeObjects = (
           return recurse(value);
         });
 
-        let sourceUri: EchoURI.EchoURI | undefined;
-        let targetUri: EchoURI.EchoURI | undefined;
+        let sourceUri: EID.EID | undefined;
+        let targetUri: EID.EID | undefined;
         if (Entity.getKind(Type.getSchema(entry.schema)) === 'relation') {
           sourceUri = resolveId(data.source);
           if (!sourceUri) {
@@ -297,7 +296,7 @@ export const sanitizeObjects = (
     return res.flatMap(({ data, schema, sourceUri, targetUri }) => {
       let skip = false;
       if (sourceUri) {
-        const id = EchoURI.getObjectId(sourceUri);
+        const id = EID.getEntityId(sourceUri);
         const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
           data[RelationSourceId] = obj;
@@ -306,7 +305,7 @@ export const sanitizeObjects = (
         }
       }
       if (targetUri) {
-        const id = EchoURI.getObjectId(targetUri);
+        const id = EID.getEntityId(targetUri);
         const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
           data[RelationTargetId] = obj;

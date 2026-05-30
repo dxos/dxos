@@ -11,12 +11,12 @@ import * as Layer from 'effect/Layer';
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
+import { FtsIndex, type IndexerObject, EntityMetaIndex, ReverseRefIndex } from './indexes';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -95,7 +95,7 @@ describe('IndexEngine', () => {
   const setup = Effect.gen(function* () {
     const tracker = new IndexTracker();
     yield* tracker.migrate();
-    const metaIndex = new ObjectMetaIndex();
+    const metaIndex = new EntityMetaIndex();
     yield* metaIndex.migrate();
     const ftsIndex = new FtsIndex();
     yield* ftsIndex.migrate();
@@ -123,7 +123,7 @@ describe('IndexEngine', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_DEFAULT,
           title: 'Hello',
         },
@@ -202,7 +202,7 @@ describe('IndexEngine', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
             val: 1,
           },
@@ -215,7 +215,7 @@ describe('IndexEngine', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_A,
             val: 2,
           },
@@ -228,7 +228,7 @@ describe('IndexEngine', () => {
           recordId: null,
           updatedAt: Date.now(),
           data: {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             [ATTR_TYPE]: TYPE_B,
             val: 3,
           },
@@ -278,7 +278,7 @@ describe('IndexEngine', () => {
           documentId: 'doc-done-test',
           recordId: null,
           updatedAt: Date.now(),
-          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
+          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
         },
       ]);
 
@@ -304,8 +304,8 @@ describe('IndexEngine', () => {
       const dataSource = new MockIndexDataSource();
       const spaceId1 = SpaceId.random();
       const spaceId2 = SpaceId.random();
-      const id1 = ObjectId.random();
-      const id2 = ObjectId.random();
+      const id1 = EntityId.random();
+      const id2 = EntityId.random();
 
       const obj1: IndexerObject = {
         spaceId: spaceId1,
@@ -367,7 +367,7 @@ describe('IndexEngine', () => {
         recordId: null,
         updatedAt: Date.now(),
         data: {
-          id: ObjectId.random(),
+          id: EntityId.random(),
           [ATTR_TYPE]: TYPE_DEFAULT,
           '@deleted': true,
         },

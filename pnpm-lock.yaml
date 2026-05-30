@@ -43,17 +43,17 @@ catalogs:
       specifier: ^0.19.5
       version: 0.19.11
     '@automerge/automerge-repo':
-      specifier: 2.6.0-subduction.20
-      version: 2.6.0-subduction.20
+      specifier: 2.6.0-subduction.23
+      version: 2.6.0-subduction.23
     '@automerge/automerge-repo-network-broadcastchannel':
-      specifier: 2.6.0-subduction.20
-      version: 2.6.0-subduction.20
+      specifier: 2.6.0-subduction.23
+      version: 2.6.0-subduction.23
     '@automerge/automerge-repo-network-websocket':
-      specifier: 2.6.0-subduction.20
-      version: 2.6.0-subduction.20
+      specifier: 2.6.0-subduction.23
+      version: 2.6.0-subduction.23
     '@automerge/automerge-repo-storage-indexeddb':
-      specifier: 2.6.0-subduction.20
-      version: 2.6.0-subduction.20
+      specifier: 2.6.0-subduction.23
+      version: 2.6.0-subduction.23
     '@babel/core':
       specifier: ^7.18.13
       version: 7.28.0
@@ -280,8 +280,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.2.3
-      version: 2.2.3
+      specifier: 2.2.6
+      version: 2.2.6
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -1898,8 +1898,8 @@ catalogs:
       version: 8.8.5
 
 overrides:
-  '@automerge/automerge': 3.2.6
-  '@automerge/automerge-subduction': 0.12.1
+  '@automerge/automerge': 3.3.0-fragments.1
+  '@automerge/automerge-subduction': 0.13.0
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/common': ^1.5.2
   '@lezer/highlight': ^1.2.3
@@ -1950,12 +1950,12 @@ overrides:
 pnpmfileChecksum: sha256-cQVl+jrEHH0V4IgNkydwSKNmLoShP2mLkufXFXEHIjU=
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.20':
-    hash: 0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091
-    path: patches/@automerge__automerge-repo@2.6.0-subduction.20.patch
-  '@automerge/automerge-subduction@0.12.1':
-    hash: 40f00ac48fb23a936a9a4ac6d90bf93cb36fc906cac4aec5af32e03134e17da9
-    path: patches/@automerge__automerge-subduction@0.12.1.patch
+  '@automerge/automerge-repo@2.6.0-subduction.23':
+    hash: 5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9
+    path: patches/@automerge__automerge-repo@2.6.0-subduction.23.patch
+  '@automerge/automerge-subduction@0.13.0':
+    hash: 6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669
+    path: patches/@automerge__automerge-subduction@0.13.0.patch
   '@vitest/browser@4.1.7':
     hash: 6c3dc337ee70b919eca34fd4b7144f3f075cb1e9285392c3ac13108c217939a5
     path: patches/@vitest__browser@4.1.7.patch
@@ -2048,7 +2048,7 @@ importers:
         version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.2.3
+        version: 2.2.6
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -2420,11 +2420,11 @@ importers:
         specifier: 'catalog:'
         version: 3.2.10(@types/react@19.2.14)(react@19.2.6)
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.2
@@ -4750,8 +4750,8 @@ importers:
   packages/core/compute/assistant:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
@@ -5350,8 +5350,8 @@ importers:
         version: 1.6.0
     devDependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@aws-sdk/client-s3':
         specifier: 3.955.0
         version: 3.955.0
@@ -5629,11 +5629,11 @@ importers:
   packages/core/echo/echo-db:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5726,8 +5726,8 @@ importers:
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -5763,14 +5763,14 @@ importers:
   packages/core/echo/echo-pipeline:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@automerge/automerge-subduction':
-        specifier: 0.12.1
-        version: 0.12.1(patch_hash=40f00ac48fb23a936a9a4ac6d90bf93cb36fc906cac4aec5af32e03134e17da9)
+        specifier: 0.13.0
+        version: 0.13.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6023,40 +6023,6 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.6(react@19.2.6)
-
-  packages/core/echo/echo-registry:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo-pipeline
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
-    devDependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../../common/test-utils
 
   packages/core/echo/echo-solid:
     dependencies:
@@ -7103,8 +7069,8 @@ importers:
   packages/devtools/devtools:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -7510,17 +7476,17 @@ importers:
   packages/e2e/blade-runner:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@automerge/automerge-repo-network-websocket':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20
+        version: 2.6.0-subduction.23
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20
+        version: 2.6.0-subduction.23
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8765,8 +8731,8 @@ importers:
   packages/plugins/plugin-chess:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -9353,8 +9319,8 @@ importers:
         specifier: 'catalog:'
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9768,6 +9734,9 @@ importers:
       '@dxos/plugin-integration':
         specifier: workspace:*
         version: link:../plugin-integration
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -10714,9 +10683,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -11472,8 +11438,8 @@ importers:
   packages/plugins/plugin-markdown:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@codemirror/search':
         specifier: 'catalog:'
         version: 6.7.0
@@ -13264,8 +13230,8 @@ importers:
   packages/plugins/plugin-script:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.2
@@ -14231,8 +14197,8 @@ importers:
   packages/plugins/plugin-sketch:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -14440,8 +14406,8 @@ importers:
   packages/plugins/plugin-space:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -17008,11 +16974,11 @@ importers:
   packages/sdk/client:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -17186,11 +17152,11 @@ importers:
   packages/sdk/client-services:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -17461,11 +17427,11 @@ importers:
   packages/sdk/migrations:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -18937,6 +18903,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -19808,8 +19777,8 @@ importers:
   packages/ui/react-ui-editor:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.2
@@ -19972,10 +19941,10 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20
+        version: 2.6.0-subduction.23
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -21942,8 +21911,8 @@ importers:
   packages/ui/ui-editor:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.2.6
-        version: 3.2.6
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.2
@@ -22085,10 +22054,10 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.20
+        version: 2.6.0-subduction.23
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -22962,23 +22931,23 @@ packages:
   '@atproto/xrpc@0.7.7':
     resolution: {integrity: sha512-K1ZyO/BU8JNtXX5dmPp7b5UrkLMMqpsIa/Lrj5D3Su+j1Xwq1m6QJ2XJ1AgjEjkI1v4Muzm7klianLE6XGxtmA==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.6.0-subduction.20':
-    resolution: {integrity: sha512-L9fOFGaCG5ry4L7Ya223QaRAd16w743N4U23f4mOKzhC7M3FFXqseHqnhYIyjF1g6xs7y0JHghfV2C54cvY+uw==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.6.0-subduction.23':
+    resolution: {integrity: sha512-lCsxaauTmtd2bxwW2p5Kk6zRqjgxCOXUcMDb4T2Yb6GtT7jo6gbBZh5G9U4UPANwGICdyQGJREQh8bj5n6BMOw==}
 
-  '@automerge/automerge-repo-network-websocket@2.6.0-subduction.20':
-    resolution: {integrity: sha512-N05WTZfosGYLrljt+qdtWbreqqWuvHQSf/2qAhGmkolfUBCz5BlnTtZ4hwhpXW1RICEOzrC9o+d4gYNN+Og3fw==}
+  '@automerge/automerge-repo-network-websocket@2.6.0-subduction.23':
+    resolution: {integrity: sha512-onckHev2sV7lVERSC7BJvPkZbrlElx5n6FIn59WeHdfk6+tweAf5MmCnIUhAtVbVGxqaRfW1teCR3mBLyy1+wA==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.20':
-    resolution: {integrity: sha512-AIbsvWw0oFKUkJChcDKgGsFWC45GzUfwp3OhmaKCUHeWZ9P7O/Lrv/IToljSSYkO6d4Nj+TmTyje1NJh3w88tw==}
+  '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.23':
+    resolution: {integrity: sha512-VCnKBuIsBFl8DEDTfkVC5OxHV9dpeflEhtK9KgjJth4EUmGfwKN6IkEPC4bhQ/yNb+tDqIDJMO+f1YcTTZauOQ==}
 
-  '@automerge/automerge-repo@2.6.0-subduction.20':
-    resolution: {integrity: sha512-3LkXIFvY79bRSEtVMncUFjOp2KBIUN9C/j9FUsmlEBFSiK2Ec9E4qo2WWpg5aJ5rDXh/HzZe+ZSKDSAJwA77oA==}
+  '@automerge/automerge-repo@2.6.0-subduction.23':
+    resolution: {integrity: sha512-SziEXGS4LlKmR6DK8Zf9FM12j14E39NM9kbzLoKx6cKdjEqowUyxDSpPAFrUPjrmFQ8eLw3p8DMb18mtoZD80Q==}
 
-  '@automerge/automerge-subduction@0.12.1':
-    resolution: {integrity: sha512-s1s40RTozkqExIk1LYdogKPzpCMFfe/7KBS0ccAlwsy4JwdcUGG9NQO2Pm3kZq8vD3OPw7DcIOSPG+bnLESQFg==}
+  '@automerge/automerge-subduction@0.13.0':
+    resolution: {integrity: sha512-7XlCIS0GH3ctboE8UPmD9rfiv203Q8n5Lx63xE6xCgtlpwecDKqzLDp77e9hUEo76j17Y8bYQyfsROqaByLf5A==}
 
-  '@automerge/automerge@3.2.6':
-    resolution: {integrity: sha512-9/GXXfYYWNVGpnbRrGQzTNU4fWZ3XaEMeEg0OrpK4pvlQSpkmUBoirEb/4TMK6BwMysZGV5Yeneq3wwc7RNGfg==}
+  '@automerge/automerge@3.3.0-fragments.1':
+    resolution: {integrity: sha512-Im2n3qcYSuIsLDSjofTRo7CZyyvFn5pKLSCCO5sjWzESw+9q9G25ZIrL2mczDX43cXtyzi+w/4b9VUaiNdY56Q==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -25571,46 +25540,46 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.2.3':
-    resolution: {integrity: sha512-Y2yX2yw2ieRQ8/LHmlLgJT0RGPcPbKlrmpTw/trsrMuW5UElzqgObztf1bB3jbOfTVjcbWmNqKP7aDDST0u3/w==}
+  '@moonrepo/cli@2.2.6':
+    resolution: {integrity: sha512-u5W0GCC5bPyr9XpE9alQJc1kCJ75tNmLdTepI9GJihSpY2YpUlhMaP8PWZ+g85YCEIZTyU0v3dBGIOXv7ds7VA==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.2.3':
-    resolution: {integrity: sha512-O2mLzDvgJd7Bgxkvq37RJsm9XAG5avA+7cD49ZIgeBKlGD8+3KZ+DmOz5SD1CELaxXrgOSh2c2vorlBzaXNmZA==}
+  '@moonrepo/core-linux-arm64-gnu@2.2.6':
+    resolution: {integrity: sha512-rM2Y7Nvuhg6vO3zfVSUFt1wZfazEjRyAqA/r+TEih85Z8c3KGFZB+YFaZ1P767mh7aQujRu6opVzrm0+E9GBIQ==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-arm64-musl@2.2.3':
-    resolution: {integrity: sha512-QD5mStzFfkhDb5Fha8Jw/rX3SlnOkSKsyBJWsMWn5WahCqV0NMOOOf4PrAAywO3NTKDorGEipqGJdqec7lIizg==}
+  '@moonrepo/core-linux-arm64-musl@2.2.6':
+    resolution: {integrity: sha512-/NjDDEbGGDq3iLIUXE7gGocO3yPgwoUyA0DyDnHohUxOxeMA/epcpxiJ4WRUKxca1M68ue5qLlbiN4Dj2Nr+3g==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-linux-x64-gnu@2.2.3':
-    resolution: {integrity: sha512-Ip68pMsXbVVfCOb3csWFv3jQtatbbHuLgQ50MUVRx8VYi2L8sPwVTGuyU57tNcMLXqeOCJxgBrTvFq/U9ElQ5g==}
+  '@moonrepo/core-linux-x64-gnu@2.2.6':
+    resolution: {integrity: sha512-VaInaf1wj5v384mNdjcagfth7QBKD/XOWzZGK2ObnKABst2HyvRcrNWeIU/KuAihsuKdsd0AUHskYkXSSRhvrA==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-x64-musl@2.2.3':
-    resolution: {integrity: sha512-10bUudg3eTrs0N/4tbH2CFWoOEuf3K7WhTypop4zArPCrq5sl5rG2Ik/wZNn40h4JdF09I7A2ZCGWlubsudd5g==}
+  '@moonrepo/core-linux-x64-musl@2.2.6':
+    resolution: {integrity: sha512-uB8kEclwXagrbMeiikXftPr8LdsL/WVDd9EX3cveXeFKNTUWfQRxJCunUGBzO3zFmU9QzOwNZv68B49BvnwEHg==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-macos-arm64@2.2.3':
-    resolution: {integrity: sha512-5/2cVkMVwsS/3aKPe5xzL8eegZz3V74xE7Wruf847UavfN0YuoIew14PfaTz5Pt69hAapdnXDiF8kmbSaKkWKA==}
+  '@moonrepo/core-macos-arm64@2.2.6':
+    resolution: {integrity: sha512-jrU9mSilQUc2jGmllrwgGXtwEnLpAsJ3By4HMCLoidr0yhxi5d+OG1jroHn7YL1G51X5u8xdmr/EmQRXWUgoIw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@2.2.3':
-    resolution: {integrity: sha512-T23dHlXqZWUkxLu45Piy8jxlzEImAurWQN1TVr06oTxZMSSTqzfyY+2Vk6GuyYnsZg0ELNnPW2ljnkEkczzy0g==}
+  '@moonrepo/core-macos-x64@2.2.6':
+    resolution: {integrity: sha512-ou9WLdo3yPjD4MHk0LsA9kTi+E1XGKl8ZMr03E9rENCEqI2LNcgco1CG3c2aA6r+LrP0hu1zNnOsKSAErNc32w==}
     cpu: [x64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.2.3':
-    resolution: {integrity: sha512-ez8/0AnMdzfUtbDitynJtR10PhG7CME3UCavLamE5BvV7dHUvtzLHipxVZIHWGx0gTEtQx6XpyDukYOozXGVlA==}
+  '@moonrepo/core-windows-x64-msvc@2.2.6':
+    resolution: {integrity: sha512-ybpepBnG3BHlVEjok5+/T1QsWSRWU7wMbOYuUnoP/4vwrS08nR+Xna7i3QBXUTBeBPr01F7qBBsnRh6CtD1LYg==}
     cpu: [x64]
     os: [win32]
 
@@ -42136,17 +42105,17 @@ snapshots:
       '@atproto/lexicon': 0.6.2
       zod: 3.25.76
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.6.0-subduction.20':
+  '@automerge/automerge-repo-network-broadcastchannel@2.6.0-subduction.23':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+      '@automerge/automerge-repo': 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-network-websocket@2.6.0-subduction.20':
+  '@automerge/automerge-repo-network-websocket@2.6.0-subduction.23':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+      '@automerge/automerge-repo': 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       cbor-x: 1.5.4
       debug: 4.4.3(supports-color@5.5.0)
       eventemitter3: 5.0.1
@@ -42157,18 +42126,18 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.20':
+  '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.23':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)
+      '@automerge/automerge-repo': 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.20(patch_hash=0c21d251fbbc2e2c0525cd4dee59cb62182405dcd8316a6d874d0426be598091)':
+  '@automerge/automerge-repo@2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)':
     dependencies:
-      '@automerge/automerge': 3.2.6
-      '@automerge/automerge-subduction': 0.12.1(patch_hash=40f00ac48fb23a936a9a4ac6d90bf93cb36fc906cac4aec5af32e03134e17da9)
+      '@automerge/automerge': 3.3.0-fragments.1
+      '@automerge/automerge-subduction': 0.13.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.4.3(supports-color@5.5.0)
@@ -42183,9 +42152,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-subduction@0.12.1(patch_hash=40f00ac48fb23a936a9a4ac6d90bf93cb36fc906cac4aec5af32e03134e17da9)': {}
+  '@automerge/automerge-subduction@0.13.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)': {}
 
-  '@automerge/automerge@3.2.6': {}
+  '@automerge/automerge@3.3.0-fragments.1': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -45496,37 +45465,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.2.3':
+  '@moonrepo/cli@2.2.6':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.2.3
-      '@moonrepo/core-linux-arm64-musl': 2.2.3
-      '@moonrepo/core-linux-x64-gnu': 2.2.3
-      '@moonrepo/core-linux-x64-musl': 2.2.3
-      '@moonrepo/core-macos-arm64': 2.2.3
-      '@moonrepo/core-macos-x64': 2.2.3
-      '@moonrepo/core-windows-x64-msvc': 2.2.3
+      '@moonrepo/core-linux-arm64-gnu': 2.2.6
+      '@moonrepo/core-linux-arm64-musl': 2.2.6
+      '@moonrepo/core-linux-x64-gnu': 2.2.6
+      '@moonrepo/core-linux-x64-musl': 2.2.6
+      '@moonrepo/core-macos-arm64': 2.2.6
+      '@moonrepo/core-macos-x64': 2.2.6
+      '@moonrepo/core-windows-x64-msvc': 2.2.6
 
-  '@moonrepo/core-linux-arm64-gnu@2.2.3':
+  '@moonrepo/core-linux-arm64-gnu@2.2.6':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.2.3':
+  '@moonrepo/core-linux-arm64-musl@2.2.6':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.2.3':
+  '@moonrepo/core-linux-x64-gnu@2.2.6':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.2.3':
+  '@moonrepo/core-linux-x64-musl@2.2.6':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.2.3':
+  '@moonrepo/core-macos-arm64@2.2.6':
     optional: true
 
-  '@moonrepo/core-macos-x64@2.2.3':
+  '@moonrepo/core-macos-x64@2.2.6':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.2.3':
+  '@moonrepo/core-windows-x64-msvc@2.2.6':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':

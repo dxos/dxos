@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { TriggerStateNotFoundError } from '@dxos/compute';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 export const TriggerState = Schema.Struct({
   version: Schema.Literal('1'),
@@ -18,7 +18,7 @@ export const TriggerState = Schema.Struct({
   state: Schema.optional(
     Schema.Union(
       Schema.TaggedStruct('subscription', {
-        processedVersions: Schema.Record({ key: ObjectId, value: Schema.String }),
+        processedVersions: Schema.Record({ key: EntityId, value: Schema.String }),
       }),
     ),
   ),
@@ -28,7 +28,7 @@ export interface TriggerState extends Schema.Schema.Type<typeof TriggerState> {}
 export class TriggerStateStore extends Context.Tag('@dxos/functions/TriggerStateStore')<
   TriggerStateStore,
   {
-    getState(triggerId: ObjectId): Effect.Effect<TriggerState, TriggerStateNotFoundError>;
+    getState(triggerId: EntityId): Effect.Effect<TriggerState, TriggerStateNotFoundError>;
     saveState(state: TriggerState): Effect.Effect<void>;
   }
 >() {
@@ -41,7 +41,7 @@ export class TriggerStateStore extends Context.Tag('@dxos/functions/TriggerState
       const kv = yield* KeyValueStore.KeyValueStore;
       const schemaStore = kv.forSchema(Schema.parseJson(TriggerState));
       const store: Context.Tag.Service<TriggerStateStore> = {
-        getState: Effect.fn('TriggerStateStore.getState')(function* (triggerId: ObjectId) {
+        getState: Effect.fn('TriggerStateStore.getState')(function* (triggerId: EntityId) {
           const valueOption = yield* schemaStore.get(triggerId).pipe(Effect.orDie);
           if (Option.isNone(valueOption)) {
             return yield* Effect.fail(new TriggerStateNotFoundError());

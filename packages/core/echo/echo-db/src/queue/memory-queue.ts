@@ -5,14 +5,14 @@
 import { Event } from '@dxos/async';
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
 export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
-  queueId?: ObjectId;
-  uri?: EchoURI.EchoURI;
+  queueId?: EntityId;
+  uri?: EID.EID;
   objects?: T[];
 };
 
@@ -23,7 +23,7 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
 export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
   static make<T extends Entity.Unknown>({ spaceId, queueId, uri, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!uri) {
-      uri = EchoURI.make({ spaceId: spaceId ?? SpaceId.random(), objectId: queueId ?? ObjectId.random() });
+      uri = EID.make({ spaceId: spaceId ?? SpaceId.random(), entityId: queueId ?? EntityId.random() });
     } else {
       invariant(spaceId == null && queueId == null);
     }
@@ -40,7 +40,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
 
   private _objects: T[] = [];
 
-  constructor(private readonly _uri: EchoURI.EchoURI) {}
+  constructor(private readonly _uri: EID.EID) {}
 
   toJSON() {
     return {
@@ -49,7 +49,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     };
   }
 
-  get uri(): EchoURI.EchoURI {
+  get uri(): EID.EID {
     return this._uri;
   }
 
@@ -89,11 +89,11 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return this._objects;
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
+  async getObjectsById(ids: EntityId[]): Promise<(T | undefined)[]> {
     return ids.map((id) => this._objects.find((object) => object.id === id));
   }
 
-  async delete(ids: ObjectId[]): Promise<void> {
+  async delete(ids: EntityId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes(object.id));
     this.updated.emit();

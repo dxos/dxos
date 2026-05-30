@@ -54,7 +54,12 @@ export const CreateObjectDialog = ({
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
-  const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
+  const schemas = db
+    ? db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .filter((t) => !Type.isTypeKind(t))
+    : undefined;
 
   const entriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 
@@ -78,6 +83,9 @@ export const CreateObjectDialog = ({
     (id) => createObjectEntries.find((entry) => entry.id === id),
     [createObjectEntries],
   );
+
+  // The type selector is shown while no type has been resolved; the registry button is only relevant then.
+  const showTypeSelector = !(typename && resolve(typename));
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
@@ -178,15 +186,17 @@ export const CreateObjectDialog = ({
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <IconButton
-            icon='ph--squares-four--regular'
-            label={t('open-plugin-registry.label')}
-            onClick={() => void operationInvoker.invokePromise(SettingsOperation.OpenPluginRegistry)}
-          />
-        </Dialog.Close>
-      </Dialog.ActionBar>
+      {showTypeSelector && (
+        <Dialog.ActionBar>
+          <Dialog.Close asChild>
+            <IconButton
+              icon='ph--squares-four--regular'
+              label={t('open-plugin-registry.label')}
+              onClick={() => void operationInvoker.invokePromise(SettingsOperation.OpenPluginRegistry)}
+            />
+          </Dialog.Close>
+        </Dialog.ActionBar>
+      )}
     </Dialog.Content>
   );
 };
