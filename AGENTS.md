@@ -94,6 +94,12 @@
 
 - When collaborating closely with the User, determine if the user's role can be automated.
 - Be precise about what you are asking the user to do and actively manage the process.
+- **IMPORTANT**: Model the user as a very expensive, intermittent resource and minimize round-trips to them. The wasteful pattern to avoid: the user waits a long time for the agent to finish, only to be asked to test or supply something the agent could have anticipated.
+  - At task start, analyze ALL human dependencies up-front (test credentials, assets, design decisions, accounts, manual verification steps).
+  - Gather/build/scaffold anything obtainable autonomously BEFORE asking the user for anything.
+  - Request all needed resources from the user in ONE batch, alongside a very concise plan; get a single go-ahead.
+  - Then execute the remainder of the task uninterrupted; do not bounce back for things that could have been front-loaded.
+  - If you hit an unforeseen human dependency mid-task, park it and continue all other reachable work; only surface an immediate ask when you are fully blocked and cannot make progress otherwise. Batch parked asks for the next checkpoint.
 
 ## PR Naming Convention
 
