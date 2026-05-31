@@ -41,7 +41,7 @@ export const TEMPLATE_ID = 'org.dxos.plugin.trip.extractor.trip';
 // Travel-related subject keywords used by the cheap `match()` pre-filter. Generous on purpose —
 // the LLM returns empty fields for non-flight mail, so a false positive costs only one cheap call.
 const TRAVEL_SUBJECT_REGEX =
-  /\b(?:flight|booking|e-?ticket|itinerary|reservation|boarding|gate\s+change|schedule\s+change)\b/i;
+  /\b(?:flight|train|rail|eurostar|booking|e-?ticket|itinerary|reservation|boarding|gate\s+change|schedule\s+change)\b/i;
 
 const senderDomain = (message: Message.Message): string =>
   (message.sender?.email ?? '').split('@')[1]?.toLowerCase() ?? '';
@@ -291,6 +291,10 @@ const updateExistingSegment = (segment: Segment.Segment, payload: SegmentPayload
       if (payload.destination !== undefined) {
         details.destination = payload.destination;
       }
+      // Same-day schedule changes share the (number, depart-date) key, so refresh the times too.
+      if (payload.departAt !== undefined) {
+        details.departAt = payload.departAt;
+      }
       if (payload.arriveAt !== undefined) {
         details.arriveAt = payload.arriveAt;
       }
@@ -350,6 +354,8 @@ const assemble = (
         updated.set(existing.id, existing);
         const owningTrip = Obj.getParent(existing);
         if (Trip.instanceOf(owningTrip)) {
+          // A schedule change can move the leg's times; widen the trip to cover the new bounds.
+          widenTripRange(owningTrip, segment);
           updated.set(owningTrip.id, owningTrip);
         }
       } else {

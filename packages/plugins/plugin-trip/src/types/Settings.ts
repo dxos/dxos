@@ -12,7 +12,7 @@ import { DEFAULT_TRIP_GAP_DAYS } from '../operations/extractor/config';
 export const Settings = Schema.mutable(
   Schema.Struct({
     tripGapDays: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)).annotations({
         title: 'Trip grouping gap (days)',
         description: `Group separately-booked segments into one trip when they fall within this many days of each other. Default ${DEFAULT_TRIP_GAP_DAYS}.`,
       }),

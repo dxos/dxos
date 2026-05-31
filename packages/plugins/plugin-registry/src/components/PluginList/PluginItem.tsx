@@ -140,8 +140,8 @@ export const PluginItem = ({
       classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
-        <div className='flex justify-center row-start-2 cursor-pointer'>
-          <Icon classNames={styles.foreground} icon={icon} size={14} onClick={handleClick} />
+        <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
+          <Icon classNames={styles.foreground} icon={icon} size={14} />
         </div>
       </div>
 

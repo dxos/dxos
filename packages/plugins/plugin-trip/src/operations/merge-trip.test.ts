@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -72,5 +72,34 @@ describe('MergeTrip', () => {
 
     const trips = await db.query(Filter.type(Trip.Trip)).run();
     expect(trips).toHaveLength(2);
+  });
+
+  test('merges into the CLOSEST eligible trip and re-parents bookings', async ({ expect }) => {
+    // Source (with a Booking) at day 10; two candidates within the gap at +2 and +8 days.
+    const srcSeg = Segment.make({ details: { _tag: 'flight', number: 'SS-1', departAt: '2026-06-10T10:00:00.000Z' } });
+    const source = addTrip({ name: 'Source', start: '2026-06-10T10:00:00.000Z', end: '2026-06-10T13:00:00.000Z' }, [
+      srcSeg,
+    ]);
+    const booking = db.add(Booking.make({ confirmationCode: 'SRC1', source: 'email' }));
+    Obj.setParent(booking, source);
+
+    const nearSeg = Segment.make({ details: { _tag: 'flight', number: 'NN-1', departAt: '2026-06-12T10:00:00.000Z' } });
+    const near = addTrip({ name: 'Near', start: '2026-06-12T10:00:00.000Z', end: '2026-06-12T12:00:00.000Z' }, [
+      nearSeg,
+    ]);
+    const farSeg = Segment.make({ details: { _tag: 'flight', number: 'FF-1', departAt: '2026-06-18T10:00:00.000Z' } });
+    addTrip({ name: 'Far', start: '2026-06-18T10:00:00.000Z', end: '2026-06-18T12:00:00.000Z' }, [farSeg]);
+    await db.flush();
+
+    const result = await merge(source);
+    expect(result.merged).toBe(true);
+    // The nearer of the two eligible trips wins.
+    expect(result.targetTripId).toBe(near.id);
+
+    await db.flush();
+    const trips = await db.query(Filter.type(Trip.Trip)).run();
+    expect(trips).toHaveLength(2);
+    // The Booking moved with the merge (re-parented to the target trip).
+    expect(Obj.getParent(booking)?.id).toBe(near.id);
   });
 });

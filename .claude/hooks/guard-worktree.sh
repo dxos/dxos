@@ -34,6 +34,19 @@ case "$path" in
   *) abs="$project_dir/$path" ;;
 esac
 
+# Canonicalize to collapse `..`/`.` segments before the string boundary checks, so a path like
+# "$project_dir/../foo" can't textually match the worktree prefix and escape it. Uses purely
+# lexical normalization (no filesystem/symlink resolution needed): python3 `normpath` is portable
+# across macOS/Linux; `realpath -m` (GNU) is a fallback; raw value as a last resort.
+canonicalize() {
+  python3 -c 'import os,sys; print(os.path.normpath(sys.argv[1]))' "$1" 2>/dev/null ||
+    realpath -m "$1" 2>/dev/null ||
+    printf '%s' "$1"
+}
+abs=$(canonicalize "$abs")
+project_dir=$(canonicalize "$project_dir")
+main_root=$(canonicalize "$main_root")
+
 # Allow anything inside the worktree.
 case "$abs" in
   "$project_dir"/* | "$project_dir") exit 0 ;;

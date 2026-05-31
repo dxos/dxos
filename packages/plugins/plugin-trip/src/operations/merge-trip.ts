@@ -55,7 +55,9 @@ export default TripOperation.MergeTrip.pipe(
 
       // Detach the now-moved segments from the source and delete it.
       Obj.update(trip, (trip) => {
-        trip.segments.splice(0, trip.segments.length);
+        if (trip.segments) {
+          trip.segments.splice(0, trip.segments.length);
+        }
       });
       db.remove(trip);
 
