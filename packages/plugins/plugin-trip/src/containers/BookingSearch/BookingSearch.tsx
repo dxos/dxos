@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
-import { Button, Select, useTranslation } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
@@ -147,6 +147,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
         schema={BookingSearchType.FlightSearchFields}
         values={query}
         onValuesChanged={(values) => setQuery(values)}
+        onSave={() => void handleSearch()}
       >
         <Form.Viewport classNames='border-b border-separator'>
           <Form.Content>
@@ -169,9 +170,11 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
 
             <Form.Layout template={SEARCH_LAYOUT} />
 
-            <Button variant='primary' disabled={pending || !canSearch} onClick={() => void handleSearch()}>
-              {pending ? t('booking.searching.label') : t('booking.search.label')}
-            </Button>
+            <Form.Submit
+              icon='ph--magnifying-glass--regular'
+              label={pending ? t('booking.searching.label') : t('booking.search.label')}
+              disabled={pending || !canSearch}
+            />
 
             {error && <div className='text-error'>{error}</div>}
           </Form.Content>
