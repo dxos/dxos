@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type BookingSearch, type Segment } from '@dxos/plugin-trip';
 
 /** Duffel cabin_class values. */
-type DuffelCabin = 'economy' | 'premium_economy' | 'business' | 'first';
+const DuffelCabin = Schema.Literal('economy', 'premium_economy', 'business', 'first');
+type DuffelCabin = Schema.Schema.Type<typeof DuffelCabin>;
 
 const CABIN_MAP: Record<Segment.ServiceClass, DuffelCabin> = {
   economy: 'economy',
