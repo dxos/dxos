@@ -42,21 +42,29 @@ import { Message, Person } from '@dxos/types';
 const PNR = 'ABC123';
 
 const LEG_1 = {
-  number: 'AF0001',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-06-01T17:30:00.000Z',
-  arriveAt: '2026-06-02T07:00:00.000Z',
   confirmationCode: PNR,
+  segments: [
+    {
+      number: 'AF0001',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-01T17:30:00.000Z',
+      arriveAt: '2026-06-02T07:00:00.000Z',
+    },
+  ],
 };
 
 const LEG_2 = {
-  number: 'AF0002',
-  origin: { code: 'CDG', name: 'Paris' },
-  destination: { code: 'LIS', name: 'Lisbon' },
-  departAt: '2026-06-05T11:00:00.000Z',
-  arriveAt: '2026-06-05T13:15:00.000Z',
   confirmationCode: PNR,
+  segments: [
+    {
+      number: 'AF0002',
+      origin: { code: 'CDG', name: 'Paris' },
+      destination: { code: 'LIS', name: 'Lisbon' },
+      departAt: '2026-06-05T11:00:00.000Z',
+      arriveAt: '2026-06-05T13:15:00.000Z',
+    },
+  ],
 };
 
 const FEED_MESSAGES = [

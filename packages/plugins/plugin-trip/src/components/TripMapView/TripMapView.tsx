@@ -4,22 +4,29 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { IconButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import {
+  type ControlAction,
+  type GeoMarker,
   Globe,
   type GlobeController,
+  Map as GeoMap,
+  type MapController,
   globeStyles,
   useDrag,
   useGlobeZoomHandler,
+  useMapZoomHandler,
   useTour,
   useWheel,
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 
-import { Segment } from '#types';
+import { Place, Segment } from '#types';
 
-import { type SegmentCardAction } from '../SegmentCard';
-import { SegmentStack } from '../SegmentStack';
+import { AIRPORTS } from '../../operations/extractor/const';
+
+/** Map presentation variant: 3D `Globe` or 2D leaflet `Map`. */
+export type TripMapVariant = 'globe' | 'map';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 const initialZoom = 1.2;
@@ -36,11 +43,34 @@ const toLatLng = (geo?: readonly [number, number, number?] | undefined): LatLng 
 
 const sameLatLng = (a: LatLng, b: LatLng): boolean => a.lat === b.lat && a.lng === b.lng;
 
-/** All points referenced by a segment (origin, destination), with geo coords if present. */
+/** IATA code → coordinates, for geocoding places that carry a code but no explicit `geo`. */
+const airportByIata = new Map<string, LatLng>(AIRPORTS.map(({ iata, geo }) => [iata, { lat: geo.lat, lng: geo.lng }]));
+
+/**
+ * Resolve a place to coordinates: prefer its explicit `geo`, otherwise (only when
+ * `allowIataFallback`) geocode by its IATA `code` against {@link AIRPORTS}. The
+ * fallback is airport-only, so it must not be used for rail/road station codes —
+ * those could collide with an unrelated airport IATA and plot in the wrong place.
+ * Returns undefined when no coordinate is available.
+ */
+const placeLatLng = (
+  place: Place.Place | undefined,
+  options: { allowIataFallback?: boolean } = {},
+): LatLng | undefined => {
+  const geo = toLatLng(place?.geo);
+  if (geo) {
+    return geo;
+  }
+  const code = place?.code?.toUpperCase();
+  return options.allowIataFallback && code ? airportByIata.get(code) : undefined;
+};
+
+/** All points referenced by a segment (origin, destination), geocoded via `geo` or (flights only) IATA code. */
 const segmentPoints = (seg: Segment.Segment): LatLng[] => {
   const points: LatLng[] = [];
-  const origin = toLatLng(Segment.getOrigin(seg)?.geo);
-  const destination = toLatLng(Segment.getDestination(seg)?.geo);
+  const allowIataFallback = seg.details._tag === 'flight';
+  const origin = placeLatLng(Segment.getOrigin(seg), { allowIataFallback });
+  const destination = placeLatLng(Segment.getDestination(seg), { allowIataFallback });
   if (origin) {
     points.push(origin);
   }
@@ -57,8 +87,9 @@ const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } |
   if (seg.details._tag === 'accommodation' || seg.details._tag === 'activity') {
     return undefined;
   }
-  const source = toLatLng(seg.details.origin?.geo);
-  const target = toLatLng(seg.details.destination?.geo);
+  const allowIataFallback = seg.details._tag === 'flight';
+  const source = placeLatLng(seg.details.origin, { allowIataFallback });
+  const target = placeLatLng(seg.details.destination, { allowIataFallback });
   if (!source || !target || sameLatLng(source, target)) {
     return undefined;
   }
@@ -72,50 +103,59 @@ const distanceSq = (a: LatLng, b: LatLng): number => {
   return dLat * dLat + dLng * dLng;
 };
 
+/** First geo-tagged point of a segment, if any. */
+const segmentAnchor = (seg: Segment.Segment): LatLng | undefined => segmentPoints(seg)[0];
+
 export type TripMapViewProps = {
   segments: Segment.Segment[];
   selectedSegmentId?: string;
+  variant?: TripMapVariant;
   onSelect?: (segmentId: string) => void;
+  onVariantToggle?: () => void;
 };
 
 /**
- * Map view for a Trip. Two-column layout: itinerary list on the left, globe
- * on the right. The globe plots each segment's geo-tagged origin,
- * destination, and venue as points; transport segments add origin→destination
- * arcs.
+ * Presentational map for a Trip. Plots each segment's geo-tagged origin,
+ * destination, and venue; transport segments add origin→destination arcs (globe)
+ * or markers (map).
  *
- * Selecting a segment in the itinerary (or via SegmentArticle) smoothly
- * animates the globe to that segment's first geo-tagged point using a
- * great-circle interpolation (`controller.flyTo`). Clicking a point on the globe
- * selects the nearest segment via the `onSelect` callback.
+ * Two variants share the same geocoding and selection behaviour:
+ * - `globe` — 3D orthographic globe with great-circle arcs and a fly-to tour.
+ * - `map` — 2D leaflet map with markers, auto-fit to bounds.
+ *
+ * The geo `Action` control's toggle button switches variant (via
+ * `onVariantToggle`); on the globe the path button plays/pauses the tour.
+ * Selecting a segment recenters the active view; clicking the globe selects the
+ * nearest segment.
  *
  * Composable: the root <div> forwards refs and merges incoming
- * `className`/`classNames` so the component can be used with `asChild`
- * slots (e.g. inside `Panel.Content asChild`).
+ * `className`/`classNames` so it can be used in `asChild` slots.
  */
 export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
-  ({ segments, selectedSegmentId, onSelect, ...props }, forwardedRef) => {
+  ({ segments, selectedSegmentId, variant = 'globe', onSelect, onVariantToggle, ...props }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const [topology, setTopology] = useState<Awaited<ReturnType<typeof loadTopology>>>();
     const [controller, setController] = useState<GlobeController | null>();
+    const [mapController, setMapController] = useState<MapController | null>();
     const styles = useMemo(() => globeStyles(themeMode), [themeMode]);
 
     useEffect(() => {
       void loadTopology().then(setTopology);
     }, []);
 
-    const handleZoom = useGlobeZoomHandler(controller);
+    const handleGlobeZoom = useGlobeZoomHandler(controller);
+    const handleMapZoom = useMapZoomHandler(mapController);
     useWheel(controller);
     useDrag(controller);
 
-    // Build the geo features.
+    // Build the globe geo features (points + great-circle lines).
     const features = useMemo(() => {
       const points: LatLng[] = [];
       const lines: { source: LatLng; target: LatLng }[] = [];
       for (const seg of segments) {
-        for (const p of segmentPoints(seg)) {
-          if (!points.some((q) => sameLatLng(q, p))) {
-            points.push(p);
+        for (const point of segmentPoints(seg)) {
+          if (!points.some((existing) => sameLatLng(existing, point))) {
+            points.push(point);
           }
         }
         const line = segmentLine(seg);
@@ -124,6 +164,17 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         }
       }
       return { points, lines };
+    }, [segments]);
+
+    // Map markers — one per geo-tagged point, titled by segment.
+    const markers = useMemo<GeoMarker[]>(() => {
+      const result: GeoMarker[] = [];
+      for (const seg of segments) {
+        segmentPoints(seg).forEach((point, index) => {
+          result.push({ id: `${seg.id}:${index}`, title: Segment.getTitle(seg), location: point });
+        });
+      }
+      return result;
     }, [segments]);
 
     // Tour through itinerary points.
@@ -135,40 +186,49 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       const points = segments.flatMap((seg) => segmentPoints(seg));
       return points.filter((point, index) => index === 0 || !sameLatLng(point, points[index - 1]));
     }, [segments]);
-    const [tourRunning, setTourRunning] = useTour(controller, tourPoints, { loop: true });
+    const [, setTourRunning] = useTour(controller, tourPoints, { loop: true });
 
-    // Recenter the globe on the selected segment's first geo-tagged point
-    // whenever the selection changes. `controller.flyTo` interrupts any
-    // in-flight tween on the same globe.
+    // Recenter the active view on the selected segment's first geo-tagged point
+    // whenever the selection changes. `controller.flyTo` interrupts any in-flight
+    // tween on the same globe.
     const lastRecenterRef = useRef<string | undefined>(undefined);
     useEffect(() => {
-      if (!controller || !selectedSegmentId) {
+      if (!selectedSegmentId) {
         return;
       }
       if (lastRecenterRef.current === selectedSegmentId) {
         return;
       }
-      const segment = segments.find((s) => s.id === selectedSegmentId);
-      const point = segment ? segmentPoints(segment)[0] : undefined;
+      const segment = segments.find((seg) => seg.id === selectedSegmentId);
+      const point = segment ? segmentAnchor(segment) : undefined;
       if (!point) {
         return;
       }
 
       lastRecenterRef.current = selectedSegmentId;
-      void controller.flyTo(point).catch(() => {});
-    }, [controller, segments, selectedSegmentId]);
+      if (variant === 'map') {
+        mapController?.setCenter(point);
+      } else {
+        void controller?.flyTo(point).catch(() => {});
+      }
+    }, [controller, mapController, variant, segments, selectedSegmentId]);
 
-    // Bridge SegmentStack actions to the parent's selection callback.
-    const handleStackAction = useCallback(
-      (action: SegmentCardAction) => {
-        if (action.type === 'current' || action.type === 'select') {
-          onSelect?.(action.segmentId);
+    // Geo `Action` controls: 'toggle' switches variant; 'start' plays/pauses the globe tour.
+    const handleAction = useCallback(
+      (action: ControlAction) => {
+        switch (action) {
+          case 'toggle':
+            onVariantToggle?.();
+            break;
+          case 'start':
+            setTourRunning((running) => !running);
+            break;
         }
       },
-      [onSelect],
+      [onVariantToggle, setTourRunning],
     );
 
-    // Click on the canvas → nearest segment.
+    // Click on the globe canvas → nearest segment.
     const handleSelectNearest = useCallback(
       (clientX: number, clientY: number) => {
         if (!controller?.canvas || !controller.projection) {
@@ -188,9 +248,9 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         let bestDist = Infinity;
         for (const seg of segments) {
           for (const point of segmentPoints(seg)) {
-            const d = distanceSq(point, click);
-            if (d < bestDist) {
-              bestDist = d;
+            const distance = distanceSq(point, click);
+            if (distance < bestDist) {
+              bestDist = distance;
               bestId = seg.id;
             }
           }
@@ -214,49 +274,23 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, [controller?.canvas, handleSelectNearest]);
 
     return (
-      <div
-        {...composableProps(props, {
-          classNames: 'grid grid-cols-[calc(var(--spacing-card-min-width)+2rem)_1fr] h-full w-full overflow-hidden',
-        })}
-        ref={forwardedRef}
-      >
-        <aside
-          aria-label='Itinerary'
-          className='flex flex-col overflow-hidden border-r border-subdued-separator bg-base-surface'
-        >
-          {segments.length === 0 ? (
-            <div className='p-3 text-sm text-description'>No segments yet.</div>
-          ) : (
-            <SegmentStack
-              id='trip-map-itinerary'
-              segments={segments}
-              currentId={selectedSegmentId}
-              onAction={handleStackAction}
-              classNames='flex-1 overflow-hidden'
-            />
-          )}
-        </aside>
-
-        <div className='relative overflow-hidden'>
+      <div {...composableProps(props, { classNames: 'relative h-full w-full overflow-hidden' })} ref={forwardedRef}>
+        {variant === 'map' ? (
+          <GeoMap.Root classNames='absolute inset-0'>
+            <GeoMap.Content ref={setMapController}>
+              <GeoMap.Tiles />
+              <GeoMap.Markers markers={markers} selected={selectedSegmentId ? [selectedSegmentId] : undefined} />
+              <GeoMap.Zoom onAction={handleMapZoom} />
+              <GeoMap.Action onAction={handleAction} />
+            </GeoMap.Content>
+          </GeoMap.Root>
+        ) : (
           <Globe.Root classNames='absolute inset-0' zoom={initialZoom} rotation={initialRotation}>
             <Globe.Canvas ref={setController} topology={topology} styles={styles} features={features} />
-            <Globe.Zoom onAction={handleZoom} />
+            <Globe.Zoom onAction={handleGlobeZoom} />
+            <Globe.Action onAction={handleAction} />
           </Globe.Root>
-
-          {/* Tour play/pause */}
-          {tourPoints.length > 1 && (
-            <div className='absolute top-3 right-3 z-10'>
-              <IconButton
-                variant='ghost'
-                icon={tourRunning ? 'ph--pause--regular' : 'ph--play--regular'}
-                iconOnly
-                label={tourRunning ? 'Pause tour' : 'Play tour'}
-                onClick={() => setTourRunning((r) => !r)}
-                classNames='bg-base-surface/70 backdrop-blur'
-              />
-            </div>
-          )}
-        </div>
+        )}
       </div>
     );
   },

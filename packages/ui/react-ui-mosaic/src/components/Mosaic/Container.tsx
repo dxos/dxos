@@ -21,8 +21,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type AllowedAxis } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { type AllowedAxis, composable, composableProps } from '@dxos/react-ui';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';

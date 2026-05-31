@@ -45,11 +45,6 @@ export const preview: Preview = {
         date: /Date$/,
       },
     },
-
-    // Disables Chromatic's snapshotting on a global level.
-    chromatic: {
-      disableSnapshot: true,
-    },
   },
 };
 

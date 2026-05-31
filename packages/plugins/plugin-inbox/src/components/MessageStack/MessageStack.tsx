@@ -153,7 +153,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root>
+          <ScrollArea.Root padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={threads ? (ThreadTile as any) : MessageTile}

@@ -7,7 +7,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconBlock, Tag, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -177,7 +177,14 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
     return () => unsubs.forEach((unsub) => unsub());
   }, [mailboxes]);
-  const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+  // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
+  const tagObjects = useQuery(db, Filter.type(EchoTag.Tag));
+  const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
+  const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+  const tags = [...new Set(tagUris)].flatMap((uri) => {
+    const tag = tagByUri.get(uri);
+    return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
+  });
 
   // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
   // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),

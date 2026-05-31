@@ -57,15 +57,25 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const sortDescending = useAtomState(true);
   const menuActions = useMailboxActions({ db, mailbox: subject, sortDescending: sortDescending.atom });
 
-  // Build message-to-tags map by inverting the unified `mailbox.tags` map.
+  const tagMap = useTags(db);
+
+  // Build message-to-tags map by inverting the Mailbox tag index.
   // NOT memoized: `Mailbox.applyTag`/`removeTag` mutate nested data under `mailbox.tags`,
   // which a `[mailbox.tags]` dependency wouldn't observe — same ECHO reactivity pitfall
   // documented in `ExtractedTags.tsx`.
-  const messageTagsMap = Mailbox.buildMessageTagsIndex(mailbox);
-  const tags = useTags(db);
+  // `messageTagUris` is the raw tag-uri index (used for client-side filtering, same id space as the
+  // query); `messageTagsMap` resolves those uris to label/hue chips for rendering.
+  const messageTagUris = Mailbox.buildMessageTagsIndex(mailbox);
+  const messageTagsMap: Record<string, { id: string; label: string; hue?: string }[]> = {};
+  for (const [messageId, uris] of Object.entries(messageTagUris)) {
+    messageTagsMap[messageId] = uris.flatMap((uri) => {
+      const tag = tagMap[uri];
+      return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
+    });
+  }
 
   // Filter.
-  const builder = useMemo(() => new QueryBuilder(tags), [tags]);
+  const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
   const [filter, setFilter] = useState<Filter.Any>();
   useEffect(() => {
@@ -84,9 +94,9 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const filteredMessages = useMemo(
     () =>
       filter
-        ? messages.filter((message) => matchesFilter(filter, message, messageTagsMap[message.id] ?? []))
+        ? messages.filter((message) => matchesFilter(filter, message, messageTagUris[message.id] ?? []))
         : messages,
-    [messages, filter, messageTagsMap],
+    [messages, filter, messageTagUris],
   );
 
   const sortedMessages = useMemo(
@@ -132,8 +142,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [db, id, mailbox.id, sortedMessages, showItem],
   );
 
-  const messageIds = useMemo(() => sortedMessages.map((message) => message.id), [sortedMessages]);
-  useArticleKeyboardNavigation({ articleId: id, ids: messageIds, currentId, onSelect: handleNavigate });
+  useArticleKeyboardNavigation({ articleId: id, items: sortedMessages, currentId, onSelect: handleNavigate });
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
@@ -197,7 +206,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
                   db={db}
-                  tags={tags}
+                  tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
                   ref={filterEditorRef}
@@ -243,12 +252,14 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
  * Return map of tags;
  */
 // TODO(burdon): Factor out.
+// Tag registry keyed by the Tag object's URI — the id space used by meta.tags, the Mailbox tag
+// index, and the QueryBuilder's `tag:` filter.
 const useTags = (db: Database.Database | undefined): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
   return useMemo(
     () =>
       tags.reduce<Tag.Map>((acc, tag) => {
-        acc[tag.id] = tag;
+        acc[Obj.getURI(tag).toString()] = tag;
         return acc;
       }, {}),
     [tags],

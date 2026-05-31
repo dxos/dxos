@@ -237,9 +237,6 @@ export const Default: Story = {
   tags: ['test'],
   parameters: {
     layout: 'fullscreen',
-    chromatic: {
-      disableSnapshot: true,
-    },
     translations,
   },
 };

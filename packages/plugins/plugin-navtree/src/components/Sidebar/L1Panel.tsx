@@ -95,7 +95,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
             path={path}
             levelOffset={5}
             draggable
-            gridTemplateColumns='[tree-row-start] 1fr min-content min-content [tree-row-end]'
+            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}

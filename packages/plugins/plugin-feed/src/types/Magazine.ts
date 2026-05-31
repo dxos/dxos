@@ -8,12 +8,19 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Routine } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, StateMap, Type } from '@dxos/echo';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Subscription from './Subscription';
+
+/** Per-Post magazine-scoped curation state, keyed by Post id. */
+export const PostState = Schema.Struct({
+  /** Agent-assigned relevance within this magazine (lower = more relevant). */
+  rank: Schema.optional(Schema.Number),
+});
+export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
@@ -43,27 +50,11 @@ export const Magazine = Schema.Struct({
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /**
-   * Per-Post magazine-scoped curation cache, keyed by Post id. The Post itself
-   * lives in a Subscription's queue and is immutable; this side map carries the
-   * magazine-specific curation outputs so the feed item is never mutated or
-   * copied into space.db.
-   *
-   * - `snippet`: agent/curation-extracted summary; different magazines (with
-   *   different prompts / instructions) may produce different snippets for the
-   *   same Post.
-   * - `rank`: agent-assigned relevance within this magazine; intrinsically
-   *   magazine-scoped.
-   *
-   * Per-Post state shared across magazines (readAt, archived, starred,
-   * content, imageUrl) lives on `Subscription.postState` keyed by Post id.
+   * Per-Post magazine-scoped curation state (just `rank`), keyed by Post id. Shared per-Post state
+   * (readAt, star/archive tags) lives on `Subscription`; snippet/imageUrl are derived from the Post
+   * (or refined onto the Subscription's contentFeed entries).
    */
-  postState: Schema.Record({
-    key: Schema.String,
-    value: Schema.Struct({
-      snippet: Schema.optional(Schema.String),
-      rank: Schema.optional(Schema.Number),
-    }),
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
+  postState: StateMap.field(PostState),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({

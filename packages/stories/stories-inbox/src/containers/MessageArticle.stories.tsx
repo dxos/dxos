@@ -12,7 +12,7 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
@@ -107,12 +107,16 @@ const MOCK_SUMMARY =
  * the template-driven `TripMessageExtractor`, which produces a Trip named "JFK → CDG (AF0003)".
  */
 const MOCK_FLIGHT_PAYLOAD = {
-  number: 'AF0003',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-05-05T17:30:00.000Z',
-  arriveAt: '2026-05-06T07:00:00.000Z',
   confirmationCode: 'FB12345',
+  segments: [
+    {
+      number: 'AF0003',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-05-05T17:30:00.000Z',
+      arriveAt: '2026-05-06T07:00:00.000Z',
+    },
+  ],
 };
 
 /**
@@ -208,6 +212,9 @@ const meta = {
         ClientPlugin({
           types: [
             Feed.Feed,
+            // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
+            // must be registered for the extractor's tagging to round-trip.
+            Tag.Tag,
             Mailbox.Mailbox,
             MessageType.Message,
             Person.Person,
