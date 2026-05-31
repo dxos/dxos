@@ -14,7 +14,7 @@ describe('BookingSearch', () => {
       origin: 'JFK',
       destination: 'LHR',
       departureDate: '2026-06-01T00:00:00.000Z',
-      cabinClass: 'economy',
+      serviceClass: 'economy',
       passengers: 1,
     });
     expect(query.origin).toBe('JFK');
@@ -26,11 +26,11 @@ describe('BookingSearch', () => {
       _tag: 'flight',
       id: 'off_123',
       provider: 'duffel',
-      carrier: { name: 'Air France', iataCode: 'AF' },
+      operator: { name: 'Air France', iataCode: 'AF' },
       totalAmount: 540.5,
       currency: 'USD',
-      cabinClass: 'economy',
-      slices: [{ origin: { code: 'JFK' }, destination: { code: 'LHR' }, flightNumber: 'AF023' }],
+      serviceClass: 'economy',
+      slices: [{ origin: { code: 'JFK' }, destination: { code: 'LHR' }, number: 'AF023' }],
     });
     expect(offer.slices).toHaveLength(1);
     expect(offer.totalAmount).toBe(540.5);

@@ -15,7 +15,7 @@ const FLIGHT_OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight' as const,
   id: 'off_1',
   provider: 'stub',
-  carrier: { name: 'Stub Air' },
+  operator: { name: 'Stub Air' },
   totalAmount: 100,
   currency: 'USD',
   slices: [{ origin: { code: 'JFK' }, destination: { code: 'LHR' } }],

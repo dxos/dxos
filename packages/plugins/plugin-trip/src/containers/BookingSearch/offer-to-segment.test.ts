@@ -12,18 +12,18 @@ const OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight',
   id: 'off_123',
   provider: 'duffel',
-  carrier: { name: 'Air France', iataCode: 'AF' },
+  operator: { name: 'Air France', iataCode: 'AF' },
   totalAmount: 540.5,
   currency: 'USD',
-  cabinClass: 'economy',
+  serviceClass: 'economy',
   slices: [
     {
       origin: { code: 'JFK', name: 'New York JFK' },
       destination: { code: 'CDG', name: 'Paris CDG' },
       departAt: '2026-06-01T18:00:00.000Z',
       arriveAt: '2026-06-02T07:00:00.000Z',
-      marketingCarrier: 'AF',
-      flightNumber: '023',
+      operator: 'AF',
+      number: '023',
       durationMinutes: 420,
     },
     {
@@ -31,8 +31,8 @@ const OFFER: BookingSearch.FlightOffer = {
       destination: { code: 'LHR' },
       departAt: '2026-06-02T09:00:00.000Z',
       arriveAt: '2026-06-02T09:30:00.000Z',
-      marketingCarrier: 'AF',
-      flightNumber: '1680',
+      operator: 'AF',
+      number: '1680',
     },
   ],
 };

@@ -14,7 +14,7 @@ const QUERY: BookingSearch.FlightSearchQuery = {
   destination: 'LHR',
   departureDate: '2026-06-01T18:00:00.000Z',
   returnDate: undefined,
-  cabinClass: 'premium',
+  serviceClass: 'premium',
   passengers: 2,
 };
 
@@ -61,15 +61,15 @@ describe('duffel-mapping', () => {
     expect(offer._tag).toBe('flight');
     expect(offer.id).toBe('off_123');
     expect(offer.provider).toBe('duffel');
-    expect(offer.carrier).toEqual({ name: 'Air France', iataCode: 'AF' });
+    expect(offer.operator).toEqual({ name: 'Air France', iataCode: 'AF' });
     expect(offer.totalAmount).toBe(540.5);
     expect(offer.currency).toBe('USD');
     expect(offer.slices).toHaveLength(1);
     expect(offer.slices[0]).toMatchObject({
       origin: { code: 'JFK', name: 'New York JFK' },
       destination: { code: 'LHR', name: 'London Heathrow' },
-      marketingCarrier: 'AF',
-      flightNumber: '023',
+      operator: 'AF',
+      number: '023',
       durationMinutes: 450,
     });
   });

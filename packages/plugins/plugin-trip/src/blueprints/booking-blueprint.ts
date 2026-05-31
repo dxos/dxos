@@ -22,8 +22,8 @@ const make = () =>
         You help the user find travel bookings (flights first).
         Use the search-bookings tool with a query: set _tag to 'flight' and provide origin and
         destination as IATA codes (e.g. JFK, LHR), a departureDate (ISO date), and optionally
-        cabinClass ('economy' | 'premium' | 'business' | 'first') and passengers. Pass a provider
-        id only if the user named a specific provider. Summarize the returned offers (carrier,
+        serviceClass ('economy' | 'premium' | 'business' | 'first') and passengers. Pass a provider
+        id only if the user named a specific provider. Summarize the returned offers (operator,
         route, price) for the user; do not fabricate offers.
       `,
     }),

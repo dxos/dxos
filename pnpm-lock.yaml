@@ -13970,6 +13970,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
