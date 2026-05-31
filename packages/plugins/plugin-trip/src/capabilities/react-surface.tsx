@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'surface.trip-settings',
+        id: 'surface.tripSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data }) => {
           const { settings, updateSettings } = useSettingsState<Settings>(data.subject.atom);
@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
       // Inline map surface (globe / map variants) rendered by TripArticle when the
       // globe is toggled on. Reads the current segment selection via useSelected.
       Surface.create({
-        id: 'surface.trip-map',
+        id: 'surface.tripMap',
         filter: AppSurface.object(TripMapRole, Trip.Trip),
         component: ({ data }) => <TripMapArticle subject={data.subject} attendableId={data.attendableId} />,
       }),
