@@ -5,25 +5,20 @@
 import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { mx } from '@dxos/ui-theme';
 
-import { SegmentStack, type SegmentCardAction, TripMapView } from '#components';
+import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
 import { Segment, Trip } from '#types';
-
-const byPrimaryDate = (a: Segment.Segment, b: Segment.Segment): number => {
-  const da = Segment.getPrimaryDate(a)?.getTime() ?? 0;
-  const db = Segment.getPrimaryDate(b)?.getTime() ?? 0;
-  return da - db;
-};
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
@@ -42,13 +37,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const id = attendableId ?? Obj.getURI(subject);
   const currentId = useSelected(id, 'single');
 
-  // Resolve segment refs to live objects (filtered to currently loaded).
-  const segments = useMemo(() => {
-    const list = (trip.segments ?? [])
-      .map((ref) => (Ref.isRef(ref) ? ref.target : (ref as unknown as Segment.Segment | undefined)))
-      .filter((s): s is Segment.Segment => Segment.instanceOf(s));
-    return [...list].sort(byPrimaryDate);
-  }, [trip.segments]);
+  // Resolve segment refs to live objects (filtered to currently loaded), sorted by primary date.
+  const segments = useMemo(() => Trip.getSegments(trip), [trip.segments]);
 
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
@@ -60,8 +50,12 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     return dates;
   });
 
+  // Most recent calendar day / range selection, used to pre-fill new segment dates.
+  const [calendarSelection, setCalendarSelection] = useState<{ from: Date; to?: Date }>();
+
   const handleDateSelect = useCallback(
     ({ date }: { date: Date }) => {
+      setCalendarSelection({ from: date });
       const match = segments.find((seg) => {
         const primary = Segment.getPrimaryDate(seg);
         if (primary && isSameDay(primary, date)) {
@@ -82,6 +76,10 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     },
     [segments, id, invokePromise],
   );
+
+  const handleDateRangeSelect = useCallback(({ range }: { range: { from: Date; to: Date } }) => {
+    setCalendarSelection({ from: range.from, to: range.to });
+  }, []);
 
   const handleAction = useCallback(
     (action: SegmentCardAction) => {
@@ -127,8 +125,15 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       }
       const segment = space.db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
+      // Pre-fill the start (and end, for a range) from the current calendar selection.
+      if (calendarSelection?.from) {
+        Segment.setDepartAt(segment, calendarSelection.from.toISOString());
+      }
+      if (calendarSelection?.to) {
+        Segment.setArriveAt(segment, calendarSelection.to.toISOString());
+      }
     },
-    [subject],
+    [subject, calendarSelection],
   );
 
   // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
@@ -153,11 +158,12 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
             }
           },
         )
+        .separator()
         .action(
           'toggle-globe',
           {
             label: ['globe.toggle.label', { ns: meta.id }],
-            icon: 'ph--globe--regular',
+            icon: 'ph--globe-hemisphere-west--regular',
             iconOnly: true,
             checked: showGlobe,
           },
@@ -170,7 +176,10 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
       <div
-        className={`grid h-full ${showGlobe ? 'grid-rows-[minmax(0,1fr)_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]'}`}
+        className={mx(
+          'grid h-full',
+          showGlobe ? 'grid-rows-[minmax(0,1fr)_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]',
+        )}
       >
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
@@ -180,7 +189,11 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
                 <NaturalCalendar.Toolbar />
               </Panel.Toolbar>
               <Panel.Content asChild>
-                <NaturalCalendar.Grid dates={calendarDates} onSelect={handleDateSelect} />
+                <NaturalCalendar.Grid
+                  dates={calendarDates}
+                  onSelect={handleDateSelect}
+                  onSelectRange={handleDateRangeSelect}
+                />
               </Panel.Content>
             </NaturalCalendar.Root>
           </Panel.Root>
@@ -196,11 +209,12 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           </Panel.Root>
         </div>
 
-        {/* Row 2: globe (toggled via the toolbar). */}
+        {/* Row 2: map surface (globe / map variants, toggled via the toolbar). Self-contained:
+            it reads the current segment selection via useSelected. */}
         {showGlobe && (
           <Panel.Root className='min-bs-0 overflow-hidden border-t border-subdued-separator'>
-            <Panel.Content asChild>
-              <TripMapView segments={segments} selectedSegmentId={currentId} onSelect={handleNavigate} />
+            <Panel.Content>
+              <Surface.Surface role='trip-map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}
