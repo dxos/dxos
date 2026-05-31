@@ -80,6 +80,40 @@ const SECOND_LEG_PNR_VARIANT_PAYLOAD = {
   confirmationCode: 'abc 123',
 };
 
+// A separately-booked leg (different PNR) within the default 28-day gap of the United trip.
+const NEARBY_LEG_PAYLOAD = {
+  number: 'AF-20',
+  origin: { code: 'LHR', name: 'London' },
+  destination: { code: 'CDG', name: 'Paris' },
+  departAt: '2026-06-20T10:00:00.000Z',
+  arriveAt: '2026-06-20T12:00:00.000Z',
+  confirmationCode: 'GAP111',
+};
+
+// A leg far outside the gap (~3 months later) → its own Trip.
+const FAR_LEG_PAYLOAD = {
+  number: 'AF-30',
+  origin: { code: 'CDG', name: 'Paris' },
+  destination: { code: 'JFK', name: 'New York' },
+  departAt: '2026-09-01T10:00:00.000Z',
+  arriveAt: '2026-09-01T13:00:00.000Z',
+  confirmationCode: 'FAR222',
+};
+
+// A rail booking (Alfa Pendular) under its own PNR.
+const TRAIN_PAYLOAD = {
+  kind: 'train' as const,
+  number: 'AP 182',
+  origin: { code: 'FCR', name: 'Porto Campanhã' },
+  destination: { code: 'ORC', name: 'Lisboa Oriente' },
+  departAt: '2026-06-05T08:00:00.000Z',
+  arriveAt: '2026-06-05T11:00:00.000Z',
+  confirmationCode: 'TR333',
+  platform: '4',
+  coach: '12',
+  provider: { name: 'Alfa Pendular' },
+};
+
 describe('TripMessageExtractor', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
@@ -284,6 +318,63 @@ describe('TripMessageExtractor', () => {
     const trips = await db.query(Filter.type(Trip.Trip)).run();
     expect(trips).toHaveLength(1);
     expect(trips[0].segments).toHaveLength(2);
+  });
+
+  test('extract — a separately-booked leg within the gap joins the nearby Trip', async ({ expect }) => {
+    const first = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
+    for (const obj of first.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trip = first.created.find((obj) => Obj.instanceOf(Trip.Trip, obj)) as Trip.Trip;
+
+    // Different PNR (GAP111), but within 28 days of the trip → joins it with a new Booking + Segment.
+    const second = await extract(unitedConfirmationRaw, NEARBY_LEG_PAYLOAD);
+    expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(false);
+    expect(second.created.some((obj) => Obj.instanceOf(Booking.Booking, obj))).toBe(true);
+    expect(second.updated).toHaveLength(1);
+    expect((second.updated![0] as Trip.Trip).id).toBe(trip.id);
+
+    for (const obj of second.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trips = await db.query(Filter.type(Trip.Trip)).run();
+    expect(trips).toHaveLength(1);
+    expect(trips[0].segments).toHaveLength(2);
+  });
+
+  test('extract — a leg beyond the gap starts a new Trip', async ({ expect }) => {
+    const first = await extract(unitedConfirmationRaw, UNITED_PAYLOAD);
+    for (const obj of first.created) {
+      db.add(obj);
+    }
+    await db.flush();
+
+    // ~3 months later under a different PNR → not grouped; a separate Trip.
+    const second = await extract(unitedConfirmationRaw, FAR_LEG_PAYLOAD);
+    expect(second.created.some((obj) => Obj.instanceOf(Trip.Trip, obj))).toBe(true);
+
+    for (const obj of second.created) {
+      db.add(obj);
+    }
+    await db.flush();
+    const trips = await db.query(Filter.type(Trip.Trip)).run();
+    expect(trips).toHaveLength(2);
+  });
+
+  test('extract — recognises a train booking and creates a train Segment', async ({ expect }) => {
+    const result = await extract(genericConfirmationRaw, TRAIN_PAYLOAD);
+
+    const segment = result.created.find((obj) => Obj.instanceOf(Segment.Segment, obj)) as Segment.Segment;
+    expect(segment.details._tag).toBe('train');
+    if (segment.details._tag !== 'train') {
+      throw new Error('expected train details');
+    }
+    expect(segment.details.number).toBe('AP 182');
+    expect(segment.details.platform).toBe('4');
+    expect(segment.details.coach).toBe('12');
+    expect(segment.details.provider?.name).toBe('Alfa Pendular');
   });
 });
 

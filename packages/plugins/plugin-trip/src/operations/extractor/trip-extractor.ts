@@ -21,6 +21,7 @@ import { type ContentBlock, Message, Organization, type Provider } from '@dxos/t
 import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '../../types';
+import { getTripGapDays } from './config';
 import { AIRLINES } from './const';
 
 /**
@@ -72,7 +73,11 @@ const matchMessage = (source: Obj.Any): MatchResult => {
 /** Structured output the LLM produces for the first flight segment in the email. */
 const PlacePayload = Schema.Struct({ code: Schema.String, name: Schema.optional(Schema.String) });
 
-const FlightPayload = Schema.Struct({
+/** Travel mode of the extracted segment. Defaults to `flight` when the LLM omits it. */
+const SegmentKind = Schema.Literal('flight', 'train');
+
+const SegmentPayload = Schema.Struct({
+  kind: Schema.optional(SegmentKind),
   number: Schema.optional(Schema.String),
   origin: Schema.optional(PlacePayload),
   destination: Schema.optional(PlacePayload),
@@ -81,42 +86,53 @@ const FlightPayload = Schema.Struct({
   confirmationCode: Schema.optional(Schema.String),
   gateFrom: Schema.optional(Schema.String),
   terminalFrom: Schema.optional(Schema.String),
+  // Rail-specific (kind === 'train').
+  platform: Schema.optional(Schema.String),
+  coach: Schema.optional(Schema.String),
   seat: Schema.optional(Schema.String),
   provider: Schema.optional(
     Schema.Struct({ name: Schema.optional(Schema.String), domain: Schema.optional(Schema.String) }),
   ),
 });
-interface FlightPayload extends Schema.Schema.Type<typeof FlightPayload> {}
+interface SegmentPayload extends Schema.Schema.Type<typeof SegmentPayload> {}
 
 const PROMPT = trim`
-  Extract the FIRST flight segment from this airline booking/confirmation email.
-  Return ISO 8601 UTC timestamps for departAt and arriveAt, and IATA airport codes for origin.code/destination.code.
-  Include the airline reservation/confirmation code and, if present, gate, terminal, and seat.
-  If the email is not a flight confirmation, return empty fields.
+  Extract the FIRST travel segment from this booking/confirmation email.
+  Set "kind" to "train" for rail bookings (e.g. Eurostar, Amtrak, Alfa Pendular, SNCF) or "flight" for air travel; default to "flight".
+  Return ISO 8601 UTC timestamps for departAt and arriveAt. For flights use IATA airport codes for origin.code/destination.code; for trains use the station name (and code if present).
+  IMPORTANT: Use the exact date stated in the email, INCLUDING the correct year — do not guess, shift, or default the year. If the year is ambiguous, prefer the year nearest the email's own date.
+  Include the reservation/confirmation code and, if present: gate, terminal, and seat (flights); platform, coach, and seat (trains).
+  If the email is not a travel confirmation, return empty fields.
 `;
 
 /** Identity key used to dedupe segments across multiple emails. */
 const matchKey = (number: string, departAt: string): string => `${number.toUpperCase()}|${departAt.split('T')[0]}`;
 
-const isSameFlight = (segment: Segment.Segment, payload: FlightPayload): boolean => {
-  if (segment.details._tag !== 'flight' || !segment.details.number || !segment.details.departAt) {
+const isSameSegment = (segment: Segment.Segment, payload: SegmentPayload): boolean => {
+  const kind = payload.kind ?? 'flight';
+  // Only transport variants (flight/train) carry a `number`; match like-for-like kinds.
+  const details = segment.details;
+  if (details._tag !== kind) {
     return false;
   }
-  if (!payload.number || !payload.departAt) {
+  const number = details._tag === 'flight' || details._tag === 'train' ? details.number : undefined;
+  const departAt = Segment.getDepartAt(segment);
+  if (!number || !departAt || !payload.number || !payload.departAt) {
     return false;
   }
-  return matchKey(segment.details.number, segment.details.departAt) === matchKey(payload.number, payload.departAt);
+
+  return matchKey(number, departAt) === matchKey(payload.number, payload.departAt);
 };
 
-const findExistingFlight = (
+const findExistingSegment = (
   db: Database.Database,
-  payload: FlightPayload,
+  payload: SegmentPayload,
 ): Effect.Effect<Segment.Segment | undefined> => {
   if (!payload.number || !payload.departAt) {
     return Effect.succeed(undefined);
   }
   return Effect.promise(() => db.query(Filter.type(Segment.Segment)).run()).pipe(
-    Effect.map((segments) => segments.find((segment) => isSameFlight(segment, payload))),
+    Effect.map((segments) => segments.find((segment) => isSameSegment(segment, payload))),
     // Recover (e.g. Segment type not registered, db closed) to undefined rather than letting an
     // unhandled rejection bubble through the operation handler.
     Effect.catchAllDefect(() => Effect.succeed(undefined)),
@@ -155,32 +171,88 @@ const findExistingBookingByConfirmation = (
   );
 };
 
-const tripNameFor = (payload: FlightPayload): string => {
-  const origin = payload.origin?.code ?? '?';
-  const destination = payload.destination?.code ?? '?';
-  const flight = payload.number ?? '';
-  return flight ? `${origin} → ${destination} (${flight})` : `${origin} → ${destination}`;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** Parse an ISO timestamp to epoch millis; undefined if missing or invalid. */
+const epoch = (iso?: string): number | undefined => {
+  if (!iso) {
+    return undefined;
+  }
+  const ms = new Date(iso).getTime();
+  return Number.isNaN(ms) ? undefined : ms;
 };
 
-const makeSegment = (payload: FlightPayload, provider: Provider.Provider, booking: Booking.Booking): Segment.Segment =>
-  Segment.make({
-    booking: Ref.make(booking),
-    details: {
-      _tag: 'flight',
-      origin: payload.origin,
-      destination: payload.destination,
-      departAt: payload.departAt,
-      arriveAt: payload.arriveAt,
-      number: payload.number,
-      provider,
-      gateFrom: payload.gateFrom,
-      terminalFrom: payload.terminalFrom,
-      seat: payload.seat,
-    },
-  });
+/**
+ * Find the nearest existing Trip whose date range is within `gapDays` of this segment's departure —
+ * i.e. the segment falls inside `[start - gap, end + gap]`. Used to group separately-booked legs of
+ * one journey (different PNRs) into a single Trip. A `gapDays` of 0 still allows same-day joins.
+ */
+const findTripWithinGap = (
+  db: Database.Database,
+  payload: SegmentPayload,
+  gapDays: number,
+): Effect.Effect<Trip.Trip | undefined> => {
+  const at = epoch(payload.departAt);
+  if (at === undefined) {
+    return Effect.succeed(undefined);
+  }
+  const gapMs = Math.max(0, gapDays) * MS_PER_DAY;
+  return Effect.promise(() => db.query(Filter.type(Trip.Trip)).run()).pipe(
+    Effect.map((trips) => {
+      let best: Trip.Trip | undefined;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (const trip of trips) {
+        const start = epoch(trip.start);
+        if (start === undefined) {
+          continue;
+        }
+        const end = epoch(trip.end) ?? start;
+        if (at < start - gapMs || at > end + gapMs) {
+          continue;
+        }
+        const distance = at < start ? start - at : at > end ? at - end : 0;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = trip;
+        }
+      }
+      return best;
+    }),
+    Effect.catchAllDefect(() => Effect.succeed(undefined)),
+  );
+};
+
+const tripNameFor = (payload: SegmentPayload): string => {
+  const origin = payload.origin?.code ?? payload.origin?.name ?? '?';
+  const destination = payload.destination?.code ?? payload.destination?.name ?? '?';
+  const number = payload.number ?? '';
+  return number ? `${origin} → ${destination} (${number})` : `${origin} → ${destination}`;
+};
+
+const makeSegment = (
+  payload: SegmentPayload,
+  provider: Provider.Provider,
+  booking: Booking.Booking,
+): Segment.Segment => {
+  // Fields shared by all transport variants (TransportFields).
+  const transport = {
+    origin: payload.origin,
+    destination: payload.destination,
+    departAt: payload.departAt,
+    arriveAt: payload.arriveAt,
+    number: payload.number,
+    provider,
+    seat: payload.seat,
+  };
+  const details: Segment.Details =
+    (payload.kind ?? 'flight') === 'train'
+      ? { _tag: 'train', ...transport, platform: payload.platform, coach: payload.coach }
+      : { _tag: 'flight', ...transport, gateFrom: payload.gateFrom, terminalFrom: payload.terminalFrom };
+  return Segment.make({ booking: Ref.make(booking), details });
+};
 
 /** Widen a Trip's date range to cover a newly-appended segment (ISO timestamps compare lexically). */
-const widenTripRange = (trip: Trip.Trip, payload: FlightPayload): void => {
+const widenTripRange = (trip: Trip.Trip, payload: SegmentPayload): void => {
   Obj.update(trip, (trip) => {
     if (payload.departAt && (!trip.start || payload.departAt < trip.start)) {
       trip.start = payload.departAt;
@@ -192,7 +264,7 @@ const widenTripRange = (trip: Trip.Trip, payload: FlightPayload): void => {
 };
 
 const assemble = (
-  payload: FlightPayload,
+  payload: SegmentPayload,
   { db, source }: { db: Database.Database; source: Obj.Any; template: ExtractionTemplate },
 ): Effect.Effect<ExtractResult> =>
   Effect.gen(function* () {
@@ -203,32 +275,42 @@ const assemble = (
 
     const message = source as Message.Message;
 
-    // Case 1: an existing segment with the same (number, depart-date) pair — update it in place
-    // (e.g. gate/terminal change). Surface its owning Trip in `updated` so the source message
-    // also gets a provenance relation to the Trip.
-    const existingSegment = yield* findExistingFlight(db, payload);
-    if (existingSegment && existingSegment.details._tag === 'flight') {
+    // Case 1: an existing segment with the same (kind, number, depart-date) — update it in place
+    // (e.g. gate/terminal/platform change, or a second email filling missing fields). Surface its
+    // owning Trip in `updated` so the source message also gets a provenance relation to the Trip.
+    const existingSegment = yield* findExistingSegment(db, payload);
+    if (existingSegment) {
       Obj.update(existingSegment, (existingSegment) => {
-        if (existingSegment.details._tag !== 'flight') {
-          return;
+        const details = existingSegment.details;
+        // Common transport fields (flight + train).
+        if (details._tag === 'flight' || details._tag === 'train') {
+          if (payload.origin !== undefined) {
+            details.origin = payload.origin;
+          }
+          if (payload.destination !== undefined) {
+            details.destination = payload.destination;
+          }
+          if (payload.arriveAt !== undefined) {
+            details.arriveAt = payload.arriveAt;
+          }
+          if (payload.seat !== undefined) {
+            details.seat = payload.seat;
+          }
         }
-        if (payload.origin !== undefined) {
-          existingSegment.details.origin = payload.origin;
-        }
-        if (payload.destination !== undefined) {
-          existingSegment.details.destination = payload.destination;
-        }
-        if (payload.arriveAt !== undefined) {
-          existingSegment.details.arriveAt = payload.arriveAt;
-        }
-        if (payload.gateFrom !== undefined) {
-          existingSegment.details.gateFrom = payload.gateFrom;
-        }
-        if (payload.terminalFrom !== undefined) {
-          existingSegment.details.terminalFrom = payload.terminalFrom;
-        }
-        if (payload.seat !== undefined) {
-          existingSegment.details.seat = payload.seat;
+        if (details._tag === 'flight') {
+          if (payload.gateFrom !== undefined) {
+            details.gateFrom = payload.gateFrom;
+          }
+          if (payload.terminalFrom !== undefined) {
+            details.terminalFrom = payload.terminalFrom;
+          }
+        } else if (details._tag === 'train') {
+          if (payload.platform !== undefined) {
+            details.platform = payload.platform;
+          }
+          if (payload.coach !== undefined) {
+            details.coach = payload.coach;
+          }
         }
       });
       const owningTrip = Obj.getParent(existingSegment);
@@ -252,7 +334,25 @@ const assemble = (
       return { created: [segment], updated: [existingTrip], relations: [] };
     }
 
-    // Case 3: a brand-new trip — create a Trip + Booking + flight Segment trio.
+    // Case 2b: no shared PNR, but a Trip lies within the configured gap of this segment's date —
+    // treat it as the same journey (e.g. a separately-booked train leg). Create a fresh Booking
+    // (different PNR) parented to that Trip and append the segment.
+    const nearbyTrip = yield* findTripWithinGap(db, payload, getTripGapDays());
+    if (nearbyTrip) {
+      const booking = Booking.make({
+        provider,
+        confirmationCode: payload.confirmationCode,
+        source: 'email',
+        rawPayload: getBodyText(message),
+      });
+      Obj.setParent(booking, nearbyTrip);
+      const segment = makeSegment(payload, provider, booking);
+      Trip.addSegment(nearbyTrip, segment);
+      widenTripRange(nearbyTrip, payload);
+      return { created: [segment, booking], updated: [nearbyTrip], relations: [] };
+    }
+
+    // Case 3: a brand-new trip — create a Trip + Booking + Segment trio.
     const booking = Booking.make({
       provider,
       confirmationCode: payload.confirmationCode,
@@ -307,12 +407,14 @@ const matchesDomain = (website: string | undefined, domain: string): boolean => 
  */
 const resolveProvider = (
   db: Database.Database,
-  payload: FlightPayload,
+  payload: SegmentPayload,
   message: Message.Message,
 ): Effect.Effect<Provider.Provider, never> =>
   Effect.gen(function* () {
     const domain = payload.provider?.domain ?? senderDomain(message);
-    const code = airlineCodeOf(payload.number);
+    // The IATA airline-prefix lookup only makes sense for flights; rail operators carry their own
+    // name in the payload (or fall back to the sender domain).
+    const code = (payload.kind ?? 'flight') === 'flight' ? airlineCodeOf(payload.number) : undefined;
     const name =
       payload.provider?.name ??
       (code && AIRLINES.find((airline) => airline.code === code)?.name) ??
@@ -340,7 +442,7 @@ const template: ExtractionTemplate = {
   id: TEMPLATE_ID,
   title: 'Trip',
   description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
-  kinds: ['flight'],
+  kinds: ['flight', 'train'],
   sourceTypes: [Type.getTypename(Message.Message)!],
   prompt: PROMPT,
   targets: [
@@ -359,7 +461,7 @@ const template: ExtractionTemplate = {
 export const TripMessageExtractor: ObjectExtractor = makeTemplateExtractor({
   template,
   operation: TripOperation.ExtractTrip,
-  payloadSchema: FlightPayload,
+  payloadSchema: SegmentPayload,
   match: matchMessage,
   getSourceText: (source) => getBodyText(source as Message.Message),
   assemble,

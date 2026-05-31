@@ -16,8 +16,9 @@ import {
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 
-import { Segment } from '#types';
+import { Place, Segment } from '#types';
 
+import { AIRPORTS } from '../../operations/extractor/const';
 import { type SegmentCardAction } from '../SegmentCard';
 import { SegmentStack } from '../SegmentStack';
 
@@ -36,11 +37,27 @@ const toLatLng = (geo?: readonly [number, number, number?] | undefined): LatLng 
 
 const sameLatLng = (a: LatLng, b: LatLng): boolean => a.lat === b.lat && a.lng === b.lng;
 
-/** All points referenced by a segment (origin, destination), with geo coords if present. */
+/** IATA code → coordinates, for geocoding places that carry a code but no explicit `geo`. */
+const airportByIata = new Map<string, LatLng>(AIRPORTS.map(({ iata, geo }) => [iata, { lat: geo.lat, lng: geo.lng }]));
+
+/**
+ * Resolve a place to coordinates: prefer its explicit `geo`, otherwise geocode by its
+ * IATA `code` against {@link AIRPORTS}. Returns undefined when neither is available.
+ */
+const placeLatLng = (place?: Place.Place): LatLng | undefined => {
+  const geo = toLatLng(place?.geo);
+  if (geo) {
+    return geo;
+  }
+  const code = place?.code?.toUpperCase();
+  return code ? airportByIata.get(code) : undefined;
+};
+
+/** All points referenced by a segment (origin, destination), geocoded via `geo` or IATA code. */
 const segmentPoints = (seg: Segment.Segment): LatLng[] => {
   const points: LatLng[] = [];
-  const origin = toLatLng(Segment.getOrigin(seg)?.geo);
-  const destination = toLatLng(Segment.getDestination(seg)?.geo);
+  const origin = placeLatLng(Segment.getOrigin(seg));
+  const destination = placeLatLng(Segment.getDestination(seg));
   if (origin) {
     points.push(origin);
   }
@@ -57,8 +74,8 @@ const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } |
   if (seg.details._tag === 'accommodation' || seg.details._tag === 'activity') {
     return undefined;
   }
-  const source = toLatLng(seg.details.origin?.geo);
-  const target = toLatLng(seg.details.destination?.geo);
+  const source = placeLatLng(seg.details.origin);
+  const target = placeLatLng(seg.details.destination);
   if (!source || !target || sameLatLng(source, target)) {
     return undefined;
   }

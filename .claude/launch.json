@@ -15,6 +15,16 @@
       "autoPort": true
     },
     {
+      "name": "composer-app-proto",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5180 --strictPort"
+      ],
+      "port": 5180,
+      "autoPort": true
+    },
+    {
       "name": "testbench-app",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "testbench-app:serve"],

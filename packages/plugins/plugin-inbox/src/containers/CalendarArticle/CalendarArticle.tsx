@@ -3,7 +3,7 @@
 //
 
 import { isSameDay } from 'date-fns';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -91,8 +91,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [events, id, showItem],
   );
 
-  const eventIds = useMemo(() => events.map((event) => event.id), [events]);
-  useArticleKeyboardNavigation({ articleId: id, ids: eventIds, currentId, onSelect: handleNavigate });
+  useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>

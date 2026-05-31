@@ -26,6 +26,7 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Trip',
         'trip.new.label': 'New trip',
+        'trip.merge.label': 'Merge into nearest trip',
         'segment.add.label': 'Add segment',
         'segment.companion.label': 'Segment',
         'segment.flight.label': 'Flight',

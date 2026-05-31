@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 
 import { SegmentStack, type SegmentCardAction, TripMapView } from '#components';
@@ -105,7 +105,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const [newSegmentKind, setNewSegmentKind] = useState<Segment.Kind>('flight');
   const [viewMode, setViewMode] = useState<ViewMode>('stack');
 
-  const handleMapSelect = useCallback(
+  const handleNavigate = useCallback(
     (segmentId: string) => {
       void showItem({
         contextId: id,
@@ -116,6 +116,9 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     },
     [id, showItem, subject],
   );
+
+  // Wire 'j' (next) / 'k' (previous) to navigate the segment stack, matching CalendarArticle.
+  useArticleKeyboardNavigation({ articleId: id, items: segments, currentId, onSelect: handleNavigate });
 
   const handleAddSegment = useCallback(() => {
     const space = getSpace(subject);
@@ -217,7 +220,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           </Panel.Toolbar>
           <Panel.Content asChild>
             {viewMode === 'map' ? (
-              <TripMapView segments={segments} selectedSegmentId={currentId} onSelect={handleMapSelect} />
+              <TripMapView segments={segments} selectedSegmentId={currentId} onSelect={handleNavigate} />
             ) : (
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
             )}
