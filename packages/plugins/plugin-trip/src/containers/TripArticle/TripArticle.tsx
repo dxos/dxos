@@ -10,9 +10,10 @@ import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace, useObject } from '@dxos/react-client/echo';
-import { Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { SegmentStack, type SegmentCardAction, TripMapView } from '#components';
 import { meta } from '#meta';
@@ -24,37 +25,11 @@ const byPrimaryDate = (a: Segment.Segment, b: Segment.Segment): number => {
   return da - db;
 };
 
-const KIND_OPTIONS: { value: Segment.Kind; label: string }[] = [
-  {
-    value: 'flight',
-    label: t('segment.flight.label'),
-  },
-  {
-    value: 'train',
-    label: t('segment.train.label'),
-  },
-  {
-    value: 'boat',
-    label: t('segment.boat.label'),
-  },
-  {
-    value: 'road',
-    label: t('segment.road.label'),
-  },
-  {
-    value: 'accommodation',
-    label: t('segment.accommodation.label'),
-  },
-  {
-    value: 'activity',
-    label: t('segment.activity.label'),
-  },
-];
-
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
+const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
+
 export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
-  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
 
@@ -127,7 +102,6 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     [id, showItem, subject],
   );
 
-  const [newSegmentKind, setNewSegmentKind] = useState<Segment.Kind>('flight');
   const [showGlobe, setShowGlobe] = useState(false);
 
   const handleNavigate = useCallback(
@@ -145,14 +119,53 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   // Wire 'j' (next) / 'k' (previous) to navigate the segment stack, matching CalendarArticle.
   useArticleKeyboardNavigation({ articleId: id, items: segments, currentId, onSelect: handleNavigate });
 
-  const handleAddSegment = useCallback(() => {
-    const space = getSpace(subject);
-    if (!space) {
-      return;
-    }
-    const segment = space.db.add(Segment.makeDefault(newSegmentKind));
-    Trip.addSegment(subject, segment);
-  }, [newSegmentKind, subject]);
+  const handleAddSegment = useCallback(
+    (kind: Segment.Kind) => {
+      const space = getSpace(subject);
+      if (!space) {
+        return;
+      }
+      const segment = space.db.add(Segment.makeDefault(kind));
+      Trip.addSegment(subject, segment);
+    },
+    [subject],
+  );
+
+  // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
+  // kinds and a globe on/off toggle, composed as data rather than hand-wired Toolbar children.
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .group(
+          'add',
+          {
+            label: ['segment.add.label', { ns: meta.id }],
+            icon: 'ph--plus--regular',
+            variant: 'dropdownMenu',
+          },
+          (group) => {
+            for (const kind of SEGMENT_KINDS) {
+              group.action(
+                `add-${kind}`,
+                { label: [`segment.${kind}.label`, { ns: meta.id }], icon: Segment.kindIcon(kind) },
+                () => handleAddSegment(kind),
+              );
+            }
+          },
+        )
+        .action(
+          'toggle-globe',
+          {
+            label: ['globe.toggle.label', { ns: meta.id }],
+            icon: 'ph--globe--regular',
+            iconOnly: true,
+            checked: showGlobe,
+          },
+          () => setShowGlobe((value) => !value),
+        )
+        .build(),
+    [handleAddSegment, showGlobe],
+  );
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
@@ -172,45 +185,10 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
             </NaturalCalendar.Root>
           </Panel.Root>
           <Panel.Root>
-            <Panel.Toolbar asChild>
-              <Toolbar.Root>
-                <Select.Root value={newSegmentKind} onValueChange={(value) => setNewSegmentKind(value as Segment.Kind)}>
-                  <Toolbar.Button asChild>
-                    <Select.TriggerButton placeholder={t('segment.add.label')} />
-                  </Toolbar.Button>
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {KIND_OPTIONS.map(({ value, label }) => (
-                          <Select.Option key={value} value={value}>
-                            {label}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                      <Select.Arrow />
-                    </Select.Content>
-                  </Select.Portal>
-                </Select.Root>
-                <Toolbar.IconButton
-                  icon='ph--plus--regular'
-                  iconOnly
-                  label={t('segment.add.label')}
-                  onClick={handleAddSegment}
-                />
-                <div className='grow' />
-                <Toolbar.ToggleGroup
-                  type='multiple'
-                  value={showGlobe ? ['globe'] : []}
-                  onValueChange={(value) => setShowGlobe(value.includes('globe'))}
-                >
-                  <Toolbar.ToggleGroupIconItem
-                    value='globe'
-                    icon='ph--globe--regular'
-                    iconOnly
-                    label={t('globe.toggle.label')}
-                  />
-                </Toolbar.ToggleGroup>
-              </Toolbar.Root>
+            <Panel.Toolbar>
+              <Menu.Root {...menuActions} attendableId={attendableId}>
+                <Menu.Toolbar />
+              </Menu.Root>
             </Panel.Toolbar>
             <Panel.Content asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />

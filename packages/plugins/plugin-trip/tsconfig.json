@@ -78,6 +78,9 @@
       "path": "../../ui/react-ui-geo"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
