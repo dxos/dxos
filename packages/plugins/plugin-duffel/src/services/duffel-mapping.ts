@@ -2,10 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type BookingSearch, type Segment } from '@dxos/plugin-trip';
 
 /** Duffel cabin_class values. */
-type DuffelCabin = 'economy' | 'premium_economy' | 'business' | 'first';
+const DuffelCabin = Schema.Literal('economy', 'premium_economy', 'business', 'first');
+type DuffelCabin = Schema.Schema.Type<typeof DuffelCabin>;
 
 const CABIN_MAP: Record<Segment.ServiceClass, DuffelCabin> = {
   economy: 'economy',
@@ -47,7 +50,7 @@ export const offerRequestBody = (query: BookingSearch.FlightSearchQuery): Duffel
     data: {
       slices,
       passengers: Array.from({ length: count }, () => ({ type: 'adult' as const })),
-      cabin_class: query.cabinClass ? CABIN_MAP[query.cabinClass] : undefined,
+      cabin_class: query.serviceClass ? CABIN_MAP[query.serviceClass] : undefined,
     },
   };
 };
@@ -98,8 +101,8 @@ const toSlice = (segment: DuffelSegment): BookingSearch.FlightSliceFields => ({
   destination: { code: segment.destination?.iata_code ?? '', name: segment.destination?.name },
   departAt: segment.departing_at,
   arriveAt: segment.arriving_at,
-  marketingCarrier: segment.marketing_carrier?.iata_code,
-  flightNumber: segment.marketing_carrier_flight_number,
+  operator: segment.marketing_carrier?.iata_code,
+  number: segment.marketing_carrier_flight_number,
   durationMinutes: parseDurationMinutes(segment.duration),
 });
 
@@ -109,9 +112,9 @@ export const parseOffers = (response: DuffelOffersResponse): BookingSearch.Fligh
     _tag: 'flight' as const,
     id: offer.id,
     provider: 'duffel',
-    carrier: { name: offer.owner?.name ?? 'Unknown', iataCode: offer.owner?.iata_code },
+    operator: { name: offer.owner?.name ?? 'Unknown', iataCode: offer.owner?.iata_code },
     totalAmount: Number(offer.total_amount),
     currency: offer.total_currency,
-    cabinClass: offer.cabin_class ? CABIN_REVERSE[offer.cabin_class] : undefined,
+    serviceClass: offer.cabin_class ? CABIN_REVERSE[offer.cabin_class] : undefined,
     slices: (offer.slices ?? []).flatMap((slice) => (slice.segments ?? []).map(toSlice)),
   }));

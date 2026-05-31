@@ -25,7 +25,6 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Trip',
-        'settings.title': 'Trip',
         'trip.new.label': 'New trip',
         'trip.merge.label': 'Merge into nearest trip',
         'globe.toggle.label': 'Toggle globe',
@@ -44,11 +43,6 @@ export const translations = [
         'booking.search.label': 'Search',
         'booking.searching.label': 'Searching…',
         'booking.provider.placeholder': 'Select provider',
-        'booking.origin.label': 'Origin',
-        'booking.destination.label': 'Destination',
-        'booking.departure.label': 'Departure',
-        'booking.passengers.label': 'Passengers',
-        'booking.cabin.placeholder': 'Cabin class',
         'booking.no-providers.message':
           'No booking providers are enabled. Enable a booking plugin (e.g. Duffel) in settings.',
         'booking.no-offers.message': 'No offers found.',

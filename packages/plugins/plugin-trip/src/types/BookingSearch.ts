@@ -29,8 +29,10 @@ export const FlightSearchFields = Schema.Struct({
   ),
   departureDate: Schema.optional(Format.DateTime.annotations({ title: 'Departure' })),
   returnDate: Schema.optional(Format.DateTime.annotations({ title: 'Return' })),
-  cabinClass: Schema.optional(Segment.ServiceClass),
-  carrier: Schema.optional(Schema.String.annotations({ title: 'Carrier', description: 'Preferred airline IATA code' })),
+  serviceClass: Schema.optional(Segment.ServiceClass),
+  operator: Schema.optional(
+    Schema.String.annotations({ title: 'Operator', description: 'Preferred operator IATA code' }),
+  ),
   passengers: Schema.optional(Schema.Number.annotations({ title: 'Passengers' })),
 });
 export interface FlightSearchFields extends Schema.Schema.Type<typeof FlightSearchFields> {}
@@ -48,19 +50,23 @@ export const FlightSliceFields = Schema.Struct({
   destination: Schema.Struct({ code: Schema.String, name: Schema.optional(Schema.String) }),
   departAt: Schema.optional(Format.DateTime),
   arriveAt: Schema.optional(Format.DateTime),
-  marketingCarrier: Schema.optional(Schema.String),
-  flightNumber: Schema.optional(Schema.String),
+  /** Operating carrier IATA code (the leg's airline). */
+  operator: Schema.optional(Schema.String),
+  /** Operator-assigned flight number (digits only; combine with `operator` for the full number). */
+  number: Schema.optional(Schema.String),
   durationMinutes: Schema.optional(Schema.Number),
 });
 export interface FlightSliceFields extends Schema.Schema.Type<typeof FlightSliceFields> {}
 
 export const FlightOffer = Schema.TaggedStruct('flight', {
   id: Schema.String,
+  /** Booking source (the contributing BookingService id, e.g. 'duffel'). */
   provider: Schema.String,
-  carrier: Schema.Struct({ name: Schema.String, iataCode: Schema.optional(Schema.String) }),
+  /** Operating airline. */
+  operator: Schema.Struct({ name: Schema.String, iataCode: Schema.optional(Schema.String) }),
   totalAmount: Schema.Number,
   currency: Schema.String,
-  cabinClass: Schema.optional(Segment.ServiceClass),
+  serviceClass: Schema.optional(Segment.ServiceClass),
   slices: Schema.Array(FlightSliceFields),
 });
 export interface FlightOffer extends Schema.Schema.Type<typeof FlightOffer> {}
