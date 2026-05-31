@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
@@ -163,15 +162,24 @@ const createWorkerdProject = ({
       // Log-meta injection only — no dev file sink.
       DxosLogPlugin({ logToFile: false }),
       ...plugins,
-      cloudflareTest({
-        miniflare: {
-          compatibilityDate,
-          compatibilityFlags,
-          // Serve `*.wasm` imports as `WebAssembly.Module` instances so deps
-          // like `@automerge/automerge`'s `workerd` build can `initSync` them.
-          modulesRules: [{ type: 'CompiledWasm', include: ['**/*.wasm'] }],
-        },
-      }),
+      // `@cloudflare/vitest-pool-workers` is ESM-only. The shared base config is
+      // also loaded by packages without `"type": "module"` (their config bundles
+      // to CJS, where a static top-level import becomes a `require` and throws
+      // "This package is ESM only"). Importing it dynamically — only here, in the
+      // workerd project those packages never construct — keeps it out of the CJS
+      // require graph; Vite awaits Promise-valued plugins. This is the workaround
+      // the Vite "ESM only" error links to.
+      import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
+        cloudflareTest({
+          miniflare: {
+            compatibilityDate,
+            compatibilityFlags,
+            // Serve `*.wasm` imports as `WebAssembly.Module` instances so deps
+            // like `@automerge/automerge`'s `workerd` build can `initSync` them.
+            modulesRules: [{ type: 'CompiledWasm', include: ['**/*.wasm'] }],
+          },
+        }),
+      ),
     ],
     test: {
       name: 'workerd',
