@@ -778,6 +778,11 @@ peerDependencyRules:
     '@effect/ai>@effect/experimental': '>=0.58.0'
     '@effect/ai>@effect/platform': '>=0.94.1'
     '@effect/ai>@effect/rpc': '>=0.73.0'
+    '@effect/ai-anthropic>@effect/experimental': '>=0.58.0'
+    '@effect/ai-anthropic>@effect/platform': '>=0.94.0'
+    '@effect/ai-openai>@effect/experimental': '>=0.58.0'
+    '@effect/ai-openai>@effect/platform': '>=0.94.1'
+    '@effect/sql-sqlite-wasm>@effect/wa-sqlite': '>=0.1.2'
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
@@ -785,6 +790,7 @@ peerDependencyRules:
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
+    - '@effect/experimental'
 
 strictPeerDependencies: true
 
