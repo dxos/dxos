@@ -172,12 +172,12 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
+          run: moon run :test :test-browser :test-storybook :test-workerd --affected remote -- --no-file-parallelism
 
       # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
       - name: Test Affected (no analytics)
         if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
+        run: moon run :test :test-browser :test-storybook :test-workerd --affected remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
@@ -187,12 +187,12 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
+          run: moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd -- --no-file-parallelism
 
       # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
       - name: Test All (no analytics)
         if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
-        run: moon exec --on-failure continue :test :test-browser :test-storybook -- --no-file-parallelism
+        run: moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd -- --no-file-parallelism
 
       - name: Upload Test Results
         if: always()
