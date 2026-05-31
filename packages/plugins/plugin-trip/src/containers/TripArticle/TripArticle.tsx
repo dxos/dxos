@@ -183,7 +183,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       >
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
-          <Panel.Root className='hidden @3xl:block border-r border-red-500'>
+          <Panel.Root className='hidden @3xl:block border-r border-separator'>
             <NaturalCalendar.Root>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
