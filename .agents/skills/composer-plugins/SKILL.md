@@ -9,6 +9,17 @@ description: Use when working on files in packages/plugins/, adding new plugins,
 
 Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand every pattern below.
 
+**Read `MEMORY.md` first** (sibling of this file) for session-logged design/implementation learnings and prior corrections.
+
+**REQUIRED — keep `MEMORY.md` current:** Whenever the user directs a correction (tells you to do something differently, rejects an approach, or specifies a pattern), record it in `MEMORY.md` as part of carrying out that correction — do not defer to session end. Also capture other non-obvious design/implementation details as you learn them.
+
+Update it *appropriately*:
+
+- Append to the current session's dated section, newest first: `## YYYY-MM-DD — <plugin(s)>`. Create it if absent; do not start a second section for the same session.
+- Keep it compact and agent-directed: terse imperative bullets, one rule per bullet, name the file/symbol/idiom. No prose, no hedging, no narration of what you did.
+- Update or merge an existing bullet instead of adding a near-duplicate; delete bullets proven wrong.
+- Record reusable rules, not task specifics. When a rule generalizes beyond one session, promote it into the body of this `SKILL.md` and drop it from `MEMORY.md`.
+
 ## Discovery
 
 Use the `dxos-introspect` MCP server (`@dxos/introspect-mcp`, served by the `dx-introspect-mcp` binary) as the source of truth for plugin metadata and reference examples — not directory listings.
