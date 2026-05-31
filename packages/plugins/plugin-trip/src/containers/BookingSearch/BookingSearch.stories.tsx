@@ -12,7 +12,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Booking, type BookingSearch as BS, Segment, Trip, TripCapabilities } from '#types';
