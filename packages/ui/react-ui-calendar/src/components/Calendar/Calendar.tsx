@@ -213,6 +213,12 @@ type CalendarGridProps = {
   rows?: number;
   /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
   dates?: Date[];
+  /**
+   * Date the grid scrolls into view on mount, and whenever this value changes.
+   * Defaults to today. Pass a stable (memoized) Date so the grid does not
+   * re-scroll on every render.
+   */
+  initialDate?: Date;
   /** Fired when a user selects a single date (click or arrow key). */
   onSelect?: (event: { date: Date }) => void;
   /**
@@ -224,7 +230,7 @@ type CalendarGridProps = {
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, dates = [], onSelect, onSelectRange, ...props }, forwardedRef) => {
+  ({ classNames, rows, dates = [], initialDate, onSelect, onSelectRange, ...props }, forwardedRef) => {
     const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
       useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
@@ -240,9 +246,9 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
-      const index = getRowIndex(start, today, weekStartsOn);
+      const index = getRowIndex(start, initialDate ?? today, weekStartsOn);
       listRef.current?.scrollToRow(index);
-    }, [initialized, start, today, weekStartsOn]);
+    }, [initialized, start, today, initialDate, weekStartsOn]);
 
     useEffect(() => {
       return event.on((event) => {

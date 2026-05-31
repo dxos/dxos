@@ -110,6 +110,7 @@
     "@dxos/react-ui-calendar": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -120,6 +121,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/keyboard": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",

@@ -88,6 +88,31 @@ type MapContentProps = ThemedClassName<Omit<MapContainerProps, 'children'> & Pro
  */
 const MAP_CONTENT_NAME = 'Map.Content';
 
+/**
+ * Recalculates the leaflet map size when its container resizes (e.g. a companion
+ * panel opening/closing). Without this, leaflet keeps its stale size and renders
+ * blank/gray tiles in the newly-exposed area until the next pan/zoom. Coalesced
+ * via rAF to avoid ResizeObserver feedback loops.
+ */
+const MapResize = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize());
+    });
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  return null;
+};
+
 const MapContent = forwardRef<MapController, MapContentProps>(
   (
     { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
@@ -144,6 +169,7 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         whenReady={() => {}}
         ref={mapRef}
       >
+        <MapResize />
         {children}
       </MapContainer>
     );
@@ -283,29 +309,47 @@ const CustomControl = ({
   position: ControlPosition;
 }>) => {
   const map = useMap();
+  const rootRef = useRef<ReturnType<typeof createRoot> | undefined>(undefined);
 
+  // Mount the leaflet control (and its React root) once per map/position. Children are
+  // rendered into the persistent root by the effect below, so updating them does NOT
+  // tear down and re-add the control (which would flicker on every parent re-render).
   useEffect(() => {
     const control = new Control({ position });
     control.onAdd = () => {
       const container = DomUtil.create('div', mx('m-0!', controlPositions[position]));
       DomEvent.disableClickPropagation(container);
       DomEvent.disableScrollPropagation(container);
-
       const root = createRoot(container);
+      rootRef.current = root;
+      // Initial render — covers mount and any map/position remount; the effect below
+      // handles subsequent children-only updates.
       root.render(
         <ThemeProvider tx={defaultTx}>
           <Tooltip.Provider>{children}</Tooltip.Provider>
         </ThemeProvider>,
       );
-
       return container;
     };
 
     control.addTo(map);
     return () => {
       control.remove();
+      const root = rootRef.current;
+      rootRef.current = undefined;
+      // Defer unmount so it doesn't run synchronously during a React render/commit.
+      queueMicrotask(() => root?.unmount());
     };
-  }, [map, position, children]);
+  }, [map, position]);
+
+  // Re-render children into the persistent root whenever they change.
+  useEffect(() => {
+    rootRef.current?.render(
+      <ThemeProvider tx={defaultTx}>
+        <Tooltip.Provider>{children}</Tooltip.Provider>
+      </ThemeProvider>,
+    );
+  }, [children]);
 
   return null;
 };

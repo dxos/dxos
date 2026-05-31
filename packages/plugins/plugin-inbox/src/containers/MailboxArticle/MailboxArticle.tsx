@@ -142,8 +142,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [db, id, mailbox.id, sortedMessages, showItem],
   );
 
-  const messageIds = useMemo(() => sortedMessages.map((message) => message.id), [sortedMessages]);
-  useArticleKeyboardNavigation({ articleId: id, ids: messageIds, currentId, onSelect: handleNavigate });
+  useArticleKeyboardNavigation({ articleId: id, items: sortedMessages, currentId, onSelect: handleNavigate });
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
