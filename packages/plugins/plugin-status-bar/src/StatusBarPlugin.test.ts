@@ -13,12 +13,11 @@ import { meta } from './meta';
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('StatusBarPlugin', () => {
-  // `createComposerTestApp` cold-start can exceed the 5s default in CI; allow more headroom.
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [StatusBarPlugin()],
     });
 
     expect(harness.manager.getActive()).toContain(moduleId('ReactSurface'));
-  }, 30_000);
+  });
 });
