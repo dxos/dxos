@@ -1,0 +1,7 @@
+diff --git a/default.js b/default.js
+index 3e32c2b..a95c4c8 100644
+--- a/default.js
++++ b/default.js
+@@ -1 +1 @@
+-module.exports = require('events')
++module.exports = require('bare-events')
