@@ -24,7 +24,32 @@ const byPrimaryDate = (a: Segment.Segment, b: Segment.Segment): number => {
   return da - db;
 };
 
-type ViewMode = 'stack' | 'map';
+const KIND_OPTIONS: { value: Segment.Kind; label: string }[] = [
+  {
+    value: 'flight',
+    label: t('segment.flight.label'),
+  },
+  {
+    value: 'train',
+    label: t('segment.train.label'),
+  },
+  {
+    value: 'boat',
+    label: t('segment.boat.label'),
+  },
+  {
+    value: 'road',
+    label: t('segment.road.label'),
+  },
+  {
+    value: 'accommodation',
+    label: t('segment.accommodation.label'),
+  },
+  {
+    value: 'activity',
+    label: t('segment.activity.label'),
+  },
+];
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
@@ -103,7 +128,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   );
 
   const [newSegmentKind, setNewSegmentKind] = useState<Segment.Kind>('flight');
-  const [viewMode, setViewMode] = useState<ViewMode>('stack');
+  const [showGlobe, setShowGlobe] = useState(false);
 
   const handleNavigate = useCallback(
     (segmentId: string) => {
@@ -129,42 +154,13 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     Trip.addSegment(subject, segment);
   }, [newSegmentKind, subject]);
 
-  const KIND_OPTIONS: { value: Segment.Kind; label: string }[] = [
-    {
-      value: 'flight',
-      label: t('segment.flight.label'),
-    },
-    {
-      value: 'train',
-      label: t('segment.train.label'),
-    },
-    {
-      value: 'boat',
-      label: t('segment.boat.label'),
-    },
-    {
-      value: 'road',
-      label: t('segment.road.label'),
-    },
-    {
-      value: 'accommodation',
-      label: t('segment.accommodation.label'),
-    },
-    {
-      value: 'activity',
-      label: t('segment.activity.label'),
-    },
-  ];
-
-  const showCalendar = viewMode === 'stack';
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
       <div
-        className={
-          showCalendar ? 'grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full' : 'grid grid-cols-1 h-full'
-        }
+        className={`grid h-full ${showGlobe ? 'grid-rows-[minmax(0,1fr)_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]'}`}
       >
-        {showCalendar && (
+        {/* Row 1: calendar + segment stack. */}
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
           <Panel.Root className='hidden @3xl:block'>
             <NaturalCalendar.Root>
               <Panel.Toolbar asChild>
@@ -175,57 +171,61 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
               </Panel.Content>
             </NaturalCalendar.Root>
           </Panel.Root>
-        )}
-        <Panel.Root>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              <Select.Root value={newSegmentKind} onValueChange={(value) => setNewSegmentKind(value as Segment.Kind)}>
-                <Toolbar.Button asChild>
-                  <Select.TriggerButton placeholder={t('segment.add.label')} />
-                </Toolbar.Button>
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {KIND_OPTIONS.map(({ value, label }) => (
-                        <Select.Option key={value} value={value}>
-                          {label}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                    <Select.Arrow />
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-              <Toolbar.IconButton
-                icon='ph--plus--regular'
-                iconOnly
-                label={t('segment.add.label')}
-                onClick={handleAddSegment}
-              />
-              <div className='grow' />
-              <Toolbar.ToggleGroup
-                type='single'
-                value={viewMode}
-                onValueChange={(value) => value && setViewMode(value as ViewMode)}
-              >
-                <Toolbar.ToggleGroupIconItem
-                  value='stack'
-                  icon='ph--list-dashes--regular'
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Select.Root value={newSegmentKind} onValueChange={(value) => setNewSegmentKind(value as Segment.Kind)}>
+                  <Toolbar.Button asChild>
+                    <Select.TriggerButton placeholder={t('segment.add.label')} />
+                  </Toolbar.Button>
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {KIND_OPTIONS.map(({ value, label }) => (
+                          <Select.Option key={value} value={value}>
+                            {label}
+                          </Select.Option>
+                        ))}
+                      </Select.Viewport>
+                      <Select.Arrow />
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+                <Toolbar.IconButton
+                  icon='ph--plus--regular'
                   iconOnly
-                  label='Stack view'
+                  label={t('segment.add.label')}
+                  onClick={handleAddSegment}
                 />
-                <Toolbar.ToggleGroupIconItem value='map' icon='ph--globe--regular' iconOnly label='Map view' />
-              </Toolbar.ToggleGroup>
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            {viewMode === 'map' ? (
-              <TripMapView segments={segments} selectedSegmentId={currentId} onSelect={handleNavigate} />
-            ) : (
+                <div className='grow' />
+                <Toolbar.ToggleGroup
+                  type='multiple'
+                  value={showGlobe ? ['globe'] : []}
+                  onValueChange={(value) => setShowGlobe(value.includes('globe'))}
+                >
+                  <Toolbar.ToggleGroupIconItem
+                    value='globe'
+                    icon='ph--globe--regular'
+                    iconOnly
+                    label={t('globe.toggle.label')}
+                  />
+                </Toolbar.ToggleGroup>
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
-            )}
-          </Panel.Content>
-        </Panel.Root>
+            </Panel.Content>
+          </Panel.Root>
+        </div>
+
+        {/* Row 2: globe (toggled via the toolbar). */}
+        {showGlobe && (
+          <Panel.Root className='min-bs-0 overflow-hidden border-t border-subdued-separator'>
+            <Panel.Content asChild>
+              <TripMapView segments={segments} selectedSegmentId={currentId} onSelect={handleNavigate} />
+            </Panel.Content>
+          </Panel.Root>
+        )}
       </div>
     </div>
   );

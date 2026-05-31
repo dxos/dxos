@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { IconButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import {
   Globe,
   type GlobeController,
@@ -19,8 +19,9 @@ import { loadTopology } from '@dxos/react-ui-geo/data';
 import { Place, Segment } from '#types';
 
 import { AIRPORTS } from '../../operations/extractor/const';
-import { type SegmentCardAction } from '../SegmentCard';
-import { SegmentStack } from '../SegmentStack';
+
+/** Globe control actions surfaced by `Globe.Action` (matches react-ui-geo's `ControlAction`). */
+type GlobeAction = 'toggle' | 'start' | 'zoom-in' | 'zoom-out';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 const initialZoom = 1.2;
@@ -152,7 +153,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       const points = segments.flatMap((seg) => segmentPoints(seg));
       return points.filter((point, index) => index === 0 || !sameLatLng(point, points[index - 1]));
     }, [segments]);
-    const [tourRunning, setTourRunning] = useTour(controller, tourPoints, { loop: true });
+    const [, setTourRunning] = useTour(controller, tourPoints, { loop: true });
 
     // Recenter the globe on the selected segment's first geo-tagged point
     // whenever the selection changes. `controller.flyTo` interrupts any
@@ -175,14 +176,20 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       void controller.flyTo(point).catch(() => {});
     }, [controller, segments, selectedSegmentId]);
 
-    // Bridge SegmentStack actions to the parent's selection callback.
-    const handleStackAction = useCallback(
-      (action: SegmentCardAction) => {
-        if (action.type === 'current' || action.type === 'select') {
-          onSelect?.(action.segmentId);
+    // `Globe.Action` controls: 'start' plays/pauses the tour, 'toggle' resets the view.
+    const handleGlobeAction = useCallback(
+      (action: GlobeAction) => {
+        switch (action) {
+          case 'start':
+            setTourRunning((running) => !running);
+            break;
+          case 'toggle':
+            controller?.setRotation?.(initialRotation);
+            controller?.setZoom?.(initialZoom);
+            break;
         }
       },
-      [onSelect],
+      [controller, setTourRunning],
     );
 
     // Click on the canvas → nearest segment.
@@ -231,49 +238,12 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, [controller?.canvas, handleSelectNearest]);
 
     return (
-      <div
-        {...composableProps(props, {
-          classNames: 'grid grid-cols-[calc(var(--spacing-card-min-width)+2rem)_1fr] h-full w-full overflow-hidden',
-        })}
-        ref={forwardedRef}
-      >
-        <aside
-          aria-label='Itinerary'
-          className='flex flex-col overflow-hidden border-r border-subdued-separator bg-base-surface'
-        >
-          {segments.length === 0 ? (
-            <div className='p-3 text-sm text-description'>No segments yet.</div>
-          ) : (
-            <SegmentStack
-              id='trip-map-itinerary'
-              segments={segments}
-              currentId={selectedSegmentId}
-              onAction={handleStackAction}
-              classNames='flex-1 overflow-hidden'
-            />
-          )}
-        </aside>
-
-        <div className='relative overflow-hidden'>
-          <Globe.Root classNames='absolute inset-0' zoom={initialZoom} rotation={initialRotation}>
-            <Globe.Canvas ref={setController} topology={topology} styles={styles} features={features} />
-            <Globe.Zoom onAction={handleZoom} />
-          </Globe.Root>
-
-          {/* Tour play/pause */}
-          {tourPoints.length > 1 && (
-            <div className='absolute top-3 right-3 z-10'>
-              <IconButton
-                variant='ghost'
-                icon={tourRunning ? 'ph--pause--regular' : 'ph--play--regular'}
-                iconOnly
-                label={tourRunning ? 'Pause tour' : 'Play tour'}
-                onClick={() => setTourRunning((r) => !r)}
-                classNames='bg-base-surface/70 backdrop-blur'
-              />
-            </div>
-          )}
-        </div>
+      <div {...composableProps(props, { classNames: 'relative h-full w-full overflow-hidden' })} ref={forwardedRef}>
+        <Globe.Root classNames='absolute inset-0' zoom={initialZoom} rotation={initialRotation}>
+          <Globe.Canvas ref={setController} topology={topology} styles={styles} features={features} />
+          <Globe.Zoom onAction={handleZoom} />
+          {tourPoints.length > 1 && <Globe.Action onAction={handleGlobeAction} />}
+        </Globe.Root>
       </div>
     );
   },

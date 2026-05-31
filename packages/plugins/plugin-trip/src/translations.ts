@@ -28,6 +28,7 @@ export const translations = [
         'settings.title': 'Trip',
         'trip.new.label': 'New trip',
         'trip.merge.label': 'Merge into nearest trip',
+        'globe.toggle.label': 'Toggle globe',
         'segment.add.label': 'Add segment',
         'segment.companion.label': 'Segment',
         'segment.flight.label': 'Flight',
