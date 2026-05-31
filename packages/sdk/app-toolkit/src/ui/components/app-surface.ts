@@ -292,10 +292,14 @@ export type SettingsArticleProps<T extends {}, Props extends {} = {}> = {
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
 
-/** Filter: matches a plugin-settings article by prefix. */
+/**
+ * Filter: matches a plugin-settings article. When `prefix` is omitted the
+ * filter matches any settings subject (used by the generic default settings
+ * surface); pass a `prefix` to match a single plugin's settings.
+ */
 export const settings = (
   token: Surface.RoleToken<any>,
-  prefix: string,
+  prefix?: string,
 ): Surface.Filter<{ subject: AppCapabilities.Settings }> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -303,7 +307,7 @@ export const settings = (
     }
 
     const subject = (data as { subject?: unknown }).subject;
-    return AppCapabilities.isSettings(subject) && subject.prefix === prefix;
+    return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
   };
   return { bindings: [{ role: token.role, guard }] };
 };

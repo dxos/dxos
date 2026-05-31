@@ -352,6 +352,9 @@
       "path": "packages/plugins/plugin-doctor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-duffel/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
