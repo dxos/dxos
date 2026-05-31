@@ -9,13 +9,14 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 import { Provider, RequestMapping, ResultMapping } from './Provider';
 import { Search } from './Search';
 
-const SEARCH_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
 
 /**
  * Fetches a page's HTML, rendering via the composer-crx extension when available. Hosted by the
@@ -24,7 +25,7 @@ const SEARCH_OPERATION = `${meta.id}.operation`;
  */
 export const RenderPage = Operation.make({
   meta: {
-    key: `${SEARCH_OPERATION}.render-page`,
+    key: makeKey('renderPage'),
     name: 'Render Page',
     description: 'Fetches a page, rendering it via the browser extension when available.',
     icon: 'ph--browser--regular',
@@ -41,7 +42,7 @@ export const RenderPage = Operation.make({
 /** Executes one provider template against a search and returns result objects. */
 export const RunProviderSearch = Operation.make({
   meta: {
-    key: `${SEARCH_OPERATION}.run-provider-search`,
+    key: makeKey('runProviderSearch'),
     name: 'Run Provider Search',
     description: 'Executes one provider template against a search, appending new results to its feed.',
     icon: 'ph--play--regular',
@@ -58,7 +59,7 @@ export const RunProviderSearch = Operation.make({
 /** Runs all enabled providers for a search and links the results. */
 export const RunSearch = Operation.make({
   meta: {
-    key: `${SEARCH_OPERATION}.run-search`,
+    key: makeKey('runSearch'),
     name: 'Run Search',
     description: 'Runs all enabled providers for a search and links the results.',
     icon: 'ph--shopping-cart--regular',
@@ -71,7 +72,7 @@ export const RunSearch = Operation.make({
 /** Fetches a provider's vendor site so the agent can derive its template. */
 export const AnalyzeProvider = Operation.make({
   meta: {
-    key: `${SEARCH_OPERATION}.analyze-provider`,
+    key: makeKey('analyzeProvider'),
     name: 'Analyze Provider',
     description: "Fetches the provider's vendor site and returns the page source for the agent to inspect.",
     icon: 'ph--brain--regular',
@@ -84,7 +85,7 @@ export const AnalyzeProvider = Operation.make({
 /** Runs the provider blueprint agent to analyze the site and populate the search template. */
 export const GenerateProviderTemplate = Operation.make({
   meta: {
-    key: `${SEARCH_OPERATION}.generate-provider-template`,
+    key: makeKey('generateProviderTemplate'),
     name: 'Generate Provider Template',
     description: 'Runs the provider blueprint agent to analyze the site and populate the search template.',
     icon: 'ph--sparkle--regular',
@@ -97,7 +98,7 @@ export const GenerateProviderTemplate = Operation.make({
 /** Persists a derived provider template (search schema + request + result mappings). */
 export const SetProviderTemplate = Operation.make({
   meta: {
-    key: `${SEARCH_OPERATION}.set-provider-template`,
+    key: makeKey('setProviderTemplate'),
     name: 'Set Provider Template',
     description: 'Persists the derived search schema, request mapping, and result mapping onto a provider.',
     icon: 'ph--floppy-disk--regular',
