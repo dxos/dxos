@@ -275,6 +275,9 @@
       "path": "../../plugins/plugin-doctor"
     },
     {
+      "path": "../../plugins/plugin-duffel"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {

@@ -2557,6 +2557,9 @@ importers:
       '@dxos/plugin-doctor':
         specifier: workspace:*
         version: link:../../plugins/plugin-doctor
+      '@dxos/plugin-duffel':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-duffel
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer

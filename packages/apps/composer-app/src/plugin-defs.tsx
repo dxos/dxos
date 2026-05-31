@@ -24,6 +24,7 @@ import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
+import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { ExtensionPlugin } from '@dxos/plugin-extension/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
@@ -133,6 +134,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     (isDev || isLabs) && [
       CallsPlugin.meta.id,
       CodePlugin.meta.id,
+      DuffelPlugin.meta.id,
       FeedPlugin.meta.id,
       GalleryPlugin.meta.id,
       GamePlugin.meta.id,
@@ -194,6 +196,7 @@ export const getPlugins = ({
     DebugPlugin({ logStore }),
     DiscordPlugin(),
     DoctorPlugin(),
+    DuffelPlugin(),
     ExplorerPlugin(),
     !isTauri && ExtensionPlugin(),
     FeedPlugin(),

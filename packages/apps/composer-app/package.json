@@ -71,6 +71,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-discord": "workspace:*",
     "@dxos/plugin-doctor": "workspace:*",
+    "@dxos/plugin-duffel": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-extension": "workspace:*",
     "@dxos/plugin-feed": "workspace:*",
