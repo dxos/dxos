@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { FlightOffer, FlightSearchQuery, MissingApiKeyError } from './BookingSearch';
+import * as BookingSearch from './BookingSearch';
 
 describe('BookingSearch', () => {
   test('decodes a flight query', ({ expect }) => {
-    const query = Schema.decodeUnknownSync(FlightSearchQuery)({
+    const query = Schema.decodeUnknownSync(BookingSearch.FlightSearchQuery)({
       _tag: 'flight',
       origin: 'JFK',
       destination: 'LHR',
@@ -22,7 +22,7 @@ describe('BookingSearch', () => {
   });
 
   test('decodes a flight offer', ({ expect }) => {
-    const offer = Schema.decodeUnknownSync(FlightOffer)({
+    const offer = Schema.decodeUnknownSync(BookingSearch.FlightOffer)({
       _tag: 'flight',
       id: 'off_123',
       provider: 'duffel',
@@ -37,7 +37,7 @@ describe('BookingSearch', () => {
   });
 
   test('MissingApiKeyError carries the service id', ({ expect }) => {
-    const error = new MissingApiKeyError('duffel');
+    const error = new BookingSearch.MissingApiKeyError('duffel');
     expect(error.serviceId).toBe('duffel');
     expect(error).toBeInstanceOf(Error);
   });
