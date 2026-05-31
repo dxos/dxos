@@ -7,7 +7,7 @@ import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.product-search'),
+  id: DXN.make('org.dxos.plugin.productSearch'),
   name: 'Product Search',
   author: 'DXOS',
   description: trim`
