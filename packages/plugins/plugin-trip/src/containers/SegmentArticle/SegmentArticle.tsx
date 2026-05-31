@@ -79,7 +79,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
           <BookingSearch segment={segment} />
         ) : (
           <Form.Root key={segment.id} schema={schema} defaultValues={segment} autoSave onSave={handleSave}>
-            <Form.Viewport>
+            <Form.Viewport scroll>
               <Form.Content>
                 <Form.FieldSet />
               </Form.Content>

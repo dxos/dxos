@@ -24,13 +24,11 @@ const STUB_OFFER: BookingSearchType.FlightOffer = {
   _tag: 'flight' as const,
   id: 'off_stub',
   provider: 'stub',
-  carrier: { name: 'Stub Air', iataCode: 'SA' },
+  operator: { name: 'Stub Air', iataCode: 'SA' },
   totalAmount: 199,
   currency: 'USD',
-  cabinClass: 'economy' as const,
-  slices: [
-    { origin: { code: 'JFK', name: 'New York' }, destination: { code: 'LHR', name: 'London' }, flightNumber: 'SA1' },
-  ],
+  serviceClass: 'economy' as const,
+  slices: [{ origin: { code: 'JFK', name: 'New York' }, destination: { code: 'LHR', name: 'London' }, number: 'SA1' }],
 };
 
 const STUB_SERVICE: BookingSearchType.BookingService = {

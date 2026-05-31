@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
-import { Select, useTranslation } from '@dxos/react-ui';
+import { Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
@@ -17,10 +17,6 @@ import { Booking, BookingOperation, BookingSearch as BookingSearchType, Segment,
 
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 
-export type BookingSearchProps = {
-  segment: Segment.Segment;
-};
-
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
 const SEARCH_LAYOUT = trim`
   <grid cols="2">
@@ -28,11 +24,15 @@ const SEARCH_LAYOUT = trim`
     <field name="destination"/>
     <field name="departureDate"/>
     <field name="returnDate"/>
-    <field name="cabinClass"/>
+    <field name="serviceClass"/>
     <field name="passengers"/>
-    <field name="carrier" span="2"/>
+    <field name="operator" span="2"/>
   </grid>
 `;
+
+export type BookingSearchProps = {
+  segment: Segment.Segment;
+};
 
 export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const { t } = useTranslation(meta.id);
@@ -57,7 +57,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
     origin: origin?.code,
     destination: destination?.code,
     departureDate: Segment.getDepartAt(segment),
-    cabinClass: 'economy',
+    serviceClass: 'economy',
     passengers: 1,
   });
 
@@ -83,7 +83,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
           origin: query.origin || undefined,
           destination: query.destination || undefined,
           departureDate: query.departureDate || undefined,
-          cabinClass: query.cabinClass,
+          serviceClass: query.serviceClass,
           passengers: query.passengers,
         },
         provider: service.id,
@@ -143,14 +143,14 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
 
   return (
     <div className='flex flex-col dx-container'>
-      {/* Query form: provider picker + schema-driven flight query + search action, all within the Form viewport. */}
+      {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearchType.FlightSearchFields}
         values={query}
         onValuesChanged={(values) => setQuery(values)}
         onSave={() => void handleSearch()}
       >
-        <Form.Viewport classNames='border-b border-separator'>
+        <Form.Viewport>
           <Form.Content>
             {services.length > 1 && (
               <Select.Root value={service?.id} onValueChange={setServiceId}>
@@ -168,25 +168,27 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
                 </Select.Portal>
               </Select.Root>
             )}
-
             <Form.Layout template={SEARCH_LAYOUT} />
-
+            <Form.Error>{error}</Form.Error>
             <Form.Submit
               icon='ph--magnifying-glass--regular'
               label={pending ? t('booking.searching.label') : t('booking.search.label')}
               disabled={pending || !canSearch}
             />
-
-            <Form.Error>{error}</Form.Error>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
 
       {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
-      {flightOffers && flightOffers.length === 0 ? (
-        <div className='p-form-gap text-description'>{t('booking.no-offers.message')}</div>
-      ) : (
-        flightOffers && <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
+      {flightOffers && (
+        <>
+          <Separator />
+          {flightOffers.length === 0 ? (
+            <div className='p-form-gap text-description'>{t('booking.no-offers.message')}</div>
+          ) : (
+            <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
+          )}
+        </>
       )}
     </div>
   );

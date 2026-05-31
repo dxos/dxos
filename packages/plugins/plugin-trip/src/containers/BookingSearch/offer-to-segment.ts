@@ -27,25 +27,22 @@ const toPlace = (place?: { code: string; name?: string }): Place.Place | undefin
 export const offerToFlightDetails = (offer: BookingSearch.FlightOffer): Segment.FlightDetails => {
   const first = firstSlice(offer);
   const last = lastSlice(offer);
-  const number =
-    first?.marketingCarrier && first?.flightNumber
-      ? `${first.marketingCarrier}${first.flightNumber}`
-      : first?.flightNumber;
+  const number = first?.operator && first?.number ? `${first.operator}${first.number}` : first?.number;
   return {
     _tag: 'flight',
-    provider: { name: offer.carrier.name },
+    provider: { name: offer.operator.name },
     number,
     origin: toPlace(first?.origin),
     destination: toPlace(last?.destination),
     departAt: first?.departAt,
     arriveAt: last?.arriveAt,
-    serviceClass: offer.cabinClass,
+    serviceClass: offer.serviceClass,
   };
 };
 
 /** Builds `Booking` make-props from an offer (search-only — no real order). */
 export const offerToBookingProps = (offer: BookingSearch.FlightOffer): Obj.MakeProps<typeof Booking.Booking> => ({
-  provider: { name: offer.carrier.name },
+  provider: { name: offer.operator.name },
   currency: offer.currency,
   totalPrice: offer.totalAmount,
   source: 'import',
