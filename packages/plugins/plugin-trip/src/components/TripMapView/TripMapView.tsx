@@ -47,23 +47,30 @@ const sameLatLng = (a: LatLng, b: LatLng): boolean => a.lat === b.lat && a.lng =
 const airportByIata = new Map<string, LatLng>(AIRPORTS.map(({ iata, geo }) => [iata, { lat: geo.lat, lng: geo.lng }]));
 
 /**
- * Resolve a place to coordinates: prefer its explicit `geo`, otherwise geocode by its
- * IATA `code` against {@link AIRPORTS}. Returns undefined when neither is available.
+ * Resolve a place to coordinates: prefer its explicit `geo`, otherwise (only when
+ * `allowIataFallback`) geocode by its IATA `code` against {@link AIRPORTS}. The
+ * fallback is airport-only, so it must not be used for rail/road station codes —
+ * those could collide with an unrelated airport IATA and plot in the wrong place.
+ * Returns undefined when no coordinate is available.
  */
-const placeLatLng = (place?: Place.Place): LatLng | undefined => {
+const placeLatLng = (
+  place: Place.Place | undefined,
+  options: { allowIataFallback?: boolean } = {},
+): LatLng | undefined => {
   const geo = toLatLng(place?.geo);
   if (geo) {
     return geo;
   }
   const code = place?.code?.toUpperCase();
-  return code ? airportByIata.get(code) : undefined;
+  return options.allowIataFallback && code ? airportByIata.get(code) : undefined;
 };
 
-/** All points referenced by a segment (origin, destination), geocoded via `geo` or IATA code. */
+/** All points referenced by a segment (origin, destination), geocoded via `geo` or (flights only) IATA code. */
 const segmentPoints = (seg: Segment.Segment): LatLng[] => {
   const points: LatLng[] = [];
-  const origin = placeLatLng(Segment.getOrigin(seg));
-  const destination = placeLatLng(Segment.getDestination(seg));
+  const allowIataFallback = seg.details._tag === 'flight';
+  const origin = placeLatLng(Segment.getOrigin(seg), { allowIataFallback });
+  const destination = placeLatLng(Segment.getDestination(seg), { allowIataFallback });
   if (origin) {
     points.push(origin);
   }
@@ -80,8 +87,9 @@ const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } |
   if (seg.details._tag === 'accommodation' || seg.details._tag === 'activity') {
     return undefined;
   }
-  const source = placeLatLng(seg.details.origin);
-  const target = placeLatLng(seg.details.destination);
+  const allowIataFallback = seg.details._tag === 'flight';
+  const source = placeLatLng(seg.details.origin, { allowIataFallback });
+  const target = placeLatLng(seg.details.destination, { allowIataFallback });
   if (!source || !target || sameLatLng(source, target)) {
     return undefined;
   }
