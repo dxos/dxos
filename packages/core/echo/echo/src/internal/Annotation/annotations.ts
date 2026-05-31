@@ -190,7 +190,7 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
 export const setTypename = (obj: any, typename: URI.URI): void => {
-  invariant(typeof typename === 'string', 'Invalid type.');
+  assertArgument(typeof typename === 'string', 'typename', 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,

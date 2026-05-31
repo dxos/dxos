@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-protocol';
 import { EntityKind, type EntityMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
@@ -199,7 +199,7 @@ export class ObjectCore {
   }
 
   getDocAccessor(path: KeyPath = []): DocAccessor {
-    invariant(isValidKeyPath(path));
+    assertArgument(isValidKeyPath(path), 'path');
     const self = this;
     return {
       handle: {

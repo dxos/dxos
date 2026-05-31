@@ -85,8 +85,12 @@ message Invitation {
   }
 
   enum Kind {
-    DEVICE = 0;
-    SPACE = 1;
+    /// Unset / unknown. Must not be used for new invitations.
+    INVALID = 0;
+
+    DEVICE = 1;
+
+    SPACE = 2;
   }
 
   enum AuthMethod {

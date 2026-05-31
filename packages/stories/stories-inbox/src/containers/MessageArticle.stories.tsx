@@ -12,7 +12,7 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -201,6 +201,9 @@ const meta = {
         ClientPlugin({
           types: [
             Feed.Feed,
+            // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
+            // must be registered for the extractor's tagging to round-trip.
+            Tag.Tag,
             Mailbox.Mailbox,
             MessageType.Message,
             Person.Person,

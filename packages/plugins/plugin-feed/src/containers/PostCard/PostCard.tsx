@@ -11,9 +11,8 @@ import { Card } from '@dxos/react-ui';
 
 import { Subscription } from '#types';
 
-import { makeSnippet, stripHtml } from '../../util/extract';
 import { formatDate } from '../../util/format-date';
-import { getSubscriptionPostState } from '../../util/post-state';
+import { getImageUrl, getSnippet } from '../../util/post-state';
 
 export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 
@@ -24,12 +23,6 @@ export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
  */
 export const PostCard = ({ subject }: PostCardProps) => {
   const [post] = useObject(subject);
-  // Subscribe to the source subscription for per-Post user state (imageUrl)
-  // and reactive re-render when LoadPostContent populates the hero image.
-  const subscription = post.source?.target;
-  useObject(subscription);
-  const postId = (post as { id: string }).id;
-  const userState = getSubscriptionPostState(subscription, postId);
 
   // Resolve the source feed's display name when present. `post.feed?.target?.name` only
   // resolves synchronously when the ref is already loaded; querying via useQuery means
@@ -45,17 +38,9 @@ export const PostCard = ({ subject }: PostCardProps) => {
   }, [post.source, allFeeds]);
 
   const published = formatDate(post.published);
-  const imageUrl = userState.imageUrl;
-  // PostCard is rendered outside a magazine context, so we can't read a
-  // curated snippet. Derive one from `post.description` on the fly — same
-  // algorithm curate-magazine uses, just inline.
-  const snippet = useMemo(() => {
-    if (!post.description) {
-      return undefined;
-    }
-    const text = stripHtml(post.description);
-    return text ? makeSnippet(text) : undefined;
-  }, [post.description]);
+  // snippet/imageUrl are derived from the Post's description (no content-feed entry in this surface).
+  const imageUrl = getImageUrl(post);
+  const snippet = useMemo(() => getSnippet(post) || undefined, [post.description]);
 
   return (
     <Card.Body>

@@ -129,7 +129,7 @@ export const PluginItem = ({
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const styles = getStyles(iconHue);
   const gridCols = 'grid grid-cols-[5rem_1fr]';
-  const gridRows = 'grid grid-rows-[40px_1fr_min-content_40px]';
+  const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
 
   return (
     <ListItem.Root
@@ -155,7 +155,7 @@ export const PluginItem = ({
         </div>
 
         <div>
-          <p className={mx('text-description', 'line-clamp-4 min-w-0')}>{description}</p>
+          <p className='text-description line-clamp-4 min-w-0'>{description}</p>
         </div>
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
