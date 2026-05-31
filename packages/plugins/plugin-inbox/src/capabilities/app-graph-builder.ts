@@ -81,6 +81,17 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
+              // Reactively count messages newer than the mailbox's `viewedAt` cursor. Querying the feed here
+              // subscribes the connector to message changes, so the count updates after sync (new messages) and
+              // after the mailbox is viewed (cursor advances, see `Mailbox.markViewed`).
+              // Cast as elsewhere in this file: `AtomRef.make` resolves to `Obj.Snapshot<Feed.Feed>`, which
+              // `Query.from` does not accept; the snapshot is structurally the feed for query purposes.
+              const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+              const messages = feed
+                ? get(AtomQuery.make<Message.Message>(space.db, Query.select(Filter.type(Message.Message)).from(feed)))
+                : [];
+              const modifiedCount = Mailbox.getNewMessageCount(mailbox, messages);
+
               return Node.make({
                 id: mailbox.id,
                 type: Type.getTypename(Mailbox.Mailbox),
@@ -91,6 +102,7 @@ export default Capability.makeModule(
                   iconHue: 'rose',
                   role: 'branch',
                   mailbox,
+                  modifiedCount,
                 },
                 nodes: [
                   Node.make({

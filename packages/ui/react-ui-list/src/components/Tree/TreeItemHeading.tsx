@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallback } from 'react';
 
-import { Button, Icon, type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type Label, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -17,12 +17,16 @@ export type TreeItemHeadingProps = {
   iconHue?: string;
   disabled?: boolean;
   current?: boolean;
+  /** Optional item count rendered as a neutral badge directly after the label. */
+  count?: number;
+  /** Optional count of new/modified items; when greater than zero it replaces {@link count} with a rose badge. */
+  modifiedCount?: number;
   onSelect?: (option: boolean) => void;
 };
 
 export const TreeItemHeading = memo(
   forwardRef<HTMLButtonElement, TreeItemHeadingProps>(
-    ({ label, className, icon, iconHue, disabled, current, onSelect }, forwardedRef) => {
+    ({ label, className, icon, iconHue, disabled, current, count, modifiedCount, onSelect }, forwardedRef) => {
       const { t } = useTranslation();
       const styles = iconHue ? getStyles(iconHue) : undefined;
 
@@ -57,7 +61,7 @@ export const TreeItemHeading = memo(
             data-testid='treeItem.heading'
             variant='ghost'
             classNames={[
-              'grow gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
+              'grow justify-start gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
               'disabled:cursor-default disabled:opacity-100',
               className,
             ]}
@@ -69,12 +73,37 @@ export const TreeItemHeading = memo(
             {icon && (
               <Icon size={5} icon={icon ?? 'ph--circle-dashed--regular'} classNames={['my-1', styles?.foreground]} />
             )}
-            <span className='flex-1 w-0 truncate text-start font-normal' data-tooltip>
+            <span className='min-w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>
+            <CountBadge count={count} modifiedCount={modifiedCount} />
           </Button>
         </TextTooltip>
       );
     },
   ),
 );
+
+/**
+ * Renders the count badge after a tree item label.
+ * A positive `modifiedCount` (e.g. new/unread items) shows as a rose badge in place of the neutral total `count`.
+ */
+const CountBadge = ({ count, modifiedCount }: Pick<TreeItemHeadingProps, 'count' | 'modifiedCount'>) => {
+  if (typeof modifiedCount === 'number' && modifiedCount > 0) {
+    return (
+      <Tag palette='rose' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+        {modifiedCount}
+      </Tag>
+    );
+  }
+
+  if (typeof count === 'number') {
+    return (
+      <Tag palette='neutral' classNames='shrink-0 text-center [min-inline-size:1.5rem] tabular-nums'>
+        {count}
+      </Tag>
+    );
+  }
+
+  return null;
+};

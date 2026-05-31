@@ -119,6 +119,8 @@ const RawTreeItem = <T extends { id: string } = any>({
     iconHue,
     disabled,
     testId,
+    count,
+    modifiedCount,
   } = useAtomValue(itemPropsAtom(path));
   const childIds = useAtomValue(childIdsAtom(item.id));
   const open = useAtomValue(itemOpenAtom(path));
@@ -336,6 +338,8 @@ const RawTreeItem = <T extends { id: string } = any>({
               className={headingClassName}
               icon={icon}
               iconHue={iconHue}
+              count={count}
+              modifiedCount={modifiedCount}
               onSelect={handleSelect}
               ref={buttonRef}
             />
