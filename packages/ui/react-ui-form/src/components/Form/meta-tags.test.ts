@@ -26,9 +26,7 @@ describe('withMetaTags', () => {
     // `Schema.extend` cannot merge an array with a record at the same key, hence the companion crash:
     // "overlapping types at path: [\"tags\"]".
     expect(() =>
-      Schema.Struct({ tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional) }).pipe(
-        Schema.extend(TagIndexHost),
-      ),
+      Schema.Struct({ tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional) }).pipe(Schema.extend(TagIndexHost)),
     ).toThrow(/tags/i);
   });
 

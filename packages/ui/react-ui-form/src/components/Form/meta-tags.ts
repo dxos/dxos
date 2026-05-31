@@ -28,9 +28,6 @@ export const META_TAGS_KEY = '_tags';
 export const withMetaTags = (schema: Schema.Schema.AnyNoContext) =>
   omitId(
     Schema.Struct({
-      [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(
-        Schema.annotations({ title: 'Tags' }),
-        Schema.optional,
-      ),
+      [META_TAGS_KEY]: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.annotations({ title: 'Tags' }), Schema.optional),
     }).pipe(Schema.extend(schema)),
   );
