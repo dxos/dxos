@@ -257,12 +257,11 @@ export const BookingService = Capability.make<BookingServiceType>(`${meta.id}.ca
 Modify `packages/plugins/plugin-trip/src/types/index.ts` — add these lines after the existing exports:
 
 ```ts
-export * as BookingOperation from './BookingOperation';
 export * as BookingSearch from './BookingSearch';
 export * as TripCapabilities from './TripCapabilities';
 ```
 
-(`BookingOperation.ts` is created in Task 2b; this barrel line lands now alongside the others.)
+(The `BookingOperation` barrel line is added in Task 2b when that file is created — adding it now would break the build.)
 
 - [ ] **Step 3: Typecheck**
 
@@ -433,6 +432,14 @@ export default handler;
 ```
 
 > If the build reports **TS2742** on the default export, append `, Operation.opaqueHandler` to the `.pipe(...)` (see the operations skill).
+
+- [ ] **Step 3b: Add the `BookingOperation` barrel export**
+
+Modify `packages/plugins/plugin-trip/src/types/index.ts` — add (alphabetical, before `BookingSearch`):
+
+```ts
+export * as BookingOperation from './BookingOperation';
+```
 
 - [ ] **Step 4: Register the handler**
 

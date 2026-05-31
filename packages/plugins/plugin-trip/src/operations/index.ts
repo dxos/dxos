@@ -6,4 +6,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './extractor';
 
-export const TripOperationHandlerSet = OperationHandlerSet.lazy(() => import('./extractor/trip-extractor'));
+export const TripOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./extractor/trip-extractor'),
+  () => import('./search-bookings'),
+);
