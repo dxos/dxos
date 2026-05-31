@@ -350,7 +350,10 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const projectType = resolveProjectType();
   const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
   const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
-  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
+  // `@vitest/coverage-v8` imports `node:inspector/promises`, which the workerd
+  // runtime doesn't provide ("No such module"), so coverage is force-disabled
+  // for the workerd project.
+  const coverageEnabled = Boolean(process.env.VITEST_COVERAGE) && projectType !== 'workerd';
 
   if (xmlReport) {
     return {
