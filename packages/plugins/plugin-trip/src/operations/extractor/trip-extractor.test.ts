@@ -29,89 +29,142 @@ const noResolver = fromResolvers({});
 // Mock LLM payloads. The fixture body is handed to a mocked `generateObject`, so the fixture text
 // only drives `match()`; the structured payload below is what assembly consumes.
 const UNITED_PAYLOAD = {
-  number: 'AF-1',
-  origin: { code: 'SFO', name: 'San Francisco' },
-  destination: { code: 'LHR', name: 'London Heathrow' },
-  departAt: '2026-06-01T15:30:00.000Z',
-  arriveAt: '2026-06-02T09:30:00.000Z',
   confirmationCode: 'ABC123',
-  provider: { name: 'Air France', domain: 'united.com' },
+  segments: [
+    {
+      number: 'AF-1',
+      origin: { code: 'SFO', name: 'San Francisco' },
+      destination: { code: 'LHR', name: 'London Heathrow' },
+      departAt: '2026-06-01T15:30:00.000Z',
+      arriveAt: '2026-06-02T09:30:00.000Z',
+      provider: { name: 'Air France', domain: 'united.com' },
+    },
+  ],
 };
 
 const GATE_CHANGE_PAYLOAD = {
-  number: 'AF-1',
-  origin: { code: 'SFO', name: 'San Francisco' },
-  destination: { code: 'LHR', name: 'London Heathrow' },
-  departAt: '2026-06-01T15:30:00.000Z',
-  arriveAt: '2026-06-02T09:30:00.000Z',
-  gateFrom: '21B',
-  terminalFrom: '3',
+  segments: [
+    {
+      number: 'AF-1',
+      origin: { code: 'SFO', name: 'San Francisco' },
+      destination: { code: 'LHR', name: 'London Heathrow' },
+      departAt: '2026-06-01T15:30:00.000Z',
+      arriveAt: '2026-06-02T09:30:00.000Z',
+      gateFrom: '21B',
+      terminalFrom: '3',
+    },
+  ],
 };
 
 // No `provider` field — exercises the sender-domain + airline-prefix derivation in the extractor.
 const AIR_FRANCE_PAYLOAD = {
-  number: 'AF-7',
-  origin: { code: 'CDG', name: 'Paris' },
-  destination: { code: 'JFK', name: 'New York' },
-  departAt: '2026-07-01T10:00:00.000Z',
-  arriveAt: '2026-07-01T13:00:00.000Z',
   confirmationCode: 'AF999',
+  segments: [
+    {
+      number: 'AF-7',
+      origin: { code: 'CDG', name: 'Paris' },
+      destination: { code: 'JFK', name: 'New York' },
+      departAt: '2026-07-01T10:00:00.000Z',
+      arriveAt: '2026-07-01T13:00:00.000Z',
+    },
+  ],
 };
 
 // A second leg under the same PNR (ABC123) as UNITED_PAYLOAD, departing later.
 const SECOND_LEG_PAYLOAD = {
-  number: 'AF-9',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'LAX', name: 'Los Angeles' },
-  departAt: '2026-06-10T12:00:00.000Z',
-  arriveAt: '2026-06-10T15:00:00.000Z',
   confirmationCode: 'ABC123',
+  segments: [
+    {
+      number: 'AF-9',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'LAX', name: 'Los Angeles' },
+      departAt: '2026-06-10T12:00:00.000Z',
+      arriveAt: '2026-06-10T15:00:00.000Z',
+    },
+  ],
 };
 
 // The SAME booking as UNITED_PAYLOAD, but a second email's LLM pass returns the PNR with
 // different casing/whitespace ("abc 123" vs "ABC123"). Two related emails for one booking must
 // still resolve to a single Trip — the confirmation-code dedup has to be representation-insensitive.
 const SECOND_LEG_PNR_VARIANT_PAYLOAD = {
-  number: 'AF-9',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'LAX', name: 'Los Angeles' },
-  departAt: '2026-06-10T12:00:00.000Z',
-  arriveAt: '2026-06-10T15:00:00.000Z',
   confirmationCode: 'abc 123',
+  segments: [
+    {
+      number: 'AF-9',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'LAX', name: 'Los Angeles' },
+      departAt: '2026-06-10T12:00:00.000Z',
+      arriveAt: '2026-06-10T15:00:00.000Z',
+    },
+  ],
+};
+
+// One email with TWO connecting flights under a single PNR (LIS→AMS→JFK).
+const MULTI_LEG_PAYLOAD = {
+  confirmationCode: 'XU26Y4',
+  segments: [
+    {
+      number: 'KL1580',
+      origin: { code: 'LIS', name: 'Lisbon' },
+      destination: { code: 'AMS', name: 'Amsterdam' },
+      departAt: '2026-05-18T11:55:00.000Z',
+      arriveAt: '2026-05-18T15:50:00.000Z',
+    },
+    {
+      number: 'KL0643',
+      origin: { code: 'AMS', name: 'Amsterdam' },
+      destination: { code: 'JFK', name: 'New York City' },
+      departAt: '2026-05-18T17:15:00.000Z',
+      arriveAt: '2026-05-18T19:15:00.000Z',
+    },
+  ],
 };
 
 // A separately-booked leg (different PNR) within the default 28-day gap of the United trip.
 const NEARBY_LEG_PAYLOAD = {
-  number: 'AF-20',
-  origin: { code: 'LHR', name: 'London' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-06-20T10:00:00.000Z',
-  arriveAt: '2026-06-20T12:00:00.000Z',
   confirmationCode: 'GAP111',
+  segments: [
+    {
+      number: 'AF-20',
+      origin: { code: 'LHR', name: 'London' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-20T10:00:00.000Z',
+      arriveAt: '2026-06-20T12:00:00.000Z',
+    },
+  ],
 };
 
 // A leg far outside the gap (~3 months later) → its own Trip.
 const FAR_LEG_PAYLOAD = {
-  number: 'AF-30',
-  origin: { code: 'CDG', name: 'Paris' },
-  destination: { code: 'JFK', name: 'New York' },
-  departAt: '2026-09-01T10:00:00.000Z',
-  arriveAt: '2026-09-01T13:00:00.000Z',
   confirmationCode: 'FAR222',
+  segments: [
+    {
+      number: 'AF-30',
+      origin: { code: 'CDG', name: 'Paris' },
+      destination: { code: 'JFK', name: 'New York' },
+      departAt: '2026-09-01T10:00:00.000Z',
+      arriveAt: '2026-09-01T13:00:00.000Z',
+    },
+  ],
 };
 
 // A rail booking (Alfa Pendular) under its own PNR.
 const TRAIN_PAYLOAD = {
-  kind: 'train' as const,
-  number: 'AP 182',
-  origin: { code: 'FCR', name: 'Porto Campanhã' },
-  destination: { code: 'ORC', name: 'Lisboa Oriente' },
-  departAt: '2026-06-05T08:00:00.000Z',
-  arriveAt: '2026-06-05T11:00:00.000Z',
   confirmationCode: 'TR333',
-  platform: '4',
-  coach: '12',
-  provider: { name: 'Alfa Pendular' },
+  segments: [
+    {
+      kind: 'train' as const,
+      number: 'AP 182',
+      origin: { code: 'FCR', name: 'Porto Campanhã' },
+      destination: { code: 'ORC', name: 'Lisboa Oriente' },
+      departAt: '2026-06-05T08:00:00.000Z',
+      arriveAt: '2026-06-05T11:00:00.000Z',
+      platform: '4',
+      coach: '12',
+      provider: { name: 'Alfa Pendular' },
+    },
+  ],
 };
 
 describe('TripMessageExtractor', () => {
@@ -198,6 +251,33 @@ describe('TripMessageExtractor', () => {
     expect(segment.booking?.target?.id).toBe(booking.id);
 
     expect(result.relations).toEqual([]);
+  });
+
+  test('extract — a multi-leg email creates one Trip + Booking with all segments', async ({ expect }) => {
+    const result = await extract(unitedConfirmationRaw, MULTI_LEG_PAYLOAD);
+
+    const trips = result.created.filter((obj) => Obj.instanceOf(Trip.Trip, obj));
+    const bookings = result.created.filter((obj) => Obj.instanceOf(Booking.Booking, obj));
+    const segments = result.created.filter((obj) => Obj.instanceOf(Segment.Segment, obj));
+    expect(trips).toHaveLength(1);
+    expect(bookings).toHaveLength(1);
+    expect(segments).toHaveLength(2);
+    expect((trips[0] as Trip.Trip).segments).toHaveLength(2);
+
+    const numbers = segments
+      .map((segment) => (segment as Segment.Segment).details)
+      .map((details) => (details._tag === 'flight' ? details.number : undefined));
+    expect(numbers).toContain('KL1580');
+    expect(numbers).toContain('KL0643');
+
+    // Both segments share the single Booking (one PNR).
+    const bookingId = (bookings[0] as Booking.Booking).id;
+    for (const segment of segments) {
+      expect((segment as Segment.Segment).booking?.target?.id).toBe(bookingId);
+    }
+    // Trip range spans the first departure to the last arrival.
+    expect((trips[0] as Trip.Trip).start).toBe('2026-05-18T11:55:00.000Z');
+    expect((trips[0] as Trip.Trip).end).toBe('2026-05-18T19:15:00.000Z');
   });
 
   test('extract — subsequent email updates the existing segment instead of creating a duplicate', async ({
