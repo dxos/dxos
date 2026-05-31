@@ -69,9 +69,9 @@ export const DateField = ({
         switch (format) {
           case Format.TypeFormat.Date:
             return (
-              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+              <div className='grid grid-cols-[1fr_min-content] items-stretch gap-1'>
                 <Input.Date disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />
-                <Input.TriggerIcon />
+                <Input.TriggerIcon classNames='h-full' />
               </div>
             );
           case Format.TypeFormat.Time:
@@ -79,13 +79,13 @@ export const DateField = ({
           case Format.TypeFormat.DateTime:
           default:
             return (
-              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+              <div className='grid grid-cols-[1fr_min-content] items-stretch gap-1'>
                 <Input.DateTime
                   disabled={!!readonly}
                   value={isoToLocalDateTime(value)}
                   onValueChange={handleDateTimeChange}
                 />
-                <Input.TriggerIcon />
+                <Input.TriggerIcon classNames='h-full' />
               </div>
             );
         }
