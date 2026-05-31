@@ -9,7 +9,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { getSpace, useObject } from '@dxos/react-client/echo';
+import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -28,17 +28,20 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
 
-  // Subscribe to subject mutations so edits made in the SegmentArticle
-  // companion re-render the stack here.
+  // Subscribe to the `segments` array property so adding/removing a segment re-renders the stack.
   const reactiveSubject = Obj.isObject(subject) ? subject : undefined;
-  const [snapshot] = useObject(reactiveSubject);
-  const trip = (snapshot ?? subject) as Trip.Trip;
+  const [segmentRefs] = useObject(reactiveSubject, 'segments');
 
   const id = attendableId ?? Obj.getURI(subject);
   const currentId = useSelected(id, 'single');
 
-  // Resolve segment refs to live objects (filtered to currently loaded), sorted by primary date.
-  const segments = useMemo(() => Trip.getSegments(trip), [trip.segments]);
+  // Reactively load + subscribe to the segment ref targets. Without this the refs are read
+  // synchronously via `.target` and render empty on first mount (only appearing after a later
+  // mutation forced a re-render); `useObjects` re-renders (and updates `loaded`) when each target
+  // loads and when a segment is edited, so the stack populates immediately and re-sorts on edits.
+  const loaded = useObjects(segmentRefs ?? []);
+  // `segmentRefs.length` covers add/remove; `loaded` covers target load + edits.
+  const segments = useMemo(() => Trip.getSegments(subject), [subject, segmentRefs?.length, loaded]);
 
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
