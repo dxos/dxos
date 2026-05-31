@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
-import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
@@ -177,11 +177,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
               disabled={pending || !canSearch}
             />
 
-            {error && (
-              <Input.Root validationValence='error'>
-                <Input.Validation>{error}</Input.Validation>
-              </Input.Root>
-            )}
+            <Form.Error>{error}</Form.Error>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

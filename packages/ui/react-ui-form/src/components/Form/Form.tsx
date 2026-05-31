@@ -14,6 +14,7 @@ import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
   IconButton,
   type IconButtonProps,
+  Input,
   ScrollArea,
   type ThemedClassName,
   useMergeRefs,
@@ -399,6 +400,29 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
 FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 //
+// Error
+//
+
+const FORM_ERROR_NAME = 'Form.Error';
+
+type FormErrorProps = ThemedClassName<PropsWithChildren>;
+
+/** Form-level error/validation message (e.g. a failed submit), styled via the error valence. */
+const FormError = ({ children, classNames }: FormErrorProps) => {
+  if (!children) {
+    return null;
+  }
+
+  return (
+    <Input.Root validationValence='error'>
+      <Input.Validation classNames={classNames}>{children}</Input.Validation>
+    </Input.Root>
+  );
+};
+
+FormError.displayName = FORM_ERROR_NAME;
+
+//
 // Form
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -413,6 +437,7 @@ export const Form = {
   Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,
+  Error: FormError,
 };
 
 export { useFormContext, useFormValues, useFormFieldState };
