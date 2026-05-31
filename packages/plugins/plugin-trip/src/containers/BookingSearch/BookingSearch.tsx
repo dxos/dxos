@@ -9,6 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
 import { meta } from '#meta';
@@ -19,6 +20,19 @@ import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 export type BookingSearchProps = {
   segment: Segment.Segment;
 };
+
+/** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
+const SEARCH_LAYOUT = trim`
+  <grid cols="2">
+    <field name="origin"/>
+    <field name="destination"/>
+    <field name="departureDate"/>
+    <field name="returnDate"/>
+    <field name="cabinClass"/>
+    <field name="passengers"/>
+    <field name="carrier" span="2"/>
+  </grid>
+`;
 
 export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const { t } = useTranslation(meta.id);
@@ -135,7 +149,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
         onValuesChanged={(values) => setQuery(values)}
       >
         <Form.Viewport classNames='border-b border-separator'>
-          <Form.Content classNames='gap-form-gap'>
+          <Form.Content>
             {services.length > 1 && (
               <Select.Root value={service?.id} onValueChange={setServiceId}>
                 <Select.TriggerButton placeholder={t('booking.provider.placeholder')} />
@@ -153,7 +167,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
               </Select.Root>
             )}
 
-            <Form.FieldSet />
+            <Form.Layout template={SEARCH_LAYOUT} />
 
             <Button variant='primary' disabled={pending || !canSearch} onClick={() => void handleSearch()}>
               {pending ? t('booking.searching.label') : t('booking.search.label')}
