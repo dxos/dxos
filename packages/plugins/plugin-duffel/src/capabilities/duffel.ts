@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
-import { TripCapabilities } from '@dxos/plugin-trip';
+import { type BookingSearch, TripCapabilities } from '@dxos/plugin-trip';
 
 import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';
@@ -22,7 +22,7 @@ export default Capability.makeModule(
       defaultValue: () => ({ apiKey: undefined }),
     });
 
-    const service = makeDuffelBookingService(() => registry.get(settingsAtom).apiKey);
+    const service: BookingSearch.BookingService = makeDuffelBookingService(() => registry.get(settingsAtom).apiKey);
 
     return [
       Capability.contributes(DuffelCapabilities.Settings, settingsAtom),
