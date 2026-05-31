@@ -62,6 +62,7 @@
 ### Task 1: `SearchQuery` / `Offer` schemas + `BookingService` interface
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/types/BookingSearch.ts`
 - Test: `packages/plugins/plugin-trip/src/types/BookingSearch.test.ts`
 
@@ -227,6 +228,7 @@ git commit -m "feat(plugin-trip): add transient SearchQuery/Offer types + Bookin
 ### Task 2: `BookingService` capability + type barrel
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/types/TripCapabilities.ts`
 - Modify: `packages/plugins/plugin-trip/src/types/index.ts`
 
@@ -282,6 +284,7 @@ git commit -m "feat(plugin-trip): define BookingService capability"
 Search is a first-class operation so the UI and the assistant share one path. The handler resolves all contributed `BookingService`s in-process (same pattern as plugin-inbox `extract-message.ts`).
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/types/BookingOperation.ts`
 - Create: `packages/plugins/plugin-trip/src/operations/search-bookings.ts`
 - Test: `packages/plugins/plugin-trip/src/operations/search-bookings.test.ts`
@@ -372,7 +375,10 @@ const capabilityServiceFrom = (services: BookingSearch.BookingService[]) =>
       interfaceDef.identifier === TripCapabilities.BookingService.identifier ? (services as any) : [],
   } as any);
 
-const invoke = (input: BookingOperation.SearchBookings['input'] extends never ? never : any, services: BookingSearch.BookingService[]) => {
+const invoke = (
+  input: BookingOperation.SearchBookings['input'] extends never ? never : any,
+  services: BookingSearch.BookingService[],
+) => {
   const set = OperationHandlerSet.make(searchBookingsHandler);
   return Effect.runPromise(
     Operation.invokeWith(set, BookingOperation.SearchBookings, input).pipe(
@@ -384,7 +390,9 @@ const invoke = (input: BookingOperation.SearchBookings['input'] extends never ? 
 
 describe('search-bookings', () => {
   test('returns offers from the matching service', async ({ expect }) => {
-    const result = await invoke({ query: { _tag: 'flight', origin: 'JFK', destination: 'LHR' } }, [stubService('duffel')]);
+    const result = await invoke({ query: { _tag: 'flight', origin: 'JFK', destination: 'LHR' } }, [
+      stubService('duffel'),
+    ]);
     expect(result.offers).toHaveLength(1);
     expect(result.offers[0].id).toBe('off_1');
   });
@@ -479,6 +487,7 @@ git commit -m "feat(plugin-trip): SearchBookings operation"
 Exposes the operation as an assistant tool (mirrors `plugin-product-search`'s `provider-blueprint.ts` + `blueprint-definition.ts`).
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/blueprints/booking-blueprint.ts`
 - Create: `packages/plugins/plugin-trip/src/blueprints/index.ts`
 - Create: `packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts`
@@ -589,7 +598,7 @@ In `packages/plugins/plugin-trip/package.json` `imports`, add (after `#meta`):
 In `packages/plugins/plugin-trip/moon.yml`, add to the `compile.args` entrypoint list:
 
 ```yaml
-      - '--entryPoint=src/blueprints/index.ts'
+- '--entryPoint=src/blueprints/index.ts'
 ```
 
 (If the blueprint imports use `#blueprints` vs a relative path, prefer the relative `../blueprints` import shown in Step 3 to avoid needing the subpath; the subpath is only required if other packages import the blueprints. Keep Step 6 only if a `#blueprints` import is actually used.)
@@ -611,6 +620,7 @@ git commit -m "feat(plugin-trip): expose SearchBookings to the assistant via blu
 ### Task 3: Pure offer → segment/booking mappers
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/containers/BookingSearch/offer-to-segment.ts`
 - Test: `packages/plugins/plugin-trip/src/containers/BookingSearch/offer-to-segment.test.ts`
 
@@ -713,7 +723,10 @@ const toPlace = (place?: { code: string; name?: string }): Place.Place | undefin
 export const offerToFlightDetails = (offer: BookingSearch.FlightOffer): Segment.FlightDetails => {
   const first = firstSlice(offer);
   const last = lastSlice(offer);
-  const number = first?.marketingCarrier && first?.flightNumber ? `${first.marketingCarrier}${first.flightNumber}` : first?.flightNumber;
+  const number =
+    first?.marketingCarrier && first?.flightNumber
+      ? `${first.marketingCarrier}${first.flightNumber}`
+      : first?.flightNumber;
   return {
     _tag: 'flight',
     provider: { name: offer.carrier.name },
@@ -753,6 +766,7 @@ git commit -m "feat(plugin-trip): pure offer-to-segment/booking mappers"
 ### Task 4: `BookingSearch` container
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/containers/BookingSearch/BookingSearch.tsx`
 - Create: `packages/plugins/plugin-trip/src/containers/BookingSearch/index.ts`
 - Modify: `packages/plugins/plugin-trip/src/containers/index.ts`
@@ -800,10 +814,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const allServices = useCapabilities(TripCapabilities.BookingService);
   const services = useMemo(() => allServices.filter((service) => service.kinds.includes(kind)), [allServices, kind]);
   const [serviceId, setServiceId] = useState<string | undefined>(undefined);
-  const service = useMemo(
-    () => services.find((s) => s.id === serviceId) ?? services.at(0),
-    [services, serviceId],
-  );
+  const service = useMemo(() => services.find((s) => s.id === serviceId) ?? services.at(0), [services, serviceId]);
 
   const origin = Segment.getOrigin(segment);
   const destination = Segment.getDestination(segment);
@@ -913,7 +924,10 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
             type='date'
             value={query.departureDate.slice(0, 10)}
             onChange={(event) =>
-              setQuery((q) => ({ ...q, departureDate: event.target.value ? new Date(event.target.value).toISOString() : '' }))
+              setQuery((q) => ({
+                ...q,
+                departureDate: event.target.value ? new Date(event.target.value).toISOString() : '',
+              }))
             }
           />
         </Input.Root>
@@ -1016,6 +1030,7 @@ git commit -m "feat(plugin-trip): BookingSearch container"
 ### Task 5: SegmentArticle toolbar Form ⇄ Search toggle
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-trip/src/containers/SegmentArticle/SegmentArticle.tsx`
 
 - [ ] **Step 1: Replace `SegmentArticle.tsx` with the toggled version**
@@ -1132,6 +1147,7 @@ git commit -m "feat(plugin-trip): SegmentArticle Form/Search toolbar toggle"
 ### Task 6: plugin-trip translations
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-trip/src/translations.ts`
 
 - [ ] **Step 1: Add keys under `[meta.id]`**
@@ -1172,6 +1188,7 @@ git commit -m "feat(plugin-trip): booking-search translations"
 ### Task 7: BookingSearch storybook
 
 **Files:**
+
 - Create: `packages/plugins/plugin-trip/src/containers/BookingSearch/BookingSearch.stories.tsx`
 
 - [ ] **Step 1: Write the storybook**
@@ -1236,6 +1253,7 @@ git commit -m "test(plugin-trip): BookingSearch storybook"
 ### Task 8: Scaffold the package
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/package.json`
 - Create: `packages/plugins/plugin-duffel/tsconfig.json`
 - Create: `packages/plugins/plugin-duffel/moon.yml`
@@ -1310,10 +1328,7 @@ git commit -m "test(plugin-trip): BookingSearch storybook"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -1352,23 +1367,12 @@ git commit -m "test(plugin-trip): BookingSearch storybook"
 
 ```json
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     { "path": "../../common/effect" },
     { "path": "../../common/log" },
@@ -1473,6 +1477,7 @@ git commit -m "feat(plugin-duffel): scaffold package"
 ### Task 9: Settings schema + capability types
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/types/Settings.ts`
 - Create: `packages/plugins/plugin-duffel/src/types/DuffelCapabilities.ts`
 - Create: `packages/plugins/plugin-duffel/src/types/index.ts`
@@ -1517,9 +1522,7 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
-  `${meta.id}.capability.settings`,
-);
+export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
 ```
 
 - [ ] **Step 3: `types/index.ts`**
@@ -1545,6 +1548,7 @@ git commit -m "feat(plugin-duffel): settings schema + capability types"
 ### Task 10: Duffel request/response mapping (pure, TDD)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/services/duffel-mapping.ts`
 - Test: `packages/plugins/plugin-duffel/src/services/duffel-mapping.test.ts`
 
@@ -1670,9 +1674,17 @@ const toDateOnly = (iso?: string): string => (iso ? iso.slice(0, 10) : '');
 export const offerRequestBody = (query: BookingSearch.FlightSearchQuery): DuffelOfferRequestBody => {
   const slices: DuffelOfferRequestBody['data']['slices'] = [];
   if (query.origin && query.destination && query.departureDate) {
-    slices.push({ origin: query.origin, destination: query.destination, departure_date: toDateOnly(query.departureDate) });
+    slices.push({
+      origin: query.origin,
+      destination: query.destination,
+      departure_date: toDateOnly(query.departureDate),
+    });
     if (query.returnDate) {
-      slices.push({ origin: query.destination, destination: query.origin, departure_date: toDateOnly(query.returnDate) });
+      slices.push({
+        origin: query.destination,
+        destination: query.origin,
+        departure_date: toDateOnly(query.returnDate),
+      });
     }
   }
   const count = Math.max(1, query.passengers ?? 1);
@@ -1767,6 +1779,7 @@ git commit -m "feat(plugin-duffel): Duffel request/response mapping"
 ### Task 11: DuffelClient (thin REST via CORS proxy)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/services/DuffelClient.ts`
 
 - [ ] **Step 1: Write `DuffelClient.ts`**
@@ -1829,6 +1842,7 @@ git commit -m "feat(plugin-duffel): Duffel REST client via CORS proxy"
 ### Task 12: DuffelBookingService factory + services barrel
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/services/DuffelBookingService.ts`
 - Create: `packages/plugins/plugin-duffel/src/services/index.ts`
 
@@ -1897,6 +1911,7 @@ git commit -m "feat(plugin-duffel): BookingService implementation"
 ### Task 13: Settings panel container
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/containers/DuffelSettings/DuffelSettings.tsx`
 - Create: `packages/plugins/plugin-duffel/src/containers/DuffelSettings/index.ts`
 - Create: `packages/plugins/plugin-duffel/src/containers/index.ts`
@@ -1970,6 +1985,7 @@ git commit -m "feat(plugin-duffel): settings panel container"
 ### Task 14: Capabilities — settings atom + AppCapabilities.Settings + BookingService
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/capabilities/duffel.ts`
 - Create: `packages/plugins/plugin-duffel/src/capabilities/react-surface.tsx`
 - Create: `packages/plugins/plugin-duffel/src/capabilities/index.ts`
@@ -2079,6 +2095,7 @@ git commit -m "feat(plugin-duffel): settings + BookingService capabilities"
 ### Task 15: Translations + plugin definition + lazy wrapper
 
 **Files:**
+
 - Create: `packages/plugins/plugin-duffel/src/translations.ts`
 - Create: `packages/plugins/plugin-duffel/src/plugin.ts`
 - Create: `packages/plugins/plugin-duffel/src/DuffelPlugin.tsx`
@@ -2168,6 +2185,7 @@ git commit -m "feat(plugin-duffel): plugin definition + translations"
 ### Task 16: Register plugin-duffel in composer-app
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/package.json`
 - Modify: `packages/apps/composer-app/tsconfig.json`
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
@@ -2249,6 +2267,7 @@ Expected: only justified casts: `value as Segment.ServiceClass`/`value as ViewMo
 - [ ] **Step 4: Manual app smoke test**
 
 Run: `moon run composer-app:serve --quiet` (port 5173).
+
 1. Open Settings → Duffel → paste the test API key `<your Duffel test key — set in Settings, do not commit>`.
 2. Create a Trip, add a flight segment, open the segment companion.
 3. Toolbar defaults to **Search** (no booking yet). Enter origin `JFK`, destination `LHR`, a near-future date, and Search.

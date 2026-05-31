@@ -9,7 +9,14 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { InboxCapabilities } from '@dxos/plugin-inbox';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface, Settings } from '#capabilities';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  CreateObject,
+  OperationHandler,
+  ReactSurface,
+  Settings,
+} from '#capabilities';
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';

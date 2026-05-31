@@ -7,6 +7,7 @@
 import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
+
 import type * as BookingSearch from './BookingSearch';
 
 /**

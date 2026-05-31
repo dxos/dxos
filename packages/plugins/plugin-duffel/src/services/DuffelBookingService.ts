@@ -4,8 +4,8 @@
 
 import { BookingSearch } from '@dxos/plugin-trip';
 
-import { createOfferRequest } from './DuffelClient';
 import { offerRequestBody, parseOffers } from './duffel-mapping';
+import { createOfferRequest } from './DuffelClient';
 
 export const DUFFEL_SERVICE_ID = 'duffel';
 

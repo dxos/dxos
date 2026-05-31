@@ -28,7 +28,9 @@ const STUB_OFFER: BS.FlightOffer = {
   totalAmount: 199,
   currency: 'USD',
   cabinClass: 'economy' as const,
-  slices: [{ origin: { code: 'JFK', name: 'New York' }, destination: { code: 'LHR', name: 'London' }, flightNumber: 'SA1' }],
+  slices: [
+    { origin: { code: 'JFK', name: 'New York' }, destination: { code: 'LHR', name: 'London' }, flightNumber: 'SA1' },
+  ],
 };
 
 const STUB_SERVICE: BS.BookingService = {

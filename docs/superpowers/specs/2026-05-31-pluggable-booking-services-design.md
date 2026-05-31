@@ -67,9 +67,7 @@ import { Capability } from '@dxos/app-framework';
 import { meta } from '#meta';
 import type { BookingService } from './BookingSearch';
 
-export const BookingService = Capability.make<BookingService>(
-  `${meta.id}.capability.bookingService`,
-);
+export const BookingService = Capability.make<BookingService>(`${meta.id}.capability.bookingService`);
 ```
 
 Exported from the types barrel as `TripCapabilities`.
@@ -84,13 +82,13 @@ the same `Segment.Kind` literal).
 ```ts
 // Shared mixin (parallels Segment.TransportFields).
 const TransportSearchFields = Schema.Struct({
-  origin: Schema.optional(Schema.String),        // IATA
-  destination: Schema.optional(Schema.String),   // IATA
+  origin: Schema.optional(Schema.String), // IATA
+  destination: Schema.optional(Schema.String), // IATA
   departureDate: Schema.optional(Format.DateTime),
   returnDate: Schema.optional(Format.DateTime),
   cabinClass: Schema.optional(Segment.ServiceClass),
-  carrier: Schema.optional(Schema.String),       // preferred airline IATA
-  passengers: Schema.optional(Schema.Number),    // default 1
+  carrier: Schema.optional(Schema.String), // preferred airline IATA
+  passengers: Schema.optional(Schema.Number), // default 1
 });
 
 export const FlightSearchQuery = Schema.extend(TransportSearchFields, Schema.TaggedStruct('flight', {}));
@@ -108,8 +106,8 @@ const FlightSliceFields = Schema.Struct({
 });
 
 export const FlightOffer = Schema.TaggedStruct('flight', {
-  id: Schema.String,                // Duffel offer id
-  provider: Schema.String,          // 'duffel'
+  id: Schema.String, // Duffel offer id
+  provider: Schema.String, // 'duffel'
   carrier: Schema.Struct({ name: Schema.String, iataCode: Schema.optional(Schema.String) }),
   totalAmount: Schema.Number,
   currency: Schema.String,
@@ -124,9 +122,9 @@ export interface Offer extends Schema.Schema.Type<typeof Offer> {}
 
 ```ts
 export interface BookingService {
-  readonly id: string;                       // 'duffel'
-  readonly label: string;                    // 'Duffel'
-  readonly kinds: readonly Segment.Kind[];   // ['flight']
+  readonly id: string; // 'duffel'
+  readonly label: string; // 'Duffel'
+  readonly kinds: readonly Segment.Kind[]; // ['flight']
   search(query: SearchQuery): Promise<readonly Offer[]>;
 }
 ```

@@ -29,9 +29,17 @@ const toDateOnly = (iso?: string): string => (iso ? iso.slice(0, 10) : '');
 export const offerRequestBody = (query: BookingSearch.FlightSearchQuery): DuffelOfferRequestBody => {
   const slices: DuffelOfferRequestBody['data']['slices'] = [];
   if (query.origin && query.destination && query.departureDate) {
-    slices.push({ origin: query.origin, destination: query.destination, departure_date: toDateOnly(query.departureDate) });
+    slices.push({
+      origin: query.origin,
+      destination: query.destination,
+      departure_date: toDateOnly(query.departureDate),
+    });
     if (query.returnDate) {
-      slices.push({ origin: query.destination, destination: query.origin, departure_date: toDateOnly(query.returnDate) });
+      slices.push({
+        origin: query.destination,
+        destination: query.origin,
+        departure_date: toDateOnly(query.returnDate),
+      });
     }
   }
   const count = Math.max(1, query.passengers ?? 1);

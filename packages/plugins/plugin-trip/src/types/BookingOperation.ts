@@ -10,6 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
+
 import * as BookingSearch from './BookingSearch';
 
 const BOOKING_OPERATION = `${meta.id}.operation`;
