@@ -41,7 +41,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   // loads and when a segment is edited, so the stack populates immediately and re-sorts on edits.
   const loaded = useObjects(segmentRefs ?? []);
   // `segmentRefs.length` covers add/remove; `loaded` covers target load + edits.
-  const segments = useMemo(() => Trip.getSegments(subject), [segmentRefs?.length, loaded]);
+  const segments = useMemo(() => Trip.getSegments(subject), [subject, segmentRefs?.length, loaded]);
 
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);

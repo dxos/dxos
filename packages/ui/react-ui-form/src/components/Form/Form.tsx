@@ -226,7 +226,7 @@ const FormViewport = composable<HTMLDivElement, FormViewportProps>(
     }
 
     return (
-      <Column.Root gutter={gutter} classNames={['w-full min-w-0', span]} ref={forwardedRef}>
+      <Column.Root {...composableProps(props)} gutter={gutter} classNames={['w-full min-w-0', span]} ref={forwardedRef}>
         {children}
       </Column.Root>
     );
