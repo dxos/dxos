@@ -4,7 +4,7 @@
 
 **Goal:** Add a pluggable `BookingService` capability + flight-search UI to `plugin-trip`, and a new `plugin-duffel` that implements it against the Duffel REST API.
 
-**Architecture:** `plugin-trip` defines the `BookingService` capability and transient `SearchQuery`/`Offer` Effect schemas (mirroring the Segment mixin + tagged-union pattern). A `BookingSearch` container resolves all contributed services, runs a query, and on offer-select writes flight details + a `Booking` ECHO object onto the segment. `SegmentArticle` gains a toolbar toggle (Form ⇄ Search). `plugin-duffel` contributes a `BookingService` whose `search` calls Duffel `POST /air/offer_requests?return_offers=true` through the DXOS edge CORS proxy, plus a settings panel for the API key. Scope is search-only — no real order placement. App-graph behavior is unchanged.
+**Architecture:** `plugin-trip` defines the `BookingService` capability and transient `SearchQuery`/`Offer` Effect schemas (mirroring the Segment mixin + tagged-union pattern). Search is a first-class **`SearchBookings` operation** (`Operation.make` from `@dxos/compute`) whose handler resolves the contributed `BookingService`s (`Capability.getAll`) and runs the query — invoked by the `BookingSearch` UI and exposed to the assistant via a blueprint tool. On offer-select the UI writes flight details + a `Booking` ECHO object onto the segment. `SegmentArticle` gains a toolbar toggle (Form ⇄ Search). `plugin-duffel` contributes a `BookingService` whose `search` calls Duffel `POST /air/offer_requests?return_offers=true` through the DXOS edge CORS proxy, plus a settings panel for the API key. Scope is search-only — no real order placement. App-graph behavior is unchanged.
 
 **Tech Stack:** TypeScript, Effect `Schema`, `@dxos/echo` (`Obj`/`Ref`), `@dxos/app-framework` capabilities, `@dxos/react-ui` + `@dxos/react-ui-form`, `@dxos/edge-client` (`proxyFetchLegacy`), vitest via `moon`, Storybook.
 
@@ -21,7 +21,16 @@
 - Create `packages/plugins/plugin-trip/src/types/BookingSearch.ts` — `SearchQuery`/`Offer` schemas, `BookingService` interface, `MissingApiKeyError`.
 - Create `packages/plugins/plugin-trip/src/types/BookingSearch.test.ts` — schema round-trip tests.
 - Create `packages/plugins/plugin-trip/src/types/TripCapabilities.ts` — `BookingService` capability id.
-- Modify `packages/plugins/plugin-trip/src/types/index.ts` — export the two new namespaces.
+- Create `packages/plugins/plugin-trip/src/types/BookingOperation.ts` — `SearchBookings` operation definition.
+- Modify `packages/plugins/plugin-trip/src/types/index.ts` — export the new namespaces.
+- Create `packages/plugins/plugin-trip/src/operations/search-bookings.ts` — operation handler.
+- Create `packages/plugins/plugin-trip/src/operations/search-bookings.test.ts`.
+- Modify `packages/plugins/plugin-trip/src/operations/index.ts` — add handler to `TripOperationHandlerSet`.
+- Create `packages/plugins/plugin-trip/src/blueprints/booking-blueprint.ts` — assistant tool.
+- Create `packages/plugins/plugin-trip/src/blueprints/index.ts`.
+- Create `packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts` — contributes the blueprint.
+- Modify `packages/plugins/plugin-trip/src/capabilities/index.ts` — export `BlueprintDefinition`.
+- Modify `packages/plugins/plugin-trip/src/TripPlugin.tsx` — add blueprint module.
 - Create `packages/plugins/plugin-trip/src/containers/BookingSearch/offer-to-segment.ts` — pure offer→details/booking mappers.
 - Create `packages/plugins/plugin-trip/src/containers/BookingSearch/offer-to-segment.test.ts`.
 - Create `packages/plugins/plugin-trip/src/containers/BookingSearch/BookingSearch.tsx` — search container.
@@ -245,12 +254,15 @@ export const BookingService = Capability.make<BookingServiceType>(`${meta.id}.ca
 
 - [ ] **Step 2: Update the type barrel**
 
-Modify `packages/plugins/plugin-trip/src/types/index.ts` — add these two lines after the existing exports:
+Modify `packages/plugins/plugin-trip/src/types/index.ts` — add these lines after the existing exports:
 
 ```ts
+export * as BookingOperation from './BookingOperation';
 export * as BookingSearch from './BookingSearch';
 export * as TripCapabilities from './TripCapabilities';
 ```
+
+(`BookingOperation.ts` is created in Task 2b; this barrel line lands now alongside the others.)
 
 - [ ] **Step 3: Typecheck**
 
@@ -262,6 +274,329 @@ Expected: builds cleanly (no type errors).
 ```bash
 git add packages/plugins/plugin-trip/src/types/TripCapabilities.ts packages/plugins/plugin-trip/src/types/index.ts
 git commit -m "feat(plugin-trip): define BookingService capability"
+```
+
+---
+
+### Task 2b: `SearchBookings` operation (definition + handler, TDD)
+
+Search is a first-class operation so the UI and the assistant share one path. The handler resolves all contributed `BookingService`s in-process (same pattern as plugin-inbox `extract-message.ts`).
+
+**Files:**
+- Create: `packages/plugins/plugin-trip/src/types/BookingOperation.ts`
+- Create: `packages/plugins/plugin-trip/src/operations/search-bookings.ts`
+- Test: `packages/plugins/plugin-trip/src/operations/search-bookings.test.ts`
+- Modify: `packages/plugins/plugin-trip/src/operations/index.ts`
+
+- [ ] **Step 1: Write `BookingOperation.ts`** (`Operation` from `@dxos/compute`, matching `TripOperation.ts`)
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
+
+import { meta } from '#meta';
+import { BookingSearch } from './BookingSearch';
+
+const BOOKING_OPERATION = `${meta.id}.operation`;
+
+/**
+ * Searches for bookings (flights, …) across the enabled `BookingService`s. The handler resolves
+ * all contributed services, filters by the query kind and optional provider id, and returns the
+ * matching service's offers. Exposed to the assistant via the booking blueprint.
+ */
+export const SearchBookings = Operation.make({
+  meta: {
+    key: `${BOOKING_OPERATION}.search-bookings`,
+    name: 'Search Bookings',
+    description: 'Search for flights (and other bookings) across the enabled booking providers.',
+    icon: 'ph--magnifying-glass--regular',
+  },
+  input: Schema.Struct({
+    query: BookingSearch.SearchQuery,
+    provider: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    offers: Schema.Array(BookingSearch.Offer),
+  }),
+  services: [Capability.Service],
+});
+```
+
+- [ ] **Step 2: Write the failing test**
+
+`packages/plugins/plugin-trip/src/operations/search-bookings.test.ts`:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import { describe, test } from 'vitest';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
+
+import { type BookingSearch, BookingOperation, TripCapabilities } from '#types';
+
+import searchBookingsHandler from './search-bookings';
+
+const FLIGHT_OFFER: BookingSearch.FlightOffer = {
+  _tag: 'flight',
+  id: 'off_1',
+  provider: 'stub',
+  carrier: { name: 'Stub Air' },
+  totalAmount: 100,
+  currency: 'USD',
+  slices: [{ origin: { code: 'JFK' }, destination: { code: 'LHR' } }],
+};
+
+const stubService = (id: string): BookingSearch.BookingService => ({
+  id,
+  label: id,
+  kinds: ['flight'],
+  search: async () => [FLIGHT_OFFER],
+});
+
+// Minimal Capability.Service exposing the contributed booking services to Capability.getAll.
+const capabilityServiceFrom = (services: BookingSearch.BookingService[]) =>
+  Capability.Service.of({
+    getAll: (interfaceDef: any) =>
+      interfaceDef.identifier === TripCapabilities.BookingService.identifier ? (services as any) : [],
+  } as any);
+
+const invoke = (input: BookingOperation.SearchBookings['input'] extends never ? never : any, services: BookingSearch.BookingService[]) => {
+  const set = OperationHandlerSet.make(searchBookingsHandler);
+  return Effect.runPromise(
+    Operation.invokeWith(set, BookingOperation.SearchBookings, input).pipe(
+      Effect.provideService(Capabilities.AtomRegistry as any, undefined as any),
+      Effect.provideService(Capability.Service, capabilityServiceFrom(services)),
+    ),
+  );
+};
+
+describe('search-bookings', () => {
+  test('returns offers from the matching service', async ({ expect }) => {
+    const result = await invoke({ query: { _tag: 'flight', origin: 'JFK', destination: 'LHR' } }, [stubService('duffel')]);
+    expect(result.offers).toHaveLength(1);
+    expect(result.offers[0].id).toBe('off_1');
+  });
+
+  test('returns [] when no service handles the kind', async ({ expect }) => {
+    const result = await invoke({ query: { _tag: 'flight' } }, []);
+    expect(result.offers).toHaveLength(0);
+  });
+});
+```
+
+> The exact `Capability.Service` shim + operation-invocation helper for tests should follow `packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts` verbatim (it builds a `Capability.Service` from a list and runs the handler). Copy that harness rather than the sketch above if the shapes differ — the assertions (offers length / id) are what matter. Confirm the invoke helper against that file before relying on `Operation.invokeWith`.
+
+- [ ] **Step 3: Write `search-bookings.ts`**
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
+
+import { BookingOperation, TripCapabilities } from '../types';
+
+const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = BookingOperation.SearchBookings.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ query, provider }) {
+      const services = yield* Capability.getAll(TripCapabilities.BookingService);
+      const service = services.find(
+        (candidate) => candidate.kinds.includes(query._tag) && (!provider || candidate.id === provider),
+      );
+      if (!service) {
+        return { offers: [] };
+      }
+      const offers = yield* Effect.promise(async () => [...(await service.search(query))]);
+      return { offers };
+    }),
+  ),
+);
+
+export default handler;
+```
+
+> If the build reports **TS2742** on the default export, append `, Operation.opaqueHandler` to the `.pipe(...)` (see the operations skill).
+
+- [ ] **Step 4: Register the handler**
+
+Modify `packages/plugins/plugin-trip/src/operations/index.ts` to add the new handler to the lazy set:
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import { OperationHandlerSet } from '@dxos/compute';
+
+export * from './extractor';
+
+export const TripOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./extractor/trip-extractor'),
+  () => import('./search-bookings'),
+);
+```
+
+- [ ] **Step 5: Run the test**
+
+Run: `moon run plugin-trip:test -- src/operations/search-bookings.test.ts`
+Expected: PASS (2 tests).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/src/types/BookingOperation.ts packages/plugins/plugin-trip/src/operations/search-bookings.ts packages/plugins/plugin-trip/src/operations/search-bookings.test.ts packages/plugins/plugin-trip/src/operations/index.ts
+git commit -m "feat(plugin-trip): SearchBookings operation"
+```
+
+---
+
+### Task 2c: Assistant blueprint for `SearchBookings`
+
+Exposes the operation as an assistant tool (mirrors `plugin-product-search`'s `provider-blueprint.ts` + `blueprint-definition.ts`).
+
+**Files:**
+- Create: `packages/plugins/plugin-trip/src/blueprints/booking-blueprint.ts`
+- Create: `packages/plugins/plugin-trip/src/blueprints/index.ts`
+- Create: `packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts`
+- Modify: `packages/plugins/plugin-trip/src/capabilities/index.ts`
+- Modify: `packages/plugins/plugin-trip/src/TripPlugin.tsx`
+
+- [ ] **Step 1: `blueprints/booking-blueprint.ts`**
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Blueprint, Template } from '@dxos/compute';
+import { trim } from '@dxos/util';
+
+import { meta } from '#meta';
+import { BookingOperation } from '#types';
+
+const BLUEPRINT_KEY = `${meta.id}/blueprint/booking`;
+
+const operations = [BookingOperation.SearchBookings];
+
+const make = () =>
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
+    name: 'Trip Booking Search',
+    tools: Blueprint.toolDefinitions({ operations }),
+    instructions: Template.make({
+      source: trim`
+        You help the user find travel bookings (flights first).
+        Use the search-bookings tool with a query: set _tag to 'flight' and provide origin and
+        destination as IATA codes (e.g. JFK, LHR), a departureDate (ISO date), and optionally
+        cabinClass ('economy' | 'premium' | 'business' | 'first') and passengers. Pass a provider
+        id only if the user named a specific provider. Summarize the returned offers (carrier,
+        route, price) for the user; do not fabricate offers.
+      `,
+    }),
+  });
+
+const blueprint: Blueprint.Definition = { key: BLUEPRINT_KEY, make };
+
+export default blueprint;
+```
+
+- [ ] **Step 2: `blueprints/index.ts`**
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+export { default as BookingBlueprint } from './booking-blueprint';
+```
+
+- [ ] **Step 3: `capabilities/blueprint-definition.ts`** (mirrors product-search)
+
+```ts
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capability } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint } from '@dxos/compute';
+
+import { BookingBlueprint } from '../blueprints';
+
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, BookingBlueprint)]));
+
+export default blueprintDefinition;
+```
+
+- [ ] **Step 4: Export from capabilities barrel**
+
+Modify `packages/plugins/plugin-trip/src/capabilities/index.ts` — add:
+
+```ts
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+```
+
+- [ ] **Step 5: Wire the module in `TripPlugin.tsx`**
+
+In `packages/plugins/plugin-trip/src/TripPlugin.tsx`: add `BlueprintDefinition` to the `#capabilities` import, and add the module to the `.pipe(...)` (after `addAppGraphModule`, before `addCreateObjectModule`):
+
+```ts
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+```
+
+- [ ] **Step 6: Add the `#blueprints` subpath + build entrypoint**
+
+In `packages/plugins/plugin-trip/package.json` `imports`, add (after `#meta`):
+
+```json
+    "#blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
+```
+
+In `packages/plugins/plugin-trip/moon.yml`, add to the `compile.args` entrypoint list:
+
+```yaml
+      - '--entryPoint=src/blueprints/index.ts'
+```
+
+(If the blueprint imports use `#blueprints` vs a relative path, prefer the relative `../blueprints` import shown in Step 3 to avoid needing the subpath; the subpath is only required if other packages import the blueprints. Keep Step 6 only if a `#blueprints` import is actually used.)
+
+- [ ] **Step 7: Build**
+
+Run: `moon run plugin-trip:build`
+Expected: builds cleanly. (Confirm `AppPlugin.addBlueprintDefinitionModule` and `Blueprint.toolDefinitions` exist — they are used by plugin-product-search.)
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/src/blueprints packages/plugins/plugin-trip/src/capabilities/blueprint-definition.ts packages/plugins/plugin-trip/src/capabilities/index.ts packages/plugins/plugin-trip/src/TripPlugin.tsx packages/plugins/plugin-trip/package.json packages/plugins/plugin-trip/moon.yml
+git commit -m "feat(plugin-trip): expose SearchBookings to the assistant via blueprint"
 ```
 
 ---
@@ -424,13 +759,13 @@ git commit -m "feat(plugin-trip): pure offer-to-segment/booking mappers"
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Booking, BookingSearch as BS, Segment, TripCapabilities } from '#types';
+import { Booking, BookingOperation, BookingSearch as BS, Segment, TripCapabilities } from '#types';
 
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 
@@ -450,9 +785,11 @@ const CABIN_OPTIONS: Segment.ServiceClass[] = ['economy', 'premium', 'business',
 
 export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
   const kind = Segment.getKind(segment);
 
-  // Resolve all contributed services, filtered to those that handle this kind.
+  // Resolve contributed services for the provider picker + empty state. The actual search runs
+  // through the SearchBookings operation so the assistant shares the same path.
   const allServices = useCapabilities(TripCapabilities.BookingService);
   const services = useMemo(() => allServices.filter((service) => service.kinds.includes(kind)), [allServices, kind]);
   const [serviceId, setServiceId] = useState<string | undefined>(undefined);
@@ -483,21 +820,26 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
     setError(undefined);
     setOffers(undefined);
     try {
-      const result = await service.search({
-        _tag: 'flight',
-        origin: query.origin || undefined,
-        destination: query.destination || undefined,
-        departureDate: query.departureDate || undefined,
-        cabinClass: query.cabinClass,
-        passengers: query.passengers,
+      const { offers: result } = await invokePromise(BookingOperation.SearchBookings, {
+        query: {
+          _tag: 'flight',
+          origin: query.origin || undefined,
+          destination: query.destination || undefined,
+          departureDate: query.departureDate || undefined,
+          cabinClass: query.cabinClass,
+          passengers: query.passengers,
+        },
+        provider: service.id,
       });
       setOffers(result);
     } catch (err) {
-      setError(err instanceof BS.MissingApiKeyError ? t('booking.missing-key.message') : t('booking.error.message'));
+      // The MissingApiKeyError class may not survive the operation boundary; match by name.
+      const missingKey = err instanceof Error && err.name === 'MissingApiKeyError';
+      setError(missingKey ? t('booking.missing-key.message') : t('booking.error.message'));
     } finally {
       setPending(false);
     }
-  }, [service, query, t]);
+  }, [service, query, invokePromise, t]);
 
   const handleSelectOffer = useCallback(
     (offer: BS.Offer) => {
@@ -1899,7 +2241,7 @@ Expected: clean.
 - [ ] **Step 3: Cast audit (CLAUDE.md gate)**
 
 Run: `git diff origin/main | grep -nE '\bas (any|unknown|const|[A-Z])|as unknown as'`
-Expected: only the justified `as` casts present in this plan (`event.target.value as Segment.ServiceClass` in BookingSearch's cabin select, `value as ViewMode` in the toggles, `values as any` carried over verbatim from the original SegmentArticle save handler, and `response as Parameters<typeof parseOffers>[0]` at the untyped Duffel JSON boundary). Confirm each is at a genuine type boundary; remove any others.
+Expected: only justified casts: `value as Segment.ServiceClass`/`value as ViewMode` in select/toggle change handlers, `values as any` carried over verbatim from the original SegmentArticle save handler, `response as Parameters<typeof parseOffers>[0]` at the untyped Duffel JSON boundary, and any `Capability.Service` test-harness casts inside `search-bookings.test.ts` that mirror the existing `extract-message.test.ts` harness (test-only, at the DI boundary). Confirm each is at a genuine type/test boundary; remove any others. No casts in production handler/service code.
 
 - [ ] **Step 4: Manual app smoke test**
 
@@ -1909,6 +2251,7 @@ Run: `moon run composer-app:serve --quiet` (port 5173).
 3. Toolbar defaults to **Search** (no booking yet). Enter origin `JFK`, destination `LHR`, a near-future date, and Search.
 4. Expected: offers list (live Duffel test data via the proxy). Selecting one fills the flight details, creates a Booking, and the toolbar can switch to **Form** to show the populated fields.
 5. If the proxy/key is unavailable, confirm the missing-key / error message renders instead of crashing.
+6. **Assistant path**: open the assistant, ask "find me a flight from JFK to LHR on <date>". Confirm it calls the `search-bookings` tool and summarizes returned offers. (Requires the Duffel key set and AiService configured.)
 
 > This step needs the dev server + network; if running headless, rely on Tasks 1–15 unit/storybook checks and note the live step as pending.
 
@@ -1923,6 +2266,6 @@ git commit -m "chore: lint fixes for booking services"
 
 ## Self-Review Notes
 
-- **Spec coverage:** BookingService capability (Tasks 1–2) ✓; generalized SearchQuery/Offer mixin+tagged union (Task 1) ✓; BookingSearch component + provider picker + offer-select write (Tasks 3–4) ✓; SegmentArticle Form⇄Search toolbar toggle (Task 5) ✓; plugin-duffel settings panel only-UI (Tasks 9, 13, 14) ✓; thin REST client via CORS proxy (Task 11) ✓; search-only, no order (Task 12) ✓; no app-graph change (untouched) ✓; tests for mapping + offer→segment + storybook (Tasks 3, 7, 10) ✓.
-- **Type consistency:** `offerToFlightDetails`/`offerToBookingProps` (Task 3) match BookingSearch types (Task 1); `offerRequestBody`/`parseOffers` (Task 10) feed `makeDuffelBookingService` (Task 12); `DuffelOfferRequestBody` shared between mapping and client (Tasks 10–11); `MissingApiKeyError` defined in Task 1, thrown in Task 12, caught in Task 4.
-- **Known risk flags (called out inline):** exact `@dxos/react-ui` import names for `Button`/`Icon`/`Input` (Task 4 Step 4); tsconfig reference list correctness (Task 8 Step 2); `Plugin.addModule` accepting a lazy capability module with a dependency (Task 15 Step 3). Each step's build/test command surfaces these immediately.
+- **Spec coverage:** BookingService capability (Tasks 1–2) ✓; generalized SearchQuery/Offer mixin+tagged union (Task 1) ✓; **search as an operation** + in-handler service resolution (Task 2b) ✓; **assistant blueprint tool** (Task 2c) ✓; BookingSearch component invoking the operation + provider picker + offer-select write (Tasks 3–4) ✓; SegmentArticle Form⇄Search toolbar toggle (Task 5) ✓; plugin-duffel settings panel only-UI (Tasks 9, 13, 14) ✓; thin REST client via CORS proxy (Task 11) ✓; search-only, no order (Task 12) ✓; no app-graph change (untouched) ✓; tests for search-bookings + mapping + offer→segment + storybook (Tasks 2b, 3, 7, 10) ✓.
+- **Type consistency:** `SearchBookings` (Task 2b) input/output use `BookingSearch.SearchQuery`/`Offer` (Task 1); handler resolves `TripCapabilities.BookingService` (Task 2) via `Capability.getAll`; component invokes it with the same input shape (Task 4); `offerToFlightDetails`/`offerToBookingProps` (Task 3) match BookingSearch types (Task 1); `offerRequestBody`/`parseOffers` (Task 10) feed `makeDuffelBookingService` (Task 12); `DuffelOfferRequestBody` shared between mapping and client (Tasks 10–11); `MissingApiKeyError` defined in Task 1, thrown in Task 12, surfaced by error-name match in Task 4.
+- **Known risk flags (called out inline):** exact `@dxos/react-ui` import names for `Button`/`Icon`/`Input` (Task 4 Step 4); the `search-bookings.test.ts` `Capability.Service` harness must follow `extract-message.test.ts` (Task 2b Step 2); whether the operation/spawn environment can resolve the browser-contributed `BookingService` (Duffel reads its settings atom via the AtomRegistry) when invoked by the assistant — proven for product-search's `RunSearch`, but verify against the live assistant path (Task 17 Step 4.6); tsconfig reference list correctness (Task 8 Step 2); `Plugin.addModule` accepting a lazy capability module with a dependency (Task 15 Step 3). Each step's build/test command surfaces these immediately.

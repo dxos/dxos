@@ -22,7 +22,10 @@ object. No real order/purchase is placed through Duffel.
 - Generalized, extensible `SearchQuery` / `Offer` types that mirror the
   discriminated-union + mixin pattern already used by `Segment` (today only the
   `flight` variant is populated; `train`/`accommodation`/etc. are additive later).
-- A booking search component in `plugin-trip` driven by the resolved services,
+- Search is implemented as a first-class **`SearchBookings` operation** (resolves
+  the contributed `BookingService`s and runs the query) so it can be driven by the
+  UI **and invoked by the assistant** via a blueprint tool.
+- A booking search component in `plugin-trip` that invokes the operation,
   reachable from a toolbar toggle on the segment surface.
 - `plugin-duffel`: a new plugin implementing `BookingService` against Duffel,
   with a settings panel for the API key and **no feature UI components**.
@@ -133,19 +136,48 @@ implementations may use Effect internally. A `MissingApiKeyError` (or similar
 structured error) is thrown by implementations lacking credentials, and surfaced
 in the search UI.
 
+## `SearchBookings` operation + assistant blueprint (plugin-trip)
+
+Search is an Operation, not a direct service call, so the same code path serves
+the UI and the assistant.
+
+- `types/BookingOperation.ts` defines `SearchBookings` via `Operation.make`
+  (`Operation` from `@dxos/compute`):
+  - `input`: `{ query: SearchQuery, provider?: string }`.
+  - `output`: `{ offers: Offer[] }`.
+  - `services: [Capability.Service]`.
+- `operations/search-bookings.ts` handler resolves
+  `Capability.getAll(TripCapabilities.BookingService)`, filters services by
+  `query._tag` (kind) and optional `provider` id, calls `service.search(query)`,
+  returns the offers. (Same in-handler capability-resolution pattern as
+  plugin-inbox's `extract-message` operation.)
+- Registered into the existing `TripOperationHandlerSet` /
+  `Capabilities.OperationHandler` contribution.
+- **Assistant exposure**: a `booking-blueprint.ts` exposes `SearchBookings` as a
+  tool via `Blueprint.toolDefinitions({ operations: [SearchBookings] })`,
+  contributed through `AppCapabilities.BlueprintDefinition` and wired with
+  `AppPlugin.addBlueprintDefinitionModule` (mirrors plugin-product-search).
+
+> Applying a chosen offer to the segment (the write below) stays a UI action in
+> this first cut. A follow-up `AddOfferToSegment` operation would let the
+> assistant complete a booking end-to-end; deferred.
+
 ## Booking search component (plugin-trip)
 
 `packages/plugins/plugin-trip/src/containers/BookingSearch/BookingSearch.tsx`:
 
-- Resolves all contributed `BookingService`s via the capability system, filtered
-  to those whose `kinds` include the current segment's kind.
+- Resolves all contributed `BookingService`s via the capability system (for the
+  provider picker + empty state), filtered to those whose `kinds` include the
+  current segment's kind.
 - If more than one matches, shows a **provider picker** defaulting to the first
   available (Duffel). If exactly one, no picker.
 - Renders a query form: origin, destination, departureDate, optional returnDate,
   cabinClass, passengers, optional carrier. Seeds initial values from the
   segment's existing `details` where present.
-- Runs `service.search(query)` and renders the resulting `Offer[]`. Shows
-  loading / empty / error states (including missing-API-key).
+- Runs the search by **invoking the `SearchBookings` operation**
+  (`useOperationInvoker().invokePromise`) and renders the returned `Offer[]`.
+  Shows loading / empty / error states (including missing-API-key — detected by
+  error `name`, since the error class may not survive the operation boundary).
 - **Selecting an offer** (search-only):
   1. Writes the first slice into the Segment's `FlightDetails`
      (`provider`, `number`, `origin`, `destination`, `departAt`, `arriveAt`,
@@ -247,6 +279,10 @@ companion-on-selection mechanism in `plugin-trip`'s `app-graph-builder.ts`.
   network in CI. An optional live smoke test against the test key is skipped in CI.
 - **plugin-trip** (`offer-to-segment.test.ts`): offer → Segment `FlightDetails`
   write + `Booking` creation + `segment.booking` ref.
+- **plugin-trip** (`search-bookings.test.ts`): `SearchBookings` handler resolves a
+  stub `BookingService`, filters by kind/provider, returns its offers (and `[]`
+  when no service matches), via an inline `OperationHandlerSet` + provided
+  `Capability.Service` (pattern from inbox's `extract-message.test.ts`).
 - **Storybook**: `BookingSearch.stories.tsx` with a stub `BookingService`
   returning fixture offers (no network), exercising query form, results, provider
   picker, empty, and error states.
