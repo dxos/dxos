@@ -1813,10 +1813,9 @@ export const createOfferRequest = async (apiKey: string, body: DuffelOfferReques
 };
 ```
 
-- [ ] **Step 2: Build**
+- [ ] **Step 2: Verify (no full build yet)**
 
-Run: `moon run plugin-duffel:build`
-Expected: builds cleanly (confirms `proxyFetchLegacy` import resolves from `@dxos/edge-client`).
+Do NOT run `moon run plugin-duffel:build` — the package's `moon.yml` lists entrypoints (`capabilities/`, `containers/`, `translations.ts`, `plugin.ts`, `DuffelPlugin.tsx`) that don't exist until Tasks 13–15, so a full compile would fail. Instead run `moon run plugin-duffel:test` (passes with no tests for this file) to confirm nothing is broken. `DuffelClient.ts` is typechecked transitively once `services/index.ts` re-exports it (Task 12) and at the final build gate (Task 15). Confirm the `proxyFetchLegacy` import path by reading `packages/plugins/plugin-discord/src/services/proxy-http-client.ts` (it imports `{ proxyFetchLegacy } from '@dxos/edge-client'`).
 
 - [ ] **Step 3: Commit**
 
@@ -1882,10 +1881,9 @@ export * from './DuffelClient';
 export * from './duffel-mapping';
 ```
 
-- [ ] **Step 3: Build**
+- [ ] **Step 3: Verify (no full build yet)**
 
-Run: `moon run plugin-duffel:build`
-Expected: builds cleanly.
+Do NOT run `moon run plugin-duffel:build` (entrypoints from Tasks 13–15 don't exist yet). Run `moon run plugin-duffel:test` to confirm the mapping test still passes and nothing broke. Full typecheck of these service files happens at the Task 15 build gate.
 
 - [ ] **Step 4: Commit**
 
@@ -2065,10 +2063,9 @@ export const Duffel = Capability.lazy('Duffel', () => import('./duffel'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 ```
 
-- [ ] **Step 4: Build**
+- [ ] **Step 4: Verify (no full build yet)**
 
-Run: `moon run plugin-duffel:build`
-Expected: builds cleanly.
+Do NOT run `moon run plugin-duffel:build` yet — `translations.ts`, `plugin.ts`, and `DuffelPlugin.tsx` entrypoints are created in Task 15. Run `moon run plugin-duffel:test` to confirm nothing broke. The full typecheck of the capabilities files happens at the Task 15 build gate.
 
 - [ ] **Step 5: Commit**
 
@@ -2153,10 +2150,9 @@ export default DuffelPlugin;
 
 > Verify `Plugin.addModule({ activate })` accepts a lazy capability (`Capability.lazy`) the same way `AppPlugin.add*Module` does. If it requires an inline `activate: () => Effect...`, replace the module with `AppPlugin.addModule(...)` or inline `activate: () => import('./capabilities/duffel').then((m) => m.default(...))` following whatever `TripPlugin.tsx`'s `trip-extractor` module shape supports. The `trip-extractor` module in `TripPlugin.tsx` uses `activate: () => Effect.succeed(Capability.contributes(...))`; for a lazy module-with-dependencies prefer wiring it through a dedicated `AppPlugin.add*Module` helper if one exists, mirroring how `plugin-meeting` registers its `state` capability module.
 
-- [ ] **Step 4: Build**
+- [ ] **Step 4: Build (FULL TYPECHECK GATE for plugin-duffel)**
 
-Run: `moon run plugin-duffel:build`
-Expected: builds cleanly.
+This is the FIRST full build of plugin-duffel — every `moon.yml` entrypoint now exists. Run `moon run plugin-duffel:build`. Expected: builds cleanly. Because Tasks 9–14 were verified only via `:test` (which does not typecheck), THIS build is the first real typecheck of the whole package — expect to surface and FIX any cross-file type errors here (settings atom typing, capability module generics, DuffelClient/mapping types, settings panel props). Fix all at the source (no casts). Also run `moon run plugin-duffel:test` to confirm tests pass.
 
 - [ ] **Step 5: Commit**
 
