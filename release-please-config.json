@@ -605,6 +605,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-duffel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
