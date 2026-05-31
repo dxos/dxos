@@ -10037,6 +10037,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
