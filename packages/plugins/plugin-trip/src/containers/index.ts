@@ -8,3 +8,4 @@ export * from './BookingSearch';
 
 export const SegmentArticle: ComponentType<any> = lazy(() => import('./SegmentArticle'));
 export const TripArticle: ComponentType<any> = lazy(() => import('./TripArticle'));
+export const TripMapArticle: ComponentType<any> = lazy(() => import('./TripMapArticle'));

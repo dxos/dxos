@@ -328,6 +328,9 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-commerce/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
@@ -434,9 +437,6 @@
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-product-search/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"

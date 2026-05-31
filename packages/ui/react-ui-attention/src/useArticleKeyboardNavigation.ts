@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { Keyboard } from '@dxos/keyboard';
 
@@ -38,13 +38,15 @@ export const advance = ({
   return ids[next];
 };
 
-export type UseArticleKeyboardNavigationOptions = {
+export type UseArticleKeyboardNavigationOptions<T> = {
   /** Stable id for the article (used as the keyboard context path). */
   articleId: string;
-  /** Ordered list of selectable item ids as they appear in the article. */
-  ids: readonly string[];
+  /** Ordered list of selectable items as they appear in the article. */
+  items: readonly T[];
   /** Currently-selected id, if any. */
   currentId: string | undefined;
+  /** Extracts the id from an item. Defaults to `item.id`. */
+  getId?: (item: T) => string;
   /** Called with the id to select when the user presses 'j' or 'k'. */
   onSelect: (id: string) => void;
 };
@@ -54,15 +56,18 @@ export type UseArticleKeyboardNavigationOptions = {
  * navigates a list of items (e.g., messages, events). Bindings are scoped to
  * the article's keyboard context so they only fire while the article has attention.
  *
+ * Pass the items directly; ids are derived via `getId` (defaults to `item.id`).
  * Clamps at list boundaries. Active only when the article is attended.
  */
-export const useArticleKeyboardNavigation = ({
-  articleId,
-  ids,
-  currentId,
-  onSelect,
-}: UseArticleKeyboardNavigationOptions): void => {
+export const useArticleKeyboardNavigation: {
+  <T extends { id: string }>(options: UseArticleKeyboardNavigationOptions<T>): void;
+  <T>(options: UseArticleKeyboardNavigationOptions<T> & { getId: (item: T) => string }): void;
+} = <T>({ articleId, items, currentId, getId, onSelect }: UseArticleKeyboardNavigationOptions<T>): void => {
   const { hasAttention } = useAttention(articleId);
+
+  // `getId` is optional only when `T extends { id: string }` (enforced by the overloads above),
+  // so the fallback is sound; the cast bridges the generic erased by the implementation signature.
+  const ids = useMemo(() => items.map((item) => (getId ? getId(item) : (item as { id: string }).id)), [items, getId]);
 
   useEffect(() => {
     if (!hasAttention) {

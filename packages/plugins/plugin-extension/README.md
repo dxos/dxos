@@ -3,7 +3,7 @@
 Composer plugin exposing user settings for the `@dxos/composer-crx` browser extension.
 
 The extension can clip DOM subtrees into Composer and act as a **search render-proxy** — fetching
-and JS-rendering pages in a real browser tab so plugins (e.g. `@dxos/plugin-product-search`) can
+and JS-rendering pages in a real browser tab so plugins (e.g. `@dxos/plugin-commerce`) can
 scrape client-rendered or anti-bot sites that a plain HTTP proxy cannot read.
 
 This plugin owns the user-facing settings for that render-proxy:

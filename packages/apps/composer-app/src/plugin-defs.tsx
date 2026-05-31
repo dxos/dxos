@@ -18,6 +18,7 @@ import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
+import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -53,7 +54,6 @@ import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { ProductSearchPlugin } from '@dxos/plugin-product-search/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
 import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
@@ -142,7 +142,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
-      ProductSearchPlugin.meta.id,
+      CommercePlugin.meta.id,
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
@@ -225,7 +225,7 @@ export const getPlugins = ({
     PresenterPlugin(),
     PreviewPlugin(),
     ProcessManagerPlugin(),
-    ProductSearchPlugin(),
+    CommercePlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),

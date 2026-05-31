@@ -58,3 +58,15 @@ export const removeSegment = (trip: Trip, segmentId: string): void => {
     }
   });
 };
+
+/**
+ * Resolves a trip's segment refs to the currently-loaded Segment objects,
+ * sorted ascending by primary (departure) date. Refs whose target is not yet
+ * loaded are skipped.
+ */
+export const getSegments = (trip: Trip): Segment.Segment[] => {
+  const list = (trip.segments ?? [])
+    .map((ref) => (Ref.isRef(ref) ? ref.target : undefined))
+    .filter((segment): segment is Segment.Segment => Segment.instanceOf(segment));
+  return list.sort((a, b) => (Segment.getPrimaryDate(a)?.getTime() ?? 0) - (Segment.getPrimaryDate(b)?.getTime() ?? 0));
+};

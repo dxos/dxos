@@ -6,15 +6,30 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { SegmentArticle, TripArticle } from '#containers';
+import { TripSettings } from '#components';
+import { SegmentArticle, TripArticle, TripMapArticle } from '#containers';
+import { meta } from '#meta';
 import { Segment, Trip } from '#types';
+
+/** Role for the Trip map surface, rendered inline by TripArticle (globe / map variants). */
+const TripMapRole = Surface.makeType<{ subject: Trip.Trip; attendableId: string }>('trip-map');
+
+import { type Settings } from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'surface.trip-settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data }) => {
+          const { settings, updateSettings } = useSettingsState<Settings>(data.subject.atom);
+          return <TripSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
       Surface.create({
         id: 'surface.trip',
         filter: AppSurface.oneOf(
@@ -24,6 +39,13 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <TripArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      // Inline map surface (globe / map variants) rendered by TripArticle when the
+      // globe is toggled on. Reads the current segment selection via useSelected.
+      Surface.create({
+        id: 'surface.trip-map',
+        filter: AppSurface.object(TripMapRole, Trip.Trip),
+        component: ({ data }) => <TripMapArticle subject={data.subject} attendableId={data.attendableId} />,
       }),
       // Companion surface dispatched when a segment is selected within a
       // Trip's attendable context. Mirrors plugin-inbox's EventArticle

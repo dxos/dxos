@@ -9,7 +9,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { InboxCapabilities } from '@dxos/plugin-inbox';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface, Settings } from '#capabilities';
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
@@ -28,6 +28,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
+  AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addTranslationsModule({ translations }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
