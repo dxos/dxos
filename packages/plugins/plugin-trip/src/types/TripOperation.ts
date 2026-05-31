@@ -44,7 +44,7 @@ export const ExtractTrip = Operation.make({
  */
 export const MergeTrip = Operation.make({
   meta: {
-    key: `${TRIP_OPERATION}.merge-trip`,
+    key: makeKey('mergeTrip'),
     name: 'Merge trip',
     description: 'Merge this trip into the nearest other trip by date and delete it.',
     icon: 'ph--arrows-merge--regular',
