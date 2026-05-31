@@ -19,4 +19,3 @@ export const Duffel: Capability.LazyCapability<
     Capability.Capability<typeof TripCapabilities.BookingService>,
   ]
 > = Capability.lazy('Duffel', () => import('./duffel'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));

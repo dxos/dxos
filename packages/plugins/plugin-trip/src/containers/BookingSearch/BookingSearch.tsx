@@ -7,8 +7,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
-import { Button, Icon, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Button, Select, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
+import { OfferStack } from '#components';
 import { meta } from '#meta';
 import { Booking, BookingOperation, BookingSearch as BS, Segment, TripCapabilities } from '#types';
 
@@ -17,16 +19,6 @@ import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 export type BookingSearchProps = {
   segment: Segment.Segment;
 };
-
-type QueryState = {
-  origin: string;
-  destination: string;
-  departureDate: string;
-  cabinClass: Segment.ServiceClass;
-  passengers: number;
-};
-
-const CABIN_OPTIONS: Segment.ServiceClass[] = ['economy', 'premium', 'business', 'first'];
 
 export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const { t } = useTranslation(meta.id);
@@ -45,10 +37,12 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
 
   const origin = Segment.getOrigin(segment);
   const destination = Segment.getDestination(segment);
-  const [query, setQuery] = useState<QueryState>({
-    origin: origin?.code ?? '',
-    destination: destination?.code ?? '',
-    departureDate: Segment.getDepartAt(segment) ?? '',
+  // Driven by the schema-based Form; fields mirror the SearchBookings flight query
+  // (departureDate is an ISO string, as stored by Format.DateTime).
+  const [query, setQuery] = useState<BS.FlightSearchFields>({
+    origin: origin?.code,
+    destination: destination?.code,
+    departureDate: Segment.getDepartAt(segment),
     cabinClass: 'economy',
     passengers: 1,
   });
@@ -111,16 +105,15 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
         if (segment.details._tag !== 'flight') {
           return;
         }
-        segment.details.provider = details.provider;
-        segment.details.number = details.number;
-        segment.details.origin = details.origin && { code: details.origin.code, name: details.origin.name };
-        segment.details.destination = details.destination && {
-          code: details.destination.code,
-          name: details.destination.name,
-        };
-        segment.details.departAt = details.departAt;
-        segment.details.arriveAt = details.arriveAt;
-        segment.details.serviceClass = details.serviceClass;
+        Object.assign(segment.details, {
+          provider: details.provider,
+          number: details.number,
+          origin: details.origin && { code: details.origin.code, name: details.origin.name },
+          destination: details.destination && { code: details.destination.code, name: details.destination.name },
+          departAt: details.departAt,
+          arriveAt: details.arriveAt,
+          serviceClass: details.serviceClass,
+        });
         segment.booking = Ref.make(booking);
       });
     },
@@ -131,114 +124,48 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
     return <div className='p-4 text-description'>{t('booking.no-providers.message')}</div>;
   }
 
+  const flightOffers = offers?.filter((offer): offer is BS.FlightOffer => offer._tag === 'flight');
+
   return (
-    <div className='flex flex-col gap-3 p-3 overflow-y-auto'>
-      {services.length > 1 && (
-        <Select.Root value={service?.id} onValueChange={setServiceId}>
-          <Select.TriggerButton placeholder={t('booking.provider.placeholder')} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {services.map((candidate) => (
-                  <Select.Option key={candidate.id} value={candidate.id}>
-                    {candidate.label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      )}
-
-      <div className='grid grid-cols-2 gap-2'>
-        <Input.Root>
-          <Input.Label>{t('booking.origin.label')}</Input.Label>
-          <Input.TextInput
-            placeholder='JFK'
-            value={query.origin}
-            onChange={(event) => setQuery((state) => ({ ...state, origin: event.target.value.toUpperCase() }))}
-          />
-        </Input.Root>
-        <Input.Root>
-          <Input.Label>{t('booking.destination.label')}</Input.Label>
-          <Input.TextInput
-            placeholder='LHR'
-            value={query.destination}
-            onChange={(event) => setQuery((state) => ({ ...state, destination: event.target.value.toUpperCase() }))}
-          />
-        </Input.Root>
-        <Input.Root>
-          <Input.Label>{t('booking.departure.label')}</Input.Label>
-          <Input.TextInput
-            type='date'
-            value={query.departureDate.slice(0, 10)}
-            onChange={(event) =>
-              setQuery((state) => ({
-                ...state,
-                departureDate: event.target.value ? new Date(event.target.value).toISOString() : '',
-              }))
-            }
-          />
-        </Input.Root>
-        <Input.Root>
-          <Input.Label>{t('booking.passengers.label')}</Input.Label>
-          <Input.TextInput
-            type='number'
-            value={String(query.passengers)}
-            onChange={(event) =>
-              setQuery((state) => ({ ...state, passengers: Math.max(1, Number(event.target.value) || 1) }))
-            }
-          />
-        </Input.Root>
-      </div>
-
-      <Select.Root
-        value={query.cabinClass}
-        onValueChange={(value) => setQuery((state) => ({ ...state, cabinClass: value as Segment.ServiceClass }))}
-      >
-        <Select.TriggerButton placeholder={t('booking.cabin.placeholder')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {CABIN_OPTIONS.map((value) => (
-                <Select.Option key={value} value={value}>
-                  {value}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-
-      <Button variant='primary' disabled={pending || !canSearch} onClick={() => void handleSearch()}>
-        {pending ? t('booking.searching.label') : t('booking.search.label')}
-      </Button>
-
-      {error && <div className='text-error'>{error}</div>}
-      {offers && offers.length === 0 && <div className='text-description'>{t('booking.no-offers.message')}</div>}
-
-      <div className='flex flex-col gap-2'>
-        {offers?.map((offer) =>
-          offer._tag === 'flight' ? (
-            <button
-              key={offer.id}
-              className='flex items-center justify-between rounded border border-separator p-2 text-start hover:bg-hoverSurface'
-              onClick={() => handleSelectOffer(offer)}
-            >
-              <span className='flex items-center gap-2'>
-                <Icon icon='ph--airplane--regular' size={4} />
-                <span>{offer.carrier.name}</span>
-                <span className='text-description'>
-                  {offer.slices.at(0)?.origin.code} → {offer.slices.at(-1)?.destination.code}
-                </span>
-              </span>
-              <span className='font-mono'>
-                {offer.totalAmount} {offer.currency}
-              </span>
-            </button>
-          ) : null,
+    <div className='flex flex-col dx-container'>
+      {/* Pinned query form: provider picker + schema-driven flight query + search action. */}
+      <div className='flex flex-col gap-2 p-3 border-b border-separator'>
+        {services.length > 1 && (
+          <Select.Root value={service?.id} onValueChange={setServiceId}>
+            <Select.TriggerButton placeholder={t('booking.provider.placeholder')} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {services.map((candidate) => (
+                    <Select.Option key={candidate.id} value={candidate.id}>
+                      {candidate.label}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         )}
+
+        <Form.Root schema={BS.FlightSearchFields} values={query} onValuesChanged={(values) => setQuery(values)}>
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
+        </Form.Root>
+
+        <Button variant='primary' disabled={pending || !canSearch} onClick={() => void handleSearch()}>
+          {pending ? t('booking.searching.label') : t('booking.search.label')}
+        </Button>
+
+        {error && <div className='text-error'>{error}</div>}
       </div>
+
+      {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
+      {flightOffers && flightOffers.length === 0 ? (
+        <div className='p-3 text-description'>{t('booking.no-offers.message')}</div>
+      ) : (
+        flightOffers && <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
+      )}
     </div>
   );
 };
