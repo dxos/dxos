@@ -15,12 +15,12 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { Booking, type BookingSearch as BS, Segment, Trip, TripCapabilities } from '#types';
+import { Booking, type BookingSearch as BookingSearchType, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
 import { BookingSearch } from './BookingSearch';
 
-const STUB_OFFER: BS.FlightOffer = {
+const STUB_OFFER: BookingSearchType.FlightOffer = {
   _tag: 'flight' as const,
   id: 'off_stub',
   provider: 'stub',
@@ -33,7 +33,7 @@ const STUB_OFFER: BS.FlightOffer = {
   ],
 };
 
-const STUB_SERVICE: BS.BookingService = {
+const STUB_SERVICE: BookingSearchType.BookingService = {
   id: 'stub',
   label: 'Stub Air',
   kinds: ['flight'],

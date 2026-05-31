@@ -9,11 +9,11 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type BookingSearch as BS } from '#types';
+import { type BookingSearch as BookingSearchType } from '#types';
 
 import { OfferStack } from './OfferStack';
 
-const OFFERS: BS.FlightOffer[] = [
+const OFFERS: BookingSearchType.FlightOffer[] = [
   {
     _tag: 'flight',
     id: 'off_1',

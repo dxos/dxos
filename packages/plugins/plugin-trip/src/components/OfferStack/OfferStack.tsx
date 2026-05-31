@@ -9,12 +9,12 @@ import { Card, ScrollArea, type ThemedClassName, composable, composableProps, us
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
-import { type BookingSearch as BS } from '#types';
+import { type BookingSearch as BookingSearchType } from '#types';
 
-export type OfferSelectHandler = (offer: BS.FlightOffer) => void;
+export type OfferSelectHandler = (offer: BookingSearchType.FlightOffer) => void;
 
 type OfferTileData = {
-  offer: BS.FlightOffer;
+  offer: BookingSearchType.FlightOffer;
   onSelect?: OfferSelectHandler;
 };
 
@@ -82,7 +82,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
 OfferTile.displayName = 'OfferTile';
 
 export type OfferStackProps = ThemedClassName<{
-  offers?: readonly BS.FlightOffer[];
+  offers?: readonly BookingSearchType.FlightOffer[];
   currentId?: string;
   onSelect?: OfferSelectHandler;
 }>;
