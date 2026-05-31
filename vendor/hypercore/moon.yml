@@ -20,6 +20,7 @@ tasks:
       - '--bundlePackage=abstract-extension'
       - '--bundlePackage=atomic-batcher'
       - '--bundlePackage=b4a'
+      - '--bundlePackage=bare-events'
       - '--bundlePackage=bitfield-rle'
       - '--bundlePackage=blake2b'
       - '--bundlePackage=blake2b-wasm'
