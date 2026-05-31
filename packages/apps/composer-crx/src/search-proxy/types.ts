@@ -6,7 +6,7 @@
  * Search render-proxy protocol.
  *
  * The Composer web page asks the extension to fetch + JS-render a URL in a
- * background tab and returns the rendered HTML. This lets the product-search
+ * background tab and returns the rendered HTML. This lets the commerce
  * plugin scrape client-rendered / anti-bot SPA sites a plain HTTP proxy
  * cannot. The extension is a PROXY ONLY — it performs no extraction.
  *
