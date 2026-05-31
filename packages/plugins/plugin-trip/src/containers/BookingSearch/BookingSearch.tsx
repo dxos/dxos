@@ -57,6 +57,10 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
+  // Duffel rejects an offer request without a complete slice; require the core fields client-side
+  // so the user gets actionable feedback rather than a server error.
+  const canSearch = Boolean(service && query.origin && query.destination && query.departureDate);
+
   const handleSearch = useCallback(async () => {
     if (!service) {
       return;
@@ -206,7 +210,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
         </Select.Portal>
       </Select.Root>
 
-      <Button variant='primary' disabled={pending || !service} onClick={() => void handleSearch()}>
+      <Button variant='primary' disabled={pending || !canSearch} onClick={() => void handleSearch()}>
         {pending ? t('booking.searching.label') : t('booking.search.label')}
       </Button>
 

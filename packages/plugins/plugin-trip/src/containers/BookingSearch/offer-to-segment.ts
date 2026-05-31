@@ -14,6 +14,8 @@ const firstSlice = (offer: BookingSearch.FlightOffer): BookingSearch.FlightSlice
 const lastSlice = (offer: BookingSearch.FlightOffer): BookingSearch.FlightSliceFields | undefined =>
   offer.slices.at(-1);
 
+// Offer slices only carry code + name; city/country/geo are intentionally narrowed away
+// (selecting an offer overwrites the segment's place with the carrier-provided values).
 const toPlace = (place?: { code: string; name?: string }): Place.Place | undefined =>
   place ? { code: place.code, name: place.name } : undefined;
 
