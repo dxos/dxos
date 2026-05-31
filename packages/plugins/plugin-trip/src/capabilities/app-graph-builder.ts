@@ -8,13 +8,14 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { Segment, Trip } from '#types';
+import { Segment, Trip, TripOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -54,6 +55,24 @@ export default Capability.makeModule(
       },
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension]);
+    // Context-menu action on a Trip: merge it into the nearest other trip (by date) and delete it.
+    const mergeExtension = yield* GraphBuilder.createExtension({
+      id: 'trip-merge',
+      match: (node) => (Trip.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+      actions: (trip) =>
+        Effect.succeed([
+          {
+            id: `${trip.id}-${TripOperation.MergeTrip.meta.key}`,
+            data: () => Operation.invoke(TripOperation.MergeTrip, { trip }),
+            properties: {
+              label: ['trip.merge.label', { ns: meta.id }],
+              icon: 'ph--arrows-merge--regular',
+              disposition: 'list-item',
+            },
+          },
+        ]),
+    });
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension, mergeExtension]);
   }),
 );

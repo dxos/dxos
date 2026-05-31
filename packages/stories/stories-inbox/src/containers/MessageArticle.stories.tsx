@@ -103,12 +103,16 @@ const MOCK_SUMMARY =
  * the template-driven `TripMessageExtractor`, which produces a Trip named "JFK → CDG (AF0003)".
  */
 const MOCK_FLIGHT_PAYLOAD = {
-  number: 'AF0003',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-05-05T17:30:00.000Z',
-  arriveAt: '2026-05-06T07:00:00.000Z',
   confirmationCode: 'FB12345',
+  segments: [
+    {
+      number: 'AF0003',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-05-05T17:30:00.000Z',
+      arriveAt: '2026-05-06T07:00:00.000Z',
+    },
+  ],
 };
 
 /**

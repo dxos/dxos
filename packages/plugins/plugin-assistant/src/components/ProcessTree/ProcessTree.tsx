@@ -54,7 +54,7 @@ export const ProcessTree = React.memo(
                       parentOf={process.parentPid?.toString()}
                       classNames={mx('col-span-full grid grid-cols-subgrid gap-2 ps-1', onProcessSelect && 'dx-hover')}
                     >
-                      <Treegrid.Cell>
+                      <Treegrid.Cell classNames='grid place-items-center'>
                         <Tooltip.Trigger content={process.state.toString()}>
                           <Icon
                             size={4}
