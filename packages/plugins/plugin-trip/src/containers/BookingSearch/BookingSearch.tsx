@@ -121,7 +121,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   );
 
   if (services.length === 0) {
-    return <div className='p-4 text-description'>{t('booking.no-providers.message')}</div>;
+    return <div className='p-form-gap text-description'>{t('booking.no-providers.message')}</div>;
   }
 
   const flightOffers = offers?.filter((offer): offer is BS.FlightOffer => offer._tag === 'flight');
@@ -129,7 +129,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   return (
     <div className='flex flex-col dx-container'>
       {/* Pinned query form: provider picker + schema-driven flight query + search action. */}
-      <div className='flex flex-col gap-2 p-3 border-b border-separator'>
+      <div className='flex flex-col gap-form-gap p-form-gap border-b border-separator'>
         {services.length > 1 && (
           <Select.Root value={service?.id} onValueChange={setServiceId}>
             <Select.TriggerButton placeholder={t('booking.provider.placeholder')} />
@@ -162,7 +162,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
 
       {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
       {flightOffers && flightOffers.length === 0 ? (
-        <div className='p-3 text-description'>{t('booking.no-offers.message')}</div>
+        <div className='p-form-gap text-description'>{t('booking.no-offers.message')}</div>
       ) : (
         flightOffers && <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
       )}
