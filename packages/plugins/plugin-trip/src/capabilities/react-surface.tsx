@@ -6,15 +6,27 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { TripSettings } from '#components';
 import { SegmentArticle, TripArticle } from '#containers';
+import { meta } from '#meta';
 import { Segment, Trip } from '#types';
+
+import { type Settings } from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'surface.trip-settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data }) => {
+          const { settings, updateSettings } = useSettingsState<Settings>(data.subject.atom);
+          return <TripSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
+      }),
       Surface.create({
         id: 'surface.trip',
         filter: AppSurface.oneOf(

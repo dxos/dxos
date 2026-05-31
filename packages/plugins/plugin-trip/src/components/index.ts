@@ -5,3 +5,4 @@
 export * from './SegmentCard';
 export * from './SegmentStack';
 export * from './TripMapView';
+export * from './TripSettings';
