@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Tag } from '@dxos/echo';
+import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { Message } from '@dxos/types';
 
@@ -12,7 +12,10 @@ import { matchesFilter } from './match-filter';
 
 const tagFoo = Tag.make({ label: 'foo' });
 const tagBar = Tag.make({ label: 'bar' });
-const tags: Tag.Map = { [tagFoo.id]: tagFoo, [tagBar.id]: tagBar };
+const tagFooUri = Obj.getURI(tagFoo).toString();
+const tagBarUri = Obj.getURI(tagBar).toString();
+// Tag registry keyed by uri — the id space matchesFilter/meta.tags use.
+const tags: Tag.Map = { [tagFooUri]: tagFoo, [tagBarUri]: tagBar };
 
 const makeMessage = (overrides: Partial<Message.Message>): Message.Message =>
   ({
@@ -94,8 +97,8 @@ describe('matchesFilter', () => {
 
   test('tag filter matches via passed tags', ({ expect }) => {
     const message = makeMessage({});
-    expect(matchesFilter(build('#foo'), message, [tagFoo])).toBe(true);
-    expect(matchesFilter(build('#foo'), message, [tagBar])).toBe(false);
+    expect(matchesFilter(build('#foo'), message, [tagFooUri])).toBe(true);
+    expect(matchesFilter(build('#foo'), message, [tagBarUri])).toBe(false);
   });
 
   test('OR matches either', ({ expect }) => {

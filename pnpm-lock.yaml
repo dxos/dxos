@@ -13047,6 +13047,9 @@ importers:
         specifier: ~19.2.3
         version: 19.2.6
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

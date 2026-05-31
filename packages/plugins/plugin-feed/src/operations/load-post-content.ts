@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '../types';
-import { appendPostContent, fetchArticle, findPostContent, updateSubscriptionPostState } from '../util';
+import { appendPostContent, fetchArticle, findPostContent, makeSnippet, stripHtml } from '../util';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
@@ -44,13 +44,14 @@ export default FeedOperation.LoadPostContent.pipe(
           const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
           const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy });
           if (text) {
-            await appendPostContent(space, subscription, { postId, text });
-          }
-          const hero = imageUrls[0];
-          if (hero) {
-            // Hero image is a hot-path read (tiles) so it stays on the side
-            // map; only the bulky body lives in the contentFeed queue.
-            updateSubscriptionPostState(subscription, postId, { imageUrl: hero });
+            // Store the body plus refined snippet/imageUrl derived from the full article — preferred
+            // over the description-derived defaults wherever the Post is rendered.
+            await appendPostContent(space, subscription, {
+              postId,
+              text,
+              snippet: makeSnippet(stripHtml(text)),
+              imageUrl: imageUrls[0],
+            });
           }
         },
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),

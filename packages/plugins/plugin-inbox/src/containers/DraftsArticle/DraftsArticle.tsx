@@ -105,13 +105,7 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
         {drafts.length === 0 ? (
           <div className='p-4 text-subdued'>{t('drafts.empty.message')}</div>
         ) : (
-          <MessageStack
-            id={id}
-            messages={drafts}
-            currentId={currentId}
-            tags={Mailbox.buildMessageTagsIndex(mailbox)}
-            onAction={handleAction}
-          />
+          <MessageStack id={id} messages={drafts} currentId={currentId} tags={{}} onAction={handleAction} />
         )}
       </Panel.Content>
     </Panel.Root>

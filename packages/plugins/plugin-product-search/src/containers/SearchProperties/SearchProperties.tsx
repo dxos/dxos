@@ -64,7 +64,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   const handleSave = useCallback(
     (values: Record<string, unknown>) => {
       Obj.update(search, (search) => {
-        search.criteria = { ...values };
+        search.params = { ...values };
       });
     },
     [search],
@@ -113,7 +113,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
         <Form.Root
           key={selectedProviders.map((provider) => provider.id).join()}
           schema={schema}
-          defaultValues={{ ...search.criteria }}
+          defaultValues={{ ...search.params }}
           autoSave
           onSave={handleSave}
         >

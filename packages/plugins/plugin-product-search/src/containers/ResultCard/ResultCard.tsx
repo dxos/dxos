@@ -4,14 +4,19 @@
 
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Card, IconButton, composable, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 import { type Result } from '../../types/Result';
 
-export type ResultCardProps = { subject: Result; current?: boolean };
+export type ResultCardProps = {
+  subject: Result;
+  current?: boolean;
+  /** Star state and toggle owned by the Search container (the immutable Result has no `starred`). */
+  starred?: boolean;
+  onToggleStar?: () => void;
+};
 
 /**
  * Presentational card for a search {@link Result}.
@@ -23,24 +28,21 @@ export type ResultCardProps = { subject: Result; current?: boolean };
  * leading icon slot and title + price occupy the centre `1fr` content slot.
  */
 export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
-  ({ subject, current, classNames, ...props }, forwardedRef) => {
+  ({ subject, current, starred = false, onToggleStar, classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    // Subscribe so the card re-renders when the result mutates (e.g. star toggle).
+    // Subscribe so the card re-renders when the result (or its image) loads.
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];
     const price =
       result.price != null ? [result.currency, result.price.toLocaleString()].filter(Boolean).join(' ') : undefined;
-    const starred = Boolean(result.starred);
 
     // Stop propagation so the star toggle doesn't trigger the tile's Focus.Item selection.
     const handleToggleStar = useCallback(
       (event: MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
-        Obj.update(subject, (subject) => {
-          subject.starred = !subject.starred;
-        });
+        onToggleStar?.();
       },
-      [subject],
+      [onToggleStar],
     );
 
     return (
