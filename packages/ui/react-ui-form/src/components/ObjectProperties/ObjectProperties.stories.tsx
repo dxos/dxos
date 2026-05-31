@@ -276,9 +276,9 @@ export const CreateRefArrayPlay: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    // ObjectProperties extends Article with the BaseSchema's `tags` array, so
-    // the form has two "Add item" buttons (Tags + Authors). Pick the last one
-    // — Authors comes after Tags in the rendered order.
+    // ObjectProperties extends Article with the synthetic `_tags` meta-tags
+    // array (labelled "Tags"), so the form has two "Add item" buttons (Tags +
+    // Authors). Pick the last one — Authors comes after Tags in rendered order.
     const addButtons = await canvas.findAllByRole('button', { name: /add/i }, { timeout: 10_000 });
     await userEvent.click(addButtons[addButtons.length - 1]);
     await new Promise((resolve) => setTimeout(resolve, 250));
