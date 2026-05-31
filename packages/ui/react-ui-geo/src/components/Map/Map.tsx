@@ -88,6 +88,31 @@ type MapContentProps = ThemedClassName<Omit<MapContainerProps, 'children'> & Pro
  */
 const MAP_CONTENT_NAME = 'Map.Content';
 
+/**
+ * Recalculates the leaflet map size when its container resizes (e.g. a companion
+ * panel opening/closing). Without this, leaflet keeps its stale size and renders
+ * blank/gray tiles in the newly-exposed area until the next pan/zoom. Coalesced
+ * via rAF to avoid ResizeObserver feedback loops.
+ */
+const MapResize = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize());
+    });
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  return null;
+};
+
 const MapContent = forwardRef<MapController, MapContentProps>(
   (
     { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
@@ -144,6 +169,7 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         whenReady={() => {}}
         ref={mapRef}
       >
+        <MapResize />
         {children}
       </MapContainer>
     );
