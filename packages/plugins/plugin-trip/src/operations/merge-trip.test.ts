@@ -99,6 +99,8 @@ describe('MergeTrip', () => {
     await db.flush();
     const trips = await db.query(Filter.type(Trip.Trip)).run();
     expect(trips).toHaveLength(2);
+    // The source segment moved into the target trip.
+    expect(near.segments).toHaveLength(2);
     // The Booking moved with the merge (re-parented to the target trip).
     expect(Obj.getParent(booking)?.id).toBe(near.id);
   });
