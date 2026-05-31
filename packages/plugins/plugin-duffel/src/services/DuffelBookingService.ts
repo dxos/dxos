@@ -27,6 +27,6 @@ export const makeDuffelBookingService = (getApiKey: () => string | undefined): B
       throw new BookingSearch.MissingApiKeyError(DUFFEL_SERVICE_ID);
     }
     const response = await createOfferRequest(apiKey, offerRequestBody(query));
-    return parseOffers(response as Parameters<typeof parseOffers>[0]);
+    return parseOffers(response);
   },
 });

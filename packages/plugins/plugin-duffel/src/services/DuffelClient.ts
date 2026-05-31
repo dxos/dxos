@@ -5,7 +5,7 @@
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
-import { type DuffelOfferRequestBody } from './duffel-mapping';
+import { type DuffelOfferRequestBody, type DuffelOffersResponse } from './duffel-mapping';
 
 const DUFFEL_API = 'https://api.duffel.com';
 const DUFFEL_VERSION = 'v2';
@@ -16,7 +16,10 @@ const DUFFEL_VERSION = 'v2';
  * because `api.duffel.com` does not permit browser CORS. Only the search path
  * (create offer request, return offers inline) is implemented.
  */
-export const createOfferRequest = async (apiKey: string, body: DuffelOfferRequestBody): Promise<unknown> => {
+export const createOfferRequest = async (
+  apiKey: string,
+  body: DuffelOfferRequestBody,
+): Promise<DuffelOffersResponse> => {
   const target = new URL('/air/offer_requests?return_offers=true', DUFFEL_API);
   const response = await proxyFetchLegacy(target, {
     method: 'POST',

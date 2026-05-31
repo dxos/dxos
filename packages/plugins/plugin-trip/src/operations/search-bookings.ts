@@ -19,7 +19,12 @@ const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = B
       if (!service) {
         return { offers: [] };
       }
-      const offers = yield* Effect.promise(async () => [...(await service.search(query))]);
+      // `tryPromise` routes a `search` rejection (e.g. MissingApiKeyError) to the operation's
+      // failure channel; the `catch` preserves the original Error so callers can match by name.
+      const offers = yield* Effect.tryPromise({
+        try: async () => [...(await service.search(query))],
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+      });
       return { offers };
     }),
   ),

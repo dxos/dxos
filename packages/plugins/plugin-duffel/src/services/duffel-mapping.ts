@@ -91,7 +91,7 @@ type DuffelOffer = {
   slices?: Array<{ segments?: DuffelSegment[] }>;
   cabin_class?: DuffelCabin;
 };
-type DuffelOffersResponse = { data?: { offers?: DuffelOffer[] } };
+export type DuffelOffersResponse = { data?: { offers?: DuffelOffer[] } };
 
 const toSlice = (segment: DuffelSegment): BookingSearch.FlightSliceFields => ({
   origin: { code: segment.origin?.iata_code ?? '', name: segment.origin?.name },
