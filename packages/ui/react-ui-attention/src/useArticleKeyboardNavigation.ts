@@ -67,10 +67,7 @@ export const useArticleKeyboardNavigation: {
 
   // `getId` is optional only when `T extends { id: string }` (enforced by the overloads above),
   // so the fallback is sound; the cast bridges the generic erased by the implementation signature.
-  const ids = useMemo(
-    () => items.map((item) => (getId ? getId(item) : (item as { id: string }).id)),
-    [items, getId],
-  );
+  const ids = useMemo(() => items.map((item) => (getId ? getId(item) : (item as { id: string }).id)), [items, getId]);
 
   useEffect(() => {
     if (!hasAttention) {
