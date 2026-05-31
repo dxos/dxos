@@ -12,7 +12,11 @@
 if (typeof globalThis.FinalizationRegistry === 'undefined') {
   globalThis.FinalizationRegistry = class FinalizationRegistry {
     register() {}
-    unregister() {}
+
+    // Native `unregister` returns a boolean (whether a cell was removed).
+    unregister() {
+      return false;
+    }
   };
 }
 
@@ -27,4 +31,12 @@ if (typeof globalThis.WeakRef === 'undefined') {
       return this.#target;
     }
   };
+}
+
+// The Workers runtime has no DOM. Some modules reference `HTMLElement` at load
+// time (e.g. `class Foo extends HTMLElement`); a no-op base class keeps those
+// modules importable. Tests that actually render DOM belong in the browser /
+// storybook projects, not here.
+if (typeof globalThis.HTMLElement === 'undefined') {
+  globalThis.HTMLElement = class HTMLElement {};
 }
