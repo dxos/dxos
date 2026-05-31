@@ -9,7 +9,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { InboxCapabilities } from '@dxos/plugin-inbox';
 
-import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
@@ -23,6 +23,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
