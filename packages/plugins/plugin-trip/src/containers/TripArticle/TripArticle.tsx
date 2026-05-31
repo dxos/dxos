@@ -183,7 +183,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       >
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
-          <Panel.Root className='hidden @3xl:block'>
+          <Panel.Root className='hidden @3xl:block border-r border-red-500'>
             <NaturalCalendar.Root>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
@@ -197,6 +197,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
               </Panel.Content>
             </NaturalCalendar.Root>
           </Panel.Root>
+
           <Panel.Root>
             <Panel.Toolbar>
               <Menu.Root {...menuActions} attendableId={attendableId}>
@@ -212,7 +213,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         {/* Row 2: map surface (globe / map variants, toggled via the toolbar). Self-contained:
             it reads the current segment selection via useSelected. */}
         {showGlobe && (
-          <Panel.Root className='min-bs-0 overflow-hidden border-t border-subdued-separator'>
+          <Panel.Root className='border-t border-separator'>
             <Panel.Content>
               <Surface.Surface role='trip-map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
