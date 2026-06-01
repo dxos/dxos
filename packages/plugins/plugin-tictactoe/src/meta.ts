@@ -8,7 +8,7 @@ import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.tictactoe', '0.8.3'),
+  key: DXN.make('org.dxos.plugin.tictactoe'),
   name: 'Tic-Tac-Toe',
   author: 'DXOS',
   description: trim`

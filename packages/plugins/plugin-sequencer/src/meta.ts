@@ -7,7 +7,7 @@ import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.sequencer', '0.8.3'),
+  key: DXN.make('org.dxos.plugin.sequencer'),
   name: 'Sequencer',
   author: 'DXOS',
   description: trim`

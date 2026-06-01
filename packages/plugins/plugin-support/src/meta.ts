@@ -7,7 +7,7 @@ import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.support', '0.8.3'),
+  key: DXN.make('org.dxos.plugin.support'),
   name: 'Support',
   author: 'DXOS',
   description: trim`
