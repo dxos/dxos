@@ -2,9 +2,10 @@
 name: composer-ui
 description: Use when building or styling plugin UI with Composer's design system — the
   `@dxos/react-ui*` packages. Covers theme tokens, primitives (Panel/Card/List/Input/Button/Icon),
-  the standard article container + toolbar/menu wiring, forms, attention/density, translations, and
-  storybook setup. The UI adjunct to the composer-plugins skill; consult it whenever you write a
-  container/component, reach for a Tailwind color class, build a toolbar, or add a story.
+  the standard container layout (Panel + ScrollArea), lists/pickers/stacks, schema-driven forms,
+  toolbar/menu wiring, reactivity (useObject), attention/density, translations, and storybook setup.
+  The UI adjunct to the composer-plugins skill; consult it whenever you write a container/component,
+  reach for a Tailwind color class, build a toolbar, render a form or list, or add a story.
 ---
 
 # Composer UI
@@ -175,26 +176,83 @@ the `useMemo` deps — the atom rebuilds and the toolbar updates. Always thread 
 
 See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
-## Forms & inputs
+## Reactivity
 
-Never hand-roll native `<input>` / `<textarea>` / `<select>` in a plugin — they don't inherit the theme
-(a bare textarea is a white box in dark mode) and bypass validation.
-
-Edit ECHO objects with the schema-driven `Form`, which generates themed inputs from the Effect Schema
-(strings, numbers, booleans, enums via `Schema.Literal`/`Format`, nested `Schema.Struct`, `Schema.Array`,
-`Schema.Record`):
+When an ECHO object is passed into a component as a prop and the component must re-render on changes to it,
+wrap it with **`useObject`** and read from the returned snapshot. A surface receiving an ECHO subject (e.g.
+via `AppSurface.ObjectArticleProps<T>`) MUST do this — without it, mutations to nested arrays/structs (e.g.
+`Obj.update(obj, (m) => (m.images = [...]))`) don't trigger a re-render until you navigate away and back:
+the prop reference stays stable, and the subscription lives inside `useObject`.
 
 ```tsx
-<Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={handleSave} />
+const [gallery] = useObject(subject);
+// reads (gallery.images) re-render reactively;
+// writes still go through the original subject:
+const handleDelete = (index: number) =>
+  Obj.update(subject, (obj) => {
+    const mutable = obj as Obj.Mutable<Gallery.Gallery>;
+    mutable.images = (mutable.images ?? []).filter((_, idx) => idx !== index);
+  });
 ```
 
-- Hide non-editable fields with `FormInputAnnotation.set(false)`.
-- For a bespoke field editor, register it via the Form's `fieldMap` / `fieldProvider` (see
-  `plugin-kanban` `KanbanSettings`) — never a native element.
-- To edit an opaque document (e.g. stored JSON Schema), model it with typed sub-schemas and render those
-  as nested form fields rather than dropping to a `<textarea>`.
+The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` to
+read fields not surfaced on `Snapshot<T>`). For *collections* of objects use the reactive `useQuery`
+rather than holding a plain array. (Pure presentational components that just receive scalar props don't
+need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
 
-For simple one-off inputs that aren't backed by a schema object, use `Input.Root` + `Input.TextInput`.
+## Forms
+
+Never hand-roll native `<input>` / `<textarea>` / `<select>` in a plugin — they don't inherit the theme
+(a bare textarea is a white box in dark mode) and bypass validation. Edit objects with the schema-driven
+`Form` from `@dxos/react-ui-form`, which renders themed inputs from the Effect Schema (strings, numbers,
+booleans, enums via `Schema.Literal`/`Format`, nested `Schema.Struct`, `Schema.Array`, `Schema.Record`).
+
+**`Form` is composed — `Form.Root` renders nothing on its own.** The fields come from `Form.FieldSet` (or
+`Form.Layout`), nested inside the standard Radix wrapper pair: `Form.Viewport` (outer) → `Form.Content`
+(inner), which own scroll and padding (so, like List/Stack, don't pad them yourself):
+
+```tsx
+<Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={handleSave}>
+  <Form.Viewport>
+    <Form.Content>
+      <Form.Section label='…' description='…' /> {/* optional grouping */}
+      <Form.FieldSet /> {/* fields, generated from the schema */}
+      <Form.Actions /> {/* Save/Cancel — omit when autoSave */}
+    </Form.Content>
+  </Form.Viewport>
+</Form.Root>
+```
+
+- **`Form.FieldSet`** is driven *entirely* by the schema and its annotations — fields, order, labels,
+  visibility. Hide a field with `FormInputAnnotation.set(false)`; there's no manual field markup.
+- **`Form.Layout template={…}`** is the alternative to `FieldSet`: a custom layout DSL for arranging
+  fields (grouping, columns, ordering) when the default schema order isn't enough.
+
+**Save model — the form never mutates `values`; the parent applies the change.** Pick a mode:
+
+- **`autoSave` + `onSave`** — on blur, if valid and changed, calls `onSave(values, { changed, isValid })`.
+  This is the usual ECHO-object pattern: `onSave` writes back via `Obj.update`. No `Form.Actions` needed.
+- **`onSave` without `autoSave`** — `onSave` fires only on explicit submit (`Form.Actions` / `Form.Submit`,
+  gated by `canSave`). Use when you want a deliberate Save/Cancel.
+- **`onValuesChanged`** — controlled: fires on every change with merged values + meta; the parent holds
+  the state. Pair with `values`.
+
+`values` is the controlled current value; `defaultValues` seeds an uncontrolled form that keeps its own
+internal state. To edit an opaque document (e.g. a stored JSON Schema), model it with typed sub-schemas
+and render those rather than dropping to a `<textarea>`. For a one-off input not backed by a schema
+object, use `Input.Root` + `Input.TextInput`.
+
+**Custom field renderers.** When a field needs an editor the schema can't express, supply a
+`FormFieldComponent` (an `FC<FormFieldComponentProps>` — `label`, `readonly`, and value/onChange wiring) —
+never a native element. Choose how to register it by *when you know which fields need it*:
+
+- **`fieldMap: Record<jsonPath, FormFieldComponent>`** — static, when you know the property paths ahead of
+  time. Override the renderer for specific named fields.
+- **`fieldProvider: (props) => FormFieldComponent | undefined`** — dynamic, when you must decide at runtime
+  (e.g. by type or annotation rather than exact path). Preferred for plugin-specific input surfaces.
+
+See: [`packages/ui/react-ui-form/src/components/Form/Form.stories.tsx`](../../../packages/ui/react-ui-form/src/components/Form/Form.stories.tsx)
+(a dedicated canonical custom-field example is still TODO).
 
 ## Cards: 3-slot subgrid
 
@@ -245,9 +303,10 @@ Use `useTranslation(meta.id)` for plugin-scoped strings and reference labels as 
 
 ## Storybook
 
-Every new UI component gets a `.stories.tsx` beside it — the user reviews agent-built UI primarily through
-storybook, so a missing story means the component effectively doesn't exist for review. Mount it with
-realistic props and these decorators (import from `@dxos/react-ui/testing`):
+Every major component and container gets a `.stories.tsx` beside it — the user reviews agent-built UI
+primarily through storybook, so a missing story means the component effectively doesn't exist for review.
+**Start with a very basic story** for each (mount it with realistic props); add variants later. Mount it
+with these decorators (import from `@dxos/react-ui/testing`):
 
 ```tsx
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -274,6 +333,10 @@ Two things break silently if omitted:
   resolve. Without it, triggers show the raw key (`foo.add.label`) instead of the translated text — which
   looks like a bug in a screenshot but isn't.
 
+For a container with **complex data behavior** (loading, mutation, multi-step interaction), add a Storybook
+`play` function that drives and asserts the interaction — a basic static story isn't enough to catch
+regressions in behaviour. Keep the basic story too; `play` is the second step, not a replacement.
+
 Capability hooks (`useCapability`, `useAppGraph`, `useOperationInvoker`) throw in storybook (no
 PluginManager). Keep those in `containers/` and take resolved values as props in `components/` so the
 component is storybook-mountable. See [[composer-plugins]] ("Container vs Component").
@@ -299,10 +362,13 @@ never the repo root. If a story renders empty with "Invalid hook call" / "Cannot
 
 ## Checklist
 
-- Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling.
+- Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
+- Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
+- Collections: existing picker/combobox → `react-ui-list` list → Mosaic `Stack`. Never `@dxos/react-ui-stack` (deprecated).
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
 - Toolbars via `MenuBuilder` + `useMenuActions` + `Menu.Root` with `attendableId`.
-- Object editing via `Form.Root` + schema; no native inputs.
+- Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.
+- ECHO object passed into a component → wrap with `useObject` at the container boundary.
 - Icons as `ph--<icon>--<weight>`.
-- Every new component has a `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`.
-- Authoring a new `Foo.Root`/`Foo.Content` primitive → [[composite-components]]; plugin wiring → [[composer-plugins]].
+- Every major component/container has a basic `.stories.tsx` with `withTheme()` (parens) + `parameters: { translations }`; add a `play` function for complex data behaviour.
+- Authoring a new `Foo.Root`/`Foo.Content` primitive → [[composite-components]]; plugin wiring/surfaces → [[composer-plugins]].

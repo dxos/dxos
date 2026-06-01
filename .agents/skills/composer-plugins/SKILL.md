@@ -173,23 +173,6 @@ Create a basic storybook for each.
 
 **If a "component" needs `useCapability`/`useCapabilities`/`useAppGraph`/`useOperationInvoker`, it belongs in `containers/`.** Storybooks won't have a PluginManager — calling capability hooks under `components/` throws. Refactor: take the resolved value (URL, callback, Tile component) as a prop and move the hook one level up.
 
-### Reactivity: wrap subjects with `useObject`
-
-A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>` MUST call `useObject(subject)` and read from the returned snapshot. Without it, mutations to nested arrays/structs (e.g. `Obj.update(obj, m => m.images = [...])`) do not trigger re-render until you navigate away and back — the prop reference stays stable; the subscription lives in `useObject`.
-
-```tsx
-const [gallery] = useObject(subject);
-// reads (gallery.images) re-render reactively
-// writes still go through the original subject:
-const handleDelete = (i: number) =>
-  Obj.update(subject, (obj) => {
-    const m = obj as Obj.Mutable<Gallery.Gallery>;
-    m.images = (m.images ?? []).filter((_, idx) => idx !== i);
-  });
-```
-
-The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
-
 ### UI: forms, theming, toolbars, cards, layout
 
 The detailed rules for building plugin UI with the design system live in the **composer-ui** skill
@@ -198,8 +181,9 @@ Tailwind color class, build a toolbar, edit an object with a form, or add a stor
 `@dxos/react-ui*` packages, verified theme tokens (never invent `bg-input`/`text-primary`), the standard
 `Panel` + `ScrollArea` container layout (no wrapper divs), `MenuBuilder` + `useMenuActions` + `Menu.Root`
 toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no native inputs), the `Card`
-3-slot subgrid, icons, attention/density, translations, and storybook setup. For authoring brand-new
-`@dxos/react-ui` primitives, see the **composite-components** skill.
+3-slot subgrid, icons, attention/density, reactivity (`useObject` for ECHO objects passed into
+components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
+the **composite-components** skill.
 
 
 ### Capability (`src/capabilities/`)
