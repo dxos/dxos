@@ -10,7 +10,7 @@ import { Obj, Registry, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { findEntityByDXN, findTypeByDXN, makeRegistry, registryLayer, registryLayerWithUpstream } from './registry';
+import { makeRegistry, registryLayer, registryLayerWithUpstream } from './registry';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -97,7 +97,7 @@ describe('Registry', () => {
     expect(result.sort()).toEqual([1, 2]);
   });
 
-  test('add type entity and findTypeByDXN', ({ expect }) => {
+  test('add type entity and getByURI', ({ expect }) => {
     const registry = makeRegistry();
     // Type.Type is a valid AnyEntity with typename and version.
     const schema = Type.Type;
@@ -109,46 +109,46 @@ describe('Registry', () => {
     // Type entity is included in list().
     expect(registry.list().filter(Type.isType)).toHaveLength(1);
 
-    // Exact DXN lookup via findTypeByDXN.
-    expect(findTypeByDXN(registry, `dxn:${typename}:${version}`)).toBe(schema);
+    // Exact DXN lookup via getByURI.
+    expect(registry.getByURI(`dxn:${typename}:${version}`)).toBe(schema);
     // Legacy "dxn:type:" prefixed lookup is normalised to canonical form.
-    expect(findTypeByDXN(registry, `dxn:type:${typename}:${version}`)).toBe(schema);
+    expect(registry.getByURI(`dxn:type:${typename}:${version}`)).toBe(schema);
     // Short-form (without dxn: prefix) is not a valid DXN and does not resolve.
-    expect(findTypeByDXN(registry, `${typename}:${version}`)).toBeUndefined();
+    expect(registry.getByURI(`${typename}:${version}`)).toBeUndefined();
     // Missing DXN.
-    expect(findTypeByDXN(registry, 'dxn:org.example.Bar:1.0.0')).toBeUndefined();
+    expect(registry.getByURI('dxn:org.example.Bar:1.0.0')).toBeUndefined();
   });
 
-  test('add keyed entity and findEntityByDXN', ({ expect }) => {
+  test('add keyed entity and getByURI', ({ expect }) => {
     const registry = makeRegistry();
     const obj = makeObj({ key: 'org.example.function.translate', version: '0.1.0', value: 1 });
     registry.add([obj]);
 
     // Resolvable by versioned and unversioned key DXN.
-    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate:0.1.0')).toBe(obj);
-    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate')).toBe(obj);
+    expect(registry.getByURI('dxn:org.example.function.translate:0.1.0')).toBe(obj);
+    expect(registry.getByURI('dxn:org.example.function.translate')).toBe(obj);
     // Missing key DXN.
-    expect(findEntityByDXN(registry, 'dxn:org.example.function.missing')).toBeUndefined();
+    expect(registry.getByURI('dxn:org.example.function.missing')).toBeUndefined();
 
     // Type entities remain resolvable via the same generic lookup.
     registry.add([Type.Type]);
     const typename = Type.getTypename(Type.Type);
     const version = Type.getVersion(Type.Type);
-    expect(findEntityByDXN(registry, `dxn:${typename}:${version}`)).toBe(Type.Type);
+    expect(registry.getByURI(`dxn:${typename}:${version}`)).toBe(Type.Type);
 
     // Index entries are removed alongside the entity.
     expect(registry.remove(obj.id)).toBe(true);
-    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate:0.1.0')).toBeUndefined();
-    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate')).toBeUndefined();
+    expect(registry.getByURI('dxn:org.example.function.translate:0.1.0')).toBeUndefined();
+    expect(registry.getByURI('dxn:org.example.function.translate')).toBeUndefined();
   });
 
-  test('findEntityByDXN resolves through upstream', ({ expect }) => {
+  test('getByURI resolves through upstream', ({ expect }) => {
     const upstream = makeRegistry({
       initial: [makeObj({ key: 'org.example.function.summarize', version: '0.2.0', value: 1 })],
     });
     const local = makeRegistry({ upstream });
-    expect(findEntityByDXN(local, 'dxn:org.example.function.summarize:0.2.0')).toBeDefined();
-    expect(findEntityByDXN(local, 'dxn:org.example.function.summarize')).toBeDefined();
+    expect(local.getByURI('dxn:org.example.function.summarize:0.2.0')).toBeDefined();
+    expect(local.getByURI('dxn:org.example.function.summarize')).toBeDefined();
   });
 
   test('type entities are surfaced in list()', ({ expect }) => {

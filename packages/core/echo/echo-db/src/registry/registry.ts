@@ -20,8 +20,8 @@ import { DXN, EID, PublicKey, URI } from '@dxos/keys';
  * secondary `#entitiesByUri` map under every URI that addresses them — a type entity by its
  * typename DXN (or, when persisted, its identifier EID), and a keyed entity (one carrying a
  * `key` in its meta — e.g. operations, blueprints) by its `dxn:<key>[:<version>]`. Types and
- * non-type entities are indexed uniformly, so {@link findTypeByDXN} and {@link findEntityByDXN}
- * resolve by URI in O(1) without separate per-kind indexes.
+ * non-type entities are indexed uniformly, so {@link Registry.Registry.getByURI} resolves by URI
+ * in O(1) without separate per-kind indexes.
  */
 export class RegistryImpl implements Registry.Registry {
   readonly [Registry.TypeId]: typeof Registry.TypeId = Registry.TypeId;
@@ -114,39 +114,8 @@ export class RegistryImpl implements Registry.Registry {
     return new RegistryQueryResult<any>(this, normalized);
   }
 
-  /**
-   * Internal URI lookup used by {@link findTypeByDXN}. Resolves type entities only.
-   * Not part of the public {@link Registry.Registry} interface.
-   */
-  _findTypeByDXN(dxn: string): Type.AnyEntity | undefined {
-    const local = this.#entitiesByUri.get(normalizeURI(dxn));
-    if (local != null) {
-      return Type.isType(local) ? local : undefined;
-    }
-    // Delegate to upstream if it supports fast URI lookup.
-    if (this.#upstream instanceof RegistryImpl) {
-      return this.#upstream._findTypeByDXN(dxn);
-    }
-    // Fallback: linear scan of upstream.
-    return this.#upstream?.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalizeURI(dxn)));
-  }
-
-  /**
-   * Internal URI lookup used by {@link findEntityByDXN}. Resolves any registry entity by URI:
-   * type entities by their typename DXN (or identifier EID), keyed entities by their
-   * `dxn:<key>[:<version>]`. Not part of the public {@link Registry.Registry} interface.
-   */
-  _findEntityByDXN(dxn: string): Entity.Unknown | undefined {
-    const local = this.#entitiesByUri.get(normalizeURI(dxn));
-    if (local != null) {
-      return local;
-    }
-    // Delegate to upstream if it supports fast URI lookup.
-    if (this.#upstream instanceof RegistryImpl) {
-      return this.#upstream._findEntityByDXN(dxn);
-    }
-    // Fallback: linear scan of upstream.
-    return this.#upstream?.list().find((entity) => matchesEntityDXN(entity, normalizeURI(dxn)));
+  getByURI(uri: string): Entity.Unknown | undefined {
+    return this.#entitiesByUri.get(normalizeURI(uri)) ?? this.#upstream?.getByURI(uri);
   }
 
   #put(entity: Entity.Unknown): void {
@@ -158,42 +127,6 @@ export class RegistryImpl implements Registry.Registry {
     }
   }
 }
-
-/**
- * Look up a type entity by its DXN string.
- *
- * Accepts the canonical `dxn:<typename>:<version>` form, the legacy
- * `dxn:type:<typename>:<version>` form, and echo identifier DXNs
- * (`dxn:echo:@:<objectId>`).
- *
- * Falls back to a linear scan when the registry is not a {@link RegistryImpl}.
- */
-export const findTypeByDXN = (registry: Registry.Registry, dxn: string): Type.AnyEntity | undefined => {
-  if (registry instanceof RegistryImpl) {
-    return registry._findTypeByDXN(dxn);
-  }
-  // Fallback: linear scan for non-RegistryImpl implementations.
-  const normalized = normalizeURI(dxn);
-  return registry.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalized));
-};
-
-/**
- * Look up any registry entity by its DXN string.
- *
- * Resolves type entities by their typename DXN (see {@link findTypeByDXN}) and keyed entities
- * (those carrying a meta `key` — e.g. operations, blueprints) by their `dxn:<key>[:<version>]`.
- * Both the versioned and unversioned key DXN forms resolve to the same entity.
- *
- * Falls back to a linear scan when the registry is not a {@link RegistryImpl}.
- */
-export const findEntityByDXN = (registry: Registry.Registry, dxn: string): Entity.Unknown | undefined => {
-  if (registry instanceof RegistryImpl) {
-    return registry._findEntityByDXN(dxn);
-  }
-  // Fallback: linear scan for non-RegistryImpl implementations.
-  const normalized = normalizeURI(dxn);
-  return registry.list().find((entity) => matchesEntityDXN(entity, normalized));
-};
 
 /**
  * Create a new {@link Registry.Registry}.
@@ -254,21 +187,6 @@ const getTypeDXN = (type: Type.AnyEntity): DXN.DXN => {
 };
 
 /**
- * Returns true if the type entity's canonical DXN (or identifier DXN) matches the normalized key.
- */
-const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
-  const identifierDXN = getPersistedIdentifierDXN(type);
-  if (identifierDXN != null && normalizeURI(identifierDXN) === normalizedDXN) {
-    return true;
-  }
-  try {
-    return getTypeDXN(type) === normalizedDXN;
-  } catch {
-    return false;
-  }
-};
-
-/**
  * Returns the key DXN(s) under which a keyed (non-type) entity is indexed.
  * A keyed entity carries a `key` in its meta (e.g. operations, blueprints); it is reachable
  * under both its versioned (`dxn:<key>:<version>`) and unversioned (`dxn:<key>`) DXN. Returns
@@ -316,13 +234,6 @@ const getEntityUris = (entity: Entity.Unknown): URI.URI[] => {
   }
   return getEntityKeyDXNs(entity);
 };
-
-/**
- * Returns true if `entity` is reachable under the normalized URI — used by the linear-scan
- * fallback for registries that are not a {@link RegistryImpl}.
- */
-const matchesEntityDXN = (entity: Entity.Unknown, normalizedDXN: string): boolean =>
-  getEntityUris(entity).some((uri) => normalizeURI(uri) === normalizedDXN);
 
 /**
  * Normalizes a URI string to the canonical key form used by `#entitiesByUri`.
