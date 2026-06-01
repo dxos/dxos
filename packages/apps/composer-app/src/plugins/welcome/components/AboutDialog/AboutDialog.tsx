@@ -6,7 +6,7 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Dialog, Link, Message, Trans, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
