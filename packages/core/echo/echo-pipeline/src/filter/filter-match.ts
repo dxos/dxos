@@ -21,11 +21,16 @@ export type MatchedObject = {
  * tagged before the migration (and vice versa). Shared by the doc and JSON match paths.
  */
 const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
-  const normalize = (tag: unknown): string => {
-    const uri = isEncodedReference(tag) ? EncodedReference.toURI(tag) : (tag as string);
-    return EID.tryParse(uri) ?? uri;
+  // Canonicalize a tag URI for comparison. For EIDs, compare by entity id so the local
+  // (`echo:/<id>`) and fully-qualified (`echo://<space>/<id>`) forms of the same object match, and
+  // legacy DXN ids normalize to the same id. Non-EID ids fall back to the raw string.
+  const canonical = (uri: string): string => {
+    const eid = EID.tryParse(uri);
+    return (eid && EID.getEntityId(eid)) || uri;
   };
-  const target = EID.tryParse(filterTag) ?? filterTag;
+  const normalize = (tag: unknown): string =>
+    canonical(isEncodedReference(tag) ? EncodedReference.toURI(tag) : (tag as string));
+  const target = canonical(filterTag);
   return tags.some((tag) => normalize(tag) === target);
 };
 
