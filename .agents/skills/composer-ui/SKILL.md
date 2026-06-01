@@ -11,8 +11,8 @@ description: Use when building or styling plugin UI with Composer's design syste
 # Composer UI
 
 How to **consume** Composer's design system (`@dxos/react-ui*`) from a plugin. This is the UI adjunct
-to [[composer-plugins]] (which owns plugin *structure*: capabilities, surfaces, schema, operations)
-and [[composite-components]] (which owns *authoring* new `@dxos/react-ui` primitives). When you're
+to [[composer-plugins]] (which owns plugin _structure_: capabilities, surfaces, schema, operations)
+and [[composite-components]] (which owns _authoring_ new `@dxos/react-ui` primitives). When you're
 laying out a container, picking a color class, wiring a toolbar, or writing a story, the rules live here.
 
 **Golden rule:** the design system already has a primitive, a token, or a layout for what you need.
@@ -23,17 +23,17 @@ always a sign you missed an existing piece. Find it (grep an existing themed com
 
 Import from the most specific package. Common ones:
 
-| Package | Provides |
-| --- | --- |
-| `@dxos/react-ui` | Core primitives: `Panel`, `Card`, `List`, `Input`, `Button`, `IconButton`, `Icon`, `ScrollArea`, `Toolbar`, `Dialog`, `Popover`, `Tooltip`, `Select`, `Tag`, `Avatar`, `Separator`, plus `useTranslation`, `useThemeContext`, `DensityProvider`. |
-| `@dxos/react-ui-theme` | The theme (`tx` resolver, tokens, Tailwind preset). You rarely import from it directly — tokens are plain Tailwind classes. |
-| `@dxos/react-ui-form` | `Form.*` — schema-driven forms (the way to edit ECHO objects). |
-| `@dxos/react-ui-menu` | `Menu.*`, `MenuBuilder`, `useMenuActions` — toolbars and command menus. |
-| `@dxos/react-ui-attention` | Attention system: `AttentionGlyph`, `useAttention`, attendable wiring. |
-| `@dxos/react-ui-list` | Navigable lists with `dx-current`/`dx-selected` item states. |
-| `@dxos/react-ui-stack` / `-mosaic` / `-board` | Layout composition (Stack, Mosaic, Deck, Board) — usually owned by the shell, not plugins. |
-| `@dxos/react-ui-editor` / `-markdown` | Text/markdown editing. |
-| `@dxos/react-ui-table` / `-data` | Data tables. |
+| Package                                       | Provides                                                                                                                                                                                                                                         |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@dxos/react-ui`                              | Core primitives: `Panel`, `Card`, `List`, `Input`, `Button`, `IconButton`, `Icon`, `ScrollArea`, `Toolbar`, `Dialog`, `Popover`, `Tooltip`, `Select`, `Tag`, `Avatar`, `Separator`, plus `useTranslation`, `useThemeContext`, `DensityProvider`. |
+| `@dxos/react-ui-theme`                        | The theme (`tx` resolver, tokens, Tailwind preset). You rarely import from it directly — tokens are plain Tailwind classes.                                                                                                                      |
+| `@dxos/react-ui-form`                         | `Form.*` — schema-driven forms (the way to edit ECHO objects).                                                                                                                                                                                   |
+| `@dxos/react-ui-menu`                         | `Menu.*`, `MenuBuilder`, `useMenuActions` — toolbars and command menus.                                                                                                                                                                          |
+| `@dxos/react-ui-attention`                    | Attention system: `AttentionGlyph`, `useAttention`, attendable wiring.                                                                                                                                                                           |
+| `@dxos/react-ui-list`                         | Navigable lists with `dx-current`/`dx-selected` item states.                                                                                                                                                                                     |
+| `@dxos/react-ui-stack` / `-mosaic` / `-board` | Layout composition (Stack, Mosaic, Deck, Board) — usually owned by the shell, not plugins.                                                                                                                                                       |
+| `@dxos/react-ui-editor` / `-markdown`         | Text/markdown editing.                                                                                                                                                                                                                           |
+| `@dxos/react-ui-table` / `-data`              | Data tables.                                                                                                                                                                                                                                     |
 
 Many more exist (`-card`, `-chat`, `-thread`, `-pickers`, `-search`, `-syntax-highlighter`, …). When you
 need a domain widget, check for a `react-ui-<domain>` package before building one.
@@ -72,7 +72,7 @@ Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `reg
 
 ```tsx
 import { Icon } from '@dxos/react-ui';
-<Icon icon='ph--plus--regular' size={5} />
+<Icon icon='ph--plus--regular' size={5} />;
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
@@ -103,7 +103,7 @@ Parts: `Panel.Root` / `Panel.Toolbar` / `Panel.Content` / `Panel.Statusbar`. Add
 (the article/section/companion role threaded in via `AppSurface.*Props`) — don't invent ARIA roles to
 hang behaviour on.
 
-**`asChild` + composable.** Every `Panel.*` part is `slottable`, so `asChild` makes the part *become* its
+**`asChild` + composable.** Every `Panel.*` part is `slottable`, so `asChild` makes the part _become_ its
 single child instead of rendering its own `<div>`. Use `asChild` whenever the child is itself composable
 (e.g. `ScrollArea.Root`): one fewer DOM node, and the height chain passes straight through. `ScrollArea`
 provides the themed scrollbar **and** the height chain that lets content scroll — content that should
@@ -112,7 +112,7 @@ scroll goes in `ScrollArea.Viewport` inside `Panel.Content asChild`.
 **Let components own their spacing.** `Form`, `List`, and `Stack` each control their own padding and
 spacing — don't wrap them in a padded viewport or sprinkle `p-*`/`space-*` around them; that double-pads
 and fights their internal rhythm. Reserve hand-written layout hints (`p-4 space-y-4`, `@container`
-queries) on `ScrollArea.Viewport` for *ad-hoc* free-form content that has no owning component. Anything
+queries) on `ScrollArea.Viewport` for _ad-hoc_ free-form content that has no owning component. Anything
 beyond a layout hint means you're probably missing a primitive — clear it with the user first.
 
 **Never introduce a wrapper `<div>` for styling.** Wrappers break the height chain that `ScrollArea`
@@ -152,10 +152,15 @@ keyboard shortcuts) target the right surface. Skipping this breaks plugin compos
 ```tsx
 const actionsAtom = useMemo(
   () =>
-    Atom.make((): ActionGraphProps =>
-      MenuBuilder.make()
-        .action('add', { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' }, handleAdd)
-        .build(),
+    Atom.make(
+      (): ActionGraphProps =>
+        MenuBuilder.make()
+          .action(
+            'add',
+            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
+            handleAdd,
+          )
+          .build(),
     ),
   [handleAdd],
 );
@@ -196,7 +201,7 @@ const handleDelete = (index: number) =>
 ```
 
 The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` to
-read fields not surfaced on `Snapshot<T>`). For *collections* of objects use the reactive `useQuery`
+read fields not surfaced on `Snapshot<T>`). For _collections_ of objects use the reactive `useQuery`
 rather than holding a plain array. (Pure presentational components that just receive scalar props don't
 need any of this — keep `useObject` at the container boundary where the ECHO object enters.)
 
@@ -223,7 +228,7 @@ booleans, enums via `Schema.Literal`/`Format`, nested `Schema.Struct`, `Schema.A
 </Form.Root>
 ```
 
-- **`Form.FieldSet`** is driven *entirely* by the schema and its annotations — fields, order, labels,
+- **`Form.FieldSet`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
   visibility. Hide a field with `FormInputAnnotation.set(false)`; there's no manual field markup.
 - **`Form.Layout template={…}`** is the alternative to `FieldSet`: a custom layout DSL for arranging
   fields (grouping, columns, ordering) when the default schema order isn't enough.
@@ -244,7 +249,7 @@ object, use `Input.Root` + `Input.TextInput`.
 
 **Custom field renderers.** When a field needs an editor the schema can't express, supply a
 `FormFieldComponent` (an `FC<FormFieldComponentProps>` — `label`, `readonly`, and value/onChange wiring) —
-never a native element. Choose how to register it by *when you know which fields need it*:
+never a native element. Choose how to register it by _when you know which fields need it_:
 
 - **`fieldMap: Record<jsonPath, FormFieldComponent>`** — static, when you know the property paths ahead of
   time. Override the renderer for specific named fields.
@@ -264,7 +269,9 @@ or wrap it in one element occupying slot 2:
 ```tsx
 <Card.Header>
   <Card.IconBlock /> {/* slot 1 (icon) */}
-  <div className='flex flex-col gap-0.5 min-w-0'> {/* slot 2 (1fr content) */}
+  <div className='flex flex-col gap-0.5 min-w-0'>
+    {' '}
+    {/* slot 2 (1fr content) */}
     <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
     {price && <span className='text-sm text-description'>{price}</span>}
   </div>
@@ -322,7 +329,11 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Default: Story = { args: { /* realistic props */ } };
+export const Default: Story = {
+  args: {
+    /* realistic props */
+  },
+};
 ```
 
 Two things break silently if omitted:

@@ -185,7 +185,6 @@ toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no nati
 components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
 the **composite-components** skill.
 
-
 ### Capability (`src/capabilities/`)
 
 Plugin modules that contribute functionality to the framework. Each is a single file with a default export using `Capability.makeModule()`. The barrel `index.ts` uses only `Capability.lazy()` exports. Do NOT add non-lazy exports.
