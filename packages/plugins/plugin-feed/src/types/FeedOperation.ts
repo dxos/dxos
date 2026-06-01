@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Ref, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -34,7 +34,7 @@ export const SyncFeed = Operation.make({
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Capability.Service],
+  services: [Feed.FeedService, Database.Service],
   input: Schema.Struct({
     feed: Ref.Ref(Subscription.Subscription),
   }),
