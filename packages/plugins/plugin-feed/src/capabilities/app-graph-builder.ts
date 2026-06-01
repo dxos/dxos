@@ -133,7 +133,12 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'sync',
-              data: () => Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(feed) }, { spaceId: Obj.getDatabase(feed)?.spaceId }),
+              data: () =>
+                Operation.invoke(
+                  FeedOperation.SyncFeed,
+                  { feed: Ref.make(feed) },
+                  { spaceId: Obj.getDatabase(feed)?.spaceId },
+                ),
               properties: {
                 label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

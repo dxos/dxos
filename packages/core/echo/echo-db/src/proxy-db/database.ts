@@ -411,7 +411,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         if (!isPersisted) {
           const typename = Type.getTypename(typeEntity);
           const version = Type.getVersion(typeEntity);
-          const registered = typename && version ? this.graph.registry.getByURI(`dxn:${typename}:${version}`) : undefined;
+          const registered =
+            typename && version ? this.graph.registry.getByURI(`dxn:${typename}:${version}`) : undefined;
           const inRegistry = registered != null && Type.isType(registered);
           if (!inRegistry) {
             throw createSchemaNotRegisteredError(typeEntity);

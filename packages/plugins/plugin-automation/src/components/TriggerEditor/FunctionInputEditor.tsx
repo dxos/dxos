@@ -25,8 +25,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   const { t } = useTranslation(meta.id);
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunction = useMemo(
-    () =>
-      Ref.isRef(selectedFunctionValue) ? findOperationByUri(functions, selectedFunctionValue.uri) : undefined,
+    () => (Ref.isRef(selectedFunctionValue) ? findOperationByUri(functions, selectedFunctionValue.uri) : undefined),
     [functions, selectedFunctionValue],
   );
 

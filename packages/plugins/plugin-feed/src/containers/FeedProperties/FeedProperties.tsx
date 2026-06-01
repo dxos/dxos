@@ -40,10 +40,7 @@ export const FeedProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Sub
     ),
   );
 
-  const syncTrigger = useMemo(
-    () => childTriggers.find((trigger) => trigger.spec?.kind === 'timer'),
-    [childTriggers],
-  );
+  const syncTrigger = useMemo(() => childTriggers.find((trigger) => trigger.spec?.kind === 'timer'), [childTriggers]);
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
 

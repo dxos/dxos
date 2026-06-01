@@ -33,8 +33,7 @@ const textFilter = (text?: string) => {
       Obj.isObject(entity) && Obj.instanceOf(Operation.PersistentOperation, entity)
         ? (Operation.getKey(entity) ?? '')
         : '';
-    const name =
-      Obj.isObject(entity) && Obj.instanceOf(Operation.PersistentOperation, entity) ? entity.name : '';
+    const name = Obj.isObject(entity) && Obj.instanceOf(Operation.PersistentOperation, entity) ? entity.name : '';
     return [typename, metaKey, uri, operationKey, name, getEntityId(entity)].some((value) => value.match(matcher));
   };
 };

@@ -8,7 +8,6 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-
 import { FeedOperation, Subscription } from '../types';
 import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
 
@@ -91,7 +90,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
           });
         }
       }
-    })
+    }),
   ),
 );
 

@@ -38,7 +38,11 @@ export default Capability.makeModule(
             });
             // Auto-sync after creation if URL is provided.
             if (object.url) {
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: Ref.make(object) }, { spaceId: Obj.getDatabase(object)?.spaceId });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(object) },
+                { spaceId: Obj.getDatabase(object)?.spaceId },
+              );
             }
             return result;
           }),
@@ -63,7 +67,11 @@ export default Capability.makeModule(
                 hidden: true,
                 targetNodeId: options.targetNodeId,
               });
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: Ref.make(defaultFeed) }, { spaceId: Obj.getDatabase(defaultFeed)?.spaceId });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(defaultFeed) },
+                { spaceId: Obj.getDatabase(defaultFeed)?.spaceId },
+              );
               return defaultFeed;
             }).pipe(Effect.option);
 
