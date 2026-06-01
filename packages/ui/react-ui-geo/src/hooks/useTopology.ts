@@ -21,7 +21,7 @@ export type LevelTier = {
 /** Default zoom buckets: 110m below zoom 3, 50m at/above it. */
 const DEFAULT_TIERS: LevelTier[] = [
   { minZoom: 0, level: '110m' },
-  { minZoom: 3, level: '50m' },
+  // { minZoom: 3, level: '50m' },
 ];
 
 const pickTier = (zoom: number, tiers: LevelTier[]): LevelTier => {

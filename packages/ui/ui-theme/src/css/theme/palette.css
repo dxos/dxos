@@ -35,6 +35,7 @@
   --color-neutral-75: color-mix(in oklch, var(--color-neutral-50) 50%, var(--color-neutral-100) 50%);
   --color-neutral-125: color-mix(in oklch, var(--color-neutral-100) 75%, var(--color-neutral-200) 25%);
   --color-neutral-150: color-mix(in oklch, var(--color-neutral-100) 50%, var(--color-neutral-200) 50%);
+  --color-neutral-175: color-mix(in oklch, var(--color-neutral-150) 50%, var(--color-neutral-200) 50%);
   --color-neutral-225: color-mix(in oklch, var(--color-neutral-200) 75%, var(--color-neutral-300) 25%);
   --color-neutral-250: color-mix(in oklch, var(--color-neutral-200) 50%, var(--color-neutral-300) 50%);
 

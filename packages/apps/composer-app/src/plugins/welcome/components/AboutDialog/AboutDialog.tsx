@@ -85,9 +85,6 @@ export const AboutDialog = () => {
               }}
             />
           </p>
-          <Message.Root valence='warning'>
-            <Message.Title classNames='font-normal text-sm'>{t('technology-preview.message')}</Message.Title>
-          </Message.Root>
         </div>
       </Dialog.Body>
       <Dialog.ActionBar>

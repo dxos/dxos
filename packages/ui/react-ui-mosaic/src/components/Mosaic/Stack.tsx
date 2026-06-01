@@ -228,6 +228,9 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     }, [registerScrollTo, scrollToId]);
 
     const virtualItems = virtualizer.getVirtualItems();
+    // The virtualizer only inserts `gap` *between* items; mirror it as a leading offset before the
+    // first item so the stack is inset from its container edge by the same amount.
+    const leadingOffset = gap ?? 0;
     const getData = (index: number): { data?: any; location: number } => {
       if (draggable) {
         if (index % 2 === 0) {
@@ -258,10 +261,10 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
           ...(orientation === 'vertical'
             ? {
                 width: '100%',
-                height: virtualizer.getTotalSize(),
+                height: virtualizer.getTotalSize() + leadingOffset,
               }
             : {
-                width: virtualizer.getTotalSize(),
+                width: virtualizer.getTotalSize() + leadingOffset,
                 height: '100%',
               }),
         }}
@@ -280,11 +283,11 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                 ...(orientation === 'vertical'
                   ? {
                       width: '100%',
-                      transform: `translateY(${start}px)`,
+                      transform: `translateY(${start + leadingOffset}px)`,
                     }
                   : {
                       height: '100%',
-                      transform: `translateX(${start}px)`,
+                      transform: `translateX(${start + leadingOffset}px)`,
                     }),
               }}
               ref={virtualizer.measureElement}

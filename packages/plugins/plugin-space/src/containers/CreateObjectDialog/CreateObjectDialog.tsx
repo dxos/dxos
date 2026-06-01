@@ -9,15 +9,15 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { getPersonalSpace, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { PluginRegistryButton, useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
@@ -45,6 +45,7 @@ export const CreateObjectDialog = ({
   const { t } = useTranslation(meta.id);
   const manager = usePluginManager();
   const operationInvoker = useOperationInvoker();
+  const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
@@ -129,22 +130,18 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const result = yield* metadata.createObject(data, {
-          db,
-          target,
-          targetNodeId,
-        });
+        const result = yield* metadata.createObject(data, { db, target, targetNodeId });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
           if (layout.mode === 'multi') {
-            yield* operationInvoker.invoke(LayoutOperation.Set, {
+            yield* invoke(LayoutOperation.Set, {
               subject: [...result.subject],
             });
-            yield* operationInvoker.invoke(LayoutOperation.Expose, {
+            yield* invoke(LayoutOperation.Expose, {
               subject: result.subject[0],
             });
           } else {
-            yield* operationInvoker.invoke(LayoutOperation.Open, {
+            yield* invoke(LayoutOperation.Open, {
               subject: [...result.subject],
               navigation: 'immediate',
             });
@@ -157,7 +154,7 @@ export const CreateObjectDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         runAndForwardErrors,
       ),
-    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker, layout.mode],
+    [target, _shouldNavigate, onCreateObject, manager.capabilities, invoke, layout.mode],
   );
 
   return (
@@ -189,11 +186,7 @@ export const CreateObjectDialog = ({
       {showTypeSelector && (
         <Dialog.ActionBar>
           <Dialog.Close asChild>
-            <IconButton
-              icon='ph--squares-four--regular'
-              label={t('open-plugin-registry.label')}
-              onClick={() => void operationInvoker.invokePromise(SettingsOperation.OpenPluginRegistry)}
-            />
+            <PluginRegistryButton />
           </Dialog.Close>
         </Dialog.ActionBar>
       )}
