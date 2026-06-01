@@ -17,7 +17,6 @@ import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
   EditorView,
-  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -297,7 +296,14 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const extensions = useMemo(() => {
     const exts = [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: compactSlots }),
+      createThemeExtensions({
+        themeMode,
+        slots: {
+          content: {
+            className: 'mx-4!',
+          },
+        },
+      }),
     ];
     if (viewMode !== 'plain') {
       exts.push(

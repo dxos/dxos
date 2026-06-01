@@ -8,6 +8,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { type SupportOperation } from '@dxos/plugin-support';
 import { FeedbackForm } from '@dxos/plugin-support/components';
+import { Form } from '@dxos/react-ui-form';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -222,7 +223,14 @@ export const ResetDialog = ({
                   <Popover.Portal>
                     <Popover.Content>
                       <Popover.Viewport>
-                        <FeedbackForm onSave={handleSaveFeedback} />
+                        <FeedbackForm.Root onSave={handleSaveFeedback}>
+                          <Form.Viewport>
+                            <Form.Content>
+                              <Form.FieldSet />
+                              <FeedbackForm.SubmitPosthog />
+                            </Form.Content>
+                          </Form.Viewport>
+                        </FeedbackForm.Root>
                       </Popover.Viewport>
                       <Popover.Arrow />
                     </Popover.Content>

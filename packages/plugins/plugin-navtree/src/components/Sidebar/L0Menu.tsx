@@ -318,7 +318,7 @@ export const L0Menu = ({
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
-        'w-(--dx-l0-size) bg-toolbar-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        'w-(--dx-l0-size) bg-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
         '[body[data-platform="macos"]_&]:pt-[30px]',
         '[body[data-platform="ios"]_&]:pt-[max(env(safe-area-inset-top),0.25rem)]',
       ]}

@@ -19,7 +19,7 @@
     oklch(from var(--color-blue-400) l c h / 0.5),
     oklch(from var(--color-blue-600) l c h / 0.5)
   );
-  --color-cm-focused-selection: light-dark(var(--color-blue-400), var(--color-blue-600));
+  --color-cm-focused-selection: light-dark(var(--color-blue-400), oklch(0.445 0.057 256)); /* #3f5573 */
   --color-cm-highlight: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-cm-highlight-surface: light-dark(var(--color-sky-200), var(--color-cyan-800));
   --color-cm-comment-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));

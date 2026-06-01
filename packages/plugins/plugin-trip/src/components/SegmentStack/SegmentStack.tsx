@@ -9,7 +9,7 @@ import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
-import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
+import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard';
 
 export type SegmentStackProps = ThemedClassName<{
   id: string;
@@ -71,6 +71,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
                 getId={(item) => item.segment.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => ROW_ESTIMATE}
+                gap={4}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>

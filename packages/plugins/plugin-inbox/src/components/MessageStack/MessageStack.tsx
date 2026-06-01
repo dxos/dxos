@@ -162,6 +162,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 getId={(item: any) => item.threadId ?? item.message?.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
+                gap={4}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -176,6 +177,8 @@ MessageStack.displayName = 'MessageStack';
 //
 // MessageTile
 //
+
+const MESSAGE_TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator';
 
 type MessageTileData = {
   message: Message.Message;
@@ -230,13 +233,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [tags]);
 
   return (
-    <Mosaic.Tile
-      asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
-      id={message.id}
-      data={data}
-      location={location}
-    >
+    <Mosaic.Tile asChild classNames={MESSAGE_TILE_CLASSNAMES} id={message.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
@@ -338,13 +335,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   );
 
   return (
-    <Mosaic.Tile
-      asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
-      id={threadId}
-      data={data}
-      location={location}
-    >
+    <Mosaic.Tile asChild classNames={MESSAGE_TILE_CLASSNAMES} id={threadId} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
           <Card.Header>

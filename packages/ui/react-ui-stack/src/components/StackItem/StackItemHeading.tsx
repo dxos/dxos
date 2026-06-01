@@ -43,7 +43,7 @@ export const StackItemHeading = ({
           ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subdued-separator'
           : 'border-subdued-separator',
         orientation === 'horizontal' ? 'h-(--dx-rail-size)' : 'w-(--dx-rail-size) flex-col',
-        orientation === 'horizontal' ? 'border-b' : 'border-e',
+        orientation === 'horizontal' ? '' : 'border-e',
         classNames,
       )}
     >

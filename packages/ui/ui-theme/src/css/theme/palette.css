@@ -9,15 +9,50 @@
  */
 
 @theme {
+  /**
+   * Neutral ramp — a warm-tinted gray (not pure neutral) matching the reference theme's warm
+   * off-white text/surfaces. Tune --dx-neutral-chroma / --dx-neutral-hue to shift the warmth across
+   * the whole ramp (and everything derived from it). The light end is also re-spread: Tailwind's
+   * defaults (100 0.97, 200 0.922, 300 0.87) squeeze the top quartile into ~0.11 of lightness while
+   * the bottom spans ~0.23, so 100/200/300 are darkened so the light steps (~0.025 L) roughly match
+   * the dark steps (~0.030 L).
+   */
+  --dx-neutral-chroma: 0.007;
+  --dx-neutral-hue: 98;
+  --color-neutral-50: oklch(0.985 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-100: oklch(0.935 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-200: oklch(0.875 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-300: oklch(0.8 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-400: oklch(0.708 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-500: oklch(0.556 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-600: oklch(0.439 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-700: oklch(0.371 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-800: oklch(0.269 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-900: oklch(0.205 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-950: oklch(0.145 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+
   --color-neutral-75: color-mix(in oklch, var(--color-neutral-50) 50%, var(--color-neutral-100) 50%);
   --color-neutral-125: color-mix(in oklch, var(--color-neutral-100) 75%, var(--color-neutral-200) 25%);
   --color-neutral-150: color-mix(in oklch, var(--color-neutral-100) 50%, var(--color-neutral-200) 50%);
+  --color-neutral-225: color-mix(in oklch, var(--color-neutral-200) 75%, var(--color-neutral-300) 25%);
   --color-neutral-250: color-mix(in oklch, var(--color-neutral-200) 50%, var(--color-neutral-300) 50%);
 
   --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
+  --color-neutral-825: color-mix(in oklch, var(--color-neutral-800) 75%, var(--color-neutral-900) 25%);
   --color-neutral-850: color-mix(in oklch, var(--color-neutral-800) 50%, var(--color-neutral-900) 50%);
   --color-neutral-875: color-mix(in oklch, var(--color-neutral-800) 25%, var(--color-neutral-900) 75%);
   --color-neutral-925: color-mix(in oklch, var(--color-neutral-900) 50%, var(--color-neutral-950) 50%);
+
+  /**
+   * In-between levels for the dark surface ramp, sized to a reference dark theme. The dark chrome
+   * tiers (sidebar 800 -> popover 775 -> panel 760 -> border 750 -> controls 730) sit between
+   * Tailwind's 800 (0.269) and 700 (0.371), where no default step exists. 575 is the dim subdued-text
+   * tone. Warm-tinted to match the rest of the neutral ramp.
+   */
+  --color-neutral-575: oklch(0.475 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-730: oklch(0.337 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-760: oklch(0.313 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-775: oklch(0.291 var(--dx-neutral-chroma) var(--dx-neutral-hue));
 
   --color-primary-50: var(--color-blue-50);
   --color-primary-100: var(--color-blue-100);
@@ -30,6 +65,27 @@
   --color-primary-800: var(--color-blue-800);
   --color-primary-900: var(--color-blue-900);
   --color-primary-950: var(--color-blue-950);
+
+  /**
+   * Secondary palette — complement of primary, derived by rotating primary's hue in OKLCH.
+   * Lightness and chroma track primary at every step, so the ramp stays perceptually matched.
+   * Runtime-selectable: override --dx-secondary-hue-shift on :root or any subtree (e.g.
+   * style="--dx-secondary-hue-shift: 90") to repaint the whole secondary family. The value is
+   * unitless degrees (the OKLCH relative-color `h` channel is a number, so calc must stay unitless):
+   * 180 is the direct complement (blue -> amber); ~120 a triadic green, ~-60 a violet.
+   */
+  --dx-secondary-hue-shift: 180;
+  --color-secondary-50: oklch(from var(--color-primary-50) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-100: oklch(from var(--color-primary-100) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-200: oklch(from var(--color-primary-200) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-300: oklch(from var(--color-primary-300) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-400: oklch(from var(--color-primary-400) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-500: oklch(from var(--color-primary-500) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-600: oklch(from var(--color-primary-600) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-700: oklch(from var(--color-primary-700) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-800: oklch(from var(--color-primary-800) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-900: oklch(from var(--color-primary-900) l c calc(h + var(--dx-secondary-hue-shift)));
+  --color-secondary-950: oklch(from var(--color-primary-950) l c calc(h + var(--dx-secondary-hue-shift)));
 
   /* Composer logo colors */
   --color-composer-100: rgb(5 40 61);
