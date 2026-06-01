@@ -3,8 +3,8 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { meta as tripMeta } from '@dxos/plugin-trip';
 import { DXN } from '@dxos/keys';
+import { meta as tripMeta } from '@dxos/plugin-trip';
 import { trim } from '@dxos/util';
 
 export const meta = Plugin.makeMeta({
