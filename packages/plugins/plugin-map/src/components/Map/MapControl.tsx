@@ -19,7 +19,10 @@ import { type GeoControlProps } from '../types';
 export type MapControlProps = GeoControlProps & MapContentProps & MapRootProps;
 
 export const MapControl = composable<HTMLDivElement, MapControlProps>(
-  ({ center, zoom, markers, selected, onToggle, onChange, ...props }, forwardedRef) => {
+  (
+    { center, zoom, markers, selected, onSelect, onToggle, onChange, tileUrl, lines: _lines, ...props },
+    forwardedRef,
+  ) => {
     const [controller, setController] = useState<MapController | null>(null);
     const handleZoomAction = useMapZoomHandler(controller);
 
@@ -44,8 +47,8 @@ export const MapControl = composable<HTMLDivElement, MapControlProps>(
     return (
       <Map.Root {...props} onChange={onChange} ref={forwardedRef}>
         <Map.Content ref={setController} center={center} zoom={zoom}>
-          <Map.Tiles />
-          <Map.Markers markers={markers} selected={selected} />
+          <Map.Tiles url={tileUrl} />
+          <Map.Markers markers={markers} selected={selected} onSelect={onSelect} />
           {onToggle && <Map.Action onAction={handleAction} />}
           <Map.Zoom onAction={handleZoomAction} />
         </Map.Content>
