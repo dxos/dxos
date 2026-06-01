@@ -123,8 +123,14 @@ const setIdOnTarget = (target: any) => {
  */
 // TODO(dmaretskyi): Move to echo-schema.
 const initMeta = <T>(obj: T, meta?: Partial<EntityMeta>) => {
-  // Backfill required fields so callers may pass a partial meta (e.g. `{ keys: [...] }`).
-  const fullMeta: EntityMeta = { keys: [], tags: [], annotations: {}, ...meta };
+  // Backfill required fields so callers may pass a partial meta, or one whose `keys`/`tags`/
+  // `annotations` are explicitly `undefined` (coalesce, don't let a spread reintroduce undefined).
+  const fullMeta: EntityMeta = {
+    ...meta,
+    keys: meta?.keys ?? [],
+    tags: meta?.tags ?? [],
+    annotations: meta?.annotations ?? {},
+  };
   prepareTypedTarget(fullMeta, EntityMetaSchema);
   defineHiddenProperty(obj, MetaId, createProxy(fullMeta, TypedReactiveHandler.instance as any));
 };

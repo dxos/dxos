@@ -97,10 +97,10 @@ export class ObjectCore {
     this.doc = A.from<EntityStructure>({
       data: this.encode(initialProps),
       meta: this.encode({
-        keys: [],
-        tags: [],
-        annotations: {},
         ...opts?.meta,
+        keys: opts?.meta?.keys ?? [],
+        tags: opts?.meta?.tags ?? [],
+        annotations: opts?.meta?.annotations ?? {},
       }),
       system: {},
     });
