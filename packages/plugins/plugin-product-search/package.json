@@ -71,13 +71,13 @@
     "react": "catalog:"
   },
   "devDependencies": {
-    "@dxos/ui-theme": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@effect/vitest": "catalog:",
     "@types/react": "catalog:"
   },
