@@ -104,8 +104,8 @@ The visible-hemisphere check can be a fast pre-filter: for each tile, take 4 bbo
 
 ### 5. Cache / lifecycle
 
-- Module-level `Map<\`${z}/${x}/${y}\`, FeatureCollection>`mirrors the`topologyCache`pattern in`useTopologyForZoom`.
-- Tile loads are idempotent and cancellable (use the `disposed` flag pattern from `useTopologyForZoom`).
+- Module-level `Map<\`${z}/${x}/${y}\`, FeatureCollection>`mirrors the`topologyCache`pattern in`useTopology`.
+- Tile loads are idempotent and cancellable (use the `disposed` flag pattern from `useTopology`).
 - Optionally a LRU bound — at z=4 with 256 tiles × ~20 KB each ≈ 5 MB resident, fine to keep all in memory.
 
 ### 6. Stories + tests

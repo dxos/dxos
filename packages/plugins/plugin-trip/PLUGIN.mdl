@@ -556,6 +556,20 @@ feat TripCalendarSource
     - sourceObject is set to a Ref of the underlying Segment so consumers can navigate to it.
 ```
 
+```mdl
+feat TripMapMarkers
+  desc: >
+    plugin-trip contributes a MapCapabilities.MarkerProvider (from @dxos/plugin-map) that plots a
+    Trip's segments: one marker per segment (keyed by segment id) plus origin→destination arcs for
+    transport segments, with IATA-code geocoding for flights. Selection is single-mode against the
+    trip's attendable context. plugin-map then renders the map (article toolbar toggle when the
+    provider matches, and a map companion). The former in-plugin TripMapView / TripMapArticle and the
+    `trip-map` surface are removed in favour of this generic integration.
+  notes:
+    - The TripArticle map toggle is shown only when a MarkerProvider matches the trip.
+    - Selecting a marker dispatches LayoutOperation.Select so the segment stack stays in sync.
+```
+
 ## Out of scope for Phase 1
 
 - View definitions for Table / Map. The existing Table and Map view

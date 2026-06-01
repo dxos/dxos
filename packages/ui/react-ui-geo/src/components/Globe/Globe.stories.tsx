@@ -11,6 +11,7 @@ import { type Topology } from 'topojson-specification';
 import { useAsyncState } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { loadTopology } from '../../data';
 import {
   type Level,
   type Vector,
@@ -19,7 +20,6 @@ import {
   useGlobeZoomHandler,
   useSpinner,
   useTopology,
-  useTopologyForZoom,
   useTour,
   useWheel,
 } from '../../hooks';
@@ -166,7 +166,7 @@ const DefaultStory = ({
       objects: { dots: points },
     } as any as Topology;
   });
-  const [topology] = useTopology(level);
+  const [topology] = useAsyncState(() => loadTopology(level), [level]);
   const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
 
   const features = useMemo(() => {
@@ -255,7 +255,7 @@ const meta = {
 export default meta;
 
 const Earth = ({ level }: { level: Level }) => {
-  const [topology] = useTopology(level);
+  const [topology] = useAsyncState(() => loadTopology(level), [level]);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -282,14 +282,13 @@ export const Earth10 = () => {
 };
 
 /**
- * Discrete-resolution LOD: swaps between 110m / 50m / 10m by zoom. Each
- * resolution is a code-split chunk and is fetched on demand the first time
- * its tier is entered. No runtime simplification (which is itself O(N) per
- * tier change on the 10m source).
+ * Discrete-resolution LOD: swaps resolution by zoom via `useTopology(zoom)`. Each resolution is a
+ * code-split chunk fetched on demand the first time its tier is entered (default tiers: 110m / 50m).
+ * Reads the live zoom from the globe context, so it must render inside `Globe.Root`.
  */
-const EarthLODCanvas = () => {
+const EarthLODContent = () => {
   const { zoom } = useGlobeContext();
-  const topology = useTopologyForZoom(zoom);
+  const topology = useTopology(zoom);
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -305,14 +304,14 @@ const EarthLODCanvas = () => {
 export const EarthLOD = () => {
   return (
     <Globe.Root zoom={1.2} rotation={[0, 0, 0]}>
-      <EarthLODCanvas />
+      <EarthLODContent />
       <Globe.Debug />
     </Globe.Root>
   );
 };
 
 export const Earthrise = () => {
-  const [topology] = useTopology();
+  const topology = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
@@ -348,7 +347,7 @@ const monochrome: StyleSet = {
 };
 
 export const Mercator = () => {
-  const [topology] = useTopology();
+  const topology = useTopology();
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
