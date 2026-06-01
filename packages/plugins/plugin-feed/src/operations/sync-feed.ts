@@ -46,8 +46,14 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
         const { feed: feedMeta, posts } = await fetcher(url, { corsProxy });
         const cursor = subscriptionFeed.cursor;
 
-        // Filter posts newer than the cursor.
-        const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
+        // Posts from the fetcher are sorted newest-first. The cursor is the guid
+        // of the newest post from the previous sync. Slice everything before the
+        // cursor position so that only genuinely new posts are appended.
+        // If the cursor is not found (e.g. it rolled off the fetched window) fall
+        // back to including all posts — some may be duplicates but new posts will
+        // not be missed.
+        const cursorIndex = cursor ? posts.findIndex((post) => post.guid === cursor) : -1;
+        const newPosts = cursorIndex >= 0 ? posts.slice(0, cursorIndex) : posts;
 
         // Append new posts to the ECHO feed.
         // NOTE: The `Subscription.Subscription.keep` bound is currently NOT enforced
