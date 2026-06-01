@@ -59,8 +59,8 @@ export default Capability.makeModule(
           continue;
         }
 
-        // First time we observe the process running.
-        if (previous === undefined && process.state === Process.State.RUNNING && notify.start) {
+        // Transition into RUNNING (the first snapshot may be a pre-RUNNING state like IDLE/HYBERNATING).
+        if (previous !== Process.State.RUNNING && process.state === Process.State.RUNNING && notify.start) {
           addToast({ id: `notify-start-${process.pid}`, title: notify.start, duration: NOTIFY_TOAST_DURATION });
         } else if (process.state === Process.State.SUCCEEDED && notify.success) {
           addToast({ id: `notify-success-${process.pid}`, title: notify.success, duration: NOTIFY_TOAST_DURATION });
