@@ -57,7 +57,11 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
         case 'sync': {
           const feedToSync = feeds.find((feed) => feed.id === action.feedId);
           if (feedToSync) {
-            void invokePromise(FeedOperation.SyncFeed, { feed: Ref.make(feedToSync) });
+            void invokePromise(
+              FeedOperation.SyncFeed,
+              { feed: Ref.make(feedToSync) },
+              { spaceId: Obj.getDatabase(feedToSync)?.spaceId },
+            );
           }
           break;
         }

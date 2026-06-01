@@ -13062,6 +13062,9 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.20.0)(vitest@4.1.7)

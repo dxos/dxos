@@ -4,18 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { createFeedServiceLayer, getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 
-import { FeedOperation } from '../types';
-import { Subscription } from '../types';
+import { FeedOperation, Subscription } from '../types';
 import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
 
 /** Resolves the appropriate fetcher for the given feed type. */
@@ -35,54 +29,47 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       const subscriptionFeed = yield* Database.load(feed);
       const url = subscriptionFeed.url;
       invariant(url, 'Feed URL is required.');
-      const echoFeed = subscriptionFeed.feed?.target;
+      const echoFeed = yield* Database.load(subscriptionFeed.feed);
       invariant(echoFeed, 'Backing ECHO feed not found.');
       invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
-      const space = getSpace(subscriptionFeed);
-      invariant(space, 'Space not found.');
 
-      yield* Effect.tryPromise(async () => {
-        const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
-        const fetcher = getFetcher(subscriptionFeed.type);
-        const { feed: feedMeta, posts } = await fetcher(url, { corsProxy });
-        const cursor = subscriptionFeed.cursor;
+      const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
+      const fetcher = getFetcher(subscriptionFeed.type);
+      const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () => fetcher(url, { corsProxy }));
+      const cursor = subscriptionFeed.cursor;
 
-        // Filter posts newer than the cursor.
-        const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
+      // Filter posts newer than the cursor.
+      const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
 
-        // Append new posts to the ECHO feed.
-        // NOTE: The `Subscription.Subscription.keep` bound is currently NOT enforced
-        // here via `Feed.remove()`. Doing so wipes the underlying queue's
-        // `_objectCache` for the deleted posts, but those same Post objects
-        // persist in `space.db` (they were added there when first curated
-        // into a Magazine via `createRef` → `database.add`). On the next
-        // sync/curate, `Feed.runQuery(...)` returns fresh proxies for the
-        // kept items, and any magazine refs to *deleted* posts now
-        // reference proxies whose `_internals.database` link is unset —
-        // `createRef` then tries to re-add them, hitting the
-        // `!_objects.has(core.id)` invariant in `CoreDatabase.addCore`.
-        // Until feed/db lifecycle is reworked we leave the feed unbounded;
-        // the `Magazine.keep` bound (enforced in
-        // `MagazineArticle.handleCurate`) prevents the visible list from
-        // growing unboundedly.
-        if (newPosts.length > 0) {
-          const feedRef = Ref.make(subscriptionFeed);
-          const postObjects = newPosts.map((post) =>
-            Obj.make(Subscription.Post, {
-              source: feedRef,
-              title: post.title,
-              link: post.link,
-              description: post.description,
-              author: post.author,
-              published: post.published,
-              guid: post.guid,
-            }),
-          );
-          await Feed.append(echoFeed, postObjects).pipe(
-            Effect.provide(createFeedServiceLayer(space.queues)),
-            runAndForwardErrors,
-          );
-        }
+      // Append new posts to the ECHO feed.
+      // NOTE: The `Subscription.Subscription.keep` bound is currently NOT enforced
+      // here via `Feed.remove()`. Doing so wipes the underlying queue's
+      // `_objectCache` for the deleted posts, but those same Post objects
+      // persist in `space.db` (they were added there when first curated
+      // into a Magazine via `createRef` → `database.add`). On the next
+      // sync/curate, `Feed.runQuery(...)` returns fresh proxies for the
+      // kept items, and any magazine refs to *deleted* posts now
+      // reference proxies whose `_internals.database` link is unset —
+      // `createRef` then tries to re-add them, hitting the
+      // `!_objects.has(core.id)` invariant in `CoreDatabase.addCore`.
+      // Until feed/db lifecycle is reworked we leave the feed unbounded;
+      // the `Magazine.keep` bound (enforced in
+      // `MagazineArticle.handleCurate`) prevents the visible list from
+      // growing unboundedly.
+      if (newPosts.length > 0) {
+        const feedRef = Ref.make(subscriptionFeed);
+        const postObjects = newPosts.map((post) =>
+          Obj.make(Subscription.Post, {
+            source: feedRef,
+            title: post.title,
+            link: post.link,
+            description: post.description,
+            author: post.author,
+            published: post.published,
+            guid: post.guid,
+          }),
+        );
+        yield* Feed.append(echoFeed, postObjects);
 
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;
@@ -103,18 +90,8 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
             subscriptionFeed.description = feedMeta.description;
           });
         }
-      }).pipe(
-        Effect.catchAll((error) => {
-          log.catch(error);
-          return Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/sync-feed-error`,
-            icon: 'ph--warning--regular',
-            duration: 5_000,
-            title: ['sync-feed-error.title', { ns: meta.id }],
-          });
-        }),
-      );
-    }),
+      }
+    })
   ),
 );
 
