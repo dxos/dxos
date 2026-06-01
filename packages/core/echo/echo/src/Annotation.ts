@@ -80,7 +80,7 @@ export interface Annotation<T> {
   set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
 }
 
-export const Key = Schema.String.pipe(Schema.brand('~@dxos/echo/AnnotationKey'));
+export const Key = internalAnnotations.Key;
 export type Key = Schema.Schema.Type<typeof Key>;
 
 interface MakeProps<T> {
@@ -156,7 +156,7 @@ export const getFromAst: {
 * });
 * ```
 */
-export const Dictionary = Schema.Record({ key: Key, value: Schema.Unknown });
+export const Dictionary = internalAnnotations.Dictionary;
 export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> { }
 
 /**
@@ -169,11 +169,7 @@ export const getDictionary: {
   <T>(annotation: Annotation<T>) => (values: Dictionary) => Option.Option<T>,
   <T>(values: Dictionary, annotation: Annotation<T>) => Option.Option<T>
 >(2, (values, annotation) => {
-  if (!(annotation.key in values)) {
-    return Option.none();
-  }
-
-  return Function.pipe(values[annotation.key], Schema.decodeUnknownSync(annotation.schema), Option.some);
+  return internalAnnotations.getDictionary(values, annotation);
 });
 
 /**
@@ -194,5 +190,5 @@ export const setDictionary: {
   <T>(annotation: Annotation<T>, value: T) => (values: Dictionary) => void,
   <T>(values: Types.Mutable<Dictionary>, annotation: Annotation<T>, value: T) => void
 >(3, (values, annotation, value) => {
-  values[annotation.key] = Schema.encodeSync(annotation.schema)(value);
+  return internalAnnotations.setDictionary(values, annotation, value);
 });

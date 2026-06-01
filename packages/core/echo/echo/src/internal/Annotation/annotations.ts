@@ -19,6 +19,8 @@ import type * as Annotation from '../../Annotation';
 import * as entityInternal from '../Entity';
 import { todo } from '@dxos/debug';
 import type * as Entity from '../../Entity';
+import type { Types } from 'effect';
+import { getMetaChecked } from '../common';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
@@ -592,9 +594,18 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   }
 };
 
+
+export const Key = Schema.String.pipe(Schema.brand('~@dxos/echo/AnnotationKey'));
+
+export const Dictionary = Schema.Record({ key: Key, value: Schema.Unknown });
+
 export const get = <T>(target: Entity.Unknown, annotation: Annotation.Annotation<T>): Option.Option<T> => {
   if (entityInternal.isEntity(target)) {
-    return todo();
+    const meta = getMetaChecked(target);
+    if (!meta.annotations) {
+      return Option.none();
+    }
+    return getDictionary(meta.annotations, annotation);
   } else {
     throw new TypeError('Target is not an annotation target.');
   }
@@ -602,7 +613,11 @@ export const get = <T>(target: Entity.Unknown, annotation: Annotation.Annotation
 
 export const set = <T>(target: Entity.Unknown, annotation: Annotation.Annotation<T>, value: T): void => {
   if (entityInternal.isEntity(target)) {
-    return todo();
+    const meta = getMetaChecked(target);
+    if (!meta.annotations) {
+      meta.annotations = {};
+    }
+    setDictionary(meta.annotations, annotation, value);
   } else {
     throw new TypeError('Target is not an annotation target.');
   }
@@ -613,4 +628,16 @@ export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotat
     Option.flatMap((meta) => Option.fromNullable(meta[annotation.key])),
     Option.map(Schema.decodeUnknownSync(annotation.schema)),
   );
+};
+
+export const getDictionary = <T>(values: Annotation.Dictionary, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+  if (!(annotation.key in values)) {
+    return Option.none();
+  }
+
+  return Function.pipe(values[annotation.key], Schema.decodeUnknownSync(annotation.schema), Option.some);
+};
+
+export const setDictionary = <T>(values: Types.Mutable<Annotation.Dictionary>, annotation: Annotation.Annotation<T>, value: T): void => {
+  values[annotation.key] = Schema.encodeSync(annotation.schema)(value);
 };

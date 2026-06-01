@@ -10,6 +10,7 @@ import { type Comparator, intersection } from '@dxos/util';
 
 import type * as Entity from '../../../Entity';
 import { type AnyProperties } from './base';
+import * as internalAnnotation from '../../Annotation';
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -49,6 +50,12 @@ export const EntityMetaSchema = Schema.Struct({
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version: Schema.optional(Schema.String),
+
+  /**
+   * Dictionary of annotations to this entity.
+   */
+  // TODO(dmaretskyi): Make required.
+  annotations: Schema.optional(internalAnnotation.Dictionary),
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;
