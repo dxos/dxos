@@ -108,6 +108,9 @@
  * var(--color-grid-line)).
  */
 @source inline("bg-grid-{surface,foreground,line,highlight,comment,comment-active,selection-surface,selection-foreground}");
+/* Sidebar surfaces alias each other (e.g. header-surface -> l0-surface); force-emit so the vars
+ * exist in apps that use the alias but not the underlying utility (e.g. devtools). */
+@source inline("bg-{l0,r0,l1,r1}-surface");
 
 /**
  * Plugins must come after all imports.
