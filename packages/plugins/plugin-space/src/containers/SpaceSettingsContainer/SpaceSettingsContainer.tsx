@@ -3,49 +3,31 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Relation, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { type Space, SpaceState, useQuery } from '@dxos/react-client/echo';
-import {
-  Button,
-  Dialog,
-  DropdownMenu,
-  Icon,
-  IconButton,
-  Input,
-  useMulticastObservable,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { ConfirmReset } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities, SpaceForm } from '#types';
 
-const SpaceFormSchema = SpaceForm.pipe(
-  Schema.extend(
-    Schema.Struct({
-      archived: Schema.Boolean.annotations({ title: 'Archive Space' }),
-    }),
-  ),
-);
+const SpaceFormSchema = SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
-  const archived = useMulticastObservable(space.state) === SpaceState.SPACE_INACTIVE;
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
   );
@@ -82,22 +64,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           }
         });
       }
-
-      if (changed['archived']) {
-        if (newValues.archived && !archived) {
-          void invokePromise(SpaceOperation.Close, { space });
-          const personalSpace = getPersonalSpace(client);
-          if (personalSpace) {
-            void invokePromise(LayoutOperation.SwitchWorkspace, {
-              subject: getSpacePath(personalSpace.id),
-            });
-          }
-        } else if (!newValues.archived && archived) {
-          void invokePromise(SpaceOperation.Open, { space });
-        }
-      }
     },
-    [space, client, archived, invokePromise, toggleEdgeReplication],
+    [space, toggleEdgeReplication],
   );
 
   const defaultValues = useMemo(
@@ -106,9 +74,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       icon: space.properties.icon,
       hue: space.properties.hue,
       edgeReplication,
-      archived,
     }),
-    [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication, archived],
+    [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication],
   );
 
   const personal = isPersonalSpace(space);
@@ -166,18 +133,6 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </Settings.Item>
         );
       },
-      archived: personal
-        ? () => null
-        : ({ type, label, getValue, onValueChange }) => {
-            const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
-            return (
-              <Settings.Item title={label} description={t('archive-space.description')}>
-                <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
-                  {getValue() ? t('unarchive-space.label') : t('archive-space.label')}
-                </Button>
-              </Settings.Item>
-            );
-          },
     }),
     [t, space, personal],
   );
@@ -194,20 +149,20 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
   }, [space, repairs]);
 
-  const { schemas, objects, relations, feeds } = useSpaceCounts(space);
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-  const handleReset = useCallback(async () => {
-    log.info('reset: confirmed in dialog', { spaceId: space.id });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const handleDelete = useCallback(async () => {
     try {
-      await invokePromise(SpaceOperation.Reset, { space });
-      log.info('reset: invocation resolved', { spaceId: space.id });
+      await invokePromise(SpaceOperation.Delete, { space });
+      const personalSpace = getPersonalSpace(client);
+      if (personalSpace) {
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
+      }
     } catch (err) {
-      log.catch(err, { stage: 'reset: invocation rejected', spaceId: space.id });
+      log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });
       throw err;
     }
-    setResetConfirmOpen(false);
-  }, [space, invokePromise]);
-  const handleResetCancel = useCallback(() => setResetConfirmOpen(false), []);
+    setDeleteConfirmOpen(false);
+  }, [space, client, invokePromise]);
 
   return (
     <Settings.Viewport>
@@ -264,87 +219,38 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       </Settings.Section>
 
       <Settings.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
-        <Settings.Item title={t('space-contents.title')} description={t('space-contents.description')}>
-          <div className='grid grid-cols-4 gap-2 justify-self-end text-center'>
-            <ContentCount label={t('schema-count.label')} value={schemas} />
-            <ContentCount label={t('object-count.label')} value={objects} />
-            <ContentCount label={t('relation-count.label')} value={relations} />
-            <ContentCount label={t('feed-count.label')} value={feeds} />
-          </div>
-        </Settings.Item>
-        <Settings.Item title={t('reset-space.title')} description={t('reset-space.description')}>
-          <Dialog.Root open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
-            <Dialog.Trigger asChild>
-              <Button variant='destructive'>{t('reset-space.label')}</Button>
-            </Dialog.Trigger>
-            <Dialog.Portal>
-              <Dialog.Overlay>
-                <Dialog.Content>
-                  <Dialog.Header>
-                    <Dialog.Title>{t('reset-space-confirm.title')}</Dialog.Title>
-                  </Dialog.Header>
-                  <Dialog.Body>
-                    <Dialog.Description classNames='sr-only'>{t('reset-space-confirm.description')}</Dialog.Description>
-                    <ConfirmReset
-                      active
-                      title={t('reset-space-confirm.title')}
-                      message={t('reset-space-confirm.description')}
-                      confirmLabel={t('reset-space.label')}
-                      errorMessage={t('reset-space-failed.message')}
-                      onConfirm={handleReset}
-                      onCancel={handleResetCancel}
-                    />
-                  </Dialog.Body>
-                </Dialog.Content>
-              </Dialog.Overlay>
-            </Dialog.Portal>
-          </Dialog.Root>
-        </Settings.Item>
+        {!personal && (
+          <Settings.Item title={t('delete-space.title')} description={t('delete-space.description')}>
+            <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+              <Dialog.Trigger asChild>
+                <Button variant='destructive'>{t('delete-space.label')}</Button>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay>
+                  <Dialog.Content>
+                    <Dialog.Header>
+                      <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
+                    </Dialog.Header>
+                    <Dialog.Body>
+                      <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
+                      <div className='flex justify-end gap-2 mbs-4'>
+                        <Dialog.Close asChild>
+                          <Button>{t('cancel.label')}</Button>
+                        </Dialog.Close>
+                        <Button variant='destructive' onClick={handleDelete}>
+                          {t('delete-space.label')}
+                        </Button>
+                      </div>
+                    </Dialog.Body>
+                  </Dialog.Content>
+                </Dialog.Overlay>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Settings.Item>
+        )}
       </Settings.Section>
     </Settings.Viewport>
   );
 };
 
 SpaceSettingsContainer.displayName = 'SpaceSettingsContainer';
-
-const ContentCount = ({ label, value }: { label: string; value: number }) => (
-  <div className='flex flex-col items-center'>
-    <div className='text-lg font-mono tabular-nums'>{value}</div>
-    <div className='text-xs text-description'>{label}</div>
-  </div>
-);
-
-type SpaceCounts = {
-  schemas: number;
-  objects: number;
-  relations: number;
-  feeds: number;
-};
-
-const useSpaceCounts = (space: Space): SpaceCounts => {
-  const entities = useQuery(space.db, Filter.everything());
-  const { objects, relations } = useMemo(() => {
-    let objects = 0;
-    let relations = 0;
-    for (const entity of entities) {
-      if (Relation.isRelation(entity)) {
-        relations += 1;
-      } else {
-        objects += 1;
-      }
-    }
-    return { objects, relations };
-  }, [entities]);
-
-  const [schemas, setSchemas] = useState(0);
-  useEffect(() => {
-    const { registry } = space.db.graph;
-    setSchemas(registry.list().filter(Type.isType).length);
-    return registry.changed.on(() => setSchemas(registry.list().filter(Type.isType).length));
-  }, [space]);
-
-  const pipeline = useMulticastObservable(space.pipeline);
-  const feeds = (pipeline.controlFeeds?.length ?? 0) + (pipeline.dataFeeds?.length ?? 0);
-
-  return { schemas, objects, relations, feeds };
-};

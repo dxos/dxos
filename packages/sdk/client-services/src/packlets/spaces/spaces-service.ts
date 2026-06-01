@@ -105,6 +105,10 @@ export class SpacesServiceImpl implements SpacesService {
         case SpaceState.SPACE_INACTIVE:
           await space.deactivate(ctx);
           break;
+
+        case SpaceState.SPACE_DELETED:
+          await dataSpaceManager.markSpaceDeleted(ctx, spaceKey);
+          break;
         default:
           throw new ApiError({ message: 'Invalid space state' });
       }
