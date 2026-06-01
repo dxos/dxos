@@ -4,11 +4,10 @@
 
 import * as Option from 'effect/Option';
 
-import { getMetaChecked } from '../common/api/meta';
-import { isEntity } from '../Entity/guard';
 import type * as Annotation from '../../Annotation';
 import type * as Entity from '../../Entity';
-
+import { getMetaChecked } from '../common/api/meta';
+import { isEntity } from '../Entity/guard';
 import { getDictionary, setDictionary } from './dictionary';
 
 /**

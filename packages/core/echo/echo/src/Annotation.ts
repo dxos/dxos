@@ -21,14 +21,15 @@ export {
   IconFromRefAnnotation,
 } from './internal/Annotation';
 
-import * as Schema from 'effect/Schema';
+import * as Option from 'effect/Option';
+import * as SchemaAST from 'effect/SchemaAST';
 import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 import * as Types from 'effect/Types';
 
-import * as internalAnnotations from './internal/Annotation';
-import { Option, SchemaAST } from 'effect';
+
 import * as Entity from './Entity';
-import { todo } from '@dxos/debug';
+import * as internalAnnotations from './internal/Annotation';
 
 export const TypeId = '~@dxos/echo/Annotation' as const;
 export type TypeId = typeof TypeId;
@@ -103,8 +104,7 @@ interface MakeProps<T> {
  * const schema = Schema.String.annotations(ColorAnnotation.set('red'));
  * ```
  */
-export const make: <T>(props: MakeProps<T>) => Annotation<T> =
-  internalAnnotations.makeUserAnnotation;
+export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;
 
 /**
  * Get the value of an annotation from a schema or an entity.
@@ -145,19 +145,19 @@ export const getFromAst: {
 });
 
 /**
-* Set of annotation values.
-*
-* Can be used inside an object/relation schema:
-*
-* ```ts
-* const Person = Schema.Struct({
-*   name: Schema.String,
-*   extensions: Annotation.Dictionary,
-* });
-* ```
-*/
+ * Set of annotation values.
+ *
+ * Can be used inside an object/relation schema:
+ *
+ * ```ts
+ * const Person = Schema.Struct({
+ *   name: Schema.String,
+ *   extensions: Annotation.Dictionary,
+ * });
+ * ```
+ */
 export const Dictionary = internalAnnotations.Dictionary;
-export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> { }
+export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> {}
 
 /**
  * Get the value of an annotation from a Dictionary.

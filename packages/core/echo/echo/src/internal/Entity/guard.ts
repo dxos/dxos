@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { KindId } from '../common/types';
 import type * as Entity from '../../Entity';
+import { KindId } from '../common/types';
 
 /**
  * Returns true if the value is an ECHO entity instance (object or relation).

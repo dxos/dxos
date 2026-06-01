@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SchemaAST from 'effect/SchemaAST';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
@@ -11,8 +12,6 @@ import { DXN } from '@dxos/keys';
 import * as Annotation from './Annotation';
 import * as Obj from './Obj';
 import * as Type from './Type';
-import { invariant } from '@dxos/invariant';
-import { SchemaAST } from 'effect';
 
 describe('Annotation', () => {
   describe('make', () => {
@@ -369,13 +368,15 @@ describe('Annotation', () => {
     });
     const Person = Schema.Struct({
       name: Schema.String,
-    }).pipe(ColorAnnotation.set('schema-teal')).pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));;
+    })
+      .pipe(ColorAnnotation.set('schema-teal'))
+      .pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));
 
     test('set and get on Obj.make instance', ({ expect }) => {
       const person = Obj.make(Person, { name: 'Alice' });
 
-      Obj.update(person, (obj) => {
-        Annotation.set(obj, ColorAnnotation, 'instance-red');
+      Obj.update(person, (person) => {
+        Annotation.set(person, ColorAnnotation, 'instance-red');
       });
       const result = Annotation.get(person, ColorAnnotation);
 
@@ -390,14 +391,13 @@ describe('Annotation', () => {
     });
 
     test('instance annotation is independent of schema default', ({ expect }) => {
-
       const person = Obj.make(Person, { name: 'Carol' });
 
       expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(Person)))).toBe('schema-teal');
       expect(Option.isNone(Annotation.get(person, ColorAnnotation))).toBe(true);
 
-      Obj.update(person, (obj) => {
-        Annotation.set(obj, ColorAnnotation, 'instance-blue');
+      Obj.update(person, (person) => {
+        Annotation.set(person, ColorAnnotation, 'instance-blue');
       });
 
       expect(Option.getOrThrow(Annotation.get(person, ColorAnnotation))).toBe('instance-blue');
@@ -407,8 +407,8 @@ describe('Annotation', () => {
     test('set and get inside Obj.update', ({ expect }) => {
       const person = Obj.make(Person, { name: 'Dana' });
 
-      Obj.update(person, (obj) => {
-        Annotation.set(obj, ColorAnnotation, 'updated');
+      Obj.update(person, (person) => {
+        Annotation.set(person, ColorAnnotation, 'updated');
       });
 
       expect(Option.getOrThrow(Annotation.get(person, ColorAnnotation))).toBe('updated');
@@ -417,8 +417,8 @@ describe('Annotation', () => {
     test('curried get and set on instances', ({ expect }) => {
       const person = Obj.make(Person, { name: 'Eve' });
 
-      Obj.update(person, (obj) => {
-        Annotation.set(ColorAnnotation, 'curried')(obj);
+      Obj.update(person, (person) => {
+        Annotation.set(ColorAnnotation, 'curried')(person);
       });
       const result = Annotation.get(ColorAnnotation)(person);
 

@@ -24,7 +24,6 @@ import {
   StaticTypeSchemaSlot,
 } from '../common/types';
 import { JsonSchemaType } from '../JsonSchema/json-schema-type';
-import type * as Entity from '../../Entity';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 

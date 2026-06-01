@@ -12,12 +12,10 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
+import type * as Annotation from '../../Annotation';
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { Key } from './dictionary';
-import { type AnnotationHelper, createAnnotationHelper } from './util';
-import type * as Annotation from '../../Annotation';
-import { todo } from '@dxos/debug';
+import { createAnnotationHelper } from './util';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
@@ -105,7 +103,7 @@ export const TypeMeta = Schema.Struct({
   version: VersionSchema,
 });
 
-export interface TypeMeta extends Schema.Schema.Type<typeof TypeMeta> { }
+export interface TypeMeta extends Schema.Schema.Type<typeof TypeMeta> {}
 
 /**
  * Entity type.
@@ -134,7 +132,7 @@ export const TypeAnnotation = Schema.extend(
   }),
 );
 
-export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation> { }
+export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation> {}
 
 /**
  * @returns {@link TypeAnnotation} from a schema.
@@ -421,10 +419,10 @@ export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generat
 export type GeneratorAnnotationValue =
   | string
   | {
-    generator: string;
-    args?: any[];
-    probability?: number;
-  };
+      generator: string;
+      args?: any[];
+      probability?: number;
+    };
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
 
@@ -440,7 +438,6 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     'id',
     'Annotation id must be in the FQN format (org.dxos.annotation.example).',
   );
-  ;
 
   const annotation: Annotation.Annotation<T> = {
     [ANNOTATION_TYPE_ID]: { _Type: {} as T },
@@ -483,7 +480,7 @@ const IconAnnotationSchema = Schema.Struct({
   hue: Schema.optional(Schema.String),
 });
 
-export interface IconAnnotation extends Schema.Schema.Type<typeof IconAnnotationSchema> { }
+export interface IconAnnotation extends Schema.Schema.Type<typeof IconAnnotationSchema> {}
 
 /**
  * Icon to render in the UI.
@@ -590,7 +587,6 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
     setDescriptionWithSchema(schema, entity, description);
   }
 };
-
 
 export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
 

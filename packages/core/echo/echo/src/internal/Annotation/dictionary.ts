@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Types from 'effect/Types';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import type { Types } from 'effect';
 
 import type * as Annotation from '../../Annotation';
 
@@ -24,7 +24,10 @@ export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> {}
 /**
  * Get the value of an annotation from a dictionary.
  */
-export const getDictionary = <T>(values: Annotation.Dictionary, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+export const getDictionary = <T>(
+  values: Annotation.Dictionary,
+  annotation: Annotation.Annotation<T>,
+): Option.Option<T> => {
   if (!(annotation.key in values)) {
     return Option.none();
   }

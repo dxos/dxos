@@ -52,7 +52,7 @@ export type Entity<Props> = OfKind<Kind> & Props;
 /**
  * Unknown Obj or Relation (reactive).
  */
-export interface Unknown extends OfKind<Kind> { }
+export interface Unknown extends OfKind<Kind> {}
 
 /**
  * Effect Schema for any ECHO entity (object or relation).
@@ -79,7 +79,7 @@ export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
  * Snapshot of an Obj or Relation.
  * Branded with SnapshotKindId instead of KindId.
  */
-export interface Snapshot extends SnapshotOfKind<Kind> { }
+export interface Snapshot extends SnapshotOfKind<Kind> {}
 
 /**
  * Object with arbitrary properties.
