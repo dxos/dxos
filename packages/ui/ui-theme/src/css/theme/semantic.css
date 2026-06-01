@@ -28,41 +28,45 @@
   );
 
   --color-toolbar-surface: light-dark(var(--color-neutral-150), var(--color-neutral-825));
-  --color-card-surface: light-dark(var(--color-neutral-75), var(--color-neutral-760));
+  --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-825));
 
   --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-  --color-group-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-  --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-775));
-  /* Same tone as the l0 rail. */
-  --color-header-surface: var(--color-l0-surface);
+  --color-group-surface: light-dark(var(--color-neutral-100), var(--color-neutral-850));
+  --color-group-alt-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-card-surface: light-dark(var(--color-neutral-75), var(--color-neutral-760));
 
   /*
    * Sidebar levels. The outer rails (l0 / r0) sit one tone darker than their inner panels (l1 / r1),
    * a relationship that holds in both light and dark.
    */
   --color-l1-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-  /* R1 panel mirrors the article (attention) surface. */
   --color-r1-surface: var(--color-attention-surface);
   --color-l0-surface: light-dark(var(--color-neutral-225), var(--color-neutral-875));
   --color-r0-surface: light-dark(var(--color-neutral-225), var(--color-neutral-875));
+  --color-header-surface: var(--color-l0-surface);
 
   /* input */
   --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-775));
   --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
-  /* selected (aria-selected) */
-  --color-selected-surface: light-dark(var(--color-neutral-200), var(--color-neutral-730));
-  --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-600));
-  --color-selected-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  /* hover (:hover, data-highlighted) */
+  /* `*-base` primitives are the un-offset values; surface contexts (e.g. .dx-main-sidebar in
+   * state.css) re-derive the public token off the base via relative oklch. */
+  --dx-hover-surface-base: light-dark(var(--color-neutral-150), var(--color-neutral-760));
+  --color-hover-surface: var(--dx-hover-surface-base);
+  --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* current (aria-current) */
-  --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-730));
-  --color-current-surface-hover: light-dark(var(--color-neutral-300), var(--color-neutral-600));
+  --dx-current-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-current-surface: var(--dx-current-surface-base);
+  --dx-current-surface-hover-base: light-dark(var(--color-neutral-300), var(--color-neutral-600));
+  --color-current-surface-hover: var(--dx-current-surface-hover-base);
   --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /* hover (:hover, data-highlighted) */
-  --color-hover-surface: light-dark(var(--color-neutral-150), var(--color-neutral-760));
-  --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  /* selected (aria-selected) */
+  --color-selected-surface: var(--color-current-surface);
+  --color-selected-surface-hover: var(--color-current-surface-hover);
+  --color-selected-foreground: var(--color-current-foreground);
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);

@@ -563,7 +563,10 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const rowRenderer = useCallback<ListRowRenderer>(
       ({ key, index, style }) => {
-        const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
+        // Zebra-stripe alternating months with a subtle neutral overlay over the grid surface, so
+        // the banding is independent of (and robust to) surface-token retuning.
+        const getBgColor = (date: Date) => (date.getMonth() % 2 === 0 ? 'bg-group-surface' : 'bg-group-alt-surface');
+
         return (
           <div key={key} style={style} className='grid'>
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
