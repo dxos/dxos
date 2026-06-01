@@ -140,7 +140,9 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
     }, [markers, selected]);
 
     const [moved, setMoved] = useState(false);
-    useWheel(controller, { onUpdate: () => controller && setZoomLevel(controller.zoom) });
+    // emitChange updates the local zoom level (for topology LOD) and propagates the new view to the
+    // parent so a wheel/pinch zoom isn't lost on the next re-render.
+    useWheel(controller, { onUpdate: emitChange });
     useDrag(controller, {
       onUpdate: ({ type }) => {
         if (type === 'move') {
