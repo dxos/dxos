@@ -223,8 +223,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
             markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
         {showGlobe && mapAvailable && (
-          <Panel.Root>
-            <Panel.Content className='border-t border-separator'>
+          <Panel.Root classNames='border-t border-separator'>
+            <Panel.Content>
               <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>

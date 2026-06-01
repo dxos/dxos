@@ -277,6 +277,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     if (!tags || tags.length === 0) {
       return [];
     }
+
     return tags
       .filter((tag) => !GoogleMail.isSystemLabel(tag.id))
       .map((tag) => ({
@@ -400,23 +401,15 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
       {messages.slice(0, 4).map((message) => {
         const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
         return (
-          <Card.Row key={message.id} icon='ph--user--regular'>
-            <div className='flex flex-col py-1'>
-              <button
-                type='button'
-                className='flex items-center justify-between w-full gap-2 text-start text-sm dx-hover dx-focus-ring'
-                onClick={(event) => handleMessageClick(event, message.id)}
-              >
+          <Card.Row key={message.id} icon='ph--user--duotone'>
+            <div className='flex flex-col' onClick={(event) => handleMessageClick(event, message.id)}>
+              <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
                 {from && <span className='truncate'>{from}</span>}
                 <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
               </button>
 
               {snippet && (
-                <button
-                  type='button'
-                  className='text-start text-description line-clamp-2'
-                  onClick={(event) => handleMessageClick(event, message.id)}
-                >
+                <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
                   {snippet}
                 </button>
               )}

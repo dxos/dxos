@@ -19,11 +19,10 @@
    *
    * Two kinds of level, listed below in ascending (darkening) order:
    *  - Anchors — the Tailwind hundreds (50…950), defined by explicit lightness.
-   *  - In-between steps — `color-mix` interpolations of the surrounding anchors, EXCEPT
-   *    760/775, which are explicit tones tuned to a reference dark theme (no anchor midpoint).
+   *  - In-between steps — `color-mix` interpolations of the surrounding anchors.
    */
-  --dx-neutral-chroma: 0.002;
-  --dx-neutral-hue: 90;
+  --dx-neutral-hue: 100;
+  --dx-neutral-chroma: 0.001;
 
   --color-neutral-50: oklch(0.985 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-75: color-mix(in oklch, var(--color-neutral-50) 50%, var(--color-neutral-100) 50%);
@@ -32,17 +31,13 @@
   --color-neutral-150: color-mix(in oklch, var(--color-neutral-100) 50%, var(--color-neutral-200) 50%);
   --color-neutral-175: color-mix(in oklch, var(--color-neutral-150) 50%, var(--color-neutral-200) 50%);
   --color-neutral-200: oklch(0.875 var(--dx-neutral-chroma) var(--dx-neutral-hue));
-  --color-neutral-225: color-mix(in oklch, var(--color-neutral-200) 75%, var(--color-neutral-300) 25%);
   --color-neutral-250: color-mix(in oklch, var(--color-neutral-200) 50%, var(--color-neutral-300) 50%);
   --color-neutral-300: oklch(0.8 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-400: oklch(0.708 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-500: oklch(0.556 var(--dx-neutral-chroma) var(--dx-neutral-hue));
-  --color-neutral-575: color-mix(in oklch, var(--color-neutral-500) 25%, var(--color-neutral-600) 75%);
   --color-neutral-600: oklch(0.439 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-700: oklch(0.371 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
-  --color-neutral-760: oklch(0.313 var(--dx-neutral-chroma) var(--dx-neutral-hue));
-  --color-neutral-775: oklch(0.291 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-800: oklch(0.269 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-825: color-mix(in oklch, var(--color-neutral-800) 75%, var(--color-neutral-900) 25%);
   --color-neutral-850: color-mix(in oklch, var(--color-neutral-800) 50%, var(--color-neutral-900) 50%);

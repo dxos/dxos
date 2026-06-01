@@ -98,18 +98,20 @@
  */
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
 @source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{fill,surface,foreground,text,border}");
+@source inline("bg-{primary,secondary}-{50,100,200,300,400,500,600,700,800,900,950}");
 @source inline("border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border");
 @source inline("bg-{info,success,warning,error}-{fill,surface,foreground,text,border}");
 @source inline("border-{info,success,warning,error}-border");
 
 /**
  * Force-emit tokens consumed by web components / .pcss files outside the
- * Tailwind source-scan graph (e.g. lit-grid's dx-grid.pcss uses
- * var(--color-grid-line)).
+ * Tailwind source-scan graph (e.g. lit-grid's dx-grid.pcss uses var(--color-grid-line)).
  */
 @source inline("bg-grid-{surface,foreground,line,highlight,comment,comment-active,selection-surface,selection-foreground}");
-/* Sidebar surfaces alias each other (e.g. header-surface -> l0-surface); force-emit so the vars
- * exist in apps that use the alias but not the underlying utility (e.g. devtools). */
+/* 
+ * Sidebar surfaces alias each other (e.g. header-surface -> l0-surface); force-emit so the vars
+ * exist in apps that use the alias but not the underlying utility (e.g. devtools). 
+ */
 @source inline("bg-{l0,r0,l1,r1}-surface");
 
 /**

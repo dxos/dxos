@@ -32,7 +32,7 @@ import { getDate, getRowIndex, isSameDay } from './util';
 
 const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
-const size = 48;
+const size = 40;
 const defaultWidth = 7 * size;
 
 // Auto-scroll while dragging near a vertical edge.
@@ -594,7 +594,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
-                    <span className='relative text-description'>{date.getDate()}</span>
+                    <span className='relative text-description text-sm'>{date.getDate()}</span>
                     {!border && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}

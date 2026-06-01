@@ -19,7 +19,10 @@
   --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
   --color-inverse-foreground: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
+  /* Focus */
   --color-focus-surface: light-dark(var(--color-neutral-100), var(--color-neutral-850));
+  --color-focus-ring: light-dark(var(--color-blue-400), var(--color-blue-600));
+  --color-focus-ring-subtle: light-dark(var(--color-neutral-300), var(--color-neutral-600));
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);
@@ -31,26 +34,26 @@
     oklch(from var(--color-neutral-950) l c h / 0.25)
   );
 
-  --color-toolbar-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
-  --color-modal-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
-  --color-sidebar-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-
-  --color-group-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
-  --color-group-alt-surface: light-dark(var(--color-neutral-125), var(--color-neutral-875));
-  --color-card-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
-
   /*
    * Sidebar levels. The outer rails (l0 / r0) sit one tone darker than their inner panels (l1 / r1),
    * a relationship that holds in both light and dark.
    */
-  --color-l0-surface: light-dark(var(--color-primary-125), var(--color-neutral-875));
-  --color-l1-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-r0-surface: light-dark(var(--color-primary-125), var(--color-neutral-875));
+  --color-header-surface: light-dark(var(--color-neutral-100), var(--color-neutral-875));
+  --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
+  --color-l0-surface: var(--color-header-surface);
+  --color-r0-surface: var(--color-header-surface);
+  --color-l1-surface: var(--color-sidebar-surface);
   --color-r1-surface: var(--color-attention-surface);
-  --color-header-surface: var(--color-l0-surface);
+
+  --color-toolbar-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
+  --color-modal-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
+
+  --color-group-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
+  --color-group-alt-surface: light-dark(var(--color-neutral-100), var(--color-neutral-875));
+  --color-card-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
 
   /* input */
-  --color-input-surface: light-dark(var(--color-neutral-225), var(--color-neutral-775));
+  --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* 
@@ -58,7 +61,7 @@
    * `*-base` primitives are the un-offset values; 
    * surface contexts (e.g. .dx-main-sidebar in state.css) re-derive the public token off the base via relative oklch. 
    */
-  --dx-hover-surface-base: light-dark(var(--color-neutral-250), var(--color-neutral-760));
+  --dx-hover-surface-base: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-hover-surface: var(--dx-hover-surface-base);
   --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
@@ -75,8 +78,8 @@
   --color-selected-foreground: var(--color-current-foreground);
 
   /* Accent (primary) */
-  --color-accent-surface: light-dark(var(--color-blue-500), var(--color-blue-700));
-  --color-accent-surface-hover: light-dark(var(--color-blue-800), var(--color-blue-800));
+  --color-accent-surface: light-dark(var(--color-blue-600), var(--color-blue-700));
+  --color-accent-surface-hover: light-dark(var(--color-blue-700), var(--color-blue-800));
   --color-accent-foreground: var(--color-blue-100);
   --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
@@ -84,19 +87,15 @@
   --color-un-accent: var(--color-neutral-400);
   --color-un-accent-hover: var(--color-neutral-500);
 
-  /* Focus rings (global) */
-  --color-focus-ring: light-dark(var(--color-blue-600), var(--color-blue-600));
-  --color-focus-ring-subtle: light-dark(var(--color-neutral-400), var(--color-neutral-600));
-
   /* Separator */
-  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-750));
-  --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-775));
+  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
   --color-primary-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 
   /* Scrollbar */
   --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-scrollbar-thumb: light-dark(var(--color-neutral-200), var(--color-neutral-575));
+  --color-scrollbar-thumb: light-dark(var(--color-neutral-200), var(--color-neutral-600));
   --color-scrollbar-thumb-active: light-dark(var(--color-neutral-200), var(--color-neutral-600));
   --color-scrollbar-thumb-hover: light-dark(var(--color-neutral-200), var(--color-neutral-600));
 
@@ -124,6 +123,6 @@
 
   /* Text */
   --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
-  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-575));
+  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-600));
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
 }

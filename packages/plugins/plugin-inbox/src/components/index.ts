@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Actor';
 export * from './AnchorIconButton';
-
 export * from './DateComponent';
 export * from './EditMessage';
 export * from './Event';
