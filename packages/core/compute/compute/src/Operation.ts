@@ -354,6 +354,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
       key: operation.meta.key,
       version: operation.meta.version ?? '0.0.0',
       keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+      annotations: operation.meta.annotations,
     },
     name: operation.meta.name ?? '',
     description: operation.meta.description,

@@ -106,7 +106,8 @@ interface MakeProps<T> {
 export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;
 
 /**
- * Get the value of an annotation from a schema or an entity.
+ * Get the value of an annotation from an entity instance.
+ * For schema-level reads use the annotation instance method (e.g. `ColorAnnotation.get(schema)`).
  * For getting an annotation value from a dictionary, use `getDictionary`.
  */
 export const get: {
@@ -120,7 +121,8 @@ export const get: {
 });
 
 /**
- * Set the value of an annotation on a schema or an entity.
+ * Set the value of an annotation on an entity instance.
+ * For schema-level writes use the annotation instance method (e.g. `ColorAnnotation.set('red')`).
  * For setting an annotation value on a dictionary, use `setDictionary`.
  */
 export const set: {
@@ -178,7 +180,7 @@ export const getDictionary: {
  *
  * ```ts
  * Obj.update(obj, (obj) => {
- *   Annotation.set(obj.annotations, ColorAnnotation, 'red');
+ *   Annotation.setDictionary(obj.annotations, ColorAnnotation, 'red');
  * });
  * ```
  */
