@@ -32,7 +32,7 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
 
 /**
  * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
- * (e.g. not an Echo object or has system annotation). Use with Card.Title for object cards.
+ * (e.g. not an Echo object or has hidden annotation). Use with Card.Title for object cards.
  */
 export const useObjectNavigate = (subject: unknown): (() => void) | undefined => {
   const { invokePromise } = useOperationInvoker();
