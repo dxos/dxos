@@ -113,6 +113,33 @@ const MapResize = () => {
   return null;
 };
 
+/**
+ * Enables pinch-to-zoom on trackpads / ctrl+wheel. Browsers deliver a trackpad pinch as a `wheel`
+ * event with `ctrlKey` set; Leaflet only zooms those via `scrollWheelZoom`, which is intentionally
+ * off here (so plain scrolling doesn't hijack the page). This handler zooms on the pinch gesture
+ * only, leaving normal wheel scrolling untouched. (Touchscreen pinch is handled by Leaflet's
+ * `touchZoom`.)
+ */
+const MapPinchZoom = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) {
+        return;
+      }
+      event.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const point = L.point(event.clientX - rect.left, event.clientY - rect.top);
+      map.setZoomAround(point, map.getZoom() - event.deltaY * 0.01);
+    };
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, [map]);
+
+  return null;
+};
+
 const MapContent = forwardRef<MapController, MapContentProps>(
   (
     { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
@@ -170,6 +197,7 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         ref={mapRef}
       >
         <MapResize />
+        <MapPinchZoom />
         {children}
       </MapContainer>
     );
