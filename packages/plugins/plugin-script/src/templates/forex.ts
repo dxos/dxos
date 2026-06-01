@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 const Forex = Operation.make({
   meta: {
-    key: 'org.dxos.script.forex',
+    key: DXN.make('org.dxos.script.forex'),
     name: 'Forex',
     description: 'Returns the exchange rate between two currencies.',
   },

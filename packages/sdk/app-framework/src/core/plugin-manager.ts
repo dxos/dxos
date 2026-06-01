@@ -342,7 +342,7 @@ class ManagerImpl implements PluginManager {
     // Core plugins are derived from `meta.tags.includes('system')`; the set is
     // a snapshot of the initial `plugins` array (later `add()` calls do not
     // promote plugins to core).
-    const core = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
+    const core: string[] = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
@@ -1121,7 +1121,7 @@ class ManagerImpl implements PluginManager {
    */
   private _collectDependents(id: string, opts: { transitive: boolean; enabledOnly: boolean }): string[] {
     const direct = this._get(this._pluginsAtom)
-      .filter((plugin) => plugin.meta.dependsOn?.includes(id))
+      .filter((plugin) => plugin.meta.dependsOn?.some((dep) => dep === id))
       .map((plugin) => plugin.meta.id);
 
     if (!opts.transitive) {
@@ -1138,7 +1138,7 @@ class ManagerImpl implements PluginManager {
       }
       visited.add(currentId);
       const parents = this._get(this._pluginsAtom)
-        .filter((plugin) => plugin.meta.dependsOn?.includes(currentId))
+        .filter((plugin) => plugin.meta.dependsOn?.some((dep) => dep === currentId))
         .map((plugin) => plugin.meta.id);
       for (const parentId of parents) {
         visit(parentId);

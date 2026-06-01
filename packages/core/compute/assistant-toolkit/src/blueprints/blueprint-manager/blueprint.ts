@@ -3,6 +3,7 @@
 //
 
 import { Blueprint, Template } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { EnableBlueprints, QueryBlueprints, UpdateBlueprints } from './functions';
@@ -34,7 +35,7 @@ const make = () =>
         {
           name: 'blueprints',
           kind: 'operation',
-          operation: QueryBlueprints.meta.key,
+          operation: DXN.getName(QueryBlueprints.meta.key),
         },
       ],
     }),

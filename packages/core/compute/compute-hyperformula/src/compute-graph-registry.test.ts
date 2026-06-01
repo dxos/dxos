@@ -9,13 +9,14 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
 
 const AddDefinition = Operation.make({
   meta: {
-    key: 'add',
+    key: DXN.make('org.dxos.test.compute.add'),
     name: 'add',
     description: 'Adds two numbers',
   },

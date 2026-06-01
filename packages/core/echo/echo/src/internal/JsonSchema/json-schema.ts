@@ -18,12 +18,8 @@ import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
 import type * as Type from '../../Type';
-import {
-  type TypeAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-  makeTypeJsonSchemaAnnotation,
-} from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import {
   ANY_OBJECT_TYPENAME,
   ANY_OBJECT_VERSION,

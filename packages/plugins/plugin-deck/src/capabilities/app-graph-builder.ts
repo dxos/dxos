@@ -17,7 +17,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'not-found',
+        id: 'notFound',
         match: NodeMatcher.whenRoot,
         connector: () => Effect.succeed([AppNode.makeNotFound()]),
       }),

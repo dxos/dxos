@@ -49,6 +49,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

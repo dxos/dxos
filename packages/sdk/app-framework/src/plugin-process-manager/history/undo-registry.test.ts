@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { Compute, HalveCompute } from '../testing';
 import * as UndoMapping from './undo-mapping';
 import * as UndoRegistry from './undo-registry';
@@ -19,7 +21,7 @@ describe('UndoRegistry', () => {
 
     const result = registry.lookup(Compute);
     expect(result).not.toBe(undefined);
-    expect(result?.inverse.meta.key).toBe('test.halve-compute');
+    expect(result?.inverse.meta.key).toBe(DXN.make('org.dxos.test.halveCompute'));
   });
 
   test('returns undefined for unmapped operations', ({ expect }) => {

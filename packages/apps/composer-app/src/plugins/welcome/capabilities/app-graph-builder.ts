@@ -20,7 +20,7 @@ export default Capability.makeModule(
       actions: () =>
         Effect.succeed([
           Node.makeAction({
-            id: 'open-about',
+            id: 'openAbout',
             data: Effect.fnUntraced(function* () {
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                 subject: ABOUT_DIALOG,

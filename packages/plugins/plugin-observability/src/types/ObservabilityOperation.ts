@@ -8,14 +8,15 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const OBSERVABILITY_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const Toggle = Operation.make({
   meta: {
-    key: `${OBSERVABILITY_OPERATION}.toggle`,
+    key: makeKey('toggle'),
     name: 'Toggle Observability',
     description: 'Toggle observability on or off.',
     icon: 'ph--eye--regular',
@@ -29,7 +30,7 @@ export const Toggle = Operation.make({
 
 export const SendEvent = Operation.make({
   meta: {
-    key: `${OBSERVABILITY_OPERATION}.send-event`,
+    key: makeKey('sendEvent'),
     name: 'Send Event',
     description: 'Send an observability event.',
     icon: 'ph--broadcast--regular',

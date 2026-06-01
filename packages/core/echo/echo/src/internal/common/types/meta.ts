@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type * as Entity from '../../../Entity';
+import { Dictionary } from '../../Annotation/dictionary';
 import { type AnyProperties } from './base';
 
 /**
@@ -49,6 +50,12 @@ export const EntityMetaSchema = Schema.Struct({
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version: Schema.optional(Schema.String),
+
+  /**
+   * Dictionary of annotations to this entity.
+   */
+  // TODO(dmaretskyi): Make required.
+  annotations: Schema.optional(Dictionary),
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;

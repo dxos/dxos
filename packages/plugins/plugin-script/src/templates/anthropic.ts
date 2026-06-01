@@ -10,10 +10,11 @@ import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 const Anthropic = Operation.make({
   meta: {
-    key: 'org.dxos.script.anthropic',
+    key: DXN.make('org.dxos.script.anthropic'),
     name: 'Anthropic Chat',
     description: 'Chat with Anthropic',
   },
