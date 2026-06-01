@@ -6,12 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import {
-  type FormFieldComponent,
-  type FormFieldComponentProps,
-  type FormUpdateMeta,
-  Form,
-} from '@dxos/react-ui-form';
+import { type FormFieldComponent, type FormFieldComponentProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
@@ -243,11 +238,7 @@ const FeedbackFormSubmitDiscord = ({ onSubmit, disabled }: FeedbackFormSubmitDis
 
   return (
     <FeedbackFormSubmitCapture handler={onSubmit}>
-      <Form.Submit
-        icon='ph--discord-logo--regular'
-        label={t('ask-for-help.label')}
-        disabled={disabled || undefined}
-      />
+      <Form.Submit icon='ph--discord-logo--regular' label={t('ask-for-help.label')} disabled={disabled || undefined} />
     </FeedbackFormSubmitCapture>
   );
 };

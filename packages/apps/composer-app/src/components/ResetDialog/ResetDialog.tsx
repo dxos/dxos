@@ -8,7 +8,6 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { type SupportOperation } from '@dxos/plugin-support';
 import { FeedbackForm } from '@dxos/plugin-support/components';
-import { Form } from '@dxos/react-ui-form';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -21,6 +20,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { setSafeModeUrl } from '../../config';
 

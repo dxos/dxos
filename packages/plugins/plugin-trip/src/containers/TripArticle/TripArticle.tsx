@@ -193,20 +193,22 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       >
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
-          <Panel.Root className='hidden @3xl:block border-r border-separator'>
-            <NaturalCalendar.Root>
-              <Panel.Toolbar asChild>
-                <NaturalCalendar.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <NaturalCalendar.Grid
-                  dates={calendarDates}
-                  onSelect={handleDateSelect}
-                  onSelectRange={handleDateRangeSelect}
-                />
-              </Panel.Content>
-            </NaturalCalendar.Root>
-          </Panel.Root>
+          <NaturalCalendar.Root>
+            <div className='hidden @3xl:block'>
+              <Panel.Root>
+                <Panel.Toolbar asChild>
+                  <NaturalCalendar.Toolbar />
+                </Panel.Toolbar>
+                <Panel.Content asChild>
+                  <NaturalCalendar.Grid
+                    dates={calendarDates}
+                    onSelect={handleDateSelect}
+                    onSelectRange={handleDateRangeSelect}
+                  />
+                </Panel.Content>
+              </Panel.Root>
+            </div>
+          </NaturalCalendar.Root>
 
           <Panel.Root>
             <Panel.Toolbar>
@@ -223,8 +225,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
             markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
         {showGlobe && mapAvailable && (
-          <Panel.Root className='border-t border-separator'>
-            <Panel.Content>
+          <Panel.Root className='p-1'>
+            <Panel.Content className='rounded-md border border-separator overflow-hidden'>
               <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>

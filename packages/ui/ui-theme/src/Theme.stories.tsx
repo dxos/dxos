@@ -247,7 +247,11 @@ export const Surfaces = {
       };
       sort();
       const observer = new MutationObserver(sort);
-      observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class', 'style', 'data-theme'] });
+      observer.observe(document.body, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['class', 'style', 'data-theme'],
+      });
       return () => observer.disconnect();
     }, []);
     return (
