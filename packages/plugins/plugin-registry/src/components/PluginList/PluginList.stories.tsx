@@ -32,16 +32,18 @@ const DefaultStory = () => {
   const [plugins] = useState<Plugin.Plugin[]>(
     random.helpers.multiple(
       () =>
-        PluginNS.define(Plugin.makeMeta({
-          key: DXN.make('org.dxos.plugin.test'),
-          name: `${random.commerce.productName()}`,
-          description: random.lorem.sentences(Math.ceil(Math.random() * 3)),
-          tags: random.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
-          icon: random.helpers.arrayElement(icons),
-          iconHue: getHashHue(random.string.uuid()),
-          homePage: random.datatype.boolean({ probability: 0.5 }) ? random.internet.url() : undefined,
-          source: random.internet.url(),
-        })).pipe(PluginNS.make)(),
+        PluginNS.define(
+          PluginNS.makeMeta({
+            key: DXN.make('org.dxos.plugin.test'),
+            name: `${random.commerce.productName()}`,
+            description: random.lorem.sentences(Math.ceil(Math.random() * 3)),
+            tags: random.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
+            icon: random.helpers.arrayElement(icons),
+            iconHue: getHashHue(random.string.uuid()),
+            homePage: random.datatype.boolean({ probability: 0.5 }) ? random.internet.url() : undefined,
+            source: random.internet.url(),
+          }),
+        ).pipe(PluginNS.make)(),
       { count: 32 },
     ),
   );

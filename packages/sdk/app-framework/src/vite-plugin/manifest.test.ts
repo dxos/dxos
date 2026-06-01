@@ -33,10 +33,10 @@ describe('serializeManifest', () => {
   });
 
   test('includes devEntry when supplied (dev-server manifest)', ({ expect }) => {
-    const json = serializeManifest(
-      buildMeta({ key: DXN.make('org.example.plugin'), name: 'Example' }, '0.0.0-dev'),
-      { assets: [], devEntry: 'src/plugin.tsx' },
-    );
+    const json = serializeManifest(buildMeta({ key: DXN.make('org.example.plugin'), name: 'Example' }, '0.0.0-dev'), {
+      assets: [],
+      devEntry: 'src/plugin.tsx',
+    });
     expect(JSON.parse(json)).toEqual({
       id: 'org.example.plugin',
       name: 'Example',
@@ -47,10 +47,9 @@ describe('serializeManifest', () => {
   });
 
   test('omits devEntry from the output when undefined', ({ expect }) => {
-    const json = serializeManifest(
-      buildMeta({ key: DXN.make('org.example.plugin'), name: 'Example' }, '1.0.0'),
-      { assets: ['index.mjs'] },
-    );
+    const json = serializeManifest(buildMeta({ key: DXN.make('org.example.plugin'), name: 'Example' }, '1.0.0'), {
+      assets: ['index.mjs'],
+    });
     expect(Object.keys(JSON.parse(json))).not.toContain('devEntry');
   });
 });

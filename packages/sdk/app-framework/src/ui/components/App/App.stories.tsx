@@ -14,11 +14,13 @@ import { Capability, Plugin } from '../../../core';
 import { useApp } from '../../hooks';
 
 // Minimal plugin that contributes a ReactRoot.
-const TestPlugin = Plugin.define<{ error?: boolean }>(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.test'),
-  name: 'Test Plugin',
-  tags: ['system'],
-})).pipe(
+const TestPlugin = Plugin.define<{ error?: boolean }>(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.test'),
+    name: 'Test Plugin',
+    tags: ['system'],
+  }),
+).pipe(
   Plugin.addModule(({ error }) => ({
     id: 'TestMain',
     activatesOn: ActivationEvents.Startup,

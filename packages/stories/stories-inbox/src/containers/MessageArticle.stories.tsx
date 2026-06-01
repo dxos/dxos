@@ -36,10 +36,12 @@ import FLIGHT_EMAIL from '../testing/flight.md?raw';
 
 // MessageArticle calls LayoutOperation.Open/Select/UpdateCompanion from its callbacks. Provide
 // no-op handlers so the operations resolve without pulling in DeckPlugin.
-const MockDeckOperationsPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('story.inbox.mockDeckOperations'),
-  name: 'Mock Deck Ops',
-})).pipe(
+const MockDeckOperationsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.mockDeckOperations'),
+    name: 'Mock Deck Ops',
+  }),
+).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
       Effect.succeed(
@@ -79,10 +81,12 @@ const ImportantMessageExtractor: ObjectExtractor = {
     }),
 };
 
-const ImportantExtractorPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('story.inbox.importantExtractor'),
-  name: 'Story Important Extractor',
-})).pipe(
+const ImportantExtractorPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.importantExtractor'),
+    name: 'Story Important Extractor',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'extractor',
     activatesOn: ActivationEvents.Startup,
@@ -127,10 +131,12 @@ const MOCK_FLIGHT_PAYLOAD = {
  * the full Operation.invoke → handler → `Markdown.make({...})` chain inside the story
  * runtime, which has no network access and no real API key.
  */
-const MockAiServicePlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('story.inbox.mockAiService'),
-  name: 'Story Mock AI Service',
-})).pipe(
+const MockAiServicePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.mockAiService'),
+    name: 'Story Mock AI Service',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'ai-service',
     activatesOn: ActivationEvents.SetupProcessManager,

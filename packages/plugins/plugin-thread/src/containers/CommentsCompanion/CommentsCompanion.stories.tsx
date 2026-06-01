@@ -116,10 +116,12 @@ const aiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
  * (no network) or `StoryLiveAgentPlugin` (real Anthropic via DXOS edge),
  * selected per-story via the `liveAgent` arg.
  */
-const StoryGraphPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.thread.story.storyGraph'),
-  name: 'Story Graph',
-})).pipe(
+const StoryGraphPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.thread.story.storyGraph'),
+    name: 'Story Graph',
+  }),
+).pipe(
   AppPlugin.addAppGraphModule({
     activate: Effect.fnUntraced(function* () {
       const capabilities = yield* Capability.Service;
@@ -167,10 +169,12 @@ const StoryGraphPlugin = Plugin.define(Plugin.makeMeta({
  * Loaded BEFORE ThreadPlugin so its `AgentRunner` contribution wins over
  * ThreadPlugin's default LLM-backed runner.
  */
-const StoryStubAgentPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.thread.story.storyStubAgent'),
-  name: 'Story Stub Agent',
-})).pipe(
+const StoryStubAgentPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.thread.story.storyStubAgent'),
+    name: 'Story Stub Agent',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'story-stub-agent.runner',
     activatesOn: ActivationEvents.Startup,
@@ -184,10 +188,12 @@ const StoryStubAgentPlugin = Plugin.define(Plugin.makeMeta({
  * ThreadPlugin's default `AgentRunner` routes through Anthropic via the DXOS
  * edge. Used by the WithLiveAgent variant.
  */
-const StoryLiveAgentPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.thread.story.storyLiveAgent'),
-  name: 'Story Live Agent',
-})).pipe(
+const StoryLiveAgentPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.thread.story.storyLiveAgent'),
+    name: 'Story Live Agent',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'story-live-agent.ai-service',
     activatesOn: ActivationEvents.Startup,

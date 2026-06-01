@@ -4,7 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 import { SETTINGS_ID, SETTINGS_KEY } from '#types';
@@ -19,11 +18,8 @@ export namespace SettingsAction {
     output: Schema.Void,
   }) {}
 
-  export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(
-    `${meta.id}.openPluginRegistry`,
-    {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
-  ) {}
+  export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(`${meta.id}.openPluginRegistry`, {
+    input: Schema.Void,
+    output: Schema.Void,
+  }) {}
 }

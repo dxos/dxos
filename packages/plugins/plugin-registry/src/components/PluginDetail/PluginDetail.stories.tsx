@@ -29,18 +29,20 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    plugin: Plugin.define(Plugin.makeMeta({
-      key: DXN.make('com.example.plugin.test'),
-      name: 'Test Plugin',
-      author: 'DXOS',
-      description: random.lorem.paragraphs(2),
-      icon: 'ph--bug--regular',
-      iconHue: 'sky',
-      homePage: 'https://example.com',
-      source: 'https://github.com/example/test-plugin',
-      screenshots: [
-        'https://media.gcflearnfree.org/content/55e073de7dd48174331f51b3_01_17_2014/getting_started_interactive2.png',
-      ],
-    })).pipe(Plugin.make)(),
+    plugin: Plugin.define(
+      Plugin.makeMeta({
+        key: DXN.make('com.example.plugin.test'),
+        name: 'Test Plugin',
+        author: 'DXOS',
+        description: random.lorem.paragraphs(2),
+        icon: 'ph--bug--regular',
+        iconHue: 'sky',
+        homePage: 'https://example.com',
+        source: 'https://github.com/example/test-plugin',
+        screenshots: [
+          'https://media.gcflearnfree.org/content/55e073de7dd48174331f51b3_01_17_2014/getting_started_interactive2.png',
+        ],
+      }),
+    ).pipe(Plugin.make)(),
   },
 };

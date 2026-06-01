@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ServiceResolver } from '@dxos/compute';
-import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 

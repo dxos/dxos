@@ -23,10 +23,10 @@ export const meta = Plugin.makeMeta({
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-scripts-dark.png'],
-};
+});
 
 // TODO(ZaymonFC): Configure by scopes?
 export const defaultScriptsForIntegration: Record<string, string[]> = {
   // TODO(wittjosiah): Also include content extraction scripts in the default set.
   'gmail.com': [DXN.make('org.dxos.script.gmail')],
-});
+};

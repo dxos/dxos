@@ -3,7 +3,6 @@
 //
 
 import { Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';

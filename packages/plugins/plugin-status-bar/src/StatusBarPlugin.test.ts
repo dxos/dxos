@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { StatusBarPlugin } from '#plugin';

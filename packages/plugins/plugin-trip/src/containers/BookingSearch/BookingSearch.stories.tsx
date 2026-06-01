@@ -40,10 +40,12 @@ const STUB_SERVICE: BookingSearchType.BookingService = {
 };
 
 /** Inline plugin contributing the stub `BookingService` so the form (not the empty state) renders. */
-const StubBookingPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.trip.story.stubBooking'),
-  name: 'Stub Booking',
-})).pipe(
+const StubBookingPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.trip.story.stubBooking'),
+    name: 'Stub Booking',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'stub-booking-service',
     activatesOn: ActivationEvents.Startup,

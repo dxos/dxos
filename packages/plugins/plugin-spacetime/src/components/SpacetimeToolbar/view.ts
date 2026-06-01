@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';

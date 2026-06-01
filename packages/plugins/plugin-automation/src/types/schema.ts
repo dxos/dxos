@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 

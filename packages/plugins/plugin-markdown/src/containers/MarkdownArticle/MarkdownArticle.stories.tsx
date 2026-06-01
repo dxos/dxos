@@ -36,10 +36,12 @@ random.seed(1);
 const generator: ValueGenerator = random as any;
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
-const MarkdownExtensionsPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.markdown.story.markdownExtensions'),
-  name: 'Story Extensions',
-})).pipe(
+const MarkdownExtensionsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.markdown.story.markdownExtensions'),
+    name: 'Story Extensions',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'extensions',
     activatesOn: MarkdownEvents.SetupExtensions,

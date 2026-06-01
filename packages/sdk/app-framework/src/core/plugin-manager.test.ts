@@ -894,7 +894,9 @@ describe('PluginManager', () => {
       });
 
       const SlowEvent = ActivationEvent.make('org.dxos.test.slow');
-      const SlowPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowPlugin'), name: 'Slow Plugin' })).pipe(
+      const SlowPlugin = Plugin.define(
+        Plugin.makeMeta({ key: DXN.make('org.dxos.test.slowPlugin'), name: 'Slow Plugin' }),
+      ).pipe(
         Plugin.addModule({
           id: 'SlowModule',
           activatesOn: SlowEvent,
@@ -941,10 +943,12 @@ describe('PluginManager', () => {
       const EventB = ActivationEvent.make('org.dxos.test.event-b');
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define(Plugin.makeMeta({
-        key: DXN.make('org.dxos.test.concurrentPlugin'),
-        name: 'Concurrent Plugin',
-      })).pipe(
+      const ConcurrentPlugin = Plugin.define(
+        Plugin.makeMeta({
+          key: DXN.make('org.dxos.test.concurrentPlugin'),
+          name: 'Concurrent Plugin',
+        }),
+      ).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
@@ -1489,10 +1493,12 @@ describe('PluginManager', () => {
     it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
       Effect.gen(function* () {
         const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
-        const SlowPlugin = Plugin.define(Plugin.makeMeta({
-          key: DXN.make('org.dxos.test.slowActivation'),
-          name: 'Slow Activation',
-        })).pipe(
+        const SlowPlugin = Plugin.define(
+          Plugin.makeMeta({
+            key: DXN.make('org.dxos.test.slowActivation'),
+            name: 'Slow Activation',
+          }),
+        ).pipe(
           Plugin.addModule({
             id: 'Slow',
             activatesOn: SlowEvent,
@@ -1580,7 +1586,9 @@ describe('PluginManager', () => {
     it.effect('records non-timeout activation errors as reason: error', () =>
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
-        const FailingPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' })).pipe(
+        const FailingPlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+        ).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1610,7 +1618,9 @@ describe('PluginManager', () => {
     it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
-        const CorePlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] })).pipe(
+        const CorePlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.core'), name: 'Core', tags: ['system'] }),
+        ).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1639,7 +1649,9 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         let shouldFail = true;
         const Event = ActivationEvent.make('org.dxos.test.flaky');
-        const FlakyPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.flaky'), name: 'Flaky' })).pipe(
+        const FlakyPlugin = Plugin.define(
+          Plugin.makeMeta({ key: DXN.make('org.dxos.test.flaky'), name: 'Flaky' }),
+        ).pipe(
           Plugin.addModule({
             id: 'Maybe',
             activatesOn: Event,

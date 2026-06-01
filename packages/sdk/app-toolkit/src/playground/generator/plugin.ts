@@ -8,7 +8,9 @@ import { DXN } from '@dxos/keys';
 const Main = Capability.lazy('Main', () => import('./Main'));
 const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
-export const GeneratorPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.generator'), name: 'Generator' })).pipe(
+export const GeneratorPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.test.generator'), name: 'Generator' }),
+).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
     activate: Main,

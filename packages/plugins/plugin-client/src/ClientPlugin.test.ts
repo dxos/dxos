@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 // #plugin resolves to ClientPlugin.node.ts under the source condition used by vitest.
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
 import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
 
 import { type Plugin } from '../core';

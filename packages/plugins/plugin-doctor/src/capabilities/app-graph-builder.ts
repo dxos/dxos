@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';

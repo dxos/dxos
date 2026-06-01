@@ -118,11 +118,13 @@ const CounterComponent = () => {
 };
 
 // Plugin that provides the Counter capability and renders the UI
-const CounterPlugin = Plugin.define(Plugin.makeMeta({
-  key: DXN.make('org.dxos.plugin.counter'),
-  name: 'Counter Plugin',
-  tags: ['system'],
-})).pipe(
+const CounterPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.counter'),
+    name: 'Counter Plugin',
+    tags: ['system'],
+  }),
+).pipe(
   Plugin.addModule({
     id: 'CounterMain',
     activatesOn: ActivationEvents.Startup,

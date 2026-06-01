@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { ActivationEvents } from '@dxos/app-framework';
-import { DXN } from '@dxos/keys';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SpotlightPlugin } from '#plugin';

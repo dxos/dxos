@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Label, LayoutOperation } from '@dxos/app-toolkit';
-import { DXN } from '@dxos/keys';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -132,14 +131,11 @@ export namespace DeckAction {
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(
-    `${meta.id}.action.update-plank-size`,
-    {
-      input: Schema.Struct({
-        id: Schema.String,
-        size: Schema.Number,
-      }),
-      output: Schema.Void,
-    },
-  ) {}
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
+    input: Schema.Struct({
+      id: Schema.String,
+      size: Schema.Number,
+    }),
+    output: Schema.Void,
+  }) {}
 }

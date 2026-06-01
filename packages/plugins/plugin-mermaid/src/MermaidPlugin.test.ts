@@ -6,7 +6,6 @@ import { describe, test } from 'vitest';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
-import { DXN } from '@dxos/keys';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
 import { MermaidPlugin } from '#plugin';
