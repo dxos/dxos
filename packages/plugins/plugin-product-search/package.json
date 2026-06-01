@@ -71,6 +71,7 @@
     "react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/keys": "workspace:*",
