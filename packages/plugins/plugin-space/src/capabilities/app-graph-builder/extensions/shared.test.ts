@@ -6,12 +6,14 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { Migrations } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { buildViewIndex } from './shared';
+import { buildViewIndex, checkPendingMigration } from './shared';
 
 const TestContact = Schema.Struct({
   name: Schema.String,
@@ -107,5 +109,50 @@ describe('buildViewIndex', () => {
 
     expect(viewIndex.typenamesWithViews.size).toBe(0);
     expect(viewIndex.getViewsForTypename(Type.getTypename(TestContact))).toHaveLength(0);
+  });
+});
+
+describe('checkPendingMigration', () => {
+  const TARGET = '1970-01-02';
+
+  // Minimal fake exercising only the fields checkPendingMigration reads (state, properties).
+  const makeFakeSpace = (state: SpaceState, properties: Record<string, unknown>): Space =>
+    ({ state: { get: () => state }, properties }) as unknown as Space;
+
+  let savedNamespace: string | undefined;
+  let savedMigrations: typeof Migrations.migrations;
+
+  beforeEach(() => {
+    savedNamespace = Migrations.namespace;
+    savedMigrations = Migrations.migrations;
+    Migrations.define('test', [
+      { version: '1970-01-01', next: async () => {} },
+      { version: TARGET, next: async () => {} },
+    ]);
+  });
+
+  afterEach(() => {
+    Migrations.namespace = savedNamespace;
+    Migrations.migrations = savedMigrations;
+  });
+
+  test('SPACE_REQUIRES_MIGRATION is pending regardless of version property', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_REQUIRES_MIGRATION, { [Migrations.versionProperty!]: TARGET });
+    expect(checkPendingMigration(space)).toBe(true);
+  });
+
+  test('READY with version matching target is not pending', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_READY, { [Migrations.versionProperty!]: TARGET });
+    expect(checkPendingMigration(space)).toBe(false);
+  });
+
+  test('READY with undefined version is pending (legacy property-migration preserved)', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_READY, {});
+    expect(checkPendingMigration(space)).toBe(true);
+  });
+
+  test('READY with stale version is pending', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_READY, { [Migrations.versionProperty!]: '1970-01-01' });
+    expect(checkPendingMigration(space)).toBe(true);
   });
 });

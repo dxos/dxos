@@ -22,7 +22,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const client = yield* Capability.get(ClientCapabilities.Client);
       const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
       const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
-      const space = yield* Effect.promise(() => client.spaces.create({ name, hue, icon }));
+      const space = yield* Effect.promise(() =>
+        client.spaces.create({
+          name,
+          hue,
+          icon,
+          ...(Migrations.versionProperty ? { [Migrations.versionProperty]: Migrations.targetVersion } : {}),
+        }),
+      );
       if (edgeReplication) {
         yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
       }
@@ -31,9 +38,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (obj) => {
         obj[Type.getTypename(Collection.Collection)] = Ref.make(collection);
-        if (Migrations.versionProperty) {
-          obj[Migrations.versionProperty] = Migrations.targetVersion;
-        }
       });
 
       yield* Plugin.activate(SpaceEvents.SpaceCreated);
