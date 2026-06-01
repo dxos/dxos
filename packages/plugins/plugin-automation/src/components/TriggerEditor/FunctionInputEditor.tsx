@@ -8,11 +8,12 @@ import React, { useCallback, useMemo } from 'react';
 import { type Operation } from '@dxos/compute';
 import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
-import { EID } from '@dxos/keys';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+
+import { findOperationByUri } from './util';
 
 export type FunctionInputEditorProps = {
   type: SchemaAST.AST;
@@ -23,16 +24,10 @@ export type FunctionInputEditorProps = {
 export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChange }: FunctionInputEditorProps) => {
   const { t } = useTranslation(meta.id);
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
-  const selectedFunctionId = useMemo(() => {
-    if (Ref.isRef(selectedFunctionValue)) {
-      const eid = EID.tryParse(selectedFunctionValue.uri);
-      return eid && EID.getEntityId(eid);
-    }
-  }, [selectedFunctionValue]);
-
   const selectedFunction = useMemo(
-    () => functions.find((fn) => fn.id === selectedFunctionId),
-    [functions, selectedFunctionId],
+    () =>
+      Ref.isRef(selectedFunctionValue) ? findOperationByUri(functions, selectedFunctionValue.uri) : undefined,
+    [functions, selectedFunctionValue],
   );
 
   useOnTransition(
