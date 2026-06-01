@@ -11,24 +11,6 @@ import { type PublicKey } from '@dxos/keys';
 import { Client } from '../client';
 import { TestBuilder, waitForSpace } from '../testing';
 
-/**
- * Waits until the given space key is no longer present in `client.spaces`.
- */
-const waitForSpaceRemoval = async (client: Client, spaceKey: PublicKey, timeout = 1000): Promise<void> => {
-  if (!client.spaces.get(spaceKey)) {
-    return;
-  }
-  const trigger = new Trigger();
-  const sub = client.spaces.subscribe(() => {
-    if (!client.spaces.get(spaceKey)) {
-      sub.unsubscribe();
-      trigger.wake();
-    }
-  });
-  onTestFinished(() => sub.unsubscribe());
-  await asyncTimeout(trigger.wait(), timeout);
-};
-
 describe('Space deletion', () => {
   // Acceptance test: deleting a space on one device removes it on another device of the same identity.
   test('delete replicates across devices of the same identity', async ({ expect }) => {
@@ -80,3 +62,21 @@ describe('Space deletion', () => {
     expect(client.spaces.get(space.key)).to.be.undefined;
   });
 });
+
+/**
+ * Waits until the given space key is no longer present in `client.spaces`.
+ */
+const waitForSpaceRemoval = async (client: Client, spaceKey: PublicKey, timeout = 1000): Promise<void> => {
+  if (!client.spaces.get(spaceKey)) {
+    return;
+  }
+  const trigger = new Trigger();
+  const sub = client.spaces.subscribe(() => {
+    if (!client.spaces.get(spaceKey)) {
+      sub.unsubscribe();
+      trigger.wake();
+    }
+  });
+  onTestFinished(() => sub.unsubscribe());
+  await asyncTimeout(trigger.wait(), timeout);
+};
