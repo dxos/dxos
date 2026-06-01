@@ -87,6 +87,10 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
             boxShadow: 'none',
             padding: 0,
             margin: 0,
+            // Non-scrolling wrapper: defer all scrolling to an enclosing `Syntax.Viewport`.
+            // The prism theme sets `overflow: auto` on the <pre>, which otherwise creates a
+            // nested native horizontal scrollbar alongside the viewport's custom one.
+            overflow: 'visible',
           }}
           {...nativeProps}
         >

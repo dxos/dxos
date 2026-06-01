@@ -14,10 +14,10 @@ import { Mailbox } from '#types';
 import { Builder } from './builder';
 
 /** Fixture tag dictionary — keys are stable across runs so builder can reference them. */
-export const LABELS: Mailbox.Tags = Object.fromEntries(
+export const LABELS: Record<string, { label: string }> = Object.fromEntries(
   (['important', 'investor', 'team', 'eng', 'work', 'personal'] as const).map((label) => [
     `fixture-tag-${label}`,
-    { label, source: 'user', messages: [] },
+    { label },
   ]),
 );
 

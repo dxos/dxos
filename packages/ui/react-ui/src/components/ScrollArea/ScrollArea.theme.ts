@@ -29,7 +29,10 @@ const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) 
 
     orientation === 'vertical' && 'group/scroll-v flex flex-col',
     orientation === 'horizontal' && 'group/scroll-h flex',
-    orientation === 'all' && 'group/scroll-all',
+    // `flex flex-col` is required (as in `vertical`) so the viewport's `flex-1 min-h-0` can
+    // bound its height; without it the viewport grows to content height and only scrolls
+    // horizontally (the root clips the vertical overflow instead of scrolling it).
+    orientation === 'all' && 'group/scroll-all flex flex-col',
 
     // Apply col-span-full only when inside a Column.Root grid (detected via dx-column-root marker).
     '[.dx-column-root_&]:col-span-full',

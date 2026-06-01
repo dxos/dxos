@@ -10,6 +10,7 @@ import * as Text from './Text';
 import * as ViewModel from './ViewModel';
 
 export { Expando, Text, CollectionModel, ViewModel };
+export { APIKey } from './APIKey';
 
 export const DataTypes: Type.AnyEntity[] = [
   Collection.Collection,

@@ -2,12 +2,30 @@
 name: composer-plugins
 description: Use when working on files in packages/plugins/, adding new plugins,
   refactoring plugin components/containers, writing storybooks for plugins,
-  or wiring capabilities like react-surface or operation-resolver.
+  or wiring capabilities like react-surface or operation-resolver. For the UI/design-system
+  details of plugin components (layout, theming, forms, toolbars, lists, storybook), pair this
+  with the composer-ui skill.
 ---
 
 # Composer Plugins
 
 Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand every pattern below.
+
+**Companion skills.** For building plugin **UI** with the design system — container layout, theme tokens,
+forms, toolbars, lists/stacks, reactivity, storybook — use the **composer-ui** skill. For **authoring**
+new `@dxos/react-ui` composite primitives (`Foo.Root`/`Foo.Content`), use **composite-components**. This
+skill owns plugin _structure_ (capabilities, surfaces, schema, operations) and points at those two for UI.
+
+**Read `MEMORY.md` first** (sibling of this file) for session-logged design/implementation learnings and prior corrections.
+
+**REQUIRED — keep `MEMORY.md` current:** Whenever the user directs a correction (tells you to do something differently, rejects an approach, or specifies a pattern), record it in `MEMORY.md` as part of carrying out that correction — do not defer to session end. Also capture other non-obvious design/implementation details as you learn them.
+
+Update it _appropriately_:
+
+- Append to the current session's dated section, newest first: `## YYYY-MM-DD — <plugin(s)>`. Create it if absent; do not start a second section for the same session.
+- Keep it compact and agent-directed: terse imperative bullets, one rule per bullet, name the file/symbol/idiom. No prose, no hedging, no narration of what you did.
+- Update or merge an existing bullet instead of adding a near-duplicate; delete bullets proven wrong.
+- Record reusable rules, not task specifics. When a rule generalizes beyond one session, promote it into the body of this `SKILL.md` and drop it from `MEMORY.md`.
 
 ## Discovery
 
@@ -162,141 +180,17 @@ Create a basic storybook for each.
 
 **If a "component" needs `useCapability`/`useCapabilities`/`useAppGraph`/`useOperationInvoker`, it belongs in `containers/`.** Storybooks won't have a PluginManager — calling capability hooks under `components/` throws. Refactor: take the resolved value (URL, callback, Tile component) as a prop and move the hook one level up.
 
-### Reactivity: wrap subjects with `useObject`
+### UI: forms, theming, toolbars, cards, layout
 
-A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>` MUST call `useObject(subject)` and read from the returned snapshot. Without it, mutations to nested arrays/structs (e.g. `Obj.update(obj, m => m.images = [...])`) do not trigger re-render until you navigate away and back — the prop reference stays stable; the subscription lives in `useObject`.
-
-```tsx
-const [gallery] = useObject(subject);
-// reads (gallery.images) re-render reactively
-// writes still go through the original subject:
-const handleDelete = (i: number) =>
-  Obj.update(subject, (obj) => {
-    const m = obj as Obj.Mutable<Gallery.Gallery>;
-    m.images = (m.images ?? []).filter((_, idx) => idx !== i);
-  });
-```
-
-The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
-
-### Forms, inputs, and theming
-
-NEVER hand-roll native form controls (`<textarea>`, `<input>`, `<select>`) in a plugin. They
-don't inherit the theme — a bare `<textarea>` renders as a white box in dark mode — and they
-bypass validation. Two rules:
-
-1. **Edit ECHO objects with `Form` + schema, not raw inputs.** Render
-   `<Form.Root schema={Type.getSchema(Foo)} values={obj} autoSave onSave={...}>` from
-   `@dxos/react-ui-form` and let it generate inputs from the Effect Schema — it handles strings,
-   numbers, booleans, enums (`Schema.Literal` / `Format`), nested `Schema.Struct`, `Schema.Array`,
-   and `Schema.Record`. Hide non-editable fields with `FormInputAnnotation.set(false)`. For a field
-   that needs a bespoke editor, register it via the Form's `fieldMap` / `fieldProvider` (see
-   `plugin-kanban` `KanbanSettings`) — never a native element. If you must edit an opaque
-   document (e.g. a stored JSON Schema), model it with typed sub-schemas (the mapping structs are
-   already Effect Schemas — render `request`/`result` as nested form fields) rather than dropping
-   to a `<textarea>`.
-
-2. **Never invent Tailwind color tokens.** `bg-input` and `text-primary` are NOT valid tokens and
-   render wrong (e.g. white-on-white). Use the themed `@dxos/react-ui` primitives (`Input.*`,
-   `Card.*`, `Button`, `IconButton`) or real semantic tokens from `@dxos/react-ui-theme`
-   (`text-baseText`, `bg-base`, `bg-modalSurface`, `text-description`, `text-subdued`,
-   `border-separator`, …). When unsure, copy classes from an existing themed component instead of
-   guessing, and pass class arrays to `classNames` on react-ui components rather than styling raw
-   elements.
-
-### Cards: 3-slot subgrid + `asChild` composability
-
-`Card.Header` and `Card.Row` are **3-slot subgrids** (`grid-cols-subgrid`: leading icon · content `1fr` · trailing action). Children are placed by ORDER. A lone `<Card.Title>` as the only child lands in the narrow leading icon slot and gets clamped (e.g. a title renders as "20…"). Put real content in the CENTRE slot: bracket it with the icon slots, or wrap the content in a single element that occupies slot 2:
-
-```tsx
-<Card.Header>
-  <Card.IconBlock /> {/* slot 1 (icon) — empty placeholder */}
-  <div className='flex flex-col gap-0.5 min-w-0'>
-    {' '}
-    {/* slot 2 (1fr content) */}
-    <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
-    {price && <span className='text-sm text-description'>{price}</span>}
-  </div>
-  <Card.IconBlock /> {/* slot 3 (action) — empty placeholder */}
-</Card.Header>
-```
-
-A component used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asChild`) MUST be composable — a single element that forwards `ref` and spreads injected props. A plain function component silently drops the Slot's `ref`/handlers, so current/keyboard/click wiring never attaches. Make presentational cards `forwardRef` and spread:
-
-```tsx
-export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, current, classNames, ...props }, ref) => (
-  <Card.Root ref={ref} classNames={['dx-hover', current && 'dx-current', classNames]} {...props}>
-    …
-  </Card.Root>
-));
-// then: <Focus.Item asChild current={current} onCurrentChange={…}><FooCard subject={x} current={current} /></Focus.Item>
-```
-
-### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
-
-Always thread `attendableId` from `AppSurface.ObjectArticleProps` into `<Menu.Root>`. Don't underscore it as unused — without it, attention-driven contributions don't target the right surface.
-
-```tsx
-const actionsAtom = useMemo(
-  () =>
-    Atom.make(
-      (): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'add',
-            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
-            handleAdd,
-          )
-          .build(),
-    ),
-  [handleAdd],
-);
-const menuActions = useMenuActions(actionsAtom);
-return (
-  <Panel.Toolbar>
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar />
-    </Menu.Root>
-  </Panel.Toolbar>
-);
-```
-
-See: `plugin-sample/src/containers/SampleArticle.tsx`.
-
-**Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
-
-- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for container (article, companion, etc.) layout structure.
-- `ScrollArea.Root` + `ScrollArea.Viewport` inside `Panel.Content asChild` for scrollable content.
-- `Input.Root` / `Input.Label` / `Input.TextInput` for form fields.
-- `Button` (with `variant`) for actions.
-- `Clipboard.IconButton` for copy-to-clipboard.
-- `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
-- `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
-- `List.Root` for navigable lists that track current (`dx-current`) and selected (`dx-selected`) item states.
-- use `react-tabster` for navigation.
-
-IMPORTANT: Any deviation from standard UI components should require permission from the user.
-
-The only acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g., `p-4 space-y-4`) or responsive `@container` queries. If you find yourself writing custom styles, you are probably missing an existing UI component.
-
-**Standard article container pattern:**
-
-```tsx
-<Panel.Root role={role}>
-  <Panel.Toolbar asChild>
-    <Toolbar.Root>{/* toolbar content */}</Toolbar.Root>
-  </Panel.Toolbar>
-  <Panel.Content asChild>
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport classNames='p-4 space-y-4'>{/* Input.Root, Button, etc. */}</ScrollArea.Viewport>
-    </ScrollArea.Root>
-  </Panel.Content>
-</Panel.Root>
-```
-
-All imports from `@dxos/react-ui`: `Panel`, `ScrollArea`, `Input`, `Button`, `Clipboard`, `Toolbar`, `Card`, `Icon`, `useTranslation`.
-
-See: `plugin-chess/src/containers/ChessArticle/`, `plugin-discord/src/containers/BotArticle/`
+The detailed rules for building plugin UI with the design system live in the **composer-ui** skill
+(`.agents/skills/composer-ui/SKILL.md`). Consult it whenever you write a container/component, reach for a
+Tailwind color class, build a toolbar, edit an object with a form, or add a story. It covers: the
+`@dxos/react-ui*` packages, verified theme tokens (never invent `bg-input`/`text-primary`), the standard
+`Panel` + `ScrollArea` container layout (no wrapper divs), `MenuBuilder` + `useMenuActions` + `Menu.Root`
+toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no native inputs), the `Card`
+3-slot subgrid, icons, attention/density, reactivity (`useObject` for ECHO objects passed into
+components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
+the **composite-components** skill.
 
 ### Capability (`src/capabilities/`)
 
@@ -447,7 +341,7 @@ See: `plugin-chess/moon.yml`
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
 - All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
-- Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See "Forms, inputs, and theming".
+- Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See the **composer-ui** skill.
 
 ## Build & Test
 

@@ -26,11 +26,11 @@ import { Subscription } from '../types';
 export const usePostContent = (
   subscription: Subscription.Subscription | undefined,
   postId: string,
-): string | undefined => {
-  const [text, setText] = useState<string | undefined>(undefined);
+): Subscription.PostContent | undefined => {
+  const [entry, setEntry] = useState<Subscription.PostContent | undefined>(undefined);
 
   useEffect(() => {
-    setText(undefined);
+    setEntry(undefined);
     if (!subscription) {
       return;
     }
@@ -57,7 +57,7 @@ export const usePostContent = (
           // Refresh, a newer PostContent gets appended for the same postId —
           // we want the latest one, not the first.
           const match = queryResult.results.findLast((entry) => entry.postId === postId);
-          setText(match?.text);
+          setEntry(match);
         };
         // `fire: true` makes the subscription fire immediately with the
         // current snapshot, covering the case where the queue is already
@@ -72,5 +72,5 @@ export const usePostContent = (
     };
   }, [subscription, subscription?.contentFeed?.target, postId]);
 
-  return text;
+  return entry;
 };

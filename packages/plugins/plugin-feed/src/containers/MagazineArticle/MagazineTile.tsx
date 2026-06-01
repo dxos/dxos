@@ -8,35 +8,37 @@ import { useObject } from '@dxos/react-client/echo';
 import { Card, Focus, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type Magazine, type Subscription } from '#types';
+import { type Subscription } from '#types';
 
 import { formatDate } from '../../util/format-date';
-import { getMagazinePostState, getSubscriptionPostState, updateSubscriptionPostState } from '../../util/post-state';
+import { getImageUrl, getSnippet } from '../../util/post-state';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
-  magazine: Magazine.Magazine;
   current?: boolean;
+  /** Per-Post state owned by the parent (resolved from the Subscription's tags / read marker). */
+  read?: boolean;
+  starred?: boolean;
+  onToggleStar?: (post: Subscription.Post) => void;
   feedName?: string;
   published?: string;
   onOpen?: (post: Subscription.Post) => void;
 };
 
-export const MagazineTile = ({ post, magazine, current, feedName, published, onOpen }: MagazineTileProps) => {
+export const MagazineTile = ({
+  post,
+  current,
+  read = false,
+  starred = false,
+  onToggleStar,
+  feedName,
+  published,
+  onOpen,
+}: MagazineTileProps) => {
   useObject(post);
-  const postId = (post as { id: string }).id;
-  const subscription = post.source?.target;
-  // Subscribe to the subscription so the tile re-renders when its postState
-  // changes (star toggle, read tracking, content fetch).
-  useObject(subscription);
-  // Subscribe to the magazine for curation-cache updates (snippet).
-  useObject(magazine);
-  const userState = getSubscriptionPostState(subscription, postId);
-  const curation = getMagazinePostState(magazine, postId);
-  const read = Boolean(userState.readAt);
-  const starred = Boolean(userState.starred);
-  const imageUrl = userState.imageUrl;
-  const snippet = curation.snippet;
+  // snippet/imageUrl are derived from the Post's description (grid posts aren't content-fetched).
+  const imageUrl = getImageUrl(post);
+  const snippet = getSnippet(post) || undefined;
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   // For MagazineTile, "activate the current tile" means "open the post" — same effect as the previous direct onClick.
@@ -48,16 +50,9 @@ export const MagazineTile = ({ post, magazine, current, feedName, published, onO
     (event: MouseEvent<HTMLButtonElement>) => {
       // Prevent Focus.Item's onClick from firing the open action — clicks on the star toggle should not open the post.
       event.stopPropagation();
-      if (!subscription) {
-        return;
-      }
-      const current = getSubscriptionPostState(subscription, postId);
-      updateSubscriptionPostState(subscription, postId, {
-        starred: !current.starred,
-        ...(current.starred ? { starredAt: undefined } : { starredAt: new Date().toISOString() }),
-      });
+      onToggleStar?.(post);
     },
-    [subscription, postId],
+    [onToggleStar, post],
   );
 
   return (

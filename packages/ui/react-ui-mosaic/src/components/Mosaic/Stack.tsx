@@ -16,8 +16,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Axis, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
@@ -316,6 +315,7 @@ MosaicVirtualStackInner.displayName = MOSAIC_VIRTUAL_STACK_NAME;
 const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
   props: MosaicVirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
+
 (MosaicVirtualStack as any)[Symbol.for('dxos.composable')] = true;
 
 //

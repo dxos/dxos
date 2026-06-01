@@ -257,6 +257,9 @@
       "path": "../../plugins/plugin-code"
     },
     {
+      "path": "../../plugins/plugin-commerce"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
@@ -273,6 +276,9 @@
     },
     {
       "path": "../../plugins/plugin-doctor"
+    },
+    {
+      "path": "../../plugins/plugin-duffel"
     },
     {
       "path": "../../plugins/plugin-explorer"
@@ -357,9 +363,6 @@
     },
     {
       "path": "../../plugins/plugin-preview"
-    },
-    {
-      "path": "../../plugins/plugin-product-search"
     },
     {
       "path": "../../plugins/plugin-pwa"

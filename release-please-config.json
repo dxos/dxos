@@ -570,6 +570,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-commerce/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
@@ -601,6 +606,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-doctor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-duffel/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -741,11 +751,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-preview/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-product-search/package.json",
           "jsonpath": "$.version"
         },
         {
