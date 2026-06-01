@@ -9,11 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { SegmentArticle, TripArticle, TripMapArticle } from '#containers';
+import { SegmentArticle, TripArticle } from '#containers';
 import { Segment, Trip } from '#types';
-
-/** Role for the Trip map surface, rendered inline by TripArticle (globe / map variants). */
-const TripMapRole = Surface.makeType<{ subject: Trip.Trip; attendableId: string }>('trip-map');
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -27,13 +24,6 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <TripArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
-      }),
-      // Inline map surface (globe / map variants) rendered by TripArticle when the
-      // globe is toggled on. Reads the current segment selection via useSelected.
-      Surface.create({
-        id: 'surface.trip-map',
-        filter: AppSurface.object(TripMapRole, Trip.Trip),
-        component: ({ data }) => <TripMapArticle subject={data.subject} attendableId={data.attendableId} />,
       }),
       // Companion surface dispatched when a segment is selected within a
       // Trip's attendable context. Mirrors plugin-inbox's EventArticle
