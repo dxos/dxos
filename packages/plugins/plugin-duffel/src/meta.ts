@@ -3,6 +3,7 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { meta as tripMeta } from '@dxos/plugin-trip';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
@@ -21,6 +22,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--airplane-tilt--regular',
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-duffel',
+  dependsOn: [tripMeta.id],
   version: '0.8.3',
   tags: ['labs'],
 };

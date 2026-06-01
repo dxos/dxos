@@ -76,7 +76,8 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
       </Panel.Toolbar>
       <Panel.Content>
         {viewMode === 'search' ? (
-          <BookingSearch segment={segment} />
+          // Key by segment id so switching/adding a segment resets the search form state.
+          <BookingSearch key={segment.id} segment={segment} />
         ) : (
           <Form.Root key={segment.id} schema={schema} defaultValues={segment} autoSave onSave={handleSave}>
             <Form.Viewport scroll>

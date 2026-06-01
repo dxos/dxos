@@ -54,6 +54,31 @@ describe('Segment schemas', () => {
     expect(stay.details._tag === 'accommodation' && stay.details.checkOut).toBe(arrive);
   });
 
+  test('setOrigin writes the variant-appropriate "from" place and copies fields', ({ expect }) => {
+    const place = { name: 'London Heathrow', code: 'LHR', geo: [-0.4543, 51.47] as const };
+
+    // Transport → origin.
+    const flight = Segment.makeDefault('flight');
+    Segment.setOrigin(flight, place);
+    expect(Segment.getOrigin(flight)?.code).toBe('LHR');
+    expect(flight.details._tag === 'flight' && flight.details.origin?.code).toBe('LHR');
+
+    // Accommodation → location.
+    const stay = Segment.makeDefault('accommodation');
+    Segment.setOrigin(stay, place);
+    expect(Segment.getOrigin(stay)?.code).toBe('LHR');
+    expect(stay.details._tag === 'accommodation' && stay.details.location?.code).toBe('LHR');
+
+    // Activity → venue.
+    const activity = Segment.makeDefault('activity');
+    Segment.setOrigin(activity, place);
+    expect(Segment.getOrigin(activity)?.code).toBe('LHR');
+    expect(activity.details._tag === 'activity' && activity.details.venue?.code).toBe('LHR');
+
+    // Writes a copy, not the same reference.
+    expect(Segment.getOrigin(flight)).not.toBe(place);
+  });
+
   test('Place carries a LabelAnnotation resolving to its name', ({ expect }) => {
     expect(Option.getOrUndefined(Annotation.LabelAnnotation.get(Place))).toEqual(['name']);
     const label = Annotation.getLabelWithSchema(Place, { name: 'John F. Kennedy Intl', code: 'JFK' });

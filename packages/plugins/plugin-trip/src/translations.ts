@@ -47,6 +47,7 @@ export const translations = [
           'No booking providers are enabled. Enable a booking plugin (e.g. Duffel) in settings.',
         'booking.no-offers.message': 'No offers found.',
         'booking.missing-key.message': 'Set the provider API key in plugin settings to search.',
+        'booking.past-date.message': 'Choose a departure date in the future to search.',
         'booking.error.message': 'Search failed. Check the provider configuration and try again.',
       },
     },

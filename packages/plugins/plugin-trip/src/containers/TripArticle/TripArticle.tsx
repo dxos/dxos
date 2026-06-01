@@ -97,10 +97,20 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           break;
         case 'delete':
           Trip.removeSegment(subject, action.segmentId);
+          // The companion is resolved from the current selection (app-graph-builder), which only
+          // re-runs on selection change — not on `segments` mutation. So when the active segment is
+          // deleted, clear the selection to re-resolve the companion to empty rather than leaving the
+          // now-orphaned segment shown.
+          if (action.segmentId === currentId) {
+            void invokePromise(LayoutOperation.Select, {
+              contextId: id,
+              subject: { mode: 'single', id: undefined },
+            });
+          }
           break;
       }
     },
-    [id, showItem, subject],
+    [id, currentId, showItem, subject, invokePromise],
   );
 
   const [showGlobe, setShowGlobe] = useState(false);
@@ -126,6 +136,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       if (!space) {
         return;
       }
+      // The chronologically-last leg, used to chain the new segment's origin from where it ended.
+      const previous = segments.at(-1);
       const segment = space.db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
       // Pre-fill the start (and end, for a range) from the current calendar selection.
@@ -135,8 +147,15 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       if (calendarSelection?.to) {
         Segment.setArriveAt(segment, calendarSelection.to.toISOString());
       }
+      // Default the origin to where the previous leg ended so a multi-leg trip chains naturally.
+      const previousDestination = previous && Segment.getDestination(previous);
+      if (previousDestination) {
+        Segment.setOrigin(segment, previousDestination);
+      }
+      // Make the new segment the current item and open its (fresh) companion form.
+      handleNavigate(segment.id);
     },
-    [subject, calendarSelection],
+    [subject, segments, calendarSelection, handleNavigate],
   );
 
   // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
