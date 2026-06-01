@@ -10,6 +10,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -121,6 +122,7 @@ describe('checkPendingMigration', () => {
 
   let savedNamespace: string | undefined;
   let savedMigrations: typeof Migrations.migrations;
+  let versionProperty: string;
 
   beforeEach(() => {
     savedNamespace = Migrations.namespace;
@@ -129,6 +131,8 @@ describe('checkPendingMigration', () => {
       { version: '1970-01-01', next: async () => {} },
       { version: TARGET, next: async () => {} },
     ]);
+    invariant(Migrations.versionProperty, 'Migrations.versionProperty must be set after define().');
+    versionProperty = Migrations.versionProperty;
   });
 
   afterEach(() => {
@@ -137,12 +141,12 @@ describe('checkPendingMigration', () => {
   });
 
   test('SPACE_REQUIRES_MIGRATION is pending regardless of version property', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_REQUIRES_MIGRATION, { [Migrations.versionProperty!]: TARGET });
+    const space = makeFakeSpace(SpaceState.SPACE_REQUIRES_MIGRATION, { [versionProperty]: TARGET });
     expect(checkPendingMigration(space)).toBe(true);
   });
 
   test('READY with version matching target is not pending', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_READY, { [Migrations.versionProperty!]: TARGET });
+    const space = makeFakeSpace(SpaceState.SPACE_READY, { [versionProperty]: TARGET });
     expect(checkPendingMigration(space)).toBe(false);
   });
 
@@ -152,7 +156,7 @@ describe('checkPendingMigration', () => {
   });
 
   test('READY with stale version is pending', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_READY, { [Migrations.versionProperty!]: '1970-01-01' });
+    const space = makeFakeSpace(SpaceState.SPACE_READY, { [versionProperty]: '1970-01-01' });
     expect(checkPendingMigration(space)).toBe(true);
   });
 });
