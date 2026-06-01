@@ -113,6 +113,33 @@ const MapResize = () => {
   return null;
 };
 
+/**
+ * Enables pinch-to-zoom on trackpads / ctrl+wheel. Browsers deliver a trackpad pinch as a `wheel`
+ * event with `ctrlKey` set; Leaflet only zooms those via `scrollWheelZoom`, which is intentionally
+ * off here (so plain scrolling doesn't hijack the page). This handler zooms on the pinch gesture
+ * only, leaving normal wheel scrolling untouched. (Touchscreen pinch is handled by Leaflet's
+ * `touchZoom`.)
+ */
+const MapPinchZoom = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) {
+        return;
+      }
+      event.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const point = L.point(event.clientX - rect.left, event.clientY - rect.top);
+      map.setZoomAround(point, map.getZoom() - event.deltaY * 0.01);
+    };
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, [map]);
+
+  return null;
+};
+
 const MapContent = forwardRef<MapController, MapContentProps>(
   (
     { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
@@ -170,6 +197,7 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         ref={mapRef}
       >
         <MapResize />
+        <MapPinchZoom />
         {children}
       </MapContainer>
     );
@@ -185,9 +213,15 @@ MapContent.displayName = 'Map.Content';
 
 const MAP_TILES_NAME = 'Map.Tiles';
 
-type MapTilesProps = {};
+/** Default OpenStreetMap raster tile template. */
+export const DEFAULT_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-const MapTiles = (_props: MapTilesProps) => {
+type MapTilesProps = {
+  /** Leaflet tile URL template (e.g. a MapTiler style endpoint with an API key). Defaults to OpenStreetMap. */
+  url?: string;
+};
+
+const MapTiles = ({ url = DEFAULT_TILE_URL }: MapTilesProps) => {
   const ref = useRef<L.TileLayer>(null);
   const { onChange } = useMapContext(MAP_TILES_NAME);
 
@@ -217,7 +251,7 @@ const MapTiles = (_props: MapTilesProps) => {
         data-attention={attention}
         detectRetina={true}
         className='dark:grayscale dark:invert data-[attention="0"]:!opacity-80'
-        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        url={url}
         keepBuffer={4}
         // opacity={attention ? 1 : 0.7}
       />
@@ -252,9 +286,11 @@ MapTiles.displayName = MAP_TILES_NAME;
 type MapMarkersProps = {
   markers?: GeoMarker[];
   selected?: string[];
+  /** Invoked with the marker id when a marker is clicked. */
+  onSelect?: (id: string) => void;
 };
 
-const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
+const MapMarkers = ({ selected, markers, onSelect }: MapMarkersProps) => {
   const map = useMap();
 
   // Fit the viewport around the markers. When there are no markers, leave the current view alone
@@ -273,6 +309,7 @@ const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
           <Marker
             key={id}
             position={{ lat, lng }}
+            eventHandlers={onSelect ? { click: () => onSelect(id) } : undefined}
             icon={
               // TODO(burdon): Create custom icon from bundled assets.
               // TODO(burdon): Selection state.

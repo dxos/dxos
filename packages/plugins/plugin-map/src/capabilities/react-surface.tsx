@@ -8,48 +8,105 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Database, JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
+import { type APIKey } from '@dxos/schema';
 
 import { MapArticle, MapViewEditor } from '#containers';
 import { LocationAnnotationId, Map, MapCapabilities } from '#types';
+
+// MapTiler raster style used when an API key for `maptiler.com` is configured.
+const MAPTILER_STYLE = 'streets-v2';
+
+/** Build a MapTiler tile URL when a `maptiler.com` API key is configured; otherwise undefined (default OSM). */
+const buildTileUrl = (apiKeys?: readonly APIKey[]): string | undefined => {
+  const key = apiKeys?.find((entry) => entry.domain === 'maptiler.com');
+  return key?.apiKey ? `https://api.maptiler.com/maps/${MAPTILER_STYLE}/{z}/{x}/{y}.png?key=${key.apiKey}` : undefined;
+};
+
+/**
+ * Resolves the marker provider, tile URL and selection writer for {@link MapArticle} and wires the
+ * shared map view state (globe/map type, last center/zoom). Used by the map article/section, the
+ * generic `map` inline role, and the map companion.
+ */
+const MapSurface = ({ subject, attendableId, role }: { subject: Obj.Any; attendableId?: string; role?: string }) => {
+  const providers = useCapabilities(MapCapabilities.MarkerProvider);
+  const provider = useMemo(() => providers.find((entry) => entry.match(subject)), [providers, subject]);
+  const settings = useAtomCapability(MapCapabilities.Settings);
+  const tileUrl = useMemo(() => buildTileUrl(settings?.apiKeys), [settings?.apiKeys]);
+  const state = useAtomCapability(MapCapabilities.State);
+  const { invokePromise } = useOperationInvoker();
+
+  const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
+  const [zoom, setZoom] = useState<number | undefined>(undefined);
+  const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
+    setCenter(center);
+    setZoom(zoom);
+  }, []);
+
+  const handleSelect = useCallback(
+    (contextId: string, mode: 'single' | 'multi', id: string) => {
+      const subject = mode === 'multi' ? { mode: 'multi' as const, ids: [id] } : { mode: 'single' as const, id };
+      void invokePromise(LayoutOperation.Select, { contextId, subject });
+    },
+    [invokePromise],
+  );
+
+  return (
+    <MapArticle
+      role={role}
+      subject={subject}
+      attendableId={attendableId}
+      provider={provider}
+      tileUrl={tileUrl}
+      type={state.type}
+      center={center}
+      zoom={zoom}
+      onChange={handleChange}
+      onSelect={handleSelect}
+    />
+  );
+};
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.map',
-        // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Map.Map),
           AppSurface.object(AppSurface.Section, Map.Map),
         ),
-        component: ({ data, role }) => {
-          const state = useAtomCapability(MapCapabilities.State);
-          const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
-          const [zoom, setZoom] = useState<number | undefined>(undefined);
-
-          const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
-            setCenter(center);
-            setZoom(zoom);
-          }, []);
-
-          return (
-            <MapArticle
-              role={role}
-              subject={data.subject}
-              type={state.type}
-              center={center}
-              zoom={zoom}
-              onChange={handleChange}
-            />
-          );
-        },
+        component: ({ data, role }) => (
+          <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
+      }),
+      // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
+      // role (e.g. TripArticle renders `<Surface.Surface role='map' data={{ subject, attendableId }} />`).
+      Surface.create({
+        id: 'surface.map-inline',
+        role: 'map',
+        filter: (data): data is { subject: Obj.Any; attendableId?: string } => Obj.isObject(data.subject),
+        component: ({ data, role }) => (
+          <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
+        ),
+      }),
+      // Companion surface for any object that has markers (gated by app-graph-builder, which only
+      // emits the `map` companion node when a MarkerProvider matches the primary object).
+      Surface.create({
+        id: 'surface.map-companion',
+        role: 'article',
+        filter: (data): data is { subject: 'map'; companionTo: Obj.Unknown; attendableId: string } =>
+          Obj.isObject(data.companionTo) && (data as { subject?: unknown }).subject === 'map',
+        component: ({ data, role }) => (
+          <MapSurface subject={data.companionTo} attendableId={data.attendableId} role={role} />
+        ),
       }),
       Surface.create({
         id: 'surface.objectProperties',
