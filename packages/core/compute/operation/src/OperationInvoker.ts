@@ -17,12 +17,6 @@ import { log } from '@dxos/log';
 
 import * as Scheduler from './scheduler';
 
-// Monotonic counter for correlating an invocation's lifecycle events. Intentionally NOT an
-// `EntityId.random()` so it doesn't consume the deterministic id sequence in tests that call
-// `EntityId.dangerouslyDisableRandomness()`.
-let invocationCounter = 0;
-const nextInvocationId = (): string => `invocation-${++invocationCounter}`;
-
 // @import-as-namespace
 
 /**
@@ -39,25 +33,16 @@ export type UndoInfo = {
 };
 
 /**
- * Lifecycle status of an invocation. Mirrors the success/failure/pending vocabulary used by EDGE
- * invocation traces.
- */
-export type InvocationStatus<O = any> =
-  | { type: 'pending' }
-  | { type: 'success'; output: O; undo?: UndoInfo }
-  | { type: 'failure'; error: { message: string; name?: string; stack?: string } };
-
-/**
- * Invocation lifecycle event. A `pending` event is emitted before the handler runs, followed by a
- * terminal `success`/`failure` event sharing the same `invocationId`.
+ * Emitted after an operation completes successfully. (The in-progress / failure lifecycle is observed
+ * via the process monitor; this stream exists to surface successful, potentially-undoable invocations.)
  */
 export type InvocationEvent<I = any, O = any> = {
-  /** Correlates the `pending` event with its terminal event for one invocation. */
-  invocationId: string;
   operation: Operation.Definition<I, O>;
   input: I;
+  output: O;
+  /** Present when the operation is undoable (stamped by the injected {@link UndoResolver}). */
+  undo?: UndoInfo;
   timestamp: number;
-  status: InvocationStatus<O>;
 };
 
 /**
@@ -139,17 +124,6 @@ export interface OperationInvokerInternal extends OperationInvoker {
 
 type AnyManagedRuntime = ManagedRuntime.ManagedRuntime<any, any>;
 
-/**
- * Maps an Effect Cause to a serializable error shape for invocation failure events.
- */
-const causeToError = (cause: Cause.Cause<unknown>): { message: string; name?: string; stack?: string } => {
-  const squashed = Cause.squash(cause);
-  if (squashed instanceof Error) {
-    return { message: squashed.message, name: squashed.name, stack: squashed.stack };
-  }
-  return { message: Cause.pretty(cause) };
-};
-
 class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
   private readonly _getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>;
@@ -226,30 +200,14 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(this, function* () {
-      const invocationId = nextInvocationId();
-      const base = { invocationId, operation: op, input };
+      const output = yield* this._invokeCore(op, input, options);
 
-      // Publish lifecycle start event.
-      yield* PubSub.publish(this._pubsub, { ...base, timestamp: Date.now(), status: { type: 'pending' } });
+      // Publish a success event (carrying undo info if the operation is undoable). Failures propagate
+      // without an event; in-progress/failure lifecycle is observed via the process monitor.
+      const undo = this._undoResolver?.(op, input, output);
+      yield* PubSub.publish(this._pubsub, { operation: op, input, output, undo, timestamp: Date.now() });
 
-      const exit = yield* Effect.exit(this._invokeCore(op, input, options));
-      if (Exit.isSuccess(exit)) {
-        const output = exit.value;
-        const undo = this._undoResolver?.(op, input, output);
-        yield* PubSub.publish(this._pubsub, {
-          ...base,
-          timestamp: Date.now(),
-          status: { type: 'success', output, undo },
-        });
-      } else {
-        yield* PubSub.publish(this._pubsub, {
-          ...base,
-          timestamp: Date.now(),
-          status: { type: 'failure', error: causeToError(exit.cause) },
-        });
-      }
-
-      return yield* exit;
+      return output;
     });
   };
 

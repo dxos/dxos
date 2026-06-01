@@ -41,14 +41,9 @@ export interface HistoryTracker {
 export const make = (invoker: OperationInvoker.OperationInvokerInternal): HistoryTracker => {
   const history: HistoryEntry[] = [];
 
-  // Subscribe to invocation stream.
+  // Subscribe to invocation stream (success-only; undoability is stamped by the invoker's resolver).
   const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
-    if (event.status.type !== 'success') {
-      // Only successful invocations can be undone.
-      return;
-    }
-
-    const undo = event.status.undo;
+    const undo = event.undo;
     if (!undo) {
       // Operation is not undoable.
       return;
@@ -57,7 +52,7 @@ export const make = (invoker: OperationInvoker.OperationInvokerInternal): Histor
     const entry: HistoryEntry = {
       operation: event.operation,
       input: event.input,
-      output: event.status.output,
+      output: event.output,
       inverse: undo.inverse,
       inverseInput: undo.inverseInput,
       timestamp: event.timestamp,

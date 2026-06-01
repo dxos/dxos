@@ -92,7 +92,7 @@ describe('HistoryTracker', () => {
       yield* invoker.invoke(ToString, { value: 42 });
 
       // Wait for the pending + success events to be processed.
-      yield* collector.waitForEvents(2);
+      yield* collector.waitForEvents(1);
 
       // Without an undo mapping, canUndo should remain false.
       expect(tracker.canUndo()).toBe(false);
@@ -150,13 +150,13 @@ describe('HistoryTracker', () => {
       wireUndoResolver(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);
 
-      // Fork compute operation (emits pending + success events).
+      // Fork compute operation (emits one success event).
       const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
       yield* TestClock.adjust('20 millis');
       yield* Fiber.join(fiber);
 
-      yield* collector.waitForEvents(2);
-      expect(collector.events.length).toBe(2);
+      yield* collector.waitForEvents(1);
+      expect(collector.events.length).toBe(1);
 
       // Wait until the tracker has processed the event.
       yield* waitUntil(() => tracker.canUndo());
@@ -165,7 +165,7 @@ describe('HistoryTracker', () => {
       yield* tracker.undo();
 
       // Verify no new events were emitted.
-      expect(collector.events.length).toBe(2);
+      expect(collector.events.length).toBe(1);
 
       yield* collector.dispose;
     }),
@@ -202,7 +202,7 @@ describe('HistoryTracker', () => {
       yield* Fiber.join(fiber2);
 
       // Each invoke emits a pending + success event.
-      yield* collector.waitForEvents(4);
+      yield* collector.waitForEvents(2);
 
       // First undo should halve 6 (the output of the second compute).
       yield* tracker.undo();
@@ -253,12 +253,9 @@ describe('HistoryTracker', () => {
       yield* Fiber.join(fiber);
 
       // The success event should carry the undo descriptor with the resolved message.
-      yield* collector.waitForEvents(2);
-      const success = collector.events.find((event) => event.status.type === 'success');
-      expect(success?.status.type).toBe('success');
-      if (success?.status.type === 'success') {
-        expect(success.status.undo?.message).toEqual(testMessage);
-      }
+      yield* collector.waitForEvents(1);
+      const event = collector.events.find((event) => event.operation.meta.key === Compute.meta.key);
+      expect(event?.undo?.message).toEqual(testMessage);
       expect(tracker.canUndo()).toBe(true);
 
       yield* collector.dispose;
@@ -291,12 +288,9 @@ describe('HistoryTracker', () => {
       yield* Fiber.join(fiber);
 
       // The success event should carry the derived message.
-      yield* collector.waitForEvents(2);
-      const success = collector.events.find((event) => event.status.type === 'success');
-      expect(success?.status.type).toBe('success');
-      if (success?.status.type === 'success') {
-        expect(success.status.undo?.message).toEqual(['computed-2-to-4', { ns: 'test' }]);
-      }
+      yield* collector.waitForEvents(1);
+      const event = collector.events.find((event) => event.operation.meta.key === Compute.meta.key);
+      expect(event?.undo?.message).toEqual(['computed-2-to-4', { ns: 'test' }]);
 
       yield* collector.dispose;
     }),
@@ -331,7 +325,7 @@ describe('HistoryTracker', () => {
       yield* Fiber.join(fiber);
 
       // Wait for the pending + success events to be processed.
-      yield* collector.waitForEvents(2);
+      yield* collector.waitForEvents(1);
 
       // Even though there's an undo mapping, deriveContext returned undefined,
       // so this operation should not be tracked as undoable.
@@ -371,7 +365,7 @@ describe('HistoryTracker', () => {
       yield* Fiber.join(fiber);
 
       // Wait for the pending + success events to be processed.
-      yield* collector.waitForEvents(2);
+      yield* collector.waitForEvents(1);
 
       // Wait until the tracker has processed the event.
       yield* waitUntil(() => tracker.canUndo());

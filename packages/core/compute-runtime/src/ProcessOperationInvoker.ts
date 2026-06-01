@@ -32,22 +32,6 @@ export interface OperationFiber<T> {
   poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
 }
 
-/**
- * Maps an Effect Cause to a serializable error shape for invocation failure events.
- */
-const causeToError = (cause: Cause.Cause<unknown>): { message: string; name?: string; stack?: string } => {
-  const squashed = Cause.squash(cause);
-  if (squashed instanceof Error) {
-    return { message: squashed.message, name: squashed.name, stack: squashed.stack };
-  }
-  return { message: Cause.pretty(cause) };
-};
-
-// Monotonic counter for correlating an invocation's lifecycle events. Intentionally NOT an
-// `EntityId.random()` so it doesn't consume the deterministic id sequence in tests that call
-// `EntityId.dangerouslyDisableRandomness()`.
-let invocationCounter = 0;
-const nextInvocationId = (): string => `invocation-${++invocationCounter}`;
 
 // TODO(dmaretskyi): Can we move this into the core invoker?
 export interface ProcessOperationInvoker {
@@ -209,12 +193,6 @@ export const make = (opts: {
     const traceMeta = options?.tracing as Trace.Meta | undefined;
     log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
-      const invocationId = nextInvocationId();
-      const base = { invocationId, operation: op, input };
-
-      // Publish lifecycle start event.
-      yield* PubSub.publish(pubsub, { ...base, timestamp: Date.now(), status: { type: 'pending' as const } });
-
       const fiber = yield* invokeFiber(op, input, {
         traceMeta,
         // Notifications ride the process monitor: forward `notify` onto the spawned process's params.
@@ -224,26 +202,16 @@ export const make = (opts: {
           ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       });
-      // `fiber.await` is `Effect<Exit<O>>`; inspect the Exit to publish the terminal lifecycle event,
-      // then re-raise it (Exit is a subtype of Effect) to preserve the original cause.
-      const exit = yield* fiber.await;
-      if (Exit.isSuccess(exit)) {
-        const output = exit.value;
-        const undo = undoResolver?.(op, input, output);
-        yield* PubSub.publish(pubsub, {
-          ...base,
-          timestamp: Date.now(),
-          status: { type: 'success', output, undo },
-        });
-      } else {
-        yield* PubSub.publish(pubsub, {
-          ...base,
-          timestamp: Date.now(),
-          status: { type: 'failure', error: causeToError(exit.cause) },
-        });
-      }
+      // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`, so flattening unwraps it
+      // into `Effect<O, …>` with the original cause (failures propagate without a published event).
+      const output = yield* fiber.await.pipe(Effect.flatten);
 
-      return yield* exit;
+      // Publish a success event (carrying undo info if the operation is undoable). In-progress/failure
+      // lifecycle is observed via the process monitor.
+      const undo = undoResolver?.(op, input, output);
+      yield* PubSub.publish(pubsub, { operation: op, input, output, undo, timestamp: Date.now() });
+
+      return output;
     }).pipe(
       Effect.tapErrorCause((cause) =>
         Effect.sync(() => {

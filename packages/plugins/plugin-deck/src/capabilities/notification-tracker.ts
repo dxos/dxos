@@ -22,8 +22,8 @@ const UNDO_TOAST_DURATION = 10_000;
  * - Per-invoke notifications ride the process monitor: each invocation spawns a process carrying the
  *   caller's `notify` config on its params; this tracker watches process state transitions and toasts
  *   on start / success / failure.
- * - Undo toasts come from the invocation stream's `status.undo` (which needs input/output the monitor
- *   doesn't carry) and are wired to the history tracker.
+ * - Undo toasts come from the invocation stream's `undo` descriptor (which needs input/output the
+ *   monitor doesn't carry) and are wired to the history tracker.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -88,11 +88,11 @@ export default Capability.makeModule(
     registry.subscribe(monitor.processTreeAtom, handleProcesses);
 
     //
-    // Undo — driven by the invocation stream (`status.undo` carries the message + inverse).
+    // Undo — driven by the invocation stream (`event.undo` carries the message + inverse).
     //
 
-    const showUndoToast = (message: LayoutOperation.Toast['title'], invocationId: string) => {
-      const undoId = `notify-undo-${invocationId}`;
+    const showUndoToast = (message: LayoutOperation.Toast['title']) => {
+      const undoId = `notify-undo-${crypto.randomUUID()}`;
       const state = registry.get(ephemeralAtom);
       // Replace the previous undo toast (only the most recent action can be undone).
       const toasts = state.currentUndoId
@@ -115,8 +115,8 @@ export default Capability.makeModule(
     };
 
     const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
-      if (event.status.type === 'success' && event.status.undo) {
-        showUndoToast(event.status.undo.message, event.invocationId);
+      if (event.undo) {
+        showUndoToast(event.undo.message);
       }
     };
 

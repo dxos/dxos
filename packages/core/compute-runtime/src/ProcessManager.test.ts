@@ -614,32 +614,28 @@ describe('ProcessOperationInvoker environment inheritance', () => {
 
 describe('ProcessOperationInvoker invocations', () => {
   it.effect(
-    'publishes pending then success lifecycle events sharing an invocationId',
+    'publishes a success event with the output',
     Effect.fn(function* ({ expect }) {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       yield* Effect.scoped(
         Effect.gen(function* () {
-          // Subscribe before invoking so no lifecycle event is missed.
+          // Subscribe before invoking so the event is not missed.
           const events = yield* PubSub.subscribe(invoker.invocations);
 
           const output = yield* invoker.invoke(Double, { value: 5 });
           expect(output).toEqual(10);
 
-          const pending = yield* Queue.take(events);
-          const terminal = yield* Queue.take(events);
-          expect(pending.status.type).toBe('pending');
-          expect(terminal.status.type).toBe('success');
-          expect(pending.invocationId).toEqual(terminal.invocationId);
-          if (terminal.status.type === 'success') {
-            expect(terminal.status.output).toEqual(10);
-          }
+          const event = yield* Queue.take(events);
+          expect(event.operation.meta.key).toEqual(Double.meta.key);
+          expect(event.output).toEqual(10);
+          expect(event.undo).toBeUndefined();
         }),
       );
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    'publishes a failure lifecycle event and still propagates the error',
+    'does not publish an event when the operation fails (error propagates)',
     Effect.fn(function* ({ expect }) {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       yield* Effect.scoped(
@@ -649,10 +645,8 @@ describe('ProcessOperationInvoker invocations', () => {
           const exit = yield* invoker.invoke(Failing).pipe(Effect.exit);
           expect(Exit.isFailure(exit)).toBe(true);
 
-          const pending = yield* Queue.take(events);
-          const terminal = yield* Queue.take(events);
-          expect(pending.status.type).toBe('pending');
-          expect(terminal.status.type).toBe('failure');
+          // No success event should be queued for a failed invocation.
+          expect(yield* Queue.size(events)).toBe(0);
         }),
       );
     }, Effect.provide(TestLayer)),
@@ -671,7 +665,7 @@ describe('ProcessOperationInvoker invocations', () => {
   );
 
   it.effect(
-    'stamps undo info from the resolver onto success events',
+    'stamps undo info from the resolver onto the success event',
     Effect.fn(function* ({ expect }) {
       const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       invoker.setUndoResolver((op, _input, output) =>
@@ -685,13 +679,9 @@ describe('ProcessOperationInvoker invocations', () => {
 
           yield* invoker.invoke(Double, { value: 5 });
 
-          yield* Queue.take(events); // pending
-          const terminal = yield* Queue.take(events);
-          expect(terminal.status.type).toBe('success');
-          if (terminal.status.type === 'success') {
-            expect(terminal.status.undo?.message).toBe('Undo double');
-            expect(terminal.status.undo?.inverseInput).toEqual({ value: 10 });
-          }
+          const event = yield* Queue.take(events);
+          expect(event.undo?.message).toBe('Undo double');
+          expect(event.undo?.inverseInput).toEqual({ value: 10 });
         }),
       );
     }, Effect.provide(TestLayer)),
