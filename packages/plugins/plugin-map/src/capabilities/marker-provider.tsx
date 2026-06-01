@@ -42,7 +42,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
             return undefined;
           }
 
-          const field = view.projection.fields?.find((f) => f.id === view.projection.pivotFieldId);
+          const field = view.projection.fields?.find((candidate) => candidate.id === view.projection.pivotFieldId);
           const geopoint = field?.path && getDeep(row, field.path.split('.'));
           if (!geopoint || !Array.isArray(geopoint) || geopoint.length < 2) {
             return undefined;
