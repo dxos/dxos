@@ -8,6 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { type Operation } from '@dxos/compute';
 import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
+import { EID } from '@dxos/keys';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
@@ -24,7 +25,8 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
-      return selectedFunctionValue.uri.split('dxn:echo:@:').at(1);
+      const eid = EID.tryParse(selectedFunctionValue.uri);
+      return eid && EID.getEntityId(eid);
     }
   }, [selectedFunctionValue]);
 
