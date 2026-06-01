@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -27,13 +28,18 @@ import { InitializeCalendar } from './InitializeCalendar';
 // Contributes a stub `integration--auth` surface so stories can exercise the
 // empty-state path that delegates to an installed integration plugin without
 // pulling in `@dxos/plugin-integration`.
-const MockAuthSurfacePlugin = Plugin.define({ id: 'story.mock-auth-surface', name: 'Mock Auth Surface' }).pipe(
+const MockAuthSurfacePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.inbox.story.mockAuthSurface'),
+    name: 'Mock Auth Surface',
+  }),
+).pipe(
   AppPlugin.addSurfaceModule({
     activate: () =>
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
-            id: 'mock-integration-auth',
+            id: 'mockIntegrationAuth',
             role: 'integration--auth',
             component: ({ data }) => (
               <div className='text-description'>

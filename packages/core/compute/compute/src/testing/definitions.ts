@@ -4,11 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import * as Operation from '../Operation';
 
 export const Fibonacci = Operation.make({
   meta: {
-    key: 'org.example.function.fib',
+    key: DXN.make('org.example.function.fib'),
     name: 'Fibonacci',
     description: 'Function that calculates a Fibonacci number',
   },
@@ -25,7 +27,7 @@ export const Fibonacci = Operation.make({
 
 export const Reply = Operation.make({
   meta: {
-    key: 'org.example.function.reply',
+    key: DXN.make('org.example.function.reply'),
     name: 'Reply',
     description: 'Function that echoes the input',
   },
@@ -35,7 +37,7 @@ export const Reply = Operation.make({
 
 export const Sleep = Operation.make({
   meta: {
-    key: 'org.example.function.sleep',
+    key: DXN.make('org.example.function.sleep'),
     name: 'Sleep',
     description: 'Function that sleeps for a given amount of time',
   },

@@ -9,11 +9,12 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { InboxOperation } from '@dxos/plugin-inbox';
 
 import { meta } from '#meta';
 
-const TRIP_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /**
  * Trip-message extractor as a first-class operation. The handler at
@@ -25,7 +26,7 @@ const TRIP_OPERATION = `${meta.id}.operation`;
  */
 export const ExtractTrip = Operation.make({
   meta: {
-    key: `${TRIP_OPERATION}.extract-trip`,
+    key: makeKey('extractTrip'),
     name: 'Extract Trip',
     description: 'Parse a flight confirmation email into Booking + Segment proposals.',
     icon: 'ph--airplane-takeoff--regular',
@@ -43,7 +44,7 @@ export const ExtractTrip = Operation.make({
  */
 export const MergeTrip = Operation.make({
   meta: {
-    key: `${TRIP_OPERATION}.merge-trip`,
+    key: makeKey('mergeTrip'),
     name: 'Merge trip',
     description: 'Merge this trip into the nearest other trip by date and delete it.',
     icon: 'ph--arrows-merge--regular',

@@ -16,12 +16,12 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'active-call-companion',
+        id: 'activeCallCompanion',
         role: 'deck-companion--active-call',
         component: () => <CallSidebar />,
       }),
       Surface.create({
-        id: 'devtools-overview',
+        id: 'devtoolsOverview',
         role: 'devtools-overview',
         component: () => {
           const call = useCapability(CallsCapabilities.Manager);

@@ -29,7 +29,7 @@ export type NodeMatcher<TData = Node.Node> = (node: Node.Node) => Option.Option<
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'my-extension',
+ *   id: 'myExtension',
  *   match: NodeMatcher.whenRoot,
  *   connector: (node) => Effect.succeed([...]),
  * });
@@ -47,7 +47,7 @@ export const whenRoot = (node: Node.Node): Option.Option<Node.Node> =>
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'spaces-extension',
+ *   id: 'spacesExtension',
  *   match: NodeMatcher.whenId('spaces'),
  *   connector: (node) => Effect.succeed([...]),
  * });
@@ -67,7 +67,7 @@ export const whenId =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'space-settings-extension',
+ *   id: 'spaceSettingsExtension',
  *   match: NodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   connector: (node) => Effect.succeed([...]),
  * });
@@ -96,7 +96,7 @@ export const whenNodeType =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'collection-extension',
+ *   id: 'collectionExtension',
  *   match: NodeMatcher.whenEchoType(Collection.Collection),
  *   connector: (collection) => {
  *     // `collection` is typed as Collection.Collection
@@ -126,7 +126,7 @@ export const whenEchoType =
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'object-properties',
+ *   id: 'objectProperties',
  *   match: NodeMatcher.whenEchoObject,
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown

@@ -103,7 +103,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
 const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
-    id: 'story-article',
+    id: 'storyArticle',
     role: 'article',
     component: ({ data: { subject } }) => {
       if (!subject) {

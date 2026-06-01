@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Obj, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -52,7 +53,7 @@ export type ExtractionFunction = Operation.Definition<ExtractionInput, Extractio
  */
 export const extractionAnthropicFunction = Operation.make({
   meta: {
-    key: 'org.dxos.function.extraction.anthropic',
+    key: DXN.make('org.dxos.function.extraction.anthropic'),
     name: 'Entity Extraction (Anthropic)',
     description: 'Extract entities from transcript using Anthropic LLM.',
     icon: 'ph--text-t--regular',
@@ -67,7 +68,7 @@ export const extractionAnthropicFunction = Operation.make({
  */
 export const extractionNerFunction = Operation.make({
   meta: {
-    key: 'org.dxos.function.extraction.ner',
+    key: DXN.make('org.dxos.function.extraction.ner'),
     name: 'Entity Extraction (NER)',
     description: 'Extract entities from transcript using Named Entity Recognition.',
     icon: 'ph--text-t--regular',

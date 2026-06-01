@@ -178,18 +178,51 @@ const dedupeBy = <T>(items: T[], keyFn: (item: T) => string): T[] => {
   return out;
 };
 
+/**
+ * Extracts the NSID (first string argument) from a `DXN.make('<nsid>'[, '<version>'])`
+ * property value — e.g. the `key` field of a plugin `Meta`.
+ */
+const readDxnName = (obj: ObjectLiteralExpression, name: string): string | undefined => {
+  const prop = obj.getProperty(name);
+  if (!prop || prop.getKind() !== SyntaxKind.PropertyAssignment) {
+    return undefined;
+  }
+  const init = prop.asKindOrThrow(SyntaxKind.PropertyAssignment).getInitializer();
+  if (!init || init.getKind() !== SyntaxKind.CallExpression) {
+    return undefined;
+  }
+  const call = init.asKindOrThrow(SyntaxKind.CallExpression);
+  if (!call.getExpression().getText().endsWith('DXN.make')) {
+    return undefined;
+  }
+  const first = call.getArguments()[0];
+  return first?.getKind() === SyntaxKind.StringLiteral
+    ? first.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue()
+    : undefined;
+};
+
 const readPluginMeta = (file: SourceFile, pkg: PackageLike): Plugin | null => {
-  // Match `export const meta: Plugin.Meta = { ... };`
+  // Match `export const meta = Plugin.makeMeta({ ... })` (or a legacy bare object literal).
   const metaDecl = file.getVariableDeclaration('meta');
   if (!metaDecl) {
     return null;
   }
-  const initializer = metaDecl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  // The initializer is either the options object literal directly (legacy) or a
+  // `Plugin.makeMeta({...})` call whose first argument is that object literal.
+  let initializer = metaDecl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+  if (!initializer) {
+    const call = metaDecl.getInitializerIfKind(SyntaxKind.CallExpression);
+    const arg = call?.getExpression().getText().endsWith('makeMeta') ? call.getArguments()[0] : undefined;
+    if (arg?.getKind() === SyntaxKind.ObjectLiteralExpression) {
+      initializer = arg.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    }
+  }
   if (!initializer) {
     return null;
   }
 
-  const id = readStringProperty(initializer, 'id');
+  // Identity is the bare NSID of the `key` DXN; fall back to a legacy plain-string `id`.
+  const id = readDxnName(initializer, 'key') ?? readStringProperty(initializer, 'id');
   if (!id) {
     return null;
   }

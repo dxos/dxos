@@ -49,7 +49,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: 'primary-actions',
+      id: 'primaryActions',
       position: 'first',
       match: NodeMatcher.whenRoot,
       actions: () =>

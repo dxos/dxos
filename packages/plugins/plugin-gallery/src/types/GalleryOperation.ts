@@ -7,17 +7,17 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, DXN } from '@dxos/echo';
 
 import { meta } from '#meta';
 
 import * as Gallery from './Gallery';
 
-const GALLERY_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const DescribeImage = Operation.make({
   meta: {
-    key: `${GALLERY_OPERATION}.describe-image`,
+    key: makeKey('describeImage'),
     name: 'Describe Image',
     description: 'Generate a textual description for an image at the given index in a Gallery.',
     icon: 'ph--image--regular',

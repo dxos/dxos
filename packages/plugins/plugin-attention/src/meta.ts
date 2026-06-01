@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.attention',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.attention'),
   name: 'Attention',
   author: 'DXOS',
   description: trim`
@@ -14,4 +15,4 @@ export const meta: Plugin.Meta = {
     Highlight items requiring action and coordinate team focus on priority work.
   `,
   tags: ['system'],
-};
+});
