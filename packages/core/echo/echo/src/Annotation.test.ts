@@ -6,7 +6,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import * as Annotation from './Annotation';
+import * as Obj from './Obj';
+import * as Type from './Type';
 
 describe('Annotation', () => {
   describe('make', () => {
@@ -284,6 +288,168 @@ describe('Annotation', () => {
       });
 
       expect(Annotation.TypeId in ColorAnnotation).toBe(true);
+    });
+  });
+
+  describe('schema', () => {
+    test('set and get on a struct schema', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+
+      const PersonSchema = Schema.Struct({
+        name: Schema.String,
+      }).pipe(ColorAnnotation.set('crimson'));
+
+      const result = ColorAnnotation.get(PersonSchema);
+
+      expect(Option.isSome(result)).toBe(true);
+      expect(Option.getOrThrow(result)).toBe('crimson');
+    });
+
+    test('get returns None when annotation is not on schema', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+
+      const PersonSchema = Schema.Struct({
+        name: Schema.String,
+      });
+
+      expect(Option.isNone(ColorAnnotation.get(PersonSchema))).toBe(true);
+    });
+
+    test('set and get on a property schema', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+
+      const PersonSchema = Schema.Struct({
+        name: Schema.String.pipe(ColorAnnotation.set('navy')),
+      });
+
+      const nameProperty = PersonSchema.ast.propertySignatures.find((prop) => prop.name === 'name');
+      expect(nameProperty).toBeDefined();
+
+      const result = ColorAnnotation.getFromAst(nameProperty!.type);
+
+      expect(Option.isSome(result)).toBe(true);
+      expect(Option.getOrThrow(result)).toBe('navy');
+    });
+
+    test('annotation survives Type.makeObject and is readable from Type.getSchema', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+
+      const TaggedPerson = Schema.Struct({
+        name: Schema.String,
+      })
+        .pipe(ColorAnnotation.set('teal'))
+        .pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));
+
+      const schema = Type.getSchema(TaggedPerson);
+      const result = ColorAnnotation.get(schema);
+
+      expect(Option.isSome(result)).toBe(true);
+      expect(Option.getOrThrow(result)).toBe('teal');
+    });
+  });
+
+  describe('object', () => {
+    const makeTaggedPersonType = (ColorAnnotation: Annotation.Annotation<string>) =>
+      Schema.Struct({
+        name: Schema.String,
+      })
+        .pipe(ColorAnnotation.set('schema-teal'))
+        .pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));
+
+    test('set and get on Obj.make instance', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
+
+      const person = Obj.make(TaggedPerson, { name: 'Alice' });
+
+      Obj.update(person, (obj) => {
+        Annotation.set(obj, ColorAnnotation, 'instance-red');
+      });
+      const result = Annotation.get(person, ColorAnnotation);
+
+      expect(Option.isSome(result)).toBe(true);
+      expect(Option.getOrThrow(result)).toBe('instance-red');
+    });
+
+    test('get returns None when instance has no annotation value', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
+
+      const person = Obj.make(TaggedPerson, { name: 'Bob' });
+
+      expect(Option.isNone(Annotation.get(person, ColorAnnotation))).toBe(true);
+    });
+
+    test('instance annotation is independent of schema default', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
+
+      const person = Obj.make(TaggedPerson, { name: 'Carol' });
+
+      expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(TaggedPerson)))).toBe('schema-teal');
+      expect(Option.isNone(Annotation.get(person, ColorAnnotation))).toBe(true);
+
+      Obj.update(person, (obj) => {
+        Annotation.set(obj, ColorAnnotation, 'instance-blue');
+      });
+
+      expect(Option.getOrThrow(Annotation.get(person, ColorAnnotation))).toBe('instance-blue');
+      expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(TaggedPerson)))).toBe('schema-teal');
+    });
+
+    test('set and get inside Obj.update', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
+
+      const person = Obj.make(TaggedPerson, { name: 'Dana' });
+
+      Obj.update(person, (obj) => {
+        Annotation.set(obj, ColorAnnotation, 'updated');
+      });
+
+      expect(Option.getOrThrow(Annotation.get(person, ColorAnnotation))).toBe('updated');
+    });
+
+    test('curried get and set on instances', ({ expect }) => {
+      const ColorAnnotation = Annotation.make({
+        id: 'org.dxos.annotation.color',
+        schema: Schema.String,
+      });
+      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
+
+      const person = Obj.make(TaggedPerson, { name: 'Eve' });
+
+      Obj.update(person, (obj) => {
+        Annotation.set(ColorAnnotation, 'curried')(obj);
+      });
+      const result = Annotation.get(ColorAnnotation)(person);
+
+      expect(Option.isSome(result)).toBe(true);
+      expect(Option.getOrThrow(result)).toBe('curried');
     });
   });
 });
