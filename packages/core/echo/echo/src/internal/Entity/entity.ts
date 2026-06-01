@@ -23,6 +23,7 @@ import {
   StaticTypeSchemaSlot,
 } from '../common/types';
 import { JsonSchemaType } from '../JsonSchema';
+import type * as Entity from '../../Entity';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -271,4 +272,11 @@ export const makeEchoTypeSchema = <
   Object.defineProperty(target, 'fields', { configurable: true, enumerable: false, get: () => fields });
 
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
+};
+
+export const isEntity = (value: unknown): value is Entity.Unknown => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  return (value as any)[KindId] !== undefined;
 };

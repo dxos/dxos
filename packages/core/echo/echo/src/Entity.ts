@@ -52,7 +52,7 @@ export type Entity<Props> = OfKind<Kind> & Props;
 /**
  * Unknown Obj or Relation (reactive).
  */
-export interface Unknown extends OfKind<Kind> {}
+export interface Unknown extends OfKind<Kind> { }
 
 /**
  * Effect Schema for any ECHO entity (object or relation).
@@ -79,7 +79,7 @@ export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
  * Snapshot of an Obj or Relation.
  * Branded with SnapshotKindId instead of KindId.
  */
-export interface Snapshot extends SnapshotOfKind<Kind> {}
+export interface Snapshot extends SnapshotOfKind<Kind> { }
 
 /**
  * Object with arbitrary properties.
@@ -103,12 +103,7 @@ export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.T
  * Check if a value is an ECHO entity (object or relation).
  * Returns `false` for snapshots.
  */
-export const isEntity = (value: unknown): value is Unknown => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  return (value as any)[KindId] !== undefined;
-};
+export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
 
 /**
  * Test if a value is an instance of a given object or relation type.

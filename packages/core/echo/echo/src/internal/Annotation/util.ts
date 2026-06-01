@@ -39,14 +39,15 @@ export interface AnnotationHelper<T> {
  * Note: only for system annotations.
  */
 // TODO(dmaretskyi): Rename to createSystemAnnotationHelper.
+// TODO(dmaretskyi): REconcile with Annotation.make.
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
     get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
     getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
     set:
       (value) =>
-      <S extends Schema.Schema.Any>(schema: S): S =>
-        schema.annotations({ [id]: value }) as S,
+        <S extends Schema.Schema.Any>(schema: S): S =>
+          schema.annotations({ [id]: value }) as S,
   };
 };
 
