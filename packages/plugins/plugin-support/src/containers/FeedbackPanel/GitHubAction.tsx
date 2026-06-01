@@ -89,6 +89,12 @@ export const GitHubAction = () => {
 
   const handleGitHub = useCallback<FeedbackSubmitHandler>(
     async (values) => {
+      // Claim the popup synchronously while the user gesture is still active — Safari/Firefox
+      // expire transient activation across the awaited screenshot work, so a deferred
+      // `window.open` would be blocked. Navigate this tab once the final URL is built. (No
+      // `noopener` here: that forces `window.open` to return null; we drop the opener manually.)
+      const popup = window.open('about:blank', '_blank');
+
       // Log only the non-sensitive triage metadata — the title/body fields can
       // contain user-typed content (including PII or paths) and shouldn't be
       // emitted at info level. Screenshot URLs are likewise scrubbed below.
@@ -140,15 +146,9 @@ export const GitHubAction = () => {
       // stored AccessToken and open the resulting `html_url` instead.
       const url = buildGitHubIssueUrl(values, screenshotUrl);
       log.info('github-issue: opening', { hasScreenshot: !!screenshotUrl, urlLength: url.length });
-      // Open the GH tab only once we have the final URL — no blank-popup
-      // placeholder. The screenshot pipeline finishes in 1-2s in practice,
-      // and modern Chrome tolerates a `window.open` for that long after a
-      // user gesture (the gesture-credit window is roughly 5s). If a popup
-      // blocker denies the open, `window.open` returns `null`; show a
-      // distinct toast so the user knows the tab didn't appear rather than
-      // leaving them with a misleading success message.
-      const opened = window.open(url, '_blank', 'noopener,noreferrer');
-      if (!opened) {
+      // If the synchronous open was blocked, `popup` is null; show a distinct toast so the user
+      // knows the tab didn't appear rather than leaving them with a misleading success message.
+      if (!popup) {
         log.warn('github-issue: popup blocked');
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.github-issue-popup-blocked`,
@@ -160,6 +160,10 @@ export const GitHubAction = () => {
         });
         return;
       }
+
+      // Drop the opener for security, then navigate the already-open tab to the prefilled URL.
+      popup.opener = null;
+      popup.location.href = url;
 
       await invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}.github-issue-success`,

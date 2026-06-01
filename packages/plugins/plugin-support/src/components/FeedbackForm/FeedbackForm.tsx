@@ -173,10 +173,17 @@ const FeedbackFormSubmitPosthog = ({ onSubmit, disabled }: FeedbackFormSubmitPos
   const { t } = useTranslation(meta.id);
   const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitPosthog`);
 
-  // Primary action: default a keyboard (Enter) submit to PostHog until another button is clicked.
+  // Primary action: default a keyboard (Enter) submit to PostHog until another button is clicked —
+  // but never while disabled (e.g. feedback survey unavailable).
   useEffect(() => {
+    if (disabled) {
+      if (submitHandlerRef.current === onSubmit) {
+        submitHandlerRef.current = undefined;
+      }
+      return;
+    }
     submitHandlerRef.current ??= onSubmit;
-  }, [onSubmit, submitHandlerRef]);
+  }, [disabled, onSubmit, submitHandlerRef]);
 
   return (
     <FeedbackFormSubmitCapture handler={onSubmit}>

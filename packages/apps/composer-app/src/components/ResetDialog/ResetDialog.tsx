@@ -223,11 +223,11 @@ export const ResetDialog = ({
                   <Popover.Portal>
                     <Popover.Content>
                       <Popover.Viewport>
-                        <FeedbackForm.Root onSave={handleSaveFeedback}>
+                        <FeedbackForm.Root>
                           <Form.Viewport>
                             <Form.Content>
                               <Form.FieldSet />
-                              <FeedbackForm.SubmitPosthog />
+                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
                             </Form.Content>
                           </Form.Viewport>
                         </FeedbackForm.Root>

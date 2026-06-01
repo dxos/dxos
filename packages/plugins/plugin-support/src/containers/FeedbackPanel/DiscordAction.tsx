@@ -76,11 +76,12 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
         if (!threadUrl) {
           throw new Error('Discord service did not return a thread URL');
         }
-        if (popup) {
-          popup.location.href = threadUrl;
-        } else {
-          window.open(threadUrl, '_blank', 'noopener,noreferrer');
+        // The pre-opened popup is our only way to navigate after the await; if it was blocked,
+        // fall through to the PostHog success toast rather than claiming a Discord thread opened.
+        if (!popup) {
+          throw new Error('popup blocked');
         }
+        popup.location.href = threadUrl;
 
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
