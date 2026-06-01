@@ -23,17 +23,17 @@ always a sign you missed an existing piece. Find it (grep an existing themed com
 
 Import from the most specific package. Common ones:
 
-| Package                                       | Provides                                                                                                                                                                                                                                         |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@dxos/react-ui`                              | Core primitives: `Panel`, `Card`, `List`, `Input`, `Button`, `IconButton`, `Icon`, `ScrollArea`, `Toolbar`, `Dialog`, `Popover`, `Tooltip`, `Select`, `Tag`, `Avatar`, `Separator`, plus `useTranslation`, `useThemeContext`, `DensityProvider`. |
-| `@dxos/react-ui-theme`                        | The theme (`tx` resolver, tokens, Tailwind preset). You rarely import from it directly — tokens are plain Tailwind classes.                                                                                                                      |
-| `@dxos/react-ui-form`                         | `Form.*` — schema-driven forms (the way to edit ECHO objects).                                                                                                                                                                                   |
-| `@dxos/react-ui-menu`                         | `Menu.*`, `MenuBuilder`, `useMenuActions` — toolbars and command menus.                                                                                                                                                                          |
-| `@dxos/react-ui-attention`                    | Attention system: `AttentionGlyph`, `useAttention`, attendable wiring.                                                                                                                                                                           |
-| `@dxos/react-ui-list`                         | Navigable lists with `dx-current`/`dx-selected` item states.                                                                                                                                                                                     |
-| `@dxos/react-ui-stack` / `-mosaic` / `-board` | Layout composition (Stack, Mosaic, Deck, Board) — usually owned by the shell, not plugins.                                                                                                                                                       |
-| `@dxos/react-ui-editor` / `-markdown`         | Text/markdown editing.                                                                                                                                                                                                                           |
-| `@dxos/react-ui-table` / `-data`              | Data tables.                                                                                                                                                                                                                                     |
+| Package                               | Provides                                                                                                                                                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@dxos/react-ui`                      | Core primitives: `Panel`, `Card`, `List`, `Input`, `Button`, `IconButton`, `Icon`, `ScrollArea`, `Toolbar`, `Dialog`, `Popover`, `Tooltip`, `Select`, `Tag`, `Avatar`, `Separator`, plus `useTranslation`, `useThemeContext`, `DensityProvider`. |
+| `@dxos/react-ui-theme`                | The theme (`tx` resolver, tokens, Tailwind preset). You rarely import from it directly — tokens are plain Tailwind classes.                                                                                                                      |
+| `@dxos/react-ui-form`                 | `Form.*` — schema-driven forms (the way to edit ECHO objects).                                                                                                                                                                                   |
+| `@dxos/react-ui-menu`                 | `Menu.*`, `MenuBuilder`, `useMenuActions` — toolbars and command menus.                                                                                                                                                                          |
+| `@dxos/react-ui-attention`            | Attention system: `AttentionGlyph`, `useAttention`, attendable wiring.                                                                                                                                                                           |
+| `@dxos/react-ui-list`                 | Navigable lists with `dx-current`/`dx-selected` item states.                                                                                                                                                                                     |
+| `@dxos/react-ui-mosaic` / `-board`    | Layout composition (Mosaic `Stack`, Deck, Board) — usually owned by the shell, not plugins. (`@dxos/react-ui-stack` is **deprecated** — use the Mosaic `Stack`.)                                                                                 |
+| `@dxos/react-ui-editor` / `-markdown` | Text/markdown editing.                                                                                                                                                                                                                           |
+| `@dxos/react-ui-table` / `-data`      | Data tables.                                                                                                                                                                                                                                     |
 
 Many more exist (`-card`, `-chat`, `-thread`, `-pickers`, `-search`, `-syntax-highlighter`, …). When you
 need a domain widget, check for a `react-ui-<domain>` package before building one.
@@ -257,7 +257,7 @@ never a native element. Choose how to register it by _when you know which fields
   (e.g. by type or annotation rather than exact path). Preferred for plugin-specific input surfaces.
 
 See: [`packages/ui/react-ui-form/src/components/Form/Form.stories.tsx`](../../../packages/ui/react-ui-form/src/components/Form/Form.stories.tsx)
-(a dedicated canonical custom-field example is still TODO).
+(a dedicated canonical custom-field example is planned — tracked separately).
 
 ## Cards: 3-slot subgrid
 
