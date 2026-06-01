@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       const subscriptionFeed = yield* Database.load(feed);
       const url = subscriptionFeed.url;
       invariant(url, 'Feed URL is required.');
-      const echoFeed = subscriptionFeed.feed?.target;
+      const echoFeed = yield* Database.load(subscriptionFeed.feed);
       invariant(echoFeed, 'Backing ECHO feed not found.');
       invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
       const space = getSpace(subscriptionFeed);
