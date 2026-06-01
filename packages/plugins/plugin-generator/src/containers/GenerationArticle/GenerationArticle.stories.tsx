@@ -3,14 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo } from 'react';
 
+import { Capability } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Generation } from '#types';
+import { Generation, GeneratorCapabilities, Settings } from '#types';
 
 import { GenerationArticle } from './GenerationArticle';
 
@@ -36,7 +38,13 @@ const DefaultStory = ({ prompt, urls, type }: DefaultStoryProps) => {
 const meta = {
   title: 'plugins/plugin-generator/containers/GenerationArticle',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withPluginManager({
+      capabilities: [Capability.contributes(GeneratorCapabilities.Settings, Atom.make<Settings.Settings>({ apiKey: undefined }))],
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,
