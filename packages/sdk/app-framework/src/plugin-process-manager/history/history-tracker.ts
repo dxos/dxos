@@ -3,14 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as PubSub from 'effect/PubSub';
 import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
+import { type Label } from '../../common';
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
+import { resolveMessage } from './undo-mapping';
+import type { UndoRegistry } from './undo-registry';
 
 const HISTORY_LIMIT = 100;
 
@@ -19,12 +23,23 @@ const HISTORY_LIMIT = 100;
 //
 
 /**
+ * Emitted when a new undoable action is recorded; consumed by the UI to surface an undo affordance
+ * (e.g. the deck notification tracker's undo toast).
+ */
+export type UndoableEvent = {
+  /** Message describing the undoable action. */
+  message?: Label;
+};
+
+/**
  * HistoryTracker interface - tracks operation history and provides undo.
  */
 export interface HistoryTracker {
   undo: () => Effect.Effect<void, Error>;
   undoPromise: () => Promise<{ error?: Error }>;
   canUndo: () => boolean;
+  /** Stream of undoable actions, published as they are recorded. */
+  undoable: PubSub.PubSub<UndoableEvent>;
 }
 
 //
@@ -32,29 +47,37 @@ export interface HistoryTracker {
 //
 
 /**
- * Creates a HistoryTracker that subscribes to invocation events and provides undo.
- *
- * Undoability is resolved by the invoker's injected undo resolver and stamped onto the success event
- * (see {@link OperationInvoker.UndoInfo}); the tracker consumes it directly. The undo toast is rendered
- * separately by the deck notification tracker subscribing to the same stream.
+ * Creates a HistoryTracker that subscribes to (successful) invocation events, derives undoability from
+ * the undo registry, maintains the undo stack, and publishes an {@link UndoableEvent} for each undoable
+ * action so the UI can offer an undo affordance. The invoker itself is undo-agnostic.
  */
-export const make = (invoker: OperationInvoker.OperationInvokerInternal): HistoryTracker => {
+export const make = (
+  invoker: OperationInvoker.OperationInvokerInternal,
+  undoRegistry: UndoRegistry,
+): HistoryTracker => {
   const history: HistoryEntry[] = [];
+  const undoable = Effect.runSync(PubSub.unbounded<UndoableEvent>());
 
-  // Subscribe to invocation stream (success-only; undoability is stamped by the invoker's resolver).
-  const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
-    const undo = event.undo;
-    if (!undo) {
+  // Record an invocation; returns the undoable event to publish, or undefined if not undoable.
+  const recordInvocation = (event: OperationInvoker.InvocationEvent): UndoableEvent | undefined => {
+    const mapping = undoRegistry.lookup(event.operation);
+    if (!mapping) {
       // Operation is not undoable.
-      return;
+      return undefined;
+    }
+
+    const inverseInput = mapping.deriveContext(event.input, event.output);
+    if (inverseInput === undefined) {
+      // Operation is conditionally not undoable (deriveContext returned undefined).
+      return undefined;
     }
 
     const entry: HistoryEntry = {
       operation: event.operation,
       input: event.input,
       output: event.output,
-      inverse: undo.inverse,
-      inverseInput: undo.inverseInput,
+      inverse: mapping.inverse,
+      inverseInput,
       timestamp: event.timestamp,
     };
 
@@ -65,12 +88,21 @@ export const make = (invoker: OperationInvoker.OperationInvokerInternal): Histor
     if (history.length > HISTORY_LIMIT) {
       history.splice(0, history.length - HISTORY_LIMIT);
     }
+
+    return { message: resolveMessage(mapping.message, event.input, event.output) };
   };
 
   // Fork a fiber to consume the invocation stream.
   Effect.runFork(
     Stream.fromPubSub(invoker.invocations).pipe(
-      Stream.runForEach((event) => Effect.sync(() => handleInvocation(event))),
+      Stream.runForEach((event) =>
+        Effect.gen(function* () {
+          const undoableEvent = recordInvocation(event);
+          if (undoableEvent) {
+            yield* PubSub.publish(undoable, undoableEvent);
+          }
+        }),
+      ),
     ),
   );
 
@@ -107,5 +139,6 @@ export const make = (invoker: OperationInvoker.OperationInvokerInternal): Histor
     undo,
     undoPromise,
     canUndo,
+    undoable,
   };
 };

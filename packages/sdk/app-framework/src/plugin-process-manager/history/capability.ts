@@ -9,7 +9,6 @@ import { OperationInvoker } from '@dxos/operation';
 import { Capabilities } from '../../common';
 import { Capability } from '../../core';
 import * as HistoryTracker from './history-tracker';
-import { resolveMessage } from './undo-mapping';
 import * as UndoRegistry from './undo-registry';
 
 //
@@ -24,25 +23,11 @@ export default Capability.makeModule(
     // Create UndoRegistry.
     const undoRegistry = UndoRegistry.make(() => capabilities.getAll(Capabilities.UndoMapping).flat());
 
-    // Create HistoryTracker (consumes undo info stamped onto invocation events).
+    // Create HistoryTracker (derives undoability from the registry and maintains the undo stack).
     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
     // Cast to internal type - the factory always returns OperationInvokerInternal.
     const internalInvoker = invoker as OperationInvoker.OperationInvokerInternal;
-    const historyTracker = HistoryTracker.make(internalInvoker);
-
-    // Stamp undo information onto successful invocation events via the registry. The single lookup here
-    // feeds both the HistoryTracker (undo stack) and the deck notification tracker (undo toast).
-    internalInvoker.setUndoResolver((operation, input, output) => {
-      const mapping = undoRegistry.lookup(operation);
-      if (!mapping) {
-        return undefined;
-      }
-      const inverseInput = mapping.deriveContext(input, output);
-      if (inverseInput === undefined) {
-        return undefined;
-      }
-      return { message: resolveMessage(mapping.message, input, output), inverse: mapping.inverse, inverseInput };
-    });
+    const historyTracker = HistoryTracker.make(internalInvoker, undoRegistry);
 
     return [
       Capability.contributes(Capabilities.UndoRegistry, undoRegistry),

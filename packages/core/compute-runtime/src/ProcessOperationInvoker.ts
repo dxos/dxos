@@ -110,11 +110,6 @@ export const make = (opts: {
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
-  // Late-bound by the layer that owns the undo registry.
-  let undoResolver: OperationInvoker.UndoResolver | undefined;
-  const setUndoResolver = (resolver: OperationInvoker.UndoResolver): void => {
-    undoResolver = resolver;
-  };
 
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
@@ -205,10 +200,9 @@ export const make = (opts: {
       // into `Effect<O, …>` with the original cause (failures propagate without a published event).
       const output = yield* fiber.await.pipe(Effect.flatten);
 
-      // Publish a success event (carrying undo info if the operation is undoable). In-progress/failure
-      // lifecycle is observed via the process monitor.
-      const undo = undoResolver?.(op, input, output);
-      yield* PubSub.publish(pubsub, { operation: op, input, output, undo, timestamp: Date.now() });
+      // Publish a success event. In-progress/failure lifecycle is observed via the process monitor;
+      // undoability is derived by downstream consumers (the history tracker).
+      yield* PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() });
 
       return output;
     }).pipe(
@@ -308,7 +302,6 @@ export const make = (opts: {
     pendingFollowups: Ref.get(pendingCount),
     awaitFollowups,
     _invokeCore,
-    setUndoResolver,
   };
 };
 

@@ -20,36 +20,16 @@ import * as Scheduler from './scheduler';
 // @import-as-namespace
 
 /**
- * Undo descriptor stamped onto a successful invocation event by the injected {@link UndoResolver}
- * when the operation is undoable.
- */
-export type UndoInfo = {
-  /** Message shown in the undo toast. */
-  message?: Operation.Label;
-  /** Inverse operation that undoes the original invocation. */
-  inverse: Operation.Definition.Any;
-  /** Input for the inverse operation, derived from the original input and output. */
-  inverseInput: unknown;
-};
-
-/**
  * Emitted after an operation completes successfully. (The in-progress / failure lifecycle is observed
- * via the process monitor; this stream exists to surface successful, potentially-undoable invocations.)
+ * via the process monitor; this stream surfaces successful invocations for layered consumers — e.g.
+ * the undo history tracker, which derives undoability from the operation/input/output.)
  */
 export type InvocationEvent<I = any, O = any> = {
   operation: Operation.Definition<I, O>;
   input: I;
   output: O;
-  /** Present when the operation is undoable (stamped by the injected {@link UndoResolver}). */
-  undo?: UndoInfo;
   timestamp: number;
 };
-
-/**
- * Resolves undo information for a successful invocation. Injected by the layer that owns the undo
- * registry (the invoker itself has no knowledge of undoability).
- */
-export type UndoResolver = (op: Operation.Definition.Any, input: unknown, output: unknown) => UndoInfo | undefined;
 
 /**
  * Resolves a spaceId to a context containing Database.Service.
@@ -110,12 +90,6 @@ export interface OperationInvokerInternal extends OperationInvoker {
     input: I,
     options?: Operation.InvokeOptions,
   ) => Effect.Effect<O, NoHandlerError>;
-
-  /**
-   * Inject the resolver that stamps undo information onto successful invocation events.
-   * Late-bound because the undo registry is assembled after the invoker is constructed.
-   */
-  setUndoResolver: (resolver: UndoResolver) => void;
 }
 
 //
@@ -132,8 +106,6 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _databaseResolver?: DatabaseResolver;
   // Cache for DynamicRuntime instances keyed by service tag keys.
   private readonly _dynamicRuntimeCache = new Map<string, DynamicRuntime.DynamicRuntime<any>>();
-  // Late-bound by the layer that owns the undo registry.
-  private _undoResolver?: UndoResolver;
 
   constructor(
     getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>,
@@ -164,11 +136,6 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     }
     return dynamicRuntime;
   }
-
-  // Arrow function to preserve `this` context when destructured.
-  setUndoResolver = (resolver: UndoResolver): void => {
-    this._undoResolver = resolver;
-  };
 
   get invocations(): PubSub.PubSub<InvocationEvent> {
     return this._pubsub;
@@ -202,10 +169,9 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     return Effect.gen(this, function* () {
       const output = yield* this._invokeCore(op, input, options);
 
-      // Publish a success event (carrying undo info if the operation is undoable). Failures propagate
-      // without an event; in-progress/failure lifecycle is observed via the process monitor.
-      const undo = this._undoResolver?.(op, input, output);
-      yield* PubSub.publish(this._pubsub, { operation: op, input, output, undo, timestamp: Date.now() });
+      // Publish a success event. Failures propagate without an event; in-progress/failure lifecycle is
+      // observed via the process monitor, and undoability is derived by downstream consumers.
+      yield* PubSub.publish(this._pubsub, { operation: op, input, output, timestamp: Date.now() });
 
       return output;
     });

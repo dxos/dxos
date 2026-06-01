@@ -628,7 +628,6 @@ describe('ProcessOperationInvoker invocations', () => {
           const event = yield* Queue.take(events);
           expect(event.operation.meta.key).toEqual(Double.meta.key);
           expect(event.output).toEqual(10);
-          expect(event.undo).toBeUndefined();
         }),
       );
     }, Effect.provide(TestLayer)),
@@ -661,29 +660,6 @@ describe('ProcessOperationInvoker invocations', () => {
       const notify = { success: 'Done', error: 'Failed' };
       const handle = yield* manager.spawn(makeSumAggregator(), { notify });
       expect(handle.params.notify).toEqual(notify);
-    }, Effect.provide(TestLayer)),
-  );
-
-  it.effect(
-    'stamps undo info from the resolver onto the success event',
-    Effect.fn(function* ({ expect }) {
-      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-      invoker.setUndoResolver((op, _input, output) =>
-        op.meta.key === Double.meta.key
-          ? { message: 'Undo double', inverse: Double, inverseInput: { value: output } }
-          : undefined,
-      );
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const events = yield* PubSub.subscribe(invoker.invocations);
-
-          yield* invoker.invoke(Double, { value: 5 });
-
-          const event = yield* Queue.take(events);
-          expect(event.undo?.message).toBe('Undo double');
-          expect(event.undo?.inverseInput).toEqual({ value: 10 });
-        }),
-      );
     }, Effect.provide(TestLayer)),
   );
 });

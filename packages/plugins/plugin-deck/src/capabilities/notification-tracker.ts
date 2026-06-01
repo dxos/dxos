@@ -8,7 +8,6 @@ import * as Stream from 'effect/Stream';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { type LayoutOperation } from '@dxos/app-toolkit';
 import { Process } from '@dxos/compute';
-import { type OperationInvoker } from '@dxos/operation';
 
 import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
@@ -22,8 +21,8 @@ const UNDO_TOAST_DURATION = 10_000;
  * - Per-invoke notifications ride the process monitor: each invocation spawns a process carrying the
  *   caller's `notify` config on its params; this tracker watches process state transitions and toasts
  *   on start / success / failure.
- * - Undo toasts come from the invocation stream's `undo` descriptor (which needs input/output the
- *   monitor doesn't carry) and are wired to the history tracker.
+ * - Undo toasts come from the history tracker's `undoable` stream (it owns the undo registry lookup);
+ *   the toast action triggers `historyTracker.undoPromise()`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -31,7 +30,6 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
     const monitor = yield* Capability.get(Capabilities.ProcessMonitor);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
 
     const addToast = (toast: LayoutOperation.Toast) => {
       const state = registry.get(ephemeralAtom);
@@ -88,10 +86,10 @@ export default Capability.makeModule(
     registry.subscribe(monitor.processTreeAtom, handleProcesses);
 
     //
-    // Undo — driven by the invocation stream (`event.undo` carries the message + inverse).
+    // Undo — driven by the history tracker's `undoable` stream (it owns the registry lookup).
     //
 
-    const showUndoToast = (message: LayoutOperation.Toast['title']) => {
+    const showUndoToast = (message: LayoutOperation.Toast['title'], onUndo: () => void) => {
       const undoId = `notify-undo-${crypto.randomUUID()}`;
       const state = registry.get(ephemeralAtom);
       // Replace the previous undo toast (only the most recent action can be undone).
@@ -105,25 +103,22 @@ export default Capability.makeModule(
         actionLabel: ['undo-action.label', { ns: meta.id }],
         actionAlt: ['undo-action.alt', { ns: meta.id }],
         closeLabel: ['undo-close.label', { ns: meta.id }],
-        onAction: () => {
-          // Resolve lazily to avoid an activation-ordering race with the history capability.
-          const historyTracker = capabilities.getAll(Capabilities.HistoryTracker)[0];
-          void historyTracker?.undoPromise();
-        },
+        onAction: onUndo,
       };
       registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: [...toasts, toast] });
     };
 
-    const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
-      if (event.undo) {
-        showUndoToast(event.undo.message);
-      }
-    };
-
+    // The history tracker is contributed on ProcessManagerReady, possibly after this module activates;
+    // `waitFor` resolves it once available, then we observe its undoable stream.
     Effect.runFork(
-      Stream.fromPubSub(invoker.invocations).pipe(
-        Stream.runForEach((event) => Effect.sync(() => handleInvocation(event))),
-      ),
+      Effect.gen(function* () {
+        const historyTracker = yield* Capability.waitFor(Capabilities.HistoryTracker);
+        yield* Stream.fromPubSub(historyTracker.undoable).pipe(
+          Stream.runForEach((event) =>
+            Effect.sync(() => showUndoToast(event.message, () => void historyTracker.undoPromise())),
+          ),
+        );
+      }).pipe(Effect.provideService(Capability.Service, capabilities)),
     );
   }),
 );

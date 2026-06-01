@@ -55,12 +55,6 @@ const Fail = Operation.make({
   meta: { key: 'test.fail' },
 });
 
-const Halve = Operation.make({
-  input: Schema.Struct({ value: Schema.Number }),
-  output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: 'test.halve' },
-});
-
 //
 // Test Handlers
 //
@@ -79,8 +73,6 @@ const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] +
 const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
 
 const failHandler = Operation.withHandler(Fail, () => Effect.fail(new Error('boom')));
-
-const halveHandler = Operation.withHandler(Halve, (data) => Effect.succeed({ value: data.value / 2 }));
 
 //
 // Test Utilities
@@ -247,7 +239,6 @@ describe('OperationInvoker', () => {
       const [event] = collector.events;
       expect(event.input).toEqual({ value: 42 });
       expect(event.output).toEqual({ string: '42' });
-      expect(event.undo).toBeUndefined();
 
       yield* collector.dispose;
     }),
@@ -265,42 +256,6 @@ describe('OperationInvoker', () => {
       // Give any (unexpected) event a chance to arrive, then assert none was published.
       yield* Effect.yieldNow();
       expect(collector.events.length).toBe(0);
-
-      yield* collector.dispose;
-    }),
-  );
-
-  it.effect('stamps undo info from the resolver onto the success event', () =>
-    Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveHandler]), testRuntime);
-      invoker.setUndoResolver((operation, _input, output) => {
-        if (operation.meta.key !== Compute.meta.key) {
-          return undefined;
-        }
-        return {
-          message: 'Undo compute',
-          inverse: Halve,
-          inverseInput: { value: (output as { value: number }).value },
-        };
-      });
-      const collector = yield* createEventCollector(invoker);
-      yield* Effect.yieldNow();
-
-      // Compute 2 → 4.
-      const fiber = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
-      yield* TestClock.adjust('20 millis');
-      yield* Fiber.join(fiber);
-
-      yield* collector.waitForEvents(1);
-      const computeEvent = collector.events.find((event) => event.operation.meta.key === Compute.meta.key);
-      expect(computeEvent?.undo?.message).toBe('Undo compute');
-      expect(computeEvent?.undo?.inverseInput).toEqual({ value: 4 });
-
-      // Invoking the inverse operation (not a forward op in the resolver) yields no undo info.
-      yield* invoker.invoke(Halve, { value: 4 });
-      yield* collector.waitForEvents(2);
-      const halveEvent = collector.events.find((event) => event.operation.meta.key === Halve.meta.key);
-      expect(halveEvent?.undo).toBeUndefined();
 
       yield* collector.dispose;
     }),
