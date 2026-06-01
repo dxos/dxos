@@ -97,12 +97,12 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   // rejection (e.g. Duffel's "departure_date must be in the future") are actionable, so prefer them
   // over the generic fallback.
   const messageForError = useCallback(
-    (error: { name?: string; message?: string }): string => {
-      switch (error.name) {
+    (cause: { name?: string; message?: string }): string => {
+      switch (cause.name) {
         case 'MissingApiKeyError':
           return t('booking.missing-key.message');
         case 'BookingProviderError':
-          return error.message || t('booking.error.message');
+          return cause.message || t('booking.error.message');
         default:
           return t('booking.error.message');
       }
