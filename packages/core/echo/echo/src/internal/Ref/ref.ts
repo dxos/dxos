@@ -20,7 +20,7 @@ import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import type * as Type from '../../Type';
-import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation/annotations';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 

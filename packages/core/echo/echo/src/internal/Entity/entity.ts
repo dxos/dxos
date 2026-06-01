@@ -9,7 +9,8 @@ import type * as Types from 'effect/Types';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import { defineHiddenProperty } from '../common/proxy/define-hidden-property';
 import { makeObject } from '../common/proxy/make-object';
 import { getProxyTarget } from '../common/proxy/proxy-utils';
@@ -22,7 +23,7 @@ import {
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
-import { JsonSchemaType } from '../JsonSchema';
+import { type JsonSchemaType } from '../JsonSchema/json-schema-type';
 import type * as Entity from '../../Entity';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
@@ -274,9 +275,4 @@ export const makeEchoTypeSchema = <
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };
 
-export const isEntity = (value: unknown): value is Entity.Unknown => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  return (value as any)[KindId] !== undefined;
-};
+export { isEntity } from './guard';
