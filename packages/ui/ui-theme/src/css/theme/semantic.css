@@ -30,27 +30,27 @@
   --color-toolbar-surface: light-dark(var(--color-neutral-75), var(--color-neutral-925));
   --color-card-surface: light-dark(var(--color-neutral-75), var(--color-neutral-925));
 
+  --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-group-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-header-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
 
   /* input */
   --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /* current (aria-current) */
-  --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-current-surface-hover: light-dark(var(--color-neutral-300), var(--color-neutral-700));
-  --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
-
   /* selected (aria-selected) */
   --color-selected-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-selected-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
+  /* current (aria-current) */
+  --color-current-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
+  --color-current-surface-hover: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
   /* hover (:hover, data-highlighted) */
-  --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-hover-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */

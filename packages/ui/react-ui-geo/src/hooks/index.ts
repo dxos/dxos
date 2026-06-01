@@ -9,6 +9,5 @@ export * from './useMapZoomHandler';
 export * from './useSimplifiedTopology';
 export * from './useSpinner';
 export * from './useTopology';
-export * from './useTopologyForZoom';
 export * from './useTour';
 export * from './useWheel';

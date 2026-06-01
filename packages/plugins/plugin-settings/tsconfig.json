@@ -24,6 +24,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../plugin-graph"
     }
   ]

@@ -11,6 +11,7 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
+import { getCategoryPredicate, getRemotePluginIds } from '../categories';
 import { LOAD_PLUGIN_DIALOG } from '../containers';
 
 /**
@@ -60,8 +61,19 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'registry',
         match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
+        connector: (_node, get) => {
+          const manager = capabilities.get(Capabilities.PluginManager);
+          const plugins = get(manager.plugins);
+          const filterContext = {
+            core: get(manager.core),
+            enabled: get(manager.enabled),
+            remoteIds: getRemotePluginIds(),
+          };
+          const categoryCount = (category: string) =>
+            plugins.filter(getCategoryPredicate(category, filterContext)).length;
+          const registryCount = get(manager.pluginRegistry.plugins).entries.length;
+
+          return Effect.succeed([
             Node.make({
               id: REGISTRY_ID,
               type: meta.id,
@@ -82,6 +94,7 @@ export default Capability.makeModule(
                     icon: 'ph--squares-four--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.bundled',
+                    count: categoryCount(registryCategoryId('bundled')),
                   },
                 }),
                 Node.make({
@@ -93,6 +106,7 @@ export default Capability.makeModule(
                     icon: 'ph--check--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.installed',
+                    count: categoryCount(registryCategoryId('installed')),
                   },
                 }),
                 Node.make({
@@ -104,6 +118,7 @@ export default Capability.makeModule(
                     icon: 'ph--star--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.recommended',
+                    count: categoryCount(registryCategoryId('recommended')),
                   },
                 }),
                 Node.make({
@@ -115,6 +130,7 @@ export default Capability.makeModule(
                     icon: 'ph--flask--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.labs',
+                    count: categoryCount(registryCategoryId('labs')),
                   },
                 }),
                 Node.make({
@@ -126,11 +142,13 @@ export default Capability.makeModule(
                     icon: 'ph--users-three--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.registry',
+                    count: registryCount,
                   },
                 }),
               ],
             }),
-          ]),
+          ]);
+        },
       }),
       GraphBuilder.createExtension({
         id: 'actions',

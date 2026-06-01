@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
@@ -14,7 +13,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { Form, type FormFieldMap, omitId } from '../Form';
+import { Form, type FormFieldMap, META_TAGS_KEY, withMetaTags } from '../Form';
 
 export type ObjectFormProps = {
   type: Type.AnyEntity;
@@ -38,16 +37,8 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
   const meta = Obj.getMeta(object);
   const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
-  const values = useMemo(() => ({ tags, ...object }), [object, tags]);
-  const formSchema = useMemo(
-    () =>
-      omitId(
-        Schema.Struct({
-          tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-        }).pipe(Schema.extend(Type.getSchema(type))),
-      ),
-    [type],
-  );
+  const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...object }), [object, tags]);
+  const formSchema = useMemo(() => withMetaTags(Type.getSchema(type)), [type]);
 
   const handleCreate = useCallback((type: Type.AnyEntity, values: any) => {
     invariant(db);
@@ -62,23 +53,26 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
 
   // TODO(wittjosiah): Use FormRootProps type.
   const handleChange = useCallback(
-    ({ tags, ...values }: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
+    (
+      { [META_TAGS_KEY]: metaTags, ...values }: any,
+      { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> },
+    ) => {
       if (!isValid) {
         return;
       }
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
 
-      // Handle tags separately using Obj.update.
-      const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
+      // Handle meta-tags separately using Obj.update.
+      const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === META_TAGS_KEY);
       if (hasTagsChange) {
         Obj.update(object, (object) => {
-          Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.uri) ?? [];
+          Obj.getMeta(object).tags = metaTags?.map((tag: Ref.Ref<Tag.Tag>) => tag.uri) ?? [];
         });
       }
 
       // Handle other property changes.
-      const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
+      const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== META_TAGS_KEY);
       if (nonTagPaths.length > 0) {
         Obj.update(object, () => {
           for (const path of nonTagPaths) {

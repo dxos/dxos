@@ -15,7 +15,6 @@ import {
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
@@ -61,11 +60,10 @@ export default Capability.makeModule(
         ];
       })) as AppCaps.NavigationTargetResolver;
 
-    // Resolve object paths to DXNs.
+    // Parse object paths into EIDs (structure only; existence is checked by the caller).
     // Handles canonical type paths (root/<spaceId>/types/<typename>/all/<objectId>)
-    // and collection paths (root/<spaceId>/collections/<collectionId>/<objectId>).
-    // Validates that the object actually exists in the space before returning a DXN.
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    // and collection paths (root/<spaceId>/collections/<collectionId>/<objectId>): the space id
+    // is the first segment and the object id the last.
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
       const segments = qualifiedPath.split('/');
       const spaceId = getSpaceIdFromPath(qualifiedPath);
@@ -73,17 +71,7 @@ export default Capability.makeModule(
       if (!spaceId || !objectId || !Key.EntityId.isValid(objectId)) {
         return Effect.succeed(Option.none());
       }
-
-      const space = client.spaces.get(spaceId);
-      if (!space) {
-        return Effect.succeed(Option.none());
-      }
-
-      const echoUri = EID.make({ spaceId: spaceId, entityId: objectId as Key.EntityId });
-      const ref = space.db.makeRef(echoUri);
-      return Database.loadOption(ref).pipe(
-        Effect.map((option) => (Option.isSome(option) ? Option.some(echoUri) : Option.none<EID.EID>())),
-      );
+      return Effect.succeed(Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId })));
     };
 
     return [

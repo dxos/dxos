@@ -570,6 +570,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-commerce/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
@@ -605,7 +610,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-duffel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-extension/package.json",
           "jsonpath": "$.version"
         },
         {

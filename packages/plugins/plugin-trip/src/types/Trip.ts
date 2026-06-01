@@ -58,3 +58,21 @@ export const removeSegment = (trip: Trip, segmentId: string): void => {
     }
   });
 };
+
+/**
+ * Resolves a trip's segment refs to the currently-loaded Segment objects,
+ * sorted ascending by primary (departure) date; undated segments sort last
+ * (stable by original order). This is the canonical segment order — used for
+ * both display (SegmentStack) and keyboard navigation, so they stay in sync.
+ * Refs whose target is not yet loaded are skipped.
+ */
+export const getSegments = (trip: Trip): Segment.Segment[] => {
+  const list = (trip.segments ?? [])
+    .map((ref) => (Ref.isRef(ref) ? ref.target : undefined))
+    .filter((segment): segment is Segment.Segment => Segment.instanceOf(segment));
+  return list.sort(
+    (a, b) =>
+      (Segment.getPrimaryDate(a)?.getTime() ?? Number.POSITIVE_INFINITY) -
+      (Segment.getPrimaryDate(b)?.getTime() ?? Number.POSITIVE_INFINITY),
+  );
+};
