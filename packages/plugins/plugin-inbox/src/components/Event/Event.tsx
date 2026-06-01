@@ -15,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
+import { MarkdownViewer } from '../MarkdownViewer';
 import { EventAttendee } from './EventAttendee';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
@@ -141,7 +142,7 @@ type EventContentProps = ThemedClassName<{}>;
 const EventContent = ({ classNames }: EventContentProps) => {
   const { event } = useEventContext(EVENT_CONTENT_NAME);
 
-  return event.description ? <div className={mx('p-3', classNames)}>{event.description}</div> : null;
+  return event.description ? <MarkdownViewer content={event.description} classNames={mx('p-3', classNames)} /> : null;
 };
 
 EventContent.displayName = EVENT_CONTENT_NAME;

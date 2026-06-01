@@ -10,26 +10,19 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Icon, IconBlock, Tag, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Icon, IconBlock, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
-import {
-  EditorView,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  preview,
-} from '@dxos/ui-editor';
-import { mx, toHue } from '@dxos/ui-theme';
+import { decorateMarkdown, preview } from '@dxos/ui-editor';
+import { toHue } from '@dxos/ui-theme';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { AnchorIconButton } from '../AnchorIconButton';
+import { MarkdownViewer } from '../MarkdownViewer';
 import { UserIconButton } from '../UserIconButton';
 import { type ViewMode, useMessageActions } from './useToolbar';
 
@@ -280,7 +273,6 @@ type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
-  const { themeMode } = useThemeContext();
   // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
   // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
   const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
@@ -294,56 +286,42 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
     return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
-  const extensions = useMemo(() => {
-    const exts = [
-      createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({
-        themeMode,
-        slots: {
-          content: {
-            className: 'mx-4!',
-          },
-        },
-      }),
-    ];
-    if (viewMode !== 'plain') {
-      exts.push(
-        createMarkdownExtensions(),
-        decorateMarkdown({
-          skip: (node) => {
-            // Skip dxn: links and images entirely (handled by preview()).
-            if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
-              return true;
-            }
-            // When remote-image loading is disabled, suppress http(s) image rendering;
-            // the markdown source is left visible as a plain link instead.
-            if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
-              return true;
-            }
-            return false;
-          },
-        }),
-        preview(),
-        EditorView.domEventHandlers({
-          click: (event) => {
-            const anchor = (event.target as Element | null)?.closest('a.cm-link') as HTMLAnchorElement | null;
-            if (anchor?.href) {
-              event.preventDefault();
-              window.open(anchor.href, '_blank', 'noopener,noreferrer');
-              return true;
-            }
-            return false;
-          },
-        }),
-      );
-    }
-    return exts;
-  }, [themeMode, viewMode, loadRemoteImages]);
+  const markdown = viewMode !== 'plain';
 
-  const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
+  // Message-specific decorations layered on the shared MarkdownViewer core (which already provides
+  // read-only / markdown / theme / open-links). Only meaningful in markdown/enriched views.
+  const extensions = useMemo(
+    () =>
+      markdown
+        ? [
+            decorateMarkdown({
+              skip: (node) => {
+                // Skip dxn: links and images entirely (handled by preview()).
+                if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
+                  return true;
+                }
+                // When remote-image loading is disabled, suppress http(s) image rendering;
+                // the markdown source is left visible as a plain link instead.
+                if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
+                  return true;
+                }
+                return false;
+              },
+            }),
+            preview(),
+          ]
+        : [],
+    [markdown, loadRemoteImages],
+  );
 
   return (
-    <div className={mx('flex overflow-hidden', classNames)} data-popover-collision-boundary={true} ref={parentRef} />
+    <MarkdownViewer
+      content={content}
+      markdown={markdown}
+      slots={{ content: { className: 'mx-4!' } }}
+      extensions={extensions}
+      classNames={classNames}
+    />
   );
 };
 

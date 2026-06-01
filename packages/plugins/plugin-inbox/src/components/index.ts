@@ -11,6 +11,7 @@ export * from './Event';
 export * from './EventStack';
 export * from './InboxSettings';
 export * from './Initialize';
+export * from './MarkdownViewer';
 export * from './MessageStack';
 export * from './Message';
 export * from './RelatedContacts';
