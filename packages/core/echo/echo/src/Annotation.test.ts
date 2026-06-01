@@ -11,6 +11,8 @@ import { DXN } from '@dxos/keys';
 import * as Annotation from './Annotation';
 import * as Obj from './Obj';
 import * as Type from './Type';
+import { invariant } from '@dxos/invariant';
+import { SchemaAST } from 'effect';
 
 describe('Annotation', () => {
   describe('make', () => {
@@ -331,7 +333,7 @@ describe('Annotation', () => {
         name: Schema.String.pipe(ColorAnnotation.set('navy')),
       });
 
-      const nameProperty = PersonSchema.ast.propertySignatures.find((prop) => prop.name === 'name');
+      const nameProperty = SchemaAST.getPropertySignatures(PersonSchema.ast).find((prop) => prop.name === 'name');
       expect(nameProperty).toBeDefined();
 
       const result = ColorAnnotation.getFromAst(nameProperty!.type);
@@ -361,21 +363,16 @@ describe('Annotation', () => {
   });
 
   describe('object', () => {
-    const makeTaggedPersonType = (ColorAnnotation: Annotation.Annotation<string>) =>
-      Schema.Struct({
-        name: Schema.String,
-      })
-        .pipe(ColorAnnotation.set('schema-teal'))
-        .pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));
+    const ColorAnnotation = Annotation.make({
+      id: 'org.dxos.annotation.color',
+      schema: Schema.String,
+    });
+    const Person = Schema.Struct({
+      name: Schema.String,
+    }).pipe(ColorAnnotation.set('schema-teal')).pipe(Type.makeObject(DXN.make('com.example.type.taggedperson', '0.1.0')));;
 
     test('set and get on Obj.make instance', ({ expect }) => {
-      const ColorAnnotation = Annotation.make({
-        id: 'org.dxos.annotation.color',
-        schema: Schema.String,
-      });
-      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
-
-      const person = Obj.make(TaggedPerson, { name: 'Alice' });
+      const person = Obj.make(Person, { name: 'Alice' });
 
       Obj.update(person, (obj) => {
         Annotation.set(obj, ColorAnnotation, 'instance-red');
@@ -387,27 +384,16 @@ describe('Annotation', () => {
     });
 
     test('get returns None when instance has no annotation value', ({ expect }) => {
-      const ColorAnnotation = Annotation.make({
-        id: 'org.dxos.annotation.color',
-        schema: Schema.String,
-      });
-      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
-
-      const person = Obj.make(TaggedPerson, { name: 'Bob' });
+      const person = Obj.make(Person, { name: 'Bob' });
 
       expect(Option.isNone(Annotation.get(person, ColorAnnotation))).toBe(true);
     });
 
     test('instance annotation is independent of schema default', ({ expect }) => {
-      const ColorAnnotation = Annotation.make({
-        id: 'org.dxos.annotation.color',
-        schema: Schema.String,
-      });
-      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
 
-      const person = Obj.make(TaggedPerson, { name: 'Carol' });
+      const person = Obj.make(Person, { name: 'Carol' });
 
-      expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(TaggedPerson)))).toBe('schema-teal');
+      expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(Person)))).toBe('schema-teal');
       expect(Option.isNone(Annotation.get(person, ColorAnnotation))).toBe(true);
 
       Obj.update(person, (obj) => {
@@ -415,17 +401,11 @@ describe('Annotation', () => {
       });
 
       expect(Option.getOrThrow(Annotation.get(person, ColorAnnotation))).toBe('instance-blue');
-      expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(TaggedPerson)))).toBe('schema-teal');
+      expect(Option.getOrThrow(ColorAnnotation.get(Type.getSchema(Person)))).toBe('schema-teal');
     });
 
     test('set and get inside Obj.update', ({ expect }) => {
-      const ColorAnnotation = Annotation.make({
-        id: 'org.dxos.annotation.color',
-        schema: Schema.String,
-      });
-      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
-
-      const person = Obj.make(TaggedPerson, { name: 'Dana' });
+      const person = Obj.make(Person, { name: 'Dana' });
 
       Obj.update(person, (obj) => {
         Annotation.set(obj, ColorAnnotation, 'updated');
@@ -435,13 +415,7 @@ describe('Annotation', () => {
     });
 
     test('curried get and set on instances', ({ expect }) => {
-      const ColorAnnotation = Annotation.make({
-        id: 'org.dxos.annotation.color',
-        schema: Schema.String,
-      });
-      const TaggedPerson = makeTaggedPersonType(ColorAnnotation);
-
-      const person = Obj.make(TaggedPerson, { name: 'Eve' });
+      const person = Obj.make(Person, { name: 'Eve' });
 
       Obj.update(person, (obj) => {
         Annotation.set(ColorAnnotation, 'curried')(obj);
