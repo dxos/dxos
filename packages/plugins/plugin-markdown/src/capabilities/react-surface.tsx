@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.plugin-settings',
+        id: 'surface.pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);

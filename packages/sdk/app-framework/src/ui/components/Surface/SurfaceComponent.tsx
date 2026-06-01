@@ -263,7 +263,7 @@ export const useSurfaces = () => {
     const result: Definition[] = [];
     for (const [moduleId, surfaces] of Object.entries(surfacesByModule)) {
       for (const def of surfaces.flat()) {
-        result.push({ ...def, id: `${moduleId}.${def.id}` });
+        result.push(def);
       }
     }
     return result;

@@ -5,10 +5,11 @@
 import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
@@ -113,6 +114,11 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     [id, currentId, showItem, subject, invokePromise],
   );
 
+  // The inline map is rendered by plugin-map's `map` surface; only offer the toggle when a marker
+  // provider can plot this trip (i.e. plugin-map is active and matches the subject).
+  const mapProviders = useCapabilities(MapCapabilities.MarkerProvider);
+  const mapAvailable = useMemo(() => mapProviders.some((provider) => provider.match(subject)), [mapProviders, subject]);
+
   const [showGlobe, setShowGlobe] = useState(false);
 
   const handleNavigate = useCallback(
@@ -160,40 +166,41 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
 
   // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
   // kinds and a globe on/off toggle, composed as data rather than hand-wired Toolbar children.
-  const menuActions = useMenuBuilder(
-    () =>
-      MenuBuilder.make()
-        .group(
-          'add',
-          {
-            label: ['segment.add.label', { ns: meta.id }],
-            icon: 'ph--plus--regular',
-            variant: 'dropdownMenu',
-          },
-          (group) => {
-            for (const kind of SEGMENT_KINDS) {
-              group.action(
-                `add-${kind}`,
-                { label: [`segment.${kind}.label`, { ns: meta.id }], icon: Segment.kindIcon(kind) },
-                () => handleAddSegment(kind),
-              );
-            }
-          },
-        )
-        .separator()
-        .action(
-          'toggle-globe',
-          {
-            label: ['globe.toggle.label', { ns: meta.id }],
-            icon: 'ph--globe-hemisphere-west--regular',
-            iconOnly: true,
-            checked: showGlobe,
-          },
-          () => setShowGlobe((value) => !value),
-        )
-        .build(),
-    [handleAddSegment, showGlobe],
-  );
+  const menuActions = useMenuBuilder(() => {
+    const builder = MenuBuilder.make().group(
+      'add',
+      {
+        label: ['segment.add.label', { ns: meta.id }],
+        icon: 'ph--plus--regular',
+        variant: 'dropdownMenu',
+      },
+      (group) => {
+        for (const kind of SEGMENT_KINDS) {
+          group.action(
+            `add-${kind}`,
+            { label: [`segment.${kind}.label`, { ns: meta.id }], icon: Segment.kindIcon(kind) },
+            () => handleAddSegment(kind),
+          );
+        }
+      },
+    );
+
+    // Only offer the map toggle when a map surface can render this trip.
+    if (mapAvailable) {
+      builder.separator().action(
+        'toggle-globe',
+        {
+          label: ['globe.toggle.label', { ns: meta.id }],
+          icon: 'ph--globe-hemisphere-west--regular',
+          iconOnly: true,
+          checked: showGlobe,
+        },
+        () => setShowGlobe((value) => !value),
+      );
+    }
+
+    return builder.build();
+  }, [handleAddSegment, showGlobe, mapAvailable]);
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
@@ -232,12 +239,12 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           </Panel.Root>
         </div>
 
-        {/* Row 2: map surface (globe / map variants, toggled via the toolbar). Self-contained:
-            it reads the current segment selection via useSelected. */}
-        {showGlobe && (
+        {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
+            markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
+        {showGlobe && mapAvailable && (
           <Panel.Root className='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface role='trip-map' data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

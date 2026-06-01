@@ -9,7 +9,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { QueryExecutor } from '../query/query-executor';
-import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,8 +23,13 @@ const makeObjectSet = (...ids: EntityId[]) => new Set<EntityId>(ids);
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 
+// Versioned type DXNs as recorded on stored objects / raw IndexingResults.
 const PERSON_DXN = 'dxn:com.example.type.person:0.1.0';
 const ORG_DXN = 'dxn:com.example.type.organization:0.1.0';
+
+// Canonical (version-less) typenames as carried by an InvalidationHint and a query scope.
+const PERSON_TYPENAME = 'com.example.type.person';
+const ORG_TYPENAME = 'com.example.type.organization';
 
 // Stable queue DXN mirroring query-planner.test.ts.
 const QUEUE_DXN = EID.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
@@ -80,10 +85,44 @@ describe('hintFromIndexingResult', () => {
     });
     expect(result).toBeDefined();
     expect(result!.spaceIds?.has(spaceId)).toBe(true);
-    expect(result!.typenames?.has(PERSON_DXN)).toBe(true);
+    // Versioned object type is canonicalized to the bare typename.
+    expect(result!.typenames?.has(PERSON_TYPENAME)).toBe(true);
+    expect(result!.typenames?.has(PERSON_DXN)).toBe(false);
     expect(result!.objectIds?.has(objectId)).toBe(true);
     // Empty queues → undefined (no queue constraint)
     expect(result!.queueIds).toBeUndefined();
+  });
+
+  // Regression for DX-966: stored object types arrive versioned (and sometimes with the legacy
+  // `dxn:type:` prefix); the hint must reduce them to the bare typename so it can match a
+  // version-less type filter scope.
+  test('canonicalizes versioned and legacy-prefixed object types', ({ expect }) => {
+    const result = hintFromIndexingResult({
+      updated: 2,
+      done: true,
+      spaces: new Set([SpaceId.random()]),
+      queues: new Set(),
+      documents: new Set(),
+      types: new Set([PERSON_DXN, `dxn:type:${ORG_TYPENAME}:0.1.0`]),
+      objects: new Set(),
+    });
+    expect(result!.typenames).toEqual(new Set([PERSON_TYPENAME, ORG_TYPENAME]));
+  });
+});
+
+describe('canonicalTypename', () => {
+  test('strips schema version and the legacy `type:` kind segment', ({ expect }) => {
+    expect(canonicalTypename(PERSON_DXN)).toBe(PERSON_TYPENAME);
+    expect(canonicalTypename(`dxn:type:${PERSON_TYPENAME}:0.1.0`)).toBe(PERSON_TYPENAME);
+    expect(canonicalTypename(`dxn:${PERSON_TYPENAME}`)).toBe(PERSON_TYPENAME);
+  });
+
+  test('passes through schema-as-object (EchoURI) and other non-type URIs unchanged', ({ expect }) => {
+    // Dynamic schemas reference the schema object by EchoURI rather than a typename DXN.
+    const echoUri = 'dxn:echo:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E';
+    expect(canonicalTypename(echoUri)).toBe(echoUri);
+    // Arbitrary non-DXN strings are returned verbatim.
+    expect(canonicalTypename('plain-string')).toBe('plain-string');
   });
 });
 
@@ -136,14 +175,14 @@ describe('mergeHints', () => {
 describe('QueryExecutor.matchesHint — typed query', () => {
   test('matches when hint typenames overlaps', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
-    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_DXN) }))).toBe(true);
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
   });
 
   test('does NOT match when hint typenames are disjoint', ({ expect }) => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     const hint = makeHint({
       spaceIds: makeSpaceSet(SPACE_ID),
-      typenames: makeTypeSet(ORG_DXN), // different type
+      typenames: makeTypeSet(ORG_TYPENAME), // different type
     });
     expect(executor.matchesHint(hint)).toBe(false);
   });
@@ -157,7 +196,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person))));
     const hint = makeHint({
       spaceIds: makeSpaceSet(SpaceId.random()),
-      typenames: makeTypeSet(PERSON_DXN),
+      typenames: makeTypeSet(PERSON_TYPENAME),
     });
     expect(executor.matchesHint(hint)).toBe(false);
   });
@@ -167,7 +206,7 @@ describe('QueryExecutor.matchesHint — typed query', () => {
       withSpace(Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)))),
     );
     expect(
-      executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(PERSON_DXN) })),
+      executor.matchesHint(makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet(PERSON_TYPENAME) })),
     ).toBe(true);
   });
 
@@ -177,9 +216,19 @@ describe('QueryExecutor.matchesHint — typed query', () => {
     );
     expect(
       executor.matchesHint(
-        makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('dxn:com.example.unrelated:0.1.0') }),
+        makeHint({ spaceIds: makeSpaceSet(SPACE_ID), typenames: makeTypeSet('com.example.unrelated') }),
       ),
     ).toBe(false);
+  });
+
+  // Regression for DX-966. The Composer navtree lists objects per type via `Filter.typename(...)`,
+  // whose scope typename is version-less. It must match the canonical hint produced for a stored
+  // (versioned) object so the reactive query is re-run on insert/delete. Both scope and hint are
+  // reduced to the same canonical typename, so the comparison stays a plain set overlap — see
+  // `canonicalTypename` and `hintFromIndexingResult` for the canonicalization at each boundary.
+  test('version-less Filter.typename scope matches the canonical hint typename', ({ expect }) => {
+    const executor = makeExecutor(withSpace(Query.select(Filter.typename(PERSON_TYPENAME))));
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
   });
 });
 

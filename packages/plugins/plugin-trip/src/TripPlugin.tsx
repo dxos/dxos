@@ -13,6 +13,7 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   CreateObject,
+  MarkerProvider,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -44,6 +45,11 @@ export const TripPlugin = Plugin.define(meta).pipe(
     id: 'trip-extractor',
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, TripMessageExtractor)),
+  }),
+  Plugin.addModule({
+    id: 'marker-provider',
+    activatesOn: ActivationEvents.Startup,
+    activate: MarkerProvider,
   }),
   Plugin.make,
 );

@@ -4,6 +4,31 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-05-31 — plugin-map, plugin-trip, react-ui-geo, schema (marker providers)
+
+### Cross-plugin capability extension
+
+- To let one plugin plot another's objects, define a capability that is `{ match(subject): boolean; useMarkers/use…(subject, opts) }` — `match` is a sync, hook-free type predicate; the reactive part is a hook. Contribute many; consumers pick the first whose `match` passes.
+- Calling a capability-contributed HOOK conditionally breaks rules-of-hooks. Resolve the provider in the parent (`useCapabilities(...).find(match)`), then render an inner component keyed by `provider.id` that calls `provider.useX(...)` UNCONDITIONALLY. Switching providers remounts via the key.
+- Keep plugin-context hooks (`useCapabilities`/`useOperationInvoker`/`useAtomCapability`) in the SURFACE component; resolve provider/url/callbacks there and pass them as props to the container. The container then needs only a `ClientProvider` in storybook (pass the provider as a prop), not a full `withPluginManager`.
+
+### `Capability.lazy` cross-package
+
+- `Capability.lazy('X', () => import('./x'))` whose module contributes a type declared in ANOTHER package fails `tsc` with TS2883 ("inferred type cannot be named… not portable"). Fix: eager re-export `export { default as X } from './x';` (like `BlueprintDefinition`) instead of lazy. The `<T>` param of `lazy` is the module PROPS, not the contributed value — don't annotate with the value type.
+
+### Companion surfaces
+
+- A companion surface created with a raw type-guard `filter` MUST also set `role: 'article'` (the `AppSurface.object(...)` helper supplies role bindings; a bare predicate does not → build error "Property 'role' is missing").
+- Gate "offer companion only when X" in the app-graph-builder CONNECTOR (capability-aware: `yield* Capability.getAll(Cap)` inside `Effect.gen`), not the surface filter (filters are sync and can't read capabilities). Companion node `data: 'sentinel'`; surface filter matches `data.subject === 'sentinel' && Obj.isObject(data.companionTo)`; render with subject = `companionTo`.
+
+### Attention selection
+
+- `LayoutOperation.Select` `subject` is a discriminated union: single → `{ mode: 'single', id }`, multi → `{ mode: 'multi', ids: [...] }`. Branch on mode; a generic `{ mode, id }` won't typecheck. `useSelected(id,'single')` returns `string|undefined`; `'multi'` returns `string[]`.
+
+### Toolchain
+
+- Use `~/.proto/shims/moon` (proto resolves the repo-pinned moon 2.2.6); a stale `~/.proto/tools/moon/1.41.2` may sit earlier on PATH and rejects `.moon/workspace.yml` (`unknown field 'remote'`). Adding a workspace dep needs `HUSKY=0 CI=true pnpm install --no-frozen-lockfile`.
+
 ## 2026-05-31 — plugin-settings, plugin-trip, plugin-duffel, plugin-crx, plugin-meeting, app-toolkit
 
 ### Settings

@@ -27,13 +27,13 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Generation.Generation),
         component: ({ data }) => <GenerationProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

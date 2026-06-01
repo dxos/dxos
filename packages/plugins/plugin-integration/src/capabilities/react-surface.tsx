@@ -23,14 +23,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'integration-article',
+        id: 'integrationArticle',
         filter: AppSurface.object(AppSurface.Article, Integration.Integration),
         component: ({ data, role }) => (
           <IntegrationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'integration-auth',
+        id: 'integrationAuth',
         role: 'integration--auth',
         filter: (
           data,
@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'sync-targets-dialog',
+        id: 'syncTargetsDialog',
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
           AppSurface.Dialog,
           SYNC_TARGETS_DIALOG,
@@ -57,12 +57,12 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
       }),
       Surface.create({
-        id: 'custom-token-dialog',
+        id: 'customTokenDialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'integration-provider-selector',
+        id: 'integrationProviderSelector',
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;

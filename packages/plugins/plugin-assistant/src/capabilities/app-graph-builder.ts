@@ -65,7 +65,7 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             Node.makeAction({
-              id: 'import-compute-operations',
+              id: 'importComputeOperations',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -102,7 +102,7 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: 'reset-blueprints',
+              id: 'resetBlueprints',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -128,7 +128,7 @@ export default Capability.makeModule(
 
       // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
-        id: 'companion-chat',
+        id: 'companionChat',
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {

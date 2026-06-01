@@ -5,4 +5,3 @@
 export * from './OfferStack';
 export * from './SegmentCard';
 export * from './SegmentStack';
-export * from './TripMapView';

@@ -30,13 +30,13 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: 'create-initial-schema-form-[pivot-column]',
+        id: 'createInitialSchemaForm',
         role: 'form-input',
         filter: (
           data,

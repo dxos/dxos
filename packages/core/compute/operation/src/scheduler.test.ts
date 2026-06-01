@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import * as OperationInvoker from './OperationInvoker';
 import * as Scheduler from './scheduler';
@@ -24,19 +25,19 @@ const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntim
 const CountOp = Operation.make({
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
-  meta: { key: 'test.count' },
+  meta: { key: DXN.make('org.example.test.count') },
 });
 
 const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: 'test.side-effect' },
+  meta: { key: DXN.make('org.example.test.sideEffect') },
 });
 
 const TriggerWithFollowup = Operation.make({
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Struct({ triggered: Schema.Boolean }),
-  meta: { key: 'test.trigger-with-followup' },
+  meta: { key: DXN.make('org.example.test.triggerWithFollowup') },
 });
 
 describe('Scheduler', () => {

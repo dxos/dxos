@@ -15,7 +15,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Relation, Type, DXN } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 
 const Commentary = Operation.make({
   meta: {
-    key: 'org.dxos.function.chess.commentary',
+    key: DXN.make('org.dxos.function.chess.commentary'),
     name: 'Commentary',
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },

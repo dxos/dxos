@@ -24,6 +24,9 @@
       "path": "../../common/keyboard"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -100,6 +103,9 @@
     },
     {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-map"
     },
     {
       "path": "../plugin-preview"

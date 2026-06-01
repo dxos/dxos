@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { SelectionSchema } from '@dxos/react-ui-attention/types';
 
 import { Label } from './translations';
@@ -23,7 +24,7 @@ export namespace LayoutOperation {
 
   export const UpdateSidebar = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.update-sidebar`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateSidebar`),
       name: 'Update Sidebar',
       description: 'Update the sidebar state.',
       icon: 'ph--sidebar--regular',
@@ -45,7 +46,7 @@ export namespace LayoutOperation {
 
   export const UpdateComplementary = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.update-complementary`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateComplementary`),
       name: 'Update Complementary Sidebar',
       description: 'Update the complementary sidebar state.',
       icon: 'ph--sidebar--regular',
@@ -71,7 +72,7 @@ export namespace LayoutOperation {
 
   export const UpdateDialog = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.update-dialog`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateDialog`),
       name: 'Update Dialog',
       description: 'Open, close, or update the dialog.',
       icon: 'ph--app-window--regular',
@@ -146,7 +147,7 @@ export namespace LayoutOperation {
 
   export const UpdatePopover = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.update-popover`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.updatePopover`),
       name: 'Update Popover',
       description: 'Open, close, or update a popover.',
       icon: 'ph--chat-text--regular',
@@ -200,7 +201,7 @@ export namespace LayoutOperation {
 
   export const AddToast = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.add-toast`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.addToast`),
       name: 'Add Toast',
       description: 'Add a toast notification.',
       icon: 'ph--broadcast--regular',
@@ -217,7 +218,7 @@ export namespace LayoutOperation {
 
   export const SetLayoutMode = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.set-layout-mode`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.setLayoutMode`),
       name: 'Set Layout Mode',
       description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
       icon: 'ph--layout--regular',
@@ -244,7 +245,7 @@ export namespace LayoutOperation {
 
   export const SwitchWorkspace = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.switch-workspace`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.switchWorkspace`),
       name: 'Switch Workspace',
       description: 'Switch to a different workspace.',
       icon: 'ph--arrows-clockwise--regular',
@@ -259,7 +260,7 @@ export namespace LayoutOperation {
 
   export const RevertWorkspace = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.revert-workspace`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.revertWorkspace`),
       name: 'Revert Workspace',
       description: 'Revert to the previous workspace.',
       icon: 'ph--clock-counter-clockwise--regular',
@@ -278,7 +279,7 @@ export namespace LayoutOperation {
 
   export const Open = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.open`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.open`),
       name: 'Open',
       description: 'Open items in the main content area. Takes navigation paths as subjects.',
       icon: 'ph--arrow-square-out--regular',
@@ -322,7 +323,7 @@ export namespace LayoutOperation {
 
   export const Close = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.close`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.close`),
       name: 'Close',
       description: 'Close items in the main content area.',
       icon: 'ph--x--regular',
@@ -337,7 +338,7 @@ export namespace LayoutOperation {
 
   export const Set = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.set`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.set`),
       name: 'Set',
       description: 'Override items in the main content area.',
       icon: 'ph--layout--regular',
@@ -356,7 +357,7 @@ export namespace LayoutOperation {
 
   export const ScrollIntoView = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.scroll-into-view`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.scrollIntoView`),
       name: 'Scroll Into View',
       description: 'Scroll an item into view.',
       icon: 'ph--eye--regular',
@@ -372,7 +373,7 @@ export namespace LayoutOperation {
 
   export const Expose = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.expose`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.expose`),
       name: 'Expose',
       description: 'Expose an item in the navigation area.',
       icon: 'ph--eye--regular',
@@ -390,7 +391,7 @@ export namespace LayoutOperation {
 
   export const UpdateCompanion = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.update-companion`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateCompanion`),
       name: 'Update Companion',
       description: 'Update the companion plank for a primary plank.',
       icon: 'ph--sidebar--regular',
@@ -408,7 +409,7 @@ export namespace LayoutOperation {
 
   export const Select = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}.operation.select`,
+      key: DXN.make(`${LAYOUT_PLUGIN}.operation.select`),
       name: 'Select',
       description: 'Select items in an attention context.',
       icon: 'ph--check--regular',
@@ -431,7 +432,7 @@ const SETTINGS_OPERATION = `${SETTINGS_PLUGIN}.operation`;
 export namespace SettingsOperation {
   export const Open = Operation.make({
     meta: {
-      key: `${SETTINGS_OPERATION}.open`,
+      key: DXN.make(`${SETTINGS_OPERATION}.open`),
       name: 'Open Settings',
       description: 'Open the settings panel.',
       icon: 'ph--gear--regular',
@@ -445,7 +446,7 @@ export namespace SettingsOperation {
 
   export const OpenPluginRegistry = Operation.make({
     meta: {
-      key: `${SETTINGS_OPERATION}.open-plugin-registry`,
+      key: DXN.make(`${SETTINGS_OPERATION}.openPluginRegistry`),
       name: 'Open Plugin Registry',
       description: 'Open the plugin registry.',
       icon: 'ph--plugs--regular',

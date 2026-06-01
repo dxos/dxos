@@ -15,6 +15,7 @@ import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
@@ -35,7 +36,12 @@ import FLIGHT_EMAIL from '../testing/flight.md?raw';
 
 // MessageArticle calls LayoutOperation.Open/Select/UpdateCompanion from its callbacks. Provide
 // no-op handlers so the operations resolve without pulling in DeckPlugin.
-const MockDeckOperationsPlugin = Plugin.define({ id: 'story.mock-deck-operations', name: 'Mock Deck Ops' }).pipe(
+const MockDeckOperationsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.mockDeckOperations'),
+    name: 'Mock Deck Ops',
+  }),
+).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
       Effect.succeed(
@@ -75,10 +81,12 @@ const ImportantMessageExtractor: ObjectExtractor = {
     }),
 };
 
-const ImportantExtractorPlugin = Plugin.define({
-  id: 'story.important-extractor',
-  name: 'Story Important Extractor',
-}).pipe(
+const ImportantExtractorPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.importantExtractor'),
+    name: 'Story Important Extractor',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'extractor',
     activatesOn: ActivationEvents.Startup,
@@ -123,7 +131,12 @@ const MOCK_FLIGHT_PAYLOAD = {
  * the full Operation.invoke → handler → `Markdown.make({...})` chain inside the story
  * runtime, which has no network access and no real API key.
  */
-const MockAiServicePlugin = Plugin.define({ id: 'story.mock-ai-service', name: 'Story Mock AI Service' }).pipe(
+const MockAiServicePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.mockAiService'),
+    name: 'Story Mock AI Service',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'ai-service',
     activatesOn: ActivationEvents.SetupProcessManager,
