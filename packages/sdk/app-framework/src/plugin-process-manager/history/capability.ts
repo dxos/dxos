@@ -23,11 +23,10 @@ export default Capability.makeModule(
     // Create UndoRegistry.
     const undoRegistry = UndoRegistry.make(() => capabilities.getAll(Capabilities.UndoMapping).flat());
 
-    // Create HistoryTracker (derives undoability from the registry and maintains the undo stack).
+    // Create HistoryTracker (depends on UndoRegistry and OperationInvoker).
     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
     // Cast to internal type - the factory always returns OperationInvokerInternal.
-    const internalInvoker = invoker as OperationInvoker.OperationInvokerInternal;
-    const historyTracker = HistoryTracker.make(internalInvoker, undoRegistry);
+    const historyTracker = HistoryTracker.make(invoker as OperationInvoker.OperationInvokerInternal, undoRegistry);
 
     return [
       Capability.contributes(Capabilities.UndoRegistry, undoRegistry),
