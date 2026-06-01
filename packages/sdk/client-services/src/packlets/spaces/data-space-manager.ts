@@ -403,7 +403,13 @@ export class DataSpaceManager extends Resource {
    * Whether the space has been tombstoned (soft-deleted). Deleted spaces are never opened or replicated.
    */
   isSpaceDeleted(spaceKey: PublicKey): boolean {
-    return this._metadataStore.deletedSpaces.some((key) => key.equals(spaceKey));
+    // Mirror the deletion predicate used in `_open`: the tombstone list or a persisted SPACE_DELETED state.
+    return (
+      this._metadataStore.deletedSpaces.some((key) => key.equals(spaceKey)) ||
+      this._metadataStore.spaces.some(
+        (spaceMetadata) => spaceMetadata.key.equals(spaceKey) && spaceMetadata.state === SpaceState.SPACE_DELETED,
+      )
+    );
   }
 
   /**

@@ -150,19 +150,25 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   }, [space, repairs]);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const handleDelete = useCallback(async () => {
     try {
       await invokePromise(SpaceOperation.Delete, { space });
+      setDeleteConfirmOpen(false);
       const personalSpace = getPersonalSpace(client);
       if (personalSpace) {
         void invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
       }
     } catch (err) {
       log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });
-      throw err;
+      setDeleteConfirmOpen(false);
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${space.id}-delete-failed`,
+        title: t('delete-space-failed.message'),
+        icon: 'ph--warning--regular',
+      });
     }
-    setDeleteConfirmOpen(false);
-  }, [space, client, invokePromise]);
+  }, [space, client, invokePromise, t]);
 
   return (
     <Settings.Viewport>

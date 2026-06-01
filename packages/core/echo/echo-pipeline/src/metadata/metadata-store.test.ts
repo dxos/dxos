@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -11,7 +11,7 @@ import { MetadataStore } from './metadata-store';
 
 describe('MetadataStore', () => {
   describe('deleted spaces', () => {
-    test('addDeletedSpace records a tombstone', async () => {
+    test('addDeletedSpace records a tombstone', async ({ expect }) => {
       const store = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
       const spaceKey = PublicKey.random();
 
@@ -22,7 +22,7 @@ describe('MetadataStore', () => {
       expect(store.deletedSpaces[0].equals(spaceKey)).to.be.true;
     });
 
-    test('addDeletedSpace is idempotent', async () => {
+    test('addDeletedSpace is idempotent', async ({ expect }) => {
       const store = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
       const spaceKey = PublicKey.random();
 
@@ -31,7 +31,7 @@ describe('MetadataStore', () => {
       expect(store.deletedSpaces).to.have.length(1);
     });
 
-    test('tombstones survive reload', async () => {
+    test('tombstones survive reload', async ({ expect }) => {
       const directory = createStorage({ type: StorageType.RAM }).createDirectory();
       const spaceKey = PublicKey.random();
 

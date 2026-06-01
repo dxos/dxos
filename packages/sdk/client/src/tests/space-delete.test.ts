@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -31,7 +31,7 @@ const waitForSpaceRemoval = async (client: Client, spaceKey: PublicKey, timeout 
 
 describe('Space deletion', () => {
   // Acceptance test: deleting a space on one device removes it on another device of the same identity.
-  test('delete replicates across devices of the same identity', async () => {
+  test('delete replicates across devices of the same identity', async ({ expect }) => {
     const testBuilder = new TestBuilder();
 
     const client1 = new Client({ services: testBuilder.createLocalClientServices() });
@@ -64,7 +64,7 @@ describe('Space deletion', () => {
     expect(client2.spaces.get(space1.key)).to.be.undefined;
   });
 
-  test('delete removes the space locally', async () => {
+  test('delete removes the space locally', async ({ expect }) => {
     const testBuilder = new TestBuilder();
 
     const client = new Client({ services: testBuilder.createLocalClientServices() });
