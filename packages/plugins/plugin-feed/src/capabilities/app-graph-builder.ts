@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -133,7 +133,7 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'sync',
-              data: () => Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(feed) }),
+              data: () => Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(feed) }, { spaceId: Obj.getDatabase(feed)?.spaceId }),
               properties: {
                 label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

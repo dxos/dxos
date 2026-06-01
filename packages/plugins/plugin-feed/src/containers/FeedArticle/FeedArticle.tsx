@@ -37,7 +37,11 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
 
   const handleSync = useCallback(() => {
     setError(undefined);
-    void invokePromise(FeedOperation.SyncFeed, { feed: Ref.make(subject) }).catch((err) => {
+    void invokePromise(
+      FeedOperation.SyncFeed,
+      { feed: Ref.make(subject) },
+      { spaceId: Obj.getDatabase(subject)?.spaceId },
+    ).catch((err) => {
       setError(String(err));
     });
   }, [subject, invokePromise]);
