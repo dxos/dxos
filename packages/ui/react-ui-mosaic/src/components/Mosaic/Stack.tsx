@@ -196,6 +196,10 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       count: draggable ? visibleItems.length * 2 + 1 : visibleItems.length,
       estimateSize: wrappedEstimateSize,
       gap,
+      // Inset the stack from both ends by `gap` (matching the inter-item spacing). The virtualizer
+      // folds this into item offsets, getTotalSize(), and scrollToIndex, so no manual compensation.
+      paddingStart: gap,
+      paddingEnd: gap,
       // Key measurements by stable item ID so the size cache survives scrolling;
       // without this, measurements are indexed by position and are lost when items reorder.
       getItemKey: draggable
@@ -228,9 +232,6 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     }, [registerScrollTo, scrollToId]);
 
     const virtualItems = virtualizer.getVirtualItems();
-    // The virtualizer only inserts `gap` *between* items; mirror it as a leading offset before the
-    // first item so the stack is inset from its container edge by the same amount.
-    const leadingOffset = gap ?? 0;
     const getData = (index: number): { data?: any; location: number } => {
       if (draggable) {
         if (index % 2 === 0) {
@@ -261,10 +262,10 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
           ...(orientation === 'vertical'
             ? {
                 width: '100%',
-                height: virtualizer.getTotalSize() + leadingOffset,
+                height: virtualizer.getTotalSize(),
               }
             : {
-                width: virtualizer.getTotalSize() + leadingOffset,
+                width: virtualizer.getTotalSize(),
                 height: '100%',
               }),
         }}
@@ -283,11 +284,11 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                 ...(orientation === 'vertical'
                   ? {
                       width: '100%',
-                      transform: `translateY(${start + leadingOffset}px)`,
+                      transform: `translateY(${start}px)`,
                     }
                   : {
                       height: '100%',
-                      transform: `translateX(${start + leadingOffset}px)`,
+                      transform: `translateX(${start}px)`,
                     }),
               }}
               ref={virtualizer.measureElement}
