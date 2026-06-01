@@ -191,6 +191,8 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         scrollWheelZoom={scrollWheelZoom}
         doubleClickZoom={doubleClickZoom}
         touchZoom={touchZoom}
+        // Allow fractional zoom so trackpad pinch (small ctrl+wheel deltas) isn't rounded away.
+        zoomSnap={0}
         center={center ?? defaults.center}
         zoom={zoom ?? defaults.zoom}
         whenReady={() => {}}
