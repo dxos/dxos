@@ -85,7 +85,6 @@ export const translations = [
         'edge.label': 'EDGE',
         'workflows.label': 'Workflows',
         'traces.label': 'Traces',
-        'operations.label': 'Operations',
         'testing.label': 'Testing',
         // GitHub (deck-companion--github surface).
         'github-loading.message': 'Loading…',

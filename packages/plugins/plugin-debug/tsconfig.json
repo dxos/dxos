@@ -63,9 +63,6 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions-runtime"
-    },
-    {
       "path": "../../core/compute/operation"
     },
     {

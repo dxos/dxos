@@ -659,22 +659,14 @@ describe('ProcessOperationInvoker invocations', () => {
   );
 
   it.effect(
-    'copies notify options onto lifecycle events',
+    'forwards notify options onto the spawned process params',
     Effect.fn(function* ({ expect }) {
-      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const events = yield* PubSub.subscribe(invoker.invocations);
-
-          const notify = { success: 'Done', error: 'Failed' };
-          yield* invoker.invoke(Double, { value: 1 }, { notify });
-
-          const pending = yield* Queue.take(events);
-          const terminal = yield* Queue.take(events);
-          expect(pending.notify).toEqual(notify);
-          expect(terminal.notify).toEqual(notify);
-        }),
-      );
+      // Notifications ride the process monitor: `notify` is forwarded onto the spawned process's params
+      // (and thereby surfaced on Process.Info for a notification tracker), not onto the invocation event.
+      const manager = yield* ProcessManager.Service;
+      const notify = { success: 'Done', error: 'Failed' };
+      const handle = yield* manager.spawn(makeSumAggregator(), { notify });
+      expect(handle.params.notify).toEqual(notify);
     }, Effect.provide(TestLayer)),
   );
 

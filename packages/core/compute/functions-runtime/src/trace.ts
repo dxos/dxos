@@ -162,8 +162,6 @@ export type TraceEvent = Type.InstanceType<typeof TraceEvent>;
  */
 export type InvocationSpan = {
   id: string;
-  /** Human-readable name (e.g. operation name); preferred over the resolved target when present. */
-  name?: string;
   timestamp: number;
   duration: number;
   outcome: InvocationOutcome;

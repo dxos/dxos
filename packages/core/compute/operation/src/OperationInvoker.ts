@@ -50,8 +50,6 @@ export type InvocationEvent<I = any, O = any> = {
   invocationId: string;
   operation: Operation.Definition<I, O>;
   input: I;
-  /** Present when the caller opted into notifications via {@link Operation.InvokeOptions.notify}. */
-  notify?: Operation.NotifyOptions;
   timestamp: number;
   status: InvocationStatus<O>;
 };
@@ -221,10 +219,9 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   ): Effect.Effect<O, NoHandlerError> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
-    const notify = options?.notify;
     return Effect.gen(this, function* () {
       const invocationId = EntityId.random();
-      const base = { invocationId, operation: op, input, notify };
+      const base = { invocationId, operation: op, input };
 
       // Publish lifecycle start event.
       yield* PubSub.publish(this._pubsub, { ...base, timestamp: Date.now(), status: { type: 'pending' } });

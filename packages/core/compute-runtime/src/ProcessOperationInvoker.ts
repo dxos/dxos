@@ -131,7 +131,7 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'> & {
+    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment' | 'notify'> & {
       /**
        * If true, do NOT link the spawned process to the current process as a
        * child. Used by {@link schedule} so that fire-and-forget operations
@@ -202,17 +202,18 @@ export const make = (opts: {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     const traceMeta = options?.tracing as Trace.Meta | undefined;
-    const notify = options?.notify;
     log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
       const invocationId = EntityId.random();
-      const base = { invocationId, operation: op, input, notify };
+      const base = { invocationId, operation: op, input };
 
       // Publish lifecycle start event.
       yield* PubSub.publish(pubsub, { ...base, timestamp: Date.now(), status: { type: 'pending' as const } });
 
       const fiber = yield* invokeFiber(op, input, {
         traceMeta,
+        // Notifications ride the process monitor: forward `notify` onto the spawned process's params.
+        notify: options?.notify,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
           ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
@@ -269,6 +270,7 @@ export const make = (opts: {
       const fiber = yield* invokeFiber(op, input, {
         detached: true,
         traceMeta,
+        notify: options?.notify,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
           ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),

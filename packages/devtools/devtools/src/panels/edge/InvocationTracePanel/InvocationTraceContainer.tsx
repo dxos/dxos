@@ -129,7 +129,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         // TODO(burdon): Use InvocationTraceStartEvent.
         return {
           id: invocation.id,
-          target: invocation.name ?? resolver(targetDXN),
+          target: resolver(targetDXN),
           // TODO(burdon): Change to timestamp?
           time: new Date(invocation.timestamp),
           duration: formatDuration(invocation.duration),

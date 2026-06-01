@@ -281,23 +281,6 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('copies notify options onto lifecycle events', () =>
-    Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
-      const collector = yield* createEventCollector(invoker);
-      yield* Effect.yieldNow();
-
-      const notify = { start: 'Starting', success: 'Done', error: 'Failed' } as const;
-      yield* invoker.invoke(ToString, { value: 1 }, { notify });
-
-      yield* collector.waitForEvents(2);
-      expect(collector.events[0].notify).toEqual(notify);
-      expect(collector.events[1].notify).toEqual(notify);
-
-      yield* collector.dispose;
-    }),
-  );
-
   it.effect('stamps undo info from the resolver onto success events', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveHandler]), testRuntime);

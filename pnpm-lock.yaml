@@ -9366,9 +9366,6 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/functions-runtime':
-        specifier: workspace:*
-        version: link:../../core/compute/functions-runtime
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
