@@ -111,7 +111,7 @@ export const createObject: {
         ? EntityKind.Relation
         : EntityKind.Object;
   defineHiddenProperty(obj, KindId, kind);
-  defineHiddenProperty(obj, MetaId, { keys: [], ...metaOverride });
+  defineHiddenProperty(obj, MetaId, { keys: [], tags: [], annotations: {}, ...metaOverride });
   setSchema(obj, schema);
   // If the caller passed a type entity (recognised via the schema slot), keep
   // a reference to it on the instance for `Obj.getType` / `Relation.getType`.

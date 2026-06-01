@@ -49,7 +49,7 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | S
 export const makeObject = <T extends AnyProperties>(
   schema: Schema.Schema<T, any, never>,
   obj: NoInfer<MakeObjectProps<T>>,
-  meta?: EntityMeta,
+  meta?: Partial<EntityMeta>,
   typeSource?: TypeSource,
 ): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
@@ -58,7 +58,7 @@ export const makeObject = <T extends AnyProperties>(
 
 const createReactiveObject = <T extends AnyProperties>(
   obj: T,
-  meta?: EntityMeta,
+  meta?: Partial<EntityMeta>,
   schema?: Schema.Schema<T>,
   typeSource?: TypeSource,
 ): T => {
@@ -122,7 +122,9 @@ const setIdOnTarget = (target: any) => {
  * Set metadata on object.
  */
 // TODO(dmaretskyi): Move to echo-schema.
-const initMeta = <T>(obj: T, meta: EntityMeta = { keys: [] }) => {
-  prepareTypedTarget(meta, EntityMetaSchema);
-  defineHiddenProperty(obj, MetaId, createProxy(meta, TypedReactiveHandler.instance as any));
+const initMeta = <T>(obj: T, meta?: Partial<EntityMeta>) => {
+  // Backfill required fields so callers may pass a partial meta (e.g. `{ keys: [...] }`).
+  const fullMeta: EntityMeta = { keys: [], tags: [], annotations: {}, ...meta };
+  prepareTypedTarget(fullMeta, EntityMetaSchema);
+  defineHiddenProperty(obj, MetaId, createProxy(fullMeta, TypedReactiveHandler.instance as any));
 };

@@ -16,9 +16,6 @@ import { getDictionary, setDictionary } from './dictionary';
 export const get = <T>(target: Entity.Unknown, annotation: Annotation.Annotation<T>): Option.Option<T> => {
   if (isEntity(target)) {
     const meta = getMetaChecked(target);
-    if (!meta.annotations) {
-      return Option.none();
-    }
     return getDictionary(meta.annotations, annotation);
   } else {
     throw new TypeError('Target is not an annotation target.');
@@ -31,9 +28,6 @@ export const get = <T>(target: Entity.Unknown, annotation: Annotation.Annotation
 export const set = <T>(target: Entity.Unknown, annotation: Annotation.Annotation<T>, value: T): void => {
   if (isEntity(target)) {
     const meta = getMetaChecked(target);
-    if (!meta.annotations) {
-      meta.annotations = {};
-    }
     setDictionary(meta.annotations, annotation, value);
   } else {
     throw new TypeError('Target is not an annotation target.');

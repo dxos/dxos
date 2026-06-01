@@ -45,11 +45,11 @@ describe('ObjectProperties — inline create flow', () => {
     const created = tags.find((tag) => tag.label === 'PinnedTag');
     expect(created, 'new Tag.Tag with label "PinnedTag" should be in the database').toBeDefined();
 
-    // And `object.meta.tags` should contain a DXN that resolves to that tag.
+    // And `object.meta.tags` should contain a ref that resolves to that tag.
     const meta = Obj.getMeta(object);
     const createdId = (created as any).id as string;
-    const matched = (meta.tags ?? []).some((dxn) => refTargetsObject(dxn, createdId));
-    expect(matched, "meta.tags should contain a DXN targeting the new tag's id").toBe(true);
+    const matched = meta.tags.some((ref) => refTargetsObject(ref.uri, createdId));
+    expect(matched, "meta.tags should contain a ref targeting the new tag's id").toBe(true);
   });
 
   test('non-Tag ref-array: Create + Save assigns the new ref to the array slot', { timeout: 30_000 }, async () => {

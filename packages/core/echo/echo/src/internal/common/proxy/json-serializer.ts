@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EntityMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
@@ -14,6 +13,7 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_TYPE,
+  type EntityMeta,
   MetaId,
   RelationSourceDXNId,
   RelationTargetDXNId,
@@ -89,5 +89,13 @@ const serializeData = (data: unknown) => {
 };
 
 const serializeMeta = (meta: EntityMeta) => {
-  return deepMapValues(meta, (value, recurse) => recurse(value));
+  // Omit empty `tags`/`annotations` to keep serialized output minimal; `objectFromJSON` backfills
+  // the required defaults on read.
+  const { tags, annotations, ...rest } = meta;
+  const compact: EntityMeta = {
+    ...rest,
+    ...(tags != null && tags.length > 0 ? { tags } : {}),
+    ...(annotations != null && Object.keys(annotations).length > 0 ? { annotations } : {}),
+  } as EntityMeta;
+  return deepMapValues(compact, (value, recurse) => recurse(value));
 };

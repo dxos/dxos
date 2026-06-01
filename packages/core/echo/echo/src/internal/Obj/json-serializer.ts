@@ -149,12 +149,14 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
+    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(normalizeMeta(jsonData[ATTR_META]));
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {
     defineHiddenProperty(obj, MetaId, {
       keys: [],
+      tags: [],
+      annotations: {},
     });
   }
 
@@ -183,6 +185,17 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
   return obj;
+};
+
+/**
+ * Backfills required meta fields and upgrades legacy `tags` (bare URI strings) to encoded references
+ * so serialized data produced before the tags-as-refs migration still decodes.
+ */
+const normalizeMeta = (meta: any): any => {
+  const tags = Array.isArray(meta?.tags)
+    ? meta.tags.map((tag: unknown) => (typeof tag === 'string' ? { '/': URI.make(tag) } : tag))
+    : [];
+  return { keys: [], annotations: {}, ...meta, tags };
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {

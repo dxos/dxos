@@ -306,7 +306,7 @@ export const TagAdd = Operation.make({
     `,
   },
   input: Schema.Struct({
-    tag: Ref.Ref(Obj.Unknown),
+    tag: Ref.Ref(Tag.Tag),
     obj: Ref.Ref(Obj.Unknown),
   }),
   output: Schema.Unknown,
@@ -324,7 +324,7 @@ export const TagRemove = Operation.make({
     `,
   },
   input: Schema.Struct({
-    tag: Ref.Ref(Obj.Unknown),
+    tag: Ref.Ref(Tag.Tag),
     obj: Ref.Ref(Obj.Unknown),
   }),
   output: Schema.Unknown,

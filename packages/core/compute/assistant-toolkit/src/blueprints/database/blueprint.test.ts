@@ -263,9 +263,9 @@ describe('Database Blueprint', () => {
         const tag = yield* Database.add(Tag.make({ label: 'important' }));
         yield* agent.submitPrompt(`Add tag "important" to the organization "Tagged Corp".`);
         yield* agent.waitForCompletion();
-        const tags = Obj.getMeta(org).tags ?? [];
+        const tags = Obj.getMeta(org).tags.map((ref) => ref.uri);
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).toContain(Obj.getURI(tag));
+        expect(tags).toContain(Obj.getURI(tag));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -283,13 +283,13 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
         const tagUri = Obj.getURI(tag);
-        Entity.update(org, (org) => Entity.addTag(org, tagUri));
-        expect(Obj.getMeta(org).tags ?? []).toContain(tagUri);
+        Entity.update(org, (org) => Entity.addTag(org, Ref.make(tag)));
+        expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toContain(tagUri);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
-        const tags = Obj.getMeta(org).tags ?? [];
+        const tags = Obj.getMeta(org).tags.map((ref) => ref.uri);
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).not.toContain(tagUri);
+        expect(tags).not.toContain(tagUri);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

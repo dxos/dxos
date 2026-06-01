@@ -2,14 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
-import { ForeignKey } from '@dxos/echo-protocol';
+import {
+  type EncodedReference,
+  EncodedReference as EncodedRef,
+  ForeignKey,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type * as Entity from '../../../Entity';
+import type * as Tag from '../../../Tag';
 import { Dictionary } from '../../Annotation/dictionary';
+// Type-only import (erased at runtime) — this module is part of the `common/types` barrel that
+// `internal/Ref/ref` imports at load time, so a value import would create an eval-order cycle.
+import type { Ref } from '../../Ref/ref';
 import { type AnyProperties } from './base';
 
 /**
@@ -26,18 +37,48 @@ export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 // EntityMeta
 //
 
+/**
+ * Schema for references to {@link Tag} objects stored in {@link EntityMetaSchema.tags}.
+ *
+ * Defined inline (rather than via `Ref.Ref(Tag)`) so this deep-internal module imports neither the
+ * `Tag` value nor the ref machinery — both would create an eval-order cycle. The codec only serves
+ * the non-database (typed-handler) and JSON paths: database reads materialize live `Ref`s in the
+ * echo handler, and database writes encode them via the handler's link assignment, so a structural
+ * pass-through is sufficient here.
+ */
+const TagRefSchema: Schema.Schema<Ref<Tag.Tag>, EncodedReference> = Schema.declare<Ref<Tag.Tag>, EncodedReference, []>(
+  [],
+  {
+    encode: () => (value) =>
+      Effect.gen(function* () {
+        if (isEncodedReference(value)) {
+          return value;
+        }
+        // `Ref`-like (has a `uri`): encode to the on-wire `{ '/': uri }` form.
+        if (value != null && typeof (value as Ref<Tag.Tag>).uri === 'string') {
+          return EncodedRef.fromURI((value as Ref<Tag.Tag>).uri);
+        }
+        return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+      }),
+    decode: () => (value) =>
+      Effect.gen(function* () {
+        // Pass the encoded reference through; the live `Ref` is materialized by the handler on read.
+        if (isEncodedReference(value) || (value != null && typeof (value as Ref<Tag.Tag>).uri === 'string')) {
+          // Codec boundary: the runtime value is an encoded reference, typed as the live ref.
+          return value as unknown as Ref<Tag.Tag>;
+        }
+        return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+      }),
+  },
+);
+
 export const EntityMetaSchema = Schema.Struct({
   keys: Schema.Array(ForeignKey),
 
   /**
-   * A set of tags.
-   * Tags are arbitrary application-defined strings.
-   * ECHO makes no assumptions about the tag structure.
+   * Tags applied to this entity, as references to {@link Tag} objects.
    */
-  // TODO(dmaretskyi): Has to be optional for compatibility with old data.
-  // Defaulting to an empty array is possible but requires a bit more work.
-  // TODO(dmaretskyi): In automerge this should be a map of { [tag]: boolean } for uniqueness and conflict resolution.
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.Array(TagRefSchema),
 
   /**
    * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
@@ -54,8 +95,7 @@ export const EntityMetaSchema = Schema.Struct({
   /**
    * Dictionary of annotations to this entity.
    */
-  // TODO(dmaretskyi): Make required.
-  annotations: Schema.optional(Dictionary),
+  annotations: Dictionary,
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;

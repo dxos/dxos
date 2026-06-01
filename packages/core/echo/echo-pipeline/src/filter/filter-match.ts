@@ -6,7 +6,7 @@ import * as semver from 'semver';
 
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, type EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
   id: EntityId;
@@ -72,7 +72,12 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
 
     case 'tag': {
       const tags = EntityStructure.getTags(obj.doc);
-      return tags.some((tag) => tag === filter.tag);
+      // Tags are stored as encoded references; legacy data may still hold bare URI strings, and those
+      // URIs may be in legacy DXN form. Normalize both sides to the canonical EID before comparing so
+      // a query by the modern id matches objects tagged before the migration (and vice versa).
+      const normalize = (uri: string): string => EID.tryParse(uri) ?? uri;
+      const target = normalize(filter.tag);
+      return tags.some((tag) => normalize(isEncodedReference(tag) ? EncodedReference.toURI(tag) : tag) === target);
     }
 
     case 'text-search': {

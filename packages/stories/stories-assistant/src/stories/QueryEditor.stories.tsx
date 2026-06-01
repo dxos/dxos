@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Obj, Tag } from '@dxos/echo';
+import { Obj, Ref, Tag } from '@dxos/echo';
+import { URI } from '@dxos/keys';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
@@ -81,7 +82,9 @@ const meta: Meta<typeof QueryEditor> = {
         ]);
         objects.forEach((obj) => {
           Obj.update(obj, (obj) => {
-            Obj.getMeta(obj).tags = random.helpers.uniqueArray(Object.keys(tags), random.number.int(3));
+            Obj.getMeta(obj).tags = random.helpers
+              .uniqueArray(Object.keys(tags), random.number.int(3))
+              .map((key) => Ref.fromURI(URI.make(`dxn:echo:@:${key}`)));
           });
         });
       },

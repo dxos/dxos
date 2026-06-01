@@ -228,7 +228,7 @@ export const makeEchoTypeSchema = <
   // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
   // canonical registry-provenance pair — not data fields. `keys` is empty for
   // in-memory declarations until persisted.
-  const meta: EntityMeta = { keys: [], key: typename, version };
+  const meta: Partial<EntityMeta> = { keys: [], key: typename, version };
 
   // Default to a deterministic id derived from `(typename, version)` so that
   // constructing a `Type.Type` entity never reaches `crypto.getRandomValues()`.
