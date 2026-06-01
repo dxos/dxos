@@ -52,7 +52,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   return yield* Effect.all([
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
-      id: 'collections-section',
+      id: 'collectionsSection',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -174,7 +174,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Object actions.
     GraphBuilder.createExtension({
-      id: 'object-actions',
+      id: 'objectActions',
       match: (node) => {
         return node.data != null &&
           Obj.getDatabase(node.data) &&
@@ -268,7 +268,7 @@ const constructObjectActions = ({
     ...(parentCollection && !Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: 'remove-from-collection',
+            id: 'removeFromCollection',
             data: () =>
               Effect.gen(function* () {
                 const index = parentCollection.objects.findIndex((ref: any) => ref.target === object);
@@ -314,7 +314,7 @@ const constructObjectActions = ({
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: 'copy-link',
+            id: 'copyLink',
             data: () =>
               Effect.promise(async () => {
                 const url = new URL(toUrlPath(nodeId), shareableLinkOrigin);

@@ -41,7 +41,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
   readonly output: Schema<O>;
 
   readonly meta: {
-    readonly key: string;
+    readonly key: DXN.DXN;
     readonly name?: string;
     readonly version?: string;
     readonly description?: string;
@@ -374,7 +374,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
     executionMode: 'async',
     types: [],
     meta: {
-      key: meta.key ?? record.name,
+      key: DXN.tryMake(meta.key ?? record.name) ?? DXN.make(meta.key ?? record.name),
       name: record.name,
       version: meta.version ?? '0.0.0',
       description: record.description,

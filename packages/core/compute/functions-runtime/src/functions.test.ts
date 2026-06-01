@@ -13,7 +13,7 @@ import { AiRequest, GenerationObserver, ToolExecutionServices, createToolkit } f
 import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
 import { AssistantTestLayer } from './testing';
@@ -22,7 +22,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const ReadName = Operation.make({
   meta: {
-    key: 'org.dxos.function.read-name',
+    key: DXN.make('org.dxos.function.readName'),
     name: 'Read Name',
     description: 'Reads the name of an organization.',
   },
@@ -36,7 +36,7 @@ const ReadName = Operation.make({
 const Handlers = OperationHandlerSet.make(
   Operation.withHandler(
     ReadName,
-    Effect.fnUntraced(function* ({ org }) {
+    Effect.fn(function* ({ org }) {
       const resolved = yield* Database.load(org);
       return resolved.name ?? '<no org>';
     }),

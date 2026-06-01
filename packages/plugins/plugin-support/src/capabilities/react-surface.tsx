@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'support-ticket',
+        id: 'supportTicket',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Support.Ticket),
           AppSurface.object(AppSurface.Section, Support.Ticket),
@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'welcome-article',
+        id: 'welcomeArticle',
         filter: AppSurface.literal(AppSurface.Article, WELCOME_NODE_ID),
         component: ({ role }) => <WelcomeArticle role={role} />,
       }),
@@ -55,7 +55,7 @@ export default Capability.makeModule(() =>
         component: () => <DiscordPanel />,
       }),
       Surface.create({
-        id: 'help-menu',
+        id: 'helpMenu',
         role: 'status-indicator',
         position: 'last',
         component: () => <HelpMenu />,
@@ -65,7 +65,7 @@ export default Capability.makeModule(() =>
       // `companion(Article)` with no schema filter; the resolver inside the
       // panel maps `companionTo` → owning plugin → `meta.description`.
       Surface.create({
-        id: 'help-companion',
+        id: 'helpCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
           AppSurface.companion(AppSurface.Article),

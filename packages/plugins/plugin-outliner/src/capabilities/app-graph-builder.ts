@@ -16,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'quick-entry',
+        id: 'quickEntry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([

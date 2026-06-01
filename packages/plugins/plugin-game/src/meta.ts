@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.game',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.game'),
   name: 'Game',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -34,4 +35,4 @@ export const meta: Plugin.Meta = {
   screenshots: [
     'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/2797d56edc9658d018ad75fe48a47f27/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2F2797d56edc9658d018ad75fe48a47f27%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
   ],
-};
+});

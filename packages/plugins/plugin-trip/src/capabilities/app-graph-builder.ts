@@ -29,7 +29,7 @@ export default Capability.makeModule(
     );
 
     const extension = yield* GraphBuilder.createExtension({
-      id: 'trip-segment',
+      id: 'tripSegment',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
         const trip = matched.trip;
@@ -57,7 +57,7 @@ export default Capability.makeModule(
 
     // Context-menu action on a Trip: merge it into the nearest other trip (by date) and delete it.
     const mergeExtension = yield* GraphBuilder.createExtension({
-      id: 'trip-merge',
+      id: 'tripMerge',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
       actions: (trip) =>
         Effect.succeed([

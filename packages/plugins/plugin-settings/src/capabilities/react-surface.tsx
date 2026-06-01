@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'default-plugin-settings',
+        id: 'defaultPluginSettings',
         position: 'last',
         filter: AppSurface.settings(AppSurface.Article),
         component: ({ data: { subject } }) => <DefaultSettings subject={subject} />,

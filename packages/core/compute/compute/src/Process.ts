@@ -14,7 +14,7 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
-import type { URI } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Operation from './Operation';
@@ -250,7 +250,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 ): Process<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
   make(
     {
-      key: op.meta.key,
+      key: DXN.getName(op.meta.key),
       input: op.input,
       output: op.output,
       services: op.services,

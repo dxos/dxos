@@ -9,6 +9,7 @@ import type * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 export const toolkit = Toolkit.make(
   Tool.make('time', {
@@ -30,7 +31,7 @@ export const layer = toolkit.toLayer({
 
 const Random = Operation.make({
   meta: {
-    key: 'com.example.function.random',
+    key: DXN.make('com.example.function.random'),
     name: 'random',
     description: 'Gets a random number.',
   },

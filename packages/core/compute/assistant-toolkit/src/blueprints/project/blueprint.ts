@@ -49,7 +49,7 @@ const make = () =>
         {
           name: 'agent',
           kind: 'operation',
-          operation: 'org.dxos.function.agent.get-context',
+          operation: 'org.dxos.function.agent.getContext',
         },
       ],
     }),
