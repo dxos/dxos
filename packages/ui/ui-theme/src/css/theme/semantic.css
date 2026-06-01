@@ -46,7 +46,7 @@
   --color-r1-surface: var(--color-attention-surface);
 
   --color-toolbar-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
-  --color-modal-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
+  --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-825));
 
   --color-group-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-group-alt-surface: light-dark(var(--color-neutral-100), var(--color-neutral-875));
