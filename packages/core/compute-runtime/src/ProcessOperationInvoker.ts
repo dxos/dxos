@@ -32,7 +32,6 @@ export interface OperationFiber<T> {
   poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
 }
 
-
 // TODO(dmaretskyi): Can we move this into the core invoker?
 export interface ProcessOperationInvoker {
   /**
