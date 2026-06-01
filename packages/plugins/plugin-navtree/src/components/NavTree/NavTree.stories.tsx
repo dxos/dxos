@@ -161,8 +161,9 @@ export const Default: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
-    // Find the element with treegrid role and click on its parent
-    const treegridElement = await canvas.findByRole('treegrid');
+    // Find the element with treegrid role and click on its parent.
+    // Use a generous timeout because the plugin manager initialises asynchronously.
+    const treegridElement = await canvas.findByRole('treegrid', {}, { timeout: 10000 });
     const treegridParent = treegridElement.parentElement;
     if (treegridParent) {
       await userEvent.click(treegridParent);
