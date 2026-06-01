@@ -18,7 +18,7 @@ export type LevelTier = {
   level: CountriesResolution;
 };
 
-/** Default zoom buckets: 110m below zoom 3, 50m at/above it. */
+/** Default zoom bucket: 110m at all zoom levels (50m tier disabled for now). */
 const DEFAULT_TIERS: LevelTier[] = [
   { minZoom: 0, level: '110m' },
   // { minZoom: 3, level: '50m' },
