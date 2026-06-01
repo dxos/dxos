@@ -75,7 +75,7 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  internal.SystemTypeAnnotation.set(true),
+  internal.HiddenAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--funnel--regular',
     hue: 'green',
