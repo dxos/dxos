@@ -46,6 +46,8 @@ export type Presentation = 'full' | 'compact' | 'inline' | 'static';
  * Props passed to input components.
  */
 export type FormFieldComponentProps<T = any> = {
+  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
+  db?: Database.Database;
   type: SchemaAST.AST;
   format?: Format.TypeFormat;
   readonly?: boolean;
@@ -60,22 +62,17 @@ export type FormFieldComponentProps<T = any> = {
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
-  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
-  db?: Database.Database;
 } & FormFieldStateProps<T>;
 
-/**
- * Form field component.
- */
 export type FormFieldComponent = FC<FormFieldComponentProps>;
 
 export type FormFieldMap = Record<string, FormFieldComponent>;
 
 export type FormFieldProvider = (props: {
-  prop: string; // TODO(burdon): Path?
+  prop: string;
   schema: Schema.Schema<any>;
   fieldProps: FormFieldComponentProps;
-}) => ReactElement | undefined;
+}) => ReactElement | null | undefined;
 
 //
 // FormFieldLabel
