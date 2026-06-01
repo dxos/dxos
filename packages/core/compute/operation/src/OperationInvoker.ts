@@ -12,10 +12,16 @@ import * as PubSub from 'effect/PubSub';
 import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
 import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
-import { EntityId, type SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Scheduler from './scheduler';
+
+// Monotonic counter for correlating an invocation's lifecycle events. Intentionally NOT an
+// `EntityId.random()` so it doesn't consume the deterministic id sequence in tests that call
+// `EntityId.dangerouslyDisableRandomness()`.
+let invocationCounter = 0;
+const nextInvocationId = (): string => `invocation-${++invocationCounter}`;
 
 // @import-as-namespace
 
@@ -220,7 +226,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(this, function* () {
-      const invocationId = EntityId.random();
+      const invocationId = nextInvocationId();
       const base = { invocationId, operation: op, input };
 
       // Publish lifecycle start event.

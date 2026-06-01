@@ -19,7 +19,6 @@ import * as Stream from 'effect/Stream';
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
-import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
@@ -43,6 +42,12 @@ const causeToError = (cause: Cause.Cause<unknown>): { message: string; name?: st
   }
   return { message: Cause.pretty(cause) };
 };
+
+// Monotonic counter for correlating an invocation's lifecycle events. Intentionally NOT an
+// `EntityId.random()` so it doesn't consume the deterministic id sequence in tests that call
+// `EntityId.dangerouslyDisableRandomness()`.
+let invocationCounter = 0;
+const nextInvocationId = (): string => `invocation-${++invocationCounter}`;
 
 // TODO(dmaretskyi): Can we move this into the core invoker?
 export interface ProcessOperationInvoker {
@@ -204,7 +209,7 @@ export const make = (opts: {
     const traceMeta = options?.tracing as Trace.Meta | undefined;
     log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
-      const invocationId = EntityId.random();
+      const invocationId = nextInvocationId();
       const base = { invocationId, operation: op, input };
 
       // Publish lifecycle start event.
