@@ -16,7 +16,7 @@ import { getObjectPathFromObject } from '../../paths';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
-/** True when subject is an Echo object and its schema does not have the system annotation. */
+/** True when subject is an Echo object and its schema does not have the hidden annotation. */
 const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
   if (!subject || !Obj.isObject(subject)) {
     return false;
@@ -27,7 +27,7 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown => {
   }
 
   const type = Obj.getType(subject);
-  return !(type != null && Option.getOrElse(Annotation.SystemTypeAnnotation.get(Type.getSchema(type)), () => false));
+  return !(type != null && Option.getOrElse(Annotation.HiddenAnnotation.get(Type.getSchema(type)), () => false));
 };
 
 /**

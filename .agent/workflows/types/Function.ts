@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/internal';
 
 import { Script } from './Script';
 
@@ -52,7 +52,7 @@ export const Function = Schema.Struct({
 }).pipe(
   Type.makeObject(DXN.make('org.dxos.type.function', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
-  SystemTypeAnnotation.set(true),
+  HiddenAnnotation.set(true),
 );
 
 export interface Function extends Schema.Schema.Type<typeof Function> {}

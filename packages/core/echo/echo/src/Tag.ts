@@ -20,7 +20,7 @@ export const Tag = Schema.Struct({
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
   internal.LabelAnnotation.set(['label']),
-  internal.SystemTypeAnnotation.set(true),
+  internal.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.tag', '0.1.0')),
 );
 

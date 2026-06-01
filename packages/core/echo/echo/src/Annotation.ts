@@ -10,7 +10,7 @@ export {
   GeneratorAnnotation,
   LabelAnnotation,
   ReferenceAnnotation,
-  SystemTypeAnnotation,
+  HiddenAnnotation,
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,
