@@ -15,6 +15,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
@@ -89,7 +90,7 @@ export type EnrichmentOutputType = Schema.Schema.Type<typeof EnrichmentOutput>;
 
 export const EnrichTranscript = Operation.make({
   meta: {
-    key: `${NAMESPACE}.enrich`,
+    key: DXN.make(`${NAMESPACE}.enrich`),
     name: 'Enrich Transcript',
     description: 'Correct Whisper output and surface entity references and candidates over a sliding window.',
     icon: 'ph--microphone--regular',
@@ -176,7 +177,7 @@ export type SummaryOutputType = Schema.Schema.Type<typeof SummaryOutput>;
 
 export const SummarizeConversation = Operation.make({
   meta: {
-    key: `${NAMESPACE}.summarize`,
+    key: DXN.make(`${NAMESPACE}.summarize`),
     name: 'Summarize Conversation',
     description: 'Maintain a cumulative summary with referent resolution over a transcript stream.',
     icon: 'ph--text-align-left--regular',

@@ -95,7 +95,7 @@ export class ObjectCore {
     initialProps ??= {};
 
     this.doc = A.from<EntityStructure>({
-      data: this.encode(initialProps as any),
+      data: this.encode(initialProps),
       meta: this.encode({
         keys: [],
         ...opts?.meta,
@@ -254,8 +254,11 @@ export class ObjectCore {
 
   /**
    * Encode a value to be stored in the Automerge document.
+   * Accepts arbitrary decoded input: in addition to {@link DecodedAutomergePrimaryValue}, this recursively
+   * serializes structured values such as entity meta, whose annotation dictionary holds opaque
+   * (schema-encoded) payloads that are not statically typed.
    */
-  encode(value: DecodedAutomergePrimaryValue) {
+  encode(value: unknown) {
     if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }

@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.navtree',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.navtree'),
   name: 'Navtree',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -26,9 +27,9 @@ export const meta: Plugin.Meta = {
     keyboard-first entry point for power users.
   `,
   tags: ['system'],
-};
+});
 
 // TODO(wittjosiah): Factor out.
 export const KEY_BINDING = 'KeyBinding';
 // TODO(wittjosiah): Factor out.
-export const COMMANDS_DIALOG = `${meta.id}.commands-dialog`;
+export const COMMANDS_DIALOG = DXN.make(`${meta.id}.commandsDialog`);

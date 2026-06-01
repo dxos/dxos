@@ -103,12 +103,7 @@ export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.T
  * Check if a value is an ECHO entity (object or relation).
  * Returns `false` for snapshots.
  */
-export const isEntity = (value: unknown): value is Unknown => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  return (value as any)[KindId] !== undefined;
-};
+export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
 
 /**
  * Test if a value is an instance of a given object or relation type.

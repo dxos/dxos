@@ -8,12 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, DXN } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const SLACK_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for `GetSlackChannels.output`. */
 const RemoteTarget = Schema.Struct({
@@ -33,7 +33,7 @@ const RemoteTarget = Schema.Struct({
  */
 export const GetSlackChannels = Operation.make({
   meta: {
-    key: `${SLACK_OPERATION}.get-slack-channels`,
+    key: makeKey('getSlackChannels'),
     name: 'Get Slack Channels',
     description: 'List Slack conversations reachable from an integration without materializing local Channels.',
     icon: 'ph--slack-logo--regular',
@@ -62,7 +62,7 @@ export const GetSlackChannels = Operation.make({
  */
 export const SyncSlackChannel = Operation.make({
   meta: {
-    key: `${SLACK_OPERATION}.sync-slack-channel`,
+    key: makeKey('syncSlackChannel'),
     name: 'Sync Slack Channel',
     description: 'Reconcile messages for currently-selected Slack targets in an Integration.',
     icon: 'ph--arrows-clockwise--regular',

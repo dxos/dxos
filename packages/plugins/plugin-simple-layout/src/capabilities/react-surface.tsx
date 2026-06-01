@@ -30,13 +30,13 @@ export default Capability.makeModule(() =>
         component: () => <Home />,
       }),
       Surface.create({
-        id: 'not-found',
+        id: 'notFound',
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === NOT_FOUND_PATH,
         component: () => <NotFoundArticle />,
       }),
       Surface.create({
-        id: 'nav-branch',
+        id: 'navBranch',
         role: 'article',
         position: 'last',
         filter: (data): data is SurfaceData => {

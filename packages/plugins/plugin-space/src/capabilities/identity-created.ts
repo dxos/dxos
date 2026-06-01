@@ -17,7 +17,10 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const personalSpace = yield* Effect.tryPromise(() =>
-      client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+      client.spaces.create(
+        Migrations.versionProperty ? { [Migrations.versionProperty]: Migrations.targetVersion } : {},
+        { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED },
+      ),
     );
     yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
 
@@ -25,9 +28,6 @@ export default Capability.makeModule(
     yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
     Obj.update(personalSpace.properties, (properties) => {
       properties[Type.getTypename(Collection.Collection)] = Ref.make(Collection.make());
-      if (Migrations.versionProperty) {
-        properties[Migrations.versionProperty] = Migrations.targetVersion;
-      }
     });
   }),
 );

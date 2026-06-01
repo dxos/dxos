@@ -21,7 +21,7 @@ const SPACE_NODE_TYPE = 'org.dxos.type.space';
  * @example
  * ```ts
  * GraphBuilder.createExtension({
- *   id: 'my-space-section',
+ *   id: 'mySpaceSection',
  *   match: AppNodeMatcher.whenSpace,
  *   connector: (space) => Effect.succeed([...]),
  * });

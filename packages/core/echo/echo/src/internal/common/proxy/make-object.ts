@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { EntityId } from '@dxos/keys';
 
-import { getTypeAnnotation } from '../../Annotation';
+import { getTypeAnnotation } from '../../Annotation/annotations';
 import {
   type AnyProperties,
   KindId,

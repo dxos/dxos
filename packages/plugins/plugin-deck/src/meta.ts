@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.deck',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.deck'),
   name: 'Layout',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -30,4 +31,4 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--layout--regular',
   tags: ['system'],
-};
+});

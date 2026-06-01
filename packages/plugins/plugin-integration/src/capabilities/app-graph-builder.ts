@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
@@ -27,7 +27,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'integration-actions',
+        id: 'integrationActions',
         match: (node) =>
           Integration.instanceOf(node.data) ? Option.some(node.data as Integration.Integration) : Option.none(),
         actions: (integration) =>
@@ -78,16 +78,12 @@ export default Capability.makeModule(
           }),
       }),
 
-      // Integrations folder nested under the space settings section; kept empty until an Integration exists.
+      // Per-space integrations folder; kept empty until an Integration exists.
       // Separate listing extension so graph reacts when targets are deleted.
       GraphBuilder.createExtension({
-        id: 'integrations-section',
-        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
-        connector: (node, get) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          if (!space) {
-            return Effect.succeed([]);
-          }
+        id: 'integrationsSection',
+        match: AppNodeMatcher.whenSpace,
+        connector: (space, get) => {
           const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
           if (integrations.length === 0) {
             return Effect.succeed([]);
@@ -113,7 +109,7 @@ export default Capability.makeModule(
 
       // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
       GraphBuilder.createExtension({
-        id: 'integration-listing',
+        id: 'integrationListing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

@@ -45,7 +45,7 @@ export default Capability.makeModule(
     // whose primary article is already a map). Gating lives here (capability-aware) rather than in
     // the surface filter; refining it to require non-empty markers is a follow-up.
     const companion = yield* GraphBuilder.createExtension({
-      id: 'map-companion',
+      id: 'mapCompanion',
       match: (node) =>
         Obj.isObject(node.data) && !Obj.instanceOf(Map.Map, node.data) ? Option.some(node.data) : Option.none(),
       connector: (object) =>
