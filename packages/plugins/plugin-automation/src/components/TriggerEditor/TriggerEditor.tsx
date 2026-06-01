@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
@@ -84,15 +84,22 @@ type UseCustomInputsProps = {
 
 const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
   const client = useClient();
+  // TODO(dmaretskyi): Perform signle query.
   // TODO(dmaretskyi): 1 - can't query db + registry together
   // TODO(dmaretskyi): 2 - infinite render loop for some reason
+  // TODO(dmaretskyi): Even when listed, registry operations dont work.
+  const [registryFunctions, setRegistryFunctions] = useState<Operation.PersistentOperation[]>([]);
+  useEffect(() => {
+    // setRegistryFunctions(client.graph.registry.query(Filter.type(Operation.PersistentOperation)).runSync());
+  }, [client.graph.registry]);
+  const dbFunctions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
-  const functions = useQuery(
-    client.graph.registry,
-    // Query.select(Filter.type(Operation.PersistentOperation)).from(db),
-    Query.select(Filter.everything()).from(Scope.registry()),
+  const functions = useMemo(
+    () => [...registryFunctions, ...dbFunctions].toSorted((a, b) => (a.name ?? '').localeCompare(b.name ?? '') ?? 0),
+    [registryFunctions, dbFunctions],
   );
   dbg(functions);
+
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
   const feeds = useQuery(db, Filter.type(Feed.Feed));

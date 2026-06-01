@@ -38,7 +38,7 @@ export default Capability.makeModule(
             });
             // Auto-sync after creation if URL is provided.
             if (object.url) {
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
+              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: Ref.make(object) });
             }
             return result;
           }),
@@ -63,7 +63,7 @@ export default Capability.makeModule(
                 hidden: true,
                 targetNodeId: options.targetNodeId,
               });
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
+              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: Ref.make(defaultFeed) });
               return defaultFeed;
             }).pipe(Effect.option);
 

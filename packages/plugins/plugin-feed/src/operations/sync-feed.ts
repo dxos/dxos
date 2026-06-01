@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { createFeedServiceLayer, getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -31,7 +31,8 @@ const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
 
 const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperation.SyncFeed.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ feed: subscriptionFeed }) {
+    Effect.fnUntraced(function* ({ feed }) {
+      const subscriptionFeed = yield* Database.load(feed);
       const url = subscriptionFeed.url;
       invariant(url, 'Feed URL is required.');
       const echoFeed = subscriptionFeed.feed?.target;
