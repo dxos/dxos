@@ -10,7 +10,7 @@ import { Obj, Registry, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { findTypeByDXN, makeRegistry, registryLayer, registryLayerWithUpstream } from './registry';
+import { findEntityByDXN, findTypeByDXN, makeRegistry, registryLayer, registryLayerWithUpstream } from './registry';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -117,6 +117,38 @@ describe('Registry', () => {
     expect(findTypeByDXN(registry, `${typename}:${version}`)).toBeUndefined();
     // Missing DXN.
     expect(findTypeByDXN(registry, 'dxn:org.example.Bar:1.0.0')).toBeUndefined();
+  });
+
+  test('add keyed entity and findEntityByDXN', ({ expect }) => {
+    const registry = makeRegistry();
+    const obj = makeObj({ key: 'org.example.function.translate', version: '0.1.0', value: 1 });
+    registry.add([obj]);
+
+    // Resolvable by versioned and unversioned key DXN.
+    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate:0.1.0')).toBe(obj);
+    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate')).toBe(obj);
+    // Missing key DXN.
+    expect(findEntityByDXN(registry, 'dxn:org.example.function.missing')).toBeUndefined();
+
+    // Type entities remain resolvable via the same generic lookup.
+    registry.add([Type.Type]);
+    const typename = Type.getTypename(Type.Type);
+    const version = Type.getVersion(Type.Type);
+    expect(findEntityByDXN(registry, `dxn:${typename}:${version}`)).toBe(Type.Type);
+
+    // Index entries are removed alongside the entity.
+    expect(registry.remove(obj.id)).toBe(true);
+    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate:0.1.0')).toBeUndefined();
+    expect(findEntityByDXN(registry, 'dxn:org.example.function.translate')).toBeUndefined();
+  });
+
+  test('findEntityByDXN resolves through upstream', ({ expect }) => {
+    const upstream = makeRegistry({
+      initial: [makeObj({ key: 'org.example.function.summarize', version: '0.2.0', value: 1 })],
+    });
+    const local = makeRegistry({ upstream });
+    expect(findEntityByDXN(local, 'dxn:org.example.function.summarize:0.2.0')).toBeDefined();
+    expect(findEntityByDXN(local, 'dxn:org.example.function.summarize')).toBeDefined();
   });
 
   test('type entities are surfaced in list()', ({ expect }) => {

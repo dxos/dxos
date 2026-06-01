@@ -18,7 +18,11 @@ import { DXN, EID, PublicKey, URI } from '@dxos/keys';
  * All entities (objects, relations, and type-definition entities) are stored in a
  * single `#entities` map keyed by id. Type entities are additionally indexed by
  * their DXN string(s) in `#typesByURI` so that {@link findTypeByDXN} can resolve
- * them in O(1) without exposing a type-specific method on the interface.
+ * them in O(1) without exposing a type-specific method on the interface. Keyed
+ * entities (those carrying a `key` in their meta — e.g. operations, blueprints)
+ * are indexed in `#entitiesByURI` under their `dxn:<key>[:<version>]` so that
+ * {@link findEntityByDXN} can resolve them by DXN the same way types resolve by
+ * typename.
  */
 export class RegistryImpl implements Registry.Registry {
   readonly [Registry.TypeId]: typeof Registry.TypeId = Registry.TypeId;
@@ -31,6 +35,12 @@ export class RegistryImpl implements Registry.Registry {
    * (e.g. both the canonical typename DXN and an identifier DXN).
    */
   readonly #typesByURI: Map<URI.URI, Type.AnyEntity> = new Map();
+  /**
+   * Secondary index: key DXN string → keyed (non-type) entity.
+   * A single entity is reachable under both its versioned (`dxn:<key>:<version>`)
+   * and unversioned (`dxn:<key>`) DXN.
+   */
+  readonly #entitiesByURI: Map<URI.URI, Entity.Unknown> = new Map();
   readonly #upstream: Registry.Registry | undefined;
 
   constructor(options: Registry.Options) {
@@ -68,6 +78,12 @@ export class RegistryImpl implements Registry.Registry {
           this.#typesByURI.delete(dxn);
         }
       }
+    } else {
+      for (const [dxn, indexed] of this.#entitiesByURI) {
+        if (indexed === entity) {
+          this.#entitiesByURI.delete(dxn);
+        }
+      }
     }
     this.#changed.emit();
     return true;
@@ -76,6 +92,7 @@ export class RegistryImpl implements Registry.Registry {
   clear(): void {
     this.#entities.clear();
     this.#typesByURI.clear();
+    this.#entitiesByURI.clear();
     this.#changed.emit();
   }
 
@@ -125,6 +142,29 @@ export class RegistryImpl implements Registry.Registry {
     return this.#upstream?.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalizeURI(dxn)));
   }
 
+  /**
+   * Internal DXN lookup used by {@link findEntityByDXN}. Resolves any registry entity by DXN:
+   * type entities by their typename DXN, keyed entities by their `dxn:<key>[:<version>]`.
+   * Not part of the public {@link Registry.Registry} interface.
+   */
+  _findEntityByDXN(dxn: string): Entity.Unknown | undefined {
+    const normalized = normalizeURI(dxn);
+    const type = this.#typesByURI.get(normalized);
+    if (type != null) {
+      return type;
+    }
+    const local = this.#entitiesByURI.get(normalized);
+    if (local != null) {
+      return local;
+    }
+    // Delegate to upstream if it supports fast DXN lookup.
+    if (this.#upstream instanceof RegistryImpl) {
+      return this.#upstream._findEntityByDXN(dxn);
+    }
+    // Fallback: linear scan of upstream.
+    return this.#upstream?.list().find((entity) => matchesEntityDXN(entity, normalized));
+  }
+
   #put(entity: Entity.Unknown): void {
     const id = getEntityId(entity);
     this.#entities.set(id, entity);
@@ -142,6 +182,12 @@ export class RegistryImpl implements Registry.Registry {
         const dxn = getTypeDXN(typeEntity);
         this.#typesByURI.set(dxn, typeEntity);
       }
+      return;
+    }
+
+    // Index keyed entities (operations, blueprints, etc.) by their key DXN(s) for fast lookup.
+    for (const dxn of getEntityKeyDXNs(entity)) {
+      this.#entitiesByURI.set(normalizeURI(dxn), entity);
     }
   }
 }
@@ -162,6 +208,24 @@ export const findTypeByDXN = (registry: Registry.Registry, dxn: string): Type.An
   // Fallback: linear scan for non-RegistryImpl implementations.
   const normalized = normalizeURI(dxn);
   return registry.list().find((e): e is Type.AnyEntity => Type.isType(e) && matchesDXN(e, normalized));
+};
+
+/**
+ * Look up any registry entity by its DXN string.
+ *
+ * Resolves type entities by their typename DXN (see {@link findTypeByDXN}) and keyed entities
+ * (those carrying a meta `key` — e.g. operations, blueprints) by their `dxn:<key>[:<version>]`.
+ * Both the versioned and unversioned key DXN forms resolve to the same entity.
+ *
+ * Falls back to a linear scan when the registry is not a {@link RegistryImpl}.
+ */
+export const findEntityByDXN = (registry: Registry.Registry, dxn: string): Entity.Unknown | undefined => {
+  if (registry instanceof RegistryImpl) {
+    return registry._findEntityByDXN(dxn);
+  }
+  // Fallback: linear scan for non-RegistryImpl implementations.
+  const normalized = normalizeURI(dxn);
+  return registry.list().find((entity) => matchesEntityDXN(entity, normalized));
 };
 
 /**
@@ -235,6 +299,44 @@ const matchesDXN = (type: Type.AnyEntity, normalizedDXN: string): boolean => {
   } catch {
     return false;
   }
+};
+
+/**
+ * Returns the key DXN(s) under which a keyed (non-type) entity is indexed.
+ * A keyed entity carries a `key` in its meta (e.g. operations, blueprints); it is reachable
+ * under both its versioned (`dxn:<key>:<version>`) and unversioned (`dxn:<key>`) DXN. Returns
+ * an empty array for entities without a meta key (which are reachable by id only).
+ */
+const getEntityKeyDXNs = (entity: Entity.Unknown): DXN.DXN[] => {
+  const meta = Entity.getMeta(entity);
+  const key = meta?.key;
+  if (!key) {
+    return [];
+  }
+  const version = meta?.version;
+  const dxns: DXN.DXN[] = [];
+  const unversioned = DXN.tryMake(`dxn:${key}`);
+  if (unversioned != null) {
+    dxns.push(unversioned);
+  }
+  if (version != null) {
+    const versioned = DXN.tryMake(`dxn:${key}:${version}`);
+    if (versioned != null) {
+      dxns.push(versioned);
+    }
+  }
+  return dxns;
+};
+
+/**
+ * Returns true if `entity` is reachable under the normalized DXN — either as a type entity
+ * (typename/identifier DXN) or as a keyed entity (key DXN).
+ */
+const matchesEntityDXN = (entity: Entity.Unknown, normalizedDXN: string): boolean => {
+  if (Type.isType(entity)) {
+    return matchesDXN(entity, normalizedDXN);
+  }
+  return getEntityKeyDXNs(entity).some((dxn) => normalizeURI(dxn) === normalizedDXN);
 };
 
 /**

@@ -23,7 +23,7 @@ import {
   SpaceQuerySource,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
-import { findTypeByDXN, makeRegistry } from './registry';
+import { findEntityByDXN, findTypeByDXN, makeRegistry } from './registry';
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -159,10 +159,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           return res ? middleware(res) : undefined;
         }
 
-        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
+        // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
+        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
-          const typeEntity = findTypeByDXN(this._registry, uri.toString());
-          return typeEntity ? middleware(typeEntity) : undefined;
+          const entity = findEntityByDXN(this._registry, uri.toString());
+          return entity ? middleware(entity) : undefined;
         }
 
         return undefined; // Unsupported URI kind.
@@ -337,10 +338,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         status = 'missing';
         return undefined;
       } else if (DXN.isDXN(uri)) {
-        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
-        const typeEntity = findTypeByDXN(this._registry, uri.toString());
-        status = typeEntity ? 'resolved' : 'missing';
-        return typeEntity ?? undefined;
+        // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
+        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        const entity = findEntityByDXN(this._registry, uri.toString());
+        status = entity ? 'resolved' : 'missing';
+        return entity ?? undefined;
       } else {
         status = 'error';
         throw new Error(`Unsupported URI kind: ${uri}`);

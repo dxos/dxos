@@ -23,7 +23,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -93,6 +93,30 @@ describe('TriggerDispatcher', () => {
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * *'),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { tick: 0 },
+        });
+
+        expect(result).toEqual(Exit.succeed({ tick: 0 }));
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should invoke trigger referencing a registry operation by key DXN',
+      Effect.fnUntraced(function* ({ expect }) {
+        // Register the operation descriptor in the in-process registry (not the space db); the
+        // executable handler is provided by ExampleHandlers. The trigger references it by key DXN
+        // and resolves through the generic registry ref resolver.
+        const { db } = yield* Database.Service;
+        db.registry.add([Operation.serialize(Reply)]);
+        const trigger = Trigger.make({
+          function: Ref.fromURI(DXN.make(Reply.meta.key)),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
         });
