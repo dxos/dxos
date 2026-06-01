@@ -176,6 +176,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
     return () => unsubs.forEach((unsub) => unsub());
   }, [mailboxes]);
+
   // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
   const tagObjects = useQuery(db, Filter.type(EchoTag.Tag));
   const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
