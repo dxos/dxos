@@ -4,7 +4,7 @@
 
 import { type Decorator, type StoryContext } from '@storybook/react';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -67,42 +67,58 @@ export type WithPluginManagerInitializer<Args = void> =
 
 /**
  * Wraps a story with a plugin manager.
- * NOTE: This builds up and tears down the plugin manager on every render.
+ *
+ * The manager is initialised synchronously so it is ready before Storybook's
+ * `play` function runs. A separate effect tears it down when the story changes
+ * or the decorator unmounts.
  */
 export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
   return (Story, context) => {
     const storyId = context.id;
     const options = typeof init === 'function' ? init(context as any) : init;
-    const [managerState, setManagerState] = useState<ManagedPluginManagerState>();
 
-    // Storybook replaces the full context object often, so key manager ownership by story id.
-    useEffect(() => {
+    // Initialise synchronously so the manager is ready on the very first render
+    // and Storybook's play() function does not race against a useEffect.
+    const [managerState, setManagerState] = useState<ManagedPluginManagerState>(() => {
       const pluginManager = setupPluginManager(options);
-      const capability = Capability.contributes(Capabilities.ReactRoot, {
-        id: storyId,
-        root: () => <Story />,
-      });
-
       pluginManager.capabilities.contribute({
-        ...capability,
+        ...Capability.contributes(Capabilities.ReactRoot, { id: storyId, root: () => <Story /> }),
         module: 'org.dxos.app-framework.with-plugin-manager',
       });
+      return { pluginManager, setupEvents: options.setupEvents, fireEvents: options.fireEvents, storyId };
+    });
 
-      setManagerState({
-        pluginManager,
-        setupEvents: options.setupEvents,
-        fireEvents: options.fireEvents,
-        storyId,
+    // Keep a stable ref to the current manager so the cleanup effect can always
+    // reach the latest instance without listing it as a dependency.
+    const managerRef = useRef(managerState);
+    managerRef.current = managerState;
+
+    // Re-initialise when the story id changes (Storybook navigation) and tear
+    // down the previous manager.
+    useEffect(() => {
+      if (managerState.storyId === storyId) {
+        // Already initialised for this story — just register the teardown.
+        return () => {
+          const { pluginManager } = managerRef.current;
+          void runAndForwardErrors(pluginManager.shutdown());
+        };
+      }
+
+      // Story changed: build a fresh manager synchronously.
+      const pluginManager = setupPluginManager(options);
+      pluginManager.capabilities.contribute({
+        ...Capability.contributes(Capabilities.ReactRoot, { id: storyId, root: () => <Story /> }),
+        module: 'org.dxos.app-framework.with-plugin-manager',
       });
+      setManagerState({ pluginManager, setupEvents: options.setupEvents, fireEvents: options.fireEvents, storyId });
 
       return () => {
-        pluginManager.capabilities.remove(capability.interface, capability.implementation);
         void runAndForwardErrors(pluginManager.shutdown());
       };
-    }, [storyId, init]);
+    }, [storyId]);
 
-    // Avoid mounting useApp with a stale manager from the previous story.
-    if (!managerState || managerState.storyId !== storyId) {
+    // Avoid rendering a stale manager while a new one is being constructed.
+    if (managerState.storyId !== storyId) {
       return <></>;
     }
 

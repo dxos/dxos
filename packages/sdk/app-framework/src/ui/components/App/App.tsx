@@ -58,11 +58,15 @@ export const App = ({ placeholder: Placeholder, ready, error, debounce, progress
 
   const ComposedContext = composeContexts(reactContexts);
   return (
-    <ComposedContext>
-      {reactRoots.map(({ id, root: Component }) => (
-        <Component key={id} />
-      ))}
-    </ComposedContext>
+    // data-testid="app-ready" lets storybook play() functions wait for startup
+    // to finish before querying content that only renders after plugin activation.
+    <div data-testid='app-ready' className='contents'>
+      <ComposedContext>
+        {reactRoots.map(({ id, root: Component }) => (
+          <Component key={id} />
+        ))}
+      </ComposedContext>
+    </div>
   );
 };
 
