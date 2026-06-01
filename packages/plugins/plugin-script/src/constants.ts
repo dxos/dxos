@@ -6,4 +6,4 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-export const DEPLOYMENT_DIALOG = DXN.make(`${DXN.getName(meta.id)}.deploymentDialog`);
+export const DEPLOYMENT_DIALOG = DXN.make(`${meta.id}.deploymentDialog`);

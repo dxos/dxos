@@ -12,7 +12,7 @@ import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const LOAD_PLUGIN_DIALOG = DXN.make(`${DXN.getName(meta.id)}.loadPluginDialog`);
+export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.id}.loadPluginDialog`);
 
 export const LoadPluginDialog = () => {
   const manager = usePluginManager();

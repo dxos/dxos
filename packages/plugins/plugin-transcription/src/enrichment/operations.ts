@@ -19,7 +19,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const NAMESPACE = `${DXN.getName(meta.id)}.enrichment`;
+const NAMESPACE = `${meta.id}.enrichment`;
 
 //
 // Shared sub-schemas.

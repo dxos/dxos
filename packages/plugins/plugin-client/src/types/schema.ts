@@ -32,14 +32,14 @@ export namespace ClientAction {
   });
 
   export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(
-    `${DXN.getName(meta.id)}.action.create-identity`,
+    `${meta.id}.action.create-identity`,
     {
       input: ProfileSchema,
       output: IdentitySchema,
     },
   ) {}
 
-  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${DXN.getName(meta.id)}.action.join-identity`, {
+  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${meta.id}.action.join-identity`, {
     input: Schema.Struct({
       invitationCode: Schema.optional(Schema.String),
     }),
@@ -47,7 +47,7 @@ export namespace ClientAction {
   }) {}
 
   export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(
-    `${DXN.getName(meta.id)}.action.share-identity`,
+    `${meta.id}.action.share-identity`,
     {
       input: Schema.Void,
       output: Schema.Void,
@@ -55,27 +55,27 @@ export namespace ClientAction {
   ) {}
 
   export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(
-    `${DXN.getName(meta.id)}.action.recover-identity`,
+    `${meta.id}.action.recover-identity`,
     {
       input: Schema.Void,
       output: Schema.Void,
     },
   ) {}
 
-  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${DXN.getName(meta.id)}.action.reset-storage`, {
+  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${meta.id}.action.reset-storage`, {
     input: Schema.Struct({
       mode: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
   }) {}
 
-  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${DXN.getName(meta.id)}.action.create-agent`, {
+  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${meta.id}.action.create-agent`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
   export class CreateRecoveryCode extends Schema.TaggedClass<CreateRecoveryCode>()(
-    `${DXN.getName(meta.id)}.action.create-recovery-code`,
+    `${meta.id}.action.create-recovery-code`,
     {
       input: Schema.Void,
       output: Schema.Void,
@@ -83,7 +83,7 @@ export namespace ClientAction {
   ) {}
 
   export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(
-    `${DXN.getName(meta.id)}.action.create-passkey`,
+    `${meta.id}.action.create-passkey`,
     {
       input: Schema.Void,
       output: Schema.Void,
@@ -91,14 +91,14 @@ export namespace ClientAction {
   ) {}
 
   export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(
-    `${DXN.getName(meta.id)}.action.redeem-passkey`,
+    `${meta.id}.action.redeem-passkey`,
     {
       input: Schema.Void,
       output: Schema.Void,
     },
   ) {}
 
-  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${DXN.getName(meta.id)}.action.redeem-token`, {
+  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${meta.id}.action.redeem-token`, {
     input: Schema.Struct({
       token: Schema.String,
     }),

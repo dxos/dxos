@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.support'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.support', '0.8.3'),
   name: 'Support',
   author: 'DXOS',
   description: trim`
@@ -46,6 +46,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-support',
   spec: 'PLUGIN.mdl',
-  version: '0.8.3',
   tags: ['system'],
-};
+});

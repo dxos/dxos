@@ -265,10 +265,10 @@ type StoryPluginOptions = {
   createAgent?: boolean | CreateAgentOptions;
 };
 
-const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: DXN.make('com.example.plugin.testing'),
+const StoryPlugin = Plugin.define<StoryPluginOptions>(Plugin.makeMeta({
+  key: DXN.make('com.example.plugin.testing'),
   name: 'Testing',
-}).pipe(
+})).pipe(
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,

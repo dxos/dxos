@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import * as Magazine from './Magazine';
 import * as Subscription from './Subscription';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
 export const SyncFeed = Operation.make({

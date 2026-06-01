@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 const IdentitySchema = Schema.Struct({
   identityKey: Schema.instanceOf(PublicKey),

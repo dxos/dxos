@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
 const RemoteTarget = Schema.Struct({

@@ -14,7 +14,7 @@ import { meta } from '#meta';
 
 import * as Integration from './Integration';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /**
  * Generic create operation: produces an empty Integration bound to the given AccessToken.

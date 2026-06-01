@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.map'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.map'),
   name: 'Maps',
   author: 'DXOS',
   description: trim`
@@ -29,4 +29,4 @@ export const meta: Plugin.Meta = {
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-map-dark.png'],
-};
+});

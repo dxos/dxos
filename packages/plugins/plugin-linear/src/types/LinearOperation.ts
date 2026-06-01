@@ -12,7 +12,7 @@ import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/pl
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /**
  * Discovery only — list Linear teams reachable from the integration's token.

@@ -29,10 +29,10 @@ import { InitializeMailbox } from './InitializeMailbox';
 // Contributes a stub `integration--auth` surface so stories can exercise the
 // empty-state path that delegates to an installed integration plugin without
 // pulling in `@dxos/plugin-integration`.
-const MockAuthSurfacePlugin = Plugin.define({
-  id: DXN.make('org.dxos.plugin.inbox.story.mockAuthSurface'),
+const MockAuthSurfacePlugin = Plugin.define(Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.inbox.story.mockAuthSurface'),
   name: 'Mock Auth Surface',
-}).pipe(
+})).pipe(
   AppPlugin.addSurfaceModule({
     activate: () =>
       Effect.succeed(

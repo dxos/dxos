@@ -150,11 +150,21 @@ class PluginModuleImpl implements PluginModule {
 
 export type Meta = {
   /**
-   * Globally unique ID in DXN format.
-   *
-   * @example DXN.make('org.dxos.plugin.example')
+   * Bare NSID (the name portion of {@link key}, e.g. `org.dxos.plugin.example`).
+   * Stable across versions; used for module-id namespacing, i18n namespaces,
+   * enable/disable, and registry lookups. Derived from `key` by {@link makeMeta} —
+   * do not set directly.
    */
-  id: DXN.DXN;
+  id: string;
+
+  /**
+   * Canonical identity DXN, including version when published
+   * (e.g. `dxn:org.dxos.plugin.example:0.8.3`). The validated source of truth
+   * from which {@link id} and {@link version} are derived.
+   *
+   * @example DXN.make('org.dxos.plugin.example', '0.8.3')
+   */
+  key: DXN.DXN;
 
   /**
    * Human-readable name.
@@ -163,7 +173,8 @@ export type Meta = {
 
   /**
    * Semver version string of the plugin, typically the publishing package's
-   * `package.json` version.
+   * `package.json` version. Derived from the version segment of {@link key} by
+   * {@link makeMeta} — do not set directly.
    */
   version?: string;
 
@@ -230,8 +241,32 @@ export type Meta = {
    * substitute an alternative implementation that satisfies the dependent's
    * capability needs in its own way.
    */
-  dependsOn?: DXN.DXN[];
+  dependsOn?: string[];
 };
+
+/**
+ * Options for {@link makeMeta}: a {@link Meta} minus the fields derived from `key`.
+ * Identity and version are specified solely through the `key` DXN — `id` and
+ * `version` cannot be passed directly.
+ */
+export type MakeMetaOptions = Omit<Meta, 'id' | 'version'>;
+
+/**
+ * Constructs a plugin {@link Meta} from a single canonical DXN. The `key` DXN is
+ * the one source of truth; `id` (bare NSID) and `version` (semver) are derived
+ * from it so each datum has exactly one home and cannot drift out of sync.
+ *
+ * @example
+ * export const meta = Plugin.makeMeta({
+ *   key: DXN.make('org.dxos.plugin.example', '0.8.3'),
+ *   name: 'Example',
+ * });
+ */
+export const makeMeta = (options: MakeMetaOptions): Meta => ({
+  ...options,
+  id: DXN.getName(options.key),
+  version: DXN.getVersion(options.key),
+});
 
 /**
  * Identifier denoting a Plugin.
@@ -354,7 +389,7 @@ const resolveModule = (
   options?: any,
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
-  const pluginName = DXN.getName(meta.id);
+  const pluginName = meta.id;
   const id = Option.fromNullable(moduleOptions.id).pipe(
     Option.match({
       onNone: () => {
@@ -377,6 +412,7 @@ const resolveModule = (
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
   const meta = builder.meta;
+  // `dependsOn` entries and `id` are both bare NSIDs, so compare directly.
   invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
 
   const factory = (options: T) => {

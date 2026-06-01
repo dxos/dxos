@@ -40,7 +40,7 @@ export const createFormat = (script: Script.Script) => {
       }
     },
     {
-      label: ['format.label', { ns: DXN.getName(meta.id) }],
+      label: ['format.label', { ns: meta.id }],
       icon: 'ph--magic-wand--regular',
     },
   );

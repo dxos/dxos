@@ -45,7 +45,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
-    label: value.error ?? ['no-error.label', { ns: DXN.getName(meta.id) }],
+    label: value.error ?? ['no-error.label', { ns: meta.id }],
     icon: 'ph--warning-circle--regular',
     hidden: !value.error,
     classNames: value.error && messageValence('error'),
@@ -72,7 +72,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'deploy',
-      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: DXN.getName(meta.id) }],
+      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: meta.id }],
       icon: value.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: value.deploying,
       classNames: value.deploying ? '[&_svg]:animate-spin' : '',
@@ -88,7 +88,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'copy',
-      label: ['copy-link.label', { ns: DXN.getName(meta.id) }],
+      label: ['copy-link.label', { ns: meta.id }],
       icon: 'ph--link--regular',
       disabled: !value.functionUrl,
     },

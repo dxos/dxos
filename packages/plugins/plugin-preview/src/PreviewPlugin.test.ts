@@ -12,7 +12,7 @@ import { PreviewPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
+const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('PreviewPlugin', () => {
   test('modules activate on the expected events', { timeout: 10_000 }, async ({ expect }) => {

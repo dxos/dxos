@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.sidekick'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.sidekick', '0.8.3'),
   name: 'Sidekick',
   author: 'DXOS',
   description: trim`
@@ -45,6 +45,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'violet',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sidekick',
   spec: 'PLUGIN.mdl',
-  version: '0.8.3',
   tags: ['labs'],
-};
+});

@@ -36,7 +36,7 @@ const makeObservability = ({ available = true }: { available?: boolean } = {}): 
 
 /** Contributes a mock Observability capability to the story plugin manager. */
 const StoryObservabilityPlugin = ({ available = true }: { available?: boolean } = {}) =>
-  Plugin.define({ id: DXN.make('org.dxos.story.observability'), name: 'Story Observability' }).pipe(
+  Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.story.observability'), name: 'Story Observability' })).pipe(
     Plugin.addModule({
       id: 'observability',
       activatesOn: ActivationEvents.Startup,
@@ -50,7 +50,7 @@ const StoryObservabilityPlugin = ({ available = true }: { available?: boolean } 
 
 /** Contributes a LogDownloader capability so the form renders the "Download logs" button. */
 const StoryLogDownloaderPlugin = () =>
-  Plugin.define({ id: DXN.make('org.dxos.story.logDownloader'), name: 'Story Log Downloader' }).pipe(
+  Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.story.logDownloader'), name: 'Story Log Downloader' })).pipe(
     Plugin.addModule({
       id: 'log-downloader',
       activatesOn: ActivationEvents.Startup,

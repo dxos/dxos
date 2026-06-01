@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.client'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.client'),
   name: 'Client',
   author: 'DXOS',
   description: trim`
@@ -15,4 +15,4 @@ export const meta: Plugin.Meta = {
     Manages identity, authentication, and real-time synchronization across devices.
   `,
   tags: ['system'],
-};
+});

@@ -29,7 +29,7 @@ export const translations = [
         'typename.label_one': 'Object',
         'typename.label_other': 'Objects',
       },
-      [DXN.getName(meta.id)]: {
+      [meta.id]: {
         'plugin.name': 'Spacetime',
 
         'settings.title': 'Spacetime settings',

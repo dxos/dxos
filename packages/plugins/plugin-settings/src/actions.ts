@@ -12,7 +12,7 @@ import { SETTINGS_ID, SETTINGS_KEY } from '#types';
 export { SETTINGS_ID, SETTINGS_KEY };
 
 export namespace SettingsAction {
-  export class Open extends Schema.TaggedClass<Open>()(`${DXN.getName(meta.id)}.open`, {
+  export class Open extends Schema.TaggedClass<Open>()(`${meta.id}.open`, {
     input: Schema.Struct({
       plugin: Schema.optional(Schema.String),
     }),
@@ -20,7 +20,7 @@ export namespace SettingsAction {
   }) {}
 
   export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(
-    `${DXN.getName(meta.id)}.openPluginRegistry`,
+    `${meta.id}.openPluginRegistry`,
     {
       input: Schema.Void,
       output: Schema.Void,

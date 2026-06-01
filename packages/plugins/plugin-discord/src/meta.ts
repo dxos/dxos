@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.discord'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.discord'),
   name: 'Discord',
   author: 'DXOS',
   description: trim`
@@ -30,4 +30,4 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-discord',
   spec: 'PLUGIN.mdl',
   tags: ['labs', 'integration'],
-};
+});

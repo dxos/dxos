@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.crm'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.crm', '0.8.3'),
   name: 'CRM',
   author: 'DXOS',
   description: trim`
@@ -45,6 +45,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'emerald',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',
   spec: 'PLUGIN.mdl',
-  version: '0.8.3',
   tags: ['labs'],
-};
+});

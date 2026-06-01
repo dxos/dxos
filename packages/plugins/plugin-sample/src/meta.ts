@@ -7,12 +7,12 @@
 // The `icon` uses the Phosphor icon naming format: `ph--{name}--{weight}`.
 // The `iconHue` sets the color used in the navigation tree.
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.sample'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.sample'),
   name: 'Sample',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -36,4 +36,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--book-open--regular',
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sample',
-};
+});

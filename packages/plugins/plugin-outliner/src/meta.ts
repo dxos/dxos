@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.outliner'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.outliner'),
   name: 'Outliner',
   author: 'DXOS',
   description: trim`
@@ -27,6 +27,6 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
-};
+});
 
-export const QUICK_ENTRY_DIALOG = DXN.make(`${DXN.getName(meta.id)}.quickEntryDialog`);
+export const QUICK_ENTRY_DIALOG = DXN.make(`${meta.id}.quickEntryDialog`);

@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const Toggle = Operation.make({
   meta: { key: makeKey('toggle'), name: 'Toggle Map', icon: 'ph--compass--regular' },

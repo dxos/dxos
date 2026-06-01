@@ -12,7 +12,7 @@ import { DebugPlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
+const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('DebugPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

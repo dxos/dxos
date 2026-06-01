@@ -19,7 +19,7 @@ import { meta } from '#meta';
 import { TriggerTemplate } from './schema';
 export { _EchoURIReference };
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const CreateTriggerFromTemplate = Operation.make({
   meta: {

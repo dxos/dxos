@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.storybookLayout'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.storybookLayout'),
   name: 'Storybook',
   author: 'DXOS',
   description: trim`
@@ -15,4 +15,4 @@ export const meta: Plugin.Meta = {
     Provides specialized views for component development and design system exploration.
   `,
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-testing',
-};
+});

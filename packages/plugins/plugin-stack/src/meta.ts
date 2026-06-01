@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const SECTION_IDENTIFIER = DXN.make('org.dxos.type.stackSection');
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.stack'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.stack'),
   // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
   //   Conside renaming this to the collection plugin and trying to factor more collections logic from the space plugin.
   name: 'Collections',
@@ -32,4 +32,4 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--stack-simple--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-stack',
-};
+});

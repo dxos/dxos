@@ -14,10 +14,10 @@ import { LogOperation } from './schema';
 
 const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
-const meta = {
-  id: DXN.make('org.dxos.test.logger'),
+const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.test.logger'),
   name: 'Logger',
-};
+});
 
 export const LoggerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({

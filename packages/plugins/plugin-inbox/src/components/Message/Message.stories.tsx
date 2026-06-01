@@ -58,10 +58,10 @@ const DefaultStory = ({ text }: DefaultStoryProps) => {
 // Plugin that contributes the inbox Settings capability with remote-image loading enabled
 // so the editor's image extension actually renders <img> tags (otherwise the markdown is
 // left as plain text and we can't observe the tracking-pixel collapse).
-const RemoteImagesEnabledPlugin = Plugin.define({
-  id: DXN.make('story.inbox.settings'),
+const RemoteImagesEnabledPlugin = Plugin.define(Plugin.makeMeta({
+  key: DXN.make('story.inbox.settings'),
   name: 'Story Inbox Settings',
-}).pipe(
+})).pipe(
   Plugin.addModule({
     id: 'settings',
     activatesOn: AppActivationEvents.SetupSettings,
@@ -161,7 +161,7 @@ const FakeTripExtractor: ObjectExtractor = {
 // toolbar shows multiple "Extract…" actions plus the synthetic "Run all" entry. Also registers
 // the InboxOperationHandlerSet so clicks resolve through a real OperationInvoker (provided by
 // ProcessManagerPlugin in corePlugins).
-const ExtractorsPlugin = Plugin.define({ id: DXN.make('story.inbox.extractors'), name: 'Story Extractors' }).pipe(
+const ExtractorsPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('story.inbox.extractors'), name: 'Story Extractors' })).pipe(
   Plugin.addModule({
     id: 'contact-extractor',
     activatesOn: ActivationEvents.Startup,

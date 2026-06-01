@@ -29,7 +29,7 @@ export const CreateTableSchema = Schema.Struct({
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const OnCreateSpace = Operation.make({
   meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--table--regular' },

@@ -32,8 +32,8 @@ const sortPlugins = (a: Plugin.Plugin, b: Plugin.Plugin) =>
 const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
-    meta: {
-      id: DXN.make(plugin.id),
+    meta: Plugin.makeMeta({
+      key: DXN.make(plugin.id),
       name: plugin.name,
       description: plugin.description,
       homePage: plugin.homePage,
@@ -42,7 +42,7 @@ const toDisplayPlugin = (plugin: Registry.Plugin): Plugin.Plugin =>
       tags: plugin.tags,
       icon: plugin.icon,
       iconHue: plugin.iconHue,
-    },
+    }),
     modules: [],
   }) as Plugin.Plugin;
 

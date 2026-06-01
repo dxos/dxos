@@ -25,10 +25,10 @@ import { Meeting } from '#types';
 
 import { MeetingArticle } from './MeetingArticle';
 
-const MarkdownExtensionsPlugin = Plugin.define({
-  id: DXN.make('org.dxos.plugin.meeting.story.markdownExtensions'),
+const MarkdownExtensionsPlugin = Plugin.define(Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.meeting.story.markdownExtensions'),
   name: 'Story Extensions',
-}).pipe(
+})).pipe(
   Plugin.addModule({
     id: 'extensions',
     activatesOn: MarkdownEvents.SetupExtensions,

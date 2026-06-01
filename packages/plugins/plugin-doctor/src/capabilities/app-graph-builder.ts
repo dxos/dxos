@@ -17,7 +17,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${DXN.getName(meta.id)}.diagnosticsDeckCompanion`,
+        id: `${meta.id}.diagnosticsDeckCompanion`,
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

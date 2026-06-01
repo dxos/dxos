@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.pipeline'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.pipeline'),
   name: 'Pipelines',
   author: 'DXOS',
   description: trim`
@@ -29,4 +29,4 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-pipeline',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
-};
+});

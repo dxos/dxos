@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 import * as Outline from './Outline';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const CreateOutline = Operation.make({
   meta: {

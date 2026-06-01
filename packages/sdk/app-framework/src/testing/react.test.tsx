@@ -14,7 +14,7 @@ import { Surface } from '../ui';
 import { createTestApp } from './harness';
 import { render, renderSurface } from './react';
 
-const testMeta = { id: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' };
+const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' });
 
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({

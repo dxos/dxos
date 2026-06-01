@@ -27,10 +27,10 @@ import { InboxPlugin } from '../../InboxPlugin';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
-const MockDeckOperationsPlugin = Plugin.define({
-  id: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
+const MockDeckOperationsPlugin = Plugin.define(Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
   name: 'Mock Deck Ops',
-}).pipe(
+})).pipe(
   AppPlugin.addOperationHandlerModule({
     activate: () =>
       Effect.succeed(

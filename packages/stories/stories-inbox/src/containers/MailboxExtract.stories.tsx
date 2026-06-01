@@ -101,10 +101,10 @@ const resolvePayload = (prompt: string): unknown => {
  * returns a static summary, so the template-driven TripMessageExtractor runs end-to-end without a
  * real provider.
  */
-const MockAiServicePlugin = Plugin.define({
-  id: DXN.make('story.inbox.mockAiService'),
+const MockAiServicePlugin = Plugin.define(Plugin.makeMeta({
+  key: DXN.make('story.inbox.mockAiService'),
   name: 'Story Mock AI Service',
-}).pipe(
+})).pipe(
   Plugin.addModule({
     id: 'ai-service',
     activatesOn: ActivationEvents.SetupProcessManager,

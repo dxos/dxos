@@ -7,7 +7,7 @@ import { DXN } from '@dxos/keys';
 
 const Layout = Capability.lazy('Layout', () => import('./Layout'));
 
-const meta = { id: DXN.make('org.dxos.test.layout'), name: 'Layout' };
+const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.layout'), name: 'Layout' });
 
 export const LayoutPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({

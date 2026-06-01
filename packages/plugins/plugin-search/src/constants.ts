@@ -6,4 +6,4 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-export const SEARCH_DIALOG = DXN.make(`${DXN.getName(meta.id)}.searchDialog`);
+export const SEARCH_DIALOG = DXN.make(`${meta.id}.searchDialog`);

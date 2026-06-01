@@ -15,7 +15,7 @@ import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const OnCreateSpace = Operation.make({
   meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--chat-text--regular' },

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: DXN.make('org.dxos.plugin.nativeFilesystem'),
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.nativeFilesystem'),
   name: 'Native Filesystem',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -21,4 +21,4 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--folder-open--regular',
   tags: ['labs'],
-};
+});

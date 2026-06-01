@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 import { templates } from '../templates';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const ScriptProps = Schema.Struct({
   name: Schema.optional(Schema.String),

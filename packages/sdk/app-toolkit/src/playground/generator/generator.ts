@@ -29,7 +29,7 @@ export const createNumberPlugin = (id: string) => {
   const number = Math.floor(Math.random() * 100);
   const AlertOperation = createAlertOperation(pluginId);
 
-  return Plugin.define({ id: pluginId, name: `Plugin ${DXN.getName(pluginId)}` }).pipe(
+  return Plugin.define(Plugin.makeMeta({ key: pluginId, name: `Plugin ${DXN.getName(pluginId)}` })).pipe(
     AppPlugin.addOperationHandlerModule({
       activate: () =>
         Effect.succeed(

@@ -14,7 +14,7 @@ import { TicTacToePlugin } from '#plugin';
 
 import { meta } from './meta';
 
-const moduleId = (name: string) => `${DXN.getName(meta.id)}.module.${name}`;
+const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('TicTacToePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

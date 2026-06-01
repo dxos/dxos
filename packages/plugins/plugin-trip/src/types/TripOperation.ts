@@ -14,7 +14,7 @@ import { InboxOperation } from '@dxos/plugin-inbox';
 
 import { meta } from '#meta';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /**
  * Trip-message extractor as a first-class operation. The handler at

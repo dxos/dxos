@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 import * as Markdown from './Markdown';
 
-const makeKey = (name: string) => DXN.make(`${DXN.getName(meta.id)}.operation.${name}`);
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 const Edit = Schema.Struct({
   oldString: Schema.String.annotations({

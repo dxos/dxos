@@ -24,8 +24,8 @@ import { LOAD_PLUGIN_DIALOG } from '../containers';
 const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
-    meta: {
-      id: DXN.make(entry.id),
+    meta: Plugin.makeMeta({
+      key: DXN.make(entry.id),
       name: entry.name,
       description: entry.description,
       homePage: entry.homePage,
@@ -34,7 +34,7 @@ const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
       tags: entry.tags,
       icon: entry.icon,
       iconHue: entry.iconHue,
-    },
+    }),
     modules: [],
   }) as Plugin.Plugin;
 

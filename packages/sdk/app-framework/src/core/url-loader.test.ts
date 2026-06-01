@@ -12,7 +12,7 @@ import * as Plugin from './plugin';
 import * as PluginAssetCache from './plugin-asset-cache';
 import * as UrlLoader from './url-loader';
 
-const testMeta = { id: DXN.make('org.dxos.plugin.test'), name: 'Test' };
+const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test' });
 
 const memoryStorage = (initial: string | null = null): UrlLoader.Storage => {
   let value = initial;

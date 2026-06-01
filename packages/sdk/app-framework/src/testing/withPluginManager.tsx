@@ -120,11 +120,11 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
   return <App />;
 };
 
-const storyMeta = {
-  id: DXN.make('org.dxos.appFramework.story'),
+const storyMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.appFramework.story'),
   name: 'Story',
   tags: ['system'],
-};
+});
 
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.

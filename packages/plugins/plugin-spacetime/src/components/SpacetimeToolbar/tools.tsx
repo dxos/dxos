@@ -22,7 +22,7 @@ export const createToolActions =
     builder.group(
       'tool',
       {
-        label: ['tool.label', { ns: DXN.getName(meta.id) }],
+        label: ['tool.label', { ns: meta.id }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
@@ -32,7 +32,7 @@ export const createToolActions =
         for (const [tool, icon] of Object.entries(tools)) {
           group.action(
             tool,
-            { label: [`tool.${tool}.label`, { ns: DXN.getName(meta.id) }], checked: currentTool === tool, icon },
+            { label: [`tool.${tool}.label`, { ns: meta.id }], checked: currentTool === tool, icon },
             () => onToolChange(tool),
           );
         }

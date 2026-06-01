@@ -16,7 +16,7 @@ export const TriggerTemplate = Schema.Union(
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${DXN.getName(meta.id)}.action.create-trigger-from-template`,
+    `${meta.id}.action.create-trigger-from-template`,
     {
       input: Schema.Struct({
         db: Database.Database,
