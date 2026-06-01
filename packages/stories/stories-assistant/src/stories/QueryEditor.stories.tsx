@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
-import { URI } from '@dxos/keys';
 import { translations } from '@dxos/plugin-assistant/translations';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
@@ -56,12 +55,6 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   );
 };
 
-const tags: Tag.Map = {
-  tag_1: Tag.make({ label: 'Red' }),
-  tag_2: Tag.make({ label: 'Green' }),
-  tag_3: Tag.make({ label: 'Blue' }),
-};
-
 const meta: Meta<typeof QueryEditor> = {
   title: 'stories/stories-assistant/QueryEditor',
   component: QueryEditor,
@@ -70,10 +63,16 @@ const meta: Meta<typeof QueryEditor> = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
+      types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer, Tag.Tag],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
+        // Persist real Tag objects so the seeded `meta.tags` refs resolve like production data.
+        const tags = [
+          space.db.add(Tag.make({ label: 'Red' })),
+          space.db.add(Tag.make({ label: 'Green' })),
+          space.db.add(Tag.make({ label: 'Blue' })),
+        ];
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },
@@ -82,9 +81,7 @@ const meta: Meta<typeof QueryEditor> = {
         ]);
         objects.forEach((obj) => {
           Obj.update(obj, (obj) => {
-            Obj.getMeta(obj).tags = random.helpers
-              .uniqueArray(Object.keys(tags), random.number.int(3))
-              .map((key) => Ref.fromURI(URI.make(`dxn:echo:@:${key}`)));
+            Obj.getMeta(obj).tags = random.helpers.uniqueArray(tags, random.number.int(3)).map((tag) => Ref.make(tag));
           });
         });
       },

@@ -195,7 +195,13 @@ const normalizeMeta = (meta: any): any => {
   const tags = Array.isArray(meta?.tags)
     ? meta.tags.map((tag: unknown) => (typeof tag === 'string' ? { '/': URI.make(tag) } : tag))
     : [];
-  return { keys: [], annotations: {}, ...meta, tags };
+  // Coalesce required fields so explicit `undefined` in legacy input doesn't override the defaults.
+  return {
+    ...meta,
+    keys: Array.isArray(meta?.keys) ? meta.keys : [],
+    tags,
+    annotations: meta?.annotations ?? {},
+  };
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {

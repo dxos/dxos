@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { URI } from '@dxos/keys';
+import { EID, URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import * as Obj from './Obj';
@@ -49,10 +49,13 @@ export const set = (object: Obj.Any, tagId: string, options: Options = {}): void
     TagIndex.bind(host, key).setTag(tagId, object.id);
     return;
   }
+  // Stored tag refs are canonical EIDs (read-time upgrade normalizes legacy DXN ids); normalize the
+  // incoming id the same way so dedupe compares like-for-like.
+  const id = EID.tryParse(tagId) ?? tagId;
   Obj.update(object, (object) => {
     const meta = Obj.getMeta(object);
-    if (!meta.tags.some((tag) => tag.uri === tagId)) {
-      meta.tags.push(Ref.fromURI(URI.make(tagId)));
+    if (!meta.tags.some((tag) => tag.uri === id)) {
+      meta.tags.push(Ref.fromURI(URI.make(id)));
     }
   });
 };
@@ -64,10 +67,11 @@ export const unset = (object: Obj.Any, tagId: string, options: Options = {}): vo
     TagIndex.bind(host, key).unsetTag(tagId, object.id);
     return;
   }
+  const id = EID.tryParse(tagId) ?? tagId;
   Obj.update(object, (object) => {
     const meta = Obj.getMeta(object);
     for (let i = meta.tags.length - 1; i >= 0; i--) {
-      if (meta.tags[i].uri === tagId) {
+      if (meta.tags[i].uri === id) {
         meta.tags.splice(i, 1);
       }
     }

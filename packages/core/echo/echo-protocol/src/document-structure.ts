@@ -256,6 +256,14 @@ export type EntityMeta = {
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version?: string;
+
+  /**
+   * Dictionary of annotations to this entity.
+   *
+   * NOTE: Optional for backwards compatibility. Values are arbitrary decoded automerge primitives;
+   * typed as `any` so `EntityStructure` stays assignable to `DecodedAutomergePrimaryValue`.
+   */
+  annotations?: { readonly [key: string]: any };
 };
 
 /**

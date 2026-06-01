@@ -82,7 +82,8 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === META_TAGS_KEY);
         if (hasTagsChange) {
           Obj.update(object, (object) => {
-            Obj.getMeta(object).tags = (metaTags as Ref.Ref<Tag.Tag>[]) ?? [];
+            // Copy so later in-place form mutations don't bypass the `Obj.update` boundary.
+            Obj.getMeta(object).tags = Array.isArray(metaTags) ? [...(metaTags as Ref.Ref<Tag.Tag>[])] : [];
           });
         }
 

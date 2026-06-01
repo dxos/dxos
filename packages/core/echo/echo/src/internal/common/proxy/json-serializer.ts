@@ -92,10 +92,11 @@ const serializeMeta = (meta: EntityMeta) => {
   // Omit empty `tags`/`annotations` to keep serialized output minimal; `objectFromJSON` backfills
   // the required defaults on read.
   const { tags, annotations, ...rest } = meta;
-  const compact: EntityMeta = {
+  const compact = {
     ...rest,
     ...(tags != null && tags.length > 0 ? { tags } : {}),
     ...(annotations != null && Object.keys(annotations).length > 0 ? { annotations } : {}),
-  } as EntityMeta;
-  return deepMapValues(compact, (value, recurse) => recurse(value));
+  };
+  // Use `serializeData` so `meta.tags` `Ref<Tag>` values encode to the on-wire reference form.
+  return serializeData(compact);
 };

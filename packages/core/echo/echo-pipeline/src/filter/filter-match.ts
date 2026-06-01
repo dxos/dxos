@@ -15,6 +15,21 @@ export type MatchedObject = {
 };
 
 /**
+ * Matches a tag filter against an object's stored tags. Tags may be stored as encoded references or
+ * (in legacy data) bare URI strings, and those URIs may be in legacy DXN form. Both sides are
+ * normalized to the canonical EID before comparing, so a query by the modern id matches objects
+ * tagged before the migration (and vice versa). Shared by the doc and JSON match paths.
+ */
+const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
+  const normalize = (tag: unknown): string => {
+    const uri = isEncodedReference(tag) ? EncodedReference.toURI(tag) : (tag as string);
+    return EID.tryParse(uri) ?? uri;
+  };
+  const target = EID.tryParse(filterTag) ?? filterTag;
+  return tags.some((tag) => normalize(tag) === target);
+};
+
+/**
  * Matches an object against a filter AST.
  * @param obj object structure as stored in automerge.
  */
@@ -71,13 +86,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'tag': {
-      const tags = EntityStructure.getTags(obj.doc);
-      // Tags are stored as encoded references; legacy data may still hold bare URI strings, and those
-      // URIs may be in legacy DXN form. Normalize both sides to the canonical EID before comparing so
-      // a query by the modern id matches objects tagged before the migration (and vice versa).
-      const normalize = (uri: string): string => EID.tryParse(uri) ?? uri;
-      const target = normalize(filter.tag);
-      return tags.some((tag) => normalize(isEncodedReference(tag) ? EncodedReference.toURI(tag) : tag) === target);
+      return matchesTag(EntityStructure.getTags(obj.doc), filter.tag);
     }
 
     case 'text-search': {
@@ -195,8 +204,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     }
 
     case 'tag': {
-      const tags = obj[ATTR_META]?.tags ?? [];
-      return tags.some((tag) => tag === filter.tag);
+      return matchesTag(obj[ATTR_META]?.tags ?? [], filter.tag);
     }
 
     // TODO: Implement text search.
