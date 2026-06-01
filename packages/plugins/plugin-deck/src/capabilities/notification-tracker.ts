@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -82,8 +83,7 @@ export default Capability.makeModule(
       }
     };
 
-    // Subscription lives for the lifetime of the capability (app lifetime), like the invocation stream below.
-    registry.subscribe(monitor.processTreeAtom, handleProcesses);
+    const unsubscribeMonitor = registry.subscribe(monitor.processTreeAtom, handleProcesses);
 
     //
     // Undo — driven by the history tracker's `undoable` stream (it owns the registry lookup).
@@ -110,7 +110,7 @@ export default Capability.makeModule(
 
     // The history tracker is contributed on ProcessManagerReady, possibly after this module activates;
     // `waitFor` resolves it once available, then we observe its undoable stream.
-    Effect.runFork(
+    const undoFiber = Effect.runFork(
       Effect.gen(function* () {
         const historyTracker = yield* Capability.waitFor(Capabilities.HistoryTracker);
         yield* Stream.fromPubSub(historyTracker.undoable).pipe(
@@ -119,6 +119,14 @@ export default Capability.makeModule(
           ),
         );
       }).pipe(Effect.provideService(Capability.Service, capabilities)),
+    );
+
+    // Track both subscriptions so they are torn down when the module deactivates.
+    return Capability.contributes(Capabilities.Null, null, () =>
+      Effect.gen(function* () {
+        unsubscribeMonitor();
+        yield* Fiber.interrupt(undoFiber);
+      }),
     );
   }),
 );
