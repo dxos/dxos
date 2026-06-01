@@ -21,12 +21,11 @@ export {
   IconFromRefAnnotation,
 } from './internal/Annotation';
 
-import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import * as Types from 'effect/Types';
-
 
 import * as Entity from './Entity';
 import * as internalAnnotations from './internal/Annotation';

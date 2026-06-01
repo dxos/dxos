@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';

@@ -55,8 +55,11 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
      */
     readonly deployedId?: string;
 
-    
-    readonly annotations: Annotation.Dictionary;
+    /**
+     * Dictionary of annotations for the operation.
+     */
+    // TODO(dmaretskyi): Make required, but this complicates `make` to fill in defaults.
+    readonly annotations?: Annotation.Dictionary;
   };
 
   /**
@@ -212,27 +215,27 @@ export const withHandler: {
   opOrHandler: Def | Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
   handler?: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
 ): WithHandler<Def> => {
-    // If called with just handler (piped usage).
-    if (handler === undefined) {
-      const handlerFn = opOrHandler as Handler<
-        Definition.Input<Def>,
-        Definition.Output<Def>,
-        E,
-        Definition.Services<Def> | Service
-      >;
-      return ((op: Def) => ({
-        ...op,
-        handler: handlerFn,
-      })) as any;
-    }
-
-    // If called with both op and handler (direct usage).
-    const op = opOrHandler as Def;
-    return {
+  // If called with just handler (piped usage).
+  if (handler === undefined) {
+    const handlerFn = opOrHandler as Handler<
+      Definition.Input<Def>,
+      Definition.Output<Def>,
+      E,
+      Definition.Services<Def> | Service
+    >;
+    return ((op: Def) => ({
       ...op,
-      handler,
-    } as any;
-  };
+      handler: handlerFn,
+    })) as any;
+  }
+
+  // If called with both op and handler (direct usage).
+  const op = opOrHandler as Def;
+  return {
+    ...op,
+    handler,
+  } as any;
+};
 
 /**
  * Helper to make the handler type opaque.
@@ -383,6 +386,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
       description: record.description,
       icon: record.icon,
       deployedId,
+      annotations: meta.annotations ?? {},
     },
   });
 };
@@ -408,6 +412,7 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
     if (sourceMeta.keys.length > 0) {
       targetMeta.keys = JSON.parse(JSON.stringify(sourceMeta.keys));
     }
+    targetMeta.annotations = sourceMeta.annotations ?? targetMeta.annotations;
   });
 };
 
@@ -482,7 +487,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() { }
+export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.

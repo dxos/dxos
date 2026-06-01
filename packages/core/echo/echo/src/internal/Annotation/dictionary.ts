@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Types from 'effect/Types';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Types from 'effect/Types';
 
 import type * as Annotation from '../../Annotation';
 
