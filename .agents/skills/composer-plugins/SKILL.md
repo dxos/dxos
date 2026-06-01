@@ -2,12 +2,19 @@
 name: composer-plugins
 description: Use when working on files in packages/plugins/, adding new plugins,
   refactoring plugin components/containers, writing storybooks for plugins,
-  or wiring capabilities like react-surface or operation-resolver.
+  or wiring capabilities like react-surface or operation-resolver. For the UI/design-system
+  details of plugin components (layout, theming, forms, toolbars, lists, storybook), pair this
+  with the composer-ui skill.
 ---
 
 # Composer Plugins
 
 Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand every pattern below.
+
+**Companion skills.** For building plugin **UI** with the design system — container layout, theme tokens,
+forms, toolbars, lists/stacks, reactivity, storybook — use the **composer-ui** skill. For **authoring**
+new `@dxos/react-ui` composite primitives (`Foo.Root`/`Foo.Content`), use **composite-components**. This
+skill owns plugin _structure_ (capabilities, surfaces, schema, operations) and points at those two for UI.
 
 **Read `MEMORY.md` first** (sibling of this file) for session-logged design/implementation learnings and prior corrections.
 
