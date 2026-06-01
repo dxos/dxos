@@ -24,7 +24,6 @@ const neutralShades: [number, string][] = [
   [575, 'bg-neutral-575'],
   [600, 'bg-neutral-600'],
   [700, 'bg-neutral-700'],
-  [730, 'bg-neutral-730'],
   [750, 'bg-neutral-750'],
   [760, 'bg-neutral-760'],
   [775, 'bg-neutral-775'],
