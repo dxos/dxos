@@ -20,7 +20,7 @@
    * Two kinds of level, listed below in ascending (darkening) order:
    *  - Anchors — the Tailwind hundreds (50…950), defined by explicit lightness.
    *  - In-between steps — `color-mix` interpolations of the surrounding anchors, EXCEPT
-   *    575/760/775, which are explicit tones tuned to a reference dark theme (no anchor midpoint).
+   *    760/775, which are explicit tones tuned to a reference dark theme (no anchor midpoint).
    */
   --dx-neutral-chroma: 0.002;
   --dx-neutral-hue: 90;
@@ -37,7 +37,7 @@
   --color-neutral-300: oklch(0.8 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-400: oklch(0.708 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-500: oklch(0.556 var(--dx-neutral-chroma) var(--dx-neutral-hue));
-  --color-neutral-575: oklch(0.475 var(--dx-neutral-chroma) var(--dx-neutral-hue));
+  --color-neutral-575: color-mix(in oklch, var(--color-neutral-500) 25%, var(--color-neutral-600) 75%);
   --color-neutral-600: oklch(0.439 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-700: oklch(0.371 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
