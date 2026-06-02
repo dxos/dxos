@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
@@ -38,6 +38,34 @@ type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
 type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence };
 
 const MESSAGE_NAME = 'Message';
+
+const valenceVars: Record<MessageValence, CSSProperties> = {
+  success: {
+    '--dx-valence-bg': 'var(--color-success-bg)',
+    '--dx-valence-bg-hover': 'var(--color-success-bg-hover)',
+    '--dx-valence-fg': 'var(--color-success-fg)',
+  } as CSSProperties,
+  info: {
+    '--dx-valence-bg': 'var(--color-info-bg)',
+    '--dx-valence-bg-hover': 'var(--color-info-bg-hover)',
+    '--dx-valence-fg': 'var(--color-info-fg)',
+  } as CSSProperties,
+  warning: {
+    '--dx-valence-bg': 'var(--color-warning-bg)',
+    '--dx-valence-bg-hover': 'var(--color-warning-bg-hover)',
+    '--dx-valence-fg': 'var(--color-warning-fg)',
+  } as CSSProperties,
+  error: {
+    '--dx-valence-bg': 'var(--color-error-bg)',
+    '--dx-valence-bg-hover': 'var(--color-error-bg-hover)',
+    '--dx-valence-fg': 'var(--color-error-fg)',
+  } as CSSProperties,
+  neutral: {
+    '--dx-valence-bg': 'var(--color-neutral-bg)',
+    '--dx-valence-bg-hover': 'var(--color-neutral-bg-hover)',
+    '--dx-valence-fg': 'var(--color-neutral-fg)',
+  } as CSSProperties,
+};
 
 const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
 
@@ -72,6 +100,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           {...props}
+          style={valenceVars[valence]}
           classNames={tx('message.root', { valence, elevation }, classNames)}
           ref={forwardedRef}
         >

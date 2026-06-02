@@ -9,6 +9,7 @@ import { random } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
+import { Button } from '../Button';
 import { Message } from './Message';
 
 random.seed(123);
@@ -86,4 +87,23 @@ export const Error: Story = {
     title: 'Error',
     body: random.lorem.paragraphs(1),
   },
+};
+
+export const WithButton: Story = {
+  args: {
+    valence: 'success',
+    title: 'Action required',
+    body: random.lorem.paragraphs(1),
+  },
+  render: ({ valence, title, body }) => (
+    <div className='w-[30rem]'>
+      <Message.Root valence={valence}>
+        {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
+        {body && <Message.Content>{body}</Message.Content>}
+        <Button variant='valence' classNames='col-start-2'>
+          Confirm
+        </Button>
+      </Message.Root>
+    </div>
+  ),
 };
