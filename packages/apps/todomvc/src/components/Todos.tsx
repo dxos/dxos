@@ -11,7 +11,7 @@ import { Annotation, Obj, Ref } from '@dxos/echo';
 import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/react-client/echo';
 
 import { FILTER } from '../constants';
-import { Todo, TodoList, TodoListAnnotation } from '../types';
+import { Todo, TodoListAnnotation } from '../types';
 import { Header } from './Header';
 import { TodoContainer } from './TodoContainer';
 import { TodoFooter } from './TodoFooter';
