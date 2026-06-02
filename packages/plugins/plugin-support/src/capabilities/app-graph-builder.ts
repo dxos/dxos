@@ -43,7 +43,7 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: 'open-shortcuts',
+              id: 'openShortcuts',
               data: Effect.fnUntraced(function* () {
                 yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -65,7 +65,7 @@ export default Capability.makeModule(
       // article. The panel surface (`help-companion` in react-surface)
       // renders the owning plugin's `meta.description`.
       GraphBuilder.createExtension({
-        id: 'help-companion',
+        id: 'helpCompanion',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([

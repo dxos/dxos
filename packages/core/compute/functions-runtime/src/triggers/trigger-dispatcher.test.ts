@@ -747,7 +747,7 @@ describe('TriggerDispatcher', () => {
      * operation handler set registered with {@link OperationHandlerSet.provide} below.
      */
     const ProbeOp = Operation.make({
-      meta: { key: 'test.trigger-dispatcher.probe-database', name: 'Probe Database' },
+      meta: { key: DXN.make('test.trigger-dispatcher.probeDatabase'), name: 'Probe Database' },
       input: Schema.Any,
       output: Schema.Struct({ spaceId: Schema.String }),
       services: [Database.Service],

@@ -26,6 +26,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",

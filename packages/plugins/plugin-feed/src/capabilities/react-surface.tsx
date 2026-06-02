@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'subscription-feed',
+        id: 'subscriptionFeed',
         filter: AppSurface.literal(AppSurface.Article, 'feeds-root'),
         component: ({ data, role }) => {
           const space = useActiveSpace();
@@ -28,28 +28,28 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'magazine-article',
+        id: 'magazineArticle',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
         component: ({ data, role }) => (
           <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'feed-article',
+        id: 'feedArticle',
         filter: AppSurface.object(AppSurface.Article, Subscription.Subscription),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'post-article',
+        id: 'postArticle',
         filter: AppSurface.object(AppSurface.Article, Subscription.Post),
         component: ({ data, role }) => (
           <PostArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'post-card',
+        id: 'postCard',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Subscription.Post),
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,

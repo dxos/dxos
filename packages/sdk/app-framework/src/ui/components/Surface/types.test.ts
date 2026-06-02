@@ -50,7 +50,7 @@ describe('create', () => {
     const filter: SurfaceFilter<Record<string, any>> = {
       bindings: [{ role: 'article', guard: (d) => (d as any).subject === 'ok' }],
     };
-    const def = create({ id: 'typed-single', filter, component: () => null });
+    const def = create({ id: 'typedSingle', filter, component: () => null });
     expect(def.role).toBe('article');
     expect(def.filter!({ subject: 'ok' }, 'article')).toBe(true);
     expect(def.filter!({ subject: 'no' }, 'article')).toBe(false);
@@ -63,7 +63,7 @@ describe('create', () => {
         { role: 'section', guard: (d) => (d as any).subject === 's' },
       ],
     };
-    const def = create({ id: 'typed-multi', filter, component: () => null });
+    const def = create({ id: 'typedMulti', filter, component: () => null });
     expect(def.role).toEqual(['article', 'section']);
     // Role-specific guard.
     expect(def.filter!({ subject: 'a' }, 'article')).toBe(true);

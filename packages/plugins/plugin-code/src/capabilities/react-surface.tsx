@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'spec-article',
+        id: 'specArticle',
         role: ['article', 'section'],
         filter: (data): data is { subject: Spec.Spec; attendableId?: string } =>
           Obj.instanceOf(Spec.Spec, data.subject) &&
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'code-article',
+        id: 'codeArticle',
         role: ['article', 'section'],
         filter: (data): data is { subject: CodeProject.CodeProject; attendableId?: string } =>
           Obj.instanceOf(CodeProject.CodeProject, data.subject) &&
@@ -41,7 +41,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'code-settings',
+        id: 'codeSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'plugin-spec',
+        id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: ({ data: { subject }, role }) => <SpecView role={role} content={subject.content} readOnly />,
       }),

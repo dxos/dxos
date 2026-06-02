@@ -44,7 +44,7 @@ export const createFilesystemEntryExtensions = (
 ) =>
   Effect.all([
     GraphBuilder.createExtension({
-      id: 'workspace-entries',
+      id: 'workspaceEntries',
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -67,7 +67,7 @@ export const createFilesystemEntryExtensions = (
     }),
 
     GraphBuilder.createExtension({
-      id: 'directory-entries',
+      id: 'directoryEntries',
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
@@ -103,7 +103,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'primary-actions',
+        id: 'primaryActions',
         position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -208,7 +208,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'workspace-settings',
+        id: 'workspaceSettings',
         match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([

@@ -92,7 +92,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -140,13 +140,13 @@ export default Capability.makeModule(
         },
       }),
       Surface.create({
-        id: 'app-graph',
+        id: 'appGraph',
         role: 'article',
         filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
         component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
       }),
       Surface.create({
-        id: 'tools-explorer',
+        id: 'toolsExplorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
       }),
@@ -169,7 +169,7 @@ export default Capability.makeModule(
         ),
       }),
       Surface.create({
-        id: 'object-debug',
+        id: 'objectDebug',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'debug'),
           AppSurface.companion(AppSurface.Article),
@@ -177,12 +177,12 @@ export default Capability.makeModule(
         component: ({ role, data }) => <DebugObjectPanel role={role} companionTo={data.companionTo} />,
       }),
       Surface.create({
-        id: 'devtools-overview',
+        id: 'devtoolsOverview',
         filter: AppSurface.literal(Surface.makeType<{ subject: string }>('deck-companion--devtools'), 'devtools'),
         component: () => <DevtoolsOverviewContainer />,
       }),
       Surface.create({
-        id: 'space-objects',
+        id: 'spaceObjects',
         filter: AppSurface.literal(
           Surface.makeType<{ subject: string }>('deck-companion--space-objects'),
           'space-objects',

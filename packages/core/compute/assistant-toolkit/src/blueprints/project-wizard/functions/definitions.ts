@@ -6,12 +6,13 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { Agent } from '../../../types';
 
 export const AgentRules = Operation.make({
   meta: {
-    key: 'org.dxos.function.agent-wizard.agent-rules',
+    key: DXN.make('org.dxos.function.agentWizard.agentRules'),
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
     icon: 'ph--book-open--regular',
@@ -22,7 +23,7 @@ export const AgentRules = Operation.make({
 
 export const CreateAgent = Operation.make({
   meta: {
-    key: 'org.dxos.function.agent-wizard.create-agent',
+    key: DXN.make('org.dxos.function.agentWizard.createAgent'),
     name: 'Create agent',
     description: 'Creates a new agent.',
     icon: 'ph--brain--regular',
@@ -49,7 +50,7 @@ export const CreateAgent = Operation.make({
 
 export const SyncTriggers = Operation.make({
   meta: {
-    key: 'org.dxos.function.agent.sync-triggers',
+    key: DXN.make('org.dxos.function.agent.syncTriggers'),
     name: 'Sync triggers',
     description:
       'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',

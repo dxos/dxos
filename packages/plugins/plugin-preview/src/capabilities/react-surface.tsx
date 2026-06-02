@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create<{ subject: Person.Person }>({
-        id: 'schema-popover--contact',
+        id: 'schemaPopoverContact',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Person.Person),
         component: ({ data, role }) => {
@@ -37,7 +37,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--organization',
+        id: 'schemaPopoverOrganization',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Organization.Organization),
         component: ({ data, role }) => {
@@ -50,7 +50,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--project',
+        id: 'schemaPopoverProject',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
         component: ({ data, role }) => {
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--task',
+        id: 'schemaPopoverTask',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Task.Task),
         component: ({ data, role }) => {
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
-        id: 'schema-popover--expando',
+        id: 'schemaPopoverExpando',
         filter: AppSurface.object(AppSurface.Card, Expando.Expando),
         component: ({ data, role }) => {
           return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
@@ -74,7 +74,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'schema-popover--dynamic-type',
+        id: 'schemaPopoverDynamicType',
         role: 'card--content',
         filter: (data): data is { subject: Obj.Unknown } => {
           if (!Obj.isObject(data.subject)) {
@@ -112,7 +112,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create({
-        id: 'fallback-popover',
+        id: 'fallbackPopover',
         role: 'card--content',
         position: 'last',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
@@ -122,7 +122,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'fallback-json',
+        id: 'fallbackJson',
         role: 'card--content',
         position: 'last',
         filter: (data): data is Record<string, unknown> => true,

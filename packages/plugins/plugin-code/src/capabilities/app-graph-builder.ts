@@ -48,7 +48,7 @@ export default Capability.makeModule(
       // plugin-code isn't enabled) or the spec content can't be resolved,
       // the node is absent and the button stays hidden.
       GraphBuilder.createExtension({
-        id: 'plugin-spec',
+        id: 'pluginSpec',
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node) => {
           const plugin = node.data as PluginNS.Plugin;
@@ -77,7 +77,7 @@ export default Capability.makeModule(
 
       // Top-level "Code Projects" section in each space that has at least one CodeProject.
       GraphBuilder.createExtension({
-        id: 'code-projects-section',
+        id: 'codeProjectsSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const projects = get(AtomQuery.make(space.db, Filter.type(CodeProject.CodeProject)));
@@ -101,7 +101,7 @@ export default Capability.makeModule(
 
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       GraphBuilder.createExtension({
-        id: 'code-project-listing',
+        id: 'codeProjectListing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();

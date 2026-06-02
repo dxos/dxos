@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
+import { Collection, Database, Entity, Obj, QueryAST, Type, View, DXN } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
@@ -19,7 +19,7 @@ const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
 export namespace CollectionOperation {
   export const Create = Operation.make({
-    meta: { key: `${COLLECTION_OPERATION}.create`, name: 'Create Collection', icon: 'ph--folder--regular' },
+    meta: { key: DXN.make(`${COLLECTION_OPERATION}.create`), name: 'Create Collection', icon: 'ph--folder--regular' },
     services: [Capability.Service],
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
@@ -30,7 +30,7 @@ export namespace CollectionOperation {
   });
 }
 
-const SPACE_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /**
  * Operations for the Space plugin.
@@ -38,7 +38,7 @@ const SPACE_OPERATION = `${meta.id}.operation`;
 export namespace SpaceOperation {
   export const Create = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.create`,
+      key: makeKey('create'),
       name: 'Create Space',
       description: 'Create a new space.',
       icon: 'ph--plus--regular',
@@ -54,7 +54,7 @@ export namespace SpaceOperation {
 
   export const Join = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.join`,
+      key: makeKey('join'),
       name: 'Join Space',
       description: 'Join a space via invitation.',
       icon: 'ph--sign-in--regular',
@@ -69,7 +69,7 @@ export namespace SpaceOperation {
 
   export const Open = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open`,
+      key: makeKey('open'),
       name: 'Open Space',
       description: 'Open a space.',
       icon: 'ph--arrow-square-out--regular',
@@ -83,7 +83,7 @@ export namespace SpaceOperation {
 
   export const Close = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.close`,
+      key: makeKey('close'),
       name: 'Close Space',
       description: 'Close a space.',
       icon: 'ph--x-circle--regular',
@@ -97,7 +97,7 @@ export namespace SpaceOperation {
 
   export const Share = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.share`,
+      key: makeKey('share'),
       name: 'Share Space',
       description: 'Share a space.',
       icon: 'ph--share-network--regular',
@@ -115,7 +115,7 @@ export namespace SpaceOperation {
 
   export const OpenSettings = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-settings`,
+      key: makeKey('openSettings'),
       name: 'Open Space Settings',
       description: 'Open space settings.',
       icon: 'ph--gear--regular',
@@ -129,7 +129,7 @@ export namespace SpaceOperation {
 
   export const WaitForObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.wait-for-object`,
+      key: makeKey('waitForObject'),
       name: 'Wait For Object',
       description: 'Wait for an object to be available.',
       icon: 'ph--clock-countdown--regular',
@@ -143,7 +143,7 @@ export namespace SpaceOperation {
 
   export const AddObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-object`,
+      key: makeKey('addObject'),
       name: 'Add Object',
       description: 'Add an object to a space.',
       icon: 'ph--plus--regular',
@@ -182,7 +182,7 @@ export namespace SpaceOperation {
 
   export const RemoveObjects = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.remove-objects`,
+      key: makeKey('removeObjects'),
       name: 'Remove Objects',
       description: 'Remove entities (objects, relations, or persisted types) from a space.',
       icon: 'ph--trash--regular',
@@ -208,7 +208,7 @@ export namespace SpaceOperation {
 
   export const DeleteField = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.delete-field`,
+      key: makeKey('deleteField'),
       name: 'Delete Field',
       description: 'Delete a field from a view.',
       icon: 'ph--minus-circle--regular',
@@ -223,7 +223,7 @@ export namespace SpaceOperation {
 
   export const OpenCreateObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-create-object`,
+      key: makeKey('openCreateObject'),
       name: 'Open Create Object Dialog',
       description: 'Open the create object dialog.',
       icon: 'ph--plus--regular',
@@ -248,7 +248,7 @@ export namespace SpaceOperation {
 
   export const OpenCreateSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-create-space`,
+      key: makeKey('openCreateSpace'),
       name: 'Open Create Space Dialog',
       description: 'Open the create space dialog.',
       icon: 'ph--plus--regular',
@@ -260,7 +260,7 @@ export namespace SpaceOperation {
 
   export const OpenImportSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-import-space`,
+      key: makeKey('openImportSpace'),
       name: 'Open Import Space Dialog',
       description: 'Open the import space dialog to create a new space from a backup.',
       icon: 'ph--download--regular',
@@ -272,7 +272,7 @@ export namespace SpaceOperation {
 
   export const ImportSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.import-space`,
+      key: makeKey('importSpace'),
       name: 'Import Space',
       description: 'Import a space archive as a new space.',
       icon: 'ph--upload--regular',
@@ -292,7 +292,7 @@ export namespace SpaceOperation {
 
   export const ExportSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.export-space`,
+      key: makeKey('exportSpace'),
       name: 'Export Space',
       description: 'Export a space as a backup and download the archive.',
       icon: 'ph--download--regular',
@@ -307,7 +307,7 @@ export namespace SpaceOperation {
 
   export const Migrate = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.migrate`,
+      key: makeKey('migrate'),
       name: 'Migrate Space',
       description: 'Migrate a space to a new version.',
       icon: 'ph--arrows-clockwise--regular',
@@ -322,7 +322,7 @@ export namespace SpaceOperation {
 
   export const Snapshot = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.snapshot`,
+      key: makeKey('snapshot'),
       name: 'Create Snapshot',
       description: 'Create a snapshot of the space.',
       icon: 'ph--camera--regular',
@@ -339,7 +339,7 @@ export namespace SpaceOperation {
 
   export const Rename = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.rename`,
+      key: makeKey('rename'),
       name: 'Rename Space',
       description: 'Rename a space.',
       icon: 'ph--pencil-simple--regular',
@@ -354,7 +354,7 @@ export namespace SpaceOperation {
 
   export const RenameObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.rename-object`,
+      key: makeKey('renameObject'),
       name: 'Rename Object',
       description: 'Rename an entity (object, relation, or persisted type).',
       icon: 'ph--pencil-simple--regular',
@@ -369,7 +369,7 @@ export namespace SpaceOperation {
 
   export const OpenMembers = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.open-members`,
+      key: makeKey('openMembers'),
       name: 'Open Members',
       description: 'Open the members panel for a space.',
       icon: 'ph--users--regular',
@@ -383,7 +383,7 @@ export namespace SpaceOperation {
 
   export const GetShareLink = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.get-share-link`,
+      key: makeKey('getShareLink'),
       name: 'Get Share Link',
       description: 'Get a shareable link for a space.',
       icon: 'ph--link--regular',
@@ -403,7 +403,7 @@ export namespace SpaceOperation {
 
   export const AddType = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-type`,
+      key: makeKey('addType'),
       name: 'Add Type',
       description: 'Add a type to the space.',
       icon: 'ph--code--regular',
@@ -426,7 +426,7 @@ export namespace SpaceOperation {
 
   export const AddRelation = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.add-relation`,
+      key: makeKey('addRelation'),
       name: 'Add Relation',
       description: 'Add a relation between objects.',
       icon: 'ph--link--regular',
@@ -449,7 +449,7 @@ export namespace SpaceOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const DuplicateObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.duplicate-object`,
+      key: makeKey('duplicateObject'),
       name: 'Duplicate Object',
       description: 'Duplicate an object.',
       icon: 'ph--file--regular',
@@ -467,7 +467,7 @@ export namespace SpaceOperation {
    */
   export const RestoreField = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.restore-field`,
+      key: makeKey('restoreField'),
       name: 'Restore Field',
       description: 'Restore a deleted field to a view.',
       icon: 'ph--clock-counter-clockwise--regular',
@@ -489,7 +489,7 @@ export namespace SpaceOperation {
    */
   export const Reset = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.reset`,
+      key: makeKey('reset'),
       name: 'Reset Space',
       description: 'Permanently delete all objects and feeds in a space.',
       icon: 'ph--warning--regular',
@@ -506,7 +506,7 @@ export namespace SpaceOperation {
    */
   export const RestoreObjects = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}.restore-objects`,
+      key: makeKey('restoreObjects'),
       name: 'Restore Objects',
       description: 'Restore deleted entities to a space.',
       icon: 'ph--clock-counter-clockwise--regular',

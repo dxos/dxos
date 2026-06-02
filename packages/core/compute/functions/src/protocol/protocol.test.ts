@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import { InvalidOperationInputError } from '@dxos/compute';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
+import { DXN } from '@dxos/keys';
 
 import { wrapFunctionHandler } from './protocol';
 
@@ -13,7 +14,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(ReplyHandler);
 
-    expect(wrapped.meta.key).toBe('org.example.function.reply');
+    expect(wrapped.meta.key).toBe(DXN.make('org.example.function.reply'));
     expect(wrapped.meta.name).toBe('Reply');
 
     const testData = { message: 'hello' };
@@ -30,7 +31,7 @@ describe('wrapFunctionHandler', () => {
   test('wraps fibonacci function with valid input', async ({ expect }) => {
     const wrapped = wrapFunctionHandler(FibonacciHandler);
 
-    expect(wrapped.meta.key).toBe('org.example.function.fib');
+    expect(wrapped.meta.key).toBe(DXN.make('org.example.function.fib'));
     expect(wrapped.meta.name).toBe('Fibonacci');
 
     const result = await wrapped.handler({

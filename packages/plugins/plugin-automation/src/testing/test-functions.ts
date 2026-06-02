@@ -5,14 +5,14 @@
 import * as Schema from 'effect/Schema';
 
 import { TestSchema } from '@dxos/client/testing';
-import { JsonSchema, Ref } from '@dxos/echo';
+import { JsonSchema, Ref, DXN } from '@dxos/echo';
 
 /**
  * Operations seeded into the local space in stories.
  */
 export const functions = [
   {
-    key: 'com.example.function.chess',
+    key: DXN.make('com.example.function.chess'),
     name: 'com.example.function.chess',
     version: '0.1.0',
     inputSchema: JsonSchema.toJsonSchema(
@@ -24,7 +24,7 @@ export const functions = [
     ),
   },
   {
-    key: 'com.example.function.forex',
+    key: DXN.make('com.example.function.forex'),
     name: 'com.example.function.forex',
     version: '0.1.0',
     binding: 'FOREX',
@@ -36,7 +36,7 @@ export const functions = [
     ),
   },
   {
-    key: 'com.example.function.ping-contact',
+    key: DXN.make('com.example.function.pingContact'),
     name: 'com.example.function.ping-contact',
     version: '0.0.1',
     inputSchema: JsonSchema.toJsonSchema(
