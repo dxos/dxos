@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 
-import { getSchemaURI, getTypename } from '../Annotation';
+import { getSchemaURI, getTypename } from '../Annotation/annotations';
 import { type AnyEntity, InstancePhantomId, KindId, TypeId, getStaticTypeSchema } from '../common/types';
 import { getUri as getUriFromEntity } from './api';
 
@@ -78,7 +78,7 @@ export const isInstanceOf = <S>(
   }
 
   if (!DXN.isDXN(schemaURI)) {
-    // EchoURI-based schema URI — no typename match possible.
+    // EID-based schema URI — no typename match possible.
     return false;
   }
 

@@ -3,7 +3,7 @@
 //
 
 export { QueryAST } from '@dxos/echo-protocol';
-export { DXN, EchoURI, URI } from '@dxos/keys';
+export { DXN, EID, URI } from '@dxos/keys';
 
 export * as Annotation from './Annotation';
 export * as Database from './Database';
@@ -23,11 +23,14 @@ export * as Order from './Order';
 export * as Query from './Query';
 export * as QueryResult from './QueryResult';
 export * as Ref from './Ref';
+export * as Registry from './Registry';
 export * as Relation from './Relation';
-export * as SchemaRegistry from './SchemaRegistry';
+export * as Scope from './Scope';
+export * as StateMap from './StateMap';
 export * as Tag from './Tag';
+export * as TagIndex from './TagIndex';
+export * as Tagging from './Tagging';
 export * as Type from './Type';
 export * as Collection from './Collection';
 export * as View from './View';
 export * as Dataset from './Dataset';
-export * as Extension from './Extension';

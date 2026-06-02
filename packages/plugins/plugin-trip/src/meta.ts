@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.trip',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.trip'),
   name: 'Trip',
   author: 'DXOS',
   description: trim`
@@ -20,7 +21,7 @@ export const meta: Plugin.Meta = {
     configuration.
 
     Phase 2 adds inbox integration via a generic MessageExtractor contract in
-    plugin-inbox. plugin-trip registers a TravelMessageExtractor that matches
+    plugin-inbox. plugin-trip registers a TripMessageExtractor that matches
     flight and hotel confirmation emails, parses them into Booking and Segment
     objects, and appends them to the relevant Trip in the user's space. The
     extractor runs in three modes: manually from a message action menu,
@@ -45,6 +46,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-trip',
   spec: 'PLUGIN.mdl',
-  version: '0.8.3',
   tags: ['travel'],
-};
+});

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Entity, Obj, Type } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
@@ -16,10 +16,13 @@ export default ObjectCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, data }) {
       const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() =>
-        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      const types = yield* Database.runQuery(
+        Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
       );
-      invariant(Type.isObject(schema), 'Schema is not an object schema');
+      const foundSchema = types.find((t) => Type.getTypename(t) === typename);
+      invariant(foundSchema, `Schema not found: ${typename}`);
+      invariant(Type.isObject(foundSchema), 'Schema is not an object schema');
+      const schema = foundSchema;
 
       const object = db.add(
         Obj.make(

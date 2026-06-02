@@ -95,6 +95,18 @@ export class GraphClusterProjector<
   // would permanently lose the hidden leaves and they couldn't reappear on expand.
   #dataNodes: GraphLayoutNode<NodeData>[] = [];
 
+  /**
+   * Built-in click semantics: clicking a synthetic root / group node toggles its subtree.
+   * Leaf clicks fall through to the consumer's `onSelect` (returns `false`).
+   */
+  override handleNodeClick(node: GraphLayoutNode<NodeData>, _event: MouseEvent): boolean {
+    if (node.type !== CLUSTER_NODE_TYPE_ROOT && node.type !== CLUSTER_NODE_TYPE_GROUP) {
+      return false;
+    }
+    this.toggleCollapsed(node.id);
+    return true;
+  }
+
   /** Toggle collapse state for a synthetic node id. Triggers a topology re-emit. */
   toggleCollapsed(id: string): void {
     if (this.#collapsed.has(id)) {

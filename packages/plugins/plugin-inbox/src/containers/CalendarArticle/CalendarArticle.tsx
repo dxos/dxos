@@ -3,7 +3,7 @@
 //
 
 import { isSameDay } from 'date-fns';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -11,12 +11,11 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler } from '#components';
-import { useArticleKeyboardNavigation } from '#hooks';
 import { meta } from '#meta';
 import { type Calendar } from '#types';
 
@@ -79,8 +78,6 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [events, id, showItem],
   );
 
-  // n / p keyboard navigation: clamp at the ends of the events list.
-  const eventIds = useMemo(() => events.map((event) => event.id), [events]);
   const handleNavigate = useCallback(
     (eventId: string) => {
       const event = events.find((entry) => entry.id === eventId);
@@ -93,7 +90,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     },
     [events, id, showItem],
   );
-  useArticleKeyboardNavigation({ articleId: id, ids: eventIds, currentId, onSelect: handleNavigate });
+
+  useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>

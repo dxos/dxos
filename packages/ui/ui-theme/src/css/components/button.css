@@ -11,7 +11,7 @@
   /* Base styles */
   .dx-button {
     @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
-    @apply font-medium transition-colors duration-100 ease-linear bg-input-surface;
+    @apply font-medium transition-colors duration-100 ease-linear bg-input-bg;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention-surface;
@@ -26,10 +26,17 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
-        @apply bg-hover-surface text-inherit;
+        /* Tint relative to the host surface (--surface-bg, set by the enclosing dx-*-surface zone)
+         * so the hover reads correctly on any background: darker in light mode, lighter in dark.
+         * Falls back to base-surface when no surface zone is in scope. */
+        background: light-dark(
+          oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.05) c h),
+          oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.05) c h)
+        );
+        @apply text-inherit;
       }
       &[data-state='open'] {
-        @apply bg-input-surface;
+        @apply bg-input-bg;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
@@ -46,26 +53,26 @@
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
-      /* Hover */
       &:hover {
         @apply bg-hover-surface;
       }
 
-      /* Variants */
       &[data-variant='primary'] {
-        @apply text-accent-foreground bg-accent-surface;
+        @apply text-accent-fg bg-accent-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-accent-surface-hover;
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          @apply bg-accent-bg-hover;
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accent-foreground bg-rose-fill;
+        @apply text-accent-fg bg-error-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-rose-fill;
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          @apply bg-error-bg-hover;
         }
       }
     }

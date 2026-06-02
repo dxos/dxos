@@ -5,17 +5,25 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Type } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
-import { GraphQueryContext, type QueryContext, QueryResultImpl, type QuerySource, SpaceQuerySource } from './query';
+import { type EchoDatabaseImpl } from './proxy-db';
+import {
+  GraphQueryContext,
+  type QueryContext,
+  QueryResultImpl,
+  type QuerySource,
+  RegistryQuerySource,
+  SpaceQuerySource,
+} from './query';
 import type { Queue, QueueFactory } from './queue';
+import { findTypeByDXN, makeRegistry } from './registry';
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -28,14 +36,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
-  private readonly _schemaRegistry = new RuntimeSchemaRegistry();
+  private readonly _registry: Registry.Registry;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
-  get schemaRegistry(): RuntimeSchemaRegistry {
-    return this._schemaRegistry;
+  constructor() {
+    this._registry = makeRegistry();
+    this._registry.add([Type.Type]);
+  }
+
+  get registry(): Registry.Registry {
+    return this._registry;
   }
 
   /**
@@ -141,17 +154,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (!EchoURI.isEchoURI(uri)) {
-          return undefined; // Unsupported URI kind.
+        if (EID.isEID(uri)) {
+          const res = this._resolveSync(uri, context, onLoad);
+          return res ? middleware(res) : undefined;
         }
 
-        const res = this._resolveSync(uri, context, onLoad);
-
-        if (res) {
-          return middleware(res);
-        } else {
-          return undefined;
+        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
+        if (DXN.isDXN(uri)) {
+          const typeEntity = findTypeByDXN(this._registry, uri.toString());
+          return typeEntity ? middleware(typeEntity) : undefined;
         }
+
+        return undefined; // Unsupported URI kind.
       },
 
       resolve: async (uri) => {
@@ -167,17 +181,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          if (DXN.isDXN(uri)) {
-            const typeEntity = this.schemaRegistry.getSchemaByDXN(uri);
-            status = typeEntity != null ? 'resolved' : 'missing';
-            return typeEntity != null ? Type.getSchema(typeEntity) : undefined;
-          } else if (EchoURI.isEchoURI(uri)) {
-            status = 'error';
-            throw new Error('Not implemented: Resolving schema stored in the database');
-          } else {
-            status = 'unknown URI';
-            return undefined;
+          // Static/runtime types are held in the registry (DXN-form, typename-based).
+          // Persisted (db-backed) types are resolved from the owning space db (echo-form URIs).
+          const typeEntity =
+            findTypeByDXN(this._registry, uri.toString()) ?? (await this._resolveTypeFromDatabase(uri, context));
+          if (typeEntity != null) {
+            status = 'resolved';
+            return Type.getSchema(typeEntity);
           }
+          status = 'missing';
+          return undefined;
         } finally {
           if (TRACE_REF_RESOLUTION) {
             log.info('resolveSchema', {
@@ -194,10 +207,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        if (DXN.isDXN(uri)) {
-          return this.schemaRegistry.getSchemaByDXN(uri);
-        }
-        return undefined;
+        return findTypeByDXN(this._registry, uri.toString()) ?? (await this._resolveTypeFromDatabase(uri, context));
       },
     } satisfies Ref.Resolver;
   }
@@ -212,13 +222,13 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | Queue | undefined {
-    const parsedEchoUri = EchoURI.tryParse(uri);
+    const parsedEchoUri = EID.tryParse(uri);
     if (!parsedEchoUri) {
       throw new Error('Unsupported URI kind');
     }
 
-    const spaceId = EchoURI.getSpaceId(parsedEchoUri) ?? context.space;
-    const objectId = EchoURI.getObjectId(parsedEchoUri);
+    const spaceId = EID.getSpaceId(parsedEchoUri) ?? context.space;
+    const objectId = EID.getEntityId(parsedEchoUri);
     if (spaceId === undefined || objectId === undefined) {
       throw new Error(`Unable to determine the Space to resolve the reference: ${uri}`);
     }
@@ -235,7 +245,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // Fallback: try to resolve as a queue (Feed object backed by queue service).
     // Only resolve if a queue with this id has been explicitly created — otherwise
     // QueueFactory.get would manufacture a phantom queue for every unknown ECHO ref.
-    const queueEchoUri = EchoURI.make({ spaceId: spaceId, objectId: objectId });
+    const queueEchoUri = EID.make({ spaceId: spaceId, entityId: objectId });
     const queueFactory = this._queueFactories.get(spaceId);
     const queue = queueFactory?.tryGet(queueEchoUri);
     if (queue) {
@@ -270,25 +280,25 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
-      const parsedEchoUri = EchoURI.tryParse(uri);
+      const parsedEchoUri = EID.tryParse(uri);
       if (parsedEchoUri) {
-        const echoUri = EchoURI.getObjectId(parsedEchoUri);
-        const echoSpaceId = EchoURI.getSpaceId(parsedEchoUri);
+        const echoUri = EID.getEntityId(parsedEchoUri);
+        const echoSpaceId = EID.getSpaceId(parsedEchoUri);
         if (!echoUri) {
           status = 'error';
-          throw new Error(`Invalid EchoURI: ${uri}`);
+          throw new Error(`Invalid EID: ${uri}`);
         }
-        if (!EchoURI.isLocal(parsedEchoUri) && echoSpaceId !== context.space) {
+        if (!EID.isLocal(parsedEchoUri) && echoSpaceId !== context.space) {
           status = 'error';
           throw new Error('Cross-space references are not yet supported');
         }
 
-        const feedEchoId = context.feed && EchoURI.isEchoURI(context.feed) ? context.feed : undefined;
+        const feedEchoId = context.feed ? EID.tryParse(context.feed) : undefined;
         if (feedEchoId) {
-          const feedSpaceId = EchoURI.getSpaceId(feedEchoId) ?? context.space;
-          const queueId = EchoURI.getObjectId(feedEchoId);
+          const feedSpaceId = EID.getSpaceId(feedEchoId) ?? context.space;
+          const queueId = EID.getEntityId(feedEchoId);
           if (feedSpaceId && queueId) {
-            const queueEchoUri = EchoURI.make({ spaceId: feedSpaceId, objectId: queueId });
+            const queueEchoUri = EID.make({ spaceId: feedSpaceId, entityId: queueId });
             const obj = await this._resolveQueueObjectAsync(queueEchoUri, echoUri);
             if (obj) {
               status = 'resolved';
@@ -317,7 +327,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (3) Fallback: caller may be addressing a queue itself by URI.
-        const queueEchoUri = EchoURI.make({ spaceId: context.space, objectId: echoUri });
+        const queueEchoUri = EID.make({ spaceId: context.space, entityId: echoUri });
         const queue = this._resolveQueueSync(queueEchoUri);
         if (queue) {
           status = 'resolved';
@@ -326,6 +336,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
         status = 'missing';
         return undefined;
+      } else if (DXN.isDXN(uri)) {
+        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
+        const typeEntity = findTypeByDXN(this._registry, uri.toString());
+        status = typeEntity ? 'resolved' : 'missing';
+        return typeEntity ?? undefined;
       } else {
         status = 'error';
         throw new Error(`Unsupported URI kind: ${uri}`);
@@ -346,7 +361,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * for an object with the given id. Does not enumerate the on-disk feed catalog — only
    * queues that have been instantiated.
    */
-  private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
+  private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
@@ -360,7 +375,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return undefined;
   }
 
-  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
+  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -369,8 +384,30 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return obj;
   }
 
-  private _resolveQueueSync(queueEchoUri: EchoURI.EchoURI): Queue | undefined {
-    const spaceId = EchoURI.getSpaceId(queueEchoUri);
+  /**
+   * Resolve a persisted (db-backed) type entity from an echo-form URI.
+   * Persisted schemas live in the db only (never in the shared registry), so type refs
+   * carrying an echo URI (`dxn:echo:@:<objectId>`) resolve through the owning space db.
+   */
+  private async _resolveTypeFromDatabase(
+    uri: URI.URI,
+    context: Hypergraph.RefResolutionContext,
+  ): Promise<Type.AnyEntity | undefined> {
+    const parsed = EID.tryParse(uri);
+    if (!parsed) {
+      return undefined;
+    }
+    const spaceId = EID.getSpaceId(parsed) ?? context.space;
+    const objectId = EID.getEntityId(parsed);
+    if (spaceId === undefined || objectId === undefined) {
+      return undefined;
+    }
+    const obj = await this._resolveDatabaseObjectAsync(spaceId, objectId);
+    return obj != null && Type.isType(obj) ? obj : undefined;
+  }
+
+  private _resolveQueueSync(queueEchoUri: EID.EID): Queue | undefined {
+    const spaceId = EID.getSpaceId(queueEchoUri);
     if (!spaceId) {
       return undefined;
     }
@@ -385,10 +422,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private async _resolveQueueObjectAsync(
-    queueEchoUri: EchoURI.EchoURI,
-    objectId: ObjectId,
+    queueEchoUri: EID.EID,
+    objectId: EntityId,
   ): Promise<Entity.Unknown | undefined> {
-    const spaceId = EchoURI.getSpaceId(queueEchoUri);
+    const spaceId = EID.getSpaceId(queueEchoUri);
     if (!spaceId) {
       return undefined;
     }
@@ -462,6 +499,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const database of this._databases.values()) {
       context.addQuerySource(new SpaceQuerySource(database));
     }
+    context.addQuerySource(new RegistryQuerySource(this._registry));
     for (const provider of this._querySourceProviders) {
       context.addQuerySource(provider.create());
     }

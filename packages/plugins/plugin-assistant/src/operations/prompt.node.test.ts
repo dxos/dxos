@@ -10,7 +10,7 @@ import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -20,7 +20,7 @@ import { Message } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {
   // Hits AutomationPlugin compute runtime (plugin handlers, AiServiceLayer, blueprints).

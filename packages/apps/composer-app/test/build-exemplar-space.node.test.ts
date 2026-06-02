@@ -40,20 +40,7 @@ import { describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import {
-  Annotation,
-  Collection,
-  DXN,
-  EchoURI,
-  Feed,
-  Filter,
-  JsonSchema,
-  Obj,
-  Query,
-  Ref,
-  Type,
-  View,
-} from '@dxos/echo';
+import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -212,12 +199,13 @@ describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
+  const collectionTypename = Type.getTypename(Collection.Collection);
   Obj.update(space.properties, (properties) => {
-    if (!properties[Collection.Collection.typename]) {
-      properties[Collection.Collection.typename] = Ref.make(Collection.make());
+    if (!properties[collectionTypename]) {
+      properties[collectionTypename] = Ref.make(Collection.make());
     }
   });
-  const rootCollection = space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined;
+  const rootCollection = space.properties[collectionTypename]?.target as Collection.Collection | undefined;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');
   }
@@ -495,7 +483,7 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
-  const query = Query.select(Filter.typename(Organization.Organization.typename));
+  const query = Query.select(Filter.typename(Type.getTypename(Organization.Organization)));
 
   // Each view object holds its own View.View so they can be customised independently
   // (e.g. Kanban's pivot field). We share the query/jsonSchema across them.
@@ -881,7 +869,7 @@ const makeNotes = (
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
-  const localDxn = (obj: Obj.Unknown) => EchoURI.make({ objectId: obj.id });
+  const localDxn = (obj: Obj.Unknown) => EID.make({ entityId: obj.id });
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 
@@ -1112,7 +1100,7 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
  * then return the collection for wiring into the root.
  *
- * We register the schema via space.db.schemaRegistry.register() so that a TypeSchema ECHO object
+ * We persist the schema via space.db.addType() so that a TypeSchema ECHO object
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
@@ -1122,18 +1110,12 @@ const addRoastLogCollection = async (
 ): Promise<Collection.Collection> => {
   const typename = 'example.type.roastLog';
 
-  // Register creates the TypeSchema ECHO object in the space so the runtime can
-  // discover and render the schema without it being compiled into the app. Pass the
-  // explicit object form so `name` is stored on the TypeSchema — passing a
-  // Type.AnyEntity directly does not auto-derive a display name.
-  await space.db.schemaRegistry.register([
-    {
-      typename,
-      version: '0.1.0',
-      jsonSchema: JsonSchema.toJsonSchema(RoastLog) as JsonSchema.JsonSchema,
-      name: 'Roast Log',
-    },
-  ]);
+  // db.addType creates the TypeSchema ECHO object in the space so the runtime can
+  // discover and render the schema without it being compiled into the app.
+  const roastLogType = await space.db.addType(RoastLog);
+  Type.update(roastLogType, (draft) => {
+    draft.name = 'Roast Log';
+  });
 
   const entries = makeRoastLogs(people);
   entries.forEach((entry) => space.db.add(entry));

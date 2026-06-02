@@ -8,13 +8,13 @@ import * as Schema from 'effect/Schema';
 
 /**
  * Branded string type for any URI.
- * Base type for more specific URI schemes like DXN and EchoURI.
+ * Base type for more specific URI schemes like DXN and EID.
  */
 export type URI = string & { readonly __URI: unique symbol };
 
 /**
  * Brand a string as an opaque URI without validating the scheme.
- * For typed construction prefer `DXN.make`, `EchoURI.make`, etc.
+ * For typed construction prefer `DXN.make`, `EID.make`, etc.
  */
 export const make = (uri: string): URI => uri as URI;
 

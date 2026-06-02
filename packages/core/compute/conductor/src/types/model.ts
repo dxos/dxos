@@ -4,7 +4,7 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import { Graph, GraphModel } from '@dxos/graph';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
@@ -20,7 +20,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     return new ComputeGraphModel(
       Obj.make(ComputeGraph, {
         graph: {
-          id: graph?.id ?? ObjectId.random(),
+          id: graph?.id ?? EntityId.random(),
           nodes: graph?.nodes ?? [],
           edges: graph?.edges ?? [],
         },
@@ -52,7 +52,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   //
 
   createNode({ id, ...rest }: MakeOptional<ComputeNode, 'id'>): ComputeNode {
-    const node: ComputeNode = { id: id ?? ObjectId.random(), ...rest };
+    const node: ComputeNode = { id: id ?? EntityId.random(), ...rest };
     this.addNode(node);
     return node;
   }

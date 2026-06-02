@@ -17,7 +17,7 @@ import { Process, Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink } from '@dxos/functions-runtime';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -48,9 +48,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
-          const echoUri = EchoURI.tryParse(commit.link);
-          const spaceId = echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
-          const objectId = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+          const echoUri = EID.tryParse(commit.link);
+          const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
+          const objectId = echoUri ? EID.getEntityId(echoUri) : undefined;
           if (spaceId && objectId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
             void invokePromise(LayoutOperation.Open, {
@@ -81,8 +81,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           classNames: mx(
             'h-full grid divide-y divide-separator',
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[minmax(0,4lh)_1fr]',
+              ? 'grid-rows-[minmax(0,160px)_1fr_minmax(0,206px)]'
+              : 'grid-rows-[minmax(0,160px)_1fr]',
           ),
         })}
         ref={forwardedRef}

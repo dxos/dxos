@@ -1,5 +1,5 @@
 /**
- * Panel — applies bg-{hue}-surface / text-{hue}-foreground / border-{hue}-border tokens via data-hue attribute or BEM modifier.
+ * Panel — applies bg-{hue}-surface / text-{hue}-fg / border-{hue}-border tokens via data-hue attribute or BEM modifier.
  * Example: <div className='dx-panel' data-hue='blue'>...</div>
  * Example: <div className='dx-panel dx-panel--blue'>...</div>
  */
@@ -7,111 +7,111 @@
 @layer dx-components {
   [data-hue='neutral'] .dx-panel,
   .dx-panel--neutral {
-    @apply bg-neutral-surface text-neutral-foreground border-neutral-border;
+    @apply bg-neutral-surface text-neutral-fg border-neutral-border;
   }
 
   [data-hue='red'] .dx-panel,
   .dx-panel--red {
-    @apply bg-red-surface text-red-foreground border-red-border;
+    @apply bg-red-surface text-red-fg border-red-border;
   }
 
   [data-hue='orange'] .dx-panel,
   .dx-panel--orange {
-    @apply bg-orange-surface text-orange-foreground border-orange-border;
+    @apply bg-orange-surface text-orange-fg border-orange-border;
   }
 
   [data-hue='amber'] .dx-panel,
   .dx-panel--amber {
-    @apply bg-amber-surface text-amber-foreground border-amber-border;
+    @apply bg-amber-surface text-amber-fg border-amber-border;
   }
 
   [data-hue='yellow'] .dx-panel,
   .dx-panel--yellow {
-    @apply bg-yellow-surface text-yellow-foreground border-yellow-border;
+    @apply bg-yellow-surface text-yellow-fg border-yellow-border;
   }
 
   [data-hue='lime'] .dx-panel,
   .dx-panel--lime {
-    @apply bg-lime-surface text-lime-foreground border-lime-border;
+    @apply bg-lime-surface text-lime-fg border-lime-border;
   }
 
   [data-hue='green'] .dx-panel,
   .dx-panel--green {
-    @apply bg-green-surface text-green-foreground border-green-border;
+    @apply bg-green-surface text-green-fg border-green-border;
   }
 
   [data-hue='emerald'] .dx-panel,
   .dx-panel--emerald {
-    @apply bg-emerald-surface text-emerald-foreground border-emerald-border;
+    @apply bg-emerald-surface text-emerald-fg border-emerald-border;
   }
 
   [data-hue='teal'] .dx-panel,
   .dx-panel--teal {
-    @apply bg-teal-surface text-teal-foreground border-teal-border;
+    @apply bg-teal-surface text-teal-fg border-teal-border;
   }
 
   [data-hue='cyan'] .dx-panel,
   .dx-panel--cyan {
-    @apply bg-cyan-surface text-cyan-foreground border-cyan-border;
+    @apply bg-cyan-surface text-cyan-fg border-cyan-border;
   }
 
   [data-hue='sky'] .dx-panel,
   .dx-panel--sky {
-    @apply bg-sky-surface text-sky-foreground border-sky-border;
+    @apply bg-sky-surface text-sky-fg border-sky-border;
   }
 
   [data-hue='blue'] .dx-panel,
   .dx-panel--blue {
-    @apply bg-blue-surface text-blue-foreground border-blue-border;
+    @apply bg-blue-surface text-blue-fg border-blue-border;
   }
 
   [data-hue='indigo'] .dx-panel,
   .dx-panel--indigo {
-    @apply bg-indigo-surface text-indigo-foreground border-indigo-border;
+    @apply bg-indigo-surface text-indigo-fg border-indigo-border;
   }
 
   [data-hue='violet'] .dx-panel,
   .dx-panel--violet {
-    @apply bg-violet-surface text-violet-foreground border-violet-border;
+    @apply bg-violet-surface text-violet-fg border-violet-border;
   }
 
   [data-hue='purple'] .dx-panel,
   .dx-panel--purple {
-    @apply bg-purple-surface text-purple-foreground border-purple-border;
+    @apply bg-purple-surface text-purple-fg border-purple-border;
   }
 
   [data-hue='fuchsia'] .dx-panel,
   .dx-panel--fuchsia {
-    @apply bg-fuchsia-surface text-fuchsia-foreground border-fuchsia-border;
+    @apply bg-fuchsia-surface text-fuchsia-fg border-fuchsia-border;
   }
 
   [data-hue='pink'] .dx-panel,
   .dx-panel--pink {
-    @apply bg-pink-surface text-pink-foreground border-pink-border;
+    @apply bg-pink-surface text-pink-fg border-pink-border;
   }
 
   [data-hue='rose'] .dx-panel,
   .dx-panel--rose {
-    @apply bg-rose-surface text-rose-foreground border-rose-border;
+    @apply bg-rose-surface text-rose-fg border-rose-border;
   }
 
   [data-hue='info'] .dx-panel,
   .dx-panel--info {
-    @apply bg-info-surface text-info-foreground border-info-border;
+    @apply bg-info-surface text-info-fg border-info-border;
   }
 
   [data-hue='success'] .dx-panel,
   .dx-panel--success {
-    @apply bg-success-surface text-success-foreground border-success-border;
+    @apply bg-success-surface text-success-fg border-success-border;
   }
 
   [data-hue='warning'] .dx-panel,
   .dx-panel--warning {
-    @apply bg-warning-surface text-warning-foreground border-warning-border;
+    @apply bg-warning-surface text-warning-fg border-warning-border;
   }
 
   [data-hue='error'] .dx-panel,
   .dx-panel--error {
-    @apply bg-error-surface text-error-foreground border-error-border;
+    @apply bg-error-surface text-error-fg border-error-border;
   }
 }

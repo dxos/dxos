@@ -87,7 +87,7 @@ const DefaultStory = () => {
           }
 
           return (
-            <div className='flex justify-center items-center border border-rose-fill rounded-sm'>
+            <div className='flex justify-center items-center border border-rose-bg rounded-sm'>
               <span className='font-mono'>Ticking... {count}</span>
             </div>
           );

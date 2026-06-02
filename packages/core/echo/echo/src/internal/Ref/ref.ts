@@ -16,11 +16,16 @@ import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import type * as Type from '../../Type';
-import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import {
+  ReferenceAnnotationId,
+  getSchemaURI,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
+} from '../Annotation/annotations';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
@@ -115,7 +120,7 @@ export interface RefFn {
   /**
    * @returns True if the reference points to the given object id.
    */
-  hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
+  hasEntityId: (id: EntityId) => (ref: Ref<any>) => boolean;
 
   /**
    * @returns True if the schema is a reference schema.
@@ -135,7 +140,7 @@ export interface RefFn {
 
   /**
    * Constructs a reference that points to the object specified by the provided URI
-   * (either an `echo:` EchoURI for an object reference or a `dxn:` DXN for a type reference).
+   * (either an `echo:` EID for an object reference or a `dxn:` DXN for a type reference).
    */
   fromURI: (uri: URI.URI) => Ref<any>;
 }
@@ -162,7 +167,7 @@ export const Ref: RefFn = (input: any): RefSchema<any> => {
  */
 export interface Ref<T> extends Pipeable.Pipeable {
   /**
-   * Target URI (either an `echo:` EchoURI for an object reference or a `dxn:` DXN for a type reference).
+   * Target URI (either an `echo:` EID for an object reference or a `dxn:` DXN for a type reference).
    */
   get uri(): URI.URI;
 
@@ -242,9 +247,9 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => {
-  const uri = EchoURI.tryParse(ref.uri);
-  return uri !== undefined && EchoURI.isLocal(uri) && EchoURI.getObjectId(uri) === id;
+Ref.hasEntityId = (id: EntityId) => (ref: Ref<any>) => {
+  const uri = EID.tryParse(ref.uri);
+  return uri !== undefined && EID.isLocal(uri) && EID.getEntityId(uri) === id;
 };
 
 Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
@@ -262,8 +267,8 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
 
   // TODO(dmaretskyi): Extract to `getObjectEchoUri` function.
   const id = obj.id;
-  invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const uri = EchoURI.make({ objectId: id });
+  invariant(EntityId.isValid(id), 'Invalid object ID');
+  const uri = EID.make({ entityId: id });
   return new RefImpl(uri, obj);
 };
 
@@ -589,7 +594,7 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 };
 
 export class StaticRefResolver implements RefResolver {
-  public objects = new Map<ObjectId, AnyProperties>();
+  public objects = new Map<EntityId, AnyProperties>();
   public schemas = new Map<URI.URI, Schema.Schema.AnyNoContext>();
 
   addObject(obj: AnyProperties): this {
@@ -607,8 +612,8 @@ export class StaticRefResolver implements RefResolver {
   }
 
   resolveSync(uri: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
-    const echoUri = EchoURI.tryParse(uri);
-    const id = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+    const echoUri = EID.tryParse(uri);
+    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
     if (id == null) {
       return undefined;
     }
@@ -617,8 +622,8 @@ export class StaticRefResolver implements RefResolver {
   }
 
   async resolve(uri: URI.URI): Promise<AnyProperties | undefined> {
-    const echoUri = EchoURI.tryParse(uri);
-    const id = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+    const echoUri = EID.tryParse(uri);
+    const id = echoUri ? EID.getEntityId(echoUri) : undefined;
     if (id == null) {
       return undefined;
     }

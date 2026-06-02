@@ -3,9 +3,8 @@
 //
 
 import { SpaceProperties } from '@dxos/client-protocol';
-import { DXN, Type } from '@dxos/echo';
-import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { DXN, Filter, Type } from '@dxos/echo';
+import { type EchoDatabase, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
 
 export type ImportSpaceOptions = {
   /** Type names to filter out during import (e.g., SpaceProperties typename). */

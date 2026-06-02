@@ -13,17 +13,13 @@ import type * as Types from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
 import type * as Type from '../../Type';
-import {
-  type TypeAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-  makeTypeJsonSchemaAnnotation,
-} from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import {
   ANY_OBJECT_TYPENAME,
   ANY_OBJECT_VERSION,
@@ -429,10 +425,10 @@ const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefi
   if (schema.$id && (schema.$id.startsWith('echo:') || schema.$id.startsWith('dxn:echo:'))) {
     return schema.$id;
   }
-  // Legacy: older serializations stored the EchoURI on echo.type.schemaId.
+  // Legacy: older serializations stored the EID on echo.type.schemaId.
   const legacySchemaId = schema.echo?.type?.schemaId;
   if (legacySchemaId) {
-    return ObjectId.isValid(legacySchemaId) ? EchoURI.make({ objectId: legacySchemaId }) : legacySchemaId;
+    return EntityId.isValid(legacySchemaId) ? EID.make({ entityId: legacySchemaId }) : legacySchemaId;
   }
   return undefined;
 };
@@ -486,7 +482,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   if (typeAnnotation) {
     annotations[TypeAnnotationId] = typeAnnotation;
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
-      // $id is the typename DXN — the schema's type identity. The storage EchoURI (if any)
+      // $id is the typename DXN — the schema's type identity. The storage EID (if any)
       // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
       identifier: DXN.make(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,

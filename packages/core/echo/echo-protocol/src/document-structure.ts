@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { ObjectId, URI } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
@@ -19,8 +19,8 @@ export type SpaceState = {
 /**
  * Array indexes get converted to strings.
  */
-export type ObjectProp = string;
-export type ObjectPropPath = ObjectProp[];
+export type EntityProp = string;
+export type EntityPropPath = EntityProp[];
 
 /**
  * Link to all documents that hold objects in the space.
@@ -35,7 +35,7 @@ export interface DatabaseDirectory {
    * Objects inlined in the current document.
    */
   objects?: {
-    [id: string]: ObjectStructure;
+    [id: string]: EntityStructure;
   };
   /**
    * Object id points to an automerge doc url where the object is embedded.
@@ -67,11 +67,11 @@ export const DatabaseDirectory = Object.freeze({
     return rawKey;
   },
 
-  getInlineObject: (doc: DatabaseDirectory, id: ObjectId): ObjectStructure | undefined => {
+  getInlineObject: (doc: DatabaseDirectory, id: EntityId): EntityStructure | undefined => {
     return doc.objects?.[id];
   },
 
-  getLink: (doc: DatabaseDirectory, id: ObjectId): string | undefined => {
+  getLink: (doc: DatabaseDirectory, id: EntityId): string | undefined => {
     return doc.links?.[id]?.toString();
   },
 
@@ -81,7 +81,7 @@ export const DatabaseDirectory = Object.freeze({
     links,
   }: {
     spaceKey: string;
-    objects?: Record<string, ObjectStructure>;
+    objects?: Record<string, EntityStructure>;
     links?: Record<string, RawString>;
   }): DatabaseDirectory => ({
     access: {
@@ -95,11 +95,11 @@ export const DatabaseDirectory = Object.freeze({
 /**
  * Representation of an ECHO object in an AM document.
  */
-export type ObjectStructure = {
+export type EntityStructure = {
   // TODO(dmaretskyi): Missing in some cases.
-  system?: ObjectSystem;
+  system?: EntitySystem;
 
-  meta: ObjectMeta;
+  meta: EntityMeta;
   /**
    * User-defined data.
    * Adheres to schema in `system.type`
@@ -107,46 +107,46 @@ export type ObjectStructure = {
   data: Record<string, any>;
 };
 
-// Helper methods to interact with the {@link ObjectStructure}.
-export const ObjectStructure = Object.freeze({
+// Helper methods to interact with the {@link EntityStructure}.
+export const EntityStructure = Object.freeze({
   /**
    * @throws On invalid object structure.
    */
-  getTypeReference: (object: ObjectStructure): EncodedReference | undefined => {
+  getTypeReference: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.type;
   },
 
   /**
    * @throws On invalid object structure.
    */
-  getEntityKind: (object: ObjectStructure): 'object' | 'relation' | 'type' => {
+  getEntityKind: (object: EntityStructure): 'object' | 'relation' | 'type' => {
     const kind = object.system?.kind ?? 'object';
     invariant(kind === 'object' || kind === 'relation' || kind === 'type', 'Invalid kind');
     return kind;
   },
 
-  isDeleted: (object: ObjectStructure): boolean => {
+  isDeleted: (object: EntityStructure): boolean => {
     return object.system?.deleted ?? false;
   },
 
-  getRelationSource: (object: ObjectStructure): EncodedReference | undefined => {
+  getRelationSource: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.source;
   },
 
-  getRelationTarget: (object: ObjectStructure): EncodedReference | undefined => {
+  getRelationTarget: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.target;
   },
 
-  getParent: (object: ObjectStructure): EncodedReference | undefined => {
+  getParent: (object: EntityStructure): EncodedReference | undefined => {
     return object.system?.parent;
   },
 
   /**
    * @returns All references in the data section of the object.
    */
-  getAllOutgoingReferences: (object: ObjectStructure): { path: ObjectPropPath; reference: EncodedReference }[] => {
-    const references: { path: ObjectPropPath; reference: EncodedReference }[] = [];
-    const visit = (path: ObjectPropPath, value: unknown) => {
+  getAllOutgoingReferences: (object: EntityStructure): { path: EntityPropPath; reference: EncodedReference }[] => {
+    const references: { path: EntityPropPath; reference: EncodedReference }[] = [];
+    const visit = (path: EntityPropPath, value: unknown) => {
       if (isEncodedReference(value)) {
         references.push({ path, reference: value });
       } else {
@@ -157,7 +157,7 @@ export const ObjectStructure = Object.freeze({
     return references;
   },
 
-  getTags: (object: ObjectStructure): string[] => {
+  getTags: (object: EntityStructure): string[] => {
     return object.meta.tags ?? [];
   },
 
@@ -170,7 +170,7 @@ export const ObjectStructure = Object.freeze({
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
-  }): ObjectStructure => {
+  }): EntityStructure => {
     return {
       system: {
         kind: 'object',
@@ -197,7 +197,7 @@ export const ObjectStructure = Object.freeze({
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
-  }): ObjectStructure => {
+  }): EntityStructure => {
     return {
       system: {
         kind: 'relation',
@@ -213,7 +213,7 @@ export const ObjectStructure = Object.freeze({
     };
   },
 
-  makeType: ({ type, keys, data }: { type: URI.URI; keys?: ForeignKey[]; data?: unknown }): ObjectStructure => {
+  makeType: ({ type, keys, data }: { type: URI.URI; keys?: ForeignKey[]; data?: unknown }): EntityStructure => {
     return {
       system: {
         kind: 'type',
@@ -230,7 +230,7 @@ export const ObjectStructure = Object.freeze({
 /**
  * Echo object metadata.
  */
-export type ObjectMeta = {
+export type EntityMeta = {
   /**
    * Foreign keys.
    */
@@ -261,7 +261,7 @@ export type ObjectMeta = {
  * Automerge object system properties.
  * (Is automerge specific.)
  */
-export type ObjectSystem = {
+export type EntitySystem = {
   /**
    * Entity kind. `'type'` covers persisted ECHO type definitions (instances of
    * the `Type.Type` meta-schema); `'object'` / `'relation'` cover regular ECHO
@@ -311,6 +311,6 @@ export const PROPERTY_ID = 'id';
 
 /**
  * Data namespace.
- * The key on {@link ObjectStructure} that contains the user-defined data.
+ * The key on {@link EntityStructure} that contains the user-defined data.
  */
 export const DATA_NAMESPACE = 'data';

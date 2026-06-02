@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Entity, Filter, Obj, Query as EchoQuery } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Query as EchoQuery, Scope, Type } from '@dxos/echo';
 
 import { Query } from './definitions';
 
@@ -20,18 +20,24 @@ export default Query.pipe(
           ...text.split(' ').map((term) => EchoQuery.select(Filter.text(term, { type: 'full-text' }))),
         );
         if (typename !== undefined) {
-          const schema = yield* Database.runSchemaQuery({ typename, location: ['database', 'runtime'] });
-          if (schema.length === 0) {
+          const types = yield* Database.runQuery(
+            EchoQuery.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+          );
+          const schema = types.find((t) => Type.getTypename(t) === typename);
+          if (!schema) {
             return yield* Effect.fail(new Error(`Schema ${typename} not found`));
           }
-          query = query.select(Filter.type(schema[0]));
+          query = query.select(Filter.type(schema));
         }
       } else if (typename) {
-        const schema = yield* Database.runSchemaQuery({ typename, location: ['database', 'runtime'] });
-        if (schema.length === 0) {
+        const types = yield* Database.runQuery(
+          EchoQuery.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+        );
+        const schema = types.find((t) => Type.getTypename(t) === typename);
+        if (!schema) {
           return yield* Effect.fail(new Error(`Schema ${typename} not found`));
         }
-        query = EchoQuery.select(Filter.type(schema[0]));
+        query = EchoQuery.select(Filter.type(schema));
       } else {
         query = EchoQuery.select(Filter.everything());
       }
@@ -43,7 +49,7 @@ export default Query.pipe(
       query = query.limit(limit);
       if (includeQueues) {
         // Must scope to the current space: `from({ allFeedsFromSpaces: true })` alone has no spaceIds, so the SQL
-        // index returns nothing (see ObjectMetaIndex.buildSourceCondition / early returns when spaceIds are empty).
+        // index returns nothing (see EntityMetaIndex.buildSourceCondition / early returns when spaceIds are empty).
         query = query.from(db, { includeFeeds: true });
       }
 

@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 const LevelLetter = Schema.Literal('T', 'D', 'V', 'I', 'W', 'E');
@@ -156,7 +157,7 @@ const QueryComposerLogsOutput = Schema.Struct({
 
 export const QueryComposerLogs = Operation.make({
   meta: {
-    key: 'org.dxos.function.doctor.query-composer-logs',
+    key: DXN.make('org.dxos.function.doctor.queryComposerLogs'),
     name: 'Query Composer Logs',
     icon: 'ph--magnifying-glass--regular',
     description: trim`

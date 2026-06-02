@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Filter, Obj, type Tag } from '@dxos/echo';
+import { type Filter, Obj } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 
 /**
@@ -10,12 +10,15 @@ import { type Message } from '@dxos/types';
  *
  * Feed/queue queries don't yet support text-search and complex filter combinations,
  * so the mailbox UI fetches all messages from the feed and applies the user filter here.
+ *
+ * `tags` is the message's tag ids (Tag object URIs) — the same id space as `meta.tags` and the
+ * `tag:` filter the QueryBuilder emits.
  */
-export const matchesFilter = (filter: Filter.Any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+export const matchesFilter = (filter: Filter.Any, message: Message.Message, tags: string[]): boolean => {
   return matchesAst(filter.ast, message, tags);
 };
 
-const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+const matchesAst = (ast: any, message: Message.Message, tags: string[]): boolean => {
   if (!ast || typeof ast !== 'object') {
     return false;
   }
@@ -27,7 +30,7 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
     case 'not':
       return ast.filter != null && !matchesAst(ast.filter, message, tags);
     case 'tag':
-      return tags.some((tag) => tag.id === ast.tag);
+      return tags.includes(ast.tag);
     case 'text-search':
       return matchesText(ast.text ?? '', message);
     case 'object': {
@@ -61,7 +64,7 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
   }
 };
 
-const matchesPredicate = (ast: any, value: any, message: Message.Message, tags: Tag.Tag[]): boolean => {
+const matchesPredicate = (ast: any, value: any, message: Message.Message, tags: string[]): boolean => {
   switch (ast?.type) {
     case 'compare': {
       switch (ast.operator) {

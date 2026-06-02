@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Filter, Query, Tag, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -26,9 +26,9 @@ const types = [
 ];
 
 const tags = Tag.createTagList({
-  [ObjectId.random().toString()]: Tag.make({ label: 'Important' }),
-  [ObjectId.random().toString()]: Tag.make({ label: 'Investor' }),
-  [ObjectId.random().toString()]: Tag.make({ label: 'New' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'Important' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'Investor' }),
+  [EntityId.random().toString()]: Tag.make({ label: 'New' }),
 });
 
 const meta = {

@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.integration',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.integration'),
   name: 'Integrations',
   author: 'DXOS',
   description: trim`
@@ -38,4 +39,4 @@ export const meta: Plugin.Meta = {
   tags: ['system'],
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-integration',
   spec: 'PLUGIN.mdl',
-};
+});

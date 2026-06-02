@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Database, Filter, Query, Type } from '@dxos/echo';
+import { Resolver } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
-
-import { Resolver } from './resolver';
 
 export type HasEmail = { email: string };
 

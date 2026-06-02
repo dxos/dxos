@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.transformer',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.transformer'),
   name: 'Transformer',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -29,4 +30,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--cpu--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-transformer',
   tags: ['labs'],
-};
+});

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
+import { Capabilities } from '@dxos/app-framework';
 import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Database, Feed } from '@dxos/echo';
@@ -27,10 +28,8 @@ describe('Chat processor', () => {
         yield* Database.add(feed);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
         const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
-        const managedRuntime = ManagedRuntime.make(
-          Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
-        );
-        const processor = new AiChatProcessor(session, managedRuntime as any, feed, Layer.empty as any);
+        const managedRuntime = ManagedRuntime.make(Layer.empty) as unknown as Capabilities.ProcessManagerRuntime;
+        const processor = new AiChatProcessor(session, managedRuntime, feed, Layer.empty as any);
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },

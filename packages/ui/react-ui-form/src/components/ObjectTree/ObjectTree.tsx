@@ -147,7 +147,7 @@ const Row = ({ label, value, depth }: RowProps) => (
     <div role='cell' className='text-subdued'>
       {label}
     </div>
-    <div role='cell' className={mx('break-all text-base-foreground')}>
+    <div role='cell' className={mx('break-all text-base-fg')}>
       {value}
     </div>
   </div>

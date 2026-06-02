@@ -13,7 +13,7 @@ export class SchemaNotFoundError extends BaseError.extend('SchemaNotFoundError',
   }
 }
 
-export class ObjectNotFoundError extends BaseError.extend('ObjectNotFoundError', 'Object not found') {
+export class EntityNotFoundError extends BaseError.extend('EntityNotFoundError', 'Entity not found') {
   constructor(uri: URI.URI, options?: BaseErrorOptions) {
     super({ context: { uri }, ...options });
   }

@@ -4,7 +4,7 @@
 
 import { type Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 import { ObjectCore } from '../core-db';
 import { getObjectCore, initEchoReactiveObjectRootProxy } from './echo-handler';
@@ -36,11 +36,11 @@ export const clone = <T extends Obj.Unknown>(obj: T, { retainId = true, addition
     'retainId must be true when additional is not empty',
   );
 
-  const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
+  const clone = cloneInner(obj, retainId ? obj.id : EntityId.random());
   const clones: T[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
-      clones.push(cloneInner<T>(innerObj, retainId ? innerObj.id : ObjectId.random()));
+      clones.push(cloneInner<T>(innerObj, retainId ? innerObj.id : EntityId.random()));
     }
   }
 

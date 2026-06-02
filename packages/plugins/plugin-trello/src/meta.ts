@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.trello',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.trello'),
   name: 'Trello',
   author: 'DXOS',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-trello',
@@ -35,4 +36,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--kanban--regular',
   iconHue: 'blue',
   tags: ['labs', 'integration'],
-};
+});

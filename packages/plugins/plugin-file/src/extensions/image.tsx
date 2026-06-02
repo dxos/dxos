@@ -9,7 +9,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Filter, Obj } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
@@ -103,16 +103,16 @@ const buildDecorations = ({
 
       const hide = state.readOnly || cursor < node.from || cursor > node.to;
       const urlText = state.sliceDoc(urlNode.from, urlNode.to);
-      if (!EchoURI.isEchoURI(urlText)) {
+      if (!EID.isEID(urlText)) {
         return;
       }
 
       let echoUri: string | undefined;
       let echoSpaceId: string | undefined;
       try {
-        const parsed = EchoURI.parse(urlText);
-        echoUri = EchoURI.getObjectId(parsed);
-        echoSpaceId = EchoURI.getSpaceId(parsed);
+        const parsed = EID.parse(urlText);
+        echoUri = EID.getEntityId(parsed);
+        echoSpaceId = EID.getSpaceId(parsed);
       } catch {
         return;
       }

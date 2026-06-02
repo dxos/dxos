@@ -64,14 +64,19 @@ export const DateField = ({
   );
 
   return (
-    <FormFieldWrapper<string> readonly={readonly} {...props}>
+    <FormFieldWrapper<string> readonly={readonly} format={format} {...props}>
       {({ value }) => {
         switch (format) {
           case Format.TypeFormat.Date:
             return (
-              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
-                <Input.Date disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />
-                <Input.TriggerIcon />
+              <div className='grid grid-cols-[minmax(0,1fr)_min-content] items-stretch gap-1'>
+                <Input.Date
+                  classNames='min-w-0 overflow-hidden'
+                  disabled={!!readonly}
+                  value={value ?? ''}
+                  onValueChange={handleSimpleChange}
+                />
+                <Input.TriggerIcon classNames='h-full' />
               </div>
             );
           case Format.TypeFormat.Time:
@@ -79,13 +84,14 @@ export const DateField = ({
           case Format.TypeFormat.DateTime:
           default:
             return (
-              <div className='grid grid-cols-[1fr_min-content] items-center gap-1'>
+              <div className='grid grid-cols-[minmax(0,1fr)_min-content] items-stretch gap-1'>
                 <Input.DateTime
+                  classNames='min-w-0 overflow-hidden'
                   disabled={!!readonly}
                   value={isoToLocalDateTime(value)}
                   onValueChange={handleDateTimeChange}
                 />
-                <Input.TriggerIcon />
+                <Input.TriggerIcon classNames='h-full' />
               </div>
             );
         }

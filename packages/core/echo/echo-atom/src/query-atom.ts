@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 
-import { Database, type Entity, type Filter, Key, Query, type QueryResult } from '@dxos/echo';
+import { Database, type Entity, type Filter, Query, type QueryResult, Registry, URI } from '@dxos/echo';
 import { WeakDictionary } from '@dxos/util';
 
 /**
@@ -68,8 +68,12 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
   if (Database.isDatabase(queryable)) {
     return queryable.spaceId;
   }
-  // Queue or similar: use uri if it's a URI (EchoURI or DXN).
-  if ('uri' in queryable && Key.URI.isURI(queryable.uri)) {
+  // Registry: use its stable per-instance id.
+  if (Registry.isRegistry(queryable)) {
+    return queryable.id;
+  }
+  // Queue or similar: use uri if it's a URI (EID or DXN).
+  if ('uri' in queryable && URI.isURI(queryable.uri)) {
     return queryable.uri;
   }
   // Fallback: use id if it's a string.

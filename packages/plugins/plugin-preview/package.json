@@ -88,7 +88,6 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",

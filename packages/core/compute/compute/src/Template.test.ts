@@ -7,6 +7,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
 import * as OperationRegistry from './OperationRegistry';
@@ -88,7 +90,7 @@ describe('Template', () => {
       Operation.make({
         input: Schema.Void,
         output: Schema.String,
-        meta: { key: 'test.greet' },
+        meta: { key: DXN.make('org.example.test.greet') },
       }),
       () => Effect.succeed('Alice'),
     );

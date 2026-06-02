@@ -166,6 +166,9 @@
       "path": "packages/core/compute/conductor/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/extractor/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions/tsconfig.json"
     },
     {
@@ -209,9 +212,6 @@
     },
     {
       "path": "packages/core/echo/echo-react/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/echo-registry/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
@@ -328,6 +328,9 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-commerce/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
@@ -349,7 +352,13 @@
       "path": "packages/plugins/plugin-doctor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-duffel/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-extension/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-feed/tsconfig.json"
@@ -437,6 +446,9 @@
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-sandbox/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-script/tsconfig.json"
@@ -584,6 +596,9 @@
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-inbox/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-ui/tsconfig.json"

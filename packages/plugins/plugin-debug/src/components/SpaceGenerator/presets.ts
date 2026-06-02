@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -179,9 +179,7 @@ export const generator = () => ({
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).from({
-              feeds: [queueDxn],
-            }),
+            ).from(Scope.feed(Obj.getURI(mailboxFeed))),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
           const contactsView = ViewModel.make({
@@ -588,7 +586,7 @@ export const generator = () => ({
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
+                value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -775,7 +773,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
+      value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

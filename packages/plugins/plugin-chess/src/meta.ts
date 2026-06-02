@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.chess',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.chess'),
   name: 'Chess',
   author: 'DXOS',
   description: trim`
@@ -20,6 +21,5 @@ export const meta: Plugin.Meta = {
   spec: 'PLUGIN.mdl',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
   dependsOn: [gameMeta.id],
-  version: '0.8.3',
   tags: ['game'],
-};
+});

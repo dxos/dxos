@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
+import { Keyboard } from '@dxos/keyboard';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder } from '#testing';
@@ -20,6 +22,18 @@ import { Booking, Segment, Trip } from '#types';
 
 import { TripPlugin } from '../../testing';
 import { TripArticle } from './TripArticle';
+
+const ATTENDABLE_ID = 'story';
+
+// Initialize the global keyboard system (normally done by plugin-navtree) so the
+// article's 'j'/'k' bindings dispatch in isolation.
+const withKeyboard: Decorator = (Story) => {
+  useEffect(() => {
+    Keyboard.singleton.initialize();
+    return () => Keyboard.singleton.destroy();
+  }, []);
+  return <Story />;
+};
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -32,10 +46,17 @@ const DefaultStory = () => {
     return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
   }
 
-  return <TripArticle role='article' subject={trip} attendableId='story' />;
+  // AttendableContainer marks the subtree with `data-attendable-id` so focusing it
+  // establishes attention for ATTENDABLE_ID, which gates the keyboard bindings.
+  return (
+    <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
+      <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} />
+    </AttendableContainer>
+  );
 };
 
 const baseDecorators = (seedFn: (space: Space) => void) => [
+  withKeyboard,
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
     setupEvents: [AppActivationEvents.SetupSettings],
