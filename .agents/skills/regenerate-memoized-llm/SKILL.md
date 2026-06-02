@@ -38,13 +38,25 @@ ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'
 
 Then commit updated `*.conversations.json` files.
 
+## Shared ID generation (do not regenerate one-by-one)
+
+Memoized conversations are stored **per test file** (`<test-file>.conversations.json`), and every test in that file shares the same ID stream.
+
+Tests call `EntityId.dangerouslyDisableRandomness()` (or `Obj.ID.dangerouslyDisableRandomness()`) at **module scope**. The PRNG advances as each test in the file runs. Object IDs, tool inputs, and prompts that embed those IDs therefore depend on **which tests ran before** the current one in the same file.
+
+**Do not** regenerate with vitest `-t "<single test name>"`. Running one test in isolation starts the ID sequence at the beginning, so generated memos use different IDs than when the full file runs in order. That corrupts the shared `*.conversations.json` for the other tests in the suite.
+
+**Always regenerate at least the whole test file** (all tests in that file, in default order). Prefer the whole package or `#memoized-llm:test` when multiple files changed.
+
+If the edge worker returns `overloaded_error`, retry the **same file or package** command after a short wait — still without `-t`.
+
 ## Regenerate one package
 
 ```bash
 ALLOW_LLM_GENERATION=1 moon run <package-name>:test
 ```
 
-Packages that use memoized-llm (tag in `moon.yml`): `ai`, `assistant`, `assistant-toolkit`, `plugin-markdown`.
+Packages that use memoized-llm (tag in `moon.yml`): `ai`, `assistant`, `assistant-toolkit`, `plugin-markdown`, `plugin-assistant`, `functions-runtime`, `assistant-e2e`, and others tagged in `moon.yml`.
 
 Example for `assistant-toolkit`:
 
@@ -52,18 +64,18 @@ Example for `assistant-toolkit`:
 ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test
 ```
 
-## Regenerate one test
+## Regenerate one test file
 
-To regenerate the cache for a single failing test (faster than the whole package):
+When only one file’s cache is stale, run **all** tests in that file (no `-t`):
 
 ```bash
-ALLOW_LLM_GENERATION=1 moon run <package-name>:test -- <test-file> -t "<test name>"
+ALLOW_LLM_GENERATION=1 moon run <package-name>:test -- <path/to/file.test.ts>
 ```
 
 Example:
 
 ```bash
-ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test -- src/blueprints/project/blueprint.test.ts -t "planning"
+ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test -- src/blueprints/project/blueprint.test.ts
 ```
 
 ## Notes

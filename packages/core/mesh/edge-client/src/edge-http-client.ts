@@ -577,11 +577,11 @@ export class EdgeHttpClient {
   //
 
   /**
-   * Issue an authenticated request to the EDGE AI route (`/generate/anthropic/*`), which
+   * Issue an authenticated request to the EDGE AI route (`/ai/generate/anthropic/*`), which
    * proxies to the AI service. Used as the backend HTTP client for the Anthropic AI provider
    * (see {@link EdgeAiHttpClient}).
    *
-   * The configured EDGE base URL and the `/generate/anthropic` prefix are authoritative — only
+   * The configured EDGE base URL and the `/ai/generate/anthropic` prefix are authoritative — only
    * the path and query of `request.url` are taken from the incoming request (the host and any
    * sentinel apiUrl path are ignored). Returns the raw `Response` so streaming bodies are
    * forwarded unchanged to `@effect/ai`.
@@ -592,7 +592,7 @@ export class EdgeHttpClient {
   public async anthropicAiRequest(request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
-    const target = new URL(`${base}/generate/anthropic${incoming.pathname}${incoming.search}`);
+    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
 
     // Buffer the body up front so it can be re-sent if the cached auth header is rejected.
     const method = request.method;
