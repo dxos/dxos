@@ -59,9 +59,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         // Sort chronologically so add/remove events are applied in the correct order.
         const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
           Effect.provide(feedServiceLayer),
-        ))
-          .filter(Obj.instanceOf(AiContext.Binding))
-          .sort((a, b) => a.created.localeCompare(b.created));
+        )).filter(Obj.instanceOf(AiContext.Binding));
 
         if (sourceBindings.length > 0) {
           // Reduce binding events to the final active set.

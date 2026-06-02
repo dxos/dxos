@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { SessionLink } from './SessionLink';
+import * as SessionLink from './SessionLink';
 
 /**
  * Loads and reifies conversation history by resolving SessionLink feed records.
@@ -23,8 +23,8 @@ export class SessionLoader {
     messages: Message.Message[],
   ): Effect.Effect<Message.Message[], never, Feed.FeedService> {
     return Effect.gen(function* () {
-      const links = yield* Feed.runQuery(feed, Filter.type(SessionLink));
-      const sessionLinks = links.filter(Obj.instanceOf(SessionLink)).sort((a, b) => a.created.localeCompare(b.created));
+      const links = yield* Feed.runQuery(feed, Filter.type(SessionLink.SessionLink));
+      const sessionLinks = links.filter(Obj.instanceOf(SessionLink.SessionLink));
 
       const link = sessionLinks[0];
       if (!link) {
