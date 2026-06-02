@@ -198,7 +198,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   return (
     <div
       data-testid='message-header'
-      className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 mb-2 border-b border-subdued-separator'
+      className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 border-b border-subdued-separator'
     >
       {/* Subject row. */}
       <div className='col-span-2 grid grid-cols-subgrid'>

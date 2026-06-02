@@ -9,18 +9,21 @@
  */
 
 @theme {
-  /**
-   * Surfaces
-   */
-
-  --color-base-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
-  --color-base-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  /* Surfaces */
+  --color-deck-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
+  --color-scrim-surface: light-dark(
+    oklch(from var(--color-neutral-50) l c h / 0.5),
+    oklch(from var(--color-neutral-950) l c h / 0.25)
+  );
 
   --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
   --color-inverse-foreground: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
+  --color-base-surface: light-dark(var(--color-neutral-75), var(--color-neutral-850));
+  --color-base-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+
   /* Focus */
-  --color-focus-surface: light-dark(var(--color-neutral-100), var(--color-neutral-850));
+  --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-850));
   --color-focus-ring: light-dark(var(--color-blue-400), var(--color-blue-600));
   --color-focus-ring-subtle: light-dark(var(--color-neutral-300), var(--color-neutral-600));
 
@@ -28,32 +31,24 @@
   --color-attention-surface: var(--color-focus-surface);
   --color-attention-contains: oklch(from var(--color-accent-fill) l c h / 0.3);
 
-  --color-deck-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
-  --color-scrim-surface: light-dark(
-    oklch(from var(--color-neutral-50) l c h / 0.5),
-    oklch(from var(--color-neutral-950) l c h / 0.25)
-  );
-
-  /*
-   * Sidebar levels. The outer rails (l0 / r0) sit one tone darker than their inner panels (l1 / r1),
-   * a relationship that holds in both light and dark.
-   */
-  --color-header-surface: light-dark(var(--color-neutral-200), var(--color-neutral-875));
+  --color-header-surface: light-dark(var(--color-neutral-175), var(--color-neutral-875));
+  --color-toolbar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-825));
   --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-  --color-l0-surface: var(--color-header-surface);
-  --color-r0-surface: var(--color-header-surface);
-  --color-l1-surface: var(--color-sidebar-surface);
-  --color-r1-surface: var(--color-attention-surface);
 
-  --color-toolbar-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
+  /* Sidebar */
+  --color-l0-surface: var(--color-header-surface);
+  --color-l1-surface: var(--color-sidebar-surface);
+  --color-r0-surface: var(--color-sidebar-surface);
+  --color-r1-surface: var(--color-base-surface);
+
   --color-modal-surface: light-dark(var(--color-neutral-100), var(--color-neutral-825));
 
   --color-group-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-group-alt-surface: light-dark(var(--color-neutral-100), var(--color-neutral-875));
-  --color-card-surface: light-dark(var(--color-neutral-175), var(--color-neutral-825));
+  --color-card-surface: light-dark(var(--color-neutral-75), var(--color-neutral-825));
 
   /* input */
-  --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-input-surface: light-dark(var(--color-neutral-150), var(--color-neutral-800));
   --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* 
@@ -61,13 +56,13 @@
    * `*-base` primitives are the un-offset values; 
    * surface contexts (e.g. .dx-main-sidebar in state.css) re-derive the public token off the base via relative oklch. 
    */
-  --dx-hover-surface-base: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --dx-hover-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-750));
   --color-hover-surface: var(--dx-hover-surface-base);
   --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* current (aria-current) */
-  --dx-current-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --dx-current-surface-hover-base: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+  --dx-current-surface-base: light-dark(var(--color-neutral-150), var(--color-neutral-800));
+  --dx-current-surface-hover-base: light-dark(var(--color-neutral-150), var(--color-neutral-600));
   --color-current-surface: var(--dx-current-surface-base);
   --color-current-surface-hover: var(--dx-current-surface-hover-base);
   --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
