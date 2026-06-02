@@ -50,6 +50,12 @@ const SideEffect = Operation.make({
   meta: { key: DXN.make('org.example.test.sideEffect') },
 });
 
+const Fail = Operation.make({
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Void,
+  meta: { key: DXN.make('org.example.test.fail') },
+});
+
 //
 // Test Handlers
 //
@@ -66,6 +72,8 @@ const toStringHandler = Operation.withHandler(ToString, (data) => Effect.succeed
 const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] + data[1]));
 
 const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
+
+const failHandler = Operation.withHandler(Fail, () => Effect.fail(new Error('boom')));
 
 //
 // Test Utilities
@@ -216,22 +224,39 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('invocations pubsub receives events', () =>
+  it.effect('emits a success event with the output', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
       const collector = yield* createEventCollector(invoker);
 
-      // Small delay to ensure subscription is ready
+      // Small delay to ensure subscription is ready.
       yield* Effect.yieldNow();
 
-      yield* invoker.invoke(ToString, { value: 1 });
-      yield* invoker.invoke(ToString, { value: 2 });
+      yield* invoker.invoke(ToString, { value: 42 });
 
-      yield* collector.waitForEvents(2);
+      // Each successful invocation emits exactly one event.
+      yield* collector.waitForEvents(1);
+      expect(collector.events.length).toBe(1);
+      const [event] = collector.events;
+      expect(event.input).toEqual({ value: 42 });
+      expect(event.output).toEqual({ string: '42' });
 
-      expect(collector.events.length).toBe(2);
-      expect(collector.events[0].input).toEqual({ value: 1 });
-      expect(collector.events[1].input).toEqual({ value: 2 });
+      yield* collector.dispose;
+    }),
+  );
+
+  it.effect('does not emit an event when the operation fails (error propagates)', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([failHandler]), testRuntime);
+      const collector = yield* createEventCollector(invoker);
+      yield* Effect.yieldNow();
+
+      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.either);
+      expect(result._tag).toBe('Left');
+
+      // Give any (unexpected) event a chance to arrive, then assert none was published.
+      yield* Effect.yieldNow();
+      expect(collector.events.length).toBe(0);
 
       yield* collector.dispose;
     }),

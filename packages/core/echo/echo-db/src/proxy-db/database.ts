@@ -44,7 +44,6 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import { findTypeByDXN } from '../registry';
 import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
@@ -412,10 +411,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         if (!isPersisted) {
           const typename = Type.getTypename(typeEntity);
           const version = Type.getVersion(typeEntity);
-          const inRegistry =
-            typename && version
-              ? findTypeByDXN(this.graph.registry, `dxn:${typename}:${version}`) !== undefined
-              : false;
+          const registered =
+            typename && version ? this.graph.registry.getByURI(`dxn:${typename}:${version}`) : undefined;
+          const inRegistry = registered != null && Type.isType(registered);
           if (!inRegistry) {
             throw createSchemaNotRegisteredError(typeEntity);
           }

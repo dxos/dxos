@@ -4,6 +4,7 @@
 
 import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
+import { MapCapabilities } from '@dxos/plugin-map/types';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export { default as BlueprintDefinition } from './blueprint-definition';

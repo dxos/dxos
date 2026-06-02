@@ -135,6 +135,12 @@ export interface SpawnOptions {
   readonly traceMeta?: Trace.Meta;
 
   readonly environment?: Environment;
+
+  /**
+   * User-facing notifications requested for this process's lifecycle phases.
+   * Surfaced on {@link Process.Info} for the notification tracker.
+   */
+  readonly notify?: Process.Params['notify'];
 }
 
 export interface ListOptions {
@@ -360,6 +366,7 @@ export class ProcessManagerImpl implements Manager {
       const params: Process.Params = {
         name: options?.name ?? null,
         target: options?.target ?? null,
+        ...(options?.notify ? { notify: options.notify } : {}),
       };
 
       const ctx: Process.ProcessContext<I, O> = {

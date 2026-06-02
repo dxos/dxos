@@ -33,9 +33,9 @@ export type TypeId = typeof TypeId;
  * in-memory cache. Wire one per space (e.g. as a Layer scoped to the space's Effect runtime)
  * or share a single instance across spaces depending on the use case.
  *
- * The concrete implementation (and the `makeRegistry` / `findTypeByDXN` / `registryLayer`
- * factories) lives in `@dxos/echo-db`; this module declares only the interface so that the
- * `@dxos/echo` API surface stays free of query-matching dependencies.
+ * The concrete implementation (and the `makeRegistry` / `registryLayer` factories) lives in
+ * `@dxos/echo-db`; this module declares only the interface so that the `@dxos/echo` API surface
+ * stays free of query-matching dependencies.
  */
 export interface Registry {
   readonly [TypeId]: TypeId;
@@ -81,6 +81,14 @@ export interface Registry {
    * Searches the local registry first, then falls back to the upstream registry.
    */
   get(id: string): Entity.Unknown | undefined;
+
+  /**
+   * Get an entity by one of its addressing URIs — a type entity by its typename DXN (or, when
+   * persisted, its identifier EID), a keyed entity by its `dxn:<key>[:<version>]`. Accepts legacy
+   * DXN forms (normalized internally). Searches the local registry first, then falls back to the
+   * upstream registry. Narrow the result with `Type.isType` when a type entity is required.
+   */
+  getByURI(uri: string): Entity.Unknown | undefined;
 
   /**
    * List all entities.
