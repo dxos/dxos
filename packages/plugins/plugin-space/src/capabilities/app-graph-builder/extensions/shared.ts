@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Migrations } from '@dxos/migrations';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { type Node } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 import type { EchoViewRefPath } from '@dxos/schema';
@@ -95,8 +95,8 @@ export const checkPendingMigration = (space: Space) => {
   return (
     space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
     (space.state.get() === SpaceState.SPACE_READY &&
-      !!Migrations.versionProperty &&
-      space.properties[Migrations.versionProperty] !== Migrations.targetVersion)
+      !!Migrations.targetVersion &&
+      Option.getOrUndefined(Annotation.get(space.properties, MigrationVersionAnnotation)) !== Migrations.targetVersion)
   );
 };
 

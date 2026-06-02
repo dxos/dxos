@@ -4,11 +4,14 @@
 
 import { Atom } from '@effect-atom/atom';
 import * as Registry from '@effect-atom/atom/Registry';
+import * as Option from 'effect/Option';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { Annotation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
+import { MigrationVersionAnnotation } from './annotations';
 import { MigrationBuilder } from './migration-builder';
 
 export type MigrationContext = {
@@ -27,6 +30,9 @@ export class Migrations {
   private static _registry = Registry.make();
   private static _stateAtom = Atom.make<{ running: string[] }>({ running: [] }).pipe(Atom.keepAlive);
 
+  /**
+   * @deprecated Use `MigrationVersionAnnotation` via `Annotation.get/set` on space properties.
+   */
   static get versionProperty() {
     return this.namespace && `${this.namespace}.version`;
   }
@@ -47,9 +53,8 @@ export class Migrations {
 
   static async migrate(space: Space, targetVersion?: string | number): Promise<boolean> {
     invariant(!this.running(space), 'Migration already running');
-    invariant(this.versionProperty, 'Migrations namespace not set');
     invariant(space.state.get() === SpaceState.SPACE_READY, 'Space not ready');
-    const currentVersion = space.properties[this.versionProperty];
+    const currentVersion = Option.getOrUndefined(Annotation.get(space.properties, MigrationVersionAnnotation));
     const currentIndex = this.migrations.findIndex((m) => m.version === currentVersion) + 1;
     const i = this.migrations.findIndex((m) => m.version === targetVersion);
     const targetIndex = i === -1 ? this.migrations.length : i + 1;
@@ -65,11 +70,8 @@ export class Migrations {
       for (const migration of migrations) {
         const builder = new MigrationBuilder(space);
         await migration.next({ space, builder });
-        await builder.changeProperties((propertiesStructure) => {
-          invariant(this.versionProperty, 'Migrations namespace not set');
-          propertiesStructure.data[this.versionProperty] = migration.version;
-        });
         await builder._commit();
+        Annotation.set(space.properties, MigrationVersionAnnotation, migration.version);
       }
     }
     const finalState = this._registry.get(this._stateAtom);

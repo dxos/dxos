@@ -169,9 +169,9 @@ export namespace SpaceOperation {
   // TODO(wittjosiah): Rename `objects` to `entities` (covers objects, relations, and persisted types).
   export const RemoveObjectsOutput = Schema.Struct({
     objects: Schema.Array(Entity.Unknown).annotations({ description: 'The removed entities.' }),
-    parentCollection: Type.getSchema(Collection.Collection).annotations({
-      description: 'The collection removed from.',
-    }),
+    parentCollection: Schema.optional(
+      Type.getSchema(Collection.Collection).annotations({ description: 'The collection removed from.' }),
+    ),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
     wasActive: Schema.Array(Schema.String).annotations({
       description: 'IDs of objects that were active before removal.',
@@ -514,9 +514,9 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to restore.' }),
-      parentCollection: Type.getSchema(Collection.Collection).annotations({
-        description: 'The collection to restore to.',
-      }),
+      parentCollection: Schema.optional(
+        Type.getSchema(Collection.Collection).annotations({ description: 'The collection to restore to.' }),
+      ),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
       wasActive: Schema.Array(Schema.String).annotations({
         description: 'IDs of objects that were active before deletion.',

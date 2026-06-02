@@ -40,7 +40,9 @@ import { describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
 import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import * as Option from 'effect/Option';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -199,13 +201,10 @@ describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
-  const collectionTypename = Type.getTypename(Collection.Collection);
-  Obj.update(space.properties, (properties) => {
-    if (!properties[collectionTypename]) {
-      properties[collectionTypename] = Ref.make(Collection.make());
-    }
-  });
-  const rootCollection = space.properties[collectionTypename]?.target as Collection.Collection | undefined;
+  if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+    Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+  }
+  const rootCollection = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target as Collection.Collection | undefined;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');
   }

@@ -15,7 +15,8 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation, Type, DXN } from '@dxos/echo';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { Annotation, Collection, Database, Filter, Obj, Ref, Relation, Type, DXN } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -158,9 +159,10 @@ export default Commentary.pipe(
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
           const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
-          const rootCollection = yield* Database.load<Collection.Collection>(
-            properties[Type.getTypename(Collection.Collection)],
-          );
+          const rootCollectionRef = Option.getOrUndefined(Annotation.get(properties, RootCollectionAnnotation));
+          const rootCollection = rootCollectionRef
+            ? yield* Database.load<Collection.Collection>(rootCollectionRef)
+            : undefined;
 
           log.info('rootCollection', { rootCollection });
 
@@ -174,9 +176,11 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.update(rootCollection, (rootCollection) => {
-            rootCollection.objects.push(documentRef);
-          });
+          if (rootCollection) {
+            Obj.update(rootCollection, (col) => {
+              col.objects.push(documentRef);
+            });
+          }
 
           // Create the HasSubject relation
           yield* Database.add(

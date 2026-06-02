@@ -3,9 +3,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Collection, Obj, Ref, Type } from '@dxos/echo';
-import { Migrations } from '@dxos/migrations';
+import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -27,7 +28,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
           name,
           hue,
           icon,
-          ...(Migrations.versionProperty ? { [Migrations.versionProperty]: Migrations.targetVersion } : {}),
         }),
       );
       if (edgeReplication) {
@@ -36,9 +36,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       yield* Effect.promise(() => space.waitUntilReady());
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
-      Obj.update(space.properties, (obj) => {
-        obj[Type.getTypename(Collection.Collection)] = Ref.make(collection);
-      });
+      Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(collection));
+      if (Migrations.targetVersion) {
+        Annotation.set(space.properties, MigrationVersionAnnotation, Migrations.targetVersion);
+      }
 
       yield* Plugin.activate(SpaceEvents.SpaceCreated);
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);

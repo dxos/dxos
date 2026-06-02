@@ -66,6 +66,9 @@
       "path": "../client"
     },
     {
+      "path": "../client-protocol"
+    },
+    {
       "path": "../react-client"
     },
     {

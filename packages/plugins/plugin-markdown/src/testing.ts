@@ -5,8 +5,8 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
-import { SpaceProperties } from '@dxos/client-protocol';
-import { Collection, Database, Obj, Ref, Type } from '@dxos/echo';
+import { RootCollectionAnnotation, SpaceProperties } from '@dxos/client-protocol';
+import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale. Uses the `#plugin` subpath so the node-only build is
@@ -19,12 +19,10 @@ export * from '#plugin';
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
   Effect.zipRight(
     Effect.gen(function* () {
+      const properties = Obj.make(SpaceProperties, {});
+      Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
       // TODO(wittjosiah): Remove cast.
-      yield* Database.add(
-        Obj.make(SpaceProperties, {
-          [Type.getTypename(Collection.Collection)]: Ref.make(Collection.make()),
-        }) as any,
-      );
+      yield* Database.add(properties as any);
     }),
     effect,
   );

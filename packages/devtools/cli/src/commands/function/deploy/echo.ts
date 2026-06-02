@@ -10,8 +10,9 @@ import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type Space } from '@dxos/client/echo';
+import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
 import { Script, Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
@@ -94,9 +95,7 @@ export const upsertFunctionObject: (opts: {
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Unknown) {
-  const collectionRef = space.properties[Type.getTypename(Collection.Collection)] as
-    | Ref.Ref<Collection.Collection>
-    | undefined;
+  const collectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {

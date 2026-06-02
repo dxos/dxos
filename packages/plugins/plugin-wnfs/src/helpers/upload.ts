@@ -7,8 +7,12 @@ import { CID } from 'multiformats';
 import * as Raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 
+import * as Option from 'effect/Option';
+
 import type { Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
+
+import { WnfsStateAnnotation } from '../annotations';
 import { log } from '@dxos/log';
 
 import { type WnfsCapabilities } from '#types';
@@ -47,9 +51,13 @@ export const upload = async ({
   const cidBytes = await updatedForest.store(wnfsStore);
 
   // Update the forest pointer on the associated space.
-  Obj.update(space.properties, (obj) => {
-    obj.wnfs.privateForestCid = CID.decode(cidBytes).toString();
-  });
+  const currentState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation));
+  if (currentState) {
+    Annotation.set(space.properties, WnfsStateAnnotation, {
+      ...currentState,
+      privateForestCid: CID.decode(cidBytes).toString(),
+    });
+  }
 
   // Generate `wnfs://` URL & return the info.
   const info = {

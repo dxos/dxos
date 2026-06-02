@@ -10,13 +10,14 @@ import {
   AppCapabilities,
   AppNodeMatcher,
   LayoutOperation,
+  RootCollectionAnnotation,
   Segments,
   getObjectPathFromObject,
   toUrlPath,
 } from '@dxos/app-toolkit';
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -60,8 +61,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed([]);
         }
 
-        const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
+        get(AtomObj.make(space.properties));
+        const collectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
         if (collectionRef) {
           get(AtomObj.make(collectionRef));
         }
@@ -103,8 +104,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const ephemeralState = get(ephemeralAtom);
 
-        const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
+        get(AtomObj.make(space.properties));
+        const collectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
         const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
         if (!collection) {
           return Effect.succeed([]);

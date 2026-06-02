@@ -7,11 +7,11 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { DXN, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { Annotation, DXN, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
-import { Migrations } from '@dxos/migrations';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
 import { buildViewIndex, checkPendingMigration } from './shared';
@@ -117,12 +117,20 @@ describe('checkPendingMigration', () => {
   const TARGET = '1970-01-02';
 
   // Minimal fake exercising only the fields checkPendingMigration reads (state, properties).
-  const makeFakeSpace = (state: SpaceState, properties: Record<string, unknown>): Space =>
-    ({ state: { get: () => state }, properties }) as unknown as Space;
+  // The properties object must look like an ECHO entity (has Obj.Meta) so Annotation.get works.
+  const makeFakeProperties = (version?: string): Record<symbol, unknown> => {
+    const annotations: Record<string, unknown> = {};
+    if (version !== undefined) {
+      Annotation.setDictionary(annotations as any, MigrationVersionAnnotation, version);
+    }
+    return { [Obj.Meta]: { keys: [], annotations } };
+  };
+
+  const makeFakeSpace = (state: SpaceState, version?: string): Space =>
+    ({ state: { get: () => state }, properties: makeFakeProperties(version) }) as unknown as Space;
 
   let savedNamespace: string | undefined;
   let savedMigrations: typeof Migrations.migrations;
-  let versionProperty: string;
 
   beforeEach(() => {
     savedNamespace = Migrations.namespace;
@@ -131,8 +139,6 @@ describe('checkPendingMigration', () => {
       { version: '1970-01-01', next: async () => {} },
       { version: TARGET, next: async () => {} },
     ]);
-    invariant(Migrations.versionProperty, 'Migrations.versionProperty must be set after define().');
-    versionProperty = Migrations.versionProperty;
   });
 
   afterEach(() => {
@@ -141,22 +147,22 @@ describe('checkPendingMigration', () => {
   });
 
   test('SPACE_REQUIRES_MIGRATION is pending regardless of version property', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_REQUIRES_MIGRATION, { [versionProperty]: TARGET });
+    const space = makeFakeSpace(SpaceState.SPACE_REQUIRES_MIGRATION, TARGET);
     expect(checkPendingMigration(space)).toBe(true);
   });
 
   test('READY with version matching target is not pending', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_READY, { [versionProperty]: TARGET });
+    const space = makeFakeSpace(SpaceState.SPACE_READY, TARGET);
     expect(checkPendingMigration(space)).toBe(false);
   });
 
   test('READY with undefined version is pending (legacy property-migration preserved)', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_READY, {});
+    const space = makeFakeSpace(SpaceState.SPACE_READY);
     expect(checkPendingMigration(space)).toBe(true);
   });
 
   test('READY with stale version is pending', ({ expect }) => {
-    const space = makeFakeSpace(SpaceState.SPACE_READY, { [versionProperty]: '1970-01-01' });
+    const space = makeFakeSpace(SpaceState.SPACE_READY, '1970-01-01');
     expect(checkPendingMigration(space)).toBe(true);
   });
 });

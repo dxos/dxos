@@ -9,12 +9,14 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
   LayoutOperation,
+  RootCollectionAnnotation,
   getSpacePath,
   resolvePersonalSpace,
   setPersonalSpace,
 } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
-import { Filter, Obj } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -141,6 +143,10 @@ export default Capability.makeModule(
     // Also add cleanup for the last effect.
     subscriptions.add(() => lastActiveCleanup?.());
 
+    // Track which spaces have had their legacy string-keyed properties seeded into annotations.
+    // Seeding is a one-time operation per space per session.
+    const seededSpaces = new Set<string>();
+
     // Cache space names.
     const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
       // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
@@ -155,6 +161,24 @@ export default Capability.makeModule(
       spaces
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
         .forEach((space) => {
+          // Seed typed annotations from legacy string-keyed data properties for spaces
+          // created before DX-971. The seededSpaces guard ensures writes only happen once per session.
+          if (!seededSpaces.has(space.id)) {
+            seededSpaces.add(space.id);
+            if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+              const legacyRef = (space.properties as any)[Type.getTypename(Collection.Collection)];
+              if (legacyRef) {
+                Annotation.set(space.properties, RootCollectionAnnotation, legacyRef);
+              }
+            }
+            if (Migrations.namespace && Option.isNone(Annotation.get(space.properties, MigrationVersionAnnotation))) {
+              const legacyVersion = (space.properties as any)[`${Migrations.namespace}.version`];
+              if (typeof legacyVersion === 'string') {
+                Annotation.set(space.properties, MigrationVersionAnnotation, legacyVersion);
+              }
+            }
+          }
+
           const updateSpaceName = () => {
             const name = space.properties.name;
             if (!name) {

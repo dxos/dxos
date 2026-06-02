@@ -5,7 +5,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities } from '@dxos/app-framework';
 import { SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Migrations } from '@dxos/migrations';
+import { Annotation } from '@dxos/echo';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import * as Option from 'effect/Option';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceCapabilities } from '../types';
@@ -34,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOpera
         properties: {
           spaceId: space.id,
           targetVersion,
-          version: Migrations.versionProperty ? space.properties[Migrations.versionProperty] : undefined,
+          version: Option.getOrUndefined(Annotation.get(space.properties, MigrationVersionAnnotation)),
         },
       });
 

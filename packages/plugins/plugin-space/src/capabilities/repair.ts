@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { Collection, Obj, Ref, Type } from '@dxos/echo';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
 import { SpaceCapabilities } from '#types';
@@ -22,7 +24,8 @@ export default Capability.makeModule(() =>
  * Remove all existing query collections from the root collection.
  */
 const removeQueryCollections = async (space: Space) => {
-  const rootCollection: Collection.Collection = await space.properties[Type.getTypename(Collection.Collection)]?.load();
+  const rootCollectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
+  const rootCollection: Collection.Collection | undefined = await rootCollectionRef?.load();
   if (!rootCollection) {
     return;
   }

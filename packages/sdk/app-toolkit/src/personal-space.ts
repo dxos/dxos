@@ -28,7 +28,7 @@ export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): bool
 
   // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
   try {
-    return space.properties[DEFAULT_SPACE_KEY] === true;
+    return (space.properties as any)[DEFAULT_SPACE_KEY] === true;
   } catch {
     return false;
   }

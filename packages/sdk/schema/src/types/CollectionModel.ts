@@ -6,8 +6,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Collection, Database, Obj, Query, Ref, Type } from '@dxos/echo';
+import { RootCollectionAnnotation, SpaceProperties } from '@dxos/client-protocol/types';
+import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
+import * as Option from 'effect/Option';
 import { invariant } from '@dxos/invariant';
 
 type AddProps = {
@@ -30,8 +31,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Obj.Any = objects[0];
 
-    const collectionRef: Ref.Ref<Collection.Collection> | undefined =
-      properties[Type.getTypename(Collection.Collection)];
+    const collectionRef = Option.getOrUndefined(Annotation.get(properties, RootCollectionAnnotation));
     if (collectionRef) {
       const collection = yield* Effect.promise(() => collectionRef.load());
       Obj.update(collection, (collection) => {
@@ -39,10 +39,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
       });
     } else {
       const newCollection = Collection.make({ objects: [objectRef] });
-      const collectionRef = Ref.make(newCollection);
-      Obj.update(properties, (properties) => {
-        properties[Type.getTypename(Collection.Collection)] = collectionRef;
-      });
+      Annotation.set(properties, RootCollectionAnnotation, Ref.make(newCollection));
     }
   }
 });

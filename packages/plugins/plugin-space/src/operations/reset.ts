@@ -5,9 +5,10 @@ import * as Effect from 'effect/Effect';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Migrations } from '@dxos/migrations';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 
 import { SpaceOperation } from './definitions';
 
@@ -135,53 +136,21 @@ const snapshotEntities = (space: Space): Obj.Unknown[] => {
 };
 
 /**
- * Schema-defined keys on `SpaceProperties` that survive a reset. Anything else on the open
- * `{ key: string, value: any }` record (Ref to the root Collection, plugin-specific anchors, etc.)
- * points to objects we just removed — leaving those refs in place produces "not found" errors in
- * containers that load them. We blank them out and re-seed the root Collection so the navtree
- * has something to render.
+ * Re-seeds the root Collection and migration version after a reset so the navtree
+ * has something to render and the space doesn't re-enter SPACE_REQUIRES_MIGRATION.
  */
-const SPACE_PROPERTY_TYPED_KEYS = new Set<string>([
-  'archived',
-  'edgeReplication',
-  'invocationTraceFeed',
-  'computeEnvironment',
-  'name',
-  'icon',
-  'hue',
-]);
-
 const rebuildSpaceRoot = (space: Space): void => {
   const properties = space.properties;
-  const versionKey = Migrations.versionProperty;
-  const preservedVersion = versionKey ? (properties as Record<string, any>)[versionKey] : undefined;
-  const cleared: string[] = [];
+  const preservedVersion = Annotation.get(properties, MigrationVersionAnnotation);
 
-  Obj.update(properties, (properties) => {
-    const record = properties as unknown as Record<string, any>;
-    for (const key of Object.keys(record)) {
-      if (key === 'id' || key === '@meta') {
-        continue;
-      }
-      if (SPACE_PROPERTY_TYPED_KEYS.has(key)) {
-        continue;
-      }
-      if (versionKey && key === versionKey) {
-        continue;
-      }
-      delete record[key];
-      cleared.push(key);
-    }
+  // Re-seed the root Collection (the navtree anchor).
+  Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
 
-    // Re-seed the root Collection (the navtree anchor).
-    record[Type.getTypename(Collection.Collection)] = Ref.make(Collection.make());
+  // Preserve or re-stamp the migration version so the space doesn't re-enter SPACE_REQUIRES_MIGRATION.
+  const version = preservedVersion._tag === 'Some' ? preservedVersion.value : Migrations.targetVersion;
+  if (version) {
+    Annotation.set(properties, MigrationVersionAnnotation, version);
+  }
 
-    // Make sure the migrations version still pins the schema at the latest known target so the
-    // reloaded space doesn't fall into SPACE_REQUIRES_MIGRATION.
-    if (versionKey) {
-      record[versionKey] = preservedVersion ?? Migrations.targetVersion;
-    }
-  });
-
-  log.info('reset: space root rebuilt', { cleared });
+  log.info('reset: space root rebuilt');
 };

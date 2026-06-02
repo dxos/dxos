@@ -7,9 +7,12 @@ import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
 import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
 
-import { Obj } from '@dxos/echo';
+import * as Option from 'effect/Option';
+
+import { Annotation, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
+import { WnfsStateAnnotation } from '../annotations';
 import { type WnfsCapabilities } from '#types';
 
 import { Rng, store } from './common';
@@ -28,20 +31,29 @@ export const loadWnfs = async ({
   instances?: WnfsCapabilities.Instances;
 }) => {
   // TODO(wittjosiah): Remove.
-  // Delete old properties if they exist.
-  if (space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined) {
+  // Delete old properties if they exist (pre-DX-971 migration cleanup).
+  const propsAny = space.properties as any;
+  if (propsAny.wnfs_access_key !== undefined && propsAny.wnfs_private_forest_cid !== undefined) {
     Obj.update(space.properties, (obj) => {
-      delete obj['wnfs_access_key'];
-      delete obj['wnfs_private_forest_cid'];
+      delete (obj as any)['wnfs_access_key'];
+      delete (obj as any)['wnfs_private_forest_cid'];
+    });
+  }
+  // Migrate legacy wnfs data key to annotation.
+  if (propsAny.wnfs !== undefined && Option.isNone(Annotation.get(space.properties, WnfsStateAnnotation))) {
+    Annotation.set(space.properties, WnfsStateAnnotation, propsAny.wnfs);
+    Obj.update(space.properties, (obj) => {
+      delete (obj as any)['wnfs'];
     });
   }
 
-  const cacheKey = space.properties.wnfs?.privateForestCid;
-  if (instances?.[cacheKey]) {
+  const wnfsState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation));
+  const cacheKey = wnfsState?.privateForestCid;
+  if (cacheKey && instances?.[cacheKey]) {
     return instances[cacheKey];
   }
 
-  const exists = !!space.properties.wnfs;
+  const exists = !!wnfsState;
   const instance = exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
   if (instances) {
     instances[cacheKey] = instance;
@@ -68,11 +80,9 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 
   const cidBytes = await newForest.store(wnfsStore);
 
-  Obj.update(space.properties, (obj) => {
-    obj.wnfs = {
-      accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
-      privateForestCid: CID.decode(cidBytes).toString(),
-    };
+  Annotation.set(space.properties, WnfsStateAnnotation, {
+    accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
+    privateForestCid: CID.decode(cidBytes).toString(),
   });
 
   return {
@@ -84,9 +94,10 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 const loadWnfsDir = async (blockstore: Blockstore, space: Space) => {
   const wnfsStore = store(blockstore);
 
-  const accessKey = AccessKey.fromBytes(Uint8Arrays.fromString(space.properties.wnfs.accessKey, 'base64'));
+  const wnfsState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))!;
+  const accessKey = AccessKey.fromBytes(Uint8Arrays.fromString(wnfsState.accessKey, 'base64'));
   const forest: PrivateForest = await PrivateForest.load(
-    CID.parse(space.properties.wnfs.privateForestCid).bytes,
+    CID.parse(wnfsState.privateForestCid).bytes,
     wnfsStore,
   );
   const node: PrivateNode = await PrivateNode.load(accessKey, forest, wnfsStore);
