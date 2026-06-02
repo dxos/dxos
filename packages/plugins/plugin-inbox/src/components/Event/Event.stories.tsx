@@ -28,9 +28,10 @@ const DefaultStory = () => {
 
   return (
     <Event.Root event={event}>
+      <Event.Toolbar alwaysActive />
       <Event.Header />
       <Event.Viewport>
-        <Event.Content />
+        <Event.Body />
       </Event.Viewport>
     </Event.Root>
   );

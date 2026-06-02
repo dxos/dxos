@@ -9,6 +9,7 @@ import { type Actor } from '@dxos/types';
 
 import { useActorContact } from '#hooks';
 
+import { Header } from '../Header';
 import { UserIconButton } from '../UserIconButton';
 
 export type EventAttendeeProps = {
@@ -22,9 +23,10 @@ export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeePr
   const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee]);
 
   return (
-    <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-      <UserIconButton title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />
+    <Header.Row
+      icon={<UserIconButton title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />}
+    >
       <h3 className='truncate text-primary-text'>{attendee.name || attendee.email}</h3>
-    </div>
+    </Header.Row>
   );
 };
