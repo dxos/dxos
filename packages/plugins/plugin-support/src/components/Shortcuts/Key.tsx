@@ -12,7 +12,7 @@ export const Key = ({ binding }: { binding: string }) => {
       {keySymbols(binding).map((c, i) => (
         <span
           key={i}
-          className='flex w-[24px] h-[24px] justify-center items-center rounded-sm bg-input-surface text-base-foreground'
+          className='flex w-[24px] h-[24px] justify-center items-center rounded-sm bg-input-surface text-base-fg'
         >
           {c}
         </span>

@@ -261,6 +261,32 @@ describe('Integration tests', () => {
     expect(loaded).to.eq(target);
   });
 
+  test('database object resolves a keyed (non-type) registry object via a key DXN ref', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase(spaceKey);
+
+    // Register a keyed (non-type) entity in the in-process registry — e.g. an operation descriptor.
+    const registryObject = Obj.make(TestSchema.Expando, {
+      [Obj.Meta]: { key: 'org.example.function.translate', version: '0.1.0' },
+      label: 'Translate',
+    });
+    db.graph.registry.add([registryObject]);
+    const keyDXN = DXN.make('org.example.function.translate', '0.1.0');
+
+    // A database object holds a reference to the registry object via its key DXN.
+    const object = db.add(Obj.make(TestSchema.Expando, { fn: db.makeRef(keyDXN) })) as any;
+    await db.flush();
+
+    // The key DXN resolves synchronously to the in-memory registry entity.
+    const target = object.fn.target;
+    expect(target).to.eq(registryObject);
+
+    // ref.load() routes through the resolver to the same registry entity.
+    const loaded = await object.fn.load();
+    expect(loaded).to.eq(registryObject);
+  });
+
   test('replication', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();

@@ -37,10 +37,10 @@ const textInputSurfaceFocus =
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-surface aria-[checked=mixed]:bg-accent-surface';
+  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-bg aria-[checked=mixed]:bg-accent-bg';
 
 const booleanInputSurfaceHover =
-  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-surface-hover hover:aria-[checked=mixed]:bg-accent-surface-hover';
+  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-bg-hover hover:aria-[checked=mixed]:bg-accent-bg-hover';
 
 // TODO(burdon): Replace with semantic tokens.
 const valence = (valence?: MessageValence) => {
@@ -66,7 +66,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-foreground rounded-xs placeholder-placeholder',
+  'py-0 w-full text-base-fg rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
   densityDimensions(props.density),
   props.disabled ? staticDisabled : textInputSurfaceHover,
@@ -74,7 +74,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-foreground rounded-xs placeholder-placeholder',
+  'py-0 w-full text-base-fg rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention-surface',
@@ -146,7 +146,7 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
         : props.density === 'xs'
           ? 'size-6 rounded-xs'
           : 'size-10 pointer-fine:size-8 rounded-xs',
-    'bg-input-surface text-base-foreground transition-colors border border-separator',
+    'bg-input-surface text-base-fg transition-colors border border-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
     valence(props.validationValence),
@@ -169,7 +169,7 @@ const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
   mx(
     'shrink-0 inline-flex items-center justify-center size-7 rounded-xs',
-    'bg-input-surface text-subdued hover:text-base-foreground hover:bg-hover-surface',
+    'bg-input-surface text-subdued hover:text-base-fg hover:bg-hover-surface',
     'dx-focus-ring',
     ...etc,
   );

@@ -152,4 +152,28 @@ describe('util', () => {
       expect(normalizeText('aaa\n​‌‍⁠﻿\nbbb')).to.equal('aaa\n\nbbb');
     });
   });
+
+  describe('blockquotes stay contiguous', () => {
+    test('HTML blockquote paragraphs do not gain blank lines between quoted lines', ({ expect }) => {
+      // Turndown prefixes every blockquote line with `> `; the paragraph break must not become a
+      // blank line between the two quoted lines.
+      const html = '<blockquote><p>Hello Hello.</p><p>I am resending this since you missed it.</p></blockquote>';
+      expect(normalizeText(html)).to.equal('> Hello Hello.\n> I am resending this since you missed it.');
+    });
+
+    test('plaintext quotes separated by blank lines are rejoined', ({ expect }) => {
+      expect(normalizeText('> Hello Hello.\n\n> I am resending this since you missed it.')).to.equal(
+        '> Hello Hello.\n> I am resending this since you missed it.',
+      );
+    });
+
+    test('blank line between a quote and following body text is preserved', ({ expect }) => {
+      // Only blank lines *between* two quoted lines collapse; a quote→body break stays.
+      expect(normalizeText('> quoted line\n\nMy reply.')).to.equal('> quoted line\n\nMy reply.');
+    });
+
+    test('non-quoted paragraphs keep their blank-line separation', ({ expect }) => {
+      expect(normalizeText('above\n\nbelow')).to.equal('above\n\nbelow');
+    });
+  });
 });

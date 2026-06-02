@@ -55,7 +55,7 @@ export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSch
 // TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
 export const SpaceProperties = SpacePropertiesSchema.pipe(
-  Annotation.SystemTypeAnnotation.set(true),
+  Annotation.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.spaceProperties', '0.1.0')),
 );
 

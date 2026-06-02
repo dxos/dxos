@@ -17,7 +17,7 @@ export namespace TestHelpers {
    *   Effect.fn(function* ({ expect }) {
    *     // ...
    *   }),
-   *   TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+   *   TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
    * );
    * ```
    */
@@ -42,7 +42,7 @@ export namespace TestHelpers {
    *   Effect.fn(function* ({ expect }) {
    *     // ...
    *   }),
-   *   TestHelpers.skipIf(!process.env.ANTHROPIC_API_KEY),
+   *   TestHelpers.skipIf(!process.env.DX_ANTHROPIC_API_KEY),
    * );
    * ```
    */

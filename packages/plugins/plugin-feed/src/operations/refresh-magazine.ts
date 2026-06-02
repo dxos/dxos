@@ -38,7 +38,13 @@ export default FeedOperation.RefreshMagazine.pipe(
 
       let synced = 0;
       for (const feed of validFeeds) {
-        const result = yield* Effect.either(Operation.invoke(FeedOperation.SyncFeed, { feed }));
+        const result = yield* Effect.either(
+          Operation.invoke(
+            FeedOperation.SyncFeed,
+            { feed: Ref.make(feed) },
+            { spaceId: Obj.getDatabase(feed)?.spaceId },
+          ),
+        );
         if (result._tag === 'Right') {
           synced += 1;
         } else {

@@ -129,10 +129,10 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
-                  <Card.IconBlock padding>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
+                  <Card.IconBlock>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                  <Card.IconBlock padding>
+                  <Card.IconBlock>
                     <Menu.Trigger asChild disabled={!objectMenuItems.length}>
                       <Toolbar.IconButton
                         variant='ghost'

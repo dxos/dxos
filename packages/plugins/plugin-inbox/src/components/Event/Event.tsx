@@ -15,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
+import { MarkdownViewer } from '../MarkdownViewer';
 import { EventAttendee } from './EventAttendee';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
@@ -100,7 +101,7 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
+    <div className='p-1 flex flex-col border-b border-subdued-separator'>
       <div className='grid grid-cols-[2rem_1fr] gap-1'>
         <div className='flex px-2 text-subdued h-[28px] items-center'>
           <Icon icon='ph--check--regular' />
@@ -141,7 +142,7 @@ type EventContentProps = ThemedClassName<{}>;
 const EventContent = ({ classNames }: EventContentProps) => {
   const { event } = useEventContext(EVENT_CONTENT_NAME);
 
-  return event.description ? <div className={mx('p-3', classNames)}>{event.description}</div> : null;
+  return event.description ? <MarkdownViewer content={event.description} classNames={mx('p-3', classNames)} /> : null;
 };
 
 EventContent.displayName = EVENT_CONTENT_NAME;

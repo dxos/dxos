@@ -5,6 +5,8 @@
 import { parseHTML } from 'linkedom';
 import TurndownService from 'turndown';
 
+// TODO(burdon): Factor out.
+
 /**
  * https://www.npmjs.com/package/turndown
  */
@@ -79,15 +81,19 @@ const stripWhitespace = (str: string): string => {
       .replace(/^[ \t\u00A0]*[=-]{3,}[ \t\u00A0]*$/gm, '---')
       // Replace old-school sign-off dash with horizontal rule.
       .replace(/\\--/g, '---')
-      // Blank out lines that contain no letter or digit (e.g., junk separators like `*****`,
-      // `,,,,`). Uses Unicode property escapes so non-Latin scripts (Cyrillic, CJK, etc.) are
-      // preserved. Empty lines are preserved as paragraph breaks; the `---` HR we just inserted
-      // is exempted so it survives.
+      // Blank out lines that contain no letter or digit (e.g., junk separators like `*****`, `,,,,`).
+      // Uses Unicode property escapes so non-Latin scripts (Cyrillic, CJK, etc.) are preserved.
+      // Empty lines are preserved as paragraph breaks; the `---` HR we just inserted is exempted so it survives.
       .replace(/^(?!---$)[^\p{L}\p{N}\n]*$/gmu, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
       // Trim trailing whitespace from every line.
       .replace(/[ \t\u00A0]+$/gm, '')
+      // Keep a quoted block contiguous: drop blank lines between consecutive quoted (`>`) lines.
+      // Turndown prefixes every blockquote line with `> `, so paragraph breaks within a quote
+      // surface as a bare `> ` line that the no-letter pass above blanks; this rejoins them (and
+      // also collapses blank-separated quotes in plaintext bodies).
+      .replace(/^(>.*)\n\n+(?=>)/gm, '$1\n')
   );
 };
 

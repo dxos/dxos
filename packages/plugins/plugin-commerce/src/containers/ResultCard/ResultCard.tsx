@@ -61,7 +61,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
           />
         )}
         <Card.Header>
-          <Card.IconBlock padding>
+          <Card.IconBlock>
             <IconButton
               variant='ghost'
               iconOnly

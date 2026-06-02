@@ -13,7 +13,7 @@ import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
@@ -91,7 +91,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             return false;
           }
           const schema = Type.getSchema(type);
-          if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
