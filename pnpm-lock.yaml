@@ -9220,6 +9220,9 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
@@ -15085,6 +15088,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -15415,6 +15421,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.14)(react@19.2.6)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0

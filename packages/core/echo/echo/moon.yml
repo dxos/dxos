@@ -30,5 +30,4 @@ tasks:
       - '--entryPoint=src/Key.ts'
       - '--entryPoint=src/Migration.ts'
       - '--entryPoint=src/Type.ts'
-      - '--entryPoint=src/Extension.ts'
       - '--platform=neutral'

@@ -10,8 +10,7 @@ export type IconStyleProps = {
 };
 
 export type IconBlockStyleProps = {
-  /** When true, pads the wrapped slot by 0.25rem (mirrors `IconButton`'s inset). */
-  padding?: boolean;
+  compact?: boolean;
 };
 
 /**
@@ -30,8 +29,8 @@ const root: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
 /**
  * Static slot sized to `--dx-rail-item` so a wrapped `Icon` lines up with an `IconButton iconOnly`.
  */
-const block: ComponentFunction<IconBlockStyleProps> = ({ padding }, ...etc) =>
-  mx('grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center', padding && '[&>*]:p-1', ...etc);
+const block: ComponentFunction<IconBlockStyleProps> = ({ compact }, ...etc) =>
+  mx('grid w-[var(--dx-rail-item)] place-items-center', compact ? '' : 'h-[var(--dx-rail-item)]', ...etc);
 
 export const iconTheme: Theme<IconStyleProps & IconBlockStyleProps> = {
   root,

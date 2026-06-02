@@ -4,6 +4,15 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-01 — plugin-integration (SyncTargetsChecklist story)
+
+### Storybook for a container that calls capability hooks
+
+- A container calling `useOperationInvoker` (any capability hook) needs `withPluginManager({ plugins: corePlugins() })` — `corePlugins()` from `@dxos/plugin-testing` includes `ProcessManagerPlugin`, which contributes the `operation-invoker` capability. Bare `withPluginManager()` (no plugins) throws `InvariantViolation: No capability found for …operation-invoker`.
+- Keep `withTheme()` even when `corePlugins()` already pulls in `ThemePlugin` — `withTheme()` is what reads `parameters.translations` and injects them via `resourceExtensions`. Drop it and plugin-namespace keys render raw (`sync-targets-dialog.title`) while os keys (Cancel/Save) still resolve. Decorator order: `[withTheme(), withLayout(...), withPluginManager({ plugins: corePlugins() })]`.
+- A component that renders `Dialog.Content` is mounted in a story by wrapping it in `<Dialog.Root open><Dialog.Overlay>…</Dialog.Overlay></Dialog.Root>`.
+- Build the ECHO subject inside the render fn via `useMemo`, not module-level args (see [[feedback_echo_ownership_stories]]). `Integration.make({ accessToken: Ref.make(AccessToken.make({ source, token })), targets })` works standalone (no space) for rendering; `Ref.make` on the live object only matters on submit.
+
 ## 2026-05-31 — plugin-map, plugin-trip, react-ui-geo, schema (marker providers)
 
 ### Cross-plugin capability extension

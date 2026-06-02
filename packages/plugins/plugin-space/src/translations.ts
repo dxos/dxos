@@ -219,7 +219,6 @@ export const translations = [
         'no-sync-status.label': 'No space with missing objects.',
         'create-space-dialog.title': 'Create Space',
         'create-object-dialog.title': 'Create {{object}}',
-        'open-plugin-registry.label': 'Open plugin registry',
         'space-input.placeholder': 'Select space',
         'schema-input.placeholder': 'Select type',
         'plugin-subtitle.label': '{{plugin}} Plugin',

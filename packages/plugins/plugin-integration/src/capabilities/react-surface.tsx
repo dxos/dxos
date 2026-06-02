@@ -14,7 +14,7 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
-import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
+import { CustomTokenDialog, IntegrationArticle, SyncTargetsDialog } from '#containers';
 import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
@@ -50,11 +50,8 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'syncTargetsDialog',
-        filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
-          AppSurface.Dialog,
-          SYNC_TARGETS_DIALOG,
-        ),
-        component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
+        filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
+        component: ({ data }) => <SyncTargetsDialog {...data.props} />,
       }),
       Surface.create({
         id: 'customTokenDialog',

@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { type Registry, Type } from '@dxos/echo';
-import { findTypeByDXN } from '@dxos/echo-db';
 import {
   EchoObjectSchema,
   Format,
@@ -67,7 +66,8 @@ export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Pro
   }
   // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
   // directly rather than rebuilding a legacy `dxn:type:` string.
-  return findTypeByDXN(registry, dxn);
+  const entity = registry.getByURI(dxn);
+  return entity != null && Type.isType(entity) ? entity : undefined;
 };
 
 // TODO(burdon): Factor out.

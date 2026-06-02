@@ -16,6 +16,7 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
 describe('FeedPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
+    // on-space-created needs SpaceEvents (not fired in tests).
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), FeedPlugin()],
     });

@@ -9,7 +9,7 @@ import { resolve, type Resolver } from '@dxos/extractor';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
-import { normalizeText, parseFromHeader } from '../util';
+import { normalizeText, parseFromHeader } from '../../util';
 
 const getPart = (message: GoogleMail.Message, part: string) =>
   message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;

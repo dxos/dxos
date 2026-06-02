@@ -14,7 +14,7 @@ const stateClassNames: Record<SpinnerState, string> = {
   pulse: 'bg-primary-500',
   spin: 'bg-amber-500',
   flash: 'bg-primary-500',
-  error: 'bg-rose-700 border-2 border-rose-fill',
+  error: 'bg-rose-700 border-2 border-rose-bg',
 };
 
 export type SpinnerProps = ThemedClassName<{

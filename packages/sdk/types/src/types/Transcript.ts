@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/internal';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -24,7 +24,7 @@ export const Transcript = Schema.Struct({
    */
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
-  SystemTypeAnnotation.set(true),
+  HiddenAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--subtitles--regular',
     hue: 'sky',
