@@ -16,7 +16,7 @@ const layout =
 
 const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
-    'bg-toolbar-surface dx-toolbar',
+    'bg-toolbar-surface dx-toolbar shadow-sm',
     density === 'lg' && 'h-(--dx-rail-size) px-3!',
     density === 'sm' && 'h-7 px-2!',
     density === 'xs' && 'h-6 px-1!',
