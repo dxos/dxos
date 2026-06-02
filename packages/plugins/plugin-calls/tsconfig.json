@@ -49,16 +49,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../core/echo/echo"
-    },
-    {
-      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/protocols"
@@ -76,9 +67,6 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-protocol"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {
@@ -86,9 +74,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-dnd"
@@ -103,22 +88,10 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
-    },
-    {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-observability"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

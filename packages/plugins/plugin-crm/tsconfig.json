@@ -48,9 +48,6 @@
       "path": "../../core/compute/functions-runtime"
     },
     {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -58,9 +55,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"

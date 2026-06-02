@@ -60,9 +60,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../sdk/types"
     },
     {
@@ -85,9 +82,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

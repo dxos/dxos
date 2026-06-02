@@ -24,12 +24,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -37,9 +31,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/react-client"
     },
     {
       "path": "../../ui/react-ui"
