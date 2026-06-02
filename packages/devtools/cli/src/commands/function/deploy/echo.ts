@@ -100,7 +100,7 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
     const collection = yield* Database.load(collectionRef);
     if (collection) {
       Obj.update(collection, (collection) => {
-        collection.objects.push(Ref.make(collection));
+        collection.objects.push(Ref.make(obj));
       });
     }
   }

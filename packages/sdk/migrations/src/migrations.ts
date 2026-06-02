@@ -65,17 +65,20 @@ export class Migrations {
     const spaceKey = space.key.toHex();
     const currentState = this._registry.get(this._stateAtom);
     this._registry.set(this._stateAtom, { running: [...currentState.running, spaceKey] });
-    if (targetIndex > currentIndex) {
-      const migrations = this.migrations.slice(currentIndex, targetIndex);
-      for (const migration of migrations) {
-        const builder = new MigrationBuilder(space);
-        await migration.next({ space, builder });
-        await builder._commit();
-        Annotation.set(space.properties, MigrationVersionAnnotation, migration.version);
+    try {
+      if (targetIndex > currentIndex) {
+        const migrations = this.migrations.slice(currentIndex, targetIndex);
+        for (const migration of migrations) {
+          const builder = new MigrationBuilder(space);
+          await migration.next({ space, builder });
+          await builder._commit();
+          Annotation.set(space.properties, MigrationVersionAnnotation, migration.version);
+        }
       }
+    } finally {
+      const finalState = this._registry.get(this._stateAtom);
+      this._registry.set(this._stateAtom, { running: finalState.running.filter((key) => key !== spaceKey) });
     }
-    const finalState = this._registry.get(this._stateAtom);
-    this._registry.set(this._stateAtom, { running: finalState.running.filter((key) => key !== spaceKey) });
 
     return true;
   }

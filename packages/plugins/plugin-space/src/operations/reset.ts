@@ -138,10 +138,20 @@ const snapshotEntities = (space: Space): Obj.Unknown[] => {
 /**
  * Re-seeds the root Collection and migration version after a reset so the navtree
  * has something to render and the space doesn't re-enter SPACE_REQUIRES_MIGRATION.
+ * Non-core annotations are cleared so plugin state refs into removed entities don't survive.
  */
 const rebuildSpaceRoot = (space: Space): void => {
   const properties = space.properties;
   const preservedVersion = Annotation.get(properties, MigrationVersionAnnotation);
+
+  // Clear all annotations, then re-seed only the core ones. This prevents plugin-specific
+  // annotations from holding stale refs to entities that were just removed.
+  Obj.update(properties, (obj) => {
+    const meta = (obj as any)[Obj.Meta];
+    if (meta?.annotations) {
+      meta.annotations = {};
+    }
+  });
 
   // Re-seed the root Collection (the navtree anchor).
   Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));

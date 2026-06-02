@@ -55,8 +55,12 @@ export const loadWnfs = async ({
 
   const exists = !!wnfsState;
   const instance = exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
-  if (instances && cacheKey) {
-    instances[cacheKey] = instance;
+  if (instances) {
+    // Re-read after createWnfsDir so newly created instances are cached under the real CID.
+    const newCacheKey = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))?.privateForestCid as any;
+    if (newCacheKey) {
+      instances[newCacheKey] = instance;
+    }
   }
 
   return instance;

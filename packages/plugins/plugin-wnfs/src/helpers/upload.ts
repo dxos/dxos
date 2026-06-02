@@ -10,7 +10,7 @@ import { sha256 } from 'multiformats/hashes/sha2';
 import * as Option from 'effect/Option';
 
 import type { Space } from '@dxos/client/echo';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 
 import { WnfsStateAnnotation } from '../annotations';
 import { log } from '@dxos/log';
@@ -52,12 +52,13 @@ export const upload = async ({
 
   // Update the forest pointer on the associated space.
   const currentState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation));
-  if (currentState) {
-    Annotation.set(space.properties, WnfsStateAnnotation, {
-      ...currentState,
-      privateForestCid: CID.decode(cidBytes).toString(),
-    });
+  if (!currentState) {
+    throw new Error('WnfsStateAnnotation missing after loadWnfs; cannot persist forest CID.');
   }
+  Annotation.set(space.properties, WnfsStateAnnotation, {
+    ...currentState,
+    privateForestCid: CID.decode(cidBytes).toString(),
+  });
 
   // Generate `wnfs://` URL & return the info.
   const info = {

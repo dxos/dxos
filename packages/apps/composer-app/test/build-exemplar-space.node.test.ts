@@ -204,7 +204,8 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
     Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(Collection.make()));
   }
-  const rootCollection = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target as Collection.Collection | undefined;
+  const rootCollectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
+  const rootCollection = rootCollectionRef?.target;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');
   }

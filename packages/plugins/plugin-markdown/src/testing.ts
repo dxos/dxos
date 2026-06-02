@@ -21,8 +21,7 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
     Effect.gen(function* () {
       const properties = Obj.make(SpaceProperties, {});
       Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
-      // TODO(wittjosiah): Remove cast.
-      yield* Database.add(properties as any);
+      yield* Database.add(properties);
     }),
     effect,
   );
