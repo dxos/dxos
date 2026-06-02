@@ -24,13 +24,14 @@ To run e2e job:
 
 ## Trunk
 
-[Trunk](https://trunk.io) ingests JUnit from the **Check** workflow ([`check.yml`](check.yml)) for flaky-test detection and quarantine. The **`test`** and **`e2e`** jobs wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`org-slug: dxos`, `quarantine: true`, `TRUNK_TOKEN`). Uploaded XML feeds Trunk for flaky labeling and quarantine decisions.
+[Trunk](https://trunk.io) ingests JUnit from the **Check** workflow ([`check.yml`](check.yml)) for flaky-test detection and quarantine. The **`test`**, **`storybook`**, and **`e2e`** jobs wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`org-slug: dxos`, `quarantine: true`, `TRUNK_TOKEN`). Uploaded XML feeds Trunk for flaky labeling and quarantine decisions.
 
 ### Jobs and artifacts
 
 | Job | What runs | JUnit paths Trunk reads |
 | :-- | :-- | :-- |
-| `test` | Vitest, browser Vitest, Storybook (`:test`, `:test-browser`, `:test-storybook` via uploader; same workflow triggers as the rest of **Check**). | `test-results/**/results.xml` |
+| `test` | Vitest + browser Vitest (`:test`, `:test-browser` via uploader; same workflow triggers as the rest of **Check**). | `test-results/**/results.xml` |
+| `storybook` | Storybook tests (`:test-storybook` via uploader). Runs on its own runner in parallel with `test`. | `test-results/**/results.xml` |
 | `e2e` | Playwright e2e (`:e2e` via uploader). Job runs only for `main` / `rc-*` / `hotfix-*` / `release-please-*` refs, or `workflow_dispatch` with `e2e` (see [`check.yml`](check.yml)). | `test-results/playwright/report/*.xml` |
 
 **unit/browser/storybook** go through Trunk on typical PRs; **e2e** only when the `e2e` job runs (not on ordinary topic-branch PRs). Exact `moon` commands and `env` are in [`check.yml`](check.yml).
