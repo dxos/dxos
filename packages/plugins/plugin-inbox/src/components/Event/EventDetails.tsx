@@ -67,7 +67,7 @@ export const EventDetails = ({
         interactiveAttendees ? (
           <EventAttendee key={attendee.email ?? index} attendee={attendee} db={db} onContactCreate={onContactCreate} />
         ) : (
-          <Header.Row key={attendee.email ?? index} icon='ph--user--regular'>
+          <Header.Row key={attendee.email ?? index} compact icon='ph--user--regular'>
             <span className='truncate text-description'>{attendee.name ?? attendee.email}</span>
           </Header.Row>
         ),

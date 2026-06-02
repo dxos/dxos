@@ -4,7 +4,7 @@
 
 import React, { type JSX, type PropsWithChildren, type ReactNode } from 'react';
 
-import { Card, type ThemedClassName } from '@dxos/react-ui';
+import { Card, Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { DateComponent } from '../DateComponent';
@@ -85,13 +85,27 @@ type HeaderRowProps = ThemedClassName<
   PropsWithChildren<{
     /** Leading element placed in the icon column — a phosphor icon name or a custom element (e.g. an icon button). */
     icon?: string | JSX.Element;
+    /**
+     * Render a string `icon` as a compact (content-height) block rather than a full rail-height square.
+     * Use for repeated rows (e.g. attendees) so the list stays dense. Ignored for element icons.
+     */
+    compact?: boolean;
     'data-testid'?: string;
   }>
 >;
 
-const HeaderRow = ({ icon, children, classNames, ...props }: HeaderRowProps) => {
+const HeaderRow = ({ icon, compact, children, classNames, ...props }: HeaderRowProps) => {
+  const resolvedIcon =
+    compact && typeof icon === 'string' ? (
+      <IconBlock compact>
+        <Icon icon={icon} classNames='text-subdued' size={4} />
+      </IconBlock>
+    ) : (
+      icon
+    );
+
   return (
-    <Card.Row icon={icon} classNames={mx('items-center', classNames)} {...props}>
+    <Card.Row icon={resolvedIcon} classNames={mx('items-center', classNames)} {...props}>
       {children}
     </Card.Row>
   );
