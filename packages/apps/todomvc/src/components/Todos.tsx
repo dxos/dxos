@@ -26,10 +26,8 @@ export const Todos = () => {
   // Get space properties with reactive updates (waits for space to be ready).
   const [spaceProperties] = useSpaceProperties(space?.id);
 
-  // Subscribe reactively via useSpaceProperties, but read the annotation from the
-  // live entity (Annotation.get requires Entity.Unknown, not a Snapshot).
-  const listRef =
-    spaceProperties && space ? Option.getOrUndefined(Annotation.get(space.properties, TodoListAnnotation)) : undefined;
+  // Get the TodoList reference from space.properties via typed annotation.
+  const listRef = spaceProperties && Option.getOrUndefined(Annotation.get(spaceProperties, TodoListAnnotation));
 
   // Subscribe to the list ref (handles async loading and reactive updates).
   const [listSnapshot, updateList] = useObject(listRef);
