@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'doctor-diagnostics',
+        id: 'doctorDiagnostics',
         filter: AppSurface.literal(
           Surface.makeType<{ subject: string }>(`deck-companion--${DIAGNOSTICS_DECK_COMPANION_ID}`),
           DIAGNOSTICS_DECK_COMPANION_ID,

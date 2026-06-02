@@ -17,7 +17,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
@@ -101,7 +101,12 @@ const resolvePayload = (prompt: string): unknown => {
  * returns a static summary, so the template-driven TripMessageExtractor runs end-to-end without a
  * real provider.
  */
-const MockAiServicePlugin = Plugin.define({ id: 'story.mock-ai-service', name: 'Story Mock AI Service' }).pipe(
+const MockAiServicePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.mockAiService'),
+    name: 'Story Mock AI Service',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'ai-service',
     activatesOn: ActivationEvents.SetupProcessManager,

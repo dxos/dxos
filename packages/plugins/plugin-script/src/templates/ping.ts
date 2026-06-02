@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 const Ping = Operation.make({
   meta: {
-    key: 'org.dxos.script.ping',
+    key: DXN.make('org.dxos.script.ping'),
     name: 'Ping',
   },
   input: Schema.Any,

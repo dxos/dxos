@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {

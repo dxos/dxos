@@ -74,6 +74,16 @@ describe('tailwind classes', () => {
     expect(isValidClass('text-subdued')).toBe(true);
   });
 
+  test('generated hue/role tokens resolve', ({ expect }) => {
+    // Generated into styles.css by scripts/gen-hue-roles.mjs.
+    expect(isValidClass('bg-rose-fill')).toBe(true);
+    expect(isValidClass('bg-neutral-fill-hover')).toBe(true);
+    expect(isValidClass('text-blue-text')).toBe(true);
+    // Semantic aliases (name → source hue).
+    expect(isValidClass('bg-primary-surface')).toBe(true);
+    expect(isValidClass('bg-error-fill')).toBe(true);
+  });
+
   test('CSS variable shorthand uses parentheses in v4', ({ expect }) => {
     expect(isValidClass('pl-(--dx-nav-sidebar-size)')).toBe(true);
     expect(isValidClass('bg-(--surface-bg)')).toBe(true);

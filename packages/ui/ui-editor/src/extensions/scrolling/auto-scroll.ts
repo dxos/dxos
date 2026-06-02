@@ -200,7 +200,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             .classNames(getSize(4))
             .attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
-            .classNames('dx-button bg-accent-surface')
+            .classNames('dx-button bg-accent-fill')
             .attributes({ 'data-density': 'md' })
             .append(icon)
             .on('click', () => {

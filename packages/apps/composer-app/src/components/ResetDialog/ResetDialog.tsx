@@ -20,6 +20,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { setSafeModeUrl } from '../../config';
 
@@ -55,7 +56,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 };
 
 export const ResetDialog = ({
-  error: propsError,
+  error: errorProp,
   logStore,
   observability: observabilityProp,
   needRefresh,
@@ -67,7 +68,7 @@ export const ResetDialog = ({
 }: ResetDialogProps) => {
   const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const [isNotMobile] = useMediaQuery('md');
-  const error = propsError && parseError(t, propsError);
+  const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -222,7 +223,14 @@ export const ResetDialog = ({
                   <Popover.Portal>
                     <Popover.Content>
                       <Popover.Viewport>
-                        <FeedbackForm onSave={handleSaveFeedback} />
+                        <FeedbackForm.Root>
+                          <Form.Viewport>
+                            <Form.Content>
+                              <Form.FieldSet />
+                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
+                            </Form.Content>
+                          </Form.Viewport>
+                        </FeedbackForm.Root>
                       </Popover.Viewport>
                       <Popover.Arrow />
                     </Popover.Content>

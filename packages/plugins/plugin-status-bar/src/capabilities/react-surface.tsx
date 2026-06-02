@@ -14,17 +14,17 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'status-bar',
+        id: 'statusBar',
         role: 'status-bar',
         component: () => <StatusBarPanel />,
       }),
       Surface.create({
-        id: 'status-bar--r1-footer',
+        id: 'statusBarFooter',
         role: 'status-bar--r1-footer',
         component: () => <StatusBarActions />,
       }),
       Surface.create({
-        id: 'version-info',
+        id: 'versionInfo',
         role: 'version-info',
         component: () => <VersionNumber />,
       }),

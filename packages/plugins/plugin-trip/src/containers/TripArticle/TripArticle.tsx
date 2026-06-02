@@ -193,8 +193,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       >
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
-          <Panel.Root className='hidden @3xl:block border-r border-separator'>
-            <NaturalCalendar.Root>
+          <NaturalCalendar.Root>
+            <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
               </Panel.Toolbar>
@@ -205,8 +205,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
                   onSelectRange={handleDateRangeSelect}
                 />
               </Panel.Content>
-            </NaturalCalendar.Root>
-          </Panel.Root>
+            </Panel.Root>
+          </NaturalCalendar.Root>
 
           <Panel.Root>
             <Panel.Toolbar>
@@ -223,7 +223,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
             markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
         {showGlobe && mapAvailable && (
-          <Panel.Root className='border-t border-separator'>
+          <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
               <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>

@@ -10,10 +10,11 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 const ForexEffect = Operation.make({
   meta: {
-    key: 'org.dxos.script.forex-effect',
+    key: DXN.make('org.dxos.script.forexEffect'),
     name: 'Forex Effect',
     description: 'Returns the exchange rate between two currencies.',
   },

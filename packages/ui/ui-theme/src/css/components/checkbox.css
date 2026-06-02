@@ -10,7 +10,7 @@
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
-      @apply bg-accent-surface accent-accent-surface border-accent-surface;
+      @apply bg-accent-fill accent-accent-fill border-accent-fill;
     }
 
     &:not([disabled]),
@@ -20,7 +20,7 @@
         &[aria-checked='true'],
         &[aria-checked='mixed'],
         &:checked {
-          @apply bg-accent-surface-hover accent-accent-surface-hover border-accent-surface-hover;
+          @apply bg-accent-fill-hover accent-accent-fill-hover border-accent-fill-hover;
         }
       }
     }

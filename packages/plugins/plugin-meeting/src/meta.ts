@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.meeting',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.meeting'),
   name: 'Meetings',
   author: 'DXOS',
   description: trim`
@@ -26,4 +27,4 @@ export const meta: Plugin.Meta = {
   tags: ['labs'],
   // TODO(wittjosiah): Needs new screenshots.
   screenshots: ['https://dxos.network/plugin-details-calls-dark.png'],
-};
+});

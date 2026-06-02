@@ -19,7 +19,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'active-call',
+        id: 'activeCall',
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const callManagerAtom = capabilities.atom(CallsCapabilities.Manager);
@@ -33,7 +33,7 @@ export default Capability.makeModule(
             joined
               ? [
                   AppNode.makeDeckCompanion({
-                    id: 'active-call',
+                    id: 'activeCall',
                     label: ['call-panel.label', { ns: meta.id }],
                     icon: 'ph--video-conference--regular',
                     data: null,
@@ -45,7 +45,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createTypeExtension({
-        id: 'channel-chat-companion',
+        id: 'channelChatCompanion',
         type: Channel.Channel,
         connector: (channel, get) => {
           const callManagerAtom = capabilities.atom(CallsCapabilities.Manager);

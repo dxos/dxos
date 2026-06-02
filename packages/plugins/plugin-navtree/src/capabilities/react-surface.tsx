@@ -36,14 +36,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'document-title',
+        id: 'documentTitle',
         role: 'document-title',
         component: ({ data }) => (
           <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
         ),
       }),
       Surface.create({
-        id: 'search-input',
+        id: 'searchInput',
         role: 'search-input',
         position: 'last',
         component: () => <CommandsTrigger />,

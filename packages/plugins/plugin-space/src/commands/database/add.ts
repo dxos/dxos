@@ -17,7 +17,7 @@ import { SpaceProperties } from '@dxos/client/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 
 import { SpaceCapabilities } from '#types';
 
@@ -86,7 +86,7 @@ const selectTypename = Effect.fn(function* (
   const { db } = yield* Database.Service;
   const allTypes = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
   const types = allTypes
-    .filter((schema) => !SystemTypeAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
     .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
     .filter((schema) => !!resolve(Type.getTypename(schema)));
 

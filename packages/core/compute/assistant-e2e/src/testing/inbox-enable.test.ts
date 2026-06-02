@@ -24,7 +24,7 @@ describe('InboxBlueprintEnable', () => {
 
           Then enable the inbox blueprint (key: org.dxos.blueprint.inbox) using the blueprint manager.
 
-          Call the ReadEmail operation (org.dxos.plugin.inbox.operation.read-email) for that mailbox. With no messages in the feed, it should return zero emails — the important part is that ReadEmail completes successfully, not the count.
+          Call the ReadEmail operation (org.dxos.plugin.inbox.operation.readEmail) for that mailbox. With no messages in the feed, it should return zero emails — the important part is that ReadEmail completes successfully, not the count.
 
           Completion criteria:
           - A Mailbox object exists in the database.

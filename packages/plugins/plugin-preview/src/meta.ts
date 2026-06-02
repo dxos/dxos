@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.preview',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.preview'),
   name: 'Preview',
   author: 'DXOS',
   description: trim`
@@ -16,4 +17,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--eye--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-preview',
   tags: ['system'],
-};
+});

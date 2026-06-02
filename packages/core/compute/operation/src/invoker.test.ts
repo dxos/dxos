@@ -16,6 +16,7 @@ import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError, Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import * as OperationInvoker from './OperationInvoker';
 
@@ -28,25 +29,25 @@ const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntim
 const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: 'test.compute' },
+  meta: { key: DXN.make('org.example.test.compute') },
 });
 
 const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: 'test.to-string' },
+  meta: { key: DXN.make('org.example.test.toString') },
 });
 
 const Add = Operation.make({
   input: Schema.Tuple(Schema.Number, Schema.Number),
   output: Schema.Number,
-  meta: { key: 'test.add' },
+  meta: { key: DXN.make('org.example.test.add') },
 });
 
 const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: 'test.side-effect' },
+  meta: { key: DXN.make('org.example.test.sideEffect') },
 });
 
 //
@@ -270,7 +271,7 @@ describe('Operation.withHandler type safety', () => {
     const opWithDeclaredService = Operation.make({
       input: Schema.Void,
       output: Schema.Void,
-      meta: { key: 'test.declared-service' },
+      meta: { key: DXN.make('org.example.test.declaredService') },
       services: [DeclaredService],
     });
 

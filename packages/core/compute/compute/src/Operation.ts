@@ -41,7 +41,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
   readonly output: Schema<O>;
 
   readonly meta: {
-    readonly key: string;
+    readonly key: DXN.DXN;
     readonly name?: string;
     readonly version?: string;
     readonly description?: string;
@@ -54,6 +54,12 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
      * Assigned by the EDGE function service when deployed.
      */
     readonly deployedId?: string;
+
+    /**
+     * Dictionary of annotations for the operation.
+     */
+    // TODO(dmaretskyi): Make required, but this complicates `make` to fill in defaults.
+    readonly annotations?: Annotation.Dictionary;
   };
 
   /**
@@ -320,7 +326,7 @@ export const PersistentOperation = Schema$.Struct({
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-  Annotation.SystemTypeAnnotation.set(true),
+  Annotation.HiddenAnnotation.set(true),
   // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
   //  backward compatibility with existing data and avoid requiring data migration.
   Type.makeObject(DXN.make('org.dxos.type.function', '0.2.0')),
@@ -348,6 +354,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
       key: operation.meta.key,
       version: operation.meta.version ?? '0.0.0',
       keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+      annotations: operation.meta.annotations,
     },
     name: operation.meta.name ?? '',
     description: operation.meta.description,
@@ -374,12 +381,13 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
     executionMode: 'async',
     types: [],
     meta: {
-      key: meta.key ?? record.name,
+      key: DXN.tryMake(meta.key ?? record.name) ?? DXN.make(meta.key ?? record.name),
       name: record.name,
       version: meta.version ?? '0.0.0',
       description: record.description,
       icon: record.icon,
       deployedId,
+      annotations: meta.annotations ?? {},
     },
   });
 };
@@ -405,6 +413,7 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
     if (sourceMeta.keys.length > 0) {
       targetMeta.keys = JSON.parse(JSON.stringify(sourceMeta.keys));
     }
+    targetMeta.annotations = sourceMeta.annotations ?? targetMeta.annotations;
   });
 };
 

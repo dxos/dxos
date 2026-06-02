@@ -13,7 +13,7 @@ export const Text = Schema.Struct({
   content: Schema.String,
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.SystemTypeAnnotation.set(true),
+  Annotation.HiddenAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--text-t--regular',
     hue: 'green',

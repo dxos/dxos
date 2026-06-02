@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 
-import { getSchemaURI } from '../../Annotation';
+import { getSchemaURI } from '../../Annotation/annotations';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';

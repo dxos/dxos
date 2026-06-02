@@ -36,7 +36,7 @@ export default Capability.makeModule(
       // in the global action menu (e.g., the "+" button in the navigation tree).
       // `position: 'first'` places the action in the primary action area.
       GraphBuilder.createExtension({
-        id: 'root-actions',
+        id: 'rootActions',
         position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
@@ -74,7 +74,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             AppNode.makeSection({
-              id: 'sample-section',
+              id: 'sampleSection',
               type: SAMPLE_SECTION_TYPE,
               label: ['plugin.name', { ns: meta.id }],
               icon: 'ph--book-open--regular',
@@ -89,7 +89,7 @@ export default Capability.makeModule(
       // Matches nodes of `SAMPLE_SECTION_TYPE` and queries the space's database.
       // `createObjectNode` builds a standard app-graph node using the registered metadata.
       GraphBuilder.createExtension({
-        id: 'section-items',
+        id: 'sectionItems',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === SAMPLE_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -108,7 +108,7 @@ export default Capability.makeModule(
       // `GraphBuilder.createTypeExtension` is a convenience that matches nodes whose data
       // is an ECHO object of the specified type. The callback receives the typed object.
       GraphBuilder.createTypeExtension({
-        id: 'item-actions',
+        id: 'itemActions',
         type: SampleItem.SampleItem,
         actions: (item) =>
           Effect.succeed([
@@ -143,7 +143,7 @@ export default Capability.makeModule(
       // The `data` string identifies which companion surface to render (matched by the
       // `literalArticle` filter in react-surface.tsx).
       GraphBuilder.createTypeExtension({
-        id: 'related-companion',
+        id: 'relatedCompanion',
         type: SampleItem.SampleItem,
         connector: () =>
           Effect.succeed([
@@ -162,12 +162,12 @@ export default Capability.makeModule(
       // The surface role follows the convention: `deck-companion--{id}`.
       // `position: 'last'` places it after higher-priority companions.
       GraphBuilder.createExtension({
-        id: 'deck-companion',
+        id: 'deckCompanion',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'sample-panel',
+              id: 'samplePanel',
               label: ['deck-companion.label', { ns: meta.id }],
               icon: 'ph--book-open--regular',
               data: 'sample-panel' as const,

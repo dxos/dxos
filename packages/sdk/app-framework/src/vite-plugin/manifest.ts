@@ -45,13 +45,19 @@ export type BuildMeta = Plugin.Meta & { version: string };
 export const serializeManifest = (
   meta: BuildMeta,
   { assets, devEntry }: { assets: readonly string[]; devEntry?: string },
-): string =>
-  JSON.stringify(
+): string => {
+  // The published manifest is keyed by the bare NSID `id`; the `key` DXN is an
+  // in-process convenience and is intentionally omitted to keep the registry
+  // wire-format stable. `version` is the build-time package version (may be a
+  // non-semver dev tag), carried by `BuildMeta` rather than derived from `key`.
+  const { key: _key, ...rest } = meta;
+  return JSON.stringify(
     {
-      ...meta,
+      ...rest,
       assets,
       ...(devEntry !== undefined ? { devEntry } : {}),
     },
     null,
     2,
   );
+};

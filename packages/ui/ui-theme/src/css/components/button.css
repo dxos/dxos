@@ -26,7 +26,14 @@
     &[data-variant='ghost'] {
       @apply bg-transparent;
       &:hover {
-        @apply bg-hover-surface text-inherit;
+        /* Tint relative to the host surface (--surface-bg, set by the enclosing dx-*-surface zone)
+         * so the hover reads correctly on any background: darker in light mode, lighter in dark.
+         * Falls back to base-surface when no surface zone is in scope. */
+        background: light-dark(
+          oklch(from var(--surface-bg, var(--color-base-surface)) calc(l - 0.05) c h),
+          oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + 0.05) c h)
+        );
+        @apply text-inherit;
       }
       &[data-state='open'] {
         @apply bg-input-surface;
@@ -46,26 +53,24 @@
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
-      /* Hover */
       &:hover {
         @apply bg-hover-surface;
       }
 
-      /* Variants */
       &[data-variant='primary'] {
-        @apply text-accent-foreground bg-accent-surface;
+        @apply text-accent-foreground bg-accent-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-accent-surface-hover;
+          @apply bg-accent-fill-hover;
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accent-foreground bg-rose-fill;
+        @apply text-accent-foreground bg-error-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-rose-fill;
+          @apply bg-error-fill-hover;
         }
       }
     }

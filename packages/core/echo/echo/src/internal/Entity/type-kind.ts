@@ -8,7 +8,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import { EntityKind } from '../common/types';
 import { toJsonSchema } from '../JsonSchema';
 import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity';

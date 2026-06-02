@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'meeting-companion',
+        id: 'meetingCompanion',
         role: 'article',
         filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
           (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

@@ -49,7 +49,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: 'primary-actions',
+      id: 'primaryActions',
       position: 'first',
       match: NodeMatcher.whenRoot,
       actions: () =>
@@ -228,6 +228,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
         if (!client) {
           return Effect.succeed([]);
+        }
+
+        // Recompute actions when a migration completes (state transition or versionProperty stamp).
+        get(CreateAtom.fromObservable(space.state));
+        if (space.state.get() === SpaceState.SPACE_READY) {
+          get(AtomObj.make(space.properties));
         }
 
         return Effect.succeed(

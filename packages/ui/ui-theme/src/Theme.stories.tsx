@@ -3,7 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { hueShades, hues } from './defs';
 import { mx } from './util';
@@ -13,6 +13,8 @@ const neutralShades: [number, string][] = [
   [50,  'bg-neutral-50'],
   [75,  'bg-neutral-75'],
   [100, 'bg-neutral-100'],
+  [125, 'bg-neutral-125'],
+  [150, 'bg-neutral-150'],
   [200, 'bg-neutral-200'],
   [250, 'bg-neutral-250'],
   [300, 'bg-neutral-300'],
@@ -22,12 +24,15 @@ const neutralShades: [number, string][] = [
   [700, 'bg-neutral-700'],
   [750, 'bg-neutral-750'],
   [800, 'bg-neutral-800'],
+  [825, 'bg-neutral-825'],
+  [850, 'bg-neutral-850'],
+  [875, 'bg-neutral-875'],
   [900, 'bg-neutral-900'],
   [925, 'bg-neutral-925'],
   [950, 'bg-neutral-950'],
 ];
 
-const ColorSwatch = ({ hue }: { hue: string }) => {
+const StyleSwatch = ({ hue }: { hue: string }) => {
   return (
     <div
       style={{
@@ -42,12 +47,13 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
         }}
         className='p-2 text-sm'
       >
-        {hue}
+        <div>{hue}</div>
+        <div className='text-xs'>-text</div>
       </div>
       <div
         style={{
           backgroundColor: `var(--color-${hue}-fill)`,
-          color: `var(--color-${hue}-text)`,
+          color: `var(--color-${hue}-foreground)`,
         }}
         className='px-1 text-sm flex items-center'
       >
@@ -62,7 +68,8 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
         }}
         className='p-2 text-sm'
       >
-        {hue}
+        <div>{hue}</div>
+        <div className='text-xs'>-fg/-surface</div>
       </div>
     </div>
   );
@@ -103,7 +110,7 @@ export const Styles = {
       <div className='p-4'>
         <div className='flex flex-wrap gap-2'>
           {['neutral', ...hues].map((hue) => (
-            <ColorSwatch key={hue} hue={hue} />
+            <StyleSwatch key={hue} hue={hue} />
           ))}
         </div>
       </div>
@@ -148,27 +155,87 @@ export const Neutral = {
   },
 };
 
+// prettier-ignore
+const surfaces: [surface: string, foreground: string, label: string][] = [
+  // Sorted lightest -> darkest at runtime (see Surfaces story); surfaces without a dedicated
+  // foreground fall back to base-foreground.
+  ['bg-base-surface',    'text-base-foreground',     'base'],
+  ['bg-deck-surface',    'text-base-foreground',     'deck'],
+  ['bg-card-surface',    'text-base-foreground',     'card'],
+  ['bg-toolbar-surface', 'text-base-foreground',     'toolbar'],
+  ['bg-sidebar-surface', 'text-base-foreground',     'sidebar'],
+  ['bg-group-surface',   'text-base-foreground',     'group'],
+  ['bg-header-surface',  'text-base-foreground',     'header'],
+  ['bg-modal-surface',   'text-base-foreground',     'modal'],
+  ['bg-l1-surface',      'text-base-foreground',     'l1'],
+  ['bg-r1-surface',      'text-base-foreground',     'r1'],
+  ['bg-hover-surface',   'text-hover-foreground',    'hover'],
+  ['bg-current-surface', 'text-current-foreground',  'current'],
+  ['bg-selected-surface','text-selected-foreground', 'selected'],
+  ['bg-l0-surface',      'text-base-foreground',     'l0'],
+  ['bg-r0-surface',      'text-base-foreground',     'r0'],
+  ['bg-input-surface',   'text-input-foreground',    'input'],
+  ['bg-inverse-surface', 'text-inverse-foreground',  'inverse'],
+  ['bg-scrim-surface',   'text-base-foreground',     'scrim'],
+];
+
+// Resolve any CSS color (oklch, light-dark(), rgb, ...) to a 0-1 luminance via a 1x1 canvas.
+const colorLuminance = (css: string): number => {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return 0;
+  }
+  ctx.clearRect(0, 0, 1, 1);
+  ctx.fillStyle = css;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+};
+
 export const Surfaces = {
   render: () => {
+    const rowRefs = useRef(new Map<string, HTMLDivElement>());
+    const [order, setOrder] = useState(surfaces);
+    useLayoutEffect(() => {
+      // Sort lightest -> darkest by the resolved background; re-runs when the theme toggles.
+      const sort = () => {
+        const ranked = surfaces
+          .map((row) => {
+            const element = rowRefs.current.get(row[2]);
+            return { row, luminance: element ? colorLuminance(getComputedStyle(element).backgroundColor) : 0 };
+          })
+          .sort((a, b) => b.luminance - a.luminance)
+          .map(({ row }) => row);
+        setOrder(ranked);
+      };
+      sort();
+      const observer = new MutationObserver(sort);
+      observer.observe(document.body, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['class', 'style', 'data-theme'],
+      });
+      return () => observer.disconnect();
+    }, []);
     return (
-      <div className='absolute inset-0 h-full p-4 bg-white dark:bg-black'>
-        <div className='flex flex-wrap gap-2'>
-          {[
-            { className: 'bg-scrim-surface', label: 'scrim' },
-            { className: 'bg-base-surface', label: 'base' },
-            { className: 'bg-deck-surface', label: 'deck' },
-            { className: 'bg-group-surface', label: 'group' },
-            { className: 'bg-sidebar-surface', label: 'sidebar' },
-            { className: 'bg-header-surface', label: 'header' },
-            { className: 'bg-card-surface', label: 'card' },
-            { className: 'bg-modal-surface', label: 'modal' },
-            { className: 'bg-input-surface', label: 'input' },
-            { className: 'bg-current-surface', label: 'current' },
-            { className: 'bg-hover-surface', label: 'hover' },
-            { className: 'bg-inverse-surface text-inverse-foreground', label: 'inverse' },
-          ].map(({ className, label }) => (
-            <div key={className} className={mx('shrink-0 p-2 aspect-square w-48 rounded-md', className)}>
-              {label}
+      <div className='absolute inset-0 overflow-auto bg-white dark:bg-black'>
+        <div className='flex flex-col'>
+          {order.map(([surface, foreground, label]) => (
+            <div
+              key={label}
+              ref={(element) => {
+                if (element) {
+                  rowRefs.current.set(label, element);
+                }
+              }}
+              className={mx('flex items-baseline justify-between px-4 py-3', surface, foreground)}
+            >
+              <span className='text-sm'>{label}</span>
+              <span className='text-xs opacity-60'>
+                {surface} · {foreground}
+              </span>
             </div>
           ))}
         </div>

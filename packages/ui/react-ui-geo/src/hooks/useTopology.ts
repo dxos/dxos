@@ -5,6 +5,8 @@
 import { useEffect, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
+import { log } from '@dxos/log';
+
 import { type CountriesResolution, loadTopology } from '../data';
 
 export type Level = CountriesResolution;
@@ -16,10 +18,10 @@ export type LevelTier = {
   level: CountriesResolution;
 };
 
-/** Default zoom buckets: 110m below zoom 3, 50m at/above it. */
+/** Default zoom bucket: 110m at all zoom levels (50m tier disabled for now). */
 const DEFAULT_TIERS: LevelTier[] = [
   { minZoom: 0, level: '110m' },
-  { minZoom: 3, level: '50m' },
+  // { minZoom: 3, level: '50m' },
 ];
 
 const pickTier = (zoom: number, tiers: LevelTier[]): LevelTier => {
@@ -67,12 +69,20 @@ export const useTopology: {
     }
 
     let disposed = false;
-    void loadTopology(level).then((loaded) => {
-      topologyCache.set(level, loaded);
-      if (!disposed) {
-        setTopology(loaded);
-      }
-    });
+    void loadTopology(level)
+      .then((loaded) => {
+        topologyCache.set(level, loaded);
+        if (!disposed) {
+          setTopology(loaded);
+        }
+      })
+      .catch((err) => {
+        // A chunk/network failure leaves the previously-displayed topology on screen; log rather
+        // than surfacing an unhandled rejection.
+        if (!disposed) {
+          log.warn('failed to load topology', { level, err });
+        }
+      });
 
     return () => {
       disposed = true;

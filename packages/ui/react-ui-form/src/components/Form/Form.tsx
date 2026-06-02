@@ -211,7 +211,7 @@ type FormViewportProps = { scroll?: boolean; gutter?: ColumnRootProps['gutter'] 
 // The viewing window: owns the gutter Column (chrome/side-padding). Content-height by default;
 // `scroll` makes it fill its parent and scroll (the gutter then hosts the scrollbar).
 const FormViewport = composable<HTMLDivElement, FormViewportProps>(
-  ({ children, scroll, gutter = 'xs', ...props }, forwardedRef) => {
+  ({ children, scroll, gutter = 'sm', ...props }, forwardedRef) => {
     // Span the full width when nested inside another Column grid (e.g. Card.Root) instead of
     // landing in a single narrow track.
     const span = '[.dx-column-root_&]:col-span-full';
