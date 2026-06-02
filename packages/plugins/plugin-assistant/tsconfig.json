@@ -72,6 +72,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../devtools/devtools"
     },
     {
@@ -130,6 +133,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-search"
