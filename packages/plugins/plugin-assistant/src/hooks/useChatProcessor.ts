@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry as AtomRegistry, RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
@@ -64,7 +64,7 @@ export const useChatProcessor = ({
     const session = new AiSession.Session({
       feed: feedTarget,
       runtime,
-      registry: observableRegistry as AtomRegistry.Registry,
+      registry: observableRegistry,
     });
     await session.open();
     setSession(session);
