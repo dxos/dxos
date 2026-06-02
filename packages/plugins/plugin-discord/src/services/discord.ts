@@ -42,11 +42,39 @@ export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordRES
  */
 export const makeDiscordLayer = (
   integrationRef: Ref.Ref<Integration.Integration>,
-): Layer.Layer<DiscordREST, Err.ObjectNotFoundError> =>
+): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);
       const accessToken = yield* Database.load(integration.accessToken);
       return makeDiscordLayerFromToken(accessToken.token);
+    }),
+  );
+
+/**
+ * Build a `DiscordREST` layer pinned to a specific user OAuth token.
+ *
+ * Identical to `makeDiscordLayerFromToken` except the edge-proxy fetch layer
+ * is configured to rewrite dfx's `Bot <token>` Authorization header to
+ * `Bearer <token>`, which is what Discord requires for user OAuth credentials.
+ */
+export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<DiscordREST> =>
+  DiscordRESTMemoryLive.pipe(
+    Layer.provide(DiscordConfig.layer({ token: Redacted.make(token), rest: { baseUrl: DISCORD_API_BASE } })),
+    Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer({ tokenKind: 'Bearer' })))),
+  );
+
+/**
+ * Build a `DiscordREST` layer from a persisted `Integration` ref, for use by
+ * Discord user OAuth operation handlers.
+ */
+export const makeDiscordUserLayer = (
+  integrationRef: Ref.Ref<Integration.Integration>,
+): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
+  Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const integration = yield* Database.load(integrationRef);
+      const accessToken = yield* Database.load(integration.accessToken);
+      return makeDiscordUserLayerFromToken(accessToken.token);
     }),
   );

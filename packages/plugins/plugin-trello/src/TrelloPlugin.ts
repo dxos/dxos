@@ -8,6 +8,8 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AppGraphBuilder, IntegrationProvider, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 import { translations } from './translations';
 
 export const TrelloPlugin = Plugin.define(meta).pipe(
@@ -17,6 +19,9 @@ export const TrelloPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupIntegrationProviders,
     activate: IntegrationProvider,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

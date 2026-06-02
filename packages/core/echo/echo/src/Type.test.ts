@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 
 import * as Entity from './Entity';
 import * as JsonSchema from './JsonSchema';
@@ -44,24 +44,24 @@ describe('Type', () => {
     test('Type.Type is branded as the type entity kind', ({ expect }) => {
       // The Type.Type entity itself is an in-memory object (KindId=Object) that
       // *declares* a type-kind schema (SchemaKindId=Type).
-      expect(Type.isTypeKindSchema(Type.Type)).toBe(true);
+      expect(Type.isTypeKind(Type.Type)).toBe(true);
       expect(Type.isObject(Type.Type)).toBe(false);
       expect(Type.isRelation(Type.Type)).toBe(false);
     });
 
     test('static object/relation types are not type-kind', ({ expect }) => {
-      expect(Type.isTypeKindSchema(TestSchema.Person)).toBe(false);
-      expect(Type.isTypeKindSchema(TestSchema.HasManager)).toBe(false);
+      expect(Type.isTypeKind(TestSchema.Person)).toBe(false);
+      expect(Type.isTypeKind(TestSchema.HasManager)).toBe(false);
     });
 
     test('Type.getMeta(Type.Type) reports key/version of the meta-schema', ({ expect }) => {
-      // `Type.getMeta` returns the entity's `ObjectMeta`. For the static
+      // `Type.getMeta` returns the entity's `EntityMeta`. For the static
       // `Type.Type` meta-schema entity the key/version reflect its registry
       // identity. The schema-kind brand is on `[SchemaKindId]`, not in meta.
       const meta = Type.getMeta(Type.Type);
       expect(meta.key).toBe('org.dxos.type.schema');
       expect(meta.version).toBe('0.1.0');
-      expect(Type.isTypeKindSchema(Type.Type)).toBe(true);
+      expect(Type.isTypeKind(Type.Type)).toBe(true);
     });
 
     test('Type.getURI(Type.Type) returns the meta-schema DXN', ({ expect }) => {
@@ -78,7 +78,7 @@ describe('Type', () => {
       });
       expect((entity as any)[Entity.KindId]).toBe(Entity.Kind.Type);
       // `typename` / `version` are not direct fields on a persisted `Type.Type`;
-      // they live in `ObjectMeta` (the canonical registry-provenance pair).
+      // they live in `EntityMeta` (the canonical registry-provenance pair).
       // Read them via the helpers (or `Type.getMeta`).
       expect(Type.getTypename(entity)).toBe('com.example.type.test');
       expect(Type.getVersion(entity)).toBe('0.1.0');
@@ -89,8 +89,8 @@ describe('Type', () => {
       const draft = Type.makeObjectFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.String })),
       });
-      // Drafts default version to `'0.0.0'` in `ObjectMeta.version`; the
-      // typename (`ObjectMeta.key`) is undefined until set.
+      // Drafts default version to `'0.0.0'` in `EntityMeta.version`; the
+      // typename (`EntityMeta.key`) is undefined until set.
       expect(Type.getVersion(draft)).toBe('0.0.0');
       const meta = Type.getMeta(draft);
       expect(meta.key).toBeUndefined();
@@ -198,7 +198,7 @@ describe('Type', () => {
   });
 
   describe('deterministic id default', () => {
-    // The default id is `ObjectId.deterministic(typename, version)` — required so that
+    // The default id is `EntityId.deterministic(typename, version)` — required so that
     // `Type.makeObject(...)` never calls `crypto.getRandomValues()` at module-evaluation
     // time (forbidden by Cloudflare workerd in global scope).
     const personDxn = DXN.make('com.example.type.deterministic.person', '0.1.0');
@@ -208,7 +208,7 @@ describe('Type', () => {
       const a = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
       const b = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn));
       expect(a.id).toBe(b.id);
-      expect(a.id).toBe(ObjectId.deterministic('com.example.type.deterministic.person', '0.1.0'));
+      expect(a.id).toBe(EntityId.deterministic('com.example.type.deterministic.person', '0.1.0'));
     });
 
     test('different versions produce different ids', ({ expect }) => {
@@ -222,7 +222,7 @@ describe('Type', () => {
     });
 
     test('Type.makeObject({ id }) override is honoured', ({ expect }) => {
-      const explicit = ObjectId.random();
+      const explicit = EntityId.random();
       const entity = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(personDxn, { id: explicit }));
       expect(entity.id).toBe(explicit);
       // And the default still kicks in when no override is supplied.
@@ -238,11 +238,11 @@ describe('Type', () => {
         Type.makeRelation({ dxn: worksForDxn, source: TestSchema.Person, target: TestSchema.Organization }),
       );
       expect(a.id).toBe(b.id);
-      expect(a.id).toBe(ObjectId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
+      expect(a.id).toBe(EntityId.deterministic('com.example.type.deterministic.worksFor', '0.1.0'));
     });
 
     test('Type.makeRelation({ id }) override is honoured', ({ expect }) => {
-      const explicit = ObjectId.random();
+      const explicit = EntityId.random();
       const entity = Schema.Struct({ since: Schema.Number }).pipe(
         Type.makeRelation({
           dxn: worksForDxn,

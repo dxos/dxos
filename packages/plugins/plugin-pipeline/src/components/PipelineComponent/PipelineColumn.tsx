@@ -3,12 +3,10 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
-import { Annotation, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
@@ -54,7 +52,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       return;
     }
 
-    const type = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
+    const type = await resolveSchemaWithRegistry(db, query.ast);
     setType(() => type);
   }, [db, query]);
 
@@ -119,14 +117,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
-    const icon = Function.pipe(
-      Obj.getType(data),
-      Option.fromNullable,
-      Option.map(Type.getSchema),
-      Option.flatMap(Annotation.IconAnnotation.get),
-      Option.map(({ icon }) => icon),
-      Option.getOrElse(() => 'ph--circle-dashed--regular'),
-    );
+    const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
     return (
       <Menu.Root>
@@ -137,7 +128,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
                 <Card.Icon icon={icon} />
                 <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.IconBlock padding>
+                <Card.IconBlock>
                   <Menu.Trigger asChild>
                     <Toolbar.IconButton
                       iconOnly

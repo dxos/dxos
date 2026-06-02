@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { DXN, EchoURI } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 /**
@@ -18,7 +18,7 @@ export const make = (props: Obj.MakeProps<typeof Message.Message>) => Obj.make(M
 export const instanceOf = (value: unknown): value is Message.Message =>
   Obj.instanceOf(Message.Message, value) &&
   typeof value.properties?.mailbox === 'string' &&
-  (DXN.isDXN(value.properties.mailbox) || EchoURI.isEchoURI(value.properties.mailbox));
+  (DXN.isDXN(value.properties.mailbox) || EID.isEID(value.properties.mailbox));
 
 /** Whether a draft message is scoped to the given mailbox (by DXN string on properties). */
 export const belongsTo = (message: Message.Message, mailboxDXN: string): boolean =>

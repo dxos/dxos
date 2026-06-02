@@ -6,11 +6,11 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -18,7 +18,7 @@ import DatabaseBlueprint from './blueprint';
 import { DatabaseHandlers } from './functions';
 import { Query as DatabaseQueryOperation } from './functions/definitions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DatabaseHandlers,
@@ -60,10 +60,10 @@ describe('Database Blueprint', () => {
           'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
         );
         yield* agent.waitForCompletion();
-        const schemas = yield* Database.runSchemaQuery({
-          typename: 'com.example.type.project',
-          location: ['database', 'runtime'],
-        });
+        const allTypes = yield* Database.runQuery(
+          Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+        );
+        const schemas = allTypes.filter((t) => Type.getTypename(t) === 'com.example.type.project');
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),

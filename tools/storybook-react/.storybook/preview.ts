@@ -60,11 +60,6 @@ export const preview: Preview = {
       },
     },
 
-    // Disables Chromatic's snapshotting on a global level.
-    chromatic: {
-      disableSnapshot: true,
-    },
-
     options: {
       // This must be defined inline and may not include TS type defs.
       // https://storybook.js.org/docs/api/parameters#optionsstorysort

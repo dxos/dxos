@@ -197,7 +197,10 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       name: 'node',
       environment,
       retry,
-      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : undefined),
+      // Default node test timeout. The 5s vitest default is too tight for harness-based tests
+      // (e.g. `createComposerTestApp` plugin-activation tests) whose cold-start exceeds 5s under CI
+      // load, causing flaky timeouts in a different plugin each run. Per-package `timeout` overrides.
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 15_000),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',

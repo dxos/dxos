@@ -10,14 +10,14 @@ import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../../types';
 import PlanningBlueprint from '../blueprint';
 import { PlanningHandlers } from './index';
 import { UpdateTasks } from './update-tasks';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,

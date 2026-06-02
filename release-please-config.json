@@ -295,6 +295,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/extractor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/functions/package.json",
           "jsonpath": "$.version"
         },
@@ -366,11 +371,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-react/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-registry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -570,6 +570,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-commerce/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
@@ -605,7 +610,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-duffel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-extension/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1001,6 +1016,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-inbox/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from '../testing';
@@ -248,10 +248,10 @@ describe('Feed', () => {
       });
       yield* Database.flush();
 
-      // The stored ref must be a queue EchoURI — not a synthesized ECHO URI.
+      // The stored ref must be a queue EID — not a synthesized ECHO URI.
       const ref = container.objects![0];
-      expect(EchoURI.isEchoURI(ref.uri)).toBe(true);
-      expect(EchoURI.getObjectId(EchoURI.parse(ref.uri))).toBe((queuePost as any).id);
+      expect(EID.isEID(ref.uri)).toBe(true);
+      expect(EID.getEntityId(EID.parse(ref.uri))).toBe((queuePost as any).id);
 
       // The queue item must NOT have been added to space.db.
       const dbResults = yield* Database.runQuery(Filter.type(TestSchema.Person));

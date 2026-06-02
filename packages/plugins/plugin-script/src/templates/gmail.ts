@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
+import { EchoObject, Filter, EntityId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
   FetchHttpClient,
@@ -105,7 +105,7 @@ export default defineFunction({
           }
           const subject = messageDetails.payload.headers.find((h: any) => h.name === 'Subject')?.value;
           const object = create(MessageType, {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             created,
             sender,
             blocks: [
@@ -197,7 +197,7 @@ const Text = S.TaggedStruct('text', {
 interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
-  id: ObjectId,
+  id: EntityId,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),

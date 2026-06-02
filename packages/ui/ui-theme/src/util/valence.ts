@@ -20,14 +20,14 @@ export const textValence = (valence?: MessageValence) => {
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'font-medium text-success-text border-success-text bg-success-surface';
+      return 'font-medium border-success-text bg-success-surface';
     case 'info':
-      return 'font-medium text-info-text border-info-text bg-info-surface';
+      return 'font-medium border-info-text bg-info-surface';
     case 'warning':
-      return 'font-medium text-warning-text border-warning-text bg-warning-surface';
+      return 'font-medium border-warning-text bg-warning-surface';
     case 'error':
-      return 'font-medium text-error-text border-error-text bg-error-surface';
+      return 'font-medium border-error-text bg-error-surface';
     default:
-      return 'font-medium text-neutral-text border-neutral-text bg-neutral-surface';
+      return 'font-medium border-neutral-text bg-neutral-surface';
   }
 };

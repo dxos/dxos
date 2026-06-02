@@ -65,7 +65,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'comments-companion',
+        id: 'commentsCompanion',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
@@ -85,7 +85,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: 'comment-toolbar',
+        id: 'commentToolbar',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();

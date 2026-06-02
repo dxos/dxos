@@ -5,7 +5,7 @@
 import type * as Tool from '@effect/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
@@ -42,6 +42,7 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
             lastToolCall = { tool, block };
             return {
               title: tool?.description ?? [t('tool-call.label'), block.name].filter(Boolean).join(' '),
+              icon: block.operationIcon,
               content: {
                 ...block,
                 input: safeParseJson(block.input),
@@ -54,6 +55,7 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
             if (block.error) {
               return {
                 title: t('tool-error.label'),
+                icon: lastToolCall?.block.operationIcon,
                 content: block,
               };
             }
@@ -61,9 +63,11 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
             const title =
               lastToolCall?.tool?.description ??
               [t('tool-result.label'), lastToolCall?.block.name].filter(Boolean).join(' ');
+            const icon = lastToolCall?.block.operationIcon;
             lastToolCall = undefined;
             return {
               title,
+              icon,
               content: {
                 ...block,
                 result: safeParseJson(block.result),
@@ -78,6 +82,7 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
 
             return {
               title: t('stats.label'),
+              icon: lastToolCall.block.operationIcon,
               content: block,
             };
           }
@@ -101,9 +106,13 @@ export const ToolWidget = ({ view, blocks = [] }: ToolWidgetProps) => {
   return <ToolPanel items={items} onChangeOpen={handleChangeOpen} />;
 };
 
+type ToolPanelItem = { title: string; icon?: string; content: any };
+
 type ToolPanelProps = {
-  items: { title: string; content: any }[];
+  items: ToolPanelItem[];
 } & Pick<TogglePanelRootProps, 'onChangeOpen'>;
+
+const DEFAULT_TOOL_ICON = 'ph--wrench--regular';
 
 const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -126,9 +135,15 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
     setSelected(index);
   }, []);
 
+  // Prefer the icon from the latest tool call so the header reflects what's currently active.
+  // TextCrawl shows multiple titles, but only one icon slot — using the most recent keeps it in sync
+  // with the visible operation while it streams.
+  const headerIcon = items[items.length - 1]?.icon ?? items[0]?.icon ?? DEFAULT_TOOL_ICON;
+
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
-      <TogglePanel.Header classNames='text-sm text-placeholder'>
+      <TogglePanel.Header classNames='flex items-center gap-2 text-sm text-placeholder'>
+        <Icon icon={headerIcon} size={4} classNames='shrink-0 opacity-70' />
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
       <TogglePanel.Content>

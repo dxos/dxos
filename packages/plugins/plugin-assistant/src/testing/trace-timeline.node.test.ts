@@ -21,14 +21,14 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { FeedTraceSink, TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 import { Organization, Person } from '@dxos/types';
 
 import { buildExecutionGraph } from '#execution-graph';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const queryTraceMessages = Effect.gen(function* () {
   yield* FeedTraceSink.flush();

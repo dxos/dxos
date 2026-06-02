@@ -23,7 +23,7 @@ export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => 
   const createNodes = (parent: TreeNodeType, spec: NumberOrNumberArray = 0): TreeNodeType[] => {
     const count = Array.isArray(spec) ? random(spec[0], spec[1]) : spec;
     return range(count, (i) => ({
-      id: Key.ObjectId.random(),
+      id: Key.EntityId.random(),
       children: [],
       data: {
         text: createText?.() ?? [parent.data.text, i + 1].join('.'),

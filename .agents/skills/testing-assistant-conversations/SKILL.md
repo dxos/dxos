@@ -91,7 +91,7 @@ Use `@effect/vitest` (`describe`, `it.effect`, `it.scoped`) and `Effect.fnUntrac
 
 ### Determinism
 
-Many tests call **`ObjectId.dangerouslyDisableRandomness()`** at module scope for stable IDs.
+Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs.
 
 ### Database and invocation flow
 

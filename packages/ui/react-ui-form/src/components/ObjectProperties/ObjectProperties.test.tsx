@@ -7,7 +7,7 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import { OBJECT_PROPERTIES_DEBUG_SYMBOL } from '../testing';
 import * as stories from './ObjectProperties.stories';
@@ -26,8 +26,8 @@ const getDebug = (): ObjectPropertiesDebug => {
  * new (`echo:/<id>`, `echo://<space>/<id>`) form — extract and compare object id.
  */
 const refTargetsObject = (uri: string, objectId: string): boolean => {
-  const parsed = EchoURI.tryParse(uri);
-  return parsed !== undefined && EchoURI.getObjectId(parsed) === objectId;
+  const parsed = EID.tryParse(uri);
+  return parsed !== undefined && EID.getEntityId(parsed) === objectId;
 };
 
 describe('ObjectProperties — inline create flow', () => {

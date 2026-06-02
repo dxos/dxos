@@ -4,5 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
+export * from './BookingSearch';
+
 export const SegmentArticle: ComponentType<any> = lazy(() => import('./SegmentArticle'));
 export const TripArticle: ComponentType<any> = lazy(() => import('./TripArticle'));

@@ -12,7 +12,17 @@ import { type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type AutomergeProtocolMessage, EdgeService, type PeerId } from '@dxos/protocols';
+import {
+  EdgeService,
+  MESSAGE_TYPE_COLLECTION_QUERY,
+  MESSAGE_TYPE_COLLECTION_STATE,
+  MESSAGE_TYPE_ERROR,
+  MESSAGE_TYPE_SUBDUCTION_CONNECTION,
+  MESSAGE_TYPE_SUBDUCTION_FRAME,
+  type PeerId,
+  type SubductionProtocolMessage,
+  type SubductionProtocolMessageEnveloped,
+} from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -59,13 +69,39 @@ export type EchoEdgeSubductionReplicatorProps = {
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
+  /**
+   * Coordinates cross-space lifecycle (`connect`/`disconnect`/`_handleReconnect`)
+   * — operations that touch the entire `_connections` map atomically. Per-space
+   * operations use {@link _spaceMutex} instead, so a slow restart on space A
+   * cannot serialize behind / block `connectToSpace(B)`.
+   */
   private readonly _mutex = new Mutex();
+  /**
+   * Per-space serialization for `connectToSpace`/`disconnectFromSpace` and the
+   * restart task fired from `onRestartRequested`. Restart tears down the WS
+   * subscription and runs a fresh SUH handshake against the edge (seconds of
+   * I/O), and under a single global mutex this blocked every other space's
+   * `host.spaces.create` → `connectToSpace` call, producing O(N) create-latency
+   * growth at space-creation boundaries. Per-space mutexes preserve the same-
+   * space serialization invariant (`_openConnection`'s `invariant(!_connections.has)`,
+   * single in-flight restart per space) without cross-space contention.
+   */
+  private readonly _spaceMutexes = new Map<SpaceId, Mutex>();
   private readonly _disableSharePolicy: boolean;
 
   private _ctx?: Context = undefined;
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeSubductionReplicatorConnection>();
+
+  private _spaceMutex(spaceId: SpaceId): Mutex {
+    let mutex = this._spaceMutexes.get(spaceId);
+    if (!mutex) {
+      mutex = new Mutex();
+      this._spaceMutexes.set(spaceId, mutex);
+    }
+    return mutex;
+  }
 
   constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeSubductionReplicatorProps) {
     this._edgeConnection = edgeConnection;
@@ -87,14 +123,19 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private async _handleReconnect(): Promise<void> {
     using _guard = await this._mutex.acquire();
 
+    // Snapshot + tear down all existing connections in one pass. Per-space
+    // operations no longer share `_mutex` with us, so we acquire each
+    // `_spaceMutex` before touching its slot to avoid racing with a concurrent
+    // `connectToSpace`/`disconnectFromSpace`/restart-task for the same space.
     const spaces = [...this._connectedSpaces];
-    for (const connection of this._connections.values()) {
-      await connection.close();
-    }
-    this._connections.clear();
-
-    if (this._context !== null) {
-      for (const spaceId of spaces) {
+    for (const spaceId of spaces) {
+      using _spaceGuard = await this._spaceMutex(spaceId).acquire();
+      const connection = this._connections.get(spaceId);
+      if (connection) {
+        await connection.close();
+        this._connections.delete(spaceId);
+      }
+      if (this._context !== null && this._connectedSpaces.has(spaceId)) {
         await this._openConnection(spaceId);
       }
     }
@@ -113,7 +154,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   @trace.span({ showInBrowserTimeline: true })
   async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
-    using _guard = await this._mutex.acquire();
+    using _guard = await this._spaceMutex(spaceId).acquire();
 
     if (this._connectedSpaces.has(spaceId)) {
       return;
@@ -126,7 +167,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   }
 
   async disconnectFromSpace(spaceId: SpaceId): Promise<void> {
-    using _guard = await this._mutex.acquire();
+    using _guard = await this._spaceMutex(spaceId).acquire();
 
     this._connectedSpaces.delete(spaceId);
 
@@ -135,6 +176,11 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       await connection.close();
       this._connections.delete(spaceId);
     }
+    // NOTE: do not delete from `_spaceMutexes`. A concurrent `connectToSpace`
+    // that arrived while we held the mutex is parked on this exact instance
+    // and would otherwise race against a fresh mutex created by a later
+    // caller. The map entries are bounded by the live space set, so the
+    // residual cost is one Mutex per ever-connected space.
   }
 
   private async _openConnection(spaceId: SpaceId, reconnects: number = 0): Promise<void> {
@@ -170,7 +216,11 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
         scheduleTask(
           this._ctx!,
           async () => {
-            using _guard = await this._mutex.acquire();
+            // Per-space mutex (not the global `_mutex`) — the restart's heavy
+            // I/O (`close()` + fresh SUH handshake on `open()`) must not block
+            // `connectToSpace`/`disconnectFromSpace` for other spaces, which
+            // was the O(N) create-latency cliff at space-creation boundaries.
+            using _guard = await this._spaceMutex(spaceId).acquire();
             if (this._connections.get(spaceId) !== connection) {
               return;
             }
@@ -216,10 +266,10 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
 
-  private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
+  private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
-  public readable: ReadableStream<AutomergeProtocolMessage>;
-  public writable: WritableStream<AutomergeProtocolMessage>;
+  public readable: ReadableStream<SubductionProtocolMessage>;
+  public writable: WritableStream<SubductionProtocolMessage>;
 
   constructor({
     edgeConnection,
@@ -242,14 +292,14 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     this._onRemoteDisconnected = onRemoteDisconnected;
     this._onRestartRequested = onRestartRequested;
 
-    this.readable = new ReadableStream<AutomergeProtocolMessage>({
+    this.readable = new ReadableStream<SubductionProtocolMessage>({
       start: (controller) => {
         this._readableStreamController = controller;
       },
     });
 
-    this.writable = new WritableStream<AutomergeProtocolMessage>({
-      write: async (message: AutomergeProtocolMessage) => {
+    this.writable = new WritableStream<SubductionProtocolMessage>({
+      write: async (message: SubductionProtocolMessage) => {
         await this._sendMessage(this._ctx, message);
       },
     });
@@ -329,34 +379,112 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       return;
     }
 
-    const payload = cbor.decode(message.payload!.value) as any;
-
-    // Out-of-band reconnect signal from the edge (sent after DO hibernation).
-    if (payload?.type === 'subduction-reconnect') {
-      log.info('received subduction-reconnect signal');
-      this._onRestartRequested();
+    let payload: SubductionProtocolMessageEnveloped;
+    try {
+      payload = cbor.decode(message.payload!.value) as SubductionProtocolMessageEnveloped;
+    } catch (err) {
+      log.warn('failed to decode subduction envelope', { err });
+      return;
+    }
+    // Defensive validation: cbor.decode returns untrusted bytes. Drop malformed
+    // envelopes before touching `payload.type` / `payload.subductionFrame`.
+    if (payload === null || typeof payload !== 'object' || typeof (payload as { type?: unknown }).type !== 'string') {
+      log.warn('dropping malformed subduction envelope', { payload });
       return;
     }
 
-    log.verbose('received subduction frame', { remoteId: this._remotePeerId });
-
-    // Fix the peer id so subduction routing inside the Repo accepts the frame.
-    const msg = payload as AutomergeProtocolMessage;
-    msg.senderId = this._remotePeerId as PeerId;
-    this._readableStreamController.enqueue(msg);
+    switch (payload.type) {
+      case MESSAGE_TYPE_ERROR: {
+        // Edge → client restart signal for a specific connection lifetime.
+        // Match the edge-supplied `connectionId` against our local
+        // `_connectionId` and tear down only on an exact match; mismatches
+        // (or absent ids) refer to a sibling/prior connection and must be
+        // ignored.
+        if (payload.connectionId === undefined) {
+          log.verbose('dropping error without connectionId', { message: payload.message });
+          return;
+        }
+        if (payload.connectionId !== this._connectionId) {
+          log.verbose('dropping error for different connection', {
+            expected: this._connectionId,
+            got: payload.connectionId,
+          });
+          return;
+        }
+        log.info('received subduction error; restarting', { message: payload.message });
+        this._onRestartRequested();
+        return;
+      }
+      case MESSAGE_TYPE_SUBDUCTION_FRAME: {
+        // The edge echoes the client-supplied connectionId. Frames carrying a
+        // different id are leftovers from a previous connection lifetime
+        // (rotated by `_onRestartRequested`) and must be dropped.
+        if (payload.connectionId !== this._connectionId) {
+          log.verbose('dropping subduction-frame for different connection', {
+            expected: this._connectionId,
+            got: payload.connectionId,
+          });
+          return;
+        }
+        const inner = payload.subductionFrame;
+        if (inner === null || typeof inner !== 'object') {
+          log.warn('dropping subduction-frame with missing inner frame', { payload });
+          return;
+        }
+        log.verbose('received subduction frame', { remoteId: this._remotePeerId });
+        // Fix the peer id so subduction routing inside the Repo accepts the frame.
+        inner.senderId = this._remotePeerId as PeerId;
+        this._readableStreamController.enqueue(inner);
+        return;
+      }
+      case MESSAGE_TYPE_COLLECTION_QUERY:
+      case MESSAGE_TYPE_COLLECTION_STATE:
+        payload.senderId = this._remotePeerId as PeerId;
+        this._readableStreamController.enqueue(payload);
+        return;
+      default: {
+        const _exhaustive: never = payload;
+        log.warn('unknown subduction protocol message', { payload: _exhaustive });
+      }
+    }
   }
 
-  private async _sendMessage(ctx: Context, message: AutomergeProtocolMessage): Promise<void> {
-    // Fix the peer id for the outbound frame.
-    (message as any).targetId = this._subductionServiceId as PeerId;
+  private async _sendMessage(ctx: Context, message: SubductionProtocolMessage): Promise<void> {
+    let wire: SubductionProtocolMessageEnveloped;
+    switch (message.type) {
+      case MESSAGE_TYPE_SUBDUCTION_CONNECTION:
+        message.targetId = this._subductionServiceId as PeerId;
+        wire = {
+          type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+          connectionId: this._connectionId,
+          subductionFrame: message,
+        };
+        break;
+      case MESSAGE_TYPE_COLLECTION_QUERY:
+      case MESSAGE_TYPE_COLLECTION_STATE:
+        message.targetId = this._subductionServiceId as PeerId;
+        wire = message;
+        break;
+      case MESSAGE_TYPE_ERROR:
+        // Edge → client only; the client never originates an error on the subduction channel.
+        log.warn('dropping unexpected error outbound', { message: message.message });
+        return;
+      default: {
+        const _exhaustive: never = message;
+        log.warn('dropping unexpected message type on subduction channel', {
+          type: (_exhaustive as { type: string }).type,
+        });
+        return;
+      }
+    }
 
     log.verbose('sending...', {
-      type: message.type,
+      type: wire.type,
       serviceId: this._subductionServiceId,
       remoteId: this._remotePeerId,
     });
 
-    const encoded = cbor.encode(message);
+    const encoded = cbor.encode(wire);
 
     try {
       await this._edgeConnection.send(

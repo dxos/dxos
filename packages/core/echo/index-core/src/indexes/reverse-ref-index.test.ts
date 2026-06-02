@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
@@ -31,13 +31,13 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const sourceObjectId = ObjectId.random();
-      const targetObjectId = ObjectId.random();
-      const targetDXN = EchoURI.make({ objectId: targetObjectId });
+      const sourceObjectId = EntityId.random();
+      const targetObjectId = EntityId.random();
+      const targetDXN = EID.make({ entityId: targetObjectId });
 
       const sourceObject: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
@@ -64,15 +64,15 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const sourceObjectId = ObjectId.random();
-      const targetObjectId1 = ObjectId.random();
-      const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoURI.make({ objectId: targetObjectId1 });
-      const targetDxn2 = EchoURI.make({ objectId: targetObjectId2 });
+      const sourceObjectId = EntityId.random();
+      const targetObjectId1 = EntityId.random();
+      const targetObjectId2 = EntityId.random();
+      const targetDxn1 = EID.make({ entityId: targetObjectId1 });
+      const targetDxn2 = EID.make({ entityId: targetObjectId2 });
 
       const sourceObject: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
@@ -107,15 +107,15 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const sourceObjectId = ObjectId.random();
-      const targetObjectId1 = ObjectId.random();
-      const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoURI.make({ objectId: targetObjectId1 });
-      const targetDxn2 = EchoURI.make({ objectId: targetObjectId2 });
+      const sourceObjectId = EntityId.random();
+      const targetObjectId1 = EntityId.random();
+      const targetObjectId2 = EntityId.random();
+      const targetDxn1 = EID.make({ entityId: targetObjectId1 });
+      const targetDxn2 = EID.make({ entityId: targetObjectId2 });
 
       const sourceObject: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
@@ -145,12 +145,12 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
-      const sourceObjectId = ObjectId.random();
-      const targetObjectId1 = ObjectId.random();
-      const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoURI.make({ objectId: targetObjectId1 });
-      const targetDxn2 = EchoURI.make({ objectId: targetObjectId2 });
+      const queueId = EntityId.random();
+      const sourceObjectId = EntityId.random();
+      const targetObjectId1 = EntityId.random();
+      const targetObjectId2 = EntityId.random();
+      const targetDxn1 = EID.make({ entityId: targetObjectId1 });
+      const targetDxn2 = EID.make({ entityId: targetObjectId2 });
       const recordId = 1;
 
       // Initial object with reference to target1.
@@ -206,11 +206,11 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const sourceObjectId = ObjectId.random();
+      const sourceObjectId = EntityId.random();
 
       const sourceObject: IndexerObject = {
         spaceId,
-        queueId: ObjectId.random(),
+        queueId: EntityId.random(),
         queueNamespace: 'data',
         documentId: null,
         recordId: 1,
@@ -226,7 +226,7 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.update([sourceObject]);
 
       // Should not throw and no results for random DXN.
-      const results = yield* reverseRefIndex.query({ targetDXN: EchoURI.make({ objectId: ObjectId.random() }) });
+      const results = yield* reverseRefIndex.query({ targetDXN: EID.make({ entityId: EntityId.random() }) });
       expect(results.length).toBe(0);
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -237,9 +237,9 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
-      const sourceObjectId = ObjectId.random();
-      const targetObjectId = ObjectId.random();
-      const targetDXN = EchoURI.make({ objectId: targetObjectId });
+      const sourceObjectId = EntityId.random();
+      const targetObjectId = EntityId.random();
+      const targetDXN = EID.make({ entityId: targetObjectId });
 
       const sourceObject: IndexerObject = {
         spaceId,

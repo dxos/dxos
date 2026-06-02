@@ -80,10 +80,13 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
       return current;
     });
 
-    // Replace edges.
+    // Replace edges. Preserve `type` so projectors can classify edges by their source
+    // semantics (e.g. the plexus projector groups by relation vs ref); projectors that
+    // synthesize their own edges (bundle, cluster) overwrite this downstream.
     const edges = data.edges
       .map((edge) => ({
         id: edge.id,
+        type: (edge as { type?: string }).type,
         source: nodes.find((n) => n.id === edge.source),
         target: nodes.find((n) => n.id === edge.target),
         data: edge.data,
@@ -100,6 +103,17 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
 
   override async onClear() {
     this.reset();
+  }
+
+  /**
+   * Optional projector-owned click intercept. The Graph component invokes this BEFORE
+   * forwarding to the consumer's `onSelect`, so projectors can implement built-in
+   * interactions (e.g. cluster collapse) without each consumer wiring them. Returning
+   * `true` indicates the click was handled — consumer's `onSelect` is suppressed.
+   * Default no-op returns `false` so consumer handlers still run.
+   */
+  handleNodeClick(_node: GraphLayoutNode<NodeData>, _event: MouseEvent): boolean {
+    return false;
   }
 
   abstract findNode(x: number, y: number, radius: number): GraphLayoutNode<NodeData> | undefined;

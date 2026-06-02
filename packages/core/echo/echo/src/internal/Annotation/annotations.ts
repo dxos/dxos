@@ -12,9 +12,12 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
+import type * as Annotation from '../../Annotation';
 import { type Mutable } from '../common/proxy';
 import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { type AnnotationHelper, createAnnotationHelper } from './util';
+import { createAnnotationHelper } from './util';
+
+const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
 /**
  * @internal
@@ -47,7 +50,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
 /**
  * @returns The schema's type identifier URI — whichever URI fits.
  *
- * - Stored (dynamic) schemas: the schema-as-object's EchoURI, so loaded objects ride
+ * - Stored (dynamic) schemas: the schema-as-object's EID, so loaded objects ride
  *   along with their schema as a strong dependency.
  * - Non-stored (static) schemas: the typename DXN built from `TypeAnnotation`.
  *
@@ -190,7 +193,7 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
 export const setTypename = (obj: any, typename: URI.URI): void => {
-  invariant(typeof typename === 'string', 'Invalid type.');
+  assertArgument(typeof typename === 'string', 'typename', 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,
@@ -280,10 +283,10 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
- * Identifies a schema as a schema for a hidden system type.
+ * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
  */
-export const SystemTypeAnnotationId = Symbol.for('@dxos/schema/annotation/SystemType');
-export const SystemTypeAnnotation = createAnnotationHelper<boolean>(SystemTypeAnnotationId);
+export const HiddenAnnotationId = Symbol.for('@dxos/schema/annotation/Hidden');
+export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
 
 /**
  * Identifies label property or JSON path expression.
@@ -429,25 +432,24 @@ interface MakeAnnoationsProps<T> {
 }
 
 // TODO(wittjosiah): Comment.
-export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
+export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
   assertArgument(
     /^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/.test(props.id),
     'id',
     'Annotation id must be in the FQN format (org.dxos.annotation.example).',
   );
 
-  const getFromAst = (ast: SchemaAST.AST) =>
-    SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
-      Option.map(Schema.decodeUnknownSync(props.schema)),
-    );
-
-  return {
-    get: (schema) => getFromAst(schema.ast),
-    getFromAst: (ast) => getFromAst(ast),
+  const annotation: Annotation.Annotation<T> = {
+    [ANNOTATION_TYPE_ID]: { _Type: {} as T },
+    key: props.id as Annotation.Key,
+    schema: props.schema,
+    get: (schema) => getFromAst(schema.ast, annotation),
+    getFromAst: (ast) => getFromAst(ast, annotation),
     set: (value) =>
       PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
   };
+
+  return annotation;
 };
 
 const IconAnnotationSchema = Schema.Struct({
@@ -556,6 +558,26 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 };
 
 /**
+ * Get the icon annotation for an entity, resolved via its type-level `IconAnnotation`.
+ * Accepts both reactive entities and snapshots.
+ *
+ * Returns the full `{ icon, hue }` annotation so callers can use both the phosphor icon
+ * name and the suggested colour. Callers wanting just the icon name typically write
+ * `Obj.getIcon(obj)?.icon ?? 'ph--cube--regular'`.
+ *
+ * Note: this is the "static" icon from the object's own schema. It does not follow
+ * `IconFromRefAnnotation` delegation — call sites needing that (e.g. app-graph node
+ * builders) should resolve the ref themselves.
+ */
+export const getIcon = (entity: AnyProperties): IconAnnotation | undefined => {
+  const schema = getSchema(entity);
+  if (schema == null) {
+    return undefined;
+  }
+  return Option.getOrUndefined(IconAnnotation.get(schema));
+};
+
+/**
  * Set the description of an entity.
  * Must be called within an Obj.update or Relation.update callback.
  */
@@ -564,4 +586,13 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   if (schema != null) {
     setDescriptionWithSchema(schema, entity, description);
   }
+};
+
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+
+export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+  return SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
+    Option.flatMap((meta) => Option.fromNullable(meta[annotation.key])),
+    Option.map(Schema.decodeUnknownSync(annotation.schema)),
+  );
 };

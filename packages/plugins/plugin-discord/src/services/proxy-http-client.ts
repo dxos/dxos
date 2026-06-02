@@ -19,6 +19,21 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 const USER_AGENT_OVERRIDE_HEADER = 'X-Cors-Proxy-User-Agent';
 const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
 
+export interface EdgeProxyHttpClientOptions {
+  /**
+   * Authorization header token kind.
+   *
+   * dfx always writes `Bot <token>` regardless of the credential type. When
+   * `'Bearer'` is specified, this layer rewrites that prefix to `Bearer ` so
+   * user OAuth tokens are transmitted correctly.
+   *
+   * TODO(wittjosiah): Submit a PR to dfx to support bearer tokens natively so
+   * this rewrite is no longer necessary.
+   * https://github.com/tim-smart/dfx
+   */
+  tokenKind?: 'Bot' | 'Bearer';
+}
+
 /**
  * Build an `@effect/platform` HttpClient layer that routes every request
  * through the integration proxy.
@@ -41,7 +56,9 @@ const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
  * `edgeClient.proxyFetch` so each request is signed with the caller's
  * verifiable presentation.
  */
-export const makeEdgeProxyHttpClientLayer = (): Layer.Layer<FetchHttpClient.Fetch> =>
+export const makeEdgeProxyHttpClientLayer = (
+  options?: EdgeProxyHttpClientOptions,
+): Layer.Layer<FetchHttpClient.Fetch> =>
   Layer.succeed(FetchHttpClient.Fetch, ((input, init) => {
     const url = input instanceof URL ? input : new URL(typeof input === 'string' ? input : input.url);
     // Seed from the Request's own headers first (caller used `fetch(new Request(...))`),
@@ -51,6 +68,12 @@ export const makeEdgeProxyHttpClientLayer = (): Layer.Layer<FetchHttpClient.Fetc
     new Headers(init?.headers ?? undefined).forEach((value, key) => {
       headers.set(key, value);
     });
+    if (options?.tokenKind === 'Bearer') {
+      const auth = headers.get('Authorization');
+      if (auth?.startsWith('Bot ')) {
+        headers.set('Authorization', `Bearer ${auth.slice(4)}`);
+      }
+    }
     if (!headers.has(USER_AGENT_OVERRIDE_HEADER)) {
       headers.set(USER_AGENT_OVERRIDE_HEADER, DISCORD_BOT_USER_AGENT);
     }

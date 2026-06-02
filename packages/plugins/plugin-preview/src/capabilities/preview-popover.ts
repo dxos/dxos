@@ -10,7 +10,7 @@ import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ const handlePreviewLookup = async (
   { dxn, label }: PreviewLinkRef,
 ): Promise<PreviewLinkTarget | null> => {
   try {
-    const object = await defaultSpace.db.makeRef(EchoURI.parse(dxn)).load();
+    const object = await defaultSpace.db.makeRef(EID.parse(dxn)).load();
     return { label, object };
   } catch {
     return null;

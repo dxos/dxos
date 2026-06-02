@@ -7,27 +7,36 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Ref, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
 import * as Magazine from './Magazine';
 import * as Subscription from './Subscription';
 
-const FEED_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
+
+export const OnCreateSpace = Operation.make({
+  meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--rss--regular' },
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
 
 /** Fetches an RSS/Atom feed and appends new posts to the backing ECHO feed. */
 export const SyncFeed = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.sync-feed`,
+    key: makeKey('syncFeed'),
     name: 'Sync Feed',
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Capability.Service],
+  services: [Feed.FeedService, Database.Service],
   input: Schema.Struct({
-    feed: Type.getSchema(Subscription.Subscription),
+    feed: Ref.Ref(Subscription.Subscription),
   }),
   output: Schema.Void,
 });
@@ -38,7 +47,7 @@ export const SyncFeed = Operation.make({
  */
 export const ListCandidatePosts = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.list-candidate-posts`,
+    key: makeKey('listCandidatePosts'),
     name: 'List Candidate Posts',
     description: "Returns uncurated Posts from a Magazine's referenced feeds.",
     icon: 'ph--list--regular',
@@ -68,7 +77,7 @@ export const ListCandidatePosts = Operation.make({
  */
 export const FetchArticleContent = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.fetch-article-content`,
+    key: makeKey('fetchArticleContent'),
     name: 'Fetch Article Content',
     description: "Fetches and extracts text + image URLs from a Post's article page.",
     icon: 'ph--article--regular',
@@ -96,7 +105,7 @@ export const FetchArticleContent = Operation.make({
  */
 export const LoadPostContent = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.load-post-content`,
+    key: makeKey('loadPostContent'),
     name: 'Load Post Content',
     description: 'Fetches and stores the full article content on a Post.',
     icon: 'ph--download--regular',
@@ -115,7 +124,7 @@ export const LoadPostContent = Operation.make({
  */
 export const AddPostToMagazine = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.add-post-to-magazine`,
+    key: makeKey('addPostToMagazine'),
     name: 'Add Post to Magazine',
     description: 'Enriches a Post with snippet/imageUrl and appends it to a Magazine.',
     icon: 'ph--plus--regular',
@@ -148,7 +157,7 @@ export const AddPostToMagazine = Operation.make({
  */
 export const RefreshMagazine = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.refresh-magazine`,
+    key: makeKey('refreshMagazine'),
     name: 'Refresh Magazine',
     description: 'Syncs feeds, curates new posts, and applies per-feed keep limits.',
     icon: 'ph--arrows-clockwise--regular',
@@ -172,7 +181,7 @@ export const RefreshMagazine = Operation.make({
  */
 export const CurateMagazine = Operation.make({
   meta: {
-    key: `${FEED_OPERATION}.curate-magazine`,
+    key: makeKey('curateMagazine'),
     name: 'Curate Magazine',
     description: "Adds uncurated Posts from the Magazine's feeds with derived snippets.",
     icon: 'ph--sparkle--regular',

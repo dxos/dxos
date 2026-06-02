@@ -25,14 +25,14 @@ import { Blueprint, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
 import { EnrichTranscript, EnrichmentHandlers, SummarizeConversation } from './operations';
 import { parseConversation } from './parser';
 import { simulateStream } from './stream-simulator';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(...EnrichmentHandlers),

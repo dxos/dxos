@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { ObjectId, PublicKey, SpaceId } from '@dxos/keys';
+import { EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -30,7 +30,7 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   test('new object document is linked with space and root document', async () => {
-    const objectId = ObjectId.random();
+    const objectId = EntityId.random();
     const { loader, spaceRootDocHandle } = await setupTest();
     const objectDocHandle = loader.createDocumentForObject(objectId);
     // Wait for the document to be created before accessing url.
@@ -41,7 +41,7 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   test('listener is invoked after a document is loaded', async () => {
-    const objectId = ObjectId.random();
+    const objectId = EntityId.random();
     const { loader, repo } = await setupTest();
     const handle = repo.create<DatabaseDirectory>();
     await handle.whenReady();
@@ -52,7 +52,7 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   test('listener is not invoked if an object was rebound during document loading', async () => {
-    const objectId = ObjectId.random();
+    const objectId = EntityId.random();
     const { loader, repo } = await setupTest();
     const oldDocHandle = repo.create<DatabaseDirectory>();
     const newDocHandle = repo.create<DatabaseDirectory>();
@@ -65,7 +65,7 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   test('document link is not loaded if object exists as inline object', async () => {
-    const objectId = ObjectId.random();
+    const objectId = EntityId.random();
     const { loader, repo } = await setupTest();
     const existingHandle = repo.create<DatabaseDirectory>();
     await existingHandle.whenReady();

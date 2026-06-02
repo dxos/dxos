@@ -243,7 +243,7 @@ export const createRepo = (
     // Reduce sync timeout so inflight syncWithAllPeers fails fast when a relay
     // peer does not yet have the document; self-healing retries kick in quickly.
     subductionTimeouts: {
-      syncMs: 2_000,
+      syncMs: 500,
       healInitialDelayMs: 100,
     },
     ...options,

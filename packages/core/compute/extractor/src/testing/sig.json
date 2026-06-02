@@ -1,0 +1,28 @@
+{
+  "contacts": [
+    {
+      "email": "friendly@example.test",
+      "body": "Quinn Hartwell (he/him)\nClient Manager, Beacon\n555.012.3456\n"
+    },
+    {
+      "email": "tkessler@acmeadvisors.test",
+      "body": "ACME ADVISORS\n\nTheodore Kessler\nDirector\n\n555.010.0100 | 555.010.0200 (Direct) | 555.010.0300 (Fax)\n100 Example Plaza, Springfield, NY 10001 tkessler@acmeadvisors.test <mailto:tkessler@acmeadvisors.test>\n"
+    },
+    {
+      "email": "hpenrose@lumenpartners.test",
+      "body": "Thanks,\nHarriet\n\nHarriet Penrose\nhpenrose@lumenpartners.test\n(555) 010-0400\n"
+    },
+    {
+      "email": "bostrow@lumenpartners.test",
+      "body": "Beatrice Ostrow\nLumen Partners LLC\n(555) 010-0500\n"
+    },
+    {
+      "email": "soren@drift.test",
+      "body": "Soren Beckwith\nFounder, Managing Partner\nDrift Capital\nsoren@drift.test\ncalendly.com/sorenbeckwith\ndrift.test\n"
+    },
+    {
+      "email": "hello@mercury.test",
+      "body": "* * *\n\nSent with care from\nMercury Technologies, Inc.\n660 Mission Street, San Francisco, CA 94105\n"
+    }
+  ]
+}

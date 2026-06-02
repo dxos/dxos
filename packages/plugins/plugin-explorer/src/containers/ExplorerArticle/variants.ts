@@ -3,7 +3,7 @@
 //
 
 /** Visualization variants exposed by `ExplorerArticle`. */
-export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'swarm';
+export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'swarm' | 'plexus';
 
 export const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[] = [
   {
@@ -22,16 +22,26 @@ export const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: str
     label: 'Connections',
   },
   {
+    value: 'plexus',
+    icon: 'ph--share-network--regular',
+    label: 'Plexus',
+  },
+  {
     value: 'lattice',
     icon: 'ph--grid-four--regular',
     label: 'Lattice',
   },
   {
     value: 'swarm',
-    icon: 'ph--fish--regular',
+    icon: 'ph--microscope--regular',
     label: 'Swarm',
   },
 ];
 
 export const isVariant = (value: unknown): value is ExplorerArticleVariant =>
-  value === 'force' || value === 'cluster' || value === 'bundle' || value === 'lattice' || value === 'swarm';
+  value === 'force' ||
+  value === 'cluster' ||
+  value === 'bundle' ||
+  value === 'lattice' ||
+  value === 'swarm' ||
+  value === 'plexus';

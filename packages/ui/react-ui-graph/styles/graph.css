@@ -273,7 +273,7 @@ svg {
             @apply stroke-1 stroke-neutral-500 fill-inverse-surface;
           }
           text {
-            @apply fill-inverse-foreground;
+            @apply fill-inverse-fg;
           }
         }
       }

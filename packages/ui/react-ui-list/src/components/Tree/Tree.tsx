@@ -35,7 +35,7 @@ export const Tree = <T extends { id: string } = any>({
   path,
   id,
   draggable = false,
-  gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
+  gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
   levelOffset,
   renderColumns,
   blockInstruction,

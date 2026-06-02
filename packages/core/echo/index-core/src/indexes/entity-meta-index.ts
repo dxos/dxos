@@ -1,0 +1,507 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
+import type * as Statement from '@effect/sql/Statement';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
+
+import type { IndexerObject } from './interface';
+import type { Index } from './interface';
+
+const _escapeLikePrefix = (prefix: string) => {
+  // Escape LIKE metacharacters in the *literal* prefix (we still append a wildcard for the version suffix).
+  // Backslash is used as the ESCAPE character.
+  // See: https://www.sqlite.org/lang_expr.html#like
+  const escaped = prefix.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
+  return `${escaped}:%`;
+};
+
+export const EntityMeta = Schema.Struct({
+  recordId: Schema.Number,
+  objectId: EntityId,
+  /** Empty string for non-queue objects. */
+  queueId: Schema.String,
+  /** Queue subspace namespace (e.g. 'data', 'trace'). Empty string for non-queue objects. */
+  queueNamespace: Schema.String,
+  spaceId: SpaceId,
+  documentId: Schema.String,
+  entityKind: Schema.String,
+  /**
+   * Type identifier URI for the object — typename DXN for non-stored schemas,
+   * schema-as-object EID for stored (dynamic) schemas. Mirrors the value
+   * written into the object's `system.type`.
+   */
+  typeDXN: URI.Schema,
+  deleted: Schema.Boolean,
+  source: Schema.NullOr(EID.Schema),
+  target: Schema.NullOr(EID.Schema),
+  /** Parent object id (nullable). */
+  parent: Schema.NullOr(EID.Schema),
+  /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
+  version: Schema.Number,
+  /** Unix ms timestamp when the object was first indexed. */
+  createdAt: Schema.NullOr(Schema.Number),
+  /** Unix ms timestamp when the object was last re-indexed. */
+  updatedAt: Schema.NullOr(Schema.Number),
+});
+export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
+
+/**
+ * Builds a SQL condition for filtering by space and queue source.
+ * When `includeAllQueues` is false and no `queueIds`, only non-queue objects are returned.
+ */
+const buildSourceCondition = (
+  sql: SqlClient.SqlClient,
+  spaceIds: readonly string[],
+  includeAllQueues: boolean,
+  queueIds: readonly string[] | null,
+): Statement.Fragment => {
+  const conditions: Statement.Fragment[] = [];
+
+  if (spaceIds.length > 0) {
+    if (includeAllQueues) {
+      conditions.push(sql`${sql.in('spaceId', spaceIds)}`);
+    } else {
+      conditions.push(sql`(${sql.in('spaceId', spaceIds)} AND queueId = '')`);
+    }
+  }
+
+  if (queueIds && queueIds.length > 0) {
+    conditions.push(sql`${sql.in('queueId', queueIds)}`);
+  }
+
+  if (conditions.length === 0) {
+    return sql`1 = 0`;
+  }
+
+  return sql.or(conditions);
+};
+
+export class EntityMetaIndex implements Index {
+  migrate = Effect.fn('EntityMetaIndex.runMigrations')(function* () {
+    const sql = yield* SqlClient.SqlClient;
+
+    yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
+      recordId INTEGER PRIMARY KEY AUTOINCREMENT,
+      objectId TEXT NOT NULL,
+      queueId TEXT NOT NULL DEFAULT '',
+      queueNamespace TEXT NOT NULL DEFAULT '',
+      spaceId TEXT NOT NULL,
+      documentId TEXT NOT NULL DEFAULT '',
+      entityKind TEXT NOT NULL,
+      typeDXN TEXT NOT NULL,
+      deleted INTEGER NOT NULL,
+      source TEXT,
+      target TEXT,
+      parent TEXT,
+      version INTEGER NOT NULL,
+      createdAt INTEGER,
+      updatedAt INTEGER
+    )`;
+
+    // Add `parent` column for tables created before it was introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
+    // Add timestamp columns for tables created before they were introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
+    // Add queueNamespace column for tables created before it was introduced.
+    yield* Effect.catchAll(
+      sql`ALTER TABLE objectMeta ADD COLUMN queueNamespace TEXT NOT NULL DEFAULT ''`,
+      () => Effect.void,
+    );
+
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
+  });
+
+  query = Effect.fn('EntityMetaIndex.query')(
+    (
+      query: Pick<EntityMeta, 'spaceId' | 'typeDXN'>,
+    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const parsedDxn = DXN.isDXN(query.typeDXN) ? query.typeDXN : undefined;
+        const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+        // Legacy backward-compat: old snapshots stored `dxn:type:<nsid>` before the DXN refactor stripped the `type:` segment.
+        const legacyTypeDXN = parsedDxn ? (`dxn:type:${parsedDxn.slice(4)}` as typeof parsedDxn) : undefined;
+
+        // SQLite stores booleans as integers, so we need to specify the raw row type.
+        const rows = hasNoVersion
+          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
+              query.typeDXN
+            } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\' ${legacyTypeDXN ? sql`OR typeDXN = ${legacyTypeDXN}` : sql``})`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${query.typeDXN} ${legacyTypeDXN ? sql`OR typeDXN = ${legacyTypeDXN}` : sql``})`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryAll = Effect.fn('EntityMetaIndex.queryAll')(
+    (query: {
+      spaceIds: readonly EntityMeta['spaceId'][];
+      includeAllQueues?: boolean;
+      queueIds?: readonly string[] | null;
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const sourceCondition = buildSourceCondition(
+          sql,
+          query.spaceIds,
+          query.includeAllQueues ?? false,
+          query.queueIds ?? null,
+        );
+        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryTypes = Effect.fn('EntityMetaIndex.queryTypes')(
+    ({
+      spaceIds,
+      typeDxns,
+      inverted = false,
+      includeAllQueues = false,
+      queueIds = null,
+    }: {
+      spaceIds: readonly EntityMeta['spaceId'][];
+      typeDxns: readonly EntityMeta['typeDXN'][];
+      inverted?: boolean;
+      includeAllQueues?: boolean;
+      queueIds?: readonly string[] | null;
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (spaceIds.length === 0 && (!queueIds || queueIds.length === 0)) {
+          return [];
+        }
+
+        if (typeDxns.length === 0) {
+          if (!inverted) {
+            return [];
+          }
+
+          const sql = yield* SqlClient.SqlClient;
+          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+          const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
+          return rows.map((row) => ({
+            ...row,
+            deleted: !!row.deleted,
+          }));
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+        const typeWhere = sql.or(
+          typeDxns.map((typeDXN) => {
+            const parsedDxn = DXN.isDXN(typeDXN) ? typeDXN : undefined;
+            const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+            // Legacy backward-compat: old snapshots stored `dxn:type:<nsid>` before the DXN refactor.
+            const legacyTypeDXN = parsedDxn ? (`dxn:type:${parsedDxn.slice(4)}` as typeof parsedDxn) : undefined;
+            const exactMatch = legacyTypeDXN
+              ? sql.or([sql`typeDXN = ${typeDXN}`, sql`typeDXN = ${legacyTypeDXN}`])
+              : sql`typeDXN = ${typeDXN}`;
+            return hasNoVersion
+              ? sql.or([exactMatch, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
+              : exactMatch;
+          }),
+        );
+        const rows = inverted
+          ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND NOT ${typeWhere}`
+          : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${typeWhere}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryRelations = Effect.fn('EntityMetaIndex.queryRelations')(
+    ({
+      endpoint,
+      anchorDxns,
+    }: {
+      endpoint: 'source' | 'target';
+      anchorDxns: readonly string[];
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (anchorDxns.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const column = endpoint === 'source' ? 'source' : 'target';
+        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${sql.in(
+          column,
+          anchorDxns,
+        )}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
+  update = Effect.fn('EntityMetaIndex.update')(
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+
+        yield* Effect.forEach(
+          objects,
+          (object) =>
+            Effect.gen(function* () {
+              const { spaceId, queueId, queueNamespace, documentId, data } = object;
+
+              // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
+              const castData = data;
+              const objectId = castData.id;
+
+              // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
+              let existing: readonly { recordId: number }[];
+              if (documentId) {
+                existing = yield* sql<{
+                  recordId: number;
+                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+              } else if (queueId) {
+                existing = yield* sql<{
+                  recordId: number;
+                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+              } else {
+                // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
+                existing = [];
+              }
+
+              // Get max version + 1.
+              const result = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
+              const [{ v }] = result;
+              const version = (v ?? 0) + 1;
+
+              // Extract metadata.
+              const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
+              // Normalize legacy `dxn:type:<nsid>` → `dxn:<nsid>` at index time for forward compat.
+              const rawTypeDXN = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
+              const typeDXN = (DXN.tryMake(rawTypeDXN) ?? rawTypeDXN) as typeof rawTypeDXN;
+              const deleted = castData[ATTR_DELETED] ? 1 : 0;
+              // Relations.
+              const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
+              const target = entityKind === 'relation' ? (castData[ATTR_RELATION_TARGET] ?? null) : null;
+              // Parent (nullable).
+              const parent = castData[ATTR_PARENT] ?? null;
+
+              const sourceTimestamp = object.updatedAt;
+
+              if (existing.length > 0) {
+                yield* sql`
+                  UPDATE objectMeta SET
+                    version = ${version},
+                    queueNamespace = ${queueNamespace ?? ''},
+                    entityKind = ${entityKind},
+                    typeDXN = ${typeDXN},
+                    deleted = ${deleted},
+                    source = ${source},
+                    target = ${target},
+                    parent = ${parent},
+                    updatedAt = ${sourceTimestamp}
+                  WHERE recordId = ${existing[0].recordId}
+                `;
+              } else {
+                yield* sql`
+                  INSERT INTO objectMeta (
+                    objectId, queueId, queueNamespace, spaceId, documentId,
+                    entityKind, typeDXN, deleted, source, target, parent, version,
+                    createdAt, updatedAt
+                  ) VALUES (
+                    ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
+                    ${entityKind}, ${typeDXN}, ${deleted},
+                    ${source}, ${target}, ${parent}, ${version},
+                    ${sourceTimestamp}, ${sourceTimestamp}
+                  )
+                `;
+              }
+            }),
+          { discard: true },
+        );
+      }),
+  );
+
+  /**
+   * Look up `recordIds` for objects that are already stored in the EntityMetaIndex.
+   * Mutates the objects in place.
+   */
+  lookupRecordIds = Effect.fn('EntityMetaIndex.lookupRecordIds')(
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+
+        for (const object of objects) {
+          const { spaceId, queueId, documentId, data } = object;
+          const objectId = data.id;
+
+          let result: readonly { recordId: number }[];
+          if (documentId) {
+            result = yield* sql<{
+              recordId: number;
+            }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+          } else if (queueId) {
+            result = yield* sql<{
+              recordId: number;
+            }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+          } else {
+            result = [];
+          }
+
+          if (result.length === 0) {
+            // TODO(mykola): Handle this case gracefully.
+            return yield* Effect.die(
+              new Error(`Object not found in EntityMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
+            );
+          }
+          object.recordId = result[0].recordId;
+        }
+      }),
+  );
+
+  /**
+   * Look up object metadata by recordIds.
+   */
+  lookupByRecordIds = Effect.fn('EntityMetaIndex.lookupByRecordIds')(
+    (recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (recordIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', recordIds)}`;
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
+   * Look up object metadata by objectId, spaceId, and queueId.
+   */
+  lookupByObjectId = Effect.fn('EntityMetaIndex.lookupByObjectId')(
+    (query: {
+      objectId: string;
+      spaceId: string;
+      queueId: string;
+    }): Effect.Effect<EntityMeta | null, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND objectId = ${query.objectId} LIMIT 1`;
+
+        if (rows.length === 0) {
+          return null;
+        }
+
+        return {
+          ...rows[0],
+          deleted: !!rows[0].deleted,
+        };
+      }),
+  );
+
+  /**
+   * Query objects by timestamp range.
+   */
+  queryByTimeRange = Effect.fn('EntityMetaIndex.queryByTimeRange')(
+    (query: {
+      spaceIds: readonly string[];
+      updatedAfter?: number;
+      updatedBefore?: number;
+      createdAfter?: number;
+      createdBefore?: number;
+      includeAllQueues?: boolean;
+      queueIds?: readonly string[] | null;
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const sourceCondition = buildSourceCondition(
+          sql,
+          query.spaceIds,
+          query.includeAllQueues ?? false,
+          query.queueIds ?? null,
+        );
+
+        const timeConditions: Statement.Fragment[] = [];
+        if (query.updatedAfter != null) {
+          timeConditions.push(sql`updatedAt >= ${query.updatedAfter}`);
+        }
+        if (query.updatedBefore != null) {
+          timeConditions.push(sql`updatedAt <= ${query.updatedBefore}`);
+        }
+        if (query.createdAfter != null) {
+          timeConditions.push(sql`createdAt >= ${query.createdAfter}`);
+        }
+        if (query.createdBefore != null) {
+          timeConditions.push(sql`createdAt <= ${query.createdBefore}`);
+        }
+
+        const rows =
+          timeConditions.length > 0
+            ? yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition} AND ${sql.and(timeConditions)}`
+            : yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}`;
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
+   * Query children by parent object ids.
+   * Matches both:
+   * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
+   * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
+   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueUri`).
+   */
+  queryChildren = Effect.fn('EntityMetaIndex.queryChildren')(
+    (query: {
+      spaceId: SpaceId[];
+      parentIds: EntityId[];
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.parentIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const parentDzns = query.parentIds.map((id) => EID.make({ entityId: id }));
+        const parentDxns = parentDzns;
+        const rows =
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+}

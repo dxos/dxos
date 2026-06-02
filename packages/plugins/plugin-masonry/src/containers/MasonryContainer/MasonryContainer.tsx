@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
-import { Annotation, Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
+import { Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
@@ -42,20 +40,20 @@ export const MasonryContainer = ({
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema);
+      return;
     }
-    if (!staticSchema && typename && db) {
-      const query = db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setCardSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
+    if (typename && db) {
+      const findInRegistry = () =>
+        db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((t) => Type.getTypename(t) === typename);
+      setCardSchema(() => findInRegistry());
+      return db.graph.registry.changed.on(() => {
+        setCardSchema(() => findInRegistry());
+      });
     }
+    setCardSchema(undefined);
   }, [schemas, typename, db]);
 
   const baseFilter = useSchemaFilter(cardSchema);
@@ -98,14 +96,7 @@ export const MasonryContainer = ({
 
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
-  const icon = Function.pipe(
-    Obj.getType(data),
-    Option.fromNullable,
-    Option.map(Type.getSchema),
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--circle-dashed--regular'),
-  );
+  const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
 
   return (
     <Menu.Root>

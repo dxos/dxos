@@ -5,15 +5,7 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import DOMPurify from 'dompurify';
-import React, {
-  CSSProperties,
-  MouseEventHandler,
-  type PropsWithChildren,
-  type ReactNode,
-  forwardRef,
-  useId,
-  useMemo,
-} from 'react';
+import React, { CSSProperties, JSX, MouseEventHandler, type ReactNode, forwardRef, useId, useMemo } from 'react';
 
 import { iconSize } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
@@ -23,7 +15,7 @@ import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Column } from '../Column';
-import { Icon, type IconProps } from '../Icon';
+import { Icon, IconBlock, type IconBlockProps, type IconProps } from '../Icon';
 import { Image } from '../Image';
 import {
   Toolbar,
@@ -119,7 +111,7 @@ type CardDragHandleProps = ToolbarDragHandleProps;
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock padding>
+    <CardIconBlock>
       <Toolbar.DragHandle {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
@@ -137,7 +129,7 @@ type CardActionIconButtonProps = ToolbarActionIconButtonProps;
 
 const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock padding>
+    <CardIconBlock>
       <Toolbar.ActionIconButton {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
@@ -155,7 +147,7 @@ type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
 function CardMenu<T extends any | void = void>({ context, items, ...props }: CardMenuProps<T>) {
   return (
-    <CardIconBlock padding>
+    <CardIconBlock>
       <Toolbar.Menu {...props} context={context} items={items ?? []} />
     </CardIconBlock>
   );
@@ -185,17 +177,9 @@ CardIcon.displayName = CARD_ICON_NAME;
 
 const CARD_ICON_BLOCK_NAME = 'Card.IconBlock';
 
-const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ padding?: boolean }>>>(
-  ({ classNames, children, padding, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-
-    return (
-      <div {...props} className={tx('card.icon-block', { padding }, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+const CardIconBlock = forwardRef<HTMLDivElement, IconBlockProps>((props, forwardedRef) => {
+  return <IconBlock {...props} ref={forwardedRef} />;
+});
 
 CardIconBlock.displayName = CARD_ICON_BLOCK_NAME;
 
@@ -287,7 +271,7 @@ CardSection.displayName = CARD_SECTION_NAME;
 
 const CARD_ROW_NAME = 'Card.Row';
 
-type CardRowProps = { icon?: string; fullWidth?: boolean };
+type CardRowProps = { icon?: string | JSX.Element; fullWidth?: boolean };
 
 /**
  * A row inside a Card.
@@ -297,14 +281,22 @@ type CardRowProps = { icon?: string; fullWidth?: boolean };
  *   The `icon` prop is ignored in this mode.
  */
 const CardRow = slottable<HTMLDivElement, CardRowProps>(
-  ({ children, asChild, icon, fullWidth, ...props }, forwardedRef) => {
+  ({ children, asChild, icon: iconProp, fullWidth, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
+    const icon =
+      typeof iconProp === 'string' ? (
+        <CardIcon classNames='text-subdued' icon={iconProp as string} size={4} />
+      ) : iconProp ? (
+        iconProp
+      ) : (
+        <div />
+      );
 
     return (
       <Comp {...rest} className={tx('card.row', { fullWidth }, className)} ref={forwardedRef}>
-        {!fullWidth && (icon ? <CardIcon classNames='text-subdued' icon={icon} size={4} /> : <div />)}
+        {!fullWidth && icon}
         {children}
       </Comp>
     );
@@ -323,9 +315,9 @@ type CardTextProps = { truncate?: boolean; variant?: 'default' | 'description' }
 
 const CardText = slottable<HTMLDivElement, CardTextProps>(
   ({ children, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
 
     return (
       <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant }, className)} ref={forwardedRef}>

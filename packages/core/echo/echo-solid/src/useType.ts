@@ -4,13 +4,17 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Filter, Query, Scope, Type } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
 /**
- * Subscribe to and retrieve type changes from a database's schema registry.
+ * Subscribe to and retrieve a type by typename from a space.
  * Accepts either values or accessors for db and typename.
+ *
+ * Fans across the owning space db (persisted custom types) and the shared
+ * registry (static/runtime plugin types). Persisted types live only in the db,
+ * so a registry-only lookup misses them.
  *
  * @param db - The database instance (can be reactive)
  * @param typename - The typename to query (can be reactive)
@@ -19,38 +23,36 @@ type MaybeAccessor<T> = T | Accessor<T>;
 export const useType = (
   db?: MaybeAccessor<Database.Database | undefined>,
   typename?: MaybeAccessor<string | undefined>,
-): Accessor<Type.Type | undefined> => {
-  // Derive the type query reactively
-  const query = createMemo(() => {
+): Accessor<Type.AnyEntity | undefined> => {
+  // Derive resolved values reactively.
+  const resolved = createMemo(() => {
     const resolvedDb = typeof db === 'function' ? db() : db;
     const resolvedTypename = typeof typename === 'function' ? typename() : typename;
     if (!resolvedTypename || !resolvedDb) {
       return undefined;
     }
-    return resolvedDb.schemaRegistry.query({ typename: resolvedTypename, location: ['database', 'runtime'] });
+    return { db: resolvedDb, typename: resolvedTypename };
   });
 
-  // Store the current type in a signal
-  const [type, setType] = createSignal<Type.Type | undefined>(undefined);
+  // Store the current type in a signal.
+  const [type, setType] = createSignal<Type.AnyEntity | undefined>(undefined);
 
-  // Subscribe to query changes
+  // Subscribe to registry changes.
   createEffect(() => {
-    const q = query();
-    if (!q) {
-      // Keep previous value during transitions to prevent flickering
+    const r = resolved();
+    if (!r) {
+      // Keep previous value during transitions to prevent flickering.
       return;
     }
 
-    // Subscribe to updates with immediate fire to get initial result and track changes
-    // The subscription will automatically start the reactive query
-    const unsubscribe = q.subscribe(
-      () => {
-        // Access results inside the callback to ensure query is running
-        const results = q.results;
-        setType(() => results[0]);
-      },
-      { fire: true },
-    );
+    const { db: resolvedDb, typename: resolvedTypename } = r;
+
+    const queryResult = resolvedDb.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+    const update = () => setType(() => queryResult.results.find((type) => Type.getTypename(type) === resolvedTypename));
+
+    // Subscribe before reading `.results` — the query requires at least one subscriber.
+    const unsubscribe = queryResult.subscribe(update);
+    update();
 
     onCleanup(unsubscribe);
   });

@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.assistant',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.assistant'),
   name: 'Assistant',
   author: 'DXOS',
   description: trim`
@@ -34,9 +35,9 @@ export const meta: Plugin.Meta = {
   iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
   spec: 'PLUGIN.mdl',
-};
+});
 
-export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;
+export const ASSISTANT_DIALOG = DXN.make(`${meta.id}.assistantDialog`);
 
 /** Companion variant identifier for the assistant chat panel. */
 export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';

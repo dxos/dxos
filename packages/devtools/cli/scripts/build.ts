@@ -5,9 +5,36 @@
 //
 
 import solidPlugin from '@opentui/solid/bun-plugin';
+import type { BunPlugin } from 'bun';
 import { existsSync } from 'fs';
 import { mkdir, writeFile, rm, copyFile } from 'fs/promises';
-import { join } from 'path';
+import { dirname, join } from 'path';
+
+/**
+ * Bun plugin that handles Vite-style `?raw` suffix imports — `import code from 'pkg?raw'`
+ * resolves the spec to a file path and inlines the file's contents as the default export.
+ * Required because some workspace packages (e.g. `@dxos/echo-query`'s `query-sandbox.ts`)
+ * use `?raw` to inline the bundled `query-lite` bundle as a string for QuickJS evaluation;
+ * Vite-built consumers handle this natively, but Bun's resolver doesn't.
+ */
+const rawImportPlugin: BunPlugin = {
+  name: 'raw-import',
+  setup(build) {
+    build.onResolve({ filter: /\?raw$/ }, (args) => {
+      const basePath = args.path.replace(/\?raw$/, '');
+      const importerDir = args.importer ? dirname(args.importer) : process.cwd();
+      const resolved = Bun.resolveSync(basePath, importerDir);
+      return { path: resolved, namespace: 'raw' };
+    });
+    build.onLoad({ filter: /.*/, namespace: 'raw' }, async (args) => {
+      const contents = await Bun.file(args.path).text();
+      return {
+        contents: `export default ${JSON.stringify(contents)};`,
+        loader: 'js',
+      };
+    });
+  },
+};
 
 // Platform configurations.
 const platforms = [
@@ -49,7 +76,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   const result = await Bun.build({
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
-    plugins: [solidPlugin],
+    plugins: [solidPlugin, rawImportPlugin],
     // TODO(wittjosiah): These aren't used by any cli plugins so why is this needed?
     external: ['@dxos/react-ui-*', 'esbuild-wasm/esbuild.wasm?url'],
     compile: {

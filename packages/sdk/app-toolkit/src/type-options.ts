@@ -6,11 +6,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { type Database, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, createAnnotationHelper, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, HiddenAnnotation, createAnnotationHelper, getTypeAnnotation } from '@dxos/echo/internal';
 
 export const TypeInputOptions = Schema.Struct({
   location: Schema.Array(Schema.Literal('database', 'runtime')),
-  kind: Schema.Array(Schema.Literal('system', 'user')),
+  kind: Schema.Array(Schema.Literal('hidden', 'user')),
 });
 
 export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
@@ -25,24 +25,25 @@ export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOption
 export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions; db?: Database.Database }) => {
   const includeRuntime = annotation.location.includes('runtime');
   const includeDatabase = annotation.location.includes('database');
-  const includeSystemType = annotation.kind.includes('system');
+  const includeHiddenType = annotation.kind.includes('hidden');
   const includeUserType = annotation.kind.includes('user');
 
   const runtimeTypenames =
     includeRuntime && db
-      ? db.schemaRegistry
-          .query({ location: ['runtime'] })
-          .runSync()
-          .filter((type) => {
-            const schema = Type.getSchema(type);
-            const relation = getTypeAnnotation(schema)?.kind === EntityKind.Relation;
+      ? db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .filter((t) => !Type.isTypeKind(t))
+          .filter((schema) => {
+            const effectSchema = Type.getSchema(schema);
+            const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
             if (relation) {
-              return includeSystemType;
+              return includeHiddenType;
             }
 
-            const system = SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
-            if (system) {
-              return includeSystemType;
+            const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
+            if (hidden) {
+              return includeHiddenType;
             }
 
             return includeUserType;
@@ -52,9 +53,10 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const databaseTypenames =
     includeDatabase && db
-      ? db.schemaRegistry
-          .query({ location: ['database'] })
-          .runSync()
+      ? db.graph.registry
+          .list()
+          .filter(Type.isType)
+          .filter((t) => Type.isTypeKind(t))
           .map((schema) => Type.getTypename(schema))
       : [];
 

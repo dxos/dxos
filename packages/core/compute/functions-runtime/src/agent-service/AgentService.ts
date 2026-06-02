@@ -15,7 +15,7 @@ import { type Trace, Blueprint, McpServer } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 
 import { AgentProcess } from './agent-process';
 
@@ -139,8 +139,8 @@ export const layer = (opts?: {
             }
 
             const target = Obj.getURI(feed);
-            const parsedEchoUri = EchoURI.tryParse(target);
-            const spaceId = parsedEchoUri ? EchoURI.getSpaceId(parsedEchoUri) : undefined;
+            const parsedEchoUri = EID.tryParse(target);
+            const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,

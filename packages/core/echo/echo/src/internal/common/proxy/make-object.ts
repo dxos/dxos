@@ -4,15 +4,15 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
-import { getTypeAnnotation } from '../../Annotation';
+import { getTypeAnnotation } from '../../Annotation/annotations';
 import {
   type AnyProperties,
   KindId,
   MetaId,
-  type ObjectMeta,
-  ObjectMetaSchema,
+  type EntityMeta,
+  EntityMetaSchema,
   ParentId,
   SchemaKindId,
   StaticTypeSchemaSlot,
@@ -49,7 +49,7 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | S
 export const makeObject = <T extends AnyProperties>(
   schema: Schema.Schema<T, any, never>,
   obj: NoInfer<MakeObjectProps<T>>,
-  meta?: ObjectMeta,
+  meta?: EntityMeta,
   typeSource?: TypeSource,
 ): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
@@ -58,7 +58,7 @@ export const makeObject = <T extends AnyProperties>(
 
 const createReactiveObject = <T extends AnyProperties>(
   obj: T,
-  meta?: ObjectMeta,
+  meta?: EntityMeta,
   schema?: Schema.Schema<T>,
   typeSource?: TypeSource,
 ): T => {
@@ -110,11 +110,11 @@ const createReactiveObject = <T extends AnyProperties>(
 const setIdOnTarget = (target: any) => {
   // invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
   if ('id' in target && target.id !== undefined && target.id !== null) {
-    if (!ObjectId.isValid(target.id)) {
+    if (!EntityId.isValid(target.id)) {
       throw new Error('Invalid object id format.');
     }
   } else {
-    target.id = ObjectId.random();
+    target.id = EntityId.random();
   }
 };
 
@@ -122,7 +122,7 @@ const setIdOnTarget = (target: any) => {
  * Set metadata on object.
  */
 // TODO(dmaretskyi): Move to echo-schema.
-const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
-  prepareTypedTarget(meta, ObjectMetaSchema);
+const initMeta = <T>(obj: T, meta: EntityMeta = { keys: [] }) => {
+  prepareTypedTarget(meta, EntityMetaSchema);
   defineHiddenProperty(obj, MetaId, createProxy(meta, TypedReactiveHandler.instance as any));
 };

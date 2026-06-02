@@ -88,6 +88,81 @@ type MapContentProps = ThemedClassName<Omit<MapContainerProps, 'children'> & Pro
  */
 const MAP_CONTENT_NAME = 'Map.Content';
 
+/**
+ * Recalculates the leaflet map size when its container resizes (e.g. a companion
+ * panel opening/closing). Without this, leaflet keeps its stale size and renders
+ * blank/gray tiles in the newly-exposed area until the next pan/zoom. Coalesced
+ * via rAF to avoid ResizeObserver feedback loops.
+ */
+const MapResize = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => map.invalidateSize());
+    });
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  return null;
+};
+
+/**
+ * Enables pinch-to-zoom on trackpads / ctrl+wheel. Browsers deliver a trackpad pinch as a `wheel`
+ * event with `ctrlKey` set; Leaflet only zooms those via `scrollWheelZoom`, which is intentionally
+ * off here (so plain scrolling doesn't hijack the page). This handler zooms on the pinch gesture
+ * only, leaving normal wheel scrolling untouched. (Touchscreen pinch is handled by Leaflet's
+ * `touchZoom`.)
+ */
+// Zoom levels per pixel of pinch (ctrl+wheel) delta.
+const PINCH_ZOOM_SENSITIVITY = 0.03;
+
+const MapPinchZoom = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    let frame = 0;
+    let point: ReturnType<typeof L.point> | undefined;
+    // Accumulate the target against the last requested value (not the live, mid-zoom `getZoom()`)
+    // and apply once per animation frame without zoom animation — overlapping animated zooms are
+    // what made this jittery. Reset between frames so the next batch re-reads the settled zoom.
+    let target: number | undefined;
+
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) {
+        return;
+      }
+      event.preventDefault();
+      const rect = container.getBoundingClientRect();
+      point = L.point(event.clientX - rect.left, event.clientY - rect.top);
+      target = (target ?? map.getZoom()) - event.deltaY * PINCH_ZOOM_SENSITIVITY;
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (target !== undefined && point) {
+            map.setZoomAround(point, target, { animate: false });
+            target = undefined;
+          }
+        });
+      }
+    };
+
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', onWheel);
+      cancelAnimationFrame(frame);
+    };
+  }, [map]);
+
+  return null;
+};
+
 const MapContent = forwardRef<MapController, MapContentProps>(
   (
     { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
@@ -139,11 +214,15 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         scrollWheelZoom={scrollWheelZoom}
         doubleClickZoom={doubleClickZoom}
         touchZoom={touchZoom}
+        // Allow fractional zoom so trackpad pinch (small ctrl+wheel deltas) isn't rounded away.
+        zoomSnap={0}
         center={center ?? defaults.center}
         zoom={zoom ?? defaults.zoom}
         whenReady={() => {}}
         ref={mapRef}
       >
+        <MapResize />
+        <MapPinchZoom />
         {children}
       </MapContainer>
     );
@@ -159,9 +238,15 @@ MapContent.displayName = 'Map.Content';
 
 const MAP_TILES_NAME = 'Map.Tiles';
 
-type MapTilesProps = {};
+/** Default OpenStreetMap raster tile template. */
+export const DEFAULT_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-const MapTiles = (_props: MapTilesProps) => {
+type MapTilesProps = {
+  /** Leaflet tile URL template (e.g. a MapTiler style endpoint with an API key). Defaults to OpenStreetMap. */
+  url?: string;
+};
+
+const MapTiles = ({ url = DEFAULT_TILE_URL }: MapTilesProps) => {
   const ref = useRef<L.TileLayer>(null);
   const { onChange } = useMapContext(MAP_TILES_NAME);
 
@@ -191,7 +276,7 @@ const MapTiles = (_props: MapTilesProps) => {
         data-attention={attention}
         detectRetina={true}
         className='dark:grayscale dark:invert data-[attention="0"]:!opacity-80'
-        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        url={url}
         keepBuffer={4}
         // opacity={attention ? 1 : 0.7}
       />
@@ -226,9 +311,11 @@ MapTiles.displayName = MAP_TILES_NAME;
 type MapMarkersProps = {
   markers?: GeoMarker[];
   selected?: string[];
+  /** Invoked with the marker id when a marker is clicked. */
+  onSelect?: (id: string) => void;
 };
 
-const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
+const MapMarkers = ({ selected, markers, onSelect }: MapMarkersProps) => {
   const map = useMap();
 
   // Fit the viewport around the markers. When there are no markers, leave the current view alone
@@ -247,6 +334,7 @@ const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
           <Marker
             key={id}
             position={{ lat, lng }}
+            eventHandlers={onSelect ? { click: () => onSelect(id) } : undefined}
             icon={
               // TODO(burdon): Create custom icon from bundled assets.
               // TODO(burdon): Selection state.
@@ -283,29 +371,47 @@ const CustomControl = ({
   position: ControlPosition;
 }>) => {
   const map = useMap();
+  const rootRef = useRef<ReturnType<typeof createRoot> | undefined>(undefined);
 
+  // Mount the leaflet control (and its React root) once per map/position. Children are
+  // rendered into the persistent root by the effect below, so updating them does NOT
+  // tear down and re-add the control (which would flicker on every parent re-render).
   useEffect(() => {
     const control = new Control({ position });
     control.onAdd = () => {
       const container = DomUtil.create('div', mx('m-0!', controlPositions[position]));
       DomEvent.disableClickPropagation(container);
       DomEvent.disableScrollPropagation(container);
-
       const root = createRoot(container);
+      rootRef.current = root;
+      // Initial render — covers mount and any map/position remount; the effect below
+      // handles subsequent children-only updates.
       root.render(
         <ThemeProvider tx={defaultTx}>
           <Tooltip.Provider>{children}</Tooltip.Provider>
         </ThemeProvider>,
       );
-
       return container;
     };
 
     control.addTo(map);
     return () => {
       control.remove();
+      const root = rootRef.current;
+      rootRef.current = undefined;
+      // Defer unmount so it doesn't run synchronously during a React render/commit.
+      queueMicrotask(() => root?.unmount());
     };
-  }, [map, position, children]);
+  }, [map, position]);
+
+  // Re-render children into the persistent root whenever they change.
+  useEffect(() => {
+    rootRef.current?.render(
+      <ThemeProvider tx={defaultTx}>
+        <Tooltip.Provider>{children}</Tooltip.Provider>
+      </ThemeProvider>,
+    );
+  }, [children]);
 
   return null;
 };

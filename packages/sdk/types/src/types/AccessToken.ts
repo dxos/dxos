@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
-import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { Format, LabelAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
 
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({
@@ -35,7 +35,7 @@ export const AccessToken = Schema.Struct({
     icon: 'ph--key--regular',
     hue: 'yellow',
   }),
-  SystemTypeAnnotation.set(true),
+  HiddenAnnotation.set(true),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),

@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
@@ -19,15 +19,9 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
-          .filter((type) => {
-            const schema = Type.getSchema(type);
-            return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
-          })
-          .filter((type) => {
-            const schema = Type.getSchema(type);
-            return !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
-          })
+        ...(db ? db.graph.registry.list().filter(Type.isType) : [])
+          .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+          .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),
       ),
     [db],

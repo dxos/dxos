@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 // TODO(wittjosiah): Rename plugin (package + id) from `native` to `app` to match the user-facing name.
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.native',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.native'),
   name: 'App',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -28,4 +29,4 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--app-window--regular',
   tags: ['system'],
-};
+});

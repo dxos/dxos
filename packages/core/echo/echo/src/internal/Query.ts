@@ -135,18 +135,21 @@ export const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'from': {
       if (query.from._tag === 'scope') {
-        const scope = query.from.scope;
-        const parts: string[] = [];
-        if (scope.spaceIds !== undefined) {
-          parts.push(`spaceIds: [${scope.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
+        if (query.from.scopes.length === 0) {
+          return `${prettyQuery(query.query)}.from('all-accessible-spaces')`;
         }
-        if (scope.feeds !== undefined) {
-          parts.push(`feeds: [${scope.feeds.map(String).join(', ')}]`);
-        }
-        if (scope.allFeedsFromSpaces !== undefined) {
-          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
-        }
-        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+        const scopeStrs = query.from.scopes.map((scope) => {
+          if (scope._tag === 'space') {
+            return scope.includeAllFeeds
+              ? `{ space: ${JSON.stringify(scope.spaceId)}, includeAllFeeds: true }`
+              : `{ space: ${JSON.stringify(scope.spaceId)} }`;
+          }
+          if (scope._tag === 'feed') {
+            return `{ feed: ${JSON.stringify(String(scope.feedUri))} }`;
+          }
+          return `{ registry: ${JSON.stringify(scope.location)} }`;
+        });
+        return `${prettyQuery(query.query)}.from([${scopeStrs.join(', ')}])`;
       }
       return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
     }

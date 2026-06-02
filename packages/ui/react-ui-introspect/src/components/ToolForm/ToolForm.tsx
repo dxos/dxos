@@ -53,6 +53,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
     if (!pickerOptions) {
       return undefined;
     }
+
     return ({ schema, fieldProps }: { schema: { ast: any }; prop: string; fieldProps: FormFieldComponentProps }) => {
       const kind = getPicker(schema.ast);
       if (!kind) {
@@ -62,6 +63,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
       if (!options || options.length === 0) {
         return undefined;
       }
+
       const { type, getValue, onValueChange, placeholder } = fieldProps;
       return (
         <Picker
@@ -100,7 +102,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
         onCancel={onCancel}
       >
         <Form.Content>
-          <Form.FieldSet fieldProvider={fieldProvider as any} />
+          <Form.FieldSet fieldProvider={fieldProvider} />
           <Form.Submit label={t('run-tool.label')} />
         </Form.Content>
       </Form.Root>

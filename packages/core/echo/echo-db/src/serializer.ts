@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, Obj, type Query } from '@dxos/echo';
+import { Filter, Obj, type Query, Type } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI, type URI } from '@dxos/keys';
+import { DXN, EID, type URI } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';
@@ -89,7 +89,12 @@ export class Serializer {
     const obj = await Obj.fromJSON(data, {
       refResolver: database.graph.createRefResolver({ context: { space: database.spaceId } }),
     });
-    database.add(obj);
+    // Type entities must be persisted via `addType` (clones/forks + conflict check); `add` rejects them.
+    if (Type.isType(obj)) {
+      await database.addType(obj);
+    } else {
+      database.add(obj);
+    }
   }
 }
 
@@ -100,7 +105,7 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI 
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return EncodedRef.toURI(encoded);
   } else if (typeof encoded === 'string') {
-    if (DXN.isDXN(encoded) || EchoURI.isEchoURI(encoded)) {
+    if (DXN.isDXN(encoded) || EID.isEID(encoded)) {
       return encoded;
     }
     // Treat plain strings as type names.

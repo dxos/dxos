@@ -4,7 +4,7 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
@@ -159,10 +159,10 @@ export class SwarmNetworkManager {
       label,
     }: SwarmOptions,
   ): Promise<SwarmConnection> {
-    invariant(PublicKey.isPublicKey(topic));
+    assertArgument(PublicKey.isPublicKey(topic), 'topic');
     invariant(topology);
     invariant(this._peerInfo);
-    invariant(typeof protocol === 'function');
+    assertArgument(typeof protocol === 'function', 'protocolProvider');
     if (this._swarms.has(topic)) {
       throw new Error(`Already connected to swarm: ${PublicKey.from(topic)}`);
     }

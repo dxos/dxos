@@ -23,8 +23,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Database, DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -40,13 +39,13 @@ import { TestDatabaseLayer } from './testing';
 //
 
 const Double = Operation.make({
-  meta: { key: 'org.dxos.test.double', name: 'Double' },
+  meta: { key: DXN.make('org.dxos.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
 
 const Failing = Operation.make({
-  meta: { key: 'org.dxos.test.failing', name: 'Failing' },
+  meta: { key: DXN.make('org.dxos.test.failing'), name: 'Failing' },
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -437,7 +436,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   // strict resolver below. If `Database.Service` resolves, the test layer
   // has correctly propagated the space context from the parent.
   const ChildOp = Operation.make({
-    meta: { key: 'org.dxos.test.invoker.child', name: 'Child' },
+    meta: { key: DXN.make('org.dxos.test.invoker.child'), name: 'Child' },
     input: Schema.Void,
     output: Schema.Struct({ spaceId: Schema.String }),
     services: [Database.Service],
@@ -446,7 +445,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   // Operation that, from its own handler, invokes `ChildOp` and surfaces the
   // resulting spaceId so the test can compare it against the expected one.
   const ParentOp = Operation.make({
-    meta: { key: 'org.dxos.test.invoker.parent', name: 'Parent' },
+    meta: { key: DXN.make('org.dxos.test.invoker.parent'), name: 'Parent' },
     input: Schema.Struct({
       override: Schema.optional(Schema.String),
     }),

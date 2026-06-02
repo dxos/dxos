@@ -96,10 +96,15 @@ export const translations = [
         'event-toolbar-create-note.menu': 'Create note',
 
         'message-toolbar.label': 'Message toolbar',
+        'message-toolbar-view.menu': 'View mode',
+        'message-toolbar-view-enriched.menu': 'Enriched',
+        'message-toolbar-view-markdown.menu': 'Markdown',
+        'message-toolbar-view-plain.menu': 'Plain text',
         'message-toolbar-open.menu': 'Open',
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-extract.menu': 'Extract',
 
         'message-body.placeholder': 'Enter message text...',
 

@@ -39,9 +39,6 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keyboard"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -70,6 +67,9 @@
     },
     {
       "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/functions"

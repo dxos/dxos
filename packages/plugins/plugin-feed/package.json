@@ -45,8 +45,12 @@
       "default": "./dist/lib/neutral/operations/index.mjs"
     },
     "#plugin": {
-      "source": "./src/FeedPlugin.tsx",
+      "source": {
+        "workerd": "./src/FeedPlugin.workerd.ts",
+        "default": "./src/FeedPlugin.tsx"
+      },
       "types": "./dist/types/src/FeedPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/FeedPlugin.workerd.mjs",
       "default": "./dist/lib/neutral/FeedPlugin.mjs"
     },
     "#testing": "./src/testing/index.ts",
@@ -67,6 +71,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",

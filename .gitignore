@@ -92,6 +92,7 @@ lib
 build
 out
 tmp
+temp
 .vite-inspect
 *.tsbuildinfo
 
