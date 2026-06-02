@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Entity, Obj, Ref, Registry } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
@@ -160,8 +160,8 @@ describe('Blueprint Manager', () => {
     'refresh-blueprints: agent syncs a mutated database blueprint from the registry',
     Effect.fnUntraced(
       function* (_) {
-        const registry = yield* Blueprint.RegistryService;
-        const canonical = registry.getByKey('org.dxos.blueprint.database');
+        const registry = yield* Registry.Service;
+        const canonical = registry.list().find((e) => Entity.getMeta(e)?.key === 'org.dxos.blueprint.database') as Blueprint.Blueprint | undefined;
         expect(canonical).toBeDefined();
 
         const stored = yield* Blueprint.upsert('org.dxos.blueprint.database');

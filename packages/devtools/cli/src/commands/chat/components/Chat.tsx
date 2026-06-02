@@ -9,7 +9,7 @@ import { For, Match, Switch, createEffect, createMemo, createSignal, useContext 
 import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -57,7 +57,7 @@ export const Chat = (props: ChatProps) => {
     contextBlueprints()
       .map((blueprint) => {
         const key = Obj.getMeta(blueprint).key;
-        return key !== undefined ? blueprintRegistry.getByKey(key) : undefined;
+        return key !== undefined ? (blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined) : undefined;
       })
       .filter(isTruthy),
   );
@@ -252,7 +252,7 @@ const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCan
     <Picker
       multi
       title='Select Blueprints'
-      items={blueprintRegistry.blueprints
+      items={(blueprintRegistry.query(Filter.type(Blueprint.Blueprint)).runSync() as Blueprint.Blueprint[])
         .map((blueprint) => {
           const key = Obj.getMeta(blueprint).key;
           return key !== undefined ? { id: key, label: blueprint.name } : undefined;

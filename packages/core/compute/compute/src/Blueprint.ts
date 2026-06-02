@@ -4,15 +4,12 @@
 
 // @import-as-namespace
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Entity, Filter, Migration, Obj, Registry, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
-import { log } from '@dxos/log';
 
 import * as McpServer from './McpServer';
 import * as Operation from './Operation';
@@ -131,89 +128,19 @@ export type Definition = {
   make: () => Blueprint;
 };
 
-//
-// Registry
-//
-
 /**
- * Blueprint registry.
- */
-export class Registry {
-  private readonly _blueprints: Blueprint[] = [];
-
-  constructor(blueprints: Blueprint[]) {
-    const seen = new Set<string>();
-    blueprints.forEach((blueprint) => {
-      const key = getKey(blueprint);
-      if (seen.has(key)) {
-        log.warn('duplicate blueprint', { key });
-      } else {
-        seen.add(key);
-        this._blueprints.push(blueprint);
-      }
-    });
-
-    this._blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
-  }
-
-  get blueprints(): Blueprint[] {
-    return this._blueprints;
-  }
-
-  getByKey(key: string): Blueprint | undefined {
-    return this._blueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
-  }
-
-  query(): Blueprint[] {
-    return this._blueprints;
-  }
-
-  updateBlueprints(): Effect.Effect<void, never, Database.Service> {
-    return Effect.gen(this, function* () {
-      const blueprints = yield* Database.runQuery(Filter.type(Blueprint));
-      for (const blueprint of blueprints) {
-        const blueprintKey = Obj.getMeta(blueprint).key;
-        if (!blueprintKey) {
-          continue;
-        }
-        const registryBlueprint = this.getByKey(blueprintKey);
-        if (!registryBlueprint) {
-          continue;
-        }
-        const source = Obj.clone(registryBlueprint, { deep: true });
-        Obj.update(blueprint, (blueprint) => {
-          void Obj.updateFrom(blueprint, source);
-        });
-      }
-    }).pipe(Effect.orDie);
-  }
-}
-
-export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {
-  static notAvailable = Layer.succeed(RegistryService, {
-    get blueprints(): Blueprint[] {
-      throw new Error('Blueprint registry not available');
-    },
-    getByKey(_key: string): Blueprint | undefined {
-      throw new Error('Blueprint registry not available');
-    },
-    query(): Blueprint[] {
-      throw new Error('Blueprint registry not available');
-    },
-    updateBlueprints() {
-      throw new Error('Blueprint registry not available');
-    },
-  } as unknown as Registry);
-}
-
-/**
- * Resolves a blueprint from the registry.
+ * Resolves a blueprint from the registry by its meta key.
  * Does not check the local database for the blueprint.
  */
-export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService> =>
+export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service> =>
   Effect.gen(function* () {
-    const registry = yield* RegistryService;
-    const blueprint = registry.getByKey(key);
+    const registry = yield* Registry.Service;
+    // Try DXN URI lookup first (fast O(1) path for valid DXN keys).
+    const dxn = DXN.tryMake(`dxn:${key}`);
+    const byUri = dxn ? (registry.getByURI(dxn) as Blueprint | undefined) : undefined;
+    // Fall back to meta.key scan for keys that are not valid DXNs (e.g. contain hyphens).
+    const blueprint =
+      byUri ?? (registry.list().find((entity) => Entity.getMeta(entity)?.key === key) as Blueprint | undefined);
     if (!blueprint) {
       return yield* Effect.fail(new NotFoundError({ context: { key } }));
     }
@@ -225,7 +152,7 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
  * If the blueprint already exists in the database, local blueprint is returned.
  * Otherwise, it will be added.
  */
-export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService | Database.Service> =>
+export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service | Database.Service> =>
   Effect.gen(function* () {
     const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
     if (local.length > 0) {

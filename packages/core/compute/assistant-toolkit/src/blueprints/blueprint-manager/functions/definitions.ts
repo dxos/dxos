@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Type } from '@dxos/echo';
+import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 export const QueryBlueprints = Operation.make({
@@ -18,7 +18,7 @@ export const QueryBlueprints = Operation.make({
   },
   input: Schema.Struct({}),
   output: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
-  services: [Blueprint.RegistryService],
+  services: [Registry.Service],
 });
 
 export const EnableBlueprints = Operation.make({
@@ -44,7 +44,7 @@ export const EnableBlueprints = Operation.make({
       }),
     ),
   }),
-  services: [Blueprint.RegistryService, Database.Service, AiContext.Service],
+  services: [Registry.Service, Database.Service, AiContext.Service],
 });
 
 export const UpdateBlueprints = Operation.make({
@@ -57,5 +57,5 @@ export const UpdateBlueprints = Operation.make({
   },
   input: Schema.Struct({}),
   output: Schema.Void,
-  services: [Blueprint.RegistryService, Database.Service],
+  services: [Registry.Service, Database.Service],
 });

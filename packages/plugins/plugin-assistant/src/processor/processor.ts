@@ -22,14 +22,13 @@ import {
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import {
-  type Blueprint,
   type Credential,
   Operation,
   type OperationRegistry,
   type ServiceNotAvailableError,
   Trace,
 } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref } from '@dxos/echo';
+import { type Database, Feed, Obj, Ref, type Registry as EchoRegistry } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -64,7 +63,7 @@ export type SpaceServices =
 export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
-  blueprintRegistry?: Blueprint.Registry;
+  registry?: EchoRegistry.Registry;
   observableRegistry?: Registry.Registry;
   /**
    * For tracing.
@@ -162,8 +161,8 @@ export class AiChatProcessor {
     return this._conversation;
   }
 
-  get blueprintRegistry() {
-    return this._options.blueprintRegistry;
+  get registry() {
+    return this._options.registry;
   }
 
   get system(): string {

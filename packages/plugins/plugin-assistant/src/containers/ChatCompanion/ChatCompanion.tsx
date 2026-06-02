@@ -11,13 +11,13 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint } from '@dxos/compute';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '#components';
-import { useBlueprintRegistry, useContextBinder } from '#hooks';
+import { useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
 
 import ChatArticle from '../ChatArticle';
@@ -27,7 +27,7 @@ export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unkn
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role, subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
-    const blueprintRegistry = useBlueprintRegistry();
+    const registry = useRegistry();
     const space = getSpace(companionTo);
     const feedTarget = chat?.feed.target;
     const binder = useContextBinder(space, feedTarget);
@@ -91,14 +91,14 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           continue;
         }
 
-        const blueprint = blueprintRegistry.getByKey(key);
+        const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined;
         if (!blueprint) {
           continue;
         }
 
         space.db.add(Obj.clone(blueprint, { deep: true }));
       }
-    }, [space, blueprintRegistry, blueprintKeys]);
+    }, [space, registry, blueprintKeys]);
 
     useAsyncEffect(async () => {
       if (!binder?.isOpen) {

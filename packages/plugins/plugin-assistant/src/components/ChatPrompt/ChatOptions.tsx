@@ -6,8 +6,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/compute';
-import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, type Registry, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -28,7 +27,7 @@ export type ChatOptionsProps = {
   chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContext.Binder;
-  blueprintRegistry?: Blueprint.Registry;
+  registry?: Registry.Registry;
   presets?: { id: string; label: string }[];
   preset?: string;
   onPresetChange?: (id: string) => void;
@@ -41,7 +40,7 @@ export const ChatOptions = ({
   chat,
   db,
   context,
-  blueprintRegistry,
+  registry,
   presets,
   preset,
   onPresetChange,
@@ -88,7 +87,7 @@ export const ChatOptions = ({
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
-                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
+                    <BlueprintsPanel registry={registry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
@@ -122,15 +121,15 @@ export const ChatOptions = ({
 };
 
 const BlueprintsPanel = ({
-  blueprintRegistry,
+  registry,
   db,
   context,
-}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'db' | 'context'>) => {
+}: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry, db });
+  const blueprints = useBlueprints({ registry, db });
   const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
+  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, registry });
   const { results, handleSearch } = useSearchListResults({
     items: blueprints,
     extract: (blueprint) => blueprint.name,

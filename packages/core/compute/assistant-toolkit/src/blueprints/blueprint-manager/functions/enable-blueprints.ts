@@ -6,24 +6,26 @@ import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, Registry } from '@dxos/echo';
 
 import { EnableBlueprints } from './definitions';
 
 export default EnableBlueprints.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ keys }) {
-      const registry = yield* Blueprint.RegistryService;
       const enabled: Blueprint.Blueprint[] = [];
       const rejected: { key: string; reason: string }[] = [];
 
       for (const key of keys) {
-        const blueprint = registry.getByKey(key);
-        if (!blueprint) {
-          rejected.push({ key, reason: 'Blueprint not found in registry.' });
+        const blueprint = yield* Blueprint.resolve(key).pipe(
+          Effect.mapError(() => ({ key, reason: 'Blueprint not found in registry.' })),
+          Effect.either,
+        );
+        if (blueprint._tag === 'Left') {
+          rejected.push(blueprint.left);
           continue;
         }
-        if (!blueprint.agentCanEnable) {
+        if (!blueprint.right.agentCanEnable) {
           rejected.push({ key, reason: 'Blueprint does not allow agent auto-enable (agentCanEnable is not set).' });
           continue;
         }

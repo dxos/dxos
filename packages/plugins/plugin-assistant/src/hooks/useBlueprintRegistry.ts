@@ -4,41 +4,40 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { distinctBy } from '@dxos/util';
 
-/**
- * Provide a registry of blueprints from plugins.
- */
-// TODO(burdon): Reconcile with eventual public registry.
-// TODO(dmaretskyi): Reconcile with blueprint registry in compute runtime.
-export const useBlueprintRegistry = () => {
-  const blueprintDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  return useMemo(
-    () => new Blueprint.Registry(blueprintDefinitions.map((blueprint) => blueprint.make())),
-    [blueprintDefinitions],
-  );
-};
-
 export const useBlueprints = ({
-  blueprintRegistry,
+  registry,
   db,
 }: {
-  blueprintRegistry?: Blueprint.Registry;
+  registry?: Registry.Registry;
   db?: Database.Database;
 }) => {
-  const staticBlueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
+  const [registryBlueprints, setRegistryBlueprints] = useState<Blueprint.Blueprint[]>(() =>
+    registry?.query(Filter.type(Blueprint.Blueprint)).runSync() ?? [],
+  );
+
+  useEffect(() => {
+    if (!registry) {
+      setRegistryBlueprints([]);
+      return;
+    }
+    setRegistryBlueprints(registry.query(Filter.type(Blueprint.Blueprint)).runSync());
+    return registry.changed.on(() => {
+      setRegistryBlueprints(registry.query(Filter.type(Blueprint.Blueprint)).runSync());
+    });
+  }, [registry]);
+
   const spaceBlueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
   return useMemo(() => {
-    const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => Obj.getMeta(b).key);
+    const blueprints = distinctBy([...registryBlueprints, ...spaceBlueprints], (b) => Obj.getMeta(b).key);
     blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
     return blueprints;
-  }, [staticBlueprints, spaceBlueprints]);
+  }, [registryBlueprints, spaceBlueprints]);
 };
 
 /**
@@ -78,15 +77,15 @@ export const useActiveBlueprints = ({ context }: { context?: AiContext.Binder })
 export const useBlueprintHandlers = ({
   db,
   context,
-  blueprintRegistry,
+  registry,
 }: {
   db: Database.Database;
   context?: AiContext.Binder;
-  blueprintRegistry?: Blueprint.Registry;
+  registry?: Registry.Registry;
 }) => {
   const onUpdateBlueprint = useCallback(
     async (key: string, checked: boolean) => {
-      if (!context || !blueprintRegistry) {
+      if (!context || !registry) {
         return;
       }
 
@@ -95,7 +94,7 @@ export const useBlueprintHandlers = ({
       let storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
       if (checked) {
         if (!storedBlueprint) {
-          const blueprint = blueprintRegistry.getByKey(key);
+          const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined;
           if (!blueprint) {
             return;
           }
@@ -108,7 +107,7 @@ export const useBlueprintHandlers = ({
         await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
       }
     },
-    [db, context, blueprintRegistry],
+    [db, context, registry],
   );
 
   return { onUpdateBlueprint };

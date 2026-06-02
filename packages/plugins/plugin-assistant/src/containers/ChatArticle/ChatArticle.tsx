@@ -10,10 +10,11 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
+import { useRegistry } from '@dxos/react-client/echo';
 import { getParentId } from '@dxos/react-ui-attention';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
+import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
 import { type Assistant, AssistantCapabilities, type ChatType } from '#types';
 
 export type ChatArticleProps = (
@@ -32,17 +33,17 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>((props, 
   const runtime = useChatServices({ id: space?.id });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
-  const blueprintRegistry = useBlueprintRegistry();
+  const registry = useRegistry();
   const processor = useChatProcessor({
     space,
     chat,
     preset,
     runtime,
-    blueprintRegistry,
+    registry,
     settings,
   });
 
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const stateAtom = useCapability(AssistantCapabilities.State);
   const pendingSubmitted = useRef(false);
   useEffect(() => {
@@ -50,17 +51,17 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>((props, 
       return;
     }
 
-    const state = registry.get(stateAtom);
+    const state = atomRegistry.get(stateAtom);
     const pendingPrompt = state.pendingPrompts[attendableId];
     if (pendingPrompt) {
       pendingSubmitted.current = true;
-      registry.update(stateAtom, (current) => {
+      atomRegistry.update(stateAtom, (current) => {
         const { [attendableId]: _, ...rest } = current.pendingPrompts;
         return { ...current, pendingPrompts: rest };
       });
       void processor.request({ message: pendingPrompt });
     }
-  }, [processor, attendableId, registry, stateAtom]);
+  }, [processor, attendableId, atomRegistry, stateAtom]);
 
   const feedTarget = chat?.feed.target;
   const view = (chat?.view as Assistant.ChatView | undefined) ?? settings.chatView;

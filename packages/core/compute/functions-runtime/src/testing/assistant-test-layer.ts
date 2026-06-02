@@ -29,7 +29,8 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, Feed, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Registry as EchoRegistry, Tag, Type } from '@dxos/echo';
+import { registryLayer } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
@@ -77,7 +78,7 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | Blueprint.RegistryService
+  | EchoRegistry.Service
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
@@ -167,7 +168,7 @@ export const AssistantTestLayer = ({
               Feed.FeedService,
               AiService.AiService,
               OperationRegistry.Service,
-              Blueprint.RegistryService,
+              EchoRegistry.Service,
             ),
           );
         }),
@@ -193,7 +194,7 @@ export const AssistantTestLayer = ({
         configuredCredentialsLayer(credentials),
       ),
     ),
-    Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
+    Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),

@@ -10,9 +10,9 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Registry as EchoRegistry } from '@dxos/echo';
 import {
   AgentService,
   FeedTraceSink,
@@ -59,20 +59,17 @@ const OperationHandlerProviderSpec = LayerSpec.make(
     ),
 );
 
-const BlueprintRegistrySpec = LayerSpec.make(
+const RegistrySpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service],
-    provides: [Blueprint.RegistryService],
+    requires: [ClientService],
+    provides: [EchoRegistry.Service],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        const capabilities = yield* Capability.Service;
-        const blueprints = capabilities
-          .getAll(AppCapabilities.BlueprintDefinition)
-          .flatMap((blueprint) => blueprint.make());
-        return Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints));
+        const client = yield* ClientService;
+        return Layer.succeed(EchoRegistry.Service, client.graph.registry);
       }),
     ),
 );
@@ -187,7 +184,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-    Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
     Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
     Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
