@@ -59,6 +59,6 @@ export type SpaceProperties = Type.InstanceType<typeof SpaceProperties>;
 
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
-  id: 'org.dxos.space.root-collection',
+  id: 'org.dxos.space.rootCollection',
   schema: Ref.Ref(Collection.Collection),
 });
