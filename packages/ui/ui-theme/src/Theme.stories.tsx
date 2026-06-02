@@ -53,7 +53,7 @@ const StyleSwatch = ({ hue }: { hue: string }) => {
       <div
         style={{
           backgroundColor: `var(--color-${hue}-bg)`,
-          color: `var(--color-${hue}-fg)`,
+          color: `var(--color-${hue}-text)`,
         }}
         className='px-1 text-sm flex items-center'
       >

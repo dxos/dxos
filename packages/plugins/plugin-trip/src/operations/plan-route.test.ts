@@ -12,8 +12,9 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
+import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';
+
 import { fakeRoutingService } from '../testing/routing';
-import { Booking, type Routing, Segment, Trip, TripCapabilities } from '../types';
 import planRouteHandler from './plan-route';
 
 const capabilityService = (service?: Routing.RoutingService) => {
@@ -71,8 +72,8 @@ describe('PlanRoute', () => {
       if (segment.details._tag === 'road') {
         const route = segment.details.routes?.[0];
         expect(route?.distance).toBeGreaterThan(0);
-        expect(route?.geometry.length).toBeGreaterThanOrEqual(2);
         expect(route?.legs.length).toBeGreaterThanOrEqual(1);
+        expect(route && Routing.routeGeometry(route).length).toBeGreaterThanOrEqual(2);
         expect(segment.details.origin?.geo).toBeDefined();
         expect(segment.details.destination?.geo).toBeDefined();
       }

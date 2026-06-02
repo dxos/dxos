@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 
-import { type Place, type Routing, RoutingOperation, Segment, TripCapabilities, Trip } from '../types';
+import { type Place, type Routing, RoutingOperation, Segment, TripCapabilities, Trip } from '#types';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 
@@ -102,7 +102,6 @@ const writeRoute = (
 const cloneRoute = (route: Routing.Route) => ({
   distance: route.distance,
   duration: route.duration,
-  geometry: route.geometry.map((point) => [point[0], point[1]]),
   legs: route.legs.map((leg) => ({
     distance: leg.distance,
     duration: leg.duration,

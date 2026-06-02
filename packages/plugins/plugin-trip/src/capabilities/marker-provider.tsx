@@ -12,7 +12,7 @@ import { useObject, useObjects } from '@dxos/react-client/echo';
 import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
-import { Place, Segment, Trip } from '#types';
+import { Place, Routing, Segment, Trip } from '#types';
 
 import { AIRPORTS } from '../operations/extractor/const';
 
@@ -99,8 +99,9 @@ const segmentLine = (seg: Segment.Segment): MapCapabilities.GeoLine | undefined 
 const ROUTE_COLOR = '#22c55e';
 
 const segmentLines = (seg: Segment.Segment): MapCapabilities.GeoLine[] => {
-  // Primary computed route geometry, if planned.
-  const geometry = seg.details._tag === 'road' ? seg.details.routes?.[0]?.geometry : undefined;
+  // Primary computed route geometry (derived from its legs), if planned.
+  const route = seg.details._tag === 'road' ? seg.details.routes?.[0] : undefined;
+  const geometry = route && Routing.routeGeometry(route);
   if (geometry && geometry.length >= 2) {
     const points = geometry.map((point) => toLatLng([point[0], point[1]])).filter(isNonNullable);
     const lines: MapCapabilities.GeoLine[] = [];

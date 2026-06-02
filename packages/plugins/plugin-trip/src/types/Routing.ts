@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 
 import { Place } from './Place';
 
@@ -55,25 +55,27 @@ export const RouteLeg = Schema.Struct({
   distance: Schema.Number,
   duration: Schema.Number,
   summary: Schema.optional(Schema.String),
-  geometry: Schema.Array(Format.GeoPoint),
+  // Hidden from schema-driven forms — geometry is computed/plotted, not user-editable.
+  geometry: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false)),
   steps: Schema.Array(RouteStep),
 });
 export interface RouteLeg extends Schema.Schema.Type<typeof RouteLeg> {}
 
-/** A computed route. `geometry` is the concatenation of its legs' geometry. */
+/** A computed route. Its geometry is derived from the legs (see {@link routeGeometry}), not stored. */
 export const Route = Schema.Struct({
   distance: Schema.Number,
   duration: Schema.Number,
-  geometry: Schema.Array(Format.GeoPoint),
   legs: Schema.Array(RouteLeg),
 });
 export interface Route extends Schema.Schema.Type<typeof Route> {}
 
-/** Builds a Route from its legs, computing total distance/duration and the concatenated geometry. */
+/** The route's full polyline: the concatenation of its legs' geometry. */
+export const routeGeometry = (route: Route) => route.legs.flatMap((leg) => [...leg.geometry]);
+
+/** Builds a Route from its legs, computing total distance/duration. */
 export const makeRoute = (legs: readonly RouteLeg[]): Route => ({
   distance: legs.reduce((sum, leg) => sum + leg.distance, 0),
   duration: legs.reduce((sum, leg) => sum + leg.duration, 0),
-  geometry: legs.flatMap((leg) => [...leg.geometry]),
   legs: [...legs],
 });
 

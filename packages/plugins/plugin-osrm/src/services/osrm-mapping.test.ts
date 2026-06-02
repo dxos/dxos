@@ -86,10 +86,10 @@ describe('parseRoutes', () => {
     expect(routes).toHaveLength(1);
     const route = routes[0];
     expect(route.legs).toHaveLength(2);
-    // Totals + geometry are derived from the legs.
+    // Totals derived from the legs; geometry is the concatenation of the legs' geometry.
     expect(route.distance).toBe(1000);
     expect(route.duration).toBe(600);
-    expect(route.geometry).toEqual([
+    expect(Routing.routeGeometry(route)).toEqual([
       [0, 0],
       [1, 1],
       [1, 1],

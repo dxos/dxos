@@ -194,13 +194,20 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       },
     );
 
+    // Push the route + map controls together to the trailing edge (single separator, so they sit
+    // adjacent rather than spread apart).
+    if (hasRoad || mapAvailable) {
+      builder.separator();
+    }
+
     // Offer route planning once the trip has at least one road segment to route.
     if (hasRoad) {
-      builder.separator().action(
+      builder.action(
         'plan-route',
         {
           label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.id }],
           icon: 'ph--path--regular',
+          iconOnly: true,
           disabled: planning,
         },
         () => void handlePlanRoute(),
@@ -209,7 +216,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
 
     // Only offer the map toggle when a map surface can render this trip.
     if (mapAvailable) {
-      builder.separator().action(
+      builder.action(
         'toggle-globe',
         {
           label: ['globe.toggle.label', { ns: meta.id }],

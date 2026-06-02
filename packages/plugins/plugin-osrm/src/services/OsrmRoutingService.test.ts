@@ -74,7 +74,7 @@ describe('OsrmRoutingService', () => {
     expect(route.legs).toHaveLength(2);
     expect(route.distance).toBe(2000);
     expect(route.legs[0].summary).toBe('leg 0');
-    expect(route.geometry.length).toBeGreaterThan(0);
+    expect(Routing.routeGeometry(route).length).toBeGreaterThan(0);
   });
 
   test('passes through already-resolved Places without geocoding', async ({ expect }) => {
