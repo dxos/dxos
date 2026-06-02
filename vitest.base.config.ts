@@ -10,8 +10,8 @@ import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import WasmPlugin from 'vite-plugin-wasm';
-import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
+import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
