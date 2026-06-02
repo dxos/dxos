@@ -150,7 +150,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'status',
+        id: 'triggerStatus',
         role: 'status-indicator',
         component: () => {
           const space = useActiveSpace();
