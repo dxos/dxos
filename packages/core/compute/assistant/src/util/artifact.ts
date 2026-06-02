@@ -47,40 +47,40 @@ const ArtifactURI: Schema.Schema<string> & {
     '@dxn:org.dxos.type.calendar:0.1.0',
   ],
 }) {
-    static toEchoURI(reference: ArtifactURI, owningSpaceId?: SpaceId): EID.EID {
-      // Allow @ prefix for compatibility with in-text references.
-      const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
-      if (stripped.startsWith('echo:') || stripped.startsWith('dxn:')) {
-        return EID.parse(stripped);
-      } else if (stripped.includes(':')) {
-        const [spaceId, objectId] = stripped.split(':');
-        if (!SpaceId.isValid(spaceId) || !EntityId.isValid(objectId)) {
-          throw new Error(`Unable to parse object reference: ${reference}`);
-        }
-        // This is a workaround because the current Filter API doesn't work with fully qualified Echo URIs.
-        // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
-        // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
-        return spaceId === owningSpaceId
-          ? EID.make({ entityId: objectId })
-          : EID.make({ spaceId: spaceId, entityId: objectId });
-      } else if (EntityId.isValid(stripped)) {
-        return EID.make({ entityId: stripped });
-      } else {
+  static toEchoURI(reference: ArtifactURI, owningSpaceId?: SpaceId): EID.EID {
+    // Allow @ prefix for compatibility with in-text references.
+    const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
+    if (stripped.startsWith('echo:') || stripped.startsWith('dxn:')) {
+      return EID.parse(stripped);
+    } else if (stripped.includes(':')) {
+      const [spaceId, objectId] = stripped.split(':');
+      if (!SpaceId.isValid(spaceId) || !EntityId.isValid(objectId)) {
         throw new Error(`Unable to parse object reference: ${reference}`);
       }
+      // This is a workaround because the current Filter API doesn't work with fully qualified Echo URIs.
+      // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
+      // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
+      return spaceId === owningSpaceId
+        ? EID.make({ entityId: objectId })
+        : EID.make({ spaceId: spaceId, entityId: objectId });
+    } else if (EntityId.isValid(stripped)) {
+      return EID.make({ entityId: stripped });
+    } else {
+      throw new Error(`Unable to parse object reference: ${reference}`);
     }
+  }
 
-    /**
-     * Resolves an artifact ID to an object.
-     */
-    static resolve<S extends Type.AnyEntity>(
-      schema: S,
-      ref: ArtifactURI,
-    ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service> {
-      const uri = ArtifactURI.toEchoURI(ref);
-      return Database.resolve(Ref.fromURI(uri), schema);
-    }
-  };
+  /**
+   * Resolves an artifact ID to an object.
+   */
+  static resolve<S extends Type.AnyEntity>(
+    schema: S,
+    ref: ArtifactURI,
+  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service> {
+    const uri = ArtifactURI.toEchoURI(ref);
+    return Database.resolve(Ref.fromURI(uri), schema);
+  }
+};
 
 type ArtifactURI = Schema.Schema.Type<typeof ArtifactURI>;
 
