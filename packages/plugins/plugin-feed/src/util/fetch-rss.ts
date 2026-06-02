@@ -40,6 +40,7 @@ const text = (value: unknown): string | undefined => {
       return String(t);
     }
   }
+
   return undefined;
 };
 
@@ -57,8 +58,8 @@ export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOpt
     // Treat known HTML-bearing fields as opaque text so embedded markup isn't parsed as XML.
     stopNodes: ['*.description', '*.summary', '*.content', '*.content:encoded'],
   });
-  const parsed = parser.parse(xml);
 
+  const parsed = parser.parse(xml);
   const channel = parsed.rss?.channel ?? parsed.feed;
   if (!channel) {
     throw new Error('Unrecognized feed format');
@@ -82,10 +83,13 @@ export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOpt
       ? (text(item.author?.name) ?? text(item.author))
       : (text(item['dc:creator']) ?? text(item.author));
 
+    // TODO(burdon): Convert to markdown.
+    const description = isAtom ? (text(item.summary) ?? text(item.content)) : text(item.description);
+
     return Subscription.makePost({
       title: text(item.title),
       link,
-      description: isAtom ? (text(item.summary) ?? text(item.content)) : (text(item.description) ?? ''),
+      description,
       author,
       published: text(item.pubDate) ?? text(item.published) ?? text(item.updated),
       guid: (isAtom ? text(item.id) : text(item.guid)) ?? link,

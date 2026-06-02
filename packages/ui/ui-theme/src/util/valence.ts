@@ -14,6 +14,8 @@ export const textValence = (valence?: MessageValence) => {
       return 'font-medium text-warning-text';
     case 'error':
       return 'font-medium text-error-text';
+    default:
+      return 'font-medium';
   }
 };
 

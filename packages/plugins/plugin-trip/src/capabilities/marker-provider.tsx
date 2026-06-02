@@ -12,6 +12,7 @@ import { useObject, useObjects } from '@dxos/react-client/echo';
 import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
+import { meta } from '#meta';
 import { Place, Routing, Segment, Trip } from '#types';
 
 import { AIRPORTS } from '../operations/extractor/const';
@@ -166,7 +167,7 @@ const useTripMarkers = (subject: Trip.Trip, { attendableId }: { attendableId?: s
 
 /** Provider plotting a {@link Trip.Trip}'s segments. */
 export const tripMarkerProvider: MapCapabilities.MarkerProvider = {
-  id: 'org.dxos.plugin.trip/segments',
+  id: `${meta.id}/segments`,
   match: (subject) => Trip.instanceOf(subject),
   useMarkers: useTripMarkers,
 };
