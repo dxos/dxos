@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-feed",
   "version": "0.8.3",
-  "private": true,
   "description": "Feed plugin for RSS and open protocol subscriptions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -141,5 +140,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
