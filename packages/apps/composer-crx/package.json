@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "catalog:",
+    "@cloudflare/ai-chat": "catalog:",
     "@dxos/brand": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",
