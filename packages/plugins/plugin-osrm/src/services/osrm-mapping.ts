@@ -47,49 +47,31 @@ export const parsePlace = (results: readonly NominatimResult[], query: string): 
 };
 
 //
-// OSRM (routing) response → RouteResult.
+// OSRM (routing) response → Route[].
 //
 
-export type OsrmStep = { geometry?: { coordinates?: Array<[number, number]> } };
-export type OsrmLeg = { distance?: number; duration?: number; steps?: OsrmStep[] };
+export type OsrmStep = { name?: string; ref?: string; geometry?: { coordinates?: Array<[number, number]> } };
+export type OsrmLeg = { distance?: number; duration?: number; summary?: string; steps?: OsrmStep[] };
 export type OsrmRoute = { distance?: number; duration?: number; legs?: OsrmLeg[] };
 export type OsrmResponse = { code?: string; message?: string; routes?: OsrmRoute[] };
 
+const mapLeg = (osrmLeg: OsrmLeg): Routing.RouteLeg => ({
+  distance: osrmLeg.distance ?? 0,
+  duration: osrmLeg.duration ?? 0,
+  summary: osrmLeg.summary || undefined,
+  // Per-leg geometry is the concatenation of its steps' geometries.
+  geometry: (osrmLeg.steps ?? []).flatMap((step) => step.geometry?.coordinates ?? []),
+  steps: (osrmLeg.steps ?? []).map((step) => ({ name: step.name || undefined, ref: step.ref || undefined })),
+});
+
 /**
- * Maps an OSRM `/route` response into a `RouteResult`, pairing each OSRM leg with the corresponding
- * consecutive `places` (the geocoded waypoints). Per-leg geometry is the concatenation of the leg's
- * step geometries; falls back to the leg endpoints when steps are absent. Throws `RouteError` when
- * the response is not `Ok`.
+ * Maps an OSRM `/route` response into the route alternatives. Each route's totals and geometry are
+ * derived from its legs (via `Routing.makeRoute`). Throws `RouteError` when the response is not `Ok`.
  */
-export const parseRoute = (response: OsrmResponse, places: readonly Place.Place[]): Routing.RouteResult => {
+export const parseRoutes = (response: OsrmResponse): Routing.Route[] => {
   if (response.code !== 'Ok' || !response.routes || response.routes.length === 0) {
     throw new Routing.RouteError(`OSRM routing failed: ${response.message ?? response.code ?? 'unknown error'}`);
   }
 
-  const route = response.routes[0];
-  const osrmLegs = route.legs ?? [];
-  const legs: Routing.RouteLeg[] = [];
-  for (let index = 0; index < osrmLegs.length; index++) {
-    const origin = places[index];
-    const destination = places[index + 1];
-    if (!origin || !destination) {
-      continue;
-    }
-    const osrmLeg = osrmLegs[index];
-    const stepCoords = (osrmLeg.steps ?? []).flatMap((step) => step.geometry?.coordinates ?? []);
-    const fallback = [origin.geo, destination.geo].filter((point): point is NonNullable<typeof point> => point != null);
-    legs.push({
-      origin,
-      destination,
-      distanceMeters: osrmLeg.distance ?? 0,
-      durationSeconds: osrmLeg.duration ?? 0,
-      path: stepCoords.length > 0 ? stepCoords : fallback,
-    });
-  }
-
-  return {
-    legs,
-    distanceMeters: route.distance ?? legs.reduce((sum, leg) => sum + leg.distanceMeters, 0),
-    durationSeconds: route.duration ?? legs.reduce((sum, leg) => sum + leg.durationSeconds, 0),
-  };
+  return response.routes.map((route) => Routing.makeRoute((route.legs ?? []).map(mapLeg)));
 };

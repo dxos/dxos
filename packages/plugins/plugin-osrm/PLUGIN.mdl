@@ -103,20 +103,34 @@ type RouteQuery
     waypoints: Waypoint[]           # ordered; >= 2 required
     profile?: RouteProfile          # default 'driving'
 
-type RouteLeg
-  desc: One leg between two consecutive (geocoded) waypoints.
+type RouteStep
+  desc: A turn / segment within a leg.
   fields:
-    origin: Place                   # geocoded — geo populated
-    destination: Place              # geocoded — geo populated
-    distanceMeters: number
-    durationSeconds: number
-    path: GeoPoint[]                # decoded polyline ([lon, lat] points)
+    name?: string
+    ref?: string                    # road reference, e.g. "A4"
+
+type RouteLeg
+  desc: A leg between two consecutive route waypoints.
+  fields:
+    distance: number                # meters
+    duration: number                # seconds
+    summary?: string                # major roads, e.g. "Pall Mall, The Mall"
+    geometry: GeoPoint[]            # decoded polyline ([lon, lat]) for this leg
+    steps: RouteStep[]
+
+type Route
+  desc: A computed route. `geometry` is the concatenation of its legs' geometry.
+  fields:
+    distance: number                # meters
+    duration: number                # seconds
+    geometry: GeoPoint[]            # computed from legs[].geometry
+    legs: RouteLeg[]
 
 type RouteResult
+  desc: Service result — geocoded stops plus the route alternatives.
   fields:
-    legs: RouteLeg[]                # one per consecutive waypoint pair (waypoints.length - 1)
-    distanceMeters: number          # totals over all legs
-    durationSeconds: number
+    waypoints: Place[]              # geocoded, index-aligned with the query waypoints
+    routes: Route[]                 # alternatives (usually one)
 
 type MissingApiKeyError
   desc: >
@@ -126,25 +140,21 @@ type MissingApiKeyError
     providers (e.g. OpenRouteService) will.
 ```
 
-### plugin-trip — `RoadDetails` route fields
+### plugin-trip — `RoadDetails.routes`
 
 The existing `RoadDetails` variant (`plugin-trip/src/types/Segment.ts`)
-gains four optional fields. All optional, so existing road segments,
+gains one optional `routes` field. Optional, so existing road segments,
 the `makeDefault('road')` factory, and the extractor paths stay valid.
 
 ```mdl
 type RoadDetails (extended)
   desc: >
-    Existing TaggedStruct('road') extended with computed-route fields
-    populated by PlanRoute. Geometry stored decoded ([lon, lat]) so the
-    map consumer needs no provider-specific polyline decoder. The road
-    segments themselves are the source of truth for the route — there is
-    no separate planner-owned marker; PlanRoute only enriches existing
-    segments.
+    Existing TaggedStruct('road') extended with the computed `Route`(s) for the leg, populated by
+    PlanRoute (primary is routes[0]; further entries are alternatives). Geometry is stored decoded
+    ([lon, lat]) so the map consumer needs no provider-specific polyline decoder. The road segments
+    themselves are the source of truth — PlanRoute only enriches existing segments.
   adds-fields:
-    distanceMeters?: number         # Schema.optional(Schema.Number)
-    durationSeconds?: number        # Schema.optional(Schema.Number)
-    path?: GeoPoint[]               # Schema.optional(Schema.Array(Format.GeoPoint))
+    routes?: Route[]                # Schema.optional(Schema.Array(Routing.Route))
 ```
 
 ### plugin-trip — `PlanRoute` operation
@@ -156,10 +166,9 @@ op PlanRoute
     segments ARE the source of truth — added/edited through the normal
     segment flow (Add segment → Road + the segment form). PlanRoute does
     not create or delete segments; for each road segment with an origin
-    and destination it geocodes the stops and writes distance / duration /
-    geometry (and endpoint geo) back onto that segment. Each road segment
-    is routed independently, so the segments need not form a contiguous
-    chain.
+    and destination it geocodes the stops and writes the computed Route(s)
+    (and endpoint geo) back onto that segment. Each road segment is routed
+    independently, so the segments need not form a contiguous chain.
   inputs:
     trip: Trip                      # the live ECHO Trip
     provider?: string               # optional RoutingService id; default = first registered
@@ -178,7 +187,7 @@ op PlanRoute
     - For each road segment (itinerary order) with both origin and
       destination: build waypoints (the Place when it has geo, else its
       name to geocode), call service.route(), and Obj.update the segment —
-      fill origin/destination geo + distanceMeters / durationSeconds / path.
+      fill origin/destination geo and set `routes` from the result.
     - Segments without both endpoints are skipped; non-road segments are
       never touched.
   notes:
@@ -294,10 +303,12 @@ feat OsrmRoutingService
   routing (OSRM):
     - GET https://router.project-osrm.org/route/v1/driving/<lon,lat;...>
         ?overview=full&geometries=geojson&steps=true
-    - route.legs[i] → distanceMeters (meters), durationSeconds (seconds).
-    - Per-leg path: concatenate the leg's step geometries (GeoJSON
+    - Each OSRM route → Route; each OSRM leg → RouteLeg { distance, duration,
+      summary, geometry, steps:[{name, ref}] }.
+    - Per-leg geometry: concatenate the leg's step geometries (GeoJSON
       LineString coords are already [lon, lat] = GeoPoint).
-    - Totals from route.distance / route.duration.
+    - Route totals + Route.geometry derived from the legs (Routing.makeRoute).
+    - Returns { waypoints: Place[], routes: Route[] }.
     - Non-2xx or code !== 'Ok' → throw RouteError.
   transport:
     - Direct fetch (both services permit browser CORS); no edge proxy
@@ -329,7 +340,7 @@ packages/plugins/plugin-osrm/
       OsrmRoutingService.ts          # makeOsrmRoutingService() factory
       NominatimClient.ts             # geocode(name) → Place
       OsrmClient.ts                  # route(coords) → raw OSRM response
-      osrm-mapping.ts                # response → RouteLeg[] / RouteResult
+      osrm-mapping.ts                # response → Route[] (parseRoutes)
       osrm-mapping.test.ts           # fixture-based unit tests
 ```
 
@@ -346,17 +357,17 @@ test OsrmRoutingService geocoding
 test OsrmRoutingService routing
   desc: OSRM route parsing with mocked fetch.
   cases:
-    - 3 waypoints → RouteResult with 2 legs; each leg has distance,
-      duration, and non-empty path.
-    - per-leg path coords are [lon, lat] (GeoPoint) order.
+    - 3 waypoints → { waypoints (3), routes:[Route] }; route has 2 legs,
+      totals + geometry derived from legs, leg.summary / steps mapped.
+    - geometry coords are [lon, lat] (GeoPoint) order.
     - OSRM code !== 'Ok' → throws RouteError.
 
 test PlanRoute operation (plugin-trip)
   desc: Operation enriches existing road segments in place. Uses a fake
         in-memory RoutingService registered in plugin-trip/src/testing.
   cases:
-    - road segments with origin/destination → each gets distance /
-      duration / path and endpoint geo filled.
+    - road segments with origin/destination → each gets `routes` (geometry,
+      legs) and endpoint geo filled.
     - non-road segments are left untouched.
     - road segment missing an endpoint is skipped.
     - no RoutingService registered → fails with "No routing service".
@@ -364,8 +375,8 @@ test PlanRoute operation (plugin-trip)
 test tripMarkerProvider polyline (plugin-trip)
   desc: Marker provider emits real geometry.
   cases:
-    - road segment with RoadDetails.path → polyline line geometry emitted.
-    - road segment without path → straight-arc fallback.
+    - road segment with RoadDetails.routes → polyline line geometry emitted.
+    - road segment without routes → straight-arc fallback.
 
 test buildTileUrl (plugin-map)
   desc: Tile URL construction across providers.

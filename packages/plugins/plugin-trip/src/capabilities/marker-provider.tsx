@@ -99,8 +99,10 @@ const segmentLine = (seg: Segment.Segment): MapCapabilities.GeoLine | undefined 
 const ROUTE_COLOR = '#22c55e';
 
 const segmentLines = (seg: Segment.Segment): MapCapabilities.GeoLine[] => {
-  if (seg.details._tag === 'road' && seg.details.path && seg.details.path.length >= 2) {
-    const points = seg.details.path.map((point) => toLatLng([point[0], point[1]])).filter(isNonNullable);
+  // Primary computed route geometry, if planned.
+  const geometry = seg.details._tag === 'road' ? seg.details.routes?.[0]?.geometry : undefined;
+  if (geometry && geometry.length >= 2) {
+    const points = geometry.map((point) => toLatLng([point[0], point[1]])).filter(isNonNullable);
     const lines: MapCapabilities.GeoLine[] = [];
     for (let index = 0; index < points.length - 1; index++) {
       lines.push({ source: points[index], target: points[index + 1], color: ROUTE_COLOR });

@@ -28,8 +28,10 @@ const osrmRouteResponse = (coordinateCount: number) => ({
       legs: Array.from({ length: coordinateCount - 1 }, (_, index) => ({
         distance: 1000,
         duration: 600,
+        summary: `leg ${index}`,
         steps: [
           {
+            name: `step ${index}`,
             geometry: {
               coordinates: [
                 [index, index],
@@ -59,14 +61,20 @@ const mockFetch = (): typeof globalThis.fetch =>
   }) as typeof globalThis.fetch;
 
 describe('OsrmRoutingService', () => {
-  test('geocodes string waypoints and returns a leg per consecutive pair', async ({ expect }) => {
+  test('geocodes string waypoints and returns aligned waypoints + a route', async ({ expect }) => {
     const service = makeOsrmRoutingService({ fetch: mockFetch(), geocodeDelayMs: 0 });
     const result = await service.route({ waypoints: ['London', 'Avignon', 'Barcelona'] });
-    expect(result.legs).toHaveLength(2);
-    expect(result.legs[0].origin.name).toBe('London');
-    expect(result.legs[0].origin.geo).toEqual([-0.1276, 51.5074]);
-    expect(result.legs[1].destination.name).toBe('Barcelona');
-    expect(result.distanceMeters).toBe(2000);
+
+    expect(result.waypoints).toHaveLength(3);
+    expect(result.waypoints[0].name).toBe('London');
+    expect(result.waypoints[0].geo).toEqual([-0.1276, 51.5074]);
+
+    expect(result.routes).toHaveLength(1);
+    const route = result.routes[0];
+    expect(route.legs).toHaveLength(2);
+    expect(route.distance).toBe(2000);
+    expect(route.legs[0].summary).toBe('leg 0');
+    expect(route.geometry.length).toBeGreaterThan(0);
   });
 
   test('passes through already-resolved Places without geocoding', async ({ expect }) => {
@@ -76,8 +84,8 @@ describe('OsrmRoutingService', () => {
     ];
     const service = makeOsrmRoutingService({ fetch: mockFetch(), geocodeDelayMs: 0 });
     const result = await service.route({ waypoints: places });
-    expect(result.legs).toHaveLength(1);
-    expect(result.legs[0].origin.name).toBe('A');
+    expect(result.waypoints[0].name).toBe('A');
+    expect(result.routes[0].legs).toHaveLength(1);
   });
 
   test('throws GeocodeError for an unknown place name', async ({ expect }) => {

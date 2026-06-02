@@ -26,7 +26,6 @@ import { Booking, type Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
 import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
-import { liveRoutingService } from './live-routing';
 import { TripArticle } from './TripArticle';
 
 /** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
@@ -40,21 +39,13 @@ const RoutingStoryPlugin = (service: Routing.RoutingService) =>
     Plugin.make,
   )();
 
-/** Seeds a trip pre-planned with road segments for the given cities (using the deterministic fake router). */
+/** Seeds a trip with a pre-planned road segment per consecutive city pair (deterministic fake router). */
 const seedRoadTrip = (space: Space, name: string, cities: string[]): void => {
   const trip = Trip.make({ name });
-  const { legs } = fakeRoute(cities);
-  for (const leg of legs) {
+  for (let index = 0; index < cities.length - 1; index++) {
+    const { waypoints, routes } = fakeRoute([cities[index], cities[index + 1]]);
     const segment = Segment.make({
-      details: {
-        _tag: 'road',
-        subKind: 'car',
-        origin: leg.origin,
-        destination: leg.destination,
-        distanceMeters: leg.distanceMeters,
-        durationSeconds: leg.durationSeconds,
-        path: [...leg.path],
-      },
+      details: { _tag: 'road', subKind: 'car', origin: waypoints[0], destination: waypoints[1], routes },
     });
     Trip.addSegment(trip, segment);
     space.db.add(segment);
@@ -93,7 +84,7 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
   // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
   return (
-    <AttendableContainer id={ATTENDABLE_ID} classNames='grid grid-cols-2 min-bs-0 overflow-hidden'>
+    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
       <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
       <div className='min-bs-0 overflow-hidden border-is border-separator'>
         {selected && (
@@ -260,16 +251,6 @@ export const RoadTripMap: Story = {
   decorators: baseDecorators((space) => {
     seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
-};
-
-// Same scenario, but backed by the real public OSRM + Nominatim services (live network). Excluded
-// from the storybook test run (`!test`) so CI never depends on external services; open it via
-// `storybook:serve` to see real driving geometry. The production provider is @dxos/plugin-osrm.
-export const RoadTripLive: Story = {
-  tags: ['!test'],
-  decorators: baseDecorators((space) => {
-    space.db.add(Trip.make({ name: 'London → Barcelona (live OSRM)' }));
-  }, liveRoutingService()),
 };
 
 export const Empty: Story = {

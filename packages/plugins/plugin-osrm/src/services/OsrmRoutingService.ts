@@ -5,7 +5,7 @@
 import { type Place, Routing } from '@dxos/plugin-trip';
 
 import { geocode } from './NominatimClient';
-import { parseRoute } from './osrm-mapping';
+import { parseRoutes } from './osrm-mapping';
 import { fetchRoute } from './OsrmClient';
 
 export const OSRM_SERVICE_ID = 'osrm';
@@ -28,8 +28,8 @@ export type OsrmServiceOptions = {
 
 /**
  * Builds the OSRM `RoutingService`: geocodes any name-only waypoints via Nominatim (throttled),
- * passes through already-resolved Places, then computes a single driving route through all
- * coordinates via OSRM and splits it into per-leg distance / duration / path.
+ * passes through already-resolved Places, then computes the driving route(s) through all
+ * coordinates via OSRM. Returns the geocoded waypoints (index-aligned) plus the route alternatives.
  */
 export const makeOsrmRoutingService = (options: OsrmServiceOptions = {}): Routing.RoutingService => ({
   id: OSRM_SERVICE_ID,
@@ -55,8 +55,6 @@ export const makeOsrmRoutingService = (options: OsrmServiceOptions = {}): Routin
     }
 
     const geos = places.map((place) => place.geo).filter((geo): geo is NonNullable<typeof geo> => geo != null);
-    // Every place must have coordinates, otherwise `places` and the routed legs would misalign by
-    // index in `parseRoute` (a leg would be paired with the wrong stop).
     if (geos.length !== places.length || geos.length < 2) {
       throw new Routing.RouteError('All waypoints must resolve to coordinates to plan a route.');
     }
@@ -64,6 +62,6 @@ export const makeOsrmRoutingService = (options: OsrmServiceOptions = {}): Routin
     const coordinates = geos.map((geo) => [geo[0], geo[1]]);
 
     const response = await fetchRoute(coordinates, { fetch: options.fetch, baseUrl: options.osrmBaseUrl });
-    return parseRoute(response, places);
+    return { waypoints: places, routes: parseRoutes(response) };
   },
 });

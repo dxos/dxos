@@ -38,22 +38,50 @@ export const RouteQuery = Schema.Struct({
 });
 export interface RouteQuery extends Schema.Schema.Type<typeof RouteQuery> {}
 
-/** One leg between two consecutive (geocoded) waypoints. */
+//
+// Route — the computed driving route, stored inline on `RoadDetails.routes` and returned by the
+// service. Minimal mirror of the OSRM response (geometry + per-leg distance/duration/summary/steps).
+//
+
+/** A turn/segment within a leg. */
+export const RouteStep = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  ref: Schema.optional(Schema.String),
+});
+export interface RouteStep extends Schema.Schema.Type<typeof RouteStep> {}
+
+/** A leg between two consecutive route waypoints. `geometry` is the decoded `[lon, lat]` polyline. */
 export const RouteLeg = Schema.Struct({
-  origin: Place,
-  destination: Place,
-  distanceMeters: Schema.Number,
-  durationSeconds: Schema.Number,
-  /** Decoded polyline as `[lon, lat]` points. */
-  path: Schema.Array(Format.GeoPoint),
+  distance: Schema.Number,
+  duration: Schema.Number,
+  summary: Schema.optional(Schema.String),
+  geometry: Schema.Array(Format.GeoPoint),
+  steps: Schema.Array(RouteStep),
 });
 export interface RouteLeg extends Schema.Schema.Type<typeof RouteLeg> {}
 
-export const RouteResult = Schema.Struct({
-  /** One leg per consecutive waypoint pair (`waypoints.length - 1`). */
+/** A computed route. `geometry` is the concatenation of its legs' geometry. */
+export const Route = Schema.Struct({
+  distance: Schema.Number,
+  duration: Schema.Number,
+  geometry: Schema.Array(Format.GeoPoint),
   legs: Schema.Array(RouteLeg),
-  distanceMeters: Schema.Number,
-  durationSeconds: Schema.Number,
+});
+export interface Route extends Schema.Schema.Type<typeof Route> {}
+
+/** Builds a Route from its legs, computing total distance/duration and the concatenated geometry. */
+export const makeRoute = (legs: readonly RouteLeg[]): Route => ({
+  distance: legs.reduce((sum, leg) => sum + leg.distance, 0),
+  duration: legs.reduce((sum, leg) => sum + leg.duration, 0),
+  geometry: legs.flatMap((leg) => [...leg.geometry]),
+  legs: [...legs],
+});
+
+export const RouteResult = Schema.Struct({
+  /** Geocoded stops, index-aligned with the query waypoints. */
+  waypoints: Schema.Array(Place),
+  /** Route alternatives (usually one). */
+  routes: Schema.Array(Route),
 });
 export interface RouteResult extends Schema.Schema.Type<typeof RouteResult> {}
 

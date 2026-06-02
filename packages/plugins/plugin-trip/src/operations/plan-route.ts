@@ -36,9 +36,7 @@ export default RoutingOperation.PlanRoute.pipe(
       let durationSeconds = 0;
       let legs = 0;
       for (const segment of roads) {
-        const origin = Segment.getOrigin(segment);
-        const destination = Segment.getDestination(segment);
-        const waypoints = [toWaypoint(origin), toWaypoint(destination)].filter(
+        const waypoints = [toWaypoint(Segment.getOrigin(segment)), toWaypoint(Segment.getDestination(segment))].filter(
           (waypoint): waypoint is Routing.Waypoint => waypoint != null,
         );
         if (waypoints.length < 2) {
@@ -51,14 +49,14 @@ export default RoutingOperation.PlanRoute.pipe(
           try: () => service.route({ waypoints, profile: 'driving' }),
           catch: (error) => (error instanceof Error ? error : new Error(String(error))),
         });
-        const leg = result.legs[0];
-        if (!leg) {
+        const route = result.routes[0];
+        if (!route) {
           continue;
         }
 
-        writeLeg(segment, leg);
-        distanceMeters += leg.distanceMeters;
-        durationSeconds += leg.durationSeconds;
+        writeRoute(segment, result.waypoints, result.routes);
+        distanceMeters += route.distance;
+        durationSeconds += route.duration;
         legs++;
       }
 
@@ -78,20 +76,38 @@ const toWaypoint = (place: Place.Place | undefined): Routing.Waypoint | undefine
   return place.name ?? place.city ?? place.code;
 };
 
-/** Writes a computed leg back onto a road segment: fills endpoint geo + distance/duration/path. */
-const writeLeg = (segment: Segment.Segment, leg: Routing.RouteLeg): void =>
+/** Writes the computed route(s) onto a road segment and fills endpoint geo from the geocoded stops. */
+const writeRoute = (
+  segment: Segment.Segment,
+  waypoints: readonly Place.Place[],
+  routes: readonly Routing.Route[],
+): void =>
   Obj.update(segment, (segment) => {
     if (segment.details._tag !== 'road') {
       return;
     }
-    if (segment.details.origin && leg.origin.geo) {
-      Object.assign(segment.details.origin, { geo: leg.origin.geo });
+    const origin = waypoints[0];
+    const destination = waypoints[waypoints.length - 1];
+    if (segment.details.origin && origin?.geo) {
+      Object.assign(segment.details.origin, { geo: [origin.geo[0], origin.geo[1]] });
     }
-    if (segment.details.destination && leg.destination.geo) {
-      Object.assign(segment.details.destination, { geo: leg.destination.geo });
+    if (segment.details.destination && destination?.geo) {
+      Object.assign(segment.details.destination, { geo: [destination.geo[0], destination.geo[1]] });
     }
-    segment.details.distanceMeters = leg.distanceMeters;
-    segment.details.durationSeconds = leg.durationSeconds;
-    // Copy to plain [lon, lat] arrays (the live segment's GeoPoint field is mutable number[][]).
-    segment.details.path = leg.path.map((point) => [point[0], point[1]]);
+    // Deep-copy to plain mutable arrays (the live segment's GeoPoint fields are mutable number[][]).
+    segment.details.routes = routes.map(cloneRoute);
   });
+
+// Return type is inferred (plain mutable arrays) so it assigns to the live segment's GeoPoint fields.
+const cloneRoute = (route: Routing.Route) => ({
+  distance: route.distance,
+  duration: route.duration,
+  geometry: route.geometry.map((point) => [point[0], point[1]]),
+  legs: route.legs.map((leg) => ({
+    distance: leg.distance,
+    duration: leg.duration,
+    summary: leg.summary,
+    geometry: leg.geometry.map((point) => [point[0], point[1]]),
+    steps: leg.steps.map((step) => ({ name: step.name, ref: step.ref })),
+  })),
+});

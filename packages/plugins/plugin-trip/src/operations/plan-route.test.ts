@@ -55,7 +55,7 @@ describe('PlanRoute', () => {
       .pipe(Effect.provideService(Capability.Service, capabilityService(service)))
       .pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
 
-  test('fills distance / duration / path and endpoint geo on each road segment', async ({ expect }) => {
+  test('writes a route (geometry + endpoint geo) onto each road segment', async ({ expect }) => {
     const trip = addTrip([roadLeg('London', 'Avignon'), roadLeg('Avignon', 'Barcelona')]);
     await db.flush();
 
@@ -69,8 +69,10 @@ describe('PlanRoute', () => {
     expect(roads).toHaveLength(2);
     for (const segment of roads) {
       if (segment.details._tag === 'road') {
-        expect(segment.details.distanceMeters).toBeGreaterThan(0);
-        expect(segment.details.path?.length).toBeGreaterThanOrEqual(2);
+        const route = segment.details.routes?.[0];
+        expect(route?.distance).toBeGreaterThan(0);
+        expect(route?.geometry.length).toBeGreaterThanOrEqual(2);
+        expect(route?.legs.length).toBeGreaterThanOrEqual(1);
         expect(segment.details.origin?.geo).toBeDefined();
         expect(segment.details.destination?.geo).toBeDefined();
       }

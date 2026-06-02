@@ -92,30 +92,26 @@ export const fakeRoute = (
   const places = waypoints.map(resolve);
   const legs: Routing.RouteLeg[] = [];
   for (let index = 0; index < places.length - 1; index++) {
-    const origin = places[index];
-    const destination = places[index + 1];
-
-    const fixture = ROUTE_FIXTURES[`${routeLabel(origin)}>${routeLabel(destination)}`];
-    if (fixture) {
-      legs.push({
-        origin,
-        destination,
-        distanceMeters: fixture.distanceMeters,
-        durationSeconds: fixture.durationSeconds,
-        path: parsePath(fixture.path),
-      });
-      continue;
-    }
-
-    const path = [origin.geo, destination.geo].filter((point): point is NonNullable<typeof point> => point != null);
-    const distanceMeters = path.length === 2 ? haversine(path[0], path[1]) : 0;
-    legs.push({ origin, destination, distanceMeters, durationSeconds: distanceMeters / AVG_SPEED_MPS, path });
+    legs.push(buildLeg(places[index], places[index + 1]));
   }
-  return {
-    legs,
-    distanceMeters: legs.reduce((sum, leg) => sum + leg.distanceMeters, 0),
-    durationSeconds: legs.reduce((sum, leg) => sum + leg.durationSeconds, 0),
-  };
+  return { waypoints: places, routes: legs.length > 0 ? [Routing.makeRoute(legs)] : [] };
+};
+
+/** Builds a leg from the captured fixture for the city pair, or a straight haversine fallback. */
+const buildLeg = (origin: Place.Place, destination: Place.Place): Routing.RouteLeg => {
+  const fixture = ROUTE_FIXTURES[`${routeLabel(origin)}>${routeLabel(destination)}`];
+  if (fixture) {
+    return {
+      distance: fixture.distanceMeters,
+      duration: fixture.durationSeconds,
+      geometry: parsePath(fixture.path),
+      steps: [],
+    };
+  }
+
+  const geometry = [origin.geo, destination.geo].filter((point): point is NonNullable<typeof point> => point != null);
+  const distance = geometry.length === 2 ? haversine(geometry[0], geometry[1]) : 0;
+  return { distance, duration: distance / AVG_SPEED_MPS, geometry, steps: [] };
 };
 
 /**

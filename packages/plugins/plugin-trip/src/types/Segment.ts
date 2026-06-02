@@ -11,6 +11,7 @@ import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
 import { Place } from './Place';
+import * as Routing from './Routing';
 
 //
 // Enums
@@ -82,12 +83,12 @@ export const RoadDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('road', {
     subKind: Schema.optional(RoadSubKind).annotations({ title: 'Mode' }),
-    /** Driving distance for the leg, in meters. Populated by `PlanRoute`. */
-    distanceMeters: Schema.optional(Schema.Number).annotations({ title: 'Distance (m)' }),
-    /** Estimated drive time for the leg, in seconds. Populated by `PlanRoute`. */
-    durationSeconds: Schema.optional(Schema.Number).annotations({ title: 'Duration (s)' }),
-    /** Decoded route polyline as `[lon, lat]` points. Populated by `PlanRoute`; rendered on the map. */
-    path: Schema.optional(Schema.Array(Format.GeoPoint)).annotations({ title: 'Path' }),
+    /**
+     * Computed driving route(s) for this leg, populated by `PlanRoute` (the primary route is
+     * `routes[0]`; additional entries are alternatives). Each route carries distance, duration, the
+     * decoded geometry, and per-leg detail. Rendered on the map.
+     */
+    routes: Schema.optional(Schema.Array(Routing.Route)),
   }),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}

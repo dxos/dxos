@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Routing } from '@dxos/plugin-trip';
 
-import { type NominatimResult, type OsrmResponse, parsePlace, parseRoute } from './osrm-mapping';
+import { type NominatimResult, type OsrmResponse, parsePlace, parseRoutes } from './osrm-mapping';
 
 const PARIS: NominatimResult = {
   lat: '48.8534951',
@@ -36,10 +36,8 @@ describe('parsePlace', () => {
   });
 });
 
-const place = (name: string, geo: [number, number]) => ({ name, geo });
-
-describe('parseRoute', () => {
-  test('maps OSRM legs to RouteLegs paired with consecutive places', ({ expect }) => {
+describe('parseRoutes', () => {
+  test('maps OSRM legs into a Route with totals and concatenated geometry', ({ expect }) => {
     const response: OsrmResponse = {
       code: 'Ok',
       routes: [
@@ -50,8 +48,11 @@ describe('parseRoute', () => {
             {
               distance: 400,
               duration: 240,
+              summary: 'A Road',
               steps: [
                 {
+                  name: 'High St',
+                  ref: 'A1',
                   geometry: {
                     coordinates: [
                       [0, 0],
@@ -66,6 +67,7 @@ describe('parseRoute', () => {
               duration: 360,
               steps: [
                 {
+                  name: 'Main St',
                   geometry: {
                     coordinates: [
                       [1, 1],
@@ -79,37 +81,30 @@ describe('parseRoute', () => {
         },
       ],
     };
-    const places = [place('A', [0, 0]), place('B', [1, 1]), place('C', [2, 2])];
 
-    const result = parseRoute(response, places);
-    expect(result.legs).toHaveLength(2);
-    expect(result.distanceMeters).toBe(1000);
-    expect(result.durationSeconds).toBe(600);
-    expect(result.legs[0].origin.name).toBe('A');
-    expect(result.legs[0].destination.name).toBe('B');
-    expect(result.legs[0].path).toEqual([
+    const routes = parseRoutes(response);
+    expect(routes).toHaveLength(1);
+    const route = routes[0];
+    expect(route.legs).toHaveLength(2);
+    // Totals + geometry are derived from the legs.
+    expect(route.distance).toBe(1000);
+    expect(route.duration).toBe(600);
+    expect(route.geometry).toEqual([
       [0, 0],
       [1, 1],
-    ]);
-    expect(result.legs[1].path).toEqual([
       [1, 1],
       [2, 2],
     ]);
-  });
-
-  test('falls back to leg endpoints when no step geometry is present', ({ expect }) => {
-    const response: OsrmResponse = {
-      code: 'Ok',
-      routes: [{ distance: 100, duration: 60, legs: [{ distance: 100, duration: 60 }] }],
-    };
-    const result = parseRoute(response, [place('A', [0, 0]), place('B', [3, 4])]);
-    expect(result.legs[0].path).toEqual([
+    expect(route.legs[0].summary).toBe('A Road');
+    expect(route.legs[0].geometry).toEqual([
       [0, 0],
-      [3, 4],
+      [1, 1],
     ]);
+    expect(route.legs[0].steps[0]).toEqual({ name: 'High St', ref: 'A1' });
+    expect(route.legs[1].steps[0]).toEqual({ name: 'Main St', ref: undefined });
   });
 
   test('throws RouteError when the response is not Ok', ({ expect }) => {
-    expect(() => parseRoute({ code: 'NoRoute', message: 'no route' }, [])).toThrow(Routing.RouteError);
+    expect(() => parseRoutes({ code: 'NoRoute', message: 'no route' })).toThrow(Routing.RouteError);
   });
 });
