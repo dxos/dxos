@@ -459,7 +459,11 @@ export class DataSpaceManager extends Resource {
 
     const space = this._spaces.get(spaceKey);
     if (space) {
-      await space.delete(ctx);
+      // Separate teardown (resource lifecycle) from the terminal state transition.
+      if (space.isOpen) {
+        await space.close(ctx);
+      }
+      await space.delete();
       this._spaces.delete(spaceKey);
     }
 

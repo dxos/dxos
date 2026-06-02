@@ -623,19 +623,18 @@ export class DataSpace {
   }
 
   /**
-   * Tombstones (soft-deletes) the space. Persists the deleted state and tears down all subsystems.
-   * Unlike {@link deactivate}, this is terminal: {@link activate} will not re-open a deleted space.
-   * Data is not removed until garbage collection (future work).
+   * Tombstones (soft-deletes) the space by moving it to a terminal state.
+   * This is intentionally separate from teardown: the caller is responsible for {@link close}-ing the
+   * space (teardown uses the resource lifecycle, distinct from this state transition).
+   * Terminal: {@link activate} will not re-open a deleted space. Data is not removed until garbage
+   * collection (future work).
    */
   @synchronized
-  async delete(ctx: Context): Promise<void> {
+  async delete(): Promise<void> {
     if (this._state === SpaceState.SPACE_DELETED) {
       return;
     }
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_DELETED);
-    if (this._state !== SpaceState.SPACE_CLOSED) {
-      await this._close(ctx);
-    }
     this._state = SpaceState.SPACE_DELETED;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
