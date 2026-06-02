@@ -12,3 +12,4 @@ export * from './entity';
 export * from './model-symbols';
 export * from './typename';
 export * from './version';
+export * from './well-known-types';
