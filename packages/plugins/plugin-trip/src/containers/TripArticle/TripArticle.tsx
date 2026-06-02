@@ -155,7 +155,18 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   const handlePlanRoute = useCallback(async () => {
     setPlanning(true);
     try {
-      await invokePromise(RoutingOperation.PlanRoute, { trip: subject });
+      const { error } = await invokePromise(RoutingOperation.PlanRoute, { trip: subject });
+      if (error) {
+        throw error;
+      }
+    } catch (err) {
+      // Surface routing failures (no provider / geocode / network) as a toast.
+      await invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.id}/plan-route-error`,
+        title: ['route.error.label', { ns: meta.id }],
+        description: err instanceof Error ? err.message : undefined,
+        icon: 'ph--warning--regular',
+      });
     } finally {
       setPlanning(false);
     }

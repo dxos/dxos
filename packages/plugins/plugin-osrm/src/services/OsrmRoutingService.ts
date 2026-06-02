@@ -54,14 +54,14 @@ export const makeOsrmRoutingService = (options: OsrmServiceOptions = {}): Routin
       places.push(place);
     }
 
-    const coordinates = places
-      .map((place) => place.geo)
-      .filter((geo): geo is NonNullable<typeof geo> => geo != null)
-      // Drop the optional altitude so the `[lon, lat]` tuple is a plain number[] for the URL builder.
-      .map((geo) => [geo[0], geo[1]]);
-    if (coordinates.length < 2) {
-      throw new Routing.RouteError('At least two located waypoints are required to plan a route.');
+    const geos = places.map((place) => place.geo).filter((geo): geo is NonNullable<typeof geo> => geo != null);
+    // Every place must have coordinates, otherwise `places` and the routed legs would misalign by
+    // index in `parseRoute` (a leg would be paired with the wrong stop).
+    if (geos.length !== places.length || geos.length < 2) {
+      throw new Routing.RouteError('All waypoints must resolve to coordinates to plan a route.');
     }
+    // Drop the optional altitude so each `[lon, lat]` tuple is a plain number[] for the URL builder.
+    const coordinates = geos.map((geo) => [geo[0], geo[1]]);
 
     const response = await fetchRoute(coordinates, { fetch: options.fetch, baseUrl: options.osrmBaseUrl });
     return parseRoute(response, places);

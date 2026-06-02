@@ -50,6 +50,7 @@ export const translations = [
         'booking.error.message': 'Search failed. Check the provider configuration and try again.',
         'route.plan.label': 'Plan route',
         'route.planning.label': 'Planning route…',
+        'route.error.label': 'Could not plan route.',
       },
     },
   },

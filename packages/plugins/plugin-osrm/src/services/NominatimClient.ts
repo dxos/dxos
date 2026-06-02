@@ -29,7 +29,13 @@ export const geocode = async (
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
   const url = `${baseUrl}/search?q=${encodeURIComponent(query)}&format=jsonv2&limit=1&addressdetails=1`;
 
-  const response = await fetchFn(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } });
+  let response: Response;
+  try {
+    response = await fetchFn(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' } });
+  } catch {
+    // Wrap transport failures (DNS / timeout / network) so callers always see a GeocodeError.
+    throw new Routing.GeocodeError(query);
+  }
   if (!response.ok) {
     throw new Routing.GeocodeError(query);
   }
