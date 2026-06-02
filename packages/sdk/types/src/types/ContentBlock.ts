@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
 export const Base = Schema.Struct({
@@ -366,22 +366,6 @@ export const Json = Schema.TaggedStruct('json', {
 });
 
 export type Json = Schema.Schema.Type<typeof Json>;
-/**
- * Link to another session's history.
- * When present as the first content block of the first message in a session,
- * the messages from the referenced feed in the range [0, messageId] are injected
- * into the conversation history. All other occurrences are ignored.
- */
-export const SessionLink = Schema.TaggedStruct('sessionLink', {
-  /** Reference to the feed of the source session. */
-  feedRef: Ref.Ref(Feed.Feed),
-  /** Messages from the source feed up to and including this message ID are injected. */
-  messageId: Obj.ID,
-  ...Base.fields,
-});
-
-export type SessionLink = Schema.Schema.Type<typeof SessionLink>;
-
 export const Any = Schema.Union(
   Anchor,
   File,
@@ -391,7 +375,6 @@ export const Any = Schema.Union(
   Reasoning,
   Reference,
   Select,
-  SessionLink,
   Status,
   Suggestion,
   Stats,

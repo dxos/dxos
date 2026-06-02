@@ -97,7 +97,7 @@ export class Session extends Resource {
     const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
     const items = await queryResult.run();
     const messages = items.filter(Obj.instanceOf(Message.Message));
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(messages));
+    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, messages));
   }
 
   getTools(): Effect.Effect<

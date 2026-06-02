@@ -7,13 +7,13 @@ import * as Runtime from 'effect/Runtime';
 
 import { Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, SessionLink } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ContentBlock, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
 
@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
           .filter(Obj.instanceOf(Message.Message))
           .sort((a, b) => a.created.localeCompare(b.created));
 
-        // Create a new chat, then override its bindings with the source chat's bindings.
+        // Create a new chat, then apply source bindings and session link.
         const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
         const newFeed = newChat.feed.target;
         invariant(newFeed, 'New chat feed not found.');
@@ -48,14 +48,17 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         if (sorted.length > 0) {
           const lastMessage = sorted[sorted.length - 1];
 
-          // Append a synthetic message containing the SessionLink as the first block of the new feed.
-          const linkBlock: ContentBlock.SessionLink = {
-            _tag: 'sessionLink',
-            feedRef: Ref.make(sourceFeed),
-            messageId: lastMessage.id,
-          };
-          const linkMessage = Message.make({ sender: 'user', blocks: [linkBlock] });
-          yield* Effect.promise(() => Runtime.runPromise(runtime)(Feed.append(newFeed, [linkMessage])));
+          // Append a SessionLink record pointing to the last message of the source feed.
+          yield* Effect.promise(() =>
+            Runtime.runPromise(runtime)(
+              Feed.append(newFeed, [
+                Obj.make(SessionLink.SessionLink, {
+                  feedRef: Ref.make(sourceFeed),
+                  messageId: lastMessage.id,
+                }),
+              ]),
+            ),
+          );
         }
 
         // Copy source chat's blueprint and object bindings to the new feed.

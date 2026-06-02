@@ -5,26 +5,32 @@
 import * as Effect from 'effect/Effect';
 
 import { Feed, Filter, Obj } from '@dxos/echo';
-import { type ContentBlock, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
+
+import { SessionLink } from './SessionLink';
 
 /**
- * Loads and reifies conversation history by resolving SessionLink content blocks.
- * Only the first content block of the first message is checked; all others are ignored.
+ * Loads and reifies conversation history by resolving SessionLink feed records.
  */
 export class SessionLoader {
   /**
-   * Replaces a leading SessionLink block with the messages it references.
-   * If the first content block of the first message is a `sessionLink`, loads all messages
-   * from the referenced feed up to and including `messageId` and prepends them to the history.
+   * Prepends linked history to `messages` when the feed contains a SessionLink.
+   * Queries the feed for any SessionLink record; if found, loads messages from
+   * the referenced feed up to and including `messageId` and prepends them.
    */
-  reifyHistory(messages: Message.Message[]): Effect.Effect<Message.Message[], never, Feed.FeedService> {
+  reifyHistory(
+    feed: Feed.Feed,
+    messages: Message.Message[],
+  ): Effect.Effect<Message.Message[], never, Feed.FeedService> {
     return Effect.gen(function* () {
-      const first = messages[0];
-      if (!first || first.blocks.length === 0 || first.blocks[0]._tag !== 'sessionLink') {
+      const links = yield* Feed.runQuery(feed, Filter.type(SessionLink));
+      const sessionLinks = links.filter(Obj.instanceOf(SessionLink)).sort((a, b) => a.created.localeCompare(b.created));
+
+      const link = sessionLinks[0];
+      if (!link) {
         return messages;
       }
 
-      const link = first.blocks[0] as ContentBlock.SessionLink;
       const sourceFeed = link.feedRef.target;
       if (!sourceFeed) {
         return messages;
@@ -43,8 +49,7 @@ export class SessionLoader {
         return messages;
       }
 
-      // Replace the SessionLink message with the loaded history.
-      return [...sorted.slice(0, cutoffIndex + 1), ...messages.slice(1)];
+      return [...sorted.slice(0, cutoffIndex + 1), ...messages];
     });
   }
 }
