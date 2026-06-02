@@ -7,8 +7,6 @@ import { type Space } from '@dxos/client-protocol';
 import type { Config } from '@dxos/config';
 import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -57,10 +55,6 @@ export const createInitializedClientsWithContext = async (
   options?: CreateInitializedClientsOptions,
 ): Promise<Client[]> => {
   const testBuilder = new TestBuilder(options?.config);
-  testBuilder.storage = options?.storage
-    ? () => createStorage({ type: StorageType.RAM, root: String(Math.random()) })
-    : undefined;
-  testBuilder.level = options?.storage ? () => createTestLevel() : undefined;
 
   const clients = range(
     count,

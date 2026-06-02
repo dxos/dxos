@@ -3,24 +3,23 @@
 //
 
 import { type DocumentId } from '@automerge/automerge-repo';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge';
+import { createTestSqliteRuntime } from '../testing';
 import { DocumentsSynchronizer } from './documents-synchronizer';
 
 describe('DocumentsSynchronizer', () => {
   test('two synchronizers receive updates for shared document', async () => {
-    const kv = createTestLevel();
-    const host = new AutomergeHost({
-      db: kv,
-    });
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
     await openAndClose(host);
     const handle = await host.createDoc<{ text: string }>({ text: 'initial' });
 
@@ -88,10 +87,9 @@ describe('DocumentsSynchronizer', () => {
 
   test('do not get init changes for client created docs', async () => {
     let counter = 0;
-    const kv = createTestLevel();
-    const host = new AutomergeHost({
-      db: kv,
-    });
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
     await openAndClose(host);
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
@@ -117,15 +115,13 @@ describe('DocumentsSynchronizer', () => {
 
   describe('persistence', () => {
     test('document created on host persists without explicit flush', async () => {
-      const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
+      const dbPath = `/tmp/dxos-${PublicKey.random().toHex()}.db`;
       let documentId: DocumentId;
       const text = 'Hello World!';
 
       {
-        const kv = createTestLevel(path);
-        const host = new AutomergeHost({
-          db: kv,
-        });
+        const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+        const host = new AutomergeHost({ runtime });
         await openAndClose(host);
         const synchronizer = new DocumentsSynchronizer({
           automergeHost: host,
@@ -143,18 +139,16 @@ describe('DocumentsSynchronizer', () => {
         // Wait for auto-save (no explicit flush).
         await sleep(500);
 
-        // Close in same order as repo-proxy.test.ts: level first, then host.
-        await kv.close();
         await host.close();
         await synchronizer.close();
+        await dispose();
       }
 
       {
         // Reopen and verify persistence.
-        const kv = createTestLevel(path);
-        const host = new AutomergeHost({
-          db: kv,
-        });
+        const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+        onTestFinished(() => dispose());
+        const host = new AutomergeHost({ runtime });
         await openAndClose(host);
 
         const handle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
@@ -163,7 +157,6 @@ describe('DocumentsSynchronizer', () => {
 
         expect(handle.doc().text).to.equal(text);
 
-        await kv.close();
         await host.close();
       }
     });

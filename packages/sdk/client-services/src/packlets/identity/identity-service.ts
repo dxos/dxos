@@ -7,7 +7,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import {
   type CreateIdentityRequest,
   type CreateRecoveryCredentialRequest,
@@ -27,7 +27,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _recoveryManager: EdgeIdentityRecoveryManager,
-    private readonly _keyring: Keyring,
+    private readonly _keyring: KeyringApi,
     private readonly _createIdentity: (params: CreateIdentityOptions, ctx?: Context) => Promise<Identity>,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {

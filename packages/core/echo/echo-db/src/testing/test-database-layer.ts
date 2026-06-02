@@ -6,12 +6,11 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as NodeFs from 'node:fs';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
-import type { LevelDB } from '@dxos/kv-store';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
 import type { EchoDatabaseImpl } from '../proxy-db';
@@ -55,35 +54,25 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
 
       const builder = yield* testBuilder;
 
-      let kv: LevelDB | undefined;
-      if (storagePath) {
-        kv = createTestLevel(storagePath);
-        yield* Effect.promise(() => kv!.open());
-      }
-      const peer = yield* Effect.promise(() => builder.createPeer({ types, kv, assignQueuePositions: true }));
+      const peer = yield* Effect.promise(() => builder.createPeer({ types, storagePath, assignQueuePositions: true }));
 
       let db: EchoDatabaseImpl | undefined;
       let queues: QueueFactory | undefined;
 
       if (storagePath) {
-        const testMetadata = yield* Effect.promise(async () => {
-          try {
-            return await kv!.get('test-metadata', { valueEncoding: 'json' });
-          } catch (e) {
-            if ((e as any).code === 'LEVEL_NOT_FOUND') {
-              return undefined;
-            }
-            throw e;
-          }
-        });
+        const metaPath = storagePath + '.meta.json';
+        let testMetadata: { key: string; rootUrl: string } | undefined;
+        try {
+          testMetadata = JSON.parse(NodeFs.readFileSync(metaPath, 'utf-8'));
+        } catch {
+          testMetadata = undefined;
+        }
         log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
           db = yield* Effect.promise(() => peer.createDatabase(key));
           queues = peer.client.constructQueueFactory(db.spaceId);
 
-          yield* Effect.promise(() =>
-            kv!.put('test-metadata', { key: key.toHex(), rootUrl: db!.rootUrl }, { valueEncoding: 'json' }),
-          );
+          NodeFs.writeFileSync(metaPath, JSON.stringify({ key: key.toHex(), rootUrl: db.rootUrl }));
 
           if (onInit) {
             yield* onInit().pipe(
@@ -92,9 +81,9 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
             );
           }
         } else {
-          const key = PublicKey.from((testMetadata as any).key);
-          const rootUrl = (testMetadata as any).rootUrl;
-          db = yield* Effect.promise(() => peer.openDatabase(key, rootUrl));
+          const resolvedKey = PublicKey.from(testMetadata.key);
+          const rootUrl = testMetadata.rootUrl;
+          db = yield* Effect.promise(() => peer.openDatabase(resolvedKey, rootUrl));
           queues = peer.client.constructQueueFactory(db.spaceId);
           // Rebuild index after reopening since in-memory SQLite is recreated.
           yield* Effect.promise(() => db!.flush());
@@ -109,14 +98,6 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
           );
         }
       }
-
-      yield* Effect.addFinalizer(() =>
-        Effect.promise(async () => {
-          if (kv) {
-            await kv.close();
-          }
-        }),
-      );
 
       return Context.mergeAll(
         Context.make(Database.Service, Database.makeService(db)),

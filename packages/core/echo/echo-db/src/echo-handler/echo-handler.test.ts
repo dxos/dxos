@@ -18,7 +18,6 @@ import {
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
@@ -262,7 +261,7 @@ describe('Reactive Object with ECHO database', () => {
 
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+    const peer = await builder.createPeer({ storagePath: tmpPath });
     const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
     peer.client.graph.registry.add([TestSchema.Example]);
 
@@ -277,7 +276,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       peer.client.graph.registry.add([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
@@ -296,7 +295,7 @@ describe('Reactive Object with ECHO database', () => {
 
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+    const peer = await builder.createPeer({ storagePath: tmpPath });
     const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
     let id: string;
@@ -312,7 +311,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
@@ -720,7 +719,7 @@ describe('Reactive Object with ECHO database', () => {
       const spaceKey = PublicKey.random();
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       let id: string;
@@ -736,7 +735,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+        const peer = await builder.createPeer({ storagePath: tmpPath });
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
         expect(Obj.getMeta(obj).keys).to.deep.eq([metaKey]);

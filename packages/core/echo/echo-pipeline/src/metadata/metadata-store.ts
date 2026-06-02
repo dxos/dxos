@@ -28,6 +28,42 @@ import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/ut
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
+/**
+ * Shared interface for file-based and SQLite-backed metadata stores.
+ */
+export interface IMetadataStore {
+  readonly update: Event<EchoMetadata>;
+  readonly metadata: EchoMetadata;
+  readonly version: number;
+  readonly spaces: SpaceMetadata[];
+
+  load(): Promise<void>;
+  close(): Promise<void>;
+  flush(): Promise<void>;
+  clear(): Promise<void>;
+  hasSpace(spaceKey: PublicKey): boolean;
+
+  getIdentityRecord(): IdentityRecord | undefined;
+  setIdentityRecord(record: IdentityRecord): Promise<void>;
+
+  getInvitations(): Invitation[];
+  addInvitation(invitation: Invitation): Promise<void>;
+  removeInvitation(invitationId: string): Promise<void>;
+
+  addSpace(record: SpaceMetadata): Promise<void>;
+  setSpaceDataLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void>;
+  setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void>;
+  setCache(spaceKey: PublicKey, cache: SpaceCache): Promise<void>;
+  setWritableFeedKeys(spaceKey: PublicKey, controlFeedKey: PublicKey, dataFeedKey: PublicKey): Promise<void>;
+  setSpaceState(spaceKey: PublicKey, state: SpaceState): Promise<void>;
+
+  getSpaceControlPipelineSnapshot(spaceKey: PublicKey): ControlPipelineSnapshot | undefined;
+  setSpaceControlPipelineSnapshot(spaceKey: PublicKey, snapshot: ControlPipelineSnapshot): Promise<void>;
+
+  getSpaceEdgeReplicationSetting(spaceKey: PublicKey): EdgeReplicationSetting | undefined;
+  setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void>;
+}
+
 export interface AddSpaceOptions {
   key: PublicKey;
   genesisFeed: PublicKey;
@@ -45,7 +81,7 @@ const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
 const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 const LargeSpaceMetadata = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
 
-export class MetadataStore {
+export class MetadataStore implements IMetadataStore {
   private _metadata: EchoMetadata = emptyEchoMetadata();
   private _spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);
 

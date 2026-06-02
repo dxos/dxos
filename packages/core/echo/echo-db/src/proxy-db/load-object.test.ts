@@ -8,7 +8,6 @@ import { describe, expect, test } from 'vitest';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder, createTmpPath } from '../testing';
@@ -23,14 +22,14 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const db = await testPeer.createDatabase(spaceKey);
     const object = Obj.make(TestSchema.Expando, { nested: Obj.make(TestSchema.Expando, { value: nestedValue }) });
     db.add(object);
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded: any = await restartedDb.query(Filter.id(object.id)).first();
     expect(loaded.nested?.value).to.be.undefined;
@@ -43,7 +42,7 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const db = await testPeer.createDatabase(spaceKey);
     const object = Obj.make(TestSchema.Expando, {
       foo: Obj.make(TestSchema.Expando, { value: 1 }),
@@ -53,7 +52,7 @@ describe.skip('loadObjectReferences', () => {
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded: any = await restartedDb.query(Filter.id(object.id)).first();
     expect(loaded.nested?.value).to.be.undefined;
@@ -67,7 +66,7 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const db = await testPeer.createDatabase(spaceKey);
     const object = Obj.make(TestSchema.Expando, {
       nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
@@ -76,7 +75,7 @@ describe.skip('loadObjectReferences', () => {
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded: any = await restartedDb.query(Filter.id(object.id)).first();
     expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
@@ -90,7 +89,7 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const objects = [
       Obj.make(TestSchema.Expando, {
         nestedArray: [Obj.make(TestSchema.Expando, {}), Obj.make(TestSchema.Expando, {})],
@@ -108,7 +107,7 @@ describe.skip('loadObjectReferences', () => {
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded: any[] = await Promise.all(objects.map((o) => restartedDb.query(Filter.id(o.id)).first()));
     const loadedArrays = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
@@ -123,14 +122,14 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const db = await testPeer.createDatabase(spaceKey);
     const object = Obj.make(TestSchema.Expando, { nestedArray: [] });
     db.add(object);
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded: any = await restartedDb.query(Filter.id(object.id)).first();
     expect(await loadObjectReferences([loaded], () => loaded.nestedArray)).to.deep.eq([[]]);
@@ -142,14 +141,14 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const db = await testPeer.createDatabase(spaceKey);
     const object = Obj.make(TestSchema.Expando, { nested: Obj.make(TestSchema.Expando, {}) });
     db.add(object);
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded: any = await restartedDb.query(Filter.id(object.id)).first();
     expect(loaded.nested?.value).to.be.undefined;
@@ -175,7 +174,7 @@ describe.skip('loadObjectReferences', () => {
     await openAndClose(testBuilder);
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
-    const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const object = Obj.make(TestSchema, { nested: [Ref.make(Obj.make(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
     db.graph.registry.add([TestSchema, Nested]);
@@ -183,7 +182,7 @@ describe.skip('loadObjectReferences', () => {
     await db.flush();
     await testPeer.close();
 
-    const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const restartedPeer = await testBuilder.createPeer({ storagePath: tmpPath });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
     const loaded = await restartedDb.query(Filter.id(object.id)).first();
     const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested.map((n: any) => n.target));

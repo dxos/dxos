@@ -10,19 +10,18 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import type { LevelDB } from '@dxos/kv-store';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { TestReplicationNetwork } from '../testing';
+import { createTestSqliteRuntime } from '../testing';
 import { AutomergeHost } from './automerge-host';
 import { type EchoNetworkAdapter } from './echo-network-adapter';
+import { TestReplicationNetwork } from '../testing';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
-    const level = await createLevel();
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost(runtime);
     const handle = await host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -32,8 +31,9 @@ describe('AutomergeHost', () => {
   });
 
   test('changes are preserved in storage', async () => {
-    const level = await createLevel();
-    const host = await setupAutomergeHost({ level });
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}.db`;
+    const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
+    const host = await setupAutomergeHost(runtime1);
     const handle = await host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -42,8 +42,11 @@ describe('AutomergeHost', () => {
 
     await host.flush(Context.default());
     await host.close();
+    await dispose1();
 
-    const host2 = await setupAutomergeHost({ level });
+    const { runtime: runtime2, dispose: dispose2 } = createTestSqliteRuntime(tmpPath);
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost(runtime2);
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
     await handle2.whenReady();
@@ -52,8 +55,9 @@ describe('AutomergeHost', () => {
   });
 
   test('load resolves when document is created from binary', async () => {
-    const level = await createLevel();
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost(runtime);
 
     // Create a document to get its binary representation
     const document = A.from({ text: 'Hello world' });
@@ -73,30 +77,32 @@ describe('AutomergeHost', () => {
   });
 
   test('query single document heads', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}.db`;
 
-    const level = await createLevel(tmpPath);
-    const host = await setupAutomergeHost({ level });
+    const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
+    const host = await setupAutomergeHost(runtime1);
     const handle = await host.createDoc({ text: 'Hello world' });
     const expectedHeads = A.getHeads(handle.doc()!);
     await host.flush(Context.default());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     await host.close();
-    await level.close();
+    await dispose1();
 
     // Simulate a restart.
     {
-      const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
+      const { runtime: runtime2, dispose: dispose2 } = createTestSqliteRuntime(tmpPath);
+      onTestFinished(() => dispose2());
+      const host = await setupAutomergeHost(runtime2);
       expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     }
   });
 
   test('query multiple document heads', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}.db`;
 
-    const level = await createLevel(tmpPath);
-    const host = await setupAutomergeHost({ level });
+    const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
+    const host = await setupAutomergeHost(runtime1);
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => A.getHeads(handle.doc()!));
     await host.flush(Context.default());
@@ -107,24 +113,25 @@ describe('AutomergeHost', () => {
 
     expect(await host.getHeads(ids)).toEqual(expectedHeads);
     await host.close();
-    await level.close();
+    await dispose1();
 
     // Simulate a restart.
     {
-      const level = await createLevel(tmpPath);
-      const host = await setupAutomergeHost({ level });
+      const { runtime: runtime2, dispose: dispose2 } = createTestSqliteRuntime(tmpPath);
+      onTestFinished(() => dispose2());
+      const host = await setupAutomergeHost(runtime2);
       expect(await host.getHeads(ids)).toEqual(expectedHeads);
-      await host.close();
-      await level.close();
     }
   });
 
   test('loadDoc respects fetchFromNetwork', { timeout: 10_000 }, async () => {
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost(runtime1);
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createTestSqliteRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost(runtime2);
     const handle = await host2.createDoc({ text: 'Hello world' });
     await host2.flush(Context.default());
 
@@ -163,23 +170,25 @@ describe('AutomergeHost', () => {
     // Pre-populate host1's storage with the doc, then close so that the
     // host1 we test with has the doc on disk but did not author it (i.e.
     // it's not in `_createdDocuments` and won't auto-announce).
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}.db`;
     let documentId: DocumentId;
     {
-      const level = await createLevel(tmpPath);
-      const provider = await setupAutomergeHost({ level });
+      const { runtime, dispose } = createTestSqliteRuntime(tmpPath);
+      const provider = await setupAutomergeHost(runtime);
       const handle = await provider.createDoc({ text: 'Hello world' });
       documentId = handle.documentId;
       await provider.flush(Context.default());
       await provider.close();
-      await level.close();
+      await dispose();
     }
 
-    const level1 = await createLevel(tmpPath);
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime(tmpPath);
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost(runtime1);
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createTestSqliteRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost(runtime2);
 
     const network = await new TestReplicationNetwork().open();
     await host1.addReplicator(Context.default(), await network.createReplicator());
@@ -214,11 +223,13 @@ describe('AutomergeHost', () => {
   test('collection synchronization', { timeout: 30_000 }, async () => {
     const NUM_DOCUMENTS = 10;
 
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createTestSqliteRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost(runtime1);
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createTestSqliteRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost(runtime2);
     const documentIds: DocumentId[] = [];
     for (const i of range(NUM_DOCUMENTS)) {
       const handle = await host2.createDoc({ docIndex: i });
@@ -244,21 +255,17 @@ describe('AutomergeHost', () => {
     await host2.close();
     await network.close();
   });
-
-  const createLevel = async (tmpPath?: string) => {
-    const level = createTestLevel(tmpPath);
-    await openAndClose(level);
-    return level;
-  };
 });
 
-const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
-  const host = new AutomergeHost({
-    db: level,
-  });
+type RuntimeArg = ReturnType<typeof createTestSqliteRuntime>['runtime'];
+
+const setupAutomergeHost = async (runtime: RuntimeArg) => {
+  const host = new AutomergeHost({ runtime });
   await host.open();
   onTestFinished(async () => {
-    await host.close();
+    if (host.isOpen) {
+      await host.close();
+    }
   });
   return host;
 };

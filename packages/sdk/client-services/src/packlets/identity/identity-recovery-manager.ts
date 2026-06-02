@@ -7,7 +7,7 @@ import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -27,7 +27,7 @@ import { type JoinIdentityProps } from './identity-manager';
 
 export class EdgeIdentityRecoveryManager {
   constructor(
-    private readonly _keyring: Keyring,
+    private readonly _keyring: KeyringApi,
     private readonly _edgeClient: EdgeHttpClient | undefined,
     private readonly _identityProvider: () => Identity | undefined,
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityProps) => Promise<Identity>,
