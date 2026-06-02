@@ -7,7 +7,8 @@ import { deepMapValues } from '@dxos/util';
 
 import type * as Obj from '../../Obj';
 import { makeObject } from '../common/proxy';
-import { getMeta, getSchema, getStaticTypeSchema, getType } from '../common/types';
+import { getSchema, getStaticTypeSchema, getType } from '../common/types';
+import { getMeta } from '../common/types/meta';
 import { Ref } from '../Ref';
 
 /**

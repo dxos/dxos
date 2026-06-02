@@ -9,7 +9,8 @@ import type { DeepReadonly } from '@dxos/util';
 import type * as Tag from '../../../Tag';
 import type { Ref } from '../../Ref/ref';
 import { type Mutable } from '../proxy';
-import { type AnyProperties, type EntityMeta, getMeta as getMeta$ } from '../types';
+import { type AnyProperties } from '../types';
+import { type EntityMeta, getMeta as getMeta$ } from '../types/meta';
 
 /**
  * Deeply read-only version of EntityMeta.

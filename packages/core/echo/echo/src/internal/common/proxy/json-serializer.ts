@@ -8,18 +8,16 @@ import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
 import { Ref } from '../../Ref';
 import {
-  ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_URI,
   ATTR_TYPE,
-  type EntityMeta,
-  MetaId,
   RelationSourceDXNId,
   RelationTargetDXNId,
   SelfURIId,
   TypeId,
 } from '../types';
+import { ATTR_META, type EntityMeta, MetaId } from '../types/meta';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.

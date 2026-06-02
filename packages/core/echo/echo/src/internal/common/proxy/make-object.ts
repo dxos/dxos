@@ -7,16 +7,8 @@ import type * as Schema from 'effect/Schema';
 import { EntityId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation/annotations';
-import {
-  type AnyProperties,
-  KindId,
-  MetaId,
-  type EntityMeta,
-  EntityMetaSchema,
-  ParentId,
-  SchemaKindId,
-  StaticTypeSchemaSlot,
-} from '../types';
+import { type AnyProperties, KindId, ParentId, SchemaKindId, StaticTypeSchemaSlot } from '../types';
+import { MetaId, type EntityMeta, EntityMetaSchema } from '../types/meta';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';

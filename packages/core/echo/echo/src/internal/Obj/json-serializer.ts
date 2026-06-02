@@ -15,18 +15,16 @@ import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
-  ATTR_META,
   ATTR_PARENT,
   ATTR_TYPE,
   type AnyEntity,
   EntityKind,
   KindId,
-  MetaId,
-  EntityMetaSchema,
   ParentId,
   setSchema,
   setType,
 } from '../common/types';
+import { ATTR_META, MetaId, EntityMetaSchema } from '../common/types/meta';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,

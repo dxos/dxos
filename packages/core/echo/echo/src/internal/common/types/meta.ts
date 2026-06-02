@@ -2,25 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 
-import {
-  type EncodedReference,
-  EncodedReference as EncodedRef,
-  ForeignKey,
-  isEncodedReference,
-} from '@dxos/echo-protocol';
+import { type EncodedReference, ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type * as Entity from '../../../Entity';
 import type * as Tag from '../../../Tag';
 import { Dictionary } from '../../Annotation/dictionary';
-// Type-only import (erased at runtime) — this module is part of the `common/types` barrel that
-// `internal/Ref/ref` imports at load time, so a value import would create an eval-order cycle.
-import type { Ref } from '../../Ref/ref';
+// `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
+// Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
+import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
 import { type AnyProperties } from './base';
 
 /**
@@ -37,39 +30,22 @@ export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 // EntityMeta
 //
 
+// Tag type DXN — duplicated from `Tag.ts` (importing the `Tag` value would re-create an eval cycle).
+const TAG_TYPENAME = 'org.dxos.type.tag';
+const TAG_VERSION = '0.1.0';
+
 /**
  * Schema for references to {@link Tag} objects stored in {@link EntityMetaSchema.tags}.
  *
- * Defined inline (rather than via `Ref.Ref(Tag)`) so this deep-internal module imports neither the
- * `Tag` value nor the ref machinery — both would create an eval-order cycle. The codec only serves
- * the non-database (typed-handler) and JSON paths: database reads materialize live `Ref`s in the
- * echo handler, and database writes encode them via the handler's link assignment, so a structural
- * pass-through is sufficient here.
+ * Built from the shared {@link createEchoReferenceSchema} (the same builder `Ref.Ref` uses) via
+ * `Schema.suspend`, so it reuses the canonical ref codec rather than duplicating it. `suspend`
+ * defers construction until first use, and `Tag` is referenced type-only, so no `Tag` value import
+ * is needed.
  */
-const TagRefSchema: Schema.Schema<Ref<Tag.Tag>, EncodedReference> = Schema.declare<Ref<Tag.Tag>, EncodedReference, []>(
-  [],
-  {
-    encode: () => (value) =>
-      Effect.gen(function* () {
-        if (isEncodedReference(value)) {
-          return value;
-        }
-        // `Ref`-like (has a `uri`): encode to the on-wire `{ '/': uri }` form.
-        if (value != null && typeof (value as Ref<Tag.Tag>).uri === 'string') {
-          return EncodedRef.fromURI((value as Ref<Tag.Tag>).uri);
-        }
-        return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
-      }),
-    decode: () => (value) =>
-      Effect.gen(function* () {
-        // Pass the encoded reference through; the live `Ref` is materialized by the handler on read.
-        if (isEncodedReference(value) || (value != null && typeof (value as Ref<Tag.Tag>).uri === 'string')) {
-          // Codec boundary: the runtime value is an encoded reference, typed as the live ref.
-          return value as unknown as Ref<Tag.Tag>;
-        }
-        return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
-      }),
-  },
+const TagRefSchema = Schema.suspend(
+  (): Schema.Schema<Ref<Tag.Tag>, EncodedReference> =>
+    // The factory yields a loosely-typed `Ref<any>` schema; narrow it to the Tag-typed ref.
+    createEchoReferenceSchema(undefined, TAG_TYPENAME, TAG_VERSION) as Schema.Schema<Ref<Tag.Tag>, EncodedReference>,
 );
 
 export const EntityMetaSchema = Schema.Struct({

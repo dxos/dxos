@@ -12,7 +12,8 @@ import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
 import { getTypeURI, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
-import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
+import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import { MetaId } from '../common/types/meta';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import * as JsonSchema from '../JsonSchema';
 import { Ref, StaticRefResolver } from '../Ref';
@@ -106,7 +107,8 @@ describe('Object JSON serializer', () => {
     json['@meta'] = { keys: [], tags: ['dxn:echo:@:TAGLEGACY'] };
 
     const fromJson = (await objectFromJSON(json)) as any;
-    expect(fromJson[MetaId].tags).toEqual([{ '/': 'dxn:echo:@:TAGLEGACY' }]);
+    // Decodes to a materialized `Ref` (the shared ref codec), not a raw encoded reference.
+    expect(fromJson[MetaId].tags.map((ref: any) => ref.uri)).toEqual(['dxn:echo:@:TAGLEGACY']);
   });
 
   test('deserializes expando without leaking internal json keys', async () => {

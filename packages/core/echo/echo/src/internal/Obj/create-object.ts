@@ -12,14 +12,13 @@ import { defineHiddenProperty } from '../common/proxy';
 import {
   EntityKind,
   KindId,
-  MetaId,
-  type EntityMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
   getStaticTypeSchema,
   setSchema,
   setType,
 } from '../common/types';
+import { MetaId, type EntityMeta } from '../common/types/meta';
 import {
   RelationSourceDXNId,
   RelationSourceId,

@@ -19,10 +19,10 @@ import {
   EntityKind,
   InstancePhantomId,
   KindId,
-  type EntityMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
+import { type EntityMeta } from '../common/types/meta';
 import { JsonSchemaType } from '../JsonSchema/json-schema-type';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
