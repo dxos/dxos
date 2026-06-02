@@ -3,7 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import React, { type CSSProperties, useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { hueShades, hues } from './defs';
 import { mx } from './util';
@@ -32,7 +32,7 @@ const neutralShades: [number, string][] = [
   [950, 'bg-neutral-950'],
 ];
 
-const ColorSwatch = ({ hue }: { hue: string }) => {
+const StyleSwatch = ({ hue }: { hue: string }) => {
   return (
     <div
       style={{
@@ -47,12 +47,13 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
         }}
         className='p-2 text-sm'
       >
-        {hue}
+        <div>{hue}</div>
+        <div className='text-xs'>-text</div>
       </div>
       <div
         style={{
           backgroundColor: `var(--color-${hue}-fill)`,
-          color: `var(--color-${hue}-text)`,
+          color: `var(--color-${hue}-foreground)`,
         }}
         className='px-1 text-sm flex items-center'
       >
@@ -67,7 +68,8 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
         }}
         className='p-2 text-sm'
       >
-        {hue}
+        <div>{hue}</div>
+        <div className='text-xs'>-fg/-surface</div>
       </div>
     </div>
   );
@@ -108,7 +110,7 @@ export const Styles = {
       <div className='p-4'>
         <div className='flex flex-wrap gap-2'>
           {['neutral', ...hues].map((hue) => (
-            <ColorSwatch key={hue} hue={hue} />
+            <StyleSwatch key={hue} hue={hue} />
           ))}
         </div>
       </div>
@@ -145,38 +147,6 @@ export const Neutral = {
               )}
             >
               {value}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  },
-};
-
-export const Primary = {
-  render: () => {
-    const [shift, setShift] = useState(180);
-    // CSSProperties does not type custom properties; cast at this boundary. The shift is unitless
-    // degrees because the OKLCH relative-color `h` channel resolves to a number.
-    const style = { '--dx-secondary-hue-shift': `${shift}` } as CSSProperties;
-    return (
-      <div className='p-4 flex flex-col gap-4' style={style}>
-        <label className='flex items-center gap-3 text-sm text-base-foreground'>
-          <span className='w-40'>--dx-secondary-hue-shift: {shift}°</span>
-          <input
-            type='range'
-            min={-180}
-            max={180}
-            value={shift}
-            onChange={(event) => setShift(Number(event.target.value))}
-            className='w-96'
-          />
-        </label>
-        <div className='flex flex-col gap-3'>
-          {(['primary', 'secondary'] as const).map((hue) => (
-            <div key={hue} className='flex flex-col gap-1'>
-              <span className='text-sm text-description'>{hue}</span>
-              <HueSwatch hue={hue} shades={hueShades} />
             </div>
           ))}
         </div>

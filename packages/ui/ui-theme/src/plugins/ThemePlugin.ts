@@ -12,6 +12,8 @@ import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 import { type HtmlTagDescriptor, type Plugin, type UserConfig } from 'vite';
 
+import dxHueRoles from './postcss-hue-roles.mjs';
+
 /**
  * CSS cascade layer order.
  * Must be established before any stylesheets load so that Tailwind's own @layer declarations don't override our ordering. Exported so consuming
@@ -75,6 +77,8 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
             plugins: [
               // Handles @import statements in CSS.
               postcssImport(),
+              // Expands the @dx-hue-* directives in styles.css into --color-<hue>-<role> tokens.
+              dxHueRoles(),
               // Processes CSS nesting syntax.
               postcssNesting(),
               // Processes Tailwind directives and generates utilities from scanned content.

@@ -61,28 +61,6 @@
   --color-primary-900: var(--color-blue-900);
   --color-primary-950: var(--color-blue-950);
 
-  /**
-   * Secondary palette — complement of primary, derived by rotating primary's hue in OKLCH.
-   * Lightness and chroma track primary at every step, so the ramp stays perceptually matched.
-   * Runtime-selectable: override --dx-secondary-hue-shift on :root or any subtree (e.g.
-   * style="--dx-secondary-hue-shift: 90") to repaint the whole secondary family. The value is
-   * unitless degrees (the OKLCH relative-color `h` channel is a number, so calc must stay unitless):
-   * 180 is the direct complement (blue -> amber); ~120 a triadic green, ~-60 a violet.
-   */
-  --dx-secondary-hue-shift: 280;
-
-  --color-secondary-50: oklch(from var(--color-primary-50) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-100: oklch(from var(--color-primary-100) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-200: oklch(from var(--color-primary-200) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-300: oklch(from var(--color-primary-300) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-400: oklch(from var(--color-primary-400) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-500: oklch(from var(--color-primary-500) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-600: oklch(from var(--color-primary-600) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-700: oklch(from var(--color-primary-700) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-800: oklch(from var(--color-primary-800) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-900: oklch(from var(--color-primary-900) l c calc(h + var(--dx-secondary-hue-shift)));
-  --color-secondary-950: oklch(from var(--color-primary-950) l c calc(h + var(--dx-secondary-hue-shift)));
-
   /* Composer logo colors */
   --color-composer-100: rgb(5 40 61);
   --color-composer-200: rgb(10 75 105);

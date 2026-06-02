@@ -143,7 +143,7 @@ const L0ItemRoot = memo(
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
   <div
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-surface rounded-sm',
+      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-fill rounded-sm',
       classNames,
     )}
   />

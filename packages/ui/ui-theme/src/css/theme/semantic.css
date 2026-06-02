@@ -26,7 +26,7 @@
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);
-  --color-attention-contains: oklch(from var(--color-accent-surface) l c h / 0.3);
+  --color-attention-contains: oklch(from var(--color-accent-fill) l c h / 0.3);
 
   --color-deck-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-scrim-surface: light-dark(
@@ -78,8 +78,8 @@
   --color-selected-foreground: var(--color-current-foreground);
 
   /* Accent (primary) */
-  --color-accent-surface: light-dark(var(--color-blue-600), var(--color-blue-700));
-  --color-accent-surface-hover: light-dark(var(--color-blue-700), var(--color-blue-800));
+  --color-accent-fill: light-dark(var(--color-blue-600), var(--color-blue-700));
+  --color-accent-fill-hover: light-dark(var(--color-blue-700), var(--color-blue-800));
   --color-accent-foreground: var(--color-blue-100);
   --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));

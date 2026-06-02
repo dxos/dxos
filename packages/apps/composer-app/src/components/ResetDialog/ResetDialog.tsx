@@ -56,7 +56,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 };
 
 export const ResetDialog = ({
-  error: propsError,
+  error: errorProp,
   logStore,
   observability: observabilityProp,
   needRefresh,
@@ -68,7 +68,7 @@ export const ResetDialog = ({
 }: ResetDialogProps) => {
   const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const [isNotMobile] = useMediaQuery('md');
-  const error = propsError && parseError(t, propsError);
+  const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);

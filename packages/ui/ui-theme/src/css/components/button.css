@@ -53,26 +53,24 @@
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
-      /* Hover */
       &:hover {
         @apply bg-hover-surface;
       }
 
-      /* Variants */
       &[data-variant='primary'] {
-        @apply text-accent-foreground bg-accent-surface;
+        @apply text-accent-foreground bg-accent-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-accent-surface-hover;
+          @apply bg-accent-fill-hover;
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accent-foreground bg-error-surface;
+        @apply text-accent-foreground bg-error-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-error-fill;
+          @apply bg-error-fill-hover;
         }
       }
     }

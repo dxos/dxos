@@ -108,13 +108,13 @@ These should probably move to `card-surface` or `current-surface` depending on i
 
 `accent-*` is the project's primary brand color (blue). The token name is `accent`, not `primary`, to avoid colliding with the raw scale `--color-primary-*` (which is aliased to `blue-*` for Tailwind utility convenience).
 
-| Token                  | Purpose                                             |
-| ---------------------- | --------------------------------------------------- |
-| `accent-surface`       | Fill for primary buttons / call-to-action surfaces. |
-| `accent-surface-hover` | Hover state.                                        |
-| `accent-foreground`    | Text/icon color on accent surfaces.                 |
-| `accent-text`          | Standalone accent-colored text (links, emphasis).   |
-| `accent-text-hover`    | Hover state for accent text.                        |
+| Token               | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
+| `accent-fill`       | Fill for primary buttons / call-to-action surfaces. |
+| `accent-fill-hover` | Hover state.                                        |
+| `accent-foreground` | Text/icon color on accent surfaces.                 |
+| `accent-text`       | Standalone accent-colored text (links, emphasis).   |
+| `accent-text-hover` | Hover state for accent text.                        |
 
 This is the canonical illustration of the `foreground` vs `text` distinction: `accent-foreground` is the ink on an accent button; `accent-text` is the accent-colored body link.
 

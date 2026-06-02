@@ -8,7 +8,7 @@
 }
 .tl-container.tl-theme__light,
 .tl-container.tl-theme__dark {
-  --color-selected: var(--color-accent-surface);
+  --color-selected: var(--color-accent-fill);
   --color-panel: var(--color-modal-surface);
   --color-panel-contrast: var(--color-separator);
 }
