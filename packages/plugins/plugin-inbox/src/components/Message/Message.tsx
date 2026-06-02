@@ -10,7 +10,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Icon, IconBlock, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Tag, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -22,9 +22,11 @@ import { InboxCapabilities, Mailbox } from '#types';
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { AnchorIconButton } from '../AnchorIconButton';
+import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { UserIconButton } from '../UserIconButton';
-import { type ViewMode, useMessageActions } from './useToolbar';
+import { type ViewMode } from '../ViewMode';
+import { useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -196,33 +198,27 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <div
-      data-testid='message-header'
-      className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 border-b border-subdued-separator'
-    >
+    <Header.Root data-testid='message-header'>
       {/* Subject row. */}
-      <div className='col-span-2 grid grid-cols-subgrid'>
-        <IconBlock classNames='text-subdued'>
-          <Icon icon='ph--envelope-open--regular' />
-        </IconBlock>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(message.created), new Date())}
-          </div>
-        </div>
-      </div>
+      <Header.Title
+        icon='ph--envelope-open--regular'
+        title={message.properties?.subject}
+        caption={message.created && formatDateTime(new Date(message.created), new Date())}
+      />
 
       {/* Sender row. */}
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <div className='col-span-2 grid grid-cols-subgrid items-center'>
-        <UserIconButton
-          title={message.sender.name}
-          value={sender}
-          onContactCreate={() => onContactCreate?.(message.sender)}
-        />
+      <Header.Row
+        icon={
+          <UserIconButton
+            title={message.sender.name}
+            value={sender}
+            onContactCreate={() => onContactCreate?.(message.sender)}
+          />
+        }
+      >
         <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
-      </div>
+      </Header.Row>
 
       {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
       {objects.map((object) => (
@@ -231,10 +227,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
       {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
       {tags.length > 0 && (
-        <div className='col-span-2 grid grid-cols-subgrid items-center'>
-          <IconBlock classNames='text-subdued'>
-            <Icon icon='ph--tag--regular' />
-          </IconBlock>
+        <Header.Row icon='ph--tag--regular'>
           <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
             {tags.map((tag) => (
               <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
@@ -242,9 +235,9 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
               </Tag>
             ))}
           </div>
-        </div>
+        </Header.Row>
       )}
-    </div>
+    </Header.Root>
   );
 };
 
@@ -256,10 +249,12 @@ const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   return (
-    <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>
-      <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
+    <Header.Row
+      icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
+      data-testid={`extracted-tag-${object.id}`}
+    >
       <h3 className='truncate text-primary-text'>{label}</h3>
-    </div>
+    </Header.Row>
   );
 };
 

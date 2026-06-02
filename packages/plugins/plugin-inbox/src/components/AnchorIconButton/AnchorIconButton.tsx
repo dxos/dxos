@@ -6,6 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { type URI } from '@dxos/keys';
 import { DxAnchorActivate, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 /**
  * Icon-only button that opens an ECHO object's preview card via `DxAnchorActivate`
@@ -33,6 +34,11 @@ export type AnchorIconButtonProps = ThemedClassName<{
   onClick?: () => void;
   /** IconButton size; defaults to 4 (matches UserIconButton). */
   size?: 4 | 5 | 6;
+  /**
+   * Render content-height (rail-width) rather than a full rail-height square — for dense, repeated
+   * rows (e.g. event attendees) so the icon aligns with `IconBlock compact` decorative icons.
+   */
+  compact?: boolean;
 }>;
 
 export const AnchorIconButton = ({
@@ -45,6 +51,7 @@ export const AnchorIconButton = ({
   title,
   onClick,
   size = 4,
+  compact,
 }: AnchorIconButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const handleClick = useCallback(() => {
@@ -72,7 +79,7 @@ export const AnchorIconButton = ({
       iconOnly
       size={size}
       label={value ? label : (fallbackLabel ?? label)}
-      classNames={classNames}
+      classNames={mx(compact && 'min-h-0 p-0 w-(--dx-rail-item)', classNames)}
       onClick={handleClick}
     />
   );

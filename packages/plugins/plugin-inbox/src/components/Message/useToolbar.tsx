@@ -7,21 +7,8 @@ import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { useExtractorActions } from './useExtractorActions';
-
-/**
- * How the selected block is sourced and rendered.
- *   - `enriched`: the enriched (second) text block, decorated via the markdown extensions.
- *   - `markdown`: the plain (first) text block, decorated via the markdown extensions.
- *   - `plain`:    the plain (first) text block, shown verbatim with no markdown parsing.
- */
-export type ViewMode = 'enriched' | 'markdown' | 'plain';
-
-const VIEW_MODES: { id: ViewMode; icon: string }[] = [
-  { id: 'enriched', icon: 'ph--article--regular' },
-  { id: 'markdown', icon: 'ph--markdown-logo--regular' },
-  { id: 'plain', icon: 'ph--text-t--regular' },
-];
 
 export type UseMessageToolbarActionsProps = {
   message: Message.Message;
@@ -65,33 +52,13 @@ export const useMessageActions = ({
               onOpen,
             )),
       )
-      .group(
-        'viewMode',
-        {
-          label: ['message-toolbar-view.menu', { ns: meta.id }],
-          icon: 'ph--article--regular',
-          iconOnly: true,
-          variant: 'dropdownMenu',
-          applyActive: true,
-          selectCardinality: 'single',
-          value: viewMode,
-        },
-        (group) => {
-          for (const mode of VIEW_MODES) {
-            if (mode.id === 'enriched' && !enrichedAvailable) {
-              continue;
-            }
-            group.action(
-              mode.id,
-              {
-                label: [`message-toolbar-view-${mode.id}.menu`, { ns: meta.id }],
-                icon: mode.icon,
-                checked: viewMode === mode.id,
-              },
-              () => setViewMode(mode.id),
-            );
-          }
-        },
+      .subgraph(
+        viewModeGroup({
+          ns: meta.id,
+          viewMode,
+          setViewMode,
+          modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
+        }),
       )
       .separator('gap')
       .subgraph(

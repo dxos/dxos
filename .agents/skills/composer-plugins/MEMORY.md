@@ -4,6 +4,24 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-02 — plugin-inbox (Header + view-mode factoring)
+
+### Shared header chrome via borderless Card
+
+- Build object-article header chrome as a borderless Card: `Card.Root border={false} fullWidth` + `Card.Body`, with `mx('p-1 border-b border-subdued-separator', classNames)` on the root for the bottom rule. Rows are `Card.Row` (icon col 1 · content centre track). This replaces hand-rolled `grid grid-cols-[2rem_1fr]` headers and aligns Message/Event headers to one `Header.*` namespace (`components/Header/Header.tsx`: `Root`/`Title`/`Date`/`Row`).
+- `Card.Row` `icon` prop takes `string | JSX.Element` — pass interactive elements (e.g. `UserIconButton`, `AnchorIconButton`) straight into the icon column; a bare string renders a `CardIcon size={4} text-subdued`. Add `items-center` via `classNames` for single-line rows.
+- Preserve `data-testid`s when refactoring DOM: Card.Root/Card.Row forward `data-testid` (and `classNames`) through `composableProps`, so move `message-header`/`extracted-tags`/`extracted-tag-*` onto the new `Header.*` nodes — the stories-inbox `MessageArticle` play test queries them.
+
+### Reuse one presentational rows component across tile/card/header
+
+- When a tile (`EventStack` Mosaic tile), preview card (`EventCard` container) and article header all render the same object as `Card.Row`s, extract ONE presentational component that returns a fragment of rows (`components/Event/EventDetails.tsx`) and let each caller supply its own Card chrome (`Card.Root`, `Card.Body`, or `Header.Root`). Parameterize the divergences: `title: 'heading'|'text'|false`, `description?`, `maxAttendees?`, `interactiveAttendees?` (+ `db`/`onContactCreate`).
+- Make attendee interactivity EXPLICIT (`interactiveAttendees` flag), not inferred from `db`/`onContactCreate` presence — the article header must render interactive `UserIconButton` rows even in a storybook with no db; a list tile stays static text (avoids a `useActorContact` hook per row in a 100-item VirtualStack).
+
+### Shared toolbar group across plugins
+
+- Factor a reusable toolbar dropdown as a function returning `ActionGroupBuilderFn` and compose via `MenuBuilder.make()….subgraph(viewModeGroup({...}))` (matches the documented `.subgraph(cond && (b=>…))` partial-application pattern). See `components/ViewMode/viewMode.ts` (`viewModeGroup`, `ViewMode`, `VIEW_MODE_ICONS`) shared by Message + Event toolbars; pass `modes` to vary options (Event omits `enriched`).
+- A `Foo.Root` that needs a toolbar-driven mode holds `useState` for it in the Root context (`viewMode`/`setViewMode`), the toolbar group reads/sets it, and the body component branches on it (`Event.Body` markdown vs plain).
+
 ## 2026-06-01 — plugin-integration (SyncTargetsChecklist story)
 
 ### Storybook for a container that calls capability hooks
