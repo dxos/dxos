@@ -8,11 +8,13 @@ import React, { useEffect } from 'react';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -113,11 +115,31 @@ const baseDecorators = (
       }),
       StorybookPlugin({}),
       TripPlugin(),
+      MapPlugin(),
       RoutingStoryPlugin(routingService),
       PreviewPlugin(),
     ],
   })),
 ];
+
+// Renders the trip plotted on the generic plugin-map `map` surface (markers + route polyline).
+const MapStory = () => {
+  const spaces = useSpaces();
+  const spaceId = spaces[0]?.id;
+  const db = useDatabase(spaceId ?? '');
+  const trips = useQuery(db, Filter.type(Trip.Trip));
+  const trip = trips[0];
+
+  if (!spaceId || !db || !trip) {
+    return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
+  }
+
+  return (
+    <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
+      <Surface.Surface role='map' data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+    </AttendableContainer>
+  );
+};
 
 const meta = {
   title: 'plugins/plugin-trip/containers/TripArticle',
@@ -221,6 +243,15 @@ export const Empty: Story = {
 // router. The Route section seeds its city list from these planned road segments; adding / removing
 // a city re-plans via the contributed RoutingService and updates the map polyline.
 export const RoadTrip: Story = {
+  decorators: baseDecorators((space) => {
+    seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
+  }),
+};
+
+// The same pre-planned road trip rendered on the plugin-map `map` surface: a marker per stop plus
+// the route polyline between cities, resolved via plugin-trip's contributed MarkerProvider.
+export const RoadTripMap: Story = {
+  render: MapStory,
   decorators: baseDecorators((space) => {
     seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
