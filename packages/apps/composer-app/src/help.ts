@@ -19,7 +19,7 @@ const base: Partial<Tour.Step> = {
   offset: 0,
   styles: {
     options: {
-      arrowColor: 'var(--color-accent-fill)',
+      arrowColor: 'var(--color-accent-bg)',
     },
   },
 };

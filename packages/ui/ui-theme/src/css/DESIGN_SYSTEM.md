@@ -30,9 +30,9 @@ Token names follow `--color-{name}-{part}[-{state}]`:
 ### Pattern rules
 
 - Suffix order is fixed: `{name}-{part}-{state}`. The part comes first, then the state.
-- Pair rule: every `{name}-surface` that hosts text has a matching `{name}-foreground`. Don't invent new ink-suffix names — keep the vocabulary closed.
+- Pair rule: every `{name}-surface` that hosts text has a matching `{name}-fg`. Don't invent new ink-suffix names — keep the vocabulary closed.
 - A state token implies a base — `current-surface-hover` only makes sense if `current-surface` exists.
-- The `-text` part (standalone) is reserved for text on the base canvas, with no enclosing surface (e.g. `accent-text` for a hyperlink in body copy). Text on any named surface uses `{name}-foreground`.
+- The `-text` part (standalone) is reserved for text on the base canvas, with no enclosing surface (e.g. `accent-text` for a hyperlink in body copy). Text on any named surface uses `{name}-fg`.
 
 ## Surfaces
 
@@ -50,7 +50,7 @@ header-surface        n-100 / n-900   headers
 input-surface         n-200 / n-800   form controls
 ```
 
-Each surface that hosts text declares a matching `*-foreground` (defaulting to `n-950 / n-50`).
+Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / n-50`).
 
 ## State tokens (rationalized)
 
@@ -60,12 +60,12 @@ The system has three orthogonal states. Pick by what the ARIA / markup is saying
 | -------------------------- | ------------------------ | ---------------------------------------------------------------- | ----------------- |
 | Active item, one-of-N      | `current-surface`        | `aria-current=true` (nav cursor, current row, current path)      | `n-100` / `n-900` |
 | Hovering on current item   | `current-surface-hover`  | pointer-over on a `current` element                              | `n-200` / `n-800` |
-| Text on a current surface  | `current-foreground`     | text/icon color paired with `current-surface`                    | `n-950` / `n-50`  |
+| Text on a current surface  | `current-fg`             | text/icon color paired with `current-surface`                    | `n-950` / `n-50`  |
 | Selected / checked         | `selected-surface`       | `aria-selected=true` (multi-select, listbox option, checked row) | `n-150` / `n-850` |
 | Hovering on selected       | `selected-surface-hover` | pointer-over on a `selected` element                             | `n-250` / `n-750` |
-| Text on a selected surface | `selected-foreground`    | text/icon color paired with `selected-surface`                   | `n-950` / `n-50`  |
+| Text on a selected surface | `selected-fg`            | text/icon color paired with `selected-surface`                   | `n-950` / `n-50`  |
 | Transient pointer-over     | `hover-surface`          | `:hover`, Radix `data-highlighted` (keyboard cursor in menus)    | `n-250` / `n-750` |
-| Text on a transient hover  | `hover-foreground`       | text/icon color paired with `hover-surface`                      | `n-950` / `n-50`  |
+| Text on a transient hover  | `hover-fg`               | text/icon color paired with `hover-surface`                      | `n-950` / `n-50`  |
 
 **Why these three.** `current` describes one-of-N navigation/selection state ("you are here"); `selected` describes a checked item in a set (multi-select-able); `hover` is transient pointer feedback. Driving the distinction off ARIA keeps markup and tokens in sync.
 
@@ -82,14 +82,14 @@ hover-surface         n-250 / n-750    transient pointer-over anywhere else
 
 These are merged into the rationalized state vocabulary:
 
-| Removed                   | Replaced by             | Notes                                                                                                                                                                                                     |
-| ------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `active-surface`          | `current-surface`       | Same concept ("the active one"). Same value already.                                                                                                                                                      |
-| `active-text`             | `current-foreground`    | Renamed and reclassified — it was always foreground (text on the surface), not `text`.                                                                                                                    |
-| `highlight-surface`       | `current-surface`       | `selected.css` used it for `aria-current=true`.                                                                                                                                                           |
-| `highlight-surface-hover` | `current-surface-hover` |                                                                                                                                                                                                           |
-| `highlight-surface-text`  | `current-foreground`    | Rename to the new `-foreground` suffix.                                                                                                                                                                   |
-| `*-surface-text` (all)    | `*-foreground`          | Repository-wide rename for every hue, semantic, and named-surface token (e.g. `base-surface-text` → `base-foreground`, `red-surface-text` → `red-foreground`, `error-surface-text` → `error-foreground`). |
+| Removed                   | Replaced by             | Notes                                                                                                                                                                             |
+| ------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `active-surface`          | `current-surface`       | Same concept ("the active one"). Same value already.                                                                                                                              |
+| `active-text`             | `current-fg`            | Renamed and reclassified — it was always foreground (text on the surface), not `text`.                                                                                            |
+| `highlight-surface`       | `current-surface`       | `selected.css` used it for `aria-current=true`.                                                                                                                                   |
+| `highlight-surface-hover` | `current-surface-hover` |                                                                                                                                                                                   |
+| `highlight-surface-text`  | `current-fg`            | Rename to the new `-fg` suffix.                                                                                                                                                   |
+| `*-surface-text` (all)    | `*-fg`                  | Repository-wide rename for every hue, semantic, and named-surface token (e.g. `base-surface-text` → `base-fg`, `red-surface-text` → `red-fg`, `error-surface-text` → `error-fg`). |
 
 ### Visual change to expect
 
@@ -110,13 +110,13 @@ These should probably move to `card-surface` or `current-surface` depending on i
 
 | Token               | Purpose                                             |
 | ------------------- | --------------------------------------------------- |
-| `accent-fill`       | Fill for primary buttons / call-to-action surfaces. |
-| `accent-fill-hover` | Hover state.                                        |
-| `accent-foreground` | Text/icon color on accent surfaces.                 |
+| `accent-bg`         | Fill for primary buttons / call-to-action surfaces. |
+| `accent-bg-hover`   | Hover state.                                        |
+| `accent-fg`         | Text/icon color on accent surfaces.                 |
 | `accent-text`       | Standalone accent-colored text (links, emphasis).   |
 | `accent-text-hover` | Hover state for accent text.                        |
 
-This is the canonical illustration of the `foreground` vs `text` distinction: `accent-foreground` is the ink on an accent button; `accent-text` is the accent-colored body link.
+This is the canonical illustration of the `fg` vs `text` distinction: `accent-fg` is the ink on an accent button; `accent-text` is the accent-colored body link.
 
 Note: `accent-focus-indicator` is removed — focus rings are now global tokens (see [Focus rings](#focus-rings)).
 

@@ -21,22 +21,22 @@ describe('string', () => {
     const classes = inline`
       rounded-xs outline-none text-end
       data-[type=year]:min-w-[4ch]
-      data-[focused]:bg-accent-fill  data-[focused]:text-accent-foreground
+      data-[focused]:bg-accent-bg  data-[focused]:text-accent-fg
     `;
 
     expect(classes).to.eq(
-      'rounded-xs outline-none text-end data-[type=year]:min-w-[4ch] data-[focused]:bg-accent-fill data-[focused]:text-accent-foreground',
+      'rounded-xs outline-none text-end data-[type=year]:min-w-[4ch] data-[focused]:bg-accent-bg data-[focused]:text-accent-fg',
     );
   });
 
   test('inline interpolates values', async ({ expect }) => {
-    const variant = 'data-[focused]:bg-accent-fill';
+    const variant = 'data-[focused]:bg-accent-bg';
     const classes = inline`
       rounded-xs
       ${variant}
       outline-none
     `;
 
-    expect(classes).to.eq('rounded-xs data-[focused]:bg-accent-fill outline-none');
+    expect(classes).to.eq('rounded-xs data-[focused]:bg-accent-bg outline-none');
   });
 });

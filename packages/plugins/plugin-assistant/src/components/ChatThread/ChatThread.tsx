@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -63,9 +63,18 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       [identity],
     );
 
-    // Show error.
+    // Jump to the bottom instantly when the thread first mounts (e.g. opening the companion);
+    // smooth-scroll only on subsequent error changes.
+    const initializedRef = useRef(false);
     useEffect(() => {
-      controller?.scrollToBottom();
+      if (!controller) {
+        // MarkdownStream is keyed by viewType; switching views replaces the controller. Reset so
+        // the first scroll for the new controller is instant rather than animated.
+        initializedRef.current = false;
+        return;
+      }
+      controller.scrollToBottom(initializedRef.current ? 'smooth' : 'instant');
+      initializedRef.current = true;
     }, [controller, error]);
 
     // Update document.

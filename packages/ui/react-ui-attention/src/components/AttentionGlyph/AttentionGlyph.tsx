@@ -11,12 +11,12 @@ import { mx } from '@dxos/ui-theme';
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
   '[[data-contains-attended=true]_&]:bg-attention-contains',
-  '[[data-attention=true]_&]:bg-accent-fill',
-  '[[data-attention=true]_&]:text-accent-foreground',
-  '[[aria-current][data-attention=true]_&]:bg-accent-fill',
-  '[[aria-current][data-attention=true]_&]:text-accent-foreground',
-  '[[aria-selected="true"][data-attention=true]_&]:bg-accent-fill',
-  '[[aria-selected="true"][data-attention=true]_&]:text-accent-foreground',
+  '[[data-attention=true]_&]:bg-accent-bg',
+  '[[data-attention=true]_&]:text-accent-fg',
+  '[[aria-current][data-attention=true]_&]:bg-accent-bg',
+  '[[aria-current][data-attention=true]_&]:text-accent-fg',
+  '[[aria-selected="true"][data-attention=true]_&]:bg-accent-bg',
+  '[[aria-selected="true"][data-attention=true]_&]:text-accent-fg',
 );
 
 const presenceIconStyles = mx('w-3 h-3');
