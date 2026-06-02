@@ -79,6 +79,13 @@ export class MetadataStore {
     return this._metadata.spaces ?? [];
   }
 
+  /**
+   * Returns the keys of spaces that have been tombstoned (soft-deleted).
+   */
+  get deletedSpaces(): PublicKey[] {
+    return this._metadata.deletedSpaces ?? [];
+  }
+
   private async _readFile<T>(file: File, codec: Codec<T>): Promise<T | undefined> {
     try {
       const { size: fileLength } = await file.stat();
@@ -295,6 +302,19 @@ export class MetadataStore {
 
   async removeInvitation(invitationId: string): Promise<void> {
     this._metadata.invitations = (this._metadata.invitations ?? []).filter((i) => i.invitationId !== invitationId);
+    await this._save();
+    await this.flush();
+  }
+
+  /**
+   * Records a space as tombstoned (soft-deleted) so it is never re-accepted or auto-opened.
+   */
+  async addDeletedSpace(spaceKey: PublicKey): Promise<void> {
+    if ((this._metadata.deletedSpaces ?? []).some((key) => key.equals(spaceKey))) {
+      return;
+    }
+
+    (this._metadata.deletedSpaces ??= []).push(spaceKey);
     await this._save();
     await this.flush();
   }

@@ -42,7 +42,11 @@ export const InitializeCalendarAction = ({ calendar }: InitializeCalendarProps) 
       target={calendar}
       targetKey='calendar'
       providerId={GOOGLE_CALENDAR_PROVIDER_ID}
-      operation={InboxOperation.SyncCalendar}
+      operation={InboxOperation.GoogleCalendarSync}
+      notify={{
+        success: ['sync-calendar-success.title', { ns: meta.id }],
+        error: ['sync-calendar-error.title', { ns: meta.id }],
+      }}
       syncLabel={t('sync-calendar.label')}
     />
   );
