@@ -13,7 +13,7 @@
 // — those files get rewritten to import a JSX runtime they don't depend on,
 // and module resolution fails.
 //
-// The production build (`moon run cli:compile`) sidesteps this by marking
+// The production build (`moon run cli:bundle`) sidesteps this by marking
 // `@dxos/react-ui-*` as external in `scripts/build.ts`. We need the same
 // scoping in dev mode.
 //

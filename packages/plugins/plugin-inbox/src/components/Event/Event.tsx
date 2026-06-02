@@ -3,20 +3,19 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database } from '@dxos/echo';
-import { Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
-import { DateComponent } from '../DateComponent';
+import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
-import { EventAttendee } from './EventAttendee';
+import { type ViewMode } from '../ViewMode';
+import { EventDetails } from './EventDetails';
 import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
 
 //
@@ -26,6 +25,8 @@ import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useT
 type EventContextValue = {
   attendableId?: string;
   event: EventType.Event;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 };
 
 const [EventContextProvider, useEventContext] = createContext<EventContextValue>('Event');
@@ -36,10 +37,20 @@ const [EventContextProvider, useEventContext] = createContext<EventContextValue>
 
 const EVENT_ROOT_NAME = 'Event.Root';
 
-type EventRootProps = PropsWithChildren<EventContextValue>;
+type EventRootProps = PropsWithChildren<
+  Omit<EventContextValue, 'viewMode' | 'setViewMode'> & {
+    viewMode?: ViewMode;
+  }
+>;
 
-const EventRoot = ({ children, ...props }: EventRootProps) => {
-  return <EventContextProvider {...props}>{children}</EventContextProvider>;
+const EventRoot = ({ children, viewMode: viewModeProp = 'markdown', ...props }: EventRootProps) => {
+  const [viewMode, setViewMode] = useState(viewModeProp);
+
+  return (
+    <EventContextProvider viewMode={viewMode} setViewMode={setViewMode} {...props}>
+      {children}
+    </EventContextProvider>
+  );
 };
 
 EventRoot.displayName = EVENT_ROOT_NAME;
@@ -54,8 +65,8 @@ type EventToolbarProps = Pick<UseEventToolbarActionsProps, 'onNoteCreate'> & Pic
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, onNoteCreate, ...props }, forwardedRef) => {
-    const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
-    const menuActions = useEventToolbarActions({ onNoteCreate });
+    const { attendableId, viewMode, setViewMode } = useEventContext(EVENT_TOOLBAR_NAME);
+    const menuActions = useEventToolbarActions({ viewMode, setViewMode, onNoteCreate });
 
     return (
       <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
@@ -97,55 +108,34 @@ type EventHeaderProps = {
 };
 
 const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
-  const { t } = useTranslation(meta.id);
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <div className='p-1 flex flex-col border-b border-subdued-separator'>
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex px-2 text-subdued h-[28px] items-center'>
-          <Icon icon='ph--check--regular' />
-        </div>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
-        </div>
-      </div>
-
-      <div className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div className='flex px-2 text-subdued items-center'>
-          <Icon icon='ph--calendar--regular' />
-        </div>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
-        </div>
-      </div>
-
-      <div>
-        {event.attendees.map((attendee) => (
-          <EventAttendee key={attendee.email} attendee={attendee} db={db} onContactCreate={onContactCreate} />
-        ))}
-      </div>
-    </div>
+    <Header.Root>
+      <EventDetails event={event} title='heading' interactiveAttendees db={db} onContactCreate={onContactCreate} />
+    </Header.Root>
   );
 };
 
 EventHeader.displayName = EVENT_HEADER_NAME;
 
 //
-// Content
+// Body
 //
 
-const EVENT_CONTENT_NAME = 'Event.Content';
+const EVENT_BODY_NAME = 'Event.Body';
 
-type EventContentProps = ThemedClassName<{}>;
+type EventBodyProps = ThemedClassName<{}>;
 
-const EventContent = ({ classNames }: EventContentProps) => {
-  const { event } = useEventContext(EVENT_CONTENT_NAME);
+const EventBody = ({ classNames }: EventBodyProps) => {
+  const { event, viewMode } = useEventContext(EVENT_BODY_NAME);
 
-  return event.description ? <MarkdownViewer content={event.description} classNames={mx('p-3', classNames)} /> : null;
+  return event.description ? (
+    <MarkdownViewer content={event.description} markdown={viewMode !== 'plain'} classNames={mx('p-3', classNames)} />
+  ) : null;
 };
 
-EventContent.displayName = EVENT_CONTENT_NAME;
+EventBody.displayName = EVENT_BODY_NAME;
 
 //
 // Event
@@ -157,7 +147,7 @@ export const Event = {
   Toolbar: EventToolbar,
   Viewport: EventViewport,
   Header: EventHeader,
-  Content: EventContent,
+  Body: EventBody,
 };
 
-export type { EventRootProps, EventToolbarProps, EventViewportProps, EventHeaderProps, EventContentProps };
+export type { EventRootProps, EventToolbarProps, EventViewportProps, EventHeaderProps, EventBodyProps };
