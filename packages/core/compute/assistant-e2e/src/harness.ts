@@ -54,7 +54,7 @@ interface AgentTestOptions {
   model?: ModelName;
 
   /**
-   * @default 'edge-remote'
+   * @default 'direct'
    */
   inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
 
@@ -71,7 +71,7 @@ export const agentTest: {
     options.model ?? (options.inferenceProvider === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
 
   const TestLayer = AssistantTestLayer({
-    aiServicePreset: options.inferenceProvider ?? 'edge-remote',
+    aiServicePreset: options.inferenceProvider ?? 'direct',
     model,
     disableLlmMemoization: options.disableLlmMemoization ?? false,
     operationHandlers: [

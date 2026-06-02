@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 
-import { FeedArticle, MagazineArticle, PostArticle, PostCard, SubscriptionsArticle } from '#containers';
+import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard, SubscriptionsArticle } from '#containers';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
@@ -53,6 +53,11 @@ export default Capability.makeModule(() =>
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Subscription.Post),
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: 'feedProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Subscription.Subscription),
+        component: ({ data }) => <FeedProperties subject={data.subject} />,
       }),
     ]),
   ),
