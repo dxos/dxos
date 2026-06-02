@@ -137,15 +137,14 @@ type RoadDetails (extended)
   desc: >
     Existing TaggedStruct('road') extended with computed-route fields
     populated by PlanRoute. Geometry stored decoded ([lon, lat]) so the
-    map consumer needs no provider-specific polyline decoder. `planned`
-    marks segments owned by the route planner so re-planning can replace
-    exactly those and leave hand-added road segments (a taxi transfer,
-    say) untouched.
+    map consumer needs no provider-specific polyline decoder. The road
+    segments themselves are the source of truth for the route — there is
+    no separate planner-owned marker; PlanRoute only enriches existing
+    segments.
   adds-fields:
     distanceMeters?: number         # Schema.optional(Schema.Number)
     durationSeconds?: number        # Schema.optional(Schema.Number)
     path?: GeoPoint[]               # Schema.optional(Schema.Array(Format.GeoPoint))
-    planned?: boolean               # Schema.optional(Schema.Boolean) — owned by PlanRoute
 ```
 
 ### plugin-trip — `PlanRoute` operation
@@ -153,81 +152,57 @@ type RoadDetails (extended)
 ```mdl
 op PlanRoute
   desc: >
-    Turns an ordered list of cities into a connected chain of road
-    Segments on a Trip. Resolves the registered RoutingService, calls
-    route(), and reconciles the trip's planner-owned road segments to
-    match the returned legs. Non-road segments (flights, lodging) and
-    hand-added road segments (planned !== true) are never touched.
+    Computes driving routes for a trip's existing road Segments. The road
+    segments ARE the source of truth — added/edited through the normal
+    segment flow (Add segment → Road + the segment form). PlanRoute does
+    not create or delete segments; for each road segment with an origin
+    and destination it geocodes the stops and writes distance / duration /
+    geometry (and endpoint geo) back onto that segment. Each road segment
+    is routed independently, so the segments need not form a contiguous
+    chain.
   inputs:
     trip: Trip                      # the live ECHO Trip
-    waypoints: Waypoint[]           # ordered city list from the UI (>= 2)
     provider?: string               # optional RoutingService id; default = first registered
   outputs:
-    legs: number                    # number of road segments produced
-    distanceMeters: number          # total distance
-    durationSeconds: number         # total drive time
+    legs: number                    # number of road segments routed
+    distanceMeters: number          # total distance over routed segments
+    durationSeconds: number         # total drive time over routed segments
   errors:
     - NoRoutingService — no RoutingService registered (or none matching `provider`).
     - MissingApiKeyError — bubbled from the service; reported via the failure channel.
-    - GeocodeError — a waypoint name could not be resolved (names the offending waypoint).
+    - GeocodeError — a stop could not be resolved (names the offending location).
     - RouteError — bubbled routing failure.
   services:
     - Capability.Service
-  reconciliation:
-    - Identify the contiguous run of planner-owned road segments
-      (RoadDetails.planned === true) on the trip.
-    - First plan (no prior run): append the new leg segments in order.
-    - Re-plan: remove exactly the prior planner-owned run, insert the new
-      legs at that position. Uses Trip.addSegment / removeSegment.
-    - Each produced segment: makeDefault('road') with subKind 'car',
-      origin/destination set to the leg's geocoded Places, and
-      distanceMeters / durationSeconds / path / planned=true set from the leg.
+  behavior:
+    - For each road segment (itinerary order) with both origin and
+      destination: build waypoints (the Place when it has geo, else its
+      name to geocode), call service.route(), and Obj.update the segment —
+      fill origin/destination geo + distanceMeters / durationSeconds / path.
+    - Segments without both endpoints are skipped; non-road segments are
+      never touched.
   notes:
     - Handler shape mirrors search-bookings.ts: Capability.getAll →
-      find by provider → Effect.tryPromise around service.route().
-    - The city list is NOT persisted on the Trip (Approach A). The UI
-      derives the initial list from existing planner-owned road segments;
-      "Plan route" is the commit point.
+      pick by provider → Effect.tryPromise around service.route().
 ```
 
-### plugin-trip — Route section (UI)
+### plugin-trip — "Plan route" toolbar action (UI)
 
 ```mdl
-component RouteSection
+feat PlanRouteAction
   desc: >
-    A section within TripArticle for building and planning the road-trip
-    leg sequence. Lives in plugin-trip/src/containers (uses capabilities /
-    operation invoker). Renders an ordered, reorderable city list, a Plan
-    route action, and a totals readout. Initial list derived from the
-    trip's planner-owned road segments.
-  props:
-    trip: Trip
-  state:
-    cities: Waypoint[]              # local; seeded from planner-owned road segments
-    status: 'idle' | 'planning' | 'error'
-    error?: string                 # e.g. "Couldn't find city: Springfield"
-  actions:
-    addCity: (name: string) => void
-    removeCity: (index: number) => void
-    reorder: (from: number, to: number) => void
-    plan: () => void                # dispatches PlanRoute with current cities
-  emits:
-    planned: { legs: number; distanceMeters: number; durationSeconds: number }
-  layout: |
-    ┌─ Route ───────────────────────────────┐
-    │  1. London            ⠿  ✕             │
-    │  2. Oxford            ⠿  ✕             │
-    │  3. Bath              ⠿  ✕             │
-    │  [ + add city            ]             │
-    │  ───────────────────────────────────  │
-    │  3 legs · 210 km · 3 h 40 m            │
-    │                       [ Plan route ]   │
-    └────────────────────────────────────────┘
+    There is no dedicated route-planning panel. A driving trip is fully
+    described by its ordered road Segments, rendered by the existing
+    SegmentStack; cities/legs are added via the existing
+    "Add segment → Road" menu and edited (origin/destination Places) in
+    the SegmentArticle form. TripArticle's toolbar gains a single
+    "Plan route" action (shown when the trip has ≥ 1 road segment) that
+    invokes PlanRoute over the trip and shows a transient "Planning…"
+    state while it runs.
   notes:
-    - Reuse the mosaic list primitive used by SegmentStack for drag-reorder.
-    - City input uses @dxos/react-ui primitives + Form, never native inputs.
-    - Loading / error states cover: no provider, geocode miss (names the
-      city), routing failure.
+    - No parallel city list, no derived state, no reconciliation.
+    - Per-leg distance / duration / geometry live on each RoadDetails and
+      surface through the segment card / map.
 ```
 
 ### plugin-trip — map polyline
@@ -377,23 +352,14 @@ test OsrmRoutingService routing
     - OSRM code !== 'Ok' → throws RouteError.
 
 test PlanRoute operation (plugin-trip)
-  desc: Operation reconciles planner-owned road segments. Uses a fake
+  desc: Operation enriches existing road segments in place. Uses a fake
         in-memory RoutingService registered in plugin-trip/src/testing.
   cases:
-    - first plan on a trip with no road segments → appends N-1 road
-      segments with planned=true and route fields set.
-    - re-plan with a changed/reordered city list → replaces only the
-      prior planner-owned run; flights / lodging / hand-added road
-      segments (planned !== true) are preserved.
-    - no RoutingService registered → NoRoutingService error.
-
-test RouteSection (plugin-trip)
-  desc: Container story / interaction.
-  cases:
-    - initial city list derived from planner-owned road segments.
-    - add / remove / reorder updates local state; Plan route dispatches
-      PlanRoute with the current list.
-    - geocode miss surfaces an inline error naming the city.
+    - road segments with origin/destination → each gets distance /
+      duration / path and endpoint geo filled.
+    - non-road segments are left untouched.
+    - road segment missing an endpoint is skipped.
+    - no RoutingService registered → fails with "No routing service".
 
 test tripMarkerProvider polyline (plugin-trip)
   desc: Marker provider emits real geometry.

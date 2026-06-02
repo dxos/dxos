@@ -24,6 +24,9 @@ const capabilityService = (service?: Routing.RoutingService) => {
   return manager;
 };
 
+const roadLeg = (from: string, to: string): Segment.Segment =>
+  Segment.make({ details: { _tag: 'road', subKind: 'car', origin: { name: from }, destination: { name: to } } });
+
 describe('PlanRoute', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
@@ -37,77 +40,71 @@ describe('PlanRoute', () => {
     await builder.close();
   });
 
-  const plan = (trip: Trip.Trip, waypoints: Routing.Waypoint[], service?: Routing.RoutingService) =>
+  const addTrip = (segments: Segment.Segment[]): Trip.Trip => {
+    const trip = db.add(Trip.make({ name: 'Trip' }));
+    for (const segment of segments) {
+      db.add(segment);
+      Trip.addSegment(trip, segment);
+    }
+    return trip;
+  };
+
+  const plan = (trip: Trip.Trip, service?: Routing.RoutingService) =>
     planRouteHandler
-      .handler({ trip, waypoints })
+      .handler({ trip })
       .pipe(Effect.provideService(Capability.Service, capabilityService(service)))
       .pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
 
-  test('first plan appends a planned road segment per leg with route fields set', async ({ expect }) => {
-    const trip = db.add(Trip.make({ name: 'Road trip' }));
+  test('fills distance / duration / path and endpoint geo on each road segment', async ({ expect }) => {
+    const trip = addTrip([roadLeg('London', 'Avignon'), roadLeg('Avignon', 'Barcelona')]);
     await db.flush();
 
-    const result = await plan(trip, ['London', 'Avignon', 'Barcelona'], fakeRoutingService());
+    const result = await plan(trip, fakeRoutingService());
     expect(result.legs).toBe(2);
     expect(result.distanceMeters).toBeGreaterThan(0);
     expect(result.durationSeconds).toBeGreaterThan(0);
 
     await db.flush();
-    const segments = Trip.getSegments(trip);
-    expect(segments).toHaveLength(2);
-    for (const segment of segments) {
-      expect(Segment.isPlannedRoad(segment)).toBe(true);
+    const roads = Trip.getSegments(trip).filter((segment) => segment.details._tag === 'road');
+    expect(roads).toHaveLength(2);
+    for (const segment of roads) {
       if (segment.details._tag === 'road') {
         expect(segment.details.distanceMeters).toBeGreaterThan(0);
         expect(segment.details.path?.length).toBe(2);
+        expect(segment.details.origin?.geo).toBeDefined();
+        expect(segment.details.destination?.geo).toBeDefined();
       }
     }
-    expect(Segment.getOrigin(segments[0])?.name).toBe('London');
-    expect(Segment.getDestination(segments[1])?.name).toBe('Barcelona');
   });
 
-  test('re-plan replaces planner-owned legs but preserves other segments', async ({ expect }) => {
-    const trip = db.add(Trip.make({ name: 'Mixed' }));
-    const flight = db.add(
-      Segment.make({ details: { _tag: 'flight', number: 'AF1', departAt: '2026-06-01T10:00:00.000Z' } }),
-    );
-    Trip.addSegment(trip, flight);
-    const taxi = db.add(Segment.make({ details: { _tag: 'road', subKind: 'taxi' } }));
-    Trip.addSegment(trip, taxi);
+  test('leaves non-road segments untouched', async ({ expect }) => {
+    const flight = Segment.make({ details: { _tag: 'flight', number: 'AF1', departAt: '2026-06-01T10:00:00.000Z' } });
+    const trip = addTrip([flight, roadLeg('London', 'Barcelona')]);
     await db.flush();
 
-    await plan(trip, ['London', 'Avignon', 'Barcelona'], fakeRoutingService());
-    await db.flush();
-    let segments = Trip.getSegments(trip);
-    expect(segments).toHaveLength(4);
-    expect(segments.filter(Segment.isPlannedRoad)).toHaveLength(2);
+    const result = await plan(trip, fakeRoutingService());
+    expect(result.legs).toBe(1);
 
-    await plan(trip, ['London', 'Barcelona'], fakeRoutingService());
     await db.flush();
-    segments = Trip.getSegments(trip);
-    expect(segments.filter(Segment.isPlannedRoad)).toHaveLength(1);
-    expect(segments.filter((segment) => segment.details._tag === 'flight')).toHaveLength(1);
-    // The hand-added taxi (planned !== true) survives.
-    expect(
-      segments.filter((segment) => segment.details._tag === 'road' && segment.details.planned !== true),
-    ).toHaveLength(1);
+    const flightSegment = Trip.getSegments(trip).find((segment) => segment.details._tag === 'flight');
+    expect(flightSegment?.details._tag).toBe('flight');
+    if (flightSegment?.details._tag === 'flight') {
+      expect(flightSegment.details.number).toBe('AF1');
+    }
+  });
+
+  test('skips road segments missing an endpoint', async ({ expect }) => {
+    const incomplete = Segment.make({ details: { _tag: 'road', subKind: 'car', origin: { name: 'London' } } });
+    const trip = addTrip([incomplete]);
+    await db.flush();
+
+    const result = await plan(trip, fakeRoutingService());
+    expect(result.legs).toBe(0);
   });
 
   test('fails when no routing service is registered', async ({ expect }) => {
-    const trip = db.add(Trip.make({ name: 'X' }));
+    const trip = addTrip([roadLeg('London', 'Avignon')]);
     await db.flush();
-    await expect(plan(trip, ['London', 'Avignon'])).rejects.toThrow(/No routing service/);
-  });
-
-  test('clears the planned run when fewer than two waypoints remain', async ({ expect }) => {
-    const trip = db.add(Trip.make({ name: 'Shrink' }));
-    await db.flush();
-    await plan(trip, ['London', 'Avignon'], fakeRoutingService());
-    await db.flush();
-    expect(Trip.getSegments(trip).filter(Segment.isPlannedRoad)).toHaveLength(1);
-
-    await plan(trip, ['London'], fakeRoutingService());
-    await db.flush();
-    expect(Trip.getSegments(trip).filter(Segment.isPlannedRoad)).toHaveLength(0);
+    await expect(plan(trip)).rejects.toThrow(/No routing service/);
   });
 });

@@ -53,7 +53,6 @@ const seedRoadTrip = (space: Space, name: string, cities: string[]): void => {
         distanceMeters: leg.distanceMeters,
         durationSeconds: leg.durationSeconds,
         path: [...leg.path],
-        planned: true,
       },
     });
     Trip.addSegment(trip, segment);

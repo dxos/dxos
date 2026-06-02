@@ -19,9 +19,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
-import { Segment, Trip } from '#types';
-
-import { RouteSection } from '../RouteSection';
+import { RoutingOperation, Segment, Trip } from '#types';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
@@ -147,8 +145,22 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     [subject, calendarSelection],
   );
 
+  // Computes driving routes for the trip's road segments via the registered RoutingService,
+  // writing distance / duration / geometry back onto each segment.
+  const [planning, setPlanning] = useState(false);
+  const hasRoad = useMemo(() => segments.some((seg) => seg.details._tag === 'road'), [segments]);
+  const handlePlanRoute = useCallback(async () => {
+    setPlanning(true);
+    try {
+      await invokePromise(RoutingOperation.PlanRoute, { trip: subject });
+    } finally {
+      setPlanning(false);
+    }
+  }, [subject, invokePromise]);
+
   // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
-  // kinds and a globe on/off toggle, composed as data rather than hand-wired Toolbar children.
+  // kinds, a "plan route" action, and a globe on/off toggle, composed as data rather than
+  // hand-wired Toolbar children.
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().group(
       'add',
@@ -168,6 +180,19 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       },
     );
 
+    // Offer route planning once the trip has at least one road segment to route.
+    if (hasRoad) {
+      builder.separator().action(
+        'plan-route',
+        {
+          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.id }],
+          icon: 'ph--path--regular',
+          disabled: planning,
+        },
+        () => void handlePlanRoute(),
+      );
+    }
+
     // Only offer the map toggle when a map surface can render this trip.
     if (mapAvailable) {
       builder.separator().action(
@@ -183,7 +208,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     }
 
     return builder.build();
-  }, [handleAddSegment, showGlobe, mapAvailable]);
+  }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
@@ -210,19 +235,16 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
             </Panel.Root>
           </NaturalCalendar.Root>
 
-          <div className='flex flex-col min-bs-0 overflow-hidden'>
-            <RouteSection trip={subject} />
-            <Panel.Root classNames='grow min-bs-0'>
-              <Panel.Toolbar>
-                <Menu.Root {...menuActions} attendableId={attendableId}>
-                  <Menu.Toolbar />
-                </Menu.Root>
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
-              </Panel.Content>
-            </Panel.Root>
-          </div>
+          <Panel.Root>
+            <Panel.Toolbar>
+              <Menu.Root {...menuActions} attendableId={attendableId}>
+                <Menu.Toolbar />
+              </Menu.Root>
+            </Panel.Toolbar>
+            <Panel.Content asChild>
+              <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
+            </Panel.Content>
+          </Panel.Root>
         </div>
 
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's

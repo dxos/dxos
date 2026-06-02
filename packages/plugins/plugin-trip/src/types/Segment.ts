@@ -88,12 +88,6 @@ export const RoadDetails = Schema.extend(
     durationSeconds: Schema.optional(Schema.Number).annotations({ title: 'Duration (s)' }),
     /** Decoded route polyline as `[lon, lat]` points. Populated by `PlanRoute`; rendered on the map. */
     path: Schema.optional(Schema.Array(Format.GeoPoint)).annotations({ title: 'Path' }),
-    /**
-     * True when this segment is owned by the route planner (`PlanRoute`). Lets re-planning replace
-     * exactly the planner-generated legs while leaving hand-added road segments (e.g. a taxi
-     * transfer) untouched.
-     */
-    planned: Schema.optional(Schema.Boolean),
   }),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
@@ -185,9 +179,6 @@ export const makeDefault = (kind: Kind): Segment => {
 
 /** Returns the discriminator kind. */
 export const getKind = (seg: Segment): Kind => seg.details._tag;
-
-/** True when the segment is a road leg owned by the route planner (`PlanRoute`). */
-export const isPlannedRoad = (seg: Segment): boolean => seg.details._tag === 'road' && seg.details.planned === true;
 
 /**
  * Departure time across variants.
