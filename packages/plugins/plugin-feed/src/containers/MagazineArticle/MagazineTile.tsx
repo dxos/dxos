@@ -65,7 +65,7 @@ export const MagazineTile = ({
           <Card.Poster alt={post.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Card.IconBlock padding>
+          <Card.IconBlock>
             <IconButton
               variant='ghost'
               iconOnly

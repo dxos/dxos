@@ -4,12 +4,11 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card, Icon, IconBlock, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
-import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
 export type EventStackAction = { type: 'current'; eventId: string } | { type: 'select'; eventId: string };
@@ -76,6 +75,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
                 getId={(item) => item.event.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
+                gap={4}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -90,6 +90,8 @@ EventStack.displayName = 'EventStack';
 //
 // EventTile
 //
+
+const TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator';
 
 type EventTileData = {
   event: Event.Event;
@@ -109,13 +111,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
   }, [event.id, setCurrentId, setSelected]);
 
   return (
-    <Mosaic.Tile
-      asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
-      id={event.id}
-      data={data}
-      location={location}
-    >
+    <Mosaic.Tile asChild classNames={TILE_CLASSNAMES} id={event.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Body>
@@ -125,11 +121,18 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
             <Card.Row icon='ph--calendar--regular'>
               <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
             </Card.Row>
-            {event.attendees && event.attendees.length > 0 && (
-              <Card.Row>
-                <ActorList actors={event.attendees} />
+            {event.attendees?.slice(0, 8).map((attendee, index) => (
+              <Card.Row
+                key={attendee.email ?? index}
+                icon={
+                  <IconBlock compact>
+                    <Icon classNames='text-subdued' icon='ph--user--duotone' />
+                  </IconBlock>
+                }
+              >
+                <span className='text-description'>{attendee.name ?? attendee.email}</span>
               </Card.Row>
-            )}
+            ))}
           </Card.Body>
         </Card.Root>
       </Focus.Item>

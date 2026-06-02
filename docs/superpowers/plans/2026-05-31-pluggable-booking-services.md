@@ -1165,7 +1165,7 @@ In `packages/plugins/plugin-trip/src/translations.ts`, add these entries to the 
         'booking.departure.label': 'Departure',
         'booking.passengers.label': 'Passengers',
         'booking.cabin.placeholder': 'Cabin class',
-        'booking.no-providers.message': 'No booking providers are enabled. Enable a booking plugin (e.g. Duffel) in settings.',
+        'booking.no-providers.message': 'Enable booking providers from the registry.',
         'booking.no-offers.message': 'No offers found.',
         'booking.missing-key.message': 'Set the provider API key in plugin settings to search.',
         'booking.error.message': 'Search failed. Check the provider configuration and try again.',

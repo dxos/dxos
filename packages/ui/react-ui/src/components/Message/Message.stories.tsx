@@ -51,7 +51,31 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     valence: 'neutral',
-    title: 'Alert title',
+    title: 'Default',
+    body: random.lorem.paragraphs(1),
+  },
+};
+
+export const Success: Story = {
+  args: {
+    valence: 'success',
+    title: 'Success',
+    body: random.lorem.paragraphs(1),
+  },
+};
+
+export const Info: Story = {
+  args: {
+    valence: 'info',
+    title: 'Info',
+    body: random.lorem.paragraphs(1),
+  },
+};
+
+export const Warning: Story = {
+  args: {
+    valence: 'warning',
+    title: 'Warning',
     body: random.lorem.paragraphs(1),
   },
 };
@@ -59,7 +83,7 @@ export const Default: Story = {
 export const Error: Story = {
   args: {
     valence: 'error',
-    title: 'Error title',
+    title: 'Error',
     body: random.lorem.paragraphs(1),
   },
 };

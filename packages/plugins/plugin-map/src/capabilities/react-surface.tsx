@@ -90,7 +90,7 @@ export default Capability.makeModule(() =>
       // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
       // role (e.g. TripArticle renders `<Surface.Surface role='map' data={{ subject, attendableId }} />`).
       Surface.create({
-        id: 'surface.map-inline',
+        id: 'surface.mapInline',
         role: 'map',
         filter: (data): data is { subject: Obj.Any; attendableId?: string } => Obj.isObject(data.subject),
         component: ({ data, role }) => (
@@ -100,7 +100,7 @@ export default Capability.makeModule(() =>
       // Companion surface for any object that has markers (gated by app-graph-builder, which only
       // emits the `map` companion node when a MarkerProvider matches the primary object).
       Surface.create({
-        id: 'surface.map-companion',
+        id: 'surface.mapCompanion',
         role: 'article',
         filter: (data): data is { subject: 'map'; companionTo: Obj.Unknown; attendableId: string } =>
           Obj.isObject(data.companionTo) && (data as { subject?: unknown }).subject === 'map',

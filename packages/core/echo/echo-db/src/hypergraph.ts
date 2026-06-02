@@ -23,7 +23,7 @@ import {
   SpaceQuerySource,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
-import { findTypeByDXN, makeRegistry } from './registry';
+import { makeRegistry } from './registry';
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -159,10 +159,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           return res ? middleware(res) : undefined;
         }
 
-        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
+        // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
+        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
         if (DXN.isDXN(uri)) {
-          const typeEntity = findTypeByDXN(this._registry, uri.toString());
-          return typeEntity ? middleware(typeEntity) : undefined;
+          const entity = this._registry.getByURI(uri.toString());
+          return entity ? middleware(entity) : undefined;
         }
 
         return undefined; // Unsupported URI kind.
@@ -183,8 +184,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         try {
           // Static/runtime types are held in the registry (DXN-form, typename-based).
           // Persisted (db-backed) types are resolved from the owning space db (echo-form URIs).
-          const typeEntity =
-            findTypeByDXN(this._registry, uri.toString()) ?? (await this._resolveTypeFromDatabase(uri, context));
+          const typeEntity = this.#resolveRegistryType(uri) ?? (await this._resolveTypeFromDatabase(uri, context));
           if (typeEntity != null) {
             status = 'resolved';
             return Type.getSchema(typeEntity);
@@ -207,9 +207,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.
       resolveType: async (uri) => {
-        return findTypeByDXN(this._registry, uri.toString()) ?? (await this._resolveTypeFromDatabase(uri, context));
+        return this.#resolveRegistryType(uri) ?? (await this._resolveTypeFromDatabase(uri, context));
       },
     } satisfies Ref.Resolver;
+  }
+
+  /**
+   * Resolve a type entity from the registry by URI, narrowing out any non-type entity that
+   * happens to share the URI.
+   */
+  #resolveRegistryType(uri: URI.URI): Type.AnyEntity | undefined {
+    const entity = this._registry.getByURI(uri.toString());
+    return entity != null && Type.isType(entity) ? entity : undefined;
   }
 
   /**
@@ -337,10 +346,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         status = 'missing';
         return undefined;
       } else if (DXN.isDXN(uri)) {
-        // Registry refs (typename DXNs) resolve to the type entity held in the registry.
-        const typeEntity = findTypeByDXN(this._registry, uri.toString());
-        status = typeEntity ? 'resolved' : 'missing';
-        return typeEntity ?? undefined;
+        // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
+        // typename DXN, or a keyed entity (operation, blueprint, etc.) by its key DXN.
+        const entity = this._registry.getByURI(uri.toString());
+        status = entity ? 'resolved' : 'missing';
+        return entity ?? undefined;
       } else {
         status = 'error';
         throw new Error(`Unsupported URI kind: ${uri}`);

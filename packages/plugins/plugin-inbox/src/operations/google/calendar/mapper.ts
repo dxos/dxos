@@ -9,7 +9,7 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../../apis';
-import { normalizeText } from '../util';
+import { normalizeText } from '../../util';
 
 /**
  * Maps Google Calendar event to ECHO event object.

@@ -1344,7 +1344,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
-      log('activating modules', { key, modules: activatingModuleIds });
+      log.info('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
@@ -1582,9 +1582,14 @@ class ManagerImpl implements PluginManager {
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) => {
               const error = Cause.squash(cause);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              const missingCapability = errorMessage.match(/No capability found for ([^\s\[]+)/)?.[1];
               log.error('module failed to activate', {
                 module: module.id,
-                error: error instanceof Error ? error.message : String(error),
+                parentEvent,
+                missingCapability,
+                registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
+                error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });

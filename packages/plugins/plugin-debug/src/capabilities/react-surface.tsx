@@ -51,6 +51,7 @@ import {
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
+  RegistryPanel,
   SpaceGenerator,
   Wireframe,
 } from '#containers';
@@ -150,6 +151,11 @@ export default Capability.makeModule(
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
       }),
       Surface.create({
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Registry),
+        component: () => <RegistryPanel />,
+      }),
+      Surface.create({
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
@@ -192,7 +198,7 @@ export default Capability.makeModule(
       }),
 
       Surface.create({
-        id: 'status',
+        id: 'debugStatus',
         role: 'status-indicator',
         position: 'first',
         component: () => <DebugStatus />,

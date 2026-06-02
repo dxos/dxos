@@ -89,7 +89,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-subdued-separator'
       id={segment.id}
       data={data}
       location={location}

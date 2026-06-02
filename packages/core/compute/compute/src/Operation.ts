@@ -326,7 +326,7 @@ export const PersistentOperation = Schema$.Struct({
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-  Annotation.SystemTypeAnnotation.set(true),
+  Annotation.HiddenAnnotation.set(true),
   // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
   //  backward compatibility with existing data and avoid requiring data migration.
   Type.makeObject(DXN.make('org.dxos.type.function', '0.2.0')),

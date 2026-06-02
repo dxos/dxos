@@ -32,7 +32,7 @@ import { getDate, getRowIndex, isSameDay } from './util';
 
 const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
-const size = 48;
+const size = 40;
 const defaultWidth = 7 * size;
 
 // Auto-scroll while dragging near a vertical edge.
@@ -563,7 +563,10 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const rowRenderer = useCallback<ListRowRenderer>(
       ({ key, index, style }) => {
-        const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
+        // Zebra-stripe alternating months with a subtle neutral overlay over the grid surface, so
+        // the banding is independent of (and robust to) surface-token retuning.
+        const getBgColor = (date: Date) => (date.getMonth() % 2 === 0 ? 'bg-group-surface' : 'bg-group-alt-surface');
+
         return (
           <div key={key} style={style} className='grid'>
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
@@ -591,7 +594,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
-                    <span className='relative text-description'>{date.getDate()}</span>
+                    <span className='relative text-description text-sm'>{date.getDate()}</span>
                     {!border && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}

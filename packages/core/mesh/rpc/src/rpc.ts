@@ -279,7 +279,7 @@ export class RpcPeer {
       if (req.stream) {
         log('stream request', { method: req.method });
         this._callStreamHandler(req, (response) => {
-          log('sending stream response', {
+          log.trace('sending stream response', {
             method: req.method,
             response: response.payload?.type_url,
             error: response.error,

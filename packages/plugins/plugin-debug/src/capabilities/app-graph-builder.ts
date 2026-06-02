@@ -242,6 +242,15 @@ export default Capability.makeModule(
                         },
                       }),
                       Node.make({
+                        id: Devtools.Echo.Registry,
+                        data: Devtools.Echo.Registry,
+                        type: DEVTOOLS_TYPE,
+                        properties: {
+                          label: ['registry.label', { ns: meta.id }],
+                          icon: 'ph--books--regular',
+                        },
+                      }),
+                      Node.make({
                         id: Devtools.Echo.Automerge,
                         data: Devtools.Echo.Automerge,
                         type: DEVTOOLS_TYPE,
