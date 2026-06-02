@@ -592,7 +592,7 @@ export class EdgeHttpClient {
   public async anthropicAiRequest(request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
-    const target = new URL(`${base}/generate/anthropic${incoming.pathname}${incoming.search}`);
+    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
 
     // Buffer the body up front so it can be re-sent if the cached auth header is rejected.
     const method = request.method;
