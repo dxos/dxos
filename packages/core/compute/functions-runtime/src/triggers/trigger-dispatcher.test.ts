@@ -65,6 +65,18 @@ const TestTriggerDispatcherLayer = makeTestTriggerDispatcherLayer({
   startingTime: new Date('2025-09-05T15:01:00.000Z'),
 });
 
+/**
+ * Store an operation definition in the database registry rather than persisting it to the
+ * database. The dispatcher resolves the trigger's function ref transparently from the registry.
+ */
+const registerOperation = (operation: Operation.Definition.Any) =>
+  Effect.gen(function* () {
+    const record = Operation.serialize(operation);
+    const { db } = yield* Database.Service;
+    db.registry.add([record]);
+    return record;
+  });
+
 describe('TriggerDispatcher', () => {
   describe('Time Control', () => {
     it.effect(
@@ -89,8 +101,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should manually invoke trigger',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -112,8 +123,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke scheduled timer triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -138,8 +148,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle disabled triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         const enabledTrigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -173,8 +182,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'cron triggers are invoked periodically on schedule',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // cron every 5 minutes
         const trigger = Trigger.make({
@@ -219,7 +227,8 @@ describe('TriggerDispatcher', () => {
           // Use a Person object as the function ref so trigger invocation fails the
           // `Obj.instanceOf(Operation.PersistentOperation, ...)` invariant.
           const badFn = Obj.make(Person.Person, { fullName: 'not-an-operation' });
-          yield* Database.add(badFn);
+          const { db } = yield* Database.Service;
+          db.registry.add([badFn]);
 
           const trigger = Trigger.make({
             function: Ref.make(badFn) as any,
@@ -269,8 +278,7 @@ describe('TriggerDispatcher', () => {
         // Initially no triggers in database
 
         // Add a trigger dynamically
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -289,8 +297,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should support Effect cron expressions',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         const validPatterns = [
           '* * * * *', // Every minute
@@ -320,8 +327,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle invalid cron expressions gracefully',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Test with an invalid pattern
         const trigger = Trigger.make({
@@ -361,8 +367,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -388,8 +393,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -433,8 +437,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -473,8 +476,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -515,8 +517,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke triggers on object creation',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a subscription trigger that watches for Person objects
         const trigger = Trigger.make({
@@ -548,8 +549,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke triggers on object updates',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a person object first
         const person = Obj.make(Person.Person, {
@@ -589,8 +589,7 @@ describe('TriggerDispatcher', () => {
     it.effect.skip(
       'should not invoke triggers for unchanged objects',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a subscription trigger first
         const trigger = Trigger.make({
@@ -636,8 +635,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle multiple object types with filters',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a subscription trigger that only watches for Task objects
         const trigger = Trigger.make({
@@ -675,8 +673,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should pass correct event data to function',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         const person = Obj.make(Person.Person, {
           fullName: 'Eva Martinez',
@@ -803,8 +800,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'invokeTrigger spawns operations with the dispatcher environment so space-affinity services resolve',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(ProbeOp);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(ProbeOp);
 
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
