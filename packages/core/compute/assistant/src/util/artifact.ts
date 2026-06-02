@@ -19,74 +19,78 @@ export const createArtifactElement = (id: EntityId) => `<artifact id=${id} />`;
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  *
- * @deprecated Use `Ref.Ref(XXX)` instead.
+ * @internal
  */
-// TODO(burdon): Rename RefFromLLM?
-export const ArtifactId: Schema.Schema<string> & {
-  toEchoURI: (reference: ArtifactId, owningSpaceId?: SpaceId) => EID.EID;
+const ArtifactURI: Schema.Schema<string> & {
+  toEchoURI: (reference: ArtifactURI, owningSpaceId?: SpaceId) => EID.EID;
   resolve: <S extends Type.AnyEntity>(
     schema: S,
-    ref: ArtifactId,
+    ref: ArtifactURI,
   ) => Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service>;
 } = class extends Schema.String.annotations({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
-    The ID of the referenced object. Formats accepted:
-    - DXN (dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4). DXNs can be prepended with an @ symbol for compatibility with in-text references.
+    The URI of the referenced object. Protocols accepted:
+    - echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. 
     - space ID, object ID tuple (spaceID:objectID)
     - Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)
+    - dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.
+
+    URIs can be prepended with an @ symbol for compatibility with in-text references.
   `,
   examples: [
-    'dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
-    '@dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+    'echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+    '@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
     'BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
     '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
+    'dxn:org.dxos.type.calendar:0.1.0',
+    '@dxn:org.dxos.type.calendar:0.1.0',
   ],
 }) {
-  static toEchoURI(reference: ArtifactId, owningSpaceId?: SpaceId): EID.EID {
-    // Allow @ prefix for compatibility with in-text references.
-    const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
-    if (stripped.startsWith('echo:') || stripped.startsWith('dxn:')) {
-      return EID.parse(stripped);
-    } else if (stripped.includes(':')) {
-      const [spaceId, objectId] = stripped.split(':');
-      if (!SpaceId.isValid(spaceId) || !EntityId.isValid(objectId)) {
+    static toEchoURI(reference: ArtifactURI, owningSpaceId?: SpaceId): EID.EID {
+      // Allow @ prefix for compatibility with in-text references.
+      const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
+      if (stripped.startsWith('echo:') || stripped.startsWith('dxn:')) {
+        return EID.parse(stripped);
+      } else if (stripped.includes(':')) {
+        const [spaceId, objectId] = stripped.split(':');
+        if (!SpaceId.isValid(spaceId) || !EntityId.isValid(objectId)) {
+          throw new Error(`Unable to parse object reference: ${reference}`);
+        }
+        // This is a workaround because the current Filter API doesn't work with fully qualified Echo URIs.
+        // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
+        // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
+        return spaceId === owningSpaceId
+          ? EID.make({ entityId: objectId })
+          : EID.make({ spaceId: spaceId, entityId: objectId });
+      } else if (EntityId.isValid(stripped)) {
+        return EID.make({ entityId: stripped });
+      } else {
         throw new Error(`Unable to parse object reference: ${reference}`);
       }
-      // This is a workaround because the current Filter API doesn't work with fully qualified Echo URIs.
-      // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
-      // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
-      return spaceId === owningSpaceId
-        ? EID.make({ entityId: objectId })
-        : EID.make({ spaceId: spaceId, entityId: objectId });
-    } else if (EntityId.isValid(stripped)) {
-      return EID.make({ entityId: stripped });
-    } else {
-      throw new Error(`Unable to parse object reference: ${reference}`);
     }
-  }
 
-  /**
-   * Resolves an artifact ID to an object.
-   */
-  static resolve<S extends Type.AnyEntity>(
-    schema: S,
-    ref: ArtifactId,
-  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service> {
-    const uri = ArtifactId.toEchoURI(ref);
-    return Database.resolve(Ref.fromURI(uri), schema);
-  }
-};
+    /**
+     * Resolves an artifact ID to an object.
+     */
+    static resolve<S extends Type.AnyEntity>(
+      schema: S,
+      ref: ArtifactURI,
+    ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service> {
+      const uri = ArtifactURI.toEchoURI(ref);
+      return Database.resolve(Ref.fromURI(uri), schema);
+    }
+  };
 
-export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
+type ArtifactURI = Schema.Schema.Type<typeof ArtifactURI>;
 
 /**
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
-export const RefFromLLM = Schema.transform(ArtifactId, Ref.Ref(Obj.Unknown), {
-  decode: (fromA, fromI) => EncodedReference.fromURI(ArtifactId.toEchoURI(fromA)),
+export const RefFromLLM = Schema.transform(ArtifactURI, Ref.Ref(Obj.Unknown), {
+  decode: (fromA, fromI) => EncodedReference.fromURI(ArtifactURI.toEchoURI(fromA)),
   encode: (toI, toA) => EncodedReference.toURI(toI),
   strict: false,
 }).annotations({
-  description: ArtifactId.ast.annotations.description as string,
+  description: ArtifactURI.ast.annotations.description as string,
 });
