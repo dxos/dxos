@@ -18,13 +18,14 @@ import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { AttendableContainer } from '@dxos/react-ui-attention';
+import { AttendableContainer, useSelected } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { Booking, type Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
+import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
 import { liveRoutingService } from './live-routing';
 import { TripArticle } from './TripArticle';
 
@@ -73,22 +74,32 @@ const withKeyboard: Decorator = (Story) => {
   return <Story />;
 };
 
-const DefaultStory = () => {
+const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   const spaces = useSpaces();
   const spaceId = spaces[0]?.id;
   const db = useDatabase(spaceId ?? '');
   const trips = useQuery(db, Filter.type(Trip.Trip));
   const trip = trips[0];
+  // The segment shown in the companion column tracks the article's selection (defaults to the first).
+  const selectedId = useSelected(ATTENDABLE_ID, 'single');
 
   if (!spaceId || !db || !trip) {
     return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
   }
 
-  // AttendableContainer marks the subtree with `data-attendable-id` so focusing it
-  // establishes attention for ATTENDABLE_ID, which gates the keyboard bindings.
+  const segments = Trip.getSegments(trip);
+  const selected = segments.find((segment) => segment.id === selectedId) ?? segments[0];
+
+  // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
+  // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
   return (
-    <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} />
+    <AttendableContainer id={ATTENDABLE_ID} classNames='grid grid-cols-2 min-bs-0 overflow-hidden'>
+      <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
+      <div className='min-bs-0 overflow-hidden border-is border-separator'>
+        {selected && (
+          <SegmentArticle role='article' subject={selected} companionTo={trip} attendableId={ATTENDABLE_ID} />
+        )}
+      </div>
     </AttendableContainer>
   );
 };
@@ -232,16 +243,11 @@ export const Default: Story = {
   }),
 };
 
-export const Empty: Story = {
-  decorators: baseDecorators((space) => {
-    space.db.add(Trip.make({ name: 'New Trip' }));
-  }),
-};
-
 // A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake
 // router. The Route section seeds its city list from these planned road segments; adding / removing
 // a city re-plans via the contributed RoutingService and updates the map polyline.
 export const RoadTrip: Story = {
+  args: { showMap: true },
   decorators: baseDecorators((space) => {
     seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
@@ -264,4 +270,10 @@ export const RoadTripLive: Story = {
   decorators: baseDecorators((space) => {
     space.db.add(Trip.make({ name: 'London → Barcelona (live OSRM)' }));
   }, liveRoutingService()),
+};
+
+export const Empty: Story = {
+  decorators: baseDecorators((space) => {
+    space.db.add(Trip.make({ name: 'New Trip' }));
+  }),
 };

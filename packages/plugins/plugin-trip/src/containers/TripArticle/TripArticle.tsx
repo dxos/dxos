@@ -21,11 +21,14 @@ import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
 import { RoutingOperation, Segment, Trip } from '#types';
 
-export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
+export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
+  /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
+  defaultShowGlobe?: boolean;
+};
 
 const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
 
-export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
+export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: TripArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
 
@@ -109,7 +112,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const mapProviders = useCapabilities(MapCapabilities.MarkerProvider);
   const mapAvailable = useMemo(() => mapProviders.some((provider) => provider.match(subject)), [mapProviders, subject]);
 
-  const [showGlobe, setShowGlobe] = useState(false);
+  const [showGlobe, setShowGlobe] = useState(defaultShowGlobe ?? false);
 
   const handleNavigate = useCallback(
     (segmentId: string) => {

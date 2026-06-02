@@ -95,17 +95,20 @@ const segmentLine = (seg: Segment.Segment): MapCapabilities.GeoLine | undefined 
  * rendered as a chain of connected straight segments that follows the road; other transport
  * segments fall back to a single origin→destination arc.
  */
+/** Stroke color for plotted route legs. */
+const ROUTE_COLOR = '#22c55e';
+
 const segmentLines = (seg: Segment.Segment): MapCapabilities.GeoLine[] => {
   if (seg.details._tag === 'road' && seg.details.path && seg.details.path.length >= 2) {
     const points = seg.details.path.map((point) => toLatLng([point[0], point[1]])).filter(isNonNullable);
     const lines: MapCapabilities.GeoLine[] = [];
     for (let index = 0; index < points.length - 1; index++) {
-      lines.push({ source: points[index], target: points[index + 1] });
+      lines.push({ source: points[index], target: points[index + 1], color: ROUTE_COLOR });
     }
     return lines;
   }
   const line = segmentLine(seg);
-  return line ? [line] : [];
+  return line ? [{ ...line, color: ROUTE_COLOR }] : [];
 };
 
 /** First geo-tagged point of a segment, if any. */
@@ -124,16 +127,33 @@ const useTripMarkers = (subject: Trip.Trip, { attendableId }: { attendableId?: s
   const loaded = useObjects(segmentRefs ?? []);
   const segments = useMemo(() => Trip.getSegments(subject), [subject, segmentRefs?.length, loaded]);
 
-  const markers = useMemo<GeoMarker[]>(
-    () =>
-      segments
-        .map((seg): GeoMarker | undefined => {
-          const point = segmentAnchor(seg);
-          return point ? { id: seg.id, title: Segment.getTitle(seg), location: point } : undefined;
-        })
-        .filter(isNonNullable),
-    [segments],
-  );
+  const markers = useMemo<GeoMarker[]>(() => {
+    const result: GeoMarker[] = segments
+      .map((seg): GeoMarker | undefined => {
+        const point = segmentAnchor(seg);
+        return point ? { id: seg.id, title: Segment.getTitle(seg), location: point } : undefined;
+      })
+      .filter(isNonNullable);
+
+    // Each segment is anchored at its origin, so the final destination (which has no following
+    // segment) would otherwise have no marker. Add it explicitly when it differs from its origin.
+    const last = segments.at(-1);
+    if (last) {
+      const points = segmentPoints(last);
+      const destination = points.length > 1 ? points[points.length - 1] : undefined;
+      const origin = segmentAnchor(last);
+      if (destination && (!origin || !sameLatLng(destination, origin))) {
+        const place = Segment.getDestination(last);
+        result.push({
+          id: `${last.id}:destination`,
+          title: place?.name ?? place?.city ?? place?.code ?? '',
+          location: destination,
+        });
+      }
+    }
+
+    return result;
+  }, [segments]);
 
   const lines = useMemo(() => segments.flatMap(segmentLines), [segments]);
 

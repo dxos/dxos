@@ -300,15 +300,18 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         if (!visibleHeight) {
           return;
         }
-        const firstVisibleRow = Math.floor(scrollTopRef.current / size);
-        const lastVisibleRow = firstVisibleRow + Math.floor(visibleHeight / size) - 1;
-        if (targetRow < firstVisibleRow) {
-          listRef.current?.scrollToRow(targetRow);
-        } else if (targetRow > lastVisibleRow) {
-          // Place the target row at the bottom of the viewport.
-          listRef.current?.scrollToPosition(
-            Math.max(0, (targetRow + 1) * size - Math.floor(visibleHeight / size) * size),
-          );
+        // Rows fully inside the viewport. Use ceil/floor (not floor of scrollTop) so a partially
+        // visible row at either edge counts as "not fully visible" even when scrollTop is not a
+        // multiple of the row height (which it isn't after a bottom-aligned scroll).
+        const firstFullyVisibleRow = Math.ceil(scrollTopRef.current / size);
+        const lastFullyVisibleRow = Math.floor((scrollTopRef.current + visibleHeight) / size) - 1;
+        if (targetRow < firstFullyVisibleRow) {
+          // Align the top edge of the target row with the top edge of the viewport.
+          listRef.current?.scrollToPosition(targetRow * size);
+        } else if (targetRow > lastFullyVisibleRow) {
+          // Align the bottom edge of the target row with the bottom edge of the viewport (using the
+          // full visible height, not a row-rounded height, so the row sits flush against the edge).
+          listRef.current?.scrollToPosition(Math.max(0, (targetRow + 1) * size - visibleHeight));
         }
       },
       [height, maxHeight, weekStartsOn],

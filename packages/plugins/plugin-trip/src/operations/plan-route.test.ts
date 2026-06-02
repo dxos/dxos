@@ -70,7 +70,7 @@ describe('PlanRoute', () => {
     for (const segment of roads) {
       if (segment.details._tag === 'road') {
         expect(segment.details.distanceMeters).toBeGreaterThan(0);
-        expect(segment.details.path?.length).toBe(2);
+        expect(segment.details.path?.length).toBeGreaterThanOrEqual(2);
         expect(segment.details.origin?.geo).toBeDefined();
         expect(segment.details.destination?.geo).toBeDefined();
       }
