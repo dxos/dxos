@@ -50,7 +50,7 @@ header-surface        n-100 / n-900   headers
 input-surface         n-200 / n-800   form controls
 ```
 
-Each surface that hosts text declares a matching `*-foreground` (defaulting to `n-950 / n-50`).
+Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / n-50`).
 
 ## State tokens (rationalized)
 
@@ -88,8 +88,8 @@ These are merged into the rationalized state vocabulary:
 | `active-text`             | `current-fg`            | Renamed and reclassified — it was always foreground (text on the surface), not `text`.                                                                                            |
 | `highlight-surface`       | `current-surface`       | `selected.css` used it for `aria-current=true`.                                                                                                                                   |
 | `highlight-surface-hover` | `current-surface-hover` |                                                                                                                                                                                   |
-| `highlight-surface-text`  | `current-fg`            | Rename to the new `-foreground` suffix.                                                                                                                                           |
-| `*-surface-text` (all)    | `*-foreground`          | Repository-wide rename for every hue, semantic, and named-surface token (e.g. `base-surface-text` → `base-fg`, `red-surface-text` → `red-fg`, `error-surface-text` → `error-fg`). |
+| `highlight-surface-text`  | `current-fg`            | Rename to the new `-fg` suffix.                                                                                                                                                   |
+| `*-surface-text` (all)    | `*-fg`                  | Repository-wide rename for every hue, semantic, and named-surface token (e.g. `base-surface-text` → `base-fg`, `red-surface-text` → `red-fg`, `error-surface-text` → `error-fg`). |
 
 ### Visual change to expect
 
@@ -116,7 +116,7 @@ These should probably move to `card-surface` or `current-surface` depending on i
 | `accent-text`       | Standalone accent-colored text (links, emphasis).   |
 | `accent-text-hover` | Hover state for accent text.                        |
 
-This is the canonical illustration of the `foreground` vs `text` distinction: `accent-fg` is the ink on an accent button; `accent-text` is the accent-colored body link.
+This is the canonical illustration of the `fg` vs `text` distinction: `accent-fg` is the ink on an accent button; `accent-text` is the accent-colored body link.
 
 Note: `accent-focus-indicator` is removed — focus rings are now global tokens (see [Focus rings](#focus-rings)).
 

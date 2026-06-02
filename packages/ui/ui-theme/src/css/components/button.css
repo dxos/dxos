@@ -61,7 +61,8 @@
         @apply text-accent-fg bg-accent-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
+        &[aria-checked='true'],
+        &[data-state='open'] {
           @apply bg-accent-bg-hover;
         }
       }
@@ -69,7 +70,8 @@
         @apply text-accent-fg bg-error-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
+        &[aria-checked='true'],
+        &[data-state='open'] {
           @apply bg-error-bg-hover;
         }
       }

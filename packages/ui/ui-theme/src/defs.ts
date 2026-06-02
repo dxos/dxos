@@ -34,7 +34,9 @@ export const hues: ChromaticPalette[] = [
 
 export const hueShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 
-export const roles = ['bg', 'surface', 'fg', 'text', 'border'] as const;
+// NOTE: These are the JS-side style-API role keys (see ColorStyles in util/hash-styles.ts), kept
+// distinct from the renamed CSS custom-property suffixes (`-bg`/`-fg`).
+export const roles = ['fill', 'surface', 'foreground', 'text', 'border'] as const;
 
 /**
  * Card size constants (Tailwind spacing units).

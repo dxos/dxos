@@ -68,6 +68,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     const initializedRef = useRef(false);
     useEffect(() => {
       if (!controller) {
+        // MarkdownStream is keyed by viewType; switching views replaces the controller. Reset so
+        // the first scroll for the new controller is instant rather than animated.
+        initializedRef.current = false;
         return;
       }
       controller.scrollToBottom(initializedRef.current ? 'smooth' : 'instant');
