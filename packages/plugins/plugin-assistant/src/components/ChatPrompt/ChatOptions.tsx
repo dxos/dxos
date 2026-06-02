@@ -36,15 +36,7 @@ export type ChatOptionsProps = {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({
-  chat,
-  db,
-  context,
-  registry,
-  presets,
-  preset,
-  onPresetChange,
-}: ChatOptionsProps) => {
+export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -120,11 +112,7 @@ export const ChatOptions = ({
   );
 };
 
-const BlueprintsPanel = ({
-  registry,
-  db,
-  context,
-}: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
+const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
   const blueprints = useBlueprints({ registry, db });

@@ -57,7 +57,9 @@ export const Chat = (props: ChatProps) => {
     contextBlueprints()
       .map((blueprint) => {
         const key = Obj.getMeta(blueprint).key;
-        return key !== undefined ? (blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined) : undefined;
+        return key !== undefined
+          ? (blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined)
+          : undefined;
       })
       .filter(isTruthy),
   );

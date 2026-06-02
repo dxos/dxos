@@ -9,8 +9,8 @@ import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { useRegistry } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { getParentId } from '@dxos/react-ui-attention';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';

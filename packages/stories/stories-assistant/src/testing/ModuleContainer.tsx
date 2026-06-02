@@ -49,7 +49,9 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
     const registry = makeRegistry({ initial: blueprintsDefinitions.map((def) => def.make()) });
     const blueprintObjects = blueprints
       .map((key) => {
-        const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined;
+        const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as
+          | Blueprint.Blueprint
+          | undefined;
         if (blueprint) {
           return space.db.add(Obj.clone(blueprint));
         }

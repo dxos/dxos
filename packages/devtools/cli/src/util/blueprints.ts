@@ -74,7 +74,6 @@ export const blueprintRegistry = makeRegistry({
   ],
 });
 
-
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
 //  But since CLI doesn't have this, we have to manually collect them and configure them here.
 //  Providing functions and toolkits are essential to the blueprint operation,

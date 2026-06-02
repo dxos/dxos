@@ -21,7 +21,13 @@ import {
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { createFeedServiceLayer, EchoClient, type EchoDatabaseImpl, makeRegistry, type QueueFactory } from '@dxos/echo-db';
+import {
+  createFeedServiceLayer,
+  EchoClient,
+  type EchoDatabaseImpl,
+  makeRegistry,
+  type QueueFactory,
+} from '@dxos/echo-db';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -43,7 +49,6 @@ export interface FunctionWrappingOptions {
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
-
 }
 
 /**

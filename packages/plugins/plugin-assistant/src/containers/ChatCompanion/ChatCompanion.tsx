@@ -91,7 +91,9 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           continue;
         }
 
-        const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined;
+        const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as
+          | Blueprint.Blueprint
+          | undefined;
         if (!blueprint) {
           continue;
         }

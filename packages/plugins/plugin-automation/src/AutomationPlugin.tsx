@@ -7,7 +7,14 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, LayerSpecs, OperationHandler, ReactSurface, RegistrySync, TriggerRuntimeController } from '#capabilities';
+import {
+  AppGraphBuilder,
+  LayerSpecs,
+  OperationHandler,
+  ReactSurface,
+  RegistrySync,
+  TriggerRuntimeController,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 /**
  * Syncs plugin capability contributions into `client.graph.registry`.

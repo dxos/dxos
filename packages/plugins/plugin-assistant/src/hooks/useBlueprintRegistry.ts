@@ -10,15 +10,9 @@ import { type Database, Entity, Filter, Obj, Ref, type Registry } from '@dxos/ec
 import { useQuery } from '@dxos/react-client/echo';
 import { distinctBy } from '@dxos/util';
 
-export const useBlueprints = ({
-  registry,
-  db,
-}: {
-  registry?: Registry.Registry;
-  db?: Database.Database;
-}) => {
-  const [registryBlueprints, setRegistryBlueprints] = useState<Blueprint.Blueprint[]>(() =>
-    registry?.query(Filter.type(Blueprint.Blueprint)).runSync() ?? [],
+export const useBlueprints = ({ registry, db }: { registry?: Registry.Registry; db?: Database.Database }) => {
+  const [registryBlueprints, setRegistryBlueprints] = useState<Blueprint.Blueprint[]>(
+    () => registry?.query(Filter.type(Blueprint.Blueprint)).runSync() ?? [],
   );
 
   useEffect(() => {
@@ -94,7 +88,9 @@ export const useBlueprintHandlers = ({
       let storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
       if (checked) {
         if (!storedBlueprint) {
-          const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined;
+          const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as
+            | Blueprint.Blueprint
+            | undefined;
           if (!blueprint) {
             return;
           }

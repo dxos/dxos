@@ -19,7 +19,9 @@ export default UpdateBlueprints.pipe(
         if (!key) {
           continue;
         }
-        const source = registry.list().find((entity) => Entity.getMeta(entity)?.key === key) as Blueprint.Blueprint | undefined;
+        const source = registry.list().find((entity) => Entity.getMeta(entity)?.key === key) as
+          | Blueprint.Blueprint
+          | undefined;
         if (!source) {
           continue;
         }

@@ -161,7 +161,9 @@ describe('Blueprint Manager', () => {
     Effect.fnUntraced(
       function* (_) {
         const registry = yield* Registry.Service;
-        const canonical = registry.list().find((e) => Entity.getMeta(e)?.key === 'org.dxos.blueprint.database') as Blueprint.Blueprint | undefined;
+        const canonical = registry.list().find((e) => Entity.getMeta(e)?.key === 'org.dxos.blueprint.database') as
+          | Blueprint.Blueprint
+          | undefined;
         expect(canonical).toBeDefined();
 
         const stored = yield* Blueprint.upsert('org.dxos.blueprint.database');
