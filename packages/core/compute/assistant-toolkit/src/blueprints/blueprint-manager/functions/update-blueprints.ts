@@ -24,8 +24,8 @@ export default UpdateBlueprints.pipe(
         if (!source) {
           continue;
         }
-        Obj.update(blueprint, (b) => {
-          void Obj.updateFrom(b, Obj.clone(source, { deep: true }));
+        Obj.update(blueprint, (blueprint) => {
+          void Obj.updateFrom(blueprint, Obj.clone(source, { deep: true }));
         });
       }
     }),

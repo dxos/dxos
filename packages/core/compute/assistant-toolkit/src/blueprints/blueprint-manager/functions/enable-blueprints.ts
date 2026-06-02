@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Ref, Registry } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 
 import { EnableBlueprints } from './definitions';
 
