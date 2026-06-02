@@ -140,17 +140,7 @@ describe('Trace timeline', () => {
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
               "
               ●     [atom] Agent processing request...
-              ├──●  [user] List all available schemas. Tell me what typenames are available.
-              │  ●  [list] List schemas - Success
-              ◆──╯  [atom] Agent completed request
-              ●  │  [atom] Agent processing request...
-              │  ●  [user] Create an organization called "DXOS" and a person named "Alice".
-              │  ●  [plus] Create object - Success
-              │  ●  [plus] Create object - Success
-              ◆──╯  [atom] Agent completed request
-              ●  │  [atom] Agent processing request...
-              │  ●  [user] Search for all organizations and persons.
-              │  ●  [magnifying-glass] Query - Success
+              ├──●  [user] Search for all organizations. How many are there?
               │  ●  [magnifying-glass] Query - Success
               ◆──╯  [atom] Agent completed request
               "
