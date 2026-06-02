@@ -20,7 +20,6 @@ export const useEventToolbarActions = ({ viewMode, setViewMode, onNoteCreate }: 
       MenuBuilder.make()
         .root({ label: ['event-toolbar.menu', { ns: meta.id }] })
         .subgraph(viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'] }))
-        .separator('gap')
         .action(
           'createNote',
           {
@@ -29,7 +28,6 @@ export const useEventToolbarActions = ({ viewMode, setViewMode, onNoteCreate }: 
           },
           () => onNoteCreate?.(),
         )
-        .separator('gap')
         .build(),
     [viewMode, setViewMode, onNoteCreate],
   );

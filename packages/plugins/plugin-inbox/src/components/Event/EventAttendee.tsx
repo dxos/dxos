@@ -24,7 +24,7 @@ export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeePr
 
   return (
     <Header.Row
-      icon={<UserIconButton title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />}
+      icon={<UserIconButton compact title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />}
     >
       <h3 className='truncate text-primary-text'>{attendee.name || attendee.email}</h3>
     </Header.Row>

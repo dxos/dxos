@@ -20,6 +20,10 @@ const DefaultStory = () => {
         title: random.lorem.sentence(5),
         description: random.lorem.paragraph(2),
         owner: {},
+        attendees: Array.from({ length: 3 }, () => ({
+          name: random.person.fullName(),
+          email: random.internet.email(),
+        })),
         startDate: new Date('2025-11-19T12:00:00').toISOString(),
         endDate: new Date('2025-11-19T13:00:00').toISOString(),
       }),
