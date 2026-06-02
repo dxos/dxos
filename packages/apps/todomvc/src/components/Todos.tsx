@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type ChangeEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
-
-import * as Option from 'effect/Option';
 
 import { Annotation, Obj, Ref } from '@dxos/echo';
 import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/react-client/echo';

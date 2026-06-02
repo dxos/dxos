@@ -13,7 +13,10 @@ import { getDictionary, setDictionary } from './dictionary';
 /**
  * Get the value of an annotation from an entity instance or snapshot.
  */
-export const get = <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation.Annotation<T>): Option.Option<T> => {
+export const get = <T>(
+  target: Entity.Unknown | Entity.Snapshot,
+  annotation: Annotation.Annotation<T>,
+): Option.Option<T> => {
   if (isEntity(target) || isSnapshot(target)) {
     const meta = getMetaChecked(target as Entity.Unknown);
     if (!meta.annotations) {
