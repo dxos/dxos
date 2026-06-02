@@ -427,6 +427,9 @@
       "path": "packages/plugins/plugin-observability/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-osrm/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-outliner/tsconfig.json"
     },
     {

@@ -19,7 +19,7 @@ const header: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 const title: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 overflow-hidden truncate text-lg', etc);
+  return mx('col-start-2 overflow-hidden truncate', etc);
 };
 
 const icon: ComponentFunction<MessageStyleProps> = (_, etc) => {

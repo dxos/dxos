@@ -2635,6 +2635,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../../plugins/plugin-observability
+      '@dxos/plugin-osrm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-osrm
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../../plugins/plugin-outliner
@@ -12690,6 +12693,30 @@ importers:
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-osrm:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/plugin-trip':
+        specifier: workspace:*
+        version: link:../plugin-trip
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
 
   packages/plugins/plugin-outliner:
     dependencies:

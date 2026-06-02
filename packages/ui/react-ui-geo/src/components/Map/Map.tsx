@@ -5,10 +5,19 @@
 import 'leaflet/dist/leaflet.css';
 
 import { createContext } from '@radix-ui/react-context';
-import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds } from 'leaflet';
+import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, point, latLngBounds } from 'leaflet';
 import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MapContainer, type MapContainerProps, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import {
+  MapContainer,
+  type MapContainerProps,
+  Marker,
+  Polyline,
+  Popup,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet';
 
 import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { composable, composableProps, defaultTx } from '@dxos/react-ui';
@@ -310,22 +319,32 @@ MapTiles.displayName = MAP_TILES_NAME;
 
 type MapMarkersProps = {
   markers?: GeoMarker[];
+  /** Connecting lines (e.g. a route). Used here only to extend the viewport fit; drawn by `Map.Lines`. */
+  lines?: MapLine[];
   selected?: string[];
   /** Invoked with the marker id when a marker is clicked. */
   onSelect?: (id: string) => void;
 };
 
-const MapMarkers = ({ selected, markers, onSelect }: MapMarkersProps) => {
+const MapMarkers = ({ selected, markers, lines, onSelect }: MapMarkersProps) => {
   const map = useMap();
 
-  // Fit the viewport around the markers. When there are no markers, leave the current view alone
-  // so caller-provided center/zoom (or the user's prior interaction) is preserved.
+  // Fit the viewport around the markers and any connecting lines. When there is nothing to frame,
+  // leave the current view alone so caller-provided center/zoom (or prior interaction) is preserved.
   useEffect(() => {
-    if (markers && markers.length > 0) {
-      const bounds = latLngBounds(markers.map((marker) => marker.location));
-      map.fitBounds(bounds);
+    const points: LatLngLiteral[] = [
+      ...(markers?.map((marker) => marker.location) ?? []),
+      ...(lines?.flatMap((line) => [line.source, line.target]) ?? []),
+    ];
+    if (points.length > 0) {
+      const bounds = latLngBounds(points);
+      const size = map.getSize();
+      const padding = Math.max(48, Math.min(size.x, size.y) / 6);
+      // `animate: false`: a deferred zoom animation can outlive the map (e.g. on unmount) and throw
+      // a Leaflet `_leaflet_pos` error against a removed layer; fitting instantly avoids the race.
+      map.fitBounds(bounds, { padding: point(padding, padding), animate: false });
     }
-  }, [markers, map]);
+  }, [markers, lines, map]);
 
   return (
     <>
@@ -358,6 +377,33 @@ const MapMarkers = ({ selected, markers, onSelect }: MapMarkersProps) => {
 };
 
 MapMarkers.displayName = 'Map.Markers';
+
+//
+// Lines
+//
+
+/** A connecting line between two points (e.g. a route leg). `color` is any CSS/Leaflet stroke color. */
+export type MapLine = { source: LatLngLiteral; target: LatLngLiteral; color?: string };
+
+type MapLinesProps = {
+  lines?: MapLine[];
+};
+
+const MapLines = ({ lines }: MapLinesProps) => {
+  if (!lines || lines.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {lines.map(({ source, target, color }, index) => (
+        <Polyline key={index} positions={[source, target]} pathOptions={{ color, weight: 4, opacity: 0.8 }} />
+      ))}
+    </>
+  );
+};
+
+MapLines.displayName = 'Map.Lines';
 
 //
 // Controls
@@ -439,6 +485,7 @@ export const Map = {
   Content: MapContent,
   Tiles: MapTiles,
   Markers: MapMarkers,
+  Lines: MapLines,
   Zoom: MapZoom,
   Action: MapAction,
 };
@@ -449,5 +496,6 @@ export {
   type MapContentProps,
   type MapTilesProps,
   type MapMarkersProps,
+  type MapLinesProps,
   type MapControlProps,
 };

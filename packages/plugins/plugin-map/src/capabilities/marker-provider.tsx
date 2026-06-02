@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { type GeoMarker } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
@@ -64,7 +65,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
 
 /** Built-in provider plotting a {@link Map.Map}'s view rows. */
 export const viewMarkerProvider: MapCapabilities.MarkerProvider = {
-  id: 'org.dxos.plugin.map/view',
+  id: DXN.make('org.dxos.plugin.map/view').toString(),
   match: (subject) => Obj.instanceOf(Map.Map, subject),
   useMarkers: useViewMarkers,
 };

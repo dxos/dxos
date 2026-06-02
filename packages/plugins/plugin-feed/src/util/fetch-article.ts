@@ -100,6 +100,7 @@ export const fetchArticle = async (link: string, options: FetchArticleOptions = 
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       redirect: 'follow',
     });
+
     if (!response.ok) {
       throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
     }
@@ -107,6 +108,7 @@ export const fetchArticle = async (link: string, options: FetchArticleOptions = 
     if (contentLength && Number(contentLength) > MAX_RESPONSE_BYTES_HEADER) {
       throw new Error(`Response too large: ${contentLength} bytes`);
     }
+
     const html = await readCapped(response, MAX_RESPONSE_BYTES);
     const article = await extractArticle(html, url.toString());
     return {
