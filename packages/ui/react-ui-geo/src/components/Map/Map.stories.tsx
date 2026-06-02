@@ -68,12 +68,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/**
- * https://docs.maptiler.com/leaflet
- */
-export const MapTiler: Story = {
+export const Bounds: Story = {
   args: {
-    url: 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?&key=${key}',
+    markers: [
+      { id: 'london', title: 'London', location: { lat: 51.5074, lng: -0.1278 } },
+      { id: 'barcelona', title: 'Barcelona', location: { lat: 41.3851, lng: 2.1734 } },
+      { id: 'warsaw', title: 'Warsaw', location: { lat: 52.2297, lng: 21.0122 } },
+    ] as GeoMarker[],
   },
 };
 
@@ -103,5 +104,14 @@ export const WithMarkers: Story = {
       { id: 'vientiane', title: 'Vientiane', location: { lat: 17.9757, lng: 102.6331 } },
       { id: 'yangon', title: 'Yangon', location: { lat: 16.8661, lng: 96.1951 } },
     ] as GeoMarker[],
+  },
+};
+
+/**
+ * https://docs.maptiler.com/leaflet
+ */
+export const MapTiler: Story = {
+  args: {
+    url: 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?&key=${key}',
   },
 };

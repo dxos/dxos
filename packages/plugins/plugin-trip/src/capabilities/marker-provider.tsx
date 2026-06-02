@@ -18,13 +18,22 @@ import { AIRPORTS } from '../operations/extractor/const';
 
 // TODO(burdon): Factor out to @dxos/schema.
 
-const toLatLng = (geo?: readonly [number, number, number?] | undefined): LatLngLiteral | undefined => {
+/**
+ * Converts a `GeoPoint` ([lng, lat, height?]) to a Leaflet `LatLngLiteral`. Uses index access, not
+ * destructuring: a GeoPoint read from a live ECHO object is a tuple proxy that is not iterable.
+ */
+export const toLatLng = (geo?: ArrayLike<number | undefined> | undefined): LatLngLiteral | undefined => {
   if (!geo || geo.length < 2) {
     return undefined;
   }
 
-  const [lng, lat] = geo;
-  return { lat, lng };
+  const lng = geo[0];
+  const lat = geo[1];
+  if (lng == null || lat == null) {
+    return undefined;
+  }
+
+  return { lng, lat };
 };
 
 const sameLatLng = (a: LatLngLiteral, b: LatLngLiteral): boolean => a.lat === b.lat && a.lng === b.lng;

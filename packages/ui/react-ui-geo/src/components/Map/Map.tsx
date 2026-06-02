@@ -5,7 +5,7 @@
 import 'leaflet/dist/leaflet.css';
 
 import { createContext } from '@radix-ui/react-context';
-import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds } from 'leaflet';
+import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, point, latLngBounds } from 'leaflet';
 import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MapContainer, type MapContainerProps, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
@@ -323,7 +323,9 @@ const MapMarkers = ({ selected, markers, onSelect }: MapMarkersProps) => {
   useEffect(() => {
     if (markers && markers.length > 0) {
       const bounds = latLngBounds(markers.map((marker) => marker.location));
-      map.fitBounds(bounds);
+      const size = map.getSize();
+      const padding = Math.max(48, Math.min(size.x, size.y) / 6);
+      map.fitBounds(bounds, { padding: point(padding, padding) });
     }
   }, [markers, map]);
 
