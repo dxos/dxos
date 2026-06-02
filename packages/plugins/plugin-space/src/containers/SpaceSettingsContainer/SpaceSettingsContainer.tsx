@@ -229,7 +229,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           <Settings.Item title={t('delete-space.title')} description={t('delete-space.description')}>
             <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
               <Dialog.Trigger asChild>
-                <Button variant='destructive'>{t('delete-space.label')}</Button>
+                <Button variant='destructive' data-testid='spaceSettings.deleteSpace'>
+                  {t('delete-space.label')}
+                </Button>
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay>
@@ -243,7 +245,11 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                         <Dialog.Close asChild>
                           <Button>{t('cancel.label')}</Button>
                         </Dialog.Close>
-                        <Button variant='destructive' onClick={handleDelete}>
+                        <Button
+                          variant='destructive'
+                          onClick={handleDelete}
+                          data-testid='spaceSettings.deleteSpaceConfirm'
+                        >
                           {t('delete-space.label')}
                         </Button>
                       </div>
