@@ -55,7 +55,7 @@ is being phased out — prefer the kebab forms):
 
 - **Surfaces:** `bg-base-surface`, `bg-card-surface`, `bg-modal-surface`, `bg-toolbar-surface`,
   `bg-sidebar-surface`, `bg-deck-surface`, `bg-group-surface`, `bg-input-surface`, `bg-hover-surface`,
-  `bg-attention-surface`, `bg-accent-surface` (+ `-hover`).
+  `bg-attention-surface`, `bg-accent-fill` (+ `-hover`).
 - **Text:** `text-base-foreground` (body), `text-description` (muted), `text-subdued` (dimmest),
   `text-placeholder`, `text-accent-text`.
 - **Borders:** `border-separator`, `border-subdued-separator`, `border-primary-separator`,

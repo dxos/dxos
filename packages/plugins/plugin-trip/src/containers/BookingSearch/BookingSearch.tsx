@@ -5,9 +5,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
-import { Select, Separator, useTranslation } from '@dxos/react-ui';
+import { Message, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
@@ -138,7 +139,17 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   );
 
   if (services.length === 0) {
-    return <div className='p-form-gap text-description'>{t('booking.no-providers.message')}</div>;
+    return (
+      <div className='p-form-padding'>
+        <Message.Root>
+          <Message.Title>{t('booking.no-providers.message')}</Message.Title>
+          <Message.Content classNames='flex flex-col py-1 gap-2'>
+            <p>{t('booking.enable-providers.message')}</p>
+            <PluginRegistryButton />
+          </Message.Content>
+        </Message.Root>
+      </div>
+    );
   }
 
   const flightOffers = offers?.filter((offer): offer is BookingSearchType.FlightOffer => offer._tag === 'flight');

@@ -345,11 +345,11 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-panel button': {
     '&:hover': {
-      // TODO(burdon): Replace with layer and @apply bg-accent-surface-hover
-      backgroundColor: 'var(--color-accent-surface-hover) !important',
+      // TODO(burdon): Replace with layer and @apply bg-accent-fill-hover
+      backgroundColor: 'var(--color-accent-fill-hover) !important',
     },
     '&:active': {
-      backgroundColor: 'var(--color-accent-surface-hover)',
+      backgroundColor: 'var(--color-accent-fill-hover)',
     },
   },
   '.cm-panel.cm-search': {

@@ -120,21 +120,44 @@ const MapResize = () => {
  * only, leaving normal wheel scrolling untouched. (Touchscreen pinch is handled by Leaflet's
  * `touchZoom`.)
  */
+// Zoom levels per pixel of pinch (ctrl+wheel) delta.
+const PINCH_ZOOM_SENSITIVITY = 0.03;
+
 const MapPinchZoom = () => {
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
+    let frame = 0;
+    let point: ReturnType<typeof L.point> | undefined;
+    // Accumulate the target against the last requested value (not the live, mid-zoom `getZoom()`)
+    // and apply once per animation frame without zoom animation — overlapping animated zooms are
+    // what made this jittery. Reset between frames so the next batch re-reads the settled zoom.
+    let target: number | undefined;
+
     const onWheel = (event: WheelEvent) => {
       if (!event.ctrlKey) {
         return;
       }
       event.preventDefault();
       const rect = container.getBoundingClientRect();
-      const point = L.point(event.clientX - rect.left, event.clientY - rect.top);
-      map.setZoomAround(point, map.getZoom() - event.deltaY * 0.01);
+      point = L.point(event.clientX - rect.left, event.clientY - rect.top);
+      target = (target ?? map.getZoom()) - event.deltaY * PINCH_ZOOM_SENSITIVITY;
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (target !== undefined && point) {
+            map.setZoomAround(point, target, { animate: false });
+            target = undefined;
+          }
+        });
+      }
     };
+
     container.addEventListener('wheel', onWheel, { passive: false });
-    return () => container.removeEventListener('wheel', onWheel);
+    return () => {
+      container.removeEventListener('wheel', onWheel);
+      cancelAnimationFrame(frame);
+    };
   }, [map]);
 
   return null;
@@ -191,6 +214,8 @@ const MapContent = forwardRef<MapController, MapContentProps>(
         scrollWheelZoom={scrollWheelZoom}
         doubleClickZoom={doubleClickZoom}
         touchZoom={touchZoom}
+        // Allow fractional zoom so trackpad pinch (small ctrl+wheel deltas) isn't rounded away.
+        zoomSnap={0}
         center={center ?? defaults.center}
         zoom={zoom ?? defaults.zoom}
         whenReady={() => {}}

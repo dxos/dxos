@@ -37,10 +37,10 @@ const textInputSurfaceFocus =
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
 const booleanInputSurface =
-  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-surface aria-[checked=mixed]:bg-accent-surface';
+  'shadow-inner transition-colors bg-un-accent aria-checked:bg-accent-fill aria-[checked=mixed]:bg-accent-fill';
 
 const booleanInputSurfaceHover =
-  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-surface-hover hover:aria-[checked=mixed]:bg-accent-surface-hover';
+  'hover:bg-un-accent-hover hover:aria-checked:bg-accent-fill-hover hover:aria-[checked=mixed]:bg-accent-fill-hover';
 
 // TODO(burdon): Replace with semantic tokens.
 const valence = (valence?: MessageValence) => {

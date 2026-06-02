@@ -43,8 +43,8 @@ export const translations = [
         'booking.search.label': 'Search',
         'booking.searching.label': 'Searching…',
         'booking.provider.placeholder': 'Select provider',
-        'booking.no-providers.message':
-          'No booking providers are enabled. Enable a booking plugin (e.g. Duffel) in settings.',
+        'booking.no-providers.message': 'No booking providers configured.',
+        'booking.enable-providers.message': 'Enable a booking plugin from the registry to search.',
         'booking.no-offers.message': 'No offers found.',
         'booking.missing-key.message': 'Set the provider API key in plugin settings to search.',
         'booking.error.message': 'Search failed. Check the provider configuration and try again.',
