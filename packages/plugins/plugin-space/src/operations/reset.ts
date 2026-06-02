@@ -147,8 +147,8 @@ const rebuildSpaceRoot = (space: Space): void => {
   // Clear all annotations and re-seed only the core ones, preventing plugin-specific
   // annotations from holding stale refs to entities that were just removed.
   // Obj.getMeta inside Obj.update gives the mutable meta.
-  Obj.update(properties, (mutableProps) => {
-    const meta = Obj.getMeta(mutableProps);
+  Obj.update(properties, (properties) => {
+    const meta = Obj.getMeta(properties);
     // Clear non-core annotations by deleting each key.
     if (meta.annotations) {
       for (const key of Object.keys(meta.annotations)) {

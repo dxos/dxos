@@ -10,7 +10,6 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { invariant } from '@dxos/invariant';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 

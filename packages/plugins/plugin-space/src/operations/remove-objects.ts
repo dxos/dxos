@@ -43,8 +43,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       for (const entity of entities) {
         const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
         if (index !== -1) {
-          Obj.update(parentCollection, (collection) => {
-            collection.objects.splice(index, 1);
+          Obj.update(parentCollection, (parentCollection) => {
+            parentCollection.objects.splice(index, 1);
           });
         }
 

@@ -9,7 +9,7 @@ import { QR } from 'react-qr-rounded';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, Collection, Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';

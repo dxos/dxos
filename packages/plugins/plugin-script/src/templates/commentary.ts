@@ -16,7 +16,7 @@ import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Annotation, Collection, Database, Filter, Obj, Ref, Relation, Type, DXN } from '@dxos/echo';
+import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -177,8 +177,8 @@ export default Commentary.pipe(
 
           const documentRef = Ref.make(document);
           if (rootCollection) {
-            Obj.update(rootCollection, (col) => {
-              col.objects.push(documentRef);
+            Obj.update(rootCollection, (rootCollection) => {
+              rootCollection.objects.push(documentRef);
             });
           }
 
