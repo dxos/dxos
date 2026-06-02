@@ -24,9 +24,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
       );
 
-      const parentCollection: Collection.Collection | undefined =
+      const parentCollection =
         input.target ??
         Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target;
+      invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.
@@ -41,13 +42,11 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         .filter(isNonNullable);
 
       for (const entity of entities) {
-        if (parentCollection) {
-          const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
-          if (index !== -1) {
-            Obj.update(parentCollection, (collection) => {
-              collection.objects.splice(index, 1);
-            });
-          }
+        const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
+        if (index !== -1) {
+          Obj.update(parentCollection, (collection) => {
+            collection.objects.splice(index, 1);
+          });
         }
 
         const db = Entity.getDatabase(entity);
