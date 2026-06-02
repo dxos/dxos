@@ -105,7 +105,7 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
       <Column.Row classNames={tx('message.header', {}, classNames)} ref={forwardedRef}>
         {icon && (
           <div className={tx('message.icon', { valence })}>
-            <Icon icon={icon} />
+            <Icon icon={icon} size={5} />
           </div>
         )}
         <h2 className={tx('message.title', {}, classNames)} id={titleId}>

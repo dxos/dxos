@@ -11,7 +11,7 @@
   /* Base styles */
   .dx-button {
     @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
-    @apply font-medium transition-colors duration-100 ease-linear bg-input-surface;
+    @apply font-medium transition-colors duration-100 ease-linear bg-input-bg;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention-surface;
@@ -36,7 +36,7 @@
         @apply text-inherit;
       }
       &[data-state='open'] {
-        @apply bg-input-surface;
+        @apply bg-input-bg;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
@@ -58,19 +58,21 @@
       }
 
       &[data-variant='primary'] {
-        @apply text-accent-foreground bg-accent-fill;
+        @apply text-accent-fg bg-accent-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-accent-fill-hover;
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          @apply bg-accent-bg-hover;
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accent-foreground bg-error-fill;
+        @apply text-accent-fg bg-error-bg;
         &:hover,
         &[aria-pressed='true'],
-        &[aria-checked='true'] &[data-state='open'] {
-          @apply bg-error-fill-hover;
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          @apply bg-error-bg-hover;
         }
       }
     }

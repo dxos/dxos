@@ -42,8 +42,13 @@ export type ScrollToProps = {
 /** Scroll to a specific line. */
 export const crawlerLineEffect = StateEffect.define<ScrollToProps>();
 
-/** Start/stop crawling the end of the document. */
-export const crawlerActiveEffect = StateEffect.define<boolean>();
+/**
+ * Start/stop crawling the end of the document.
+ * `instant: true` snaps to the bottom each frame (no easing) — used for non-streaming height
+ * growth (e.g. widgets measuring when a populated thread is first opened); the default eases
+ * with the spring for live streaming.
+ */
+export const crawlerActiveEffect = StateEffect.define<{ active: boolean; instant?: boolean }>();
 
 /**
  * Helper function to scroll to a specific line.
@@ -88,9 +93,9 @@ export const crawler = ({ overScroll = 0 }: CrawlerOptions = {}) => {
         this.crawler.cancel();
       }
 
-      crawl(start = false) {
-        if (start) {
-          this.crawler.scroll();
+      crawl({ active, instant }: { active: boolean; instant?: boolean } = { active: false }) {
+        if (active) {
+          this.crawler.scroll(instant);
         } else {
           this.crawler.cancel();
         }
@@ -218,6 +223,7 @@ export function createCrawler(view: EditorView, omega = 5, snapThreshold = 5, sn
   let velocity = 0;
   let rafId: number | null = null;
   let lastTime = 0;
+  let instant = false;
 
   function frame(now: number) {
     // Clamp dt to handle long pauses (tab backgrounded) and the first frame.
@@ -226,6 +232,22 @@ export function createCrawler(view: EditorView, omega = 5, snapThreshold = 5, sn
 
     const targetTop = el.scrollHeight - el.clientHeight;
     const delta = targetTop - currentTop;
+
+    // Instant mode: snap to the bottom each frame (no easing) and keep following while the
+    // height is still growing (e.g. widgets measuring on open), stopping once it stabilizes.
+    if (instant) {
+      el.scrollTop = targetTop;
+      currentTop = targetTop;
+      velocity = 0;
+      if (Math.abs(delta) < snapThreshold) {
+        rafId = null;
+        lastTime = 0;
+        return;
+      }
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
+
     if (Math.abs(delta) < snapThreshold && Math.abs(velocity) < snapVelocity) {
       el.scrollTop = targetTop;
       currentTop = targetTop;
@@ -244,7 +266,8 @@ export function createCrawler(view: EditorView, omega = 5, snapThreshold = 5, sn
   }
 
   return {
-    scroll: () => {
+    scroll: (useInstant = false) => {
+      instant = useInstant;
       if (rafId === null) {
         currentTop = el.scrollTop;
         lastTime = 0;

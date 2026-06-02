@@ -41,7 +41,7 @@ export const SettingsItem = ({ title, description = '', children }: SettingsItem
   return (
     <Input.Root>
       <SettingsPanel classNames='grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-x-trim-lg gap-y-0'>
-        <Input.Label classNames='pb-trim-md text-base-foreground text-lg md:col-span-2'>
+        <Input.Label classNames='pb-trim-md text-base-fg text-lg md:col-span-2'>
           {toLocalizedString(title, t)}
         </Input.Label>
         <Input.DescriptionAndValidation>

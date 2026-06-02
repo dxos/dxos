@@ -390,7 +390,7 @@ export default Capability.makeModule(
         component: ({ data }) => <CollectionSection subject={data.subject} />,
       }),
       Surface.create({
-        id: 'status',
+        id: 'syncStatus',
         role: 'status-indicator',
         component: () => <SyncStatus />,
       }),

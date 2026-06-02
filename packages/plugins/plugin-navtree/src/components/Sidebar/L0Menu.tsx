@@ -143,7 +143,7 @@ const L0ItemRoot = memo(
 export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
   <div
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-fill rounded-sm',
+      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-bg rounded-sm',
       classNames,
     )}
   />
@@ -243,7 +243,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   // Actions.
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-foreground)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 

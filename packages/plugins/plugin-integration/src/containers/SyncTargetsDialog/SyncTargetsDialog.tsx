@@ -17,7 +17,7 @@ import type { RemoteTarget } from '#types';
 import { IntegrationOperation } from '../../types';
 import { type Integration } from '../../types';
 
-export type SyncTargetsChecklistProps = {
+export type SyncTargetsDialogProps = {
   integration: Integration.Integration;
   availableTargets: ReadonlyArray<RemoteTarget>;
   /** Existing local object to attach to the first newly-selected target. */
@@ -27,7 +27,7 @@ export type SyncTargetsChecklistProps = {
 /**
  * Dialog body for picking which remote targets are synced into an Integration.
  */
-export const SyncTargetsChecklist = ({ integration, availableTargets, existingTarget }: SyncTargetsChecklistProps) => {
+export const SyncTargetsDialog = ({ integration, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -45,7 +45,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
 
-  const toggle = useCallback((id: string) => {
+  const handleToggle = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -57,11 +57,11 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
     });
   }, []);
 
-  const selectAll = useCallback(() => {
+  const handleSelectAll = useCallback(() => {
     setSelected(new Set(availableTargets.map((target) => target.id)));
   }, [availableTargets]);
 
-  const selectNone = useCallback(() => {
+  const handleSelectNone = useCallback(() => {
     setSelected(new Set());
   }, []);
 
@@ -101,11 +101,11 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <div className='flex gap-2 mt-form-gap'>
-            <Button onClick={selectAll} disabled={submitting}>
+          <div className='flex gap-2 py-form-gap'>
+            <Button onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
             </Button>
-            <Button onClick={selectNone} disabled={submitting}>
+            <Button onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
             </Button>
           </div>
@@ -114,25 +114,25 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
         {availableTargets.length === 0 ? (
           <p className='mt-form-gap text-description'>{t('no-available-targets.message')}</p>
         ) : (
-          <ScrollArea.Root classNames='mt-form-gap max-bs-[24rem]' orientation='vertical'>
-            <ScrollArea.Viewport>
-              <div className='flex flex-col gap-1 pie-2'>
-                {availableTargets.map((target) => (
-                  <Input.Root key={target.id}>
-                    <div className='flex items-start gap-2'>
+          <ScrollArea.Root classNames='max-bs-[24rem]' padding>
+            <ScrollArea.Viewport classNames='flex flex-col gap-2'>
+              {availableTargets.map((target) => (
+                <Input.Root key={target.id}>
+                  <div className='flex gap-2'>
+                    <div>
                       <Input.Checkbox
                         checked={selected.has(target.id)}
-                        onCheckedChange={() => toggle(target.id)}
+                        onCheckedChange={() => handleToggle(target.id)}
                         disabled={submitting}
                       />
-                      <div className='flex flex-col'>
-                        <Input.Label>{target.name}</Input.Label>
-                        {target.description && <p className='text-description'>{target.description}</p>}
-                      </div>
                     </div>
-                  </Input.Root>
-                ))}
-              </div>
+                    <div>
+                      <Input.Label>{target.name}</Input.Label>
+                      {target.description && <p className='text-sm text-description'>{target.description}</p>}
+                    </div>
+                  </div>
+                </Input.Root>
+              ))}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}

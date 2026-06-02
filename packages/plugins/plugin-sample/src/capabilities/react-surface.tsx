@@ -75,7 +75,7 @@ export default Capability.makeModule(() =>
       // indicator hides/shows when the setting is toggled. This must be in the
       // component (not the filter) so the atom subscription triggers re-renders.
       Surface.create({
-        id: 'status',
+        id: 'sampleStatus',
         role: 'status-indicator',
         component: () => {
           const settings = useAtomCapability(SampleCapabilities.Settings);
