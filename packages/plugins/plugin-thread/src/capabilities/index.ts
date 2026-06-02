@@ -11,6 +11,7 @@ export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
+export const NotificationPresets = Capability.lazy('NotificationPresets', () => import('./notification-presets'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

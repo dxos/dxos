@@ -163,6 +163,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-notification"
+    },
+    {
       "path": "../plugin-observability"
     },
     {

@@ -612,3 +612,28 @@ export type DeleteSpaceResponse = { status: string; spaceId: string };
 
 export type DeleteIdentityRequest = { identityKey: string };
 export type DeleteIdentityResponse = { status: string; identityKey: string };
+
+//
+// Push notifications.
+//
+
+/** Register or refresh a device push subscription with the notification service. */
+export type RegisterPushSubscriptionRequest =
+  | {
+      transport: 'web-push';
+      deviceKey: string;
+      endpoint: string;
+      keys: { p256dh: string; auth: string };
+      metadata?: Record<string, unknown>;
+    }
+  | {
+      transport: 'apns' | 'fcm';
+      deviceKey: string;
+      token: string;
+      metadata?: Record<string, unknown>;
+    };
+
+export type RegisterPushSubscriptionResponse = { id: string };
+
+/** Remove all push subscriptions for a device. */
+export type UnregisterPushSubscriptionRequest = { deviceKey: string };

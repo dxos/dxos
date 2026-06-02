@@ -50,6 +50,7 @@ import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { NotificationsPlugin } from '@dxos/plugin-notification/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
@@ -227,6 +228,7 @@ export const getPlugins = ({
     ProcessManagerPlugin(),
     CommercePlugin(),
     !isTauri && isPwa && PwaPlugin(),
+    NotificationsPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),
     ScriptPlugin(),

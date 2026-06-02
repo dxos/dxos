@@ -221,3 +221,86 @@ self.addEventListener('activate', (event) => {
   // asset until a cache-message replays them.
   event.waitUntil(Promise.all([self.clients.claim(), refreshPluginAssetUrls()]));
 });
+
+//
+// Push notifications.
+//
+// The notification-service (Edge) delivers a JSON payload encrypted per RFC 8291. When a
+// Composer window is focused we relay the payload to the app (which shows an in-app toast)
+// and suppress the OS notification; otherwise we show an OS notification. Coordination with
+// the app uses a dedicated `BroadcastChannel` so it doesn't collide with the plugin-asset
+// `message` handler above.
+//
+
+const PUSH_CHANNEL = 'dxos:push';
+
+type PushPayload = {
+  title: string;
+  body?: string;
+  icon?: string;
+  tag?: string;
+  url?: string;
+  data?: unknown;
+};
+
+self.addEventListener('push', (event: PushEvent) => {
+  let payload: PushPayload = { title: 'Composer' };
+  try {
+    payload = { ...payload, ...(event.data?.json() ?? {}) };
+  } catch {
+    const text = event.data?.text();
+    if (text) {
+      payload.body = text;
+    }
+  }
+
+  event.waitUntil(
+    (async () => {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const focused = clients.some((client) => (client as WindowClient).focused);
+
+      const channel = new BroadcastChannel(PUSH_CHANNEL);
+      channel.postMessage({ type: 'dxos:push', payload, focused });
+      channel.close();
+
+      // A focused window renders the notification in-app; only show an OS notification otherwise.
+      if (!focused) {
+        await self.registration.showNotification(payload.title, {
+          body: payload.body,
+          icon: payload.icon ?? '/icons/icon-192.png',
+          tag: payload.tag,
+          data: { url: payload.url, ...(payload.data && typeof payload.data === 'object' ? payload.data : {}) },
+        });
+      }
+    })(),
+  );
+});
+
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
+  event.notification.close();
+  const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/';
+  event.waitUntil(
+    (async () => {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const existing = clients.find((client): client is WindowClient => 'focus' in client);
+      if (existing) {
+        await existing.focus();
+        existing.postMessage({ type: 'dxos:notification-click', url });
+      } else {
+        await self.clients.openWindow(url);
+      }
+    })(),
+  );
+});
+
+self.addEventListener('pushsubscriptionchange', (event: Event) => {
+  // The SW has no access to the DXOS identity or VAPID key, so delegate re-subscription to
+  // the app. If no client is open it reconciles on next launch.
+  (event as ExtendableEvent).waitUntil(
+    (async () => {
+      const channel = new BroadcastChannel(PUSH_CHANNEL);
+      channel.postMessage({ type: 'dxos:pushsubscriptionchange' });
+      channel.close();
+    })(),
+  );
+});

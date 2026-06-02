@@ -40,6 +40,9 @@ import {
   type PostNotarizationRequestBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  type RegisterPushSubscriptionRequest,
+  type RegisterPushSubscriptionResponse,
+  type UnregisterPushSubscriptionRequest,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
 } from '@dxos/protocols';
@@ -190,6 +193,40 @@ export class EdgeHttpClient {
       ...args,
       method: 'GET',
     });
+  }
+
+  //
+  // Push notifications
+  //
+
+  /** Register or refresh this device's push subscription, authenticated as the account. */
+  public registerPushSubscription(
+    ctx: Context,
+    body: RegisterPushSubscriptionRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<RegisterPushSubscriptionResponse> {
+    return this._call(ctx, new URL('/notifications/subscriptions', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  /** Remove all push subscriptions for this device. */
+  public async unregisterPushSubscription(
+    ctx: Context,
+    request: UnregisterPushSubscriptionRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<void> {
+    const url = new URL('/notifications/subscriptions', this.baseUrl);
+    url.searchParams.set('deviceKey', request.deviceKey);
+    await this._call(ctx, url, { ...args, method: 'DELETE', auth: true });
+  }
+
+  /** Recompile this account's notification rule index (call after changing personal rules). */
+  public async reindexNotifications(ctx: Context, args?: EdgeHttpCallArgs): Promise<void> {
+    await this._call(ctx, new URL('/notifications/reindex', this.baseUrl), { ...args, method: 'POST', auth: true });
   }
 
   //

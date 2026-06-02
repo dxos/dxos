@@ -16,6 +16,7 @@ import * as HasConnection from './HasConnection';
 import * as HasRelationship from './HasRelationship';
 import * as HasSubject from './HasSubject';
 import * as Message from './Message';
+import * as NotificationRule from './NotificationRule';
 import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
@@ -51,6 +52,7 @@ export {
   Event,
   File,
   Message,
+  NotificationRule,
   Organization,
   Person,
   Pipeline,

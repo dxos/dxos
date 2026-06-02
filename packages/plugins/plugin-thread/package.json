@@ -139,6 +139,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-notification": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

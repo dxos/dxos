@@ -730,6 +730,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-notification/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-observability/package.json",
           "jsonpath": "$.version"
         },

@@ -18,6 +18,7 @@ import {
   BlueprintDefinition,
   CreateObject,
   Markdown,
+  NotificationPresets,
   OperationHandler,
   UndoMappings,
   ReactSurface,
@@ -47,6 +48,11 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
+  Plugin.addModule({
+    id: `${meta.id}/notification-presets`,
+    activatesOn: ActivationEvents.Startup,
+    activate: NotificationPresets,
+  }),
   // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
   // Plugin.addModule({
   //   id: 'settings',

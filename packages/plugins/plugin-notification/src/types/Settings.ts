@@ -1,0 +1,16 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+export const Settings = Schema.mutable(
+  Schema.Struct({
+    /** Whether the user has opted into push notifications on this device. */
+    enabled: Schema.optional(Schema.Boolean),
+  }),
+);
+
+export interface Settings extends Schema.Schema.Type<typeof Settings> {}

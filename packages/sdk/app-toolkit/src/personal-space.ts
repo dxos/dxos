@@ -4,11 +4,13 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { PERSONAL_SPACE_TAG } from '@dxos/echo-protocol';
 
-/** Space tag for the personal space. */
-export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
+// `PERSONAL_SPACE_TAG` lives in `@dxos/echo-protocol` so the server can reference it; re-exported
+// here for existing client callers.
+export { PERSONAL_SPACE_TAG };
 
-/** Space tag for the bundled exemplar/sample space. */
+/** Space tag for the bundled exemplar/sample space (app-level concern). */
 export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
 
 // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).

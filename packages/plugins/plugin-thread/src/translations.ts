@@ -25,6 +25,10 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Chat',
+        'notification.channel-messages.label': 'Channel messages',
+        'notification.channel-messages.description': 'Notify me when someone posts in a channel.',
+        'notification.thread-comments.label': 'Thread comments',
+        'notification.thread-comments.description': 'Notify me about replies in threads.',
         'channel-title.label': 'Title',
         'message.placeholder': 'Reply…',
         'activity.message': 'Processing…',

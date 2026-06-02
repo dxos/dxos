@@ -424,6 +424,9 @@
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-notification/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-observability/tsconfig.json"
     },
     {
