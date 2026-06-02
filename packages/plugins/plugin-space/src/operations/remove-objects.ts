@@ -41,11 +41,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         .filter(isNonNullable);
 
       for (const entity of entities) {
-        const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
-        if (index !== -1) {
-          Obj.update(parentCollection, (parentCollection) => {
-            parentCollection.objects.splice(index, 1);
-          });
+        if (Obj.instanceOf(Collection.Collection, parentCollection)) {
+          const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
+          if (index !== -1) {
+            Obj.update(parentCollection, (parentCollection) => {
+              parentCollection.objects.splice(index, 1);
+            });
+          }
         }
 
         const db = Entity.getDatabase(entity);
