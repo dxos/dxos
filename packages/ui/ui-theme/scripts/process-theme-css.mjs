@@ -9,11 +9,9 @@ import postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import postcssNesting from 'postcss-nesting';
 
-import dxHueRoles from '../src/plugins/postcss-hue-roles.mjs';
-
-// Only inline @imports, expand the @dx-hue-* tokens, and process nesting.
+// Only inline @imports and process nesting.
 // Do NOT run tailwindcss() here - @apply is processed at Vite runtime with content paths.
-const processor = postcss([postcssImport(), dxHueRoles(), postcssNesting()]);
+const processor = postcss([postcssImport(), postcssNesting()]);
 
 const inputFile = 'src/main.css';
 const outputFiles = ['dist/plugin/node-esm/theme.css', 'dist/plugin/node-cjs/theme.css'];

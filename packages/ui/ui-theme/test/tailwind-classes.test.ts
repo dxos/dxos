@@ -10,11 +10,8 @@ import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import postcss from 'postcss';
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 import { beforeAll, describe, test } from 'vitest';
-
-import dxHueRoles from '../src/plugins/postcss-hue-roles.mjs';
 
 const THEME_CSS_PATH = path.resolve(__dirname, '../src/main.css');
 
@@ -25,16 +22,10 @@ beforeAll(async () => {
   const themeBase = path.dirname(THEME_CSS_PATH);
   const req = createRequire(pathToFileURL(THEME_CSS_PATH).href);
 
-  // Mirror the real pipeline: expand the @dx-hue-* directives in styles.css (see ThemePlugin)
-  // so the generated --color-<hue>-<role> tokens exist for the design system.
-  const expandHueRoles = async (content: string, from: string) =>
-    content.includes('@dx-hue') ? (await postcss([dxHueRoles()]).process(content, { from })).css : content;
-
   const loadStylesheet = async (id: string, base: string) => {
     if (id.startsWith('.') || id.startsWith('/')) {
       const resolved = path.resolve(base, id);
-      const content = await expandHueRoles(fs.readFileSync(resolved, 'utf-8'), resolved);
-      return { path: resolved, base: path.dirname(resolved), content };
+      return { path: resolved, base: path.dirname(resolved), content: fs.readFileSync(resolved, 'utf-8') };
     }
     const specifier = id === 'tailwindcss' ? 'tailwindcss/index.css' : id;
     const resolved = req.resolve(specifier);
@@ -84,7 +75,7 @@ describe('tailwind classes', () => {
   });
 
   test('generated hue/role tokens resolve', ({ expect }) => {
-    // Emitted by postcss-hue-roles from the styles.css table.
+    // Generated into styles.css by scripts/gen-hue-roles.mjs.
     expect(isValidClass('bg-rose-fill')).toBe(true);
     expect(isValidClass('bg-neutral-fill-hover')).toBe(true);
     expect(isValidClass('text-blue-text')).toBe(true);

@@ -38,7 +38,7 @@
    * Sidebar levels. The outer rails (l0 / r0) sit one tone darker than their inner panels (l1 / r1),
    * a relationship that holds in both light and dark.
    */
-  --color-header-surface: light-dark(var(--color-neutral-100), var(--color-neutral-875));
+  --color-header-surface: light-dark(var(--color-neutral-200), var(--color-neutral-875));
   --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-800));
   --color-l0-surface: var(--color-header-surface);
   --color-r0-surface: var(--color-header-surface);
