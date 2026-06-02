@@ -26,7 +26,7 @@ export const Todos = () => {
   const [spaceProperties] = useSpaceProperties(space?.id);
 
   // Get the TodoList reference from space.properties via typed annotation.
-  const listRef = spaceProperties && Option.getOrUndefined(Annotation.get(spaceProperties, TodoListAnnotation));
+  const listRef = spaceProperties && Annotation.get(spaceProperties, TodoListAnnotation).pipe(Option.getOrUndefined);
 
   // Subscribe to the list ref (handles async loading and reactive updates).
   const [listSnapshot, updateList] = useObject(listRef);

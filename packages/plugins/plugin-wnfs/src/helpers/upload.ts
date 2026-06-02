@@ -49,7 +49,7 @@ export const upload = async ({
   const cidBytes = await updatedForest.store(wnfsStore);
 
   // Update the forest pointer on the associated space.
-  const currentState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation));
+  const currentState = Annotation.get(space.properties, WnfsStateAnnotation).pipe(Option.getOrUndefined);
   if (!currentState) {
     throw new Error('WnfsStateAnnotation missing after loadWnfs; cannot persist forest CID.');
   }

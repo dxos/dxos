@@ -96,7 +96,7 @@ export const checkPendingMigration = (space: Space) => {
     space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
     (space.state.get() === SpaceState.SPACE_READY &&
       !!Migrations.targetVersion &&
-      Option.getOrUndefined(Annotation.get(space.properties, MigrationVersionAnnotation)) !== Migrations.targetVersion)
+      Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined) !== Migrations.targetVersion)
   );
 };
 

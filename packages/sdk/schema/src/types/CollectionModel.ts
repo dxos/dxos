@@ -31,7 +31,7 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Obj.Any = objects[0];
 
-    const collectionRef = Option.getOrUndefined(Annotation.get(properties, RootCollectionAnnotation));
+    const collectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
     if (collectionRef) {
       const collection = yield* Database.load(collectionRef);
       Obj.update(collection, (collection) => {

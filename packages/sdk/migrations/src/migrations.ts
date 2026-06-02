@@ -54,7 +54,7 @@ export class Migrations {
   static async migrate(space: Space, targetVersion?: string | number): Promise<boolean> {
     invariant(!this.running(space), 'Migration already running');
     invariant(space.state.get() === SpaceState.SPACE_READY, 'Space not ready');
-    const currentVersion = Option.getOrUndefined(Annotation.get(space.properties, MigrationVersionAnnotation));
+    const currentVersion = Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined);
     const currentIndex = this.migrations.findIndex((m) => m.version === currentVersion) + 1;
     const i = this.migrations.findIndex((m) => m.version === targetVersion);
     const targetIndex = i === -1 ? this.migrations.length : i + 1;

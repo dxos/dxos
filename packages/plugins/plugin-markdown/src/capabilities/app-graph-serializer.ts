@@ -41,7 +41,7 @@ export default Capability.makeModule(
           const space = ancestors.find(isSpace);
           const target =
             ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
-            (space && Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target);
+            (space && Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target);
           if (!space || !target) {
             return;
           }

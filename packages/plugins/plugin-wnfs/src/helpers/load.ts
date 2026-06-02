@@ -46,7 +46,7 @@ export const loadWnfs = async ({
     });
   }
 
-  const wnfsState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation));
+  const wnfsState = Annotation.get(space.properties, WnfsStateAnnotation).pipe(Option.getOrUndefined);
   const cacheKey = wnfsState?.privateForestCid as any;
   if (cacheKey && instances?.[cacheKey]) {
     return instances[cacheKey];
@@ -56,7 +56,7 @@ export const loadWnfs = async ({
   const instance = exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
   if (instances) {
     // Re-read after createWnfsDir so newly created instances are cached under the real CID.
-    const newCacheKey = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))
+    const newCacheKey = Annotation.get(space.properties, WnfsStateAnnotation).pipe(Option.getOrUndefined)
       ?.privateForestCid as any;
     if (newCacheKey) {
       instances[newCacheKey] = instance;
@@ -98,7 +98,7 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 const loadWnfsDir = async (blockstore: Blockstore, space: Space) => {
   const wnfsStore = store(blockstore);
 
-  const wnfsState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))!;
+  const wnfsState = Annotation.get(space.properties, WnfsStateAnnotation).pipe(Option.getOrUndefined)!;
   const accessKey = AccessKey.fromBytes(Uint8Arrays.fromString(wnfsState.accessKey, 'base64'));
   const forest: PrivateForest = await PrivateForest.load(CID.parse(wnfsState.privateForestCid).bytes, wnfsStore);
   const node: PrivateNode = await PrivateNode.load(accessKey, forest, wnfsStore);

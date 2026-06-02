@@ -64,7 +64,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target?.objects[0]
+  const target = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target?.objects[0]
     ?.target;
 
   const inviteActions = useMemo(

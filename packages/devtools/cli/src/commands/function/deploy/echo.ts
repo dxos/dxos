@@ -95,7 +95,7 @@ export const upsertFunctionObject: (opts: {
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Unknown) {
-  const collectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
+  const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {

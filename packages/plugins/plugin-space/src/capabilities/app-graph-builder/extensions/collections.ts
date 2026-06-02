@@ -62,7 +62,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
 
         get(AtomObj.make(space.properties));
-        const collectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
+        const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
         if (collectionRef) {
           get(AtomObj.make(collectionRef));
         }
@@ -105,7 +105,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralState = get(ephemeralAtom);
 
         get(AtomObj.make(space.properties));
-        const collectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
+        const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
         const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
         if (!collection) {
           return Effect.succeed([]);

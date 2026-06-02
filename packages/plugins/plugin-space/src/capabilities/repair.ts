@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
  * Remove all existing query collections from the root collection.
  */
 const removeQueryCollections = async (space: Space) => {
-  const rootCollectionRef = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation));
+  const rootCollectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
   const rootCollection: Collection.Collection | undefined = await rootCollectionRef?.load();
   if (!rootCollection) {
     return;

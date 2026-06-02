@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOpera
         properties: {
           spaceId: space.id,
           targetVersion,
-          version: Option.getOrUndefined(Annotation.get(space.properties, MigrationVersionAnnotation)),
+          version: Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined),
         },
       });
 

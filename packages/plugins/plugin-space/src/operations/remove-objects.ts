@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       );
 
       const parentCollection =
-        input.target ?? Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target;
+        input.target ?? Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
       invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
