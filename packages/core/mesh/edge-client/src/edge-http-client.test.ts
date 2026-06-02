@@ -27,7 +27,7 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
     vi.unstubAllGlobals();
   });
 
-  test('re-bases the request path onto the EDGE /generate/anthropic route', async ({ expect }) => {
+  test('re-bases the request path onto the EDGE /ai/generate/anthropic route', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
       // `/auth` preflight: respond non-401 so no auth header is attached.
@@ -50,7 +50,7 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
 
     const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
     expect(targetCall).toBeDefined();
-    expect(String(targetCall![0])).toBe('https://edge.example.com/generate/anthropic/v1/messages?beta=true');
+    expect(String(targetCall![0])).toBe('https://edge.example.com/ai/generate/anthropic/v1/messages?beta=true');
     expect(targetCall![1]?.method).toBe('POST');
   });
 });

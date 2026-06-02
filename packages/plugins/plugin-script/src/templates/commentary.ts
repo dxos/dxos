@@ -14,9 +14,8 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, Type, URI } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -39,7 +38,7 @@ const Commentary = Operation.make({
   }),
   output: Schema.Union(
     Schema.Struct({
-      documentId: ArtifactId.annotations({
+      documentId: URI.Schema.annotations({
         description: 'The ID of the markdown document that was updated or created.',
       }),
       commentary: Schema.String.annotations({
