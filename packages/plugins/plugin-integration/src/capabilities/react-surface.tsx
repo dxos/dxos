@@ -50,10 +50,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'syncTargetsDialog',
-        filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(
-          AppSurface.Dialog,
-          SYNC_TARGETS_DIALOG,
-        ),
+        filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
         component: ({ data }) => <SyncTargetsDialog {...data.props} />,
       }),
       Surface.create({

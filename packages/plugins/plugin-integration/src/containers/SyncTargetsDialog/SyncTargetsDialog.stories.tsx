@@ -12,8 +12,8 @@ import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
-import { Integration, type RemoteTarget } from '#types';
 import { translations } from '#translations';
+import { Integration, type RemoteTarget } from '#types';
 
 import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
 
