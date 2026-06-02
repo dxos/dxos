@@ -74,7 +74,9 @@ describe.skip('Migrations', () => {
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(6);
-    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal('1970-01-03');
+    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal(
+      '1970-01-03',
+    );
   });
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
@@ -86,7 +88,9 @@ describe.skip('Migrations', () => {
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(15);
-    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal('1970-01-03');
+    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal(
+      '1970-01-03',
+    );
   });
 
   test('if all migrations have been run before, does nothing', async () => {
@@ -101,6 +105,8 @@ describe.skip('Migrations', () => {
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(2);
-    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal('1970-01-02');
+    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal(
+      '1970-01-02',
+    );
   });
 });

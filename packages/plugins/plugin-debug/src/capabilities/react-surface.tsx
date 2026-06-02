@@ -122,7 +122,8 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
+                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)
+                  ?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
