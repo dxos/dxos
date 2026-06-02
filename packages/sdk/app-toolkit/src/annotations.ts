@@ -21,4 +21,3 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
   id: 'org.dxos.annotation.graph-props',
   schema: Schema.Struct({ managesAutofocus: Schema.optional(Schema.Boolean) }),
 });
-

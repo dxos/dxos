@@ -3,11 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import * as Option from 'effect/Option';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { isSpace } from '@dxos/react-client/echo';
 

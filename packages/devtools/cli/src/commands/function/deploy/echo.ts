@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { type Space } from '@dxos/client/echo';
 import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
+import { type Space } from '@dxos/client/echo';
 import { Script, Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';

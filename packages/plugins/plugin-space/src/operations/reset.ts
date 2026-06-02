@@ -2,13 +2,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 
 import { SpaceOperation } from './definitions';
 

@@ -2,19 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import type { Blockstore } from 'interface-blockstore';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
 import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
 
-import * as Option from 'effect/Option';
-
 import { Annotation, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
-import { WnfsStateAnnotation } from '../annotations';
 import { type WnfsCapabilities } from '#types';
 
+import { WnfsStateAnnotation } from '../annotations';
 import { Rng, store } from './common';
 
 //
@@ -57,7 +56,8 @@ export const loadWnfs = async ({
   const instance = exists ? await loadWnfsDir(blockstore, space) : await createWnfsDir(blockstore, space);
   if (instances) {
     // Re-read after createWnfsDir so newly created instances are cached under the real CID.
-    const newCacheKey = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))?.privateForestCid as any;
+    const newCacheKey = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))
+      ?.privateForestCid as any;
     if (newCacheKey) {
       instances[newCacheKey] = instance;
     }
@@ -100,10 +100,7 @@ const loadWnfsDir = async (blockstore: Blockstore, space: Space) => {
 
   const wnfsState = Option.getOrUndefined(Annotation.get(space.properties, WnfsStateAnnotation))!;
   const accessKey = AccessKey.fromBytes(Uint8Arrays.fromString(wnfsState.accessKey, 'base64'));
-  const forest: PrivateForest = await PrivateForest.load(
-    CID.parse(wnfsState.privateForestCid).bytes,
-    wnfsStore,
-  );
+  const forest: PrivateForest = await PrivateForest.load(CID.parse(wnfsState.privateForestCid).bytes, wnfsStore);
   const node: PrivateNode = await PrivateNode.load(accessKey, forest, wnfsStore);
 
   return {

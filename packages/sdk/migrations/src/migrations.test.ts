@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
-
 import * as Option from 'effect/Option';
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';

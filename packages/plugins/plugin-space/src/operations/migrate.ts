@@ -1,13 +1,13 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities } from '@dxos/app-framework';
 import { SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
-import * as Option from 'effect/Option';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceCapabilities } from '../types';

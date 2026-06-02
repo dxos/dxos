@@ -5,10 +5,10 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { RootCollectionAnnotation, SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
-import * as Option from 'effect/Option';
 import { invariant } from '@dxos/invariant';
 
 type AddProps = {

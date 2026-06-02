@@ -16,9 +16,9 @@ import {
 } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
-import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';

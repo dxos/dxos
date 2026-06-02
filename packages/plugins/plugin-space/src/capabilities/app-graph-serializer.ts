@@ -3,12 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import * as Option from 'effect/Option';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';

@@ -12,10 +12,10 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Collection, Database, Filter, Obj, Ref, Relation, Type, DXN } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';

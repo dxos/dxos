@@ -31,6 +31,7 @@ import {
   type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
+import * as Option from 'effect/Option';
 import * as S from 'effect/Schema';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -38,11 +39,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
+import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
 import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
-import * as Option from 'effect/Option';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';

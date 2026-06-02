@@ -46,9 +46,7 @@ export const add = Command.make(
 
       const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
       const rootCollectionRef = Option.getOrUndefined(Annotation.get(properties, RootCollectionAnnotation));
-      const collection = rootCollectionRef
-        ? yield* Database.load<Collection.Collection>(rootCollectionRef)
-        : undefined;
+      const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),

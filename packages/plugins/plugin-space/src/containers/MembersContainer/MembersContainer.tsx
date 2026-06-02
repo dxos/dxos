@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
@@ -9,7 +10,6 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Obj } from '@dxos/echo';
-import * as Option from 'effect/Option';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
@@ -64,7 +64,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   };
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
-  const target = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target?.objects[0]?.target;
+  const target = Option.getOrUndefined(Annotation.get(space.properties, RootCollectionAnnotation))?.target?.objects[0]
+    ?.target;
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({

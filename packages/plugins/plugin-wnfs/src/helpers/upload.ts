@@ -2,21 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import type { Blockstore } from 'interface-blockstore';
 import { CID } from 'multiformats';
 import * as Raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 
-import * as Option from 'effect/Option';
-
 import type { Space } from '@dxos/client/echo';
 import { Annotation } from '@dxos/echo';
-
-import { WnfsStateAnnotation } from '../annotations';
 import { log } from '@dxos/log';
 
 import { type WnfsCapabilities } from '#types';
 
+import { WnfsStateAnnotation } from '../annotations';
 import { Rng, filePath, store } from './common';
 import { loadWnfs } from './load';
 import { wnfsUrl } from './wnfs-url';

@@ -43,7 +43,9 @@ export default Capability.makeModule(
     // depend on a fresh space (e.g. blueprints) wire themselves up. The exemplar space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
-    const personalRootCollection = Option.getOrUndefined(Annotation.get(personalSpace.properties, RootCollectionAnnotation))?.target;
+    const personalRootCollection = Option.getOrUndefined(
+      Annotation.get(personalSpace.properties, RootCollectionAnnotation),
+    )?.target;
     if (personalRootCollection) {
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
       yield* Effect.all(
