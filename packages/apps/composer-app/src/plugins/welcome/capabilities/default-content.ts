@@ -77,7 +77,9 @@ export default Capability.makeModule(
       // Stamp the migration version so the exemplar space is treated as already migrated,
       // the same way create.ts and identity-created.ts do for newly created spaces.
       if (Migrations.targetVersion) {
-        Annotation.set(exemplarSpace.properties, MigrationVersionAnnotation, Migrations.targetVersion);
+        Obj.update(exemplarSpace.properties, (properties) => {
+          Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion!);
+        });
       }
 
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree

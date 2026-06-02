@@ -36,10 +36,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       yield* Effect.promise(() => space.waitUntilReady());
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
-      Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(collection));
-      if (Migrations.targetVersion) {
-        Annotation.set(space.properties, MigrationVersionAnnotation, Migrations.targetVersion);
-      }
+      Obj.update(space.properties, (properties) => {
+        Annotation.set(properties, RootCollectionAnnotation, Ref.make(collection));
+        if (Migrations.targetVersion) {
+          Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
+        }
+      });
 
       yield* Plugin.activate(SpaceEvents.SpaceCreated);
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);

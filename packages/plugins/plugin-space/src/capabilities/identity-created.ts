@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { PERSONAL_SPACE_TAG, RootCollectionAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Collection, Ref } from '@dxos/echo';
+import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -23,9 +23,11 @@ export default Capability.makeModule(
 
     // Create root collection structure.
     yield* Effect.tryPromise(() => personalSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-    Annotation.set(personalSpace.properties, RootCollectionAnnotation, Ref.make(Collection.make()));
-    if (Migrations.targetVersion) {
-      Annotation.set(personalSpace.properties, MigrationVersionAnnotation, Migrations.targetVersion);
-    }
+    Obj.update(personalSpace.properties, (properties) => {
+      Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+      if (Migrations.targetVersion) {
+        Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
+      }
+    });
   }),
 );
