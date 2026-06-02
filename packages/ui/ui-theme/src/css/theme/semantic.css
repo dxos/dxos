@@ -2,7 +2,7 @@
  * Tokens
  *
  * Naming convention: --color-{name}-{part}[-{state}]
- *   part  : surface | foreground | border | fill | text
+ *   part  : surface | fg | border | bg | text
  *   state : hover | active (optional)
  *
  * See DESIGN_SYSTEM.md.
@@ -17,10 +17,10 @@
   );
 
   --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
-  --color-inverse-foreground: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-inverse-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
   --color-base-surface: light-dark(var(--color-neutral-75), var(--color-neutral-850));
-  --color-base-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  --color-base-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* Focus */
   --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-850));
@@ -29,7 +29,7 @@
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);
-  --color-attention-contains: oklch(from var(--color-accent-fill) l c h / 0.3);
+  --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
 
   --color-header-surface: light-dark(var(--color-neutral-175), var(--color-neutral-875));
   --color-toolbar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-825));
@@ -48,8 +48,9 @@
   --color-card-surface: light-dark(var(--color-neutral-75), var(--color-neutral-825));
 
   /* input */
-  --color-input-surface: light-dark(var(--color-neutral-150), var(--color-neutral-800));
-  --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  --color-input-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
+  --color-input-bg: light-dark(var(--color-neutral-250), var(--color-neutral-700));
+  --color-input-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* 
    * hover (:hover, data-highlighted)
@@ -58,24 +59,24 @@
    */
   --dx-hover-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-750));
   --color-hover-surface: var(--dx-hover-surface-base);
-  --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /* current (aria-current) */
   --dx-current-surface-base: light-dark(var(--color-neutral-150), var(--color-neutral-800));
   --dx-current-surface-hover-base: light-dark(var(--color-neutral-150), var(--color-neutral-600));
   --color-current-surface: var(--dx-current-surface-base);
   --color-current-surface-hover: var(--dx-current-surface-hover-base);
-  --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* selected (aria-selected) */
   --color-selected-surface: var(--color-current-surface);
   --color-selected-surface-hover: var(--color-current-surface-hover);
-  --color-selected-foreground: var(--color-current-foreground);
+  --color-selected-fg: var(--color-current-fg);
 
   /* Accent (primary) */
-  --color-accent-fill: light-dark(var(--color-blue-600), var(--color-blue-700));
-  --color-accent-fill-hover: light-dark(var(--color-blue-700), var(--color-blue-800));
-  --color-accent-foreground: var(--color-blue-100);
+  --color-accent-bg: light-dark(var(--color-blue-600), var(--color-blue-700));
+  --color-accent-bg-hover: light-dark(var(--color-blue-700), var(--color-blue-800));
+  --color-accent-fg: var(--color-blue-100);
   --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
 
@@ -105,11 +106,11 @@
    * NOTE: Update main.css when changing grid tokens (and restart dev server).
    */
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-grid-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-grid-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
   --color-grid-selection-surface: light-dark(var(--color-blue-500), var(--color-blue-400));
-  --color-grid-selection-foreground: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-selection-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(
     oklch(from var(--color-green-400) l c h / 0.5),

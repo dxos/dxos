@@ -10,7 +10,7 @@
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
-      @apply bg-accent-fill accent-accent-fill border-accent-fill;
+      @apply bg-accent-bg accent-accent-bg border-accent-bg;
     }
 
     &:not([disabled]),
@@ -20,14 +20,14 @@
         &[aria-checked='true'],
         &[aria-checked='mixed'],
         &:checked {
-          @apply bg-accent-fill-hover accent-accent-fill-hover border-accent-fill-hover;
+          @apply bg-accent-bg-hover accent-accent-bg-hover border-accent-bg-hover;
         }
       }
     }
   }
 
   .dx-checkbox {
-    @apply w-4 h-4 overflow-hidden shadow-inner transition-colors bg-un-accent accent-un-accent text-accent-foreground shrink-0 inline-grid place-items-center rounded-xs;
+    @apply w-4 h-4 overflow-hidden shadow-inner transition-colors bg-un-accent accent-un-accent text-accent-fg shrink-0 inline-grid place-items-center rounded-xs;
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/

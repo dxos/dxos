@@ -52,8 +52,8 @@ const StyleSwatch = ({ hue }: { hue: string }) => {
       </div>
       <div
         style={{
-          backgroundColor: `var(--color-${hue}-fill)`,
-          color: `var(--color-${hue}-foreground)`,
+          backgroundColor: `var(--color-${hue}-bg)`,
+          color: `var(--color-${hue}-fg)`,
         }}
         className='px-1 text-sm flex items-center'
       >
@@ -64,7 +64,7 @@ const StyleSwatch = ({ hue }: { hue: string }) => {
       <div
         style={{
           backgroundColor: `var(--color-${hue}-surface)`,
-          color: `var(--color-${hue}-foreground)`,
+          color: `var(--color-${hue}-fg)`,
         }}
         className='p-2 text-sm'
       >
@@ -158,25 +158,25 @@ export const Neutral = {
 // prettier-ignore
 const surfaces: [surface: string, foreground: string, label: string][] = [
   // Sorted lightest -> darkest at runtime (see Surfaces story); surfaces without a dedicated
-  // foreground fall back to base-foreground.
-  ['bg-base-surface',    'text-base-foreground',     'base'],
-  ['bg-deck-surface',    'text-base-foreground',     'deck'],
-  ['bg-card-surface',    'text-base-foreground',     'card'],
-  ['bg-toolbar-surface', 'text-base-foreground',     'toolbar'],
-  ['bg-sidebar-surface', 'text-base-foreground',     'sidebar'],
-  ['bg-group-surface',   'text-base-foreground',     'group'],
-  ['bg-header-surface',  'text-base-foreground',     'header'],
-  ['bg-modal-surface',   'text-base-foreground',     'modal'],
-  ['bg-l1-surface',      'text-base-foreground',     'l1'],
-  ['bg-r1-surface',      'text-base-foreground',     'r1'],
-  ['bg-hover-surface',   'text-hover-foreground',    'hover'],
-  ['bg-current-surface', 'text-current-foreground',  'current'],
-  ['bg-selected-surface','text-selected-foreground', 'selected'],
-  ['bg-l0-surface',      'text-base-foreground',     'l0'],
-  ['bg-r0-surface',      'text-base-foreground',     'r0'],
-  ['bg-input-surface',   'text-input-foreground',    'input'],
-  ['bg-inverse-surface', 'text-inverse-foreground',  'inverse'],
-  ['bg-scrim-surface',   'text-base-foreground',     'scrim'],
+  // foreground fall back to base-fg.
+  ['bg-base-surface',    'text-base-fg',     'base'],
+  ['bg-deck-surface',    'text-base-fg',     'deck'],
+  ['bg-card-surface',    'text-base-fg',     'card'],
+  ['bg-toolbar-surface', 'text-base-fg',     'toolbar'],
+  ['bg-sidebar-surface', 'text-base-fg',     'sidebar'],
+  ['bg-group-surface',   'text-base-fg',     'group'],
+  ['bg-header-surface',  'text-base-fg',     'header'],
+  ['bg-modal-surface',   'text-base-fg',     'modal'],
+  ['bg-l1-surface',      'text-base-fg',     'l1'],
+  ['bg-r1-surface',      'text-base-fg',     'r1'],
+  ['bg-hover-surface',   'text-hover-fg',    'hover'],
+  ['bg-current-surface', 'text-current-fg',  'current'],
+  ['bg-selected-surface','text-selected-fg', 'selected'],
+  ['bg-l0-surface',      'text-base-fg',     'l0'],
+  ['bg-r0-surface',      'text-base-fg',     'r0'],
+  ['bg-input-surface',   'text-input-fg',    'input'],
+  ['bg-inverse-surface', 'text-inverse-fg',  'inverse'],
+  ['bg-scrim-surface',   'text-base-fg',     'scrim'],
 ];
 
 // Resolve any CSS color (oklch, light-dark(), rgb, ...) to a 0-1 luminance via a 1x1 canvas.

@@ -37,7 +37,7 @@ const fromThree = (tx: number, ty: number, tz: number): { x: number; y: number; 
 /** Resolve the fill color for a hue by applying the Tailwind class and sampling via canvas. */
 const resolveHueColor = (hue: Hue): number => {
   const el = document.createElement('div');
-  el.className = `bg-${hue}-fill`;
+  el.className = `bg-${hue}-bg`;
   el.style.position = 'absolute';
   el.style.visibility = 'hidden';
   document.body.appendChild(el);
