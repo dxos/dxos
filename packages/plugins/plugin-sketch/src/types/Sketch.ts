@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
@@ -16,7 +16,7 @@ export const Canvas = Schema.Struct({
   // TODO(wittjosiah): Remove once the schema is fully internalized.
   schema: Schema.String.pipe(Schema.optional),
   content: Schema.Record({ key: Schema.String, value: Schema.Any }),
-}).pipe(SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.canvas', '0.1.0')));
+}).pipe(HiddenAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.canvas', '0.1.0')));
 export type Canvas = Type.InstanceType<typeof Canvas>;
 
 export const Sketch = Schema.Struct({
