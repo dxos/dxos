@@ -100,7 +100,7 @@ export const useChatProcessor = ({
       registry,
       model: preset?.model,
     });
-  }, [runtime, session, registry, preset, feed, space?.id]);
+  }, [runtime, session, registry, preset, chat, feed, space?.id]);
 
   return processor;
 };

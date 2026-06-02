@@ -19,9 +19,8 @@ export default UpdateBlueprints.pipe(
         if (!key) {
           continue;
         }
-        const source = registry.list().find((entity) => Entity.getMeta(entity)?.key === key) as
-          | Blueprint.Blueprint
-          | undefined;
+        const candidate = registry.list().find((entity) => Entity.getMeta(entity)?.key === key);
+        const source = candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate) ? candidate : undefined;
         if (!source) {
           continue;
         }

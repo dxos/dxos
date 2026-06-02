@@ -98,9 +98,8 @@ export class ChatProcessor {
           // continue;
         }
 
-        const blueprint = blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key) as
-          | Blueprint.Blueprint
-          | undefined;
+        const candidate = blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key);
+        const blueprint = candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate) ? candidate : undefined;
         if (!blueprint) {
           log.warn('blueprint not found', { key });
           return;

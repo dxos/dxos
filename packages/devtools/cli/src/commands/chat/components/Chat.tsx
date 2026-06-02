@@ -9,7 +9,7 @@ import { For, Match, Switch, createEffect, createMemo, createSignal, useContext 
 import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { type Database, Entity, Filter, Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -52,14 +52,15 @@ export const Chat = (props: ChatProps) => {
   const contextBlueprints = useAtomValue(() => props.conversation.context.blueprints);
   const objects = useAtomValue(() => props.conversation.context.objects);
 
+  // All blueprint entities in the registry, typed.
+  const allRegistryBlueprints = () => blueprintRegistry.query(Filter.type(Blueprint.Blueprint)).runSync();
+
   // Transform blueprints to full blueprint definitions from registry.
   const blueprints = createMemo(() =>
     contextBlueprints()
       .map((blueprint) => {
         const key = Obj.getMeta(blueprint).key;
-        return key !== undefined
-          ? (blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key) as Blueprint.Blueprint | undefined)
-          : undefined;
+        return key !== undefined ? allRegistryBlueprints().find((b) => Obj.getMeta(b).key === key) : undefined;
       })
       .filter(isTruthy),
   );
@@ -254,7 +255,9 @@ const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCan
     <Picker
       multi
       title='Select Blueprints'
-      items={(blueprintRegistry.query(Filter.type(Blueprint.Blueprint)).runSync() as Blueprint.Blueprint[])
+      items={blueprintRegistry
+        .query(Filter.type(Blueprint.Blueprint))
+        .runSync()
         .map((blueprint) => {
           const key = Obj.getMeta(blueprint).key;
           return key !== undefined ? { id: key, label: blueprint.name } : undefined;

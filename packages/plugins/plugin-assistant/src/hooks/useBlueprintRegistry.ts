@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
-import { type Database, Entity, Filter, Obj, Ref, type Registry } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { distinctBy } from '@dxos/util';
 
@@ -79,7 +79,7 @@ export const useBlueprintHandlers = ({
 }) => {
   const onUpdateBlueprint = useCallback(
     async (key: string, checked: boolean) => {
-      if (!context || !registry) {
+      if (!context) {
         return;
       }
 
@@ -88,9 +88,14 @@ export const useBlueprintHandlers = ({
       let storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
       if (checked) {
         if (!storedBlueprint) {
-          const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as
-            | Blueprint.Blueprint
-            | undefined;
+          // Registry is required to clone a blueprint into the space for the first time.
+          if (!registry) {
+            return;
+          }
+          const blueprint = registry
+            .query(Filter.type(Blueprint.Blueprint))
+            .runSync()
+            .find((b) => Obj.getMeta(b).key === key);
           if (!blueprint) {
             return;
           }
@@ -100,6 +105,7 @@ export const useBlueprintHandlers = ({
         }
         await context.bind({ blueprints: [Ref.make(storedBlueprint)] });
       } else if (storedBlueprint) {
+        // Unbind does not need the registry — the stored blueprint is already in the db.
         await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
       }
     },

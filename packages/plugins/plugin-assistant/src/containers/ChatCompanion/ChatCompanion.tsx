@@ -91,14 +91,12 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           continue;
         }
 
-        const blueprint = registry.list().find((e) => Entity.getMeta(e)?.key === key) as
-          | Blueprint.Blueprint
-          | undefined;
-        if (!blueprint) {
+        const candidate = registry.list().find((e) => Entity.getMeta(e)?.key === key);
+        if (!candidate || !Obj.instanceOf(Blueprint.Blueprint, candidate)) {
           continue;
         }
 
-        space.db.add(Obj.clone(blueprint, { deep: true }));
+        space.db.add(Obj.clone(candidate, { deep: true }));
       }
     }, [space, registry, blueprintKeys]);
 
@@ -118,7 +116,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       } else {
         await binder.bind({ objects: [Ref.make(companionTo)] });
       }
-    }, [binder, companionTo, blueprintKeys]);
+    }, [binder, companionTo, pluginBlueprints]);
 
     return (
       <ChatArticle
