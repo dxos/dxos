@@ -1812,6 +1812,9 @@ catalogs:
     workbox-window:
       specifier: ^7.4.0
       version: 7.4.0
+    workerize-loader:
+      specifier: ^2.0.2
+      version: 2.0.2
     wtfnode:
       specifier: ^0.10.0
       version: 0.10.0
@@ -8964,7 +8967,7 @@ importers:
         version: 2.0.4
       '@antv/layout':
         specifier: 'catalog:'
-        version: 1.2.13
+        version: 1.2.13(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -17994,7 +17997,7 @@ importers:
         version: 2.0.4
       '@antv/layout':
         specifier: 'catalog:'
-        version: 1.2.13
+        version: 1.2.13(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -18100,6 +18103,9 @@ importers:
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
+      workerize-loader:
+        specifier: 'catalog:'
+        version: 2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0))
     devDependencies:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
@@ -18154,7 +18160,7 @@ importers:
         version: 2.0.4
       '@antv/layout':
         specifier: 'catalog:'
-        version: 1.2.13
+        version: 1.2.13(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: 'catalog:'
         version: 1.7.7
@@ -30415,6 +30421,9 @@ packages:
     resolution: {integrity: sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==}
     engines: {node: '>=0.6'}
 
+  big.js@5.2.2:
+    resolution: {integrity: sha512-vyL2OymJxmarO8gxMr0mhChsO9QGwhynfuu4+MHTAW6czfq9humCB7rKpUjDd9YUiDPU4mzpyupFSvOClAwbmQ==}
+
   bigint-mod-arith@3.3.1:
     resolution: {integrity: sha512-pX/cYW3dCa87Jrzv6DAr8ivbbJRzEX5yGhdt8IutnX/PCIXfpx+mabWNK/M8qqh+zQ0J3thftUBHW0ByuUlG0w==}
     engines: {node: '>=10.4.0'}
@@ -32109,6 +32118,10 @@ packages:
 
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
+
+  emojis-list@3.0.0:
+    resolution: {integrity: sha512-/kyM18EfinwXZbno9FyUGeFh87KC8HRQBQGildHZbEuRyWFOmv1U10o9BBp8XVZDVNNuQKyIGIu5ZYAAXJ0V2Q==}
+    engines: {node: '>= 4'}
 
   empathic@2.0.0:
     resolution: {integrity: sha512-i6UzDscO/XfAcNYD75CfICkmfLedpyPDdozrLMmQc5ORaQcdMoc21OnlEylMIqI7U8eniKrPMxxtj8k0vhmJhA==}
@@ -34634,6 +34647,10 @@ packages:
   loader-runner@4.3.1:
     resolution: {integrity: sha512-IWqP2SCPhyVFTBtRcgMHdzlf9ul25NwaFx4wCEH/KjAXuuHY4yNjvPXsBokp8jCB936PyWRaPKUNh8NvylLp2Q==}
     engines: {node: '>=6.11.5'}
+
+  loader-utils@2.0.4:
+    resolution: {integrity: sha512-xXqpXoINfFhgua9xiqD8fPFHgkoq1mmmpE92WlDbm9rNRd/EbRb+Gqf908T2DMfuHjjJlksiK2RbHVOdD/MqSw==}
+    engines: {node: '>=8.9.0'}
 
   loader-utils@3.2.1:
     resolution: {integrity: sha512-ZvFw1KWS3GVyYBYb7qkmRM/WwL2TQQBxgCK62rlvm4WpVQ23Nb4tYjApUlfjrEGvOs7KHEsmyUn75OHZrJMWPw==}
@@ -39602,6 +39619,11 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
+  workerize-loader@2.0.2:
+    resolution: {integrity: sha512-HoZ6XY4sHWxA2w0WpzgBwUiR3dv1oo7bS+oCwIpb6n54MclQ/7KXdXsVIChTCygyuHtVuGBO1+i3HzTt699UJQ==}
+    peerDependencies:
+      webpack: '*'
+
   workerpool@6.5.1:
     resolution: {integrity: sha512-Fs4dNYcsdpYSAfVxhnl1L5zTksjvOJxtC5hzMNl+1t9B8hTJTdKDyZ5ju7ztgPy+ft9tBFXoOlDNiOT9WUXZlA==}
 
@@ -39937,12 +39959,12 @@ snapshots:
     dependencies:
       '@antv/event-emitter': 0.1.3
 
-  '@antv/layout@1.2.13':
+  '@antv/layout@1.2.13(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))':
     dependencies:
       '@antv/event-emitter': 0.1.3
       '@antv/graphlib': 2.0.4
       '@antv/util': 3.3.10
-      '@naoak/workerize-transferable': 0.1.0
+      '@naoak/workerize-transferable': 0.1.0(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))
       comlink: 4.4.2
       d3-force: 3.0.0
       d3-octree: 1.1.0
@@ -43730,7 +43752,9 @@ snapshots:
       uint8-varint: 2.0.4
       uint8arrays: 5.1.0
 
-  '@naoak/workerize-transferable@0.1.0': {}
+  '@naoak/workerize-transferable@0.1.0(workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)))':
+    dependencies:
+      workerize-loader: 2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0))
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
@@ -50171,6 +50195,8 @@ snapshots:
 
   big-integer@1.6.51: {}
 
+  big.js@5.2.2: {}
+
   bigint-mod-arith@3.3.1: {}
 
   binary-extensions@2.2.0: {}
@@ -52047,6 +52073,8 @@ snapshots:
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
+
+  emojis-list@3.0.0: {}
 
   empathic@2.0.0: {}
 
@@ -55076,6 +55104,12 @@ snapshots:
       lit-html: 3.3.1
 
   loader-runner@4.3.1: {}
+
+  loader-utils@2.0.4:
+    dependencies:
+      big.js: 5.2.2
+      emojis-list: 3.0.0
+      json5: 2.2.3
 
   loader-utils@3.2.1: {}
 
@@ -61557,6 +61591,11 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20260521.1
       '@cloudflare/workerd-linux-arm64': 1.20260521.1
       '@cloudflare/workerd-windows-64': 1.20260521.1
+
+  workerize-loader@2.0.2(webpack@5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)):
+    dependencies:
+      loader-utils: 2.0.4
+      webpack: 5.105.2(@swc/core@1.15.40(@swc/helpers@0.5.17))(esbuild@0.28.0)
 
   workerpool@6.5.1: {}
 
