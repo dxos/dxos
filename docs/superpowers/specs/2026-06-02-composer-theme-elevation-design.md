@@ -140,10 +140,7 @@ beneath it. Reuse the existing `surfaceShadow()` elevation helper where toolbars
 ([`Panel`](../../../packages/ui/react-ui/src/components/Panel/Panel.tsx) / toolbar theme) rather than a
 bespoke shadow.
 
-### 5.5 Update `DESIGN_SYSTEM.md`
-
-Rewrite the "Surfaces" and "Visual hierarchy" sections to document the numbered ladder as the source of
-truth, replacing the stale table that no longer matches the CSS.
+### 5.5 `DESIGN_SYSTEM.md` rewrite — see §8.
 
 ## §6. Message-button valence inheritance
 
@@ -158,18 +155,15 @@ re-derives `--surface-bg` inside `.dx-main-sidebar`. A new `buttonValence(valenc
 [`valence.ts`](../../../packages/ui/ui-theme/src/util/valence.ts) returns the classes a button uses to
 consume those vars.
 
-**Open decision — the `fill` role.** `DESIGN_SYSTEM.md` documents a `fill` role ("solid
-attention-grabbing fill, more saturated than surface") but **it is not implemented** — hue roles today are
-`bg / bg-hover / fg / surface / text / border`.
+**Token role:** use the existing solid-fill role `bg` / `bg-hover` (e.g. `bg-success-bg`,
+`bg-success-bg-hover`, `text-success-fg`). There is **no separate `fill` role** — `DESIGN_SYSTEM.md`'s
+mention of one is stale and is removed in §8, not implemented. (The brief's "`-fill`" means this `-bg`
+role.)
 
-- _Option A (recommended):_ introduce the missing `fill` role in
-  [`styles.css`](../../../packages/ui/ui-theme/src/css/theme/styles.css) for each hue + semantic alias,
-  so `buttonValence` can emit `bg-{valence}-fill` exactly as the brief describes, and the docs become
-  true.
-- _Option B:_ skip `fill`; reuse the existing solid `bg`/`bg-hover` role (`bg-success-bg`).
-
-Either way the button reads a CSS variable set by `Message.Root`, so message and button stay in sync.
-Scope: `valence.ts`, `Message.tsx` (+ `Message.theme.ts`), and `styles.css` if Option A.
+`buttonValence(valence)` in [`valence.ts`](../../../packages/ui/ui-theme/src/util/valence.ts) returns the
+classes a button uses for its fill/hover/ink, reading the scoped CSS variables that `Message.Root` sets
+for the message's hue (the `--surface-bg` re-derivation idiom). Message and button stay in sync because
+both derive from the same `valence`. Scope: `valence.ts`, `Message.tsx` (+ `Message.theme.ts`).
 
 ## §7. `CreateObjectDialog` form nesting
 
@@ -188,6 +182,18 @@ under `Dialog.Body` (hoist out of the wrapper for the schema-form branch), or gi
 wrapper the propagation classes (`[.dx-column-root_&]:col-span-full` + subgrid) so the form column lines
 up with the dialog's. Match the `CreateSpaceDialog` structure. Verify both branches of
 `CreateObjectPanel` (schema form vs. type picker) still render correctly.
+
+## §8. `DESIGN_SYSTEM.md` rewrite (done last)
+
+The doc has drifted from the CSS and must be brought back in line as the final step:
+
+- Replace the "Surfaces" and "Visual hierarchy" sections with the numbered elevation ladder (§3) as the
+  source of truth; show the actual dark/light values per level.
+- **Remove the `fill` role** from the naming-convention vocabulary and the "Adding a new token" guidance —
+  it was never implemented. The hue roles are `bg / bg-hover / surface / fg / text / border`.
+- Document `popover-surface` (level 7) and the `--dx-elevation-*` primitive.
+- Reconcile the "State tokens" / consolidation tables against the shipped `semantic.css` while here (fix
+  any other stale references noticed during implementation).
 
 ## Testing & verification
 
