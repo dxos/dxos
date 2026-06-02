@@ -200,12 +200,15 @@ const getEntityKeyDXNs = (entity: Entity.Unknown): DXN.DXN[] => {
   }
   const version = meta?.version;
   const dxns: DXN.DXN[] = [];
-  const unversioned = DXN.tryMake(`dxn:${key}`);
+  // `key` may be either a raw nsid (`org.example.function`) or an already-canonical
+  // DXN (`dxn:org.example.function`); normalize to the bare nsid for construction.
+  const nsid = DXN.isDXN(key) ? key.slice('dxn:'.length) : key;
+  const unversioned = DXN.tryMake(`dxn:${nsid}`);
   if (unversioned != null) {
     dxns.push(unversioned);
   }
   if (version != null) {
-    const versioned = DXN.tryMake(`dxn:${key}:${version}`);
+    const versioned = DXN.tryMake(`dxn:${nsid}:${version}`);
     if (versioned != null) {
       dxns.push(versioned);
     }

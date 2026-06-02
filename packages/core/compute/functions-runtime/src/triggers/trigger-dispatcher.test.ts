@@ -116,7 +116,7 @@ describe('TriggerDispatcher', () => {
         const { db } = yield* Database.Service;
         db.registry.add([Operation.serialize(Reply)]);
         const trigger = Trigger.make({
-          function: Ref.fromURI(DXN.make(Reply.meta.key)),
+          function: Ref.fromURI(Reply.meta.key),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
         });
