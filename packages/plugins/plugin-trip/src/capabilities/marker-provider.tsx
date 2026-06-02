@@ -9,27 +9,30 @@ import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { useObject, useObjects } from '@dxos/react-client/echo';
-import { type GeoMarker } from '@dxos/react-ui-geo';
+import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
 import { Place, Segment, Trip } from '#types';
 
 import { AIRPORTS } from '../operations/extractor/const';
 
-type LatLng = { lat: number; lng: number };
+// TODO(burdon): Factor out to @dxos/schema.
 
-const toLatLng = (geo?: readonly [number, number, number?] | undefined): LatLng | undefined => {
+const toLatLng = (geo?: readonly [number, number, number?] | undefined): LatLngLiteral | undefined => {
   if (!geo || geo.length < 2) {
     return undefined;
   }
+
   const [lng, lat] = geo;
   return { lat, lng };
 };
 
-const sameLatLng = (a: LatLng, b: LatLng): boolean => a.lat === b.lat && a.lng === b.lng;
+const sameLatLng = (a: LatLngLiteral, b: LatLngLiteral): boolean => a.lat === b.lat && a.lng === b.lng;
 
 /** IATA code → coordinates, for geocoding places that carry a code but no explicit `geo`. */
-const airportByIata = new Map<string, LatLng>(AIRPORTS.map(({ iata, geo }) => [iata, { lat: geo.lat, lng: geo.lng }]));
+const airportByIata = new Map<string, LatLngLiteral>(
+  AIRPORTS.map(({ iata, location: { lat, lng } }) => [iata, { lat, lng }]),
+);
 
 /**
  * Resolve a place to coordinates: prefer its explicit `geo`, otherwise (only when
@@ -39,18 +42,19 @@ const airportByIata = new Map<string, LatLng>(AIRPORTS.map(({ iata, geo }) => [i
 const placeLatLng = (
   place: Place.Place | undefined,
   options: { allowIataFallback?: boolean } = {},
-): LatLng | undefined => {
+): LatLngLiteral | undefined => {
   const geo = toLatLng(place?.geo);
   if (geo) {
     return geo;
   }
+
   const code = place?.code?.toUpperCase();
   return options.allowIataFallback && code ? airportByIata.get(code) : undefined;
 };
 
 /** All points referenced by a segment (origin, destination), geocoded via `geo` or (flights only) IATA code. */
-const segmentPoints = (seg: Segment.Segment): LatLng[] => {
-  const points: LatLng[] = [];
+const segmentPoints = (seg: Segment.Segment): LatLngLiteral[] => {
+  const points: LatLngLiteral[] = [];
   const allowIataFallback = seg.details._tag === 'flight';
   const origin = placeLatLng(Segment.getOrigin(seg), { allowIataFallback });
   const destination = placeLatLng(Segment.getDestination(seg), { allowIataFallback });
@@ -77,8 +81,26 @@ const segmentLine = (seg: Segment.Segment): MapCapabilities.GeoLine | undefined 
   return { source, target };
 };
 
+/**
+ * Map line(s) for a segment. A planner-routed road segment carries a decoded polyline (`path`),
+ * rendered as a chain of connected straight segments that follows the road; other transport
+ * segments fall back to a single origin→destination arc.
+ */
+const segmentLines = (seg: Segment.Segment): MapCapabilities.GeoLine[] => {
+  if (seg.details._tag === 'road' && seg.details.path && seg.details.path.length >= 2) {
+    const points = seg.details.path.map((point) => toLatLng([point[0], point[1]])).filter(isNonNullable);
+    const lines: MapCapabilities.GeoLine[] = [];
+    for (let index = 0; index < points.length - 1; index++) {
+      lines.push({ source: points[index], target: points[index + 1] });
+    }
+    return lines;
+  }
+  const line = segmentLine(seg);
+  return line ? [line] : [];
+};
+
 /** First geo-tagged point of a segment, if any. */
-const segmentAnchor = (seg: Segment.Segment): LatLng | undefined => segmentPoints(seg)[0];
+const segmentAnchor = (seg: Segment.Segment): LatLngLiteral | undefined => segmentPoints(seg)[0];
 
 /**
  * Reactive markers for a {@link Trip.Trip}: one marker per segment (at its anchor point, keyed by
@@ -104,7 +126,7 @@ const useTripMarkers = (subject: Trip.Trip, { attendableId }: { attendableId?: s
     [segments],
   );
 
-  const lines = useMemo(() => segments.map(segmentLine).filter(isNonNullable), [segments]);
+  const lines = useMemo(() => segments.flatMap(segmentLines), [segments]);
 
   const contextId = attendableId ?? Obj.getURI(subject);
   return { markers, lines, selection: { contextId, mode: 'single' } };

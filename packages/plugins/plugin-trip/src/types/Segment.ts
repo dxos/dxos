@@ -78,11 +78,22 @@ export const BoatDetails = Schema.extend(
 );
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 
-// TODO(burdon): Separate structure for route?
 export const RoadDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('road', {
     subKind: Schema.optional(RoadSubKind).annotations({ title: 'Mode' }),
+    /** Driving distance for the leg, in meters. Populated by `PlanRoute`. */
+    distanceMeters: Schema.optional(Schema.Number).annotations({ title: 'Distance (m)' }),
+    /** Estimated drive time for the leg, in seconds. Populated by `PlanRoute`. */
+    durationSeconds: Schema.optional(Schema.Number).annotations({ title: 'Duration (s)' }),
+    /** Decoded route polyline as `[lon, lat]` points. Populated by `PlanRoute`; rendered on the map. */
+    path: Schema.optional(Schema.Array(Format.GeoPoint)).annotations({ title: 'Path' }),
+    /**
+     * True when this segment is owned by the route planner (`PlanRoute`). Lets re-planning replace
+     * exactly the planner-generated legs while leaving hand-added road segments (e.g. a taxi
+     * transfer) untouched.
+     */
+    planned: Schema.optional(Schema.Boolean),
   }),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
@@ -174,6 +185,9 @@ export const makeDefault = (kind: Kind): Segment => {
 
 /** Returns the discriminator kind. */
 export const getKind = (seg: Segment): Kind => seg.details._tag;
+
+/** True when the segment is a road leg owned by the route planner (`PlanRoute`). */
+export const isPlannedRoad = (seg: Segment): boolean => seg.details._tag === 'road' && seg.details.planned === true;
 
 /**
  * Departure time across variants.

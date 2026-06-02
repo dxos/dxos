@@ -9,6 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { meta } from '#meta';
 
 import type * as BookingSearch from './BookingSearch';
+import type * as Routing from './Routing';
 
 /**
  * Plugins contribute booking providers via this capability. Multiple plugins
@@ -16,3 +17,9 @@ import type * as BookingSearch from './BookingSearch';
  * the segment kind being searched.
  */
 export const BookingService = Capability.make<BookingSearch.BookingService>(`${meta.id}.capability.bookingService`);
+
+/**
+ * Plugins contribute driving-route providers via this capability (e.g. plugin-osrm). `PlanRoute`
+ * resolves all contributions and uses the first (or the one matching the requested provider id).
+ */
+export const RoutingService = Capability.make<Routing.RoutingService>(`${meta.id}.capability.routingService`);

@@ -6,10 +6,12 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
 import { Keyboard } from '@dxos/keyboard';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -17,11 +19,46 @@ import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { PLACES, TripBuilder } from '#testing';
-import { Booking, Segment, Trip } from '#types';
+import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
+import { Booking, type Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
+import { liveRoutingService } from './live-routing';
 import { TripArticle } from './TripArticle';
+
+/** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
+const RoutingStoryPlugin = (service: Routing.RoutingService) =>
+  Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.trip.story.routing'), name: 'Story Routing' })).pipe(
+    Plugin.addModule({
+      id: 'story-routing',
+      activatesOn: ActivationEvents.Startup,
+      activate: () => Effect.succeed(Capability.contributes(TripCapabilities.RoutingService, service)),
+    }),
+    Plugin.make,
+  )();
+
+/** Seeds a trip pre-planned with road segments for the given cities (using the deterministic fake router). */
+const seedRoadTrip = (space: Space, name: string, cities: string[]): void => {
+  const trip = Trip.make({ name });
+  const { legs } = fakeRoute(cities);
+  for (const leg of legs) {
+    const segment = Segment.make({
+      details: {
+        _tag: 'road',
+        subKind: 'car',
+        origin: leg.origin,
+        destination: leg.destination,
+        distanceMeters: leg.distanceMeters,
+        durationSeconds: leg.durationSeconds,
+        path: [...leg.path],
+        planned: true,
+      },
+    });
+    Trip.addSegment(trip, segment);
+    space.db.add(segment);
+  }
+  space.db.add(trip);
+};
 
 const ATTENDABLE_ID = 'story';
 
@@ -55,7 +92,10 @@ const DefaultStory = () => {
   );
 };
 
-const baseDecorators = (seedFn: (space: Space) => void) => [
+const baseDecorators = (
+  seedFn: (space: Space) => void,
+  routingService: Routing.RoutingService = fakeRoutingService(),
+) => [
   withKeyboard,
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
@@ -73,6 +113,7 @@ const baseDecorators = (seedFn: (space: Space) => void) => [
       }),
       StorybookPlugin({}),
       TripPlugin(),
+      RoutingStoryPlugin(routingService),
       PreviewPlugin(),
     ],
   })),
@@ -174,4 +215,23 @@ export const Empty: Story = {
   decorators: baseDecorators((space) => {
     space.db.add(Trip.make({ name: 'New Trip' }));
   }),
+};
+
+// A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake
+// router. The Route section seeds its city list from these planned road segments; adding / removing
+// a city re-plans via the contributed RoutingService and updates the map polyline.
+export const RoadTrip: Story = {
+  decorators: baseDecorators((space) => {
+    seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
+  }),
+};
+
+// Same scenario, but backed by the real public OSRM + Nominatim services (live network). Excluded
+// from the storybook test run (`!test`) so CI never depends on external services; open it via
+// `storybook:serve` to see real driving geometry. The production provider is @dxos/plugin-osrm.
+export const RoadTripLive: Story = {
+  tags: ['!test'],
+  decorators: baseDecorators((space) => {
+    space.db.add(Trip.make({ name: 'London → Barcelona (live OSRM)' }));
+  }, liveRoutingService()),
 };

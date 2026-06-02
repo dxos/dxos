@@ -21,6 +21,8 @@ import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
 import { Segment, Trip } from '#types';
 
+import { RouteSection } from '../RouteSection';
+
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
 const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
@@ -208,16 +210,19 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
             </Panel.Root>
           </NaturalCalendar.Root>
 
-          <Panel.Root>
-            <Panel.Toolbar>
-              <Menu.Root {...menuActions} attendableId={attendableId}>
-                <Menu.Toolbar />
-              </Menu.Root>
-            </Panel.Toolbar>
-            <Panel.Content asChild>
-              <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
-            </Panel.Content>
-          </Panel.Root>
+          <div className='flex flex-col min-bs-0 overflow-hidden'>
+            <RouteSection trip={subject} />
+            <Panel.Root classNames='grow min-bs-0'>
+              <Panel.Toolbar>
+                <Menu.Root {...menuActions} attendableId={attendableId}>
+                  <Menu.Toolbar />
+                </Menu.Root>
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
+              </Panel.Content>
+            </Panel.Root>
+          </div>
         </div>
 
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's

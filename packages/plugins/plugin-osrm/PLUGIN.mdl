@@ -1,0 +1,430 @@
+---
+id: org.dxos.plugin.osrm
+name: OsrmPlugin
+version: 0.1.0
+---
+
+A Composer plugin that contributes a **driving-route provider** to
+plugin-trip. It implements the (new) plugin-trip `RoutingService`
+capability by combining two free, no-key OpenStreetMap services:
+
+- **Nominatim** (`nominatim.openstreetmap.org`) — geocodes city names
+  → `[lon, lat]`.
+- **OSRM** (`router.project-osrm.org`) — the public Open Source Routing
+  Machine demo; computes the `driving` route through an ordered list of
+  coordinates and returns per-leg distance, duration, and geometry.
+
+The plugin is the first concrete `RoutingService`, mirroring how
+`plugin-duffel` is the first concrete `BookingService`. plugin-trip's new
+`PlanRoute` operation resolves the registered routing service and uses it
+to turn an ordered list of cities into a connected chain of road
+`Segment`s, each carrying real driving distance, drive time, and a map
+polyline. plugin-trip stays provider-agnostic; this plugin (or a future
+keyed provider such as OpenRouteService) plugs in behind the same
+contract.
+
+This is a **prototype** provider: both upstream services are free,
+require no API key, and permit browser CORS — so the plugin works
+immediately with zero setup. Their public-instance usage policies
+(Nominatim ≤ 1 req/s + a descriptive `User-Agent`; OSRM demo "not for
+heavy/production use") make this suitable for development and demos, not
+production traffic.
+
+## Scope of this milestone
+
+This milestone spans **three** packages. Per the agreed plan, the
+authoritative spec is written here in `plugin-osrm/PLUGIN.mdl` now; the
+`plugin-trip` and `plugin-map` additions described below are captured
+here as cross-package sections and will be folded into each plugin's own
+`PLUGIN.mdl` once implemented.
+
+| Package       | Additions                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| `plugin-trip` | `RoutingService` capability + DTOs; `RoadDetails` route fields; `PlanRoute` op; Route section UI; map polyline. |
+| `plugin-osrm` | New private plugin: the Nominatim + OSRM `RoutingService` implementation (this spec's home).        |
+| `plugin-map`  | Bespoke settings surface with a named tile-provider picker; provider registry; `buildTileUrl` generalization. |
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix of the core template or resolved via its URI.
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+
+## Cross-package additions
+
+### plugin-trip — `RoutingService` capability
+
+A new capability, parallel to `BookingService`, declared in
+`plugin-trip/src/types/TripCapabilities.ts`:
+
+```mdl
+type RoutingService
+  desc: >
+    Pluggable driving-route provider. Resolved by the PlanRoute operation
+    via Capability.getAll. Mirrors BookingService: a stable id + label +
+    an async route() that the operation awaits. The service is
+    responsible for geocoding any name-only waypoints internally, so
+    plugin-trip never depends on a geocoder directly.
+  fields:
+    id: string                      # e.g. "osrm"
+    label: string                   # e.g. "OSRM (OpenStreetMap)"
+    profiles: RouteProfile[]        # supported profiles; v1: ["driving"]
+    route: (query: RouteQuery) => Promise<RouteResult>
+  capability:
+    # Declared as: Capability.make<Routing.RoutingService>(`${meta.id}.capability.routingService`)
+```
+
+DTOs live in `plugin-trip/src/types/Routing.ts`, defined as Effect
+Schema with derived interfaces — matching how `BookingSearch.SearchQuery`
+/ `Offer` are defined.
+
+```mdl
+type RouteProfile
+  literals: 'driving'               # room to grow: 'walking' | 'cycling'
+
+type Waypoint
+  desc: >
+    A stop on the route. Either a resolved Place (geo may be present) or
+    a free-text place name the service must geocode. Modelled as a
+    Schema.Union of Place and string.
+  union:
+    - Place                         # plugin-trip Place (may carry geo)
+    - string                        # raw city / place name
+
+type RouteQuery
+  fields:
+    waypoints: Waypoint[]           # ordered; >= 2 required
+    profile?: RouteProfile          # default 'driving'
+
+type RouteLeg
+  desc: One leg between two consecutive (geocoded) waypoints.
+  fields:
+    origin: Place                   # geocoded — geo populated
+    destination: Place              # geocoded — geo populated
+    distanceMeters: number
+    durationSeconds: number
+    path: GeoPoint[]                # decoded polyline ([lon, lat] points)
+
+type RouteResult
+  fields:
+    legs: RouteLeg[]                # one per consecutive waypoint pair (waypoints.length - 1)
+    distanceMeters: number          # totals over all legs
+    durationSeconds: number
+
+type MissingApiKeyError
+  desc: >
+    Reused convention from BookingSearch — a RoutingService throws this
+    (or a similar Error) when it requires credentials that are not
+    configured. The free OSRM provider never throws it, but keyed
+    providers (e.g. OpenRouteService) will.
+```
+
+### plugin-trip — `RoadDetails` route fields
+
+The existing `RoadDetails` variant (`plugin-trip/src/types/Segment.ts`)
+gains four optional fields. All optional, so existing road segments,
+the `makeDefault('road')` factory, and the extractor paths stay valid.
+
+```mdl
+type RoadDetails (extended)
+  desc: >
+    Existing TaggedStruct('road') extended with computed-route fields
+    populated by PlanRoute. Geometry stored decoded ([lon, lat]) so the
+    map consumer needs no provider-specific polyline decoder. `planned`
+    marks segments owned by the route planner so re-planning can replace
+    exactly those and leave hand-added road segments (a taxi transfer,
+    say) untouched.
+  adds-fields:
+    distanceMeters?: number         # Schema.optional(Schema.Number)
+    durationSeconds?: number        # Schema.optional(Schema.Number)
+    path?: GeoPoint[]               # Schema.optional(Schema.Array(Format.GeoPoint))
+    planned?: boolean               # Schema.optional(Schema.Boolean) — owned by PlanRoute
+```
+
+### plugin-trip — `PlanRoute` operation
+
+```mdl
+op PlanRoute
+  desc: >
+    Turns an ordered list of cities into a connected chain of road
+    Segments on a Trip. Resolves the registered RoutingService, calls
+    route(), and reconciles the trip's planner-owned road segments to
+    match the returned legs. Non-road segments (flights, lodging) and
+    hand-added road segments (planned !== true) are never touched.
+  inputs:
+    trip: Trip                      # the live ECHO Trip
+    waypoints: Waypoint[]           # ordered city list from the UI (>= 2)
+    provider?: string               # optional RoutingService id; default = first registered
+  outputs:
+    legs: number                    # number of road segments produced
+    distanceMeters: number          # total distance
+    durationSeconds: number         # total drive time
+  errors:
+    - NoRoutingService — no RoutingService registered (or none matching `provider`).
+    - MissingApiKeyError — bubbled from the service; reported via the failure channel.
+    - GeocodeError — a waypoint name could not be resolved (names the offending waypoint).
+    - RouteError — bubbled routing failure.
+  services:
+    - Capability.Service
+  reconciliation:
+    - Identify the contiguous run of planner-owned road segments
+      (RoadDetails.planned === true) on the trip.
+    - First plan (no prior run): append the new leg segments in order.
+    - Re-plan: remove exactly the prior planner-owned run, insert the new
+      legs at that position. Uses Trip.addSegment / removeSegment.
+    - Each produced segment: makeDefault('road') with subKind 'car',
+      origin/destination set to the leg's geocoded Places, and
+      distanceMeters / durationSeconds / path / planned=true set from the leg.
+  notes:
+    - Handler shape mirrors search-bookings.ts: Capability.getAll →
+      find by provider → Effect.tryPromise around service.route().
+    - The city list is NOT persisted on the Trip (Approach A). The UI
+      derives the initial list from existing planner-owned road segments;
+      "Plan route" is the commit point.
+```
+
+### plugin-trip — Route section (UI)
+
+```mdl
+component RouteSection
+  desc: >
+    A section within TripArticle for building and planning the road-trip
+    leg sequence. Lives in plugin-trip/src/containers (uses capabilities /
+    operation invoker). Renders an ordered, reorderable city list, a Plan
+    route action, and a totals readout. Initial list derived from the
+    trip's planner-owned road segments.
+  props:
+    trip: Trip
+  state:
+    cities: Waypoint[]              # local; seeded from planner-owned road segments
+    status: 'idle' | 'planning' | 'error'
+    error?: string                 # e.g. "Couldn't find city: Springfield"
+  actions:
+    addCity: (name: string) => void
+    removeCity: (index: number) => void
+    reorder: (from: number, to: number) => void
+    plan: () => void                # dispatches PlanRoute with current cities
+  emits:
+    planned: { legs: number; distanceMeters: number; durationSeconds: number }
+  layout: |
+    ┌─ Route ───────────────────────────────┐
+    │  1. London            ⠿  ✕             │
+    │  2. Oxford            ⠿  ✕             │
+    │  3. Bath              ⠿  ✕             │
+    │  [ + add city            ]             │
+    │  ───────────────────────────────────  │
+    │  3 legs · 210 km · 3 h 40 m            │
+    │                       [ Plan route ]   │
+    └────────────────────────────────────────┘
+  notes:
+    - Reuse the mosaic list primitive used by SegmentStack for drag-reorder.
+    - City input uses @dxos/react-ui primitives + Form, never native inputs.
+    - Loading / error states cover: no provider, geocode miss (names the
+      city), routing failure.
+```
+
+### plugin-trip — map polyline
+
+```mdl
+feat TripRoutePolyline
+  desc: >
+    Extends the existing tripMarkerProvider
+    (plugin-trip/src/capabilities/marker-provider.tsx). For road segments
+    that carry a RoadDetails.path, emit the real polyline as map line
+    geometry instead of the straight origin→destination arc. Non-routed
+    road segments keep the straight-arc fallback. Rides on the `lines`
+    prop already threaded through MapControl.
+```
+
+### plugin-map — tile-provider settings surface
+
+plugin-map already has: a `Settings` schema with `apiKeys: APIKey[]`, a
+`RECOGNIZED_API_KEY_DOMAINS = ['maptiler.com']` list, a `buildTileUrl()`
+that hardcodes a MapTiler `streets-v2` URL when a `maptiler.com` key is
+present, and the auto-generated `DefaultSettings` form. This milestone
+replaces the auto-form with a bespoke surface offering a **named
+provider picker**, and generalizes tile-URL construction via a registry.
+
+```mdl
+type TileProvider
+  desc: >
+    Registry entry for a known tile service. Pure config; the registry
+    lives in plugin-map (e.g. src/types/tile-providers.ts), not in ECHO.
+  fields:
+    id: string                      # 'osm' | 'maptiler' | 'mapbox' | 'stadia' | 'thunderforest'
+    label: string                   # display name in the picker
+    domain?: string                 # apiKeys[].domain to match; absent for keyless 'osm'
+    requiresKey: boolean
+    urlTemplate: (key?: string) => string   # Leaflet {z}/{x}/{y} template, key substituted
+
+type Settings (plugin-map, extended)
+  desc: Existing map Settings struct gains the selected provider id.
+  adds-fields:
+    tileProvider?: string           # selected TileProvider.id; default 'osm'
+    # apiKeys: APIKey[]             # unchanged — holds keys by domain
+  notes:
+    - Drop the hardcoded MAPTILER_STYLE / RECOGNIZED_API_KEY_DOMAINS logic
+      in favour of the TILE_PROVIDERS registry.
+```
+
+```mdl
+feat MapTileSettingsSurface
+  desc: >
+    Bespoke settings surface for plugin-map (replaces the auto-generated
+    DefaultSettings form for this plugin id). Mirrors the plugin-sample
+    settings-surface pattern: a ReactSurface registered with
+    filter AppSurface.settings(AppSurface.Article, meta.id), reading the
+    settings atom via useSettingsState. AppCapabilities.Settings stays
+    registered so the framework still recognizes the plugin's settings.
+  ui:
+    - A Select listing TILE_PROVIDERS by label.
+    - When the selected provider requiresKey: an API-key input bound to
+      the matching apiKeys[].domain entry, with a per-provider hint /
+      signup link.
+    - Keyless providers (OSM) hide the key input.
+  buildTileUrl (generalized):
+    - Look up TILE_PROVIDERS by settings.tileProvider (default 'osm').
+    - If requiresKey: find apiKeys entry by provider.domain; if absent,
+      fall back to OSM (or default template with no key).
+    - Return provider.urlTemplate(key).
+```
+
+## This plugin — `OsrmRoutingService`
+
+```mdl
+feat OsrmRoutingService
+  desc: >
+    plugin-osrm's RoutingService impl. Geocodes name-only waypoints via
+    Nominatim, then computes a single driving route through all
+    coordinates via the OSRM demo server, splitting the response into
+    per-leg distance / duration / path. Contributed via
+    Capability.contributes(TripCapabilities.RoutingService, service).
+  id: osrm
+  label: OSRM (OpenStreetMap)
+  profiles: ['driving']
+  geocoding (Nominatim):
+    - GET https://nominatim.openstreetmap.org/search?q=<name>&format=jsonv2&limit=1
+    - Take the first result → Place { name: display_name, city, country, geo: [lon, lat] }.
+    - Waypoints that are already a Place with geo skip geocoding.
+    - Set a descriptive User-Agent header (policy requirement).
+    - Sequence requests with a small delay to respect the ≤ 1 req/s policy.
+    - No result → throw GeocodeError naming the waypoint.
+  routing (OSRM):
+    - GET https://router.project-osrm.org/route/v1/driving/<lon,lat;...>
+        ?overview=full&geometries=geojson&steps=true
+    - route.legs[i] → distanceMeters (meters), durationSeconds (seconds).
+    - Per-leg path: concatenate the leg's step geometries (GeoJSON
+      LineString coords are already [lon, lat] = GeoPoint).
+    - Totals from route.distance / route.duration.
+    - Non-2xx or code !== 'Ok' → throw RouteError.
+  transport:
+    - Direct fetch (both services permit browser CORS); no edge proxy
+      needed (unlike plugin-duffel, whose upstream blocks CORS).
+  config:
+    - No API key. Optional Settings later (custom OSRM base URL, profile);
+      out of scope for v1.
+```
+
+### File layout (mirrors plugin-duffel)
+
+```text
+packages/plugins/plugin-osrm/
+  PLUGIN.mdl                         # this file
+  README.md
+  package.json                       # "private": true; deps incl. @dxos/plugin-trip workspace:*
+  moon.yml                           # --entryPoint per export subpath
+  src/
+    index.ts                         # exports meta + plugin only
+    meta.ts                          # Plugin.makeMeta (id org.dxos.plugin.osrm)
+    plugin.ts                        # Plugin.lazy
+    OsrmPlugin.tsx                   # Plugin.define(meta).pipe(...)
+    translations.ts
+    capabilities/
+      index.ts                       # Osrm LazyCapability
+      osrm.ts                        # Capability.contributes(TripCapabilities.RoutingService, service)
+    services/
+      index.ts
+      OsrmRoutingService.ts          # makeOsrmRoutingService() factory
+      NominatimClient.ts             # geocode(name) → Place
+      OsrmClient.ts                  # route(coords) → raw OSRM response
+      osrm-mapping.ts                # response → RouteLeg[] / RouteResult
+      osrm-mapping.test.ts           # fixture-based unit tests
+```
+
+## Acceptance
+
+```mdl
+test OsrmRoutingService geocoding
+  desc: Nominatim geocoding with mocked fetch.
+  cases:
+    - name-only waypoint → Place with geo populated from first result.
+    - Place already carrying geo → not re-geocoded.
+    - no result for a name → throws GeocodeError naming the waypoint.
+
+test OsrmRoutingService routing
+  desc: OSRM route parsing with mocked fetch.
+  cases:
+    - 3 waypoints → RouteResult with 2 legs; each leg has distance,
+      duration, and non-empty path.
+    - per-leg path coords are [lon, lat] (GeoPoint) order.
+    - OSRM code !== 'Ok' → throws RouteError.
+
+test PlanRoute operation (plugin-trip)
+  desc: Operation reconciles planner-owned road segments. Uses a fake
+        in-memory RoutingService registered in plugin-trip/src/testing.
+  cases:
+    - first plan on a trip with no road segments → appends N-1 road
+      segments with planned=true and route fields set.
+    - re-plan with a changed/reordered city list → replaces only the
+      prior planner-owned run; flights / lodging / hand-added road
+      segments (planned !== true) are preserved.
+    - no RoutingService registered → NoRoutingService error.
+
+test RouteSection (plugin-trip)
+  desc: Container story / interaction.
+  cases:
+    - initial city list derived from planner-owned road segments.
+    - add / remove / reorder updates local state; Plan route dispatches
+      PlanRoute with the current list.
+    - geocode miss surfaces an inline error naming the city.
+
+test tripMarkerProvider polyline (plugin-trip)
+  desc: Marker provider emits real geometry.
+  cases:
+    - road segment with RoadDetails.path → polyline line geometry emitted.
+    - road segment without path → straight-arc fallback.
+
+test buildTileUrl (plugin-map)
+  desc: Tile URL construction across providers.
+  cases:
+    - tileProvider 'osm' (keyless) → OSM template.
+    - tileProvider 'maptiler' with matching apiKeys entry → keyed URL.
+    - tileProvider requiresKey but no key → OSM fallback.
+```
+
+## Out of scope (v1)
+
+- Keyed routing providers (OpenRouteService, Mapbox Directions,
+  GraphHopper). They drop in as additional `RoutingService`
+  contributions with no plugin-trip changes; documented as the upgrade
+  path, not built here.
+- Profiles other than `driving` (walking, cycling). The `profiles` field
+  reserves room.
+- Route optimization / reordering cities (TSP). PlanRoute routes the list
+  in the given order; the user orders cities manually.
+- Persisting the city list on `Trip` (Approach B). Initial list is
+  derived from planner-owned road segments; revisit if draft persistence
+  is needed.
+- Turn-by-turn directions, alternative routes, traffic, tolls, ETAs at
+  time-of-day.
+- Production hardening of the public OSRM/Nominatim usage (self-hosting,
+  rate-limit backoff, caching). Prototype uses the public demo instances.
+- A map "tile preview" thumbnail in the provider picker; labels + hints
+  only in v1.
