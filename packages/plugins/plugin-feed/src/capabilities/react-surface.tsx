@@ -55,7 +55,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'feed-properties',
+        id: 'feedProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Subscription.Subscription),
         component: ({ data }) => <FeedProperties subject={data.subject} />,
       }),
