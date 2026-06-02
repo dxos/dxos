@@ -54,7 +54,7 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
         Layer.provide(
           AnthropicClient.layer({
             // Host-only sentinel; `EdgeAiHttpClient` re-bases the request onto the EDGE
-            // `/generate/anthropic` route and signs it with the verifiable presentation.
+            // `/ai/generate/anthropic` route and signs it with the verifiable presentation.
             apiUrl: 'http://edge.internal',
           }).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient))),
         ),
