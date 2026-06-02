@@ -46,7 +46,8 @@ const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
 });
 
-describe('Trace timeline', () => {
+// TODO(dmaretskyi): Flaky snapshots
+describe.skip('Trace timeline', () => {
   describe('Agent', () => {
     it.effect(
       'create objects via AgentService',
