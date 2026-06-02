@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation, Type, DXN, EID, URI } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Relation, Type, DXN, URI } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
