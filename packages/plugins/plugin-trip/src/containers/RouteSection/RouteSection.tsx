@@ -135,7 +135,10 @@ export const RouteSection = ({ trip }: RouteSectionProps) => {
     setValue('');
   }, [value, cities, update]);
 
-  const handleRemove = useCallback((index: number) => update(cities.filter((_, idx) => idx !== index)), [cities, update]);
+  const handleRemove = useCallback(
+    (index: number) => update(cities.filter((_, idx) => idx !== index)),
+    [cities, update],
+  );
 
   const handleMove = useCallback(
     (index: number, delta: number) => {

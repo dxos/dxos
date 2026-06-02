@@ -5,8 +5,8 @@
 import { type Place, Routing } from '@dxos/plugin-trip';
 
 import { geocode } from './NominatimClient';
-import { fetchRoute } from './OsrmClient';
 import { parseRoute } from './osrm-mapping';
+import { fetchRoute } from './OsrmClient';
 
 export const OSRM_SERVICE_ID = 'osrm';
 

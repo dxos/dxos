@@ -21,7 +21,10 @@ export type NominatimClientOptions = {
  * Geocodes a free-text place name to a `Place` (with `geo`) via Nominatim. Returns undefined when
  * there is no match; throws `GeocodeError` on a transport / HTTP failure.
  */
-export const geocode = async (query: string, options: NominatimClientOptions = {}): Promise<Place.Place | undefined> => {
+export const geocode = async (
+  query: string,
+  options: NominatimClientOptions = {},
+): Promise<Place.Place | undefined> => {
   const fetchFn = options.fetch ?? globalThis.fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
   const url = `${baseUrl}/search?q=${encodeURIComponent(query)}&format=jsonv2&limit=1&addressdetails=1`;

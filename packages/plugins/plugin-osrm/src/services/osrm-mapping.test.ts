@@ -47,8 +47,34 @@ describe('parseRoute', () => {
           distance: 1000,
           duration: 600,
           legs: [
-            { distance: 400, duration: 240, steps: [{ geometry: { coordinates: [[0, 0], [1, 1]] } }] },
-            { distance: 600, duration: 360, steps: [{ geometry: { coordinates: [[1, 1], [2, 2]] } }] },
+            {
+              distance: 400,
+              duration: 240,
+              steps: [
+                {
+                  geometry: {
+                    coordinates: [
+                      [0, 0],
+                      [1, 1],
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              distance: 600,
+              duration: 360,
+              steps: [
+                {
+                  geometry: {
+                    coordinates: [
+                      [1, 1],
+                      [2, 2],
+                    ],
+                  },
+                },
+              ],
+            },
           ],
         },
       ],
@@ -61,8 +87,14 @@ describe('parseRoute', () => {
     expect(result.durationSeconds).toBe(600);
     expect(result.legs[0].origin.name).toBe('A');
     expect(result.legs[0].destination.name).toBe('B');
-    expect(result.legs[0].path).toEqual([[0, 0], [1, 1]]);
-    expect(result.legs[1].path).toEqual([[1, 1], [2, 2]]);
+    expect(result.legs[0].path).toEqual([
+      [0, 0],
+      [1, 1],
+    ]);
+    expect(result.legs[1].path).toEqual([
+      [1, 1],
+      [2, 2],
+    ]);
   });
 
   test('falls back to leg endpoints when no step geometry is present', ({ expect }) => {
@@ -71,7 +103,10 @@ describe('parseRoute', () => {
       routes: [{ distance: 100, duration: 60, legs: [{ distance: 100, duration: 60 }] }],
     };
     const result = parseRoute(response, [place('A', [0, 0]), place('B', [3, 4])]);
-    expect(result.legs[0].path).toEqual([[0, 0], [3, 4]]);
+    expect(result.legs[0].path).toEqual([
+      [0, 0],
+      [3, 4],
+    ]);
   });
 
   test('throws RouteError when the response is not Ok', ({ expect }) => {

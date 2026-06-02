@@ -28,7 +28,16 @@ const osrmRouteResponse = (coordinateCount: number) => ({
       legs: Array.from({ length: coordinateCount - 1 }, (_, index) => ({
         distance: 1000,
         duration: 600,
-        steps: [{ geometry: { coordinates: [[index, index], [index + 1, index + 1]] } }],
+        steps: [
+          {
+            geometry: {
+              coordinates: [
+                [index, index],
+                [index + 1, index + 1],
+              ],
+            },
+          },
+        ],
       })),
     },
   ],

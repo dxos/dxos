@@ -17,10 +17,8 @@ type DefaultStoryProps = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'mar
 const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
   const [controller, setController] = useState<MapController>();
   const [key, setKey] = useState('');
-  const url = useMemo(() => urlProp.replace('${key}', key), [urlProp, key]);
-  console.log(url);
-
-  // nRamSBoJeikYd68E9WIP
+  // Substitute the `${key}` placeholder in a keyed tile URL (e.g. MapTiler); undefined → default OSM tiles.
+  const url = useMemo(() => urlProp?.replace('${key}', key), [urlProp, key]);
 
   const handleZoomAction = useMapZoomHandler(controller);
 
