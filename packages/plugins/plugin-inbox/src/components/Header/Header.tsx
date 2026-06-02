@@ -97,7 +97,7 @@ type HeaderRowProps = ThemedClassName<
 const HeaderRow = ({ icon, compact, children, classNames, ...props }: HeaderRowProps) => {
   const resolvedIcon =
     compact && typeof icon === 'string' ? (
-      <IconBlock compact>
+      <IconBlock compact square>
         <Icon icon={icon} classNames='text-subdued' size={4} />
       </IconBlock>
     ) : (
