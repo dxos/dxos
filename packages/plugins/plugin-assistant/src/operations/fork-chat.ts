@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Runtime from 'effect/Runtime';
 
 import { Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
@@ -29,7 +28,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
         invariant(space, 'Space not found.');
 
         const feedServiceLayer = createFeedServiceLayer(space.queues);
-        const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
 
         const messages = yield* Feed.runQuery(sourceFeed, Filter.type(Message.Message)).pipe(
           Effect.provide(feedServiceLayer),
@@ -49,22 +47,21 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
           const lastMessage = sorted[sorted.length - 1];
 
           // Append a SessionLink record pointing to the last message of the source feed.
-          yield* Effect.promise(() =>
-            Runtime.runPromise(runtime)(
-              Feed.append(newFeed, [
-                Obj.make(SessionLink.SessionLink, {
-                  feedRef: Ref.make(sourceFeed),
-                  messageId: lastMessage.id,
-                }),
-              ]),
-            ),
-          );
+          yield* Feed.append(newFeed, [
+            Obj.make(SessionLink.SessionLink, {
+              feedRef: Ref.make(sourceFeed),
+              messageId: lastMessage.id,
+            }),
+          ]).pipe(Effect.provide(feedServiceLayer));
         }
 
         // Copy source chat's blueprint and object bindings to the new feed.
+        // Sort chronologically so add/remove events are applied in the correct order.
         const sourceBindings = (yield* Feed.runQuery(sourceFeed, Filter.type(AiContext.Binding)).pipe(
           Effect.provide(feedServiceLayer),
-        )).filter(Obj.instanceOf(AiContext.Binding));
+        ))
+          .filter(Obj.instanceOf(AiContext.Binding))
+          .sort((a, b) => a.created.localeCompare(b.created));
 
         if (sourceBindings.length > 0) {
           // Reduce binding events to the final active set.
@@ -77,16 +74,12 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
             binding.objects.removed.forEach((ref: Ref.Ref<any>) => objectRefMap.delete(ref.uri));
           }
 
-          yield* Effect.promise(() =>
-            Runtime.runPromise(runtime)(
-              Feed.append(newFeed, [
-                Obj.make(AiContext.Binding, {
-                  blueprints: { added: Array.from(blueprintRefMap.values()), removed: [] },
-                  objects: { added: Array.from(objectRefMap.values()), removed: [] },
-                }),
-              ]),
-            ),
-          );
+          yield* Feed.append(newFeed, [
+            Obj.make(AiContext.Binding, {
+              blueprints: { added: Array.from(blueprintRefMap.values()), removed: [] },
+              objects: { added: Array.from(objectRefMap.values()), removed: [] },
+            }),
+          ]).pipe(Effect.provide(feedServiceLayer));
         }
 
         // Navigate to the forked chat.
