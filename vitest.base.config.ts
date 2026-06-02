@@ -10,6 +10,7 @@ import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import WasmPlugin from 'vite-plugin-wasm';
+import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -248,6 +249,52 @@ const resolveProjectType = (): string | undefined => {
   return undefined;
 };
 
+const shellQuote = (value: string): string => `"${value.replaceAll('"', '\\"')}"`;
+
+const moonTaskForProjectType = (projectType: string | undefined): string => {
+  switch (projectType) {
+    case 'browser':
+      return 'test-browser';
+    case 'storybook':
+      return 'test-storybook';
+    default:
+      return 'test';
+  }
+};
+
+/** Prints `moon run …` commands to rerun each failed test individually. */
+const createMoonRerunReporter = (options: { moonProject: string; projectType?: string }): Reporter => ({
+  onTestRunEnd(testModules: ReadonlyArray<TestModule>, _errors, reason: TestRunEndReason) {
+    if (reason === 'interrupted') {
+      return;
+    }
+
+    const commands = new Set<string>();
+    const moonTask = moonTaskForProjectType(options.projectType);
+
+    for (const testModule of testModules) {
+      for (const testCase of testModule.children.allTests('failed')) {
+        const vitestProject = testCase.project.name;
+        const projectFlag =
+          options.projectType === 'browser' && vitestProject !== 'node' ? ` --project=${vitestProject}` : '';
+        commands.add(
+          `moon run ${options.moonProject}:${moonTask} -- ${testModule.relativeModuleId}${projectFlag} -t ${shellQuote(testCase.name)}`,
+        );
+      }
+    }
+
+    if (commands.size === 0) {
+      return;
+    }
+
+    console.log('\n\x1b[33mRerun failed tests:\x1b[0m');
+    for (const command of commands) {
+      console.log(`  ${command}`);
+    }
+    console.log('');
+  },
+});
+
 const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
@@ -257,6 +304,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   }
 
   const projectType = resolveProjectType();
+  const moonRerunReporter = createMoonRerunReporter({ moonProject: packageDirName, projectType });
   const resultsDirectory = join(__dirname, 'test-results', packageDirName, ...(projectType ? [projectType] : []));
   const reportsDirectory = join(__dirname, 'coverage', packageDirName, ...(projectType ? [projectType] : []));
   const coverageEnabled = Boolean(process.env.VITEST_COVERAGE);
@@ -264,7 +312,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   if (xmlReport) {
     return {
       passWithNoTests: true,
-      reporters: [['junit', { addFileAttribute: true }], 'verbose'],
+      reporters: [['junit', { addFileAttribute: true }], 'verbose', moonRerunReporter],
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,
@@ -275,7 +323,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
 
   return {
     passWithNoTests: true,
-    reporters: ['json', 'default'],
+    reporters: ['json', 'default', moonRerunReporter],
     outputFile: join(resultsDirectory, 'results.json'),
     coverage: {
       enabled: coverageEnabled,
