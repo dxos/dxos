@@ -91,7 +91,7 @@ Use `@effect/vitest` (`describe`, `it.effect`, `it.scoped`) and `Effect.fnUntrac
 
 ### Determinism
 
-Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs.
+Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs. The PRNG is **shared across all tests in the same file** — memos and fixtures that embed object IDs only match when tests run in file order. When regenerating memoized LLM cache, never use vitest `-t` for a single test; regenerate the whole test file (see `regenerate-memoized-llm` skill).
 
 ### Database and invocation flow
 
