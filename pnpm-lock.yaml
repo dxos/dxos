@@ -3313,6 +3313,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
