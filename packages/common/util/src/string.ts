@@ -20,7 +20,7 @@ export const capitalize = (str: string): string => {
  * ```ts
  * const cls = inline`
  *   rounded-xs outline-none
- *   data-[focused]:bg-accent-fill
+ *   data-[focused]:bg-accent-bg
  * `;
  * ```
  */

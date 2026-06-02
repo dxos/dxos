@@ -89,7 +89,7 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     return (
       <div
         className={mx(
-          'w-full outline-hidden focus:border-accent-fill focus-within:border-focus-ring-subtle',
+          'w-full outline-hidden focus:border-accent-bg focus-within:border-focus-ring-subtle',
           classNames,
         )}
         {...(focusable ? focusAttributes : {})}

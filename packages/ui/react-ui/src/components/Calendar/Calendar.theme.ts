@@ -15,7 +15,7 @@ export type CalendarStyleProps = Partial<{}>;
 //
 
 const root: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('relative w-fit h-fit self-start p-2 select-none bg-group-surface text-base-foreground', ...etc);
+  mx('relative w-fit h-fit self-start p-2 select-none bg-group-surface text-base-fg', ...etc);
 
 const nav: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex items-center justify-between pb-1', ...etc);
 
