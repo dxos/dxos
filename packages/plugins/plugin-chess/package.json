@@ -118,6 +118,7 @@
     "@dxos/plugin-game": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
