@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Annotation, DXN, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
@@ -117,13 +117,16 @@ describe('checkPendingMigration', () => {
   const TARGET = '1970-01-02';
 
   // Minimal fake exercising only the fields checkPendingMigration reads (state, properties).
-  // The properties object must look like an ECHO entity (has Obj.Meta) so Annotation.get works.
-  const makeFakeProperties = (version?: string): Record<symbol, unknown> => {
+  // Must pass isEntity (checks for Entity.KindId) and have Obj.Meta so Annotation.get works.
+  const makeFakeProperties = (version?: string): Record<string | symbol, unknown> => {
     const annotations: Record<string, unknown> = {};
     if (version !== undefined) {
       Annotation.setDictionary(annotations as any, MigrationVersionAnnotation, version);
     }
-    return { [Obj.Meta]: { keys: [], annotations } };
+    return {
+      [Entity.KindId]: Entity.Kind.Object,
+      [Obj.Meta]: { keys: [], annotations },
+    };
   };
 
   const makeFakeSpace = (state: SpaceState, version?: string): Space =>

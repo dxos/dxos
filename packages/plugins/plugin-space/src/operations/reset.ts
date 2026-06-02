@@ -144,23 +144,26 @@ const rebuildSpaceRoot = (space: Space): void => {
   const properties = space.properties;
   const preservedVersion = Annotation.get(properties, MigrationVersionAnnotation);
 
-  // Clear all annotations, then re-seed only the core ones. This prevents plugin-specific
+  // Clear all annotations and re-seed only the core ones, preventing plugin-specific
   // annotations from holding stale refs to entities that were just removed.
-  Obj.update(properties, (obj) => {
-    const meta = (obj as any)[Obj.Meta];
-    if (meta?.annotations) {
+  // Obj.getMeta inside Obj.update gives the mutable meta.
+  Obj.update(properties, (mutableProps) => {
+    const meta = Obj.getMeta(mutableProps);
+    // Clear non-core annotations by deleting each key.
+    if (meta.annotations) {
+      for (const key of Object.keys(meta.annotations)) {
+        delete (meta.annotations as Record<string, unknown>)[key];
+      }
+    } else {
       meta.annotations = {};
     }
+    // Re-seed core annotations directly via the mutable meta.
+    Annotation.setDictionary(meta.annotations, RootCollectionAnnotation, Ref.make(Collection.make()));
+    const version = preservedVersion._tag === 'Some' ? preservedVersion.value : Migrations.targetVersion;
+    if (version) {
+      Annotation.setDictionary(meta.annotations, MigrationVersionAnnotation, version);
+    }
   });
-
-  // Re-seed the root Collection (the navtree anchor).
-  Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
-
-  // Preserve or re-stamp the migration version so the space doesn't re-enter SPACE_REQUIRES_MIGRATION.
-  const version = preservedVersion._tag === 'Some' ? preservedVersion.value : Migrations.targetVersion;
-  if (version) {
-    Annotation.set(properties, MigrationVersionAnnotation, version);
-  }
 
   log.info('reset: space root rebuilt');
 };
