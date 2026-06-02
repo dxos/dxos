@@ -9719,6 +9719,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/compute/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
