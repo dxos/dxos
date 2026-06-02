@@ -1341,6 +1341,9 @@ catalogs:
     manifold-3d:
       specifier: ^3.0.0
       version: 3.4.1
+    marked:
+      specifier: ^12.0.2
+      version: 12.0.2
     mathjs:
       specifier: ^14.2.1
       version: 14.4.0
@@ -12107,6 +12110,9 @@ importers:
       highlight.js:
         specifier: 'catalog:'
         version: 11.9.0
+      marked:
+        specifier: 'catalog:'
+        version: 12.0.2
       react-markdown:
         specifier: 'catalog:'
         version: 10.1.0(@types/react@19.2.14)(react@19.2.6)
@@ -34910,6 +34916,11 @@ packages:
   markdown-table@3.0.2:
     resolution: {integrity: sha512-y8j3a5/DkJCmS5x4dMCQL+OR0+2EAq3DOtio1COSHsmW2BGXnNCK3v12hJt1LrUz5iZH5g0LmuYOjDdI+czghA==}
 
+  marked@12.0.2:
+    resolution: {integrity: sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q==}
+    engines: {node: '>= 18'}
+    hasBin: true
+
   marky@1.3.0:
     resolution: {integrity: sha512-ocnPZQLNpvbedwTy9kNrQEsknEfgvcLMvOtz3sFeWApDq1MXH1TqkCIx58xlpESsfwQOnuBO9beyQuNGzVvuhQ==}
 
@@ -55331,6 +55342,8 @@ snapshots:
       uc.micro: 2.1.0
 
   markdown-table@3.0.2: {}
+
+  marked@12.0.2: {}
 
   marky@1.3.0: {}
 

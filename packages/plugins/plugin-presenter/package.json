@@ -104,6 +104,7 @@
     "rehype-highlight": "catalog:",
     "remark-frontmatter": "catalog:",
     "remark-parse-frontmatter": "catalog:",
+    "marked": "catalog:",
     "reveal.js": "catalog:"
   },
   "devDependencies": {
