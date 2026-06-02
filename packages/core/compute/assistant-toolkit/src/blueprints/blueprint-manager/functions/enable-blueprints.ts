@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
@@ -21,7 +22,7 @@ export default EnableBlueprints.pipe(
           Effect.mapError(() => ({ key, reason: 'Blueprint not found in registry.' })),
           Effect.either,
         );
-        if (blueprint._tag === 'Left') {
+        if (Either.isLeft(blueprint)) {
           rejected.push(blueprint.left);
           continue;
         }
