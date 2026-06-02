@@ -10314,6 +10314,9 @@ importers:
       '@dxos/plugin-integration':
         specifier: workspace:*
         version: link:../plugin-integration
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -10356,6 +10359,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
