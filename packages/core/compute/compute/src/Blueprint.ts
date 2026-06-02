@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Entity, Filter, Migration, Obj, Registry, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 
 import * as McpServer from './McpServer';
@@ -134,14 +134,8 @@ export type Definition = {
  */
 export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service> =>
   Effect.gen(function* () {
-    const registry = yield* Registry.Service;
-    // Try DXN URI lookup first (fast O(1) path for valid DXN keys).
-    const dxn = DXN.tryMake(`dxn:${key}`);
-    const byUri = dxn ? registry.getByURI(dxn) : undefined;
-    // Fall back to meta.key scan for keys that are not valid DXNs (e.g. contain hyphens).
-    const entity = byUri ?? registry.list().find((e) => Entity.getMeta(e)?.key === key);
-    // Guard: the generic registry may hold non-blueprint entries with the same meta key.
-    const blueprint = entity != null && Obj.instanceOf(Blueprint, entity) ? entity : undefined;
+    const results = yield* Registry.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
+    const blueprint = results[0];
     if (!blueprint) {
       return yield* Effect.fail(new NotFoundError({ context: { key } }));
     }

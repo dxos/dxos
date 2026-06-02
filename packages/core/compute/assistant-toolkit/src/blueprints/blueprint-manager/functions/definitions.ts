@@ -46,16 +46,3 @@ export const EnableBlueprints = Operation.make({
   }),
   services: [Registry.Service, Database.Service, AiContext.Service],
 });
-
-export const UpdateBlueprints = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.blueprintManager.refreshBlueprints'),
-    name: 'Refresh blueprints',
-    description:
-      'Updates the blueprints saved to the database with the latest version from the registry. Sometimes blueprints in the database can become outdated. Use this function to pull in the latest versions.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({}),
-  output: Schema.Void,
-  services: [Registry.Service, Database.Service],
-});

@@ -12,8 +12,7 @@ import { QueryBlueprints } from './definitions';
 export default QueryBlueprints.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const registry = yield* Registry.Service;
-      const blueprints = registry.query(Filter.type(Blueprint.Blueprint)).runSync();
+      const blueprints = yield* Registry.runQuery(Filter.type(Blueprint.Blueprint));
       return blueprints.slice().sort(({ name: a }, { name: b }) => a.localeCompare(b));
     }),
   ),
