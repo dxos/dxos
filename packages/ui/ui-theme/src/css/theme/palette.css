@@ -38,6 +38,7 @@
   --color-neutral-600: oklch(0.439 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-700: oklch(0.371 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
+  --color-neutral-775: color-mix(in oklch, var(--color-neutral-750) 50%, var(--color-neutral-800) 50%);
   --color-neutral-800: oklch(0.269 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-825: color-mix(in oklch, var(--color-neutral-800) 75%, var(--color-neutral-900) 25%);
   --color-neutral-850: color-mix(in oklch, var(--color-neutral-800) 50%, var(--color-neutral-900) 50%);
