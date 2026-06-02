@@ -11,7 +11,7 @@
   /* Base styles */
   .dx-button {
     @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
-    @apply font-medium transition-colors duration-100 ease-linear bg-input-surface;
+    @apply font-medium transition-colors duration-100 ease-linear bg-input-fill;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention-surface;
@@ -36,7 +36,7 @@
         @apply text-inherit;
       }
       &[data-state='open'] {
-        @apply bg-input-surface;
+        @apply bg-input-fill;
       }
       &[aria-pressed='true'],
       &[aria-checked='true'] {
