@@ -19,9 +19,18 @@ export * from '#plugin';
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>
   Effect.zipRight(
     Effect.gen(function* () {
+      const collection = Collection.make({ objects: [] });
       const properties = Obj.make(SpaceProperties, {});
-      Annotation.set(properties, RootCollectionAnnotation, Ref.make(Collection.make()));
-      yield* Database.add(properties);
+      yield* Database.add(collection as any);
+      yield* Database.add(properties as any);
+      // Entity must be in the DB before Obj.update so the mutation is persisted.
+      Obj.update(properties, (properties) => {
+        const meta = Obj.getMeta(properties);
+        if (!meta.annotations) {
+          meta.annotations = {};
+        }
+        Annotation.setDictionary(meta.annotations, RootCollectionAnnotation, Ref.make(collection));
+      });
     }),
     effect,
   );

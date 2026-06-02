@@ -33,13 +33,20 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
 
     const collectionRef = Option.getOrUndefined(Annotation.get(properties, RootCollectionAnnotation));
     if (collectionRef) {
-      const collection = yield* Effect.promise(() => collectionRef.load());
+      const collection = yield* Database.load(collectionRef);
       Obj.update(collection, (collection) => {
         collection.objects.push(objectRef);
       });
     } else {
       const newCollection = Collection.make({ objects: [objectRef] });
-      Annotation.set(properties, RootCollectionAnnotation, Ref.make(newCollection));
+      const newCollectionRef = Ref.make(newCollection);
+      Obj.update(properties, (properties) => {
+        const meta = Obj.getMeta(properties);
+        if (!meta.annotations) {
+          meta.annotations = {};
+        }
+        Annotation.setDictionary(meta.annotations, RootCollectionAnnotation, newCollectionRef);
+      });
     }
   }
 });
