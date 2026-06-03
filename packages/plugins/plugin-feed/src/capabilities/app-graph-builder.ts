@@ -84,6 +84,7 @@ export default Capability.makeModule(
                 Operation.invoke(SpaceOperation.OpenCreateObject, {
                   target: space.db,
                   typename: Type.getTypename(Magazine.Magazine),
+                  initialFormValues: { feeds: [undefined] },
                 }),
               properties: {
                 label: ['add-object.label', { ns: Type.getTypename(Magazine.Magazine) }],
