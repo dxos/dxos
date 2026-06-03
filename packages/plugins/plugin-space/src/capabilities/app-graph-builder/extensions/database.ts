@@ -181,7 +181,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
         const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
-          (object: Obj.Unknown) => !viewIndex.isView(object) && Obj.getParent(object) === undefined,
+          (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
 
         return Effect.succeed(
