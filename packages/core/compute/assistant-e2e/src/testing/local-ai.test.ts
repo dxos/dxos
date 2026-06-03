@@ -8,7 +8,7 @@ import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -25,6 +25,6 @@ describe('Local AI', () => {
       `,
       blueprints: [Ref.make(DatabaseBlueprint.make())],
     }),
-    { timeout: DEFAULT_TEST_TIMEOUT, tags: ['llm'] },
+    { timeout: agentTestTimeout(), tags: ['llm'] },
   );
 });

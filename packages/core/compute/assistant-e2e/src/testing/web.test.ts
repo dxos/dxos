@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+import { agentTest, agentTestTimeout, getDefaultBlueprints } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -22,6 +22,6 @@ describe('Web', () => {
       completionCriteria: ['5 Person objects in the database.', 'Web search works.'],
       blueprints: getDefaultBlueprints(),
     }),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    { timeout: agentTestTimeout() },
   );
 });

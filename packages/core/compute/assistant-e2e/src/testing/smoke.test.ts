@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -19,7 +19,7 @@ describe('Smoke', () => {
         Do nothing and succeed.
       `,
     }),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    { timeout: agentTestTimeout() },
   );
 
   it.effect(
@@ -30,6 +30,6 @@ describe('Smoke', () => {
         Do nothing and fail.
       `,
     }),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    { timeout: agentTestTimeout() },
   );
 });

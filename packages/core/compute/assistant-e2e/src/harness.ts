@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AiService, type ModelName } from '@dxos/ai';
-import { MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
+import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { type Plugin } from '@dxos/app-framework';
@@ -188,3 +188,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     TestHelpers.provideTestContext,
   );
 };
+
+// If generation is enabled, use long timeout, stick to default vite timeout if generation is disabled.
+export const agentTestTimeout = () => MemoizedAiService.isGenerationEnabled() ? DEFAULT_TEST_TIMEOUT : undefined;
