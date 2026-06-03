@@ -19,7 +19,8 @@ import { AssistantOperation } from '#types';
 const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = AssistantOperation.ForkChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
-      function* ({ db, chat }) {
+      function* ({ chat }) {
+        const { db } = yield* Database.Service;
         const sourceFeed = chat.feed.target;
         invariant(sourceFeed, 'Chat feed not found.');
 
@@ -86,7 +87,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
         return { object: newChat };
       },
-      (effect, { db }) => effect.pipe(Effect.provide(Database.layer(db))),
     ),
   ),
 );
