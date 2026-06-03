@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
