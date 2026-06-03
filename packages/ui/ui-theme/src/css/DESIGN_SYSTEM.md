@@ -58,7 +58,7 @@ The primitive `--dx-elevation-0…7` is defined in `semantic.css` using `light-d
 
 ### Visual hierarchy (dark)
 
-```
+```text
 popover/float   n-750  ↑ highest / closest to viewer
 modal/dialog    n-775
 toolbar         n-800  (sticky bar; content passes beneath)
@@ -103,7 +103,7 @@ The system has three orthogonal states. Pick by what the ARIA / markup is saying
 
 ### Visual hierarchy (state, dark)
 
-```
+```text
 card-surface          n-825    resting
 current-surface       n-100 / n-900    "I am the active one"
 current-surface-hover n-200 / n-800    hovering the active one

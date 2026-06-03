@@ -150,10 +150,10 @@ fill.
 **Mechanism (matches the existing token-re-derivation idiom):**
 [`Message.Root`](../../../packages/ui/react-ui/src/components/Message/Message.tsx) already applies
 `messageValence(valence)` and provides `valence` via context. Have it additionally set scoped CSS
-variables for the valence hue (e.g. `--dx-fill`, `--dx-fill-hover`, `--dx-fill-fg`) the way `main.css`
-re-derives `--surface-bg` inside `.dx-main-sidebar`. A new `buttonValence(valence)` in
+variables for the valence hue (`--dx-valence-bg`, `--dx-valence-bg-hover`, `--dx-valence-fg`) the way
+`main.css` re-derives `--surface-bg` inside `.dx-main-sidebar`. A new `buttonValence(valence)` in
 [`valence.ts`](../../../packages/ui/ui-theme/src/util/valence.ts) returns the classes a button uses to
-consume those vars.
+consume those `--dx-valence-*` vars.
 
 **Token role:** use the existing solid-fill role `bg` / `bg-hover` (e.g. `bg-success-bg`,
 `bg-success-bg-hover`, `text-success-fg`). There is **no separate `fill` role** — `DESIGN_SYSTEM.md`'s

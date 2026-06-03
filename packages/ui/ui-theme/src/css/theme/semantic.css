@@ -11,7 +11,7 @@
 @theme {
   /*
    * Elevation ladder — strictly monotonic, z-order low → high.
-   * Dark: darker = lower. Light: lighter = lower (inverted toward white).
+   * Dark: darker = lower. Light: lighter = higher (inverted toward white).
    *
    * Level  Name    Roles
    *   0    void    window gaps, scrim base
