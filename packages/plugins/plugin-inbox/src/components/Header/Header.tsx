@@ -24,11 +24,7 @@ import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
 
-//
 // Root
-//
-
-const HEADER_ROOT_NAME = 'Header.Root';
 
 type HeaderRootProps = ThemedClassName<PropsWithChildren<{ 'data-testid'?: string }>>;
 
@@ -36,21 +32,15 @@ type HeaderRootProps = ThemedClassName<PropsWithChildren<{ 'data-testid'?: strin
  * Shared header chrome for object articles (Message, Event, …). Implemented as a borderless
  * `Card` so rows align to the Card column grid (icon · content) and reuse `Card.Row`/`Card.Title`.
  */
-const HeaderRoot = ({ children, classNames, ...props }: HeaderRootProps) => {
-  return (
-    <Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
-      <Card.Body>{children}</Card.Body>
-    </Card.Root>
-  );
-};
+const HeaderRoot = ({ children, classNames, ...props }: HeaderRootProps) => (
+  <Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
+    <Card.Body>{children}</Card.Body>
+  </Card.Root>
+);
 
-HeaderRoot.displayName = HEADER_ROOT_NAME;
+HeaderRoot.displayName = 'Header.Root';
 
-//
 // Title
-//
-
-const HEADER_TITLE_NAME = 'Header.Title';
 
 type HeaderTitleProps = {
   icon: string;
@@ -59,42 +49,28 @@ type HeaderTitleProps = {
   caption?: ReactNode;
 };
 
-const HeaderTitle = ({ icon, title, caption }: HeaderTitleProps) => {
-  return (
-    <Card.Row icon={icon}>
-      <div className='flex flex-col gap-1 overflow-hidden'>
-        <h2 className='text-lg line-clamp-2'>{title}</h2>
-        {caption && <div className='whitespace-nowrap text-sm text-description'>{caption}</div>}
-      </div>
-    </Card.Row>
-  );
-};
+const HeaderTitle = ({ icon, title, caption }: HeaderTitleProps) => (
+  <Card.Row icon={icon}>
+    <div className='flex flex-col gap-1 overflow-hidden'>
+      <h2 className='text-lg line-clamp-2'>{title}</h2>
+      {caption && <div className='whitespace-nowrap text-sm text-description'>{caption}</div>}
+    </div>
+  </Card.Row>
+);
 
-HeaderTitle.displayName = HEADER_TITLE_NAME;
+HeaderTitle.displayName = 'Header.Title';
 
-//
 // Date
-//
 
-const HEADER_DATE_NAME = 'Header.Date';
+const HeaderDate = ({ start, end }: { start: Date; end?: Date }) => (
+  <Card.Row icon='ph--calendar--regular'>
+    <DateComponent start={start} end={end} />
+  </Card.Row>
+);
 
-type HeaderDateProps = { start: Date; end?: Date };
+HeaderDate.displayName = 'Header.Date';
 
-const HeaderDate = ({ start, end }: HeaderDateProps) => {
-  return (
-    <Card.Row icon='ph--calendar--regular'>
-      <DateComponent start={start} end={end} />
-    </Card.Row>
-  );
-};
-
-HeaderDate.displayName = HEADER_DATE_NAME;
-
-//
 // Row
-//
-
-const HEADER_ROW_NAME = 'Header.Row';
 
 type HeaderRowProps = ThemedClassName<
   PropsWithChildren<{
@@ -125,19 +101,11 @@ const HeaderRow = ({ icon, compact, children, classNames, ...props }: HeaderRowP
   );
 };
 
-HeaderRow.displayName = HEADER_ROW_NAME;
+HeaderRow.displayName = 'Header.Row';
 
-//
 // AnchorIconButton
-//
 
-const HEADER_ANCHOR_ICON_BUTTON_NAME = 'Header.AnchorIconButton';
-
-/**
- * Icon-only button that opens an ECHO object's preview card via `DxAnchorActivate`.
- * When `value` is missing the button falls back to `onClick` for a "create"-style action.
- */
-export type AnchorIconButtonProps = ThemedClassName<{
+type AnchorIconButtonProps = ThemedClassName<{
   /** Phosphor icon shown when `value` is present. */
   icon: string;
   /** Phosphor icon shown when `value` is absent. Defaults to `icon`. */
@@ -156,6 +124,10 @@ export type AnchorIconButtonProps = ThemedClassName<{
   size?: 4 | 5 | 6;
 }>;
 
+/**
+ * Icon-only button that opens an ECHO object's preview card via `DxAnchorActivate`.
+ * When `value` is missing the button falls back to `onClick` for a "create"-style action.
+ */
 const HeaderAnchorIconButton = ({
   classNames,
   icon,
@@ -199,15 +171,11 @@ const HeaderAnchorIconButton = ({
   );
 };
 
-HeaderAnchorIconButton.displayName = HEADER_ANCHOR_ICON_BUTTON_NAME;
+HeaderAnchorIconButton.displayName = 'Header.AnchorIconButton';
 
-//
 // UserIconButton
-//
 
-const HEADER_USER_ICON_BUTTON_NAME = 'Header.UserIconButton';
-
-export type UserIconButtonProps = Pick<IconBlockProps, 'compact'> & {
+type UserIconButtonProps = Pick<IconBlockProps, 'compact'> & {
   value?: URI.URI;
   title?: string;
   onContactCreate?: () => void;
@@ -232,13 +200,9 @@ const HeaderUserIconButton = ({ compact, value, title, onContactCreate }: UserIc
   );
 };
 
-HeaderUserIconButton.displayName = HEADER_USER_ICON_BUTTON_NAME;
+HeaderUserIconButton.displayName = 'Header.UserIconButton';
 
-//
 // ObjectRow
-//
-
-const HEADER_OBJECT_ROW_NAME = 'Header.ObjectRow';
 
 /** A row that renders an extracted ECHO object — icon button opening the object's card preview. */
 const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
@@ -256,15 +220,11 @@ const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
   );
 };
 
-HeaderObjectRow.displayName = HEADER_OBJECT_ROW_NAME;
+HeaderObjectRow.displayName = 'Header.ObjectRow';
 
-//
 // AttendeeRow
-//
 
-const HEADER_ATTENDEE_ROW_NAME = 'Header.AttendeeRow';
-
-export type AttendeeRowProps = {
+type AttendeeRowProps = {
   attendee: Actor.Actor;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
@@ -273,7 +233,7 @@ export type AttendeeRowProps = {
 /** A row that renders an event attendee with a user icon button. */
 const HeaderAttendeeRow = ({ attendee, db, onContactCreate }: AttendeeRowProps) => {
   const contactDXN = useActorContact(db, attendee);
-  const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee]);
+  const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee, onContactCreate]);
 
   return (
     <HeaderRow
@@ -286,10 +246,8 @@ const HeaderAttendeeRow = ({ attendee, db, onContactCreate }: AttendeeRowProps) 
   );
 };
 
-HeaderAttendeeRow.displayName = HEADER_ATTENDEE_ROW_NAME;
+HeaderAttendeeRow.displayName = 'Header.AttendeeRow';
 
-//
-// Header
 //
 
 export const Header = {
@@ -297,10 +255,17 @@ export const Header = {
   Title: HeaderTitle,
   Date: HeaderDate,
   Row: HeaderRow,
+  ObjectRow: HeaderObjectRow,
   AnchorIconButton: HeaderAnchorIconButton,
   UserIconButton: HeaderUserIconButton,
-  ObjectRow: HeaderObjectRow,
   AttendeeRow: HeaderAttendeeRow,
 };
 
-export type { HeaderRootProps, HeaderTitleProps, HeaderDateProps, HeaderRowProps };
+export type {
+  HeaderRootProps,
+  HeaderTitleProps,
+  HeaderRowProps,
+  AnchorIconButtonProps,
+  UserIconButtonProps,
+  AttendeeRowProps,
+};
