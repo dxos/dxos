@@ -7,13 +7,14 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
+import { SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 // TODO(wittjosiah): Factor out. Generate?
 const IdentitySchema = Schema.Struct({
   identityKey: Schema.instanceOf(PublicKey),
-  spaceKey: Schema.optional(Schema.instanceOf(PublicKey)),
+  spaceId: Schema.optional(SpaceId),
   profile: Schema.optional(
     Schema.Struct({
       displayName: Schema.optional(Schema.String),
