@@ -111,4 +111,10 @@ export const CreateMagazineSchema = Schema.Struct({
   feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotations({
     title: 'Feeds',
   }),
+  instructions: Schema.optional(
+    Schema.String.annotations({
+      title: 'Instructions',
+      description: 'Describe what content to curate.',
+    }),
+  ),
 });

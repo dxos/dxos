@@ -45,7 +45,11 @@ export default Capability.makeModule(
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const { magazine, routine } = Magazine.make({ ...props });
+            const { instructions, ...magazineProps } = props;
+            const { magazine, routine } = Magazine.make({
+              ...magazineProps,
+              routine: instructions ? { instructions } : undefined,
+            });
 
             const result = yield* Operation.invoke(SpaceOperation.AddObject, {
               object: magazine,
