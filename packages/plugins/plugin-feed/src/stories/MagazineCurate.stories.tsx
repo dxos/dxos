@@ -36,6 +36,7 @@ const REGISTER_FEED_URL =
 // to the original fetch.
 // eslint-disable-next-line no-restricted-globals
 const originalFetch = globalThis.fetch.bind(globalThis);
+
 const installRegisterFetchMock = async () => {
   const { default: registerFeedXml } = await import('./fixtures/theregister-ai.xml?raw');
   globalThis.fetch = (async (input: any, init?: any) => {
@@ -117,8 +118,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// TODO(burodn): Rename Default.
-export const Basic: Story = {};
+export const Default: Story = {};
 
 /**
  * Live curation against the The Register "AI + ML" feed (served from a bundled
@@ -130,7 +130,7 @@ export const Basic: Story = {};
  * deterministic logic is covered by `theregister-fixture.test.ts` (fetch → parse)
  * and `curate-magazine.test.ts` (curation). The AI/blueprint path is out of scope.
  */
-export const Default: Story = {
+export const Test: Story = {
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
