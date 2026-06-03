@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -205,42 +205,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     },
     [id, showItem, invokePromise],
   );
-
-  // Auto-curate when the set of subscribed feeds changes so the post list reflects
-  // the new selection without requiring a manual Curate click. Fingerprint by sorted
-  // DXN so swaps that preserve `feeds.length` still trigger.
-  const feedFingerprint = useMemo(
-    () =>
-      magazine.feeds
-        .map((ref) => ref.uri)
-        .sort()
-        .join(),
-    [magazine.feeds],
-  );
-
-  // Key on both magazine identity and feed fingerprint so switching to a different
-  // magazine with the same feeds still triggers curation for the new magazine. The
-  // ref starts with sentinel undefineds so the initial mount also triggers curation
-  // — that covers first render of a magazine that already has feeds (e.g. just
-  // created with a seeded default feed, or restored from a deep link).
-  const previousCurateKey = useRef<{ subject?: Magazine.Magazine; feedFingerprint?: string }>({});
-  useEffect(() => {
-    if (magazine.feeds.length === 0) {
-      // Track the empty state so a later restore (re-adding the same feed set
-      // that was previously cleared) still registers as a fingerprint change and
-      // re-fires curation. Without this the cached key would stay pinned to the
-      // pre-clear feed list and the comparison below would erroneously skip.
-      previousCurateKey.current = { subject, feedFingerprint };
-      return;
-    }
-    if (
-      previousCurateKey.current.subject !== subject ||
-      previousCurateKey.current.feedFingerprint !== feedFingerprint
-    ) {
-      previousCurateKey.current = { subject, feedFingerprint };
-      void invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }).catch((err) => log.catch(err));
-    }
-  }, [feedFingerprint, subject, magazine.feeds.length, invokePromise]);
 
   // Open the ObjectProperties companion when the magazine has no posts so the user
   // can configure subscription feeds without an empty pane staring back at them.
