@@ -10,21 +10,20 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Icon, IconBlock, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Card, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import { decorateMarkdown, preview } from '@dxos/ui-editor';
-import { toHue } from '@dxos/ui-theme';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
-import { AnchorIconButton } from '../AnchorIconButton';
+import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
-import { UserIconButton } from '../UserIconButton';
-import { type ViewMode, useMessageActions } from './useToolbar';
+import { type ViewMode } from '../ViewMode';
+import { useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -156,7 +155,7 @@ type MessageHeaderProps = ThemedClassName<{
 }>;
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
+  const { message } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
   const relationObjects = useExtractedObjects(db, message);
@@ -196,72 +195,37 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <div
-      data-testid='message-header'
-      className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 border-b border-subdued-separator'
-    >
-      {/* Subject row. */}
-      <div className='col-span-2 grid grid-cols-subgrid'>
-        <IconBlock classNames='text-subdued'>
-          <Icon icon='ph--envelope-open--regular' />
-        </IconBlock>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(message.created), new Date())}
+    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
+      <Card.Body>
+        {/* Subject row. */}
+        <Card.Row icon='ph--envelope-open--regular'>
+          <div className='flex flex-col gap-1 overflow-hidden'>
+            <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+            {message.created && (
+              <div className='whitespace-nowrap text-sm text-description'>
+                {formatDateTime(new Date(message.created), new Date())}
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        </Card.Row>
 
-      {/* Sender row. */}
-      {/* TODO(burdon): List other To/CC/BCC. */}
-      <div className='col-span-2 grid grid-cols-subgrid items-center'>
-        <UserIconButton
-          title={message.sender.name}
-          value={sender}
-          onContactCreate={() => onContactCreate?.(message.sender)}
-        />
-        <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
-      </div>
+        {/* Sender row. */}
+        {/* TODO(burdon): List other To/CC/BCC. */}
+        <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
 
-      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-      {objects.map((object) => (
-        <ExtractedObjectRow key={Obj.getURI(object).toString()} object={object} />
-      ))}
+        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+        {objects.map((object) => (
+          <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
+        ))}
 
-      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-      {tags.length > 0 && (
-        <div className='col-span-2 grid grid-cols-subgrid items-center'>
-          <IconBlock classNames='text-subdued'>
-            <Icon icon='ph--tag--regular' />
-          </IconBlock>
-          <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
-            {tags.map((tag) => (
-              <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
-                {tag.label}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+        <Header.TagsRow tags={tags} />
+      </Card.Body>
+    </Card.Root>
   );
 };
 
 MessageHeader.displayName = MESSAGE_HEADER_NAME;
-
-const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
-  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
-  const echoUri = EID.tryParse(Obj.getURI(object).toString());
-
-  return (
-    <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>
-      <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      <h3 className='truncate text-primary-text'>{label}</h3>
-    </div>
-  );
-};
 
 //
 // Content

@@ -42,6 +42,7 @@ export const stripHtml = (html: string): string => {
   if (!html) {
     return '';
   }
+
   const decoded = decodeEntities(html);
   // Remove script/style blocks entirely.
   const withoutScripts = decoded

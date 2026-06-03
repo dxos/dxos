@@ -68,13 +68,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Toolbar.IconButton
-          variant='ghost'
-          label={label}
-          icon={item.icon}
-          iconOnly
-          iconClassNames={styles?.foreground}
-        />
+        <Toolbar.IconButton variant='ghost' label={label} icon={item.icon} iconOnly iconClassNames={styles?.fg} />
         <Card.Title>{label}</Card.Title>
         <Card.Menu />
       </Card.Header>

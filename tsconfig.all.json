@@ -88,6 +88,9 @@
       "path": "packages/common/log-store-idb/tsconfig.json"
     },
     {
+      "path": "packages/common/markdown/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -425,6 +428,9 @@
     },
     {
       "path": "packages/plugins/plugin-observability/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-osrm/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-outliner/tsconfig.json"

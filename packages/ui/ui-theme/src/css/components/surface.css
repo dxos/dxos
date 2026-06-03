@@ -22,13 +22,9 @@
     @apply bg-attention-surface text-base-fg;
     --surface-bg: var(--color-attention-surface);
   }
-}
 
-/* TODO(burdon): Resolve. */
-/* @layer dx-tokens {
-  .dx-sidebar-surface, .dx-modal-surface {
-    --color-hover-surface: light-dark(var(--color-neutral-300), var(--color-neutral-700));
-    --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-    --color-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  .dx-popover-surface {
+    @apply bg-popover-surface text-base-fg backdrop-blur-md;
+    --surface-bg: var(--color-popover-surface);
   }
-} */
+}

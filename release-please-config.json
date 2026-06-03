@@ -165,6 +165,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/merkle-search-tree/package.json",
           "jsonpath": "$.version"
         },
@@ -731,6 +736,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-observability/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-osrm/package.json",
           "jsonpath": "$.version"
         },
         {

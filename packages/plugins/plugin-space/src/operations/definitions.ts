@@ -95,6 +95,20 @@ export namespace SpaceOperation {
     output: Schema.Void,
   });
 
+  export const Delete = Operation.make({
+    meta: {
+      key: makeKey('delete'),
+      name: 'Delete Space',
+      description: 'Delete a space. The deletion replicates to all of your devices.',
+      icon: 'ph--trash--regular',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
+  });
+
   export const Share = Operation.make({
     meta: {
       key: makeKey('share'),
@@ -479,24 +493,6 @@ export namespace SpaceOperation {
       // TODO(wittjosiah): This creates a type error with PropertySchema.
       props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
       index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
-    }),
-    output: Schema.Void,
-  });
-
-  /**
-   * Permanently reset a space — deletes ALL objects and truncates feeds via a new epoch.
-   * This is unrecoverable.
-   */
-  export const Reset = Operation.make({
-    meta: {
-      key: makeKey('reset'),
-      name: 'Reset Space',
-      description: 'Permanently delete all objects and feeds in a space.',
-      icon: 'ph--warning--regular',
-    },
-    services: [Capability.Service],
-    input: Schema.Struct({
-      space: SpaceSchema,
     }),
     output: Schema.Void,
   });

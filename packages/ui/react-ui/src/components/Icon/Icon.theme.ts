@@ -11,6 +11,8 @@ export type IconStyleProps = {
 
 export type IconBlockStyleProps = {
   compact?: boolean;
+  /** Constrain to a square (1:1) slot rather than the default rail-item width. */
+  square?: boolean;
 };
 
 /**
@@ -29,8 +31,13 @@ const root: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
 /**
  * Static slot sized to `--dx-rail-item` so a wrapped `Icon` lines up with an `IconButton iconOnly`.
  */
-const block: ComponentFunction<IconBlockStyleProps> = ({ compact }, ...etc) =>
-  mx('grid w-[var(--dx-rail-item)] place-items-center', compact ? '' : 'h-[var(--dx-rail-item)]', ...etc);
+const block: ComponentFunction<IconBlockStyleProps> = ({ compact, square }, ...etc) =>
+  mx(
+    'grid place-items-center',
+    square ? 'aspect-square' : 'w-[var(--dx-rail-item)]',
+    compact ? '' : 'h-[var(--dx-rail-item)]',
+    ...etc,
+  );
 
 export const iconTheme: Theme<IconStyleProps & IconBlockStyleProps> = {
   root,

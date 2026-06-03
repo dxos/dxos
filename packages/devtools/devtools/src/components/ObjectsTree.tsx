@@ -114,7 +114,7 @@ const ObjectsTreeRow = ({
             {node.type === 'incoming-relation' && (
               <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
             )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.foreground]} />
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
             {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
           </Treegrid.Cell>

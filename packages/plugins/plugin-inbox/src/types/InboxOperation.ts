@@ -171,22 +171,6 @@ export const GoogleMailSync = Operation.make({
   services: [Capability.Service, Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
 });
 
-// TODO(wittjosiah): Factor out notify of failures to invocation option.
-export const SyncMailbox = Operation.make({
-  meta: {
-    key: makeKey('syncMailbox'),
-    name: 'Sync Mailbox',
-    description: 'Runs Google Mail sync and notifies of progress.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-});
-
 export const GoogleCalendarSync = Operation.make({
   meta: {
     key: makeKey('googleCalendarSync'),
@@ -214,22 +198,6 @@ export const GoogleCalendarSync = Operation.make({
     newEvents: Schema.Number,
   }),
   services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
-});
-
-// TODO(wittjosiah): Factor out notify of failures to invocation option.
-export const SyncCalendar = Operation.make({
-  meta: {
-    key: makeKey('syncCalendar'),
-    name: 'Sync Calendar',
-    description: 'Runs Google Calendar sync and notifies of progress.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    calendar: Ref.Ref(Calendar.Calendar).pipe(Schema.optional),
-  }),
-  output: Schema.Void,
 });
 
 export const GetGoogleContactGroups = Operation.make({

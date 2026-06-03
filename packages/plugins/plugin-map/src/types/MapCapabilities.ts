@@ -43,8 +43,8 @@ export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}
 // Marker providers
 //
 
-/** Origin → destination arc (rendered on the globe). */
-export type GeoLine = { source: LatLngLiteral; target: LatLngLiteral };
+/** Origin → destination arc (rendered on the globe). `color` is an optional stroke color. */
+export type GeoLine = { source: LatLngLiteral; target: LatLngLiteral; color?: string };
 
 /** Reactive marker data resolved for a subject by a {@link MarkerProvider}. */
 export type MarkerSet = {
