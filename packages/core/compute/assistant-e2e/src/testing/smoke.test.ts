@@ -15,6 +15,7 @@ describe('Smoke', () => {
   it.effect(
     'succeeds',
     agentTest({
+      blueprints: [],
       instructions: trim`
         Do nothing and succeed.
       `,
@@ -25,6 +26,7 @@ describe('Smoke', () => {
   it.effect(
     'fails',
     agentTest({
+      blueprints: [],
       expect: 'failure',
       instructions: trim`
         Do nothing and fail.
