@@ -10,3 +10,7 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--platform=neutral'
+  evals:
+    command: 'evalite'
+    args:
+      - 'src/evals'
