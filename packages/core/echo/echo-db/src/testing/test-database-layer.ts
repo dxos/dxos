@@ -6,7 +6,6 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
@@ -22,7 +21,7 @@ import { EchoTestBuilder } from './echo-test-builder';
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 
 export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => {
-  return join(tmpdir(), `dxos-${name}`);
+  return join('/tmp', `dxos-${name}`);
 };
 
 const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
