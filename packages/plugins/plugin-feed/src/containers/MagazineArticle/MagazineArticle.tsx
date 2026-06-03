@@ -107,8 +107,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     return map;
   }, [allFeeds]);
 
-  // Compute posts.
-  const posts = useMagazinePosts(subject, sort, view, starredUri, archivedUri, revision);
+  // Compute posts. `byId` exposes every hydrated post (regardless of view) for
+  // consumers that must not read an unresolved `ref.target` (prune, Clear).
+  const { posts, byId } = useMagazinePosts(subject, sort, view, starredUri, archivedUri, revision);
 
   // Post ref resolution (incl. their source feed refs) is owned by
   // `useMagazinePosts`, which loads them via `ref.load()` into state — see the
@@ -125,7 +126,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     const feedIds = new Set(magazine.feeds.map((ref) => dxnToEntityId(ref.uri)));
     const orphanIds = new Set<string>();
     for (const postRef of magazine.posts) {
-      const post = postRef.target;
+      // Use the hydrated post (queue-backed `ref.target` is undefined until
+      // loaded); skip unresolved posts so they're never pruned prematurely. The
+      // `byId` dep reruns this effect once hydration completes.
+      const post = byId.get(dxnToEntityId(postRef.uri));
       const feedRef = post?.source;
       if (!feedRef) {
         continue;
@@ -141,7 +145,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     Obj.update(subject, (subject) => {
       subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToEntityId(ref.uri)));
     });
-  }, [subject, magazine.feeds, magazine.posts]);
+  }, [subject, magazine.feeds, magazine.posts, byId]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
@@ -152,9 +156,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     const next = magazine.posts.filter((ref) => {
-      const post = ref.target;
+      const post = byId.get(dxnToEntityId(ref.uri));
+      // Preserve posts that haven't hydrated yet — we can't determine their
+      // starred state, and dropping them would lose manually-saved items.
       if (!post) {
-        return false;
+        return true;
       }
       const subscription = post.source?.target;
       return hasTag(subscription, (post as { id: string }).id, starredUri);
@@ -167,7 +173,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     Obj.update(subject, (subject) => {
       subject.posts = next;
     });
-  }, [subject, magazine.posts, db, starredUri]);
+  }, [subject, magazine.posts, db, starredUri, byId]);
 
   const handleOpen = useCallback(
     (post: Subscription.Post) => {
@@ -384,7 +390,18 @@ const useMagazinePosts = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postFingerprint]);
 
-  return useMemo<Subscription.Post[]>(() => {
+  // All hydrated posts keyed by bare object id. Consumers that operate on the
+  // full set regardless of view (prune, Clear) read from this so they never act
+  // on an unresolved `ref.target` mid-hydration.
+  const byId = useMemo(() => {
+    const map = new Map<string, Subscription.Post>();
+    for (const post of resolved) {
+      map.set((post as { id: string }).id, post);
+    }
+    return map;
+  }, [resolved]);
+
+  const posts = useMemo<Subscription.Post[]>(() => {
     const seenDxn = new Set<URI.URI>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
@@ -468,4 +485,6 @@ const useMagazinePosts = (
     archivedUri,
     revision,
   ]);
+
+  return { posts, byId };
 };
