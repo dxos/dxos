@@ -10,7 +10,9 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
+import type * as Ref from './Ref';
 import type * as Relation from './Relation';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
@@ -325,10 +327,10 @@ export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCa
  * Add a tag to an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);

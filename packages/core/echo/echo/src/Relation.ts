@@ -18,6 +18,8 @@ import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
 import * as Obj from './Obj';
+import type * as Ref from './Ref';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 export type Endpoints<Source, Target> = {
@@ -127,7 +129,7 @@ export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
  */
 type MakePropsInternal<T extends Endpoints<any, any>> = {
   id?: EntityId;
-  [Meta]?: internal.EntityMeta;
+  [Meta]?: Partial<internal.EntityMeta>;
   [Source]: T[Source];
   [Target]: T[Target];
 } & Entity.Properties<T>;
@@ -468,7 +470,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the relation.
@@ -477,7 +479,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the relation is deleted.

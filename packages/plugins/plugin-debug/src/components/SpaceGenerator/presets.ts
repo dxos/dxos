@@ -72,9 +72,9 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagUri = Obj.getURI(tag);
+          const tagRef = Ref.make(tag);
           Obj.update(doc, (doc) => {
-            Obj.getMeta(doc).tags = [tagUri];
+            Obj.getMeta(doc).tags = [tagRef];
           });
 
           // space.db.add(
@@ -86,7 +86,7 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagUri] }, fullName: 'Rich', organization: Ref.make(org) }),
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagRef] }, fullName: 'Rich', organization: Ref.make(org) }),
           );
           space.db.add(
             Obj.make(Person.Person, {

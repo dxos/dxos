@@ -20,9 +20,6 @@ export const get = <T>(
 ): Option.Option<T> => {
   if (isEntity(target) || isSnapshot(target)) {
     const meta = getMetaChecked(target);
-    if (!meta.annotations) {
-      return Option.none();
-    }
     return getDictionary(meta.annotations, annotation);
   } else {
     throw new TypeError('Target is not an annotation target.');
@@ -36,9 +33,6 @@ export const get = <T>(
 export const set = <T>(target: Mutable<Entity.Unknown>, annotation: Annotation.Annotation<T>, value: T): void => {
   if (isEntity(target)) {
     const meta = getMetaChecked(target);
-    if (!meta.annotations) {
-      meta.annotations = {};
-    }
     setDictionary(meta.annotations, annotation, value);
   } else {
     throw new TypeError('Target is not an annotation target.');

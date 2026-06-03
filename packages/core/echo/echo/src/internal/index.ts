@@ -15,3 +15,8 @@ export * from './Obj';
 export * from './Query';
 export * from './Ref';
 export * from './Type';
+
+// Re-exported here (not from the low-level `common/types` barrel) so consumers keep importing meta
+// from `@dxos/echo/internal`, while that barrel stays free of the Ref/Annotation eval cycle. Placed
+// after `./Ref` so the ref schema `meta` depends on is initialized first.
+export * from './common/types/meta';
