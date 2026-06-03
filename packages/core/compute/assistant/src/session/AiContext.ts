@@ -334,7 +334,9 @@ export class Binder extends Resource {
         if (target) {
           const key = Entity.getMeta(target)?.key;
           if (!key || !seenByKey.has(key)) {
-            if (key) {seenByKey.add(key);}
+            if (key) {
+              seenByKey.add(key);
+            }
             next.push(target);
           }
         }
@@ -344,7 +346,9 @@ export class Binder extends Resource {
         if (target) {
           const key = Entity.getMeta(target)?.key;
           if (!key || !seenByKey.has(key)) {
-            if (key) {seenByKey.add(key);}
+            if (key) {
+              seenByKey.add(key);
+            }
             next.push(target);
           }
         }
@@ -360,10 +364,14 @@ export class Binder extends Resource {
    * invalid-DXN keys (hyphens in last segment) use the raw key as URI and fall back to a linear scan.
    */
   #resolveFromRegistry<T extends Obj.Unknown>(uri: URI.URI): T | undefined {
-    if (!this.#echoRegistry) {return undefined;}
+    if (!this.#echoRegistry) {
+      return undefined;
+    }
     // Fast O(1) path: try the URI directly (works when it's a `dxn:` URI).
     const byUri = this.#echoRegistry.getByURI(uri) as T | undefined;
-    if (byUri) {return byUri;}
+    if (byUri) {
+      return byUri;
+    }
     // Fall back to linear meta.key scan for raw-key URIs (invalid DXN keys).
     return this.#echoRegistry
       .query(Filter.type(Blueprint.Blueprint))
