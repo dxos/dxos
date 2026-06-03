@@ -57,7 +57,11 @@ export const layerTest = (options: Partial<Omit<MakeProps, 'upstream'>> = {}) =>
       const upstream = yield* AiService.AiService;
       return make({
         upstream,
-        storePath: options.storePath ?? ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
+        storePath:
+          options.storePath ??
+          (ctx.task.file.filepath.endsWith('.eval.ts')
+            ? ctx.task.file.filepath.replace('.eval.ts', '.conversations.json')
+            : ctx.task.file.filepath.replace('.test.ts', '.conversations.json')),
         allowGeneration: options.allowGeneration ?? isGenerationEnabled(),
         dynamicValuePatterns: options.dynamicValuePatterns,
       });
