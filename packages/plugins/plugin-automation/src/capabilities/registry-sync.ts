@@ -84,6 +84,8 @@ export default Capability.makeModule(
               batch.push(Operation.serialize(handler));
             } catch (error) {
               log.warn('skipping operation that failed to serialize', { key, error });
+              // Mark as seen so we don't warn on every subsequent subscription fire.
+              prevOperationKeys.add(key);
             }
           }
           if (batch.length > 0) {
