@@ -29,7 +29,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, Feed, Registry as EchoRegistry, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
@@ -78,7 +78,7 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | EchoRegistry.Service
+  | Registry.Service
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
@@ -123,8 +123,8 @@ export const AssistantTestLayer = ({
       Layer.effect(
         ServiceResolver.ServiceResolver,
         Effect.gen(function* () {
-          const services = yield* Effect.context<Database.Service | Feed.FeedService | EchoRegistry.Service>().pipe(
-            Effect.map(Context.pick(Database.Service, Feed.FeedService, EchoRegistry.Service)),
+          const services = yield* Effect.context<Database.Service | Feed.FeedService | Registry.Service>().pipe(
+            Effect.map(Context.pick(Database.Service, Feed.FeedService, Registry.Service)),
             Effect.map(Layer.succeedContext),
           );
           return ServiceResolver.compose(
@@ -135,7 +135,7 @@ export const AssistantTestLayer = ({
                 }
                 const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const echoRegistry = yield* EchoRegistry.Service;
+                const echoRegistry = yield* Registry.Service;
                 const binder = yield* acquireReleaseResource(
                   () =>
                     new AiContext.Binder({
@@ -154,7 +154,7 @@ export const AssistantTestLayer = ({
                 }
                 const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const echoRegistry = yield* EchoRegistry.Service;
+                const echoRegistry = yield* Registry.Service;
                 const session = yield* acquireReleaseResource(
                   () =>
                     new AiSession.Session({
@@ -172,7 +172,7 @@ export const AssistantTestLayer = ({
               Feed.FeedService,
               AiService.AiService,
               OperationRegistry.Service,
-              EchoRegistry.Service,
+              Registry.Service,
             ),
           );
         }),

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -23,7 +23,7 @@ import {
   type QueryResult,
   Query,
   Ref,
-  Registry as EchoRegistry,
+  Registry,
   Type,
 } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
@@ -73,9 +73,9 @@ export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
   /** @effect-atom/atom-react Registry for reactive state management. */
-  registry?: Registry.Registry;
+  registry?: AtomRegistry.Registry;
   /** @dxos/echo Registry used to resolve blueprint refs without DB copies. */
-  echoRegistry?: EchoRegistry.Registry;
+  echoRegistry?: Registry.Registry;
 };
 
 /**
@@ -85,10 +85,10 @@ export type BinderOptions = {
 export class Binder extends Resource {
   private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
-  private readonly _registry: Registry.Registry;
+  private readonly _registry: AtomRegistry.Registry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
-  readonly #echoRegistry: EchoRegistry.Registry | undefined;
+  readonly #echoRegistry: Registry.Registry | undefined;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
@@ -98,7 +98,7 @@ export class Binder extends Resource {
     assertArgument(options.runtime, 'options.runtime', 'Feed runtime is required');
     this._feed = options.feed;
     this._runtime = options.runtime;
-    this._registry = options.registry ?? Registry.make();
+    this._registry = options.registry ?? AtomRegistry.make();
     this.#echoRegistry = options.echoRegistry;
   }
 
