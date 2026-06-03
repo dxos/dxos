@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup } from '@testing-library/react';
+import { act, cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
@@ -31,7 +31,10 @@ const refTargetsObject = (uri: string, objectId: string): boolean => {
 };
 
 describe('ObjectProperties — inline create flow', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
     delete (window as any)[OBJECT_PROPERTIES_DEBUG_SYMBOL];
   });
