@@ -2,30 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
+import { format, intervalToDuration } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 
 import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { Card, DxAnchorActivate, IconBlock, IconButton, useTranslation } from '@dxos/react-ui';
+import { Card, DxAnchorActivate, IconButton, useTranslation } from '@dxos/react-ui';
 import { type Actor } from '@dxos/types';
 
 import { useActorContact } from '#hooks';
 import { meta } from '#meta';
 
-import { DateComponent } from '../DateComponent';
-
+//
 // AnchorIconButton — internal helper, not exported on Header.
+//
 
 type AnchorIconButtonProps = {
-  classNames?: string;
+  compact?: boolean;
   icon: string;
   fallbackIcon?: string;
   label: string;
   fallbackLabel?: string;
-  value?: URI.URI;
   title?: string;
-  onClick?: () => void;
+  value?: URI.URI;
   size?: 4 | 5 | 6;
+  onClick?: () => void;
 };
 
 /**
@@ -33,16 +34,18 @@ type AnchorIconButtonProps = {
  * Falls back to `onClick` when `value` is absent.
  */
 const AnchorIconButton = ({
+  compact,
   icon,
   fallbackIcon,
   label,
   fallbackLabel,
-  value,
   title,
-  onClick,
+  value,
   size = 4,
+  onClick,
 }: AnchorIconButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
+
   const handleClick = useCallback(() => {
     if (value) {
       buttonRef.current?.dispatchEvent(
@@ -61,6 +64,7 @@ const AnchorIconButton = ({
 
   return (
     <IconButton
+      classNames={compact && 'min-h-0'}
       variant='ghost'
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
@@ -76,27 +80,43 @@ const AnchorIconButton = ({
 // DateRow
 
 /** A Card.Row rendering a date range with a calendar icon. */
-const HeaderDateRow = ({ start, end }: { start: Date; end?: Date }) => (
-  <Card.Row icon='ph--calendar--regular'>
-    <DateComponent start={start} end={end} />
-  </Card.Row>
-);
+const HeaderDateRow = ({ start, end }: { start: Date; end?: Date }) => {
+  let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
+  // Prefer 90m over 1h 30m.
+  if (hours === 1 && minutes !== 0) {
+    hours = 0;
+    minutes += 60;
+  }
+  const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
+
+  return (
+    <Card.Row icon='ph--calendar--regular'>
+      <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
+        <div className='truncate text-description'>{format(start, 'PPp')}</div>
+        {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
+      </div>
+    </Card.Row>
+  );
+};
 
 HeaderDateRow.displayName = 'Header.DateRow';
 
+//
 // ObjectRow
+//
+
+type HeaderObjectRowProps = {
+  object: Obj.Any;
+};
 
 /** A Card.Row rendering an extracted ECHO object with a card-preview anchor icon. */
-const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
+const HeaderObjectRow = ({ object }: HeaderObjectRowProps) => {
   const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   return (
-    <Card.Row
-      icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
-      data-testid={`extracted-tag-${object.id}`}
-    >
+    <Card.Row icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
       <h3 className='truncate text-primary-text'>{label}</h3>
     </Card.Row>
   );
@@ -104,36 +124,37 @@ const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
 
 HeaderObjectRow.displayName = 'Header.ObjectRow';
 
+//
 // PersonRow
+//
 
-type PersonRowProps = {
+type HeaderPersonRowProps = {
   actor: Actor.Actor;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
 
-// TODO(burdon): Reconcile with Avatar if space member.
 /** A Card.Row rendering a person (sender, attendee) with a contact anchor icon. */
-const HeaderPersonRow = ({ actor, db, onContactCreate }: PersonRowProps) => {
+const HeaderPersonRow = ({ actor, db, onContactCreate }: HeaderPersonRowProps) => {
   const { t } = useTranslation(meta.id);
   const contactDXN = useActorContact(db, actor);
+
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
+  // TODO(burdon): Reconcile with Avatar if space member.
   return (
     <Card.Row
       icon={
-        <IconBlock compact>
-          <AnchorIconButton
-            classNames='min-h-0'
-            value={contactDXN}
-            title={actor.name}
-            icon='ph--user--regular'
-            label={t('show-contact.label')}
-            fallbackIcon='ph--user-plus--regular'
-            fallbackLabel={t('create-contact.label')}
-            onClick={handleContactCreate}
-          />
-        </IconBlock>
+        <AnchorIconButton
+          compact
+          icon='ph--user--regular'
+          fallbackIcon='ph--user-plus--regular'
+          label={t('show-contact.label')}
+          fallbackLabel={t('create-contact.label')}
+          title={actor.name}
+          value={contactDXN}
+          onClick={onContactCreate ? handleContactCreate : undefined}
+        />
       }
     >
       <h3 className='truncate'>{actor.name || actor.email}</h3>
@@ -144,11 +165,11 @@ const HeaderPersonRow = ({ actor, db, onContactCreate }: PersonRowProps) => {
 HeaderPersonRow.displayName = 'Header.PersonRow';
 
 //
+// Header
+//
 
 export const Header = {
   DateRow: HeaderDateRow,
   ObjectRow: HeaderObjectRow,
   PersonRow: HeaderPersonRow,
 };
-
-export type { PersonRowProps };

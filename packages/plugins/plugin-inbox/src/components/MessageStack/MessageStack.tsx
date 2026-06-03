@@ -310,11 +310,13 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       <Card.Row icon='ph--user--regular'>
         <Card.Text>{from}</Card.Text>
       </Card.Row>
+
       {snippet && (
         <Card.Row>
           <Card.Text variant='description'>{snippet}</Card.Text>
         </Card.Row>
       )}
+
       {messageLabels.length > 0 && (
         <Card.Row>
           <div className='flex flex-wrap gap-1 py-1'>

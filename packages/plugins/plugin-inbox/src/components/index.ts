@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './DateComponent';
 export * from './EditMessage';
 export * from './Event';
 export * from './EventStack';
