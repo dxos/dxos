@@ -8,7 +8,7 @@ import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { agentTest, agentTestTimeout } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 

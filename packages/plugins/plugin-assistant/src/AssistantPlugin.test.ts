@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LanguageModel } from '@effect/ai';
+import * as LanguageModel from '@effect/ai/LanguageModel';
 import { type TestContext } from '@effect/vitest';
-import { Layer, Schema } from 'effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 

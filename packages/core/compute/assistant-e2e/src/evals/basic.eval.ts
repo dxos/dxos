@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { Levenshtein } from 'autoevals';
 import { evalite } from 'evalite';
 
