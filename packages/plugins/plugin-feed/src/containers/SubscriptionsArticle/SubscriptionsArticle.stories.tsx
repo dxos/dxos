@@ -55,7 +55,7 @@ const meta: Meta<typeof DefaultStory> = {
                   Subscription.makeSubscription({
                     name: random.company.name() + ' Blog',
                     url: random.internet.url(),
-                    description: random.lorem.sentence(),
+                    description: random.lorem.paragraphs(3),
                   }),
                 );
               });
