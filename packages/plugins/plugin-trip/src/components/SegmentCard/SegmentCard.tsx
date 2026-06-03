@@ -97,7 +97,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Icon icon={icon} classNames={iconStyles?.foreground} />
+            <Card.Icon icon={icon} classNames={iconStyles?.fg} />
             <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
