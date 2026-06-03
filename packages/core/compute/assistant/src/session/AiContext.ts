@@ -14,7 +14,18 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import {
+  DXN,
+  Entity,
+  Filter,
+  Feed,
+  Obj,
+  type QueryResult,
+  Query,
+  Ref,
+  Registry as EchoRegistry,
+  Type,
+} from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -61,7 +72,10 @@ export class Bindings {
 export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
+  /** @effect-atom/atom-react Registry for reactive state management. */
   registry?: Registry.Registry;
+  /** @dxos/echo Registry used to resolve blueprint refs without DB copies. */
+  echoRegistry?: EchoRegistry.Registry;
 };
 
 /**
@@ -74,6 +88,7 @@ export class Binder extends Resource {
   private readonly _registry: Registry.Registry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+  readonly #echoRegistry: EchoRegistry.Registry | undefined;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
@@ -84,6 +99,7 @@ export class Binder extends Resource {
     this._feed = options.feed;
     this._runtime = options.runtime;
     this._registry = options.registry ?? Registry.make();
+    this.#echoRegistry = options.echoRegistry;
   }
 
   /**
@@ -198,7 +214,11 @@ export class Binder extends Resource {
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
       const uri = Obj.getURI(obj);
-      return uri != null && reducedBlueprintDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
+      const key = Obj.getMeta(obj).key;
+      // Match by echo URI (DB-backed) or by meta key (registry-backed, where the ref URI is the key).
+      const matched =
+        (uri != null && reducedBlueprintDxns.has(uri)) || (key != null && reducedBlueprintDxns.has(key as URI.URI));
+      return matched && key !== undefined;
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const uri = Obj.getURI(obj);
@@ -307,16 +327,35 @@ export class Binder extends Resource {
     }
 
     const seen = new Set<URI.URI>(current.map((obj) => Obj.getURI(obj)));
+    // Also index current items by meta key so registry refs don't duplicate DB refs.
+    const seenByKey = new Set<string>(
+      current.map((obj) => Entity.getMeta(obj)?.key).filter((k): k is string => k != null),
+    );
     for (const ref of refs) {
       const uri = ref.uri;
-      if (!seen.has(uri)) {
-        seen.add(uri);
-        added.push(ref);
+      if (seen.has(uri)) {
+        continue;
+      }
+      seen.add(uri);
+      added.push(ref);
 
-        // Only resolve target if available (has target or resolver).
-        if (ref.isAvailable) {
-          const target = ref.target;
-          if (target) {
+      // Resolve target: prefer inlined target, then echo registry lookup by key URI.
+      if (ref.isAvailable) {
+        const target = ref.target;
+        if (target) {
+          const key = Entity.getMeta(target)?.key;
+          if (!key || !seenByKey.has(key)) {
+            if (key) seenByKey.add(key);
+            next.push(target);
+          }
+        }
+      } else if (this.#echoRegistry) {
+        // Registry-backed ref: URI is the blueprint meta key (not an echo:/ entity URI).
+        const target = this.#resolveFromRegistry<T>(uri);
+        if (target) {
+          const key = Entity.getMeta(target)?.key;
+          if (!key || !seenByKey.has(key)) {
+            if (key) seenByKey.add(key);
             next.push(target);
           }
         }
@@ -324,6 +363,23 @@ export class Binder extends Resource {
     }
 
     return { added, next };
+  }
+
+  /**
+   * Look up an entity from the echo registry using a ref URI produced by {@link Blueprint.registryURI}.
+   * Valid-DXN keys produce `dxn:<key>` URIs which the registry indexes directly;
+   * invalid-DXN keys (hyphens in last segment) use the raw key as URI and fall back to a linear scan.
+   */
+  #resolveFromRegistry<T extends Obj.Unknown>(uri: URI.URI): T | undefined {
+    if (!this.#echoRegistry) return undefined;
+    // Fast O(1) path: try the URI directly (works when it's a `dxn:` URI).
+    const byUri = this.#echoRegistry.getByURI(uri) as T | undefined;
+    if (byUri) return byUri;
+    // Fall back to linear meta.key scan for raw-key URIs (invalid DXN keys).
+    return this.#echoRegistry
+      .query(Filter.type(Blueprint.Blueprint))
+      .runSync()
+      .find((e) => Entity.getMeta(e)?.key === uri) as T | undefined;
   }
 
   /**
@@ -383,13 +439,22 @@ export class Binder extends Resource {
     return refArray
       .map((ref) => {
         let target: T | undefined;
-        // Only resolve target if available (has target or resolver).
+        // Prefer inlined target or DB-resolved target.
         if (ref.isAvailable) {
           target = ref.target;
         }
 
-        // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        // Fallback 1: existing object matched by URI.
+        if (!target) {
+          target = current.find((obj) => Obj.getURI(obj) === ref.uri);
+        }
+
+        // Fallback 2: echo registry lookup for registry-backed refs whose URI is a meta key.
+        if (!target && this.#echoRegistry) {
+          target = this.#resolveFromRegistry<T>(ref.uri);
+        }
+
+        return target;
       })
       .filter(isNonNullable);
   }

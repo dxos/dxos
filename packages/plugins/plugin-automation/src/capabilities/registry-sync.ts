@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -19,8 +18,9 @@ import { ClientCapabilities } from '@dxos/plugin-client';
  * - {@link AppCapabilities.BlueprintDefinition} → instantiates each blueprint via `def.make()`.
  * - {@link Capabilities.OperationHandler} → serializes each handler via `Operation.serialize`.
  *
- * Also refreshes existing blueprint DB copies in all ready spaces so that stale
- * entities (e.g. those created before a DXN key rename) are kept current.
+ * Blueprint DB copies (stored in a space when a blueprint is "enabled") are treated as
+ * user forks and are not overwritten. The registry is always used as the source of truth
+ * for blueprint instructions at request time — see `formatSystemPrompt` in `@dxos/assistant`.
  *
  * Note: the plugin framework does not yet expose a teardown hook for capability
  * modules (see the TODO in process-manager-capability.ts), so the subscriptions
@@ -51,9 +51,6 @@ export default Capability.makeModule(
         }
         if (fresh.length > 0) {
           client.graph.registry.add(fresh);
-          // Refresh stale DB copies in all ready spaces so that blueprints stored
-          // before a DXN key rename (or any other change) are kept up-to-date.
-          refreshDbBlueprints(client, fresh);
         }
       },
       { immediate: true },
@@ -111,34 +108,3 @@ export default Capability.makeModule(
     );
   }),
 );
-
-/**
- * For each freshly-registered blueprint, find any existing DB copy in every
- * ready space and overwrite it with the current registry version. This ensures
- * conversations that have stale blueprint entities (e.g. created before a DXN
- * key rename) are automatically migrated on next app startup.
- */
-const refreshDbBlueprints = (
-  client: { spaces: { get(): Array<{ db: { query: any; flush(): Promise<void> } }> } },
-  fresh: Blueprint.Blueprint[],
-) => {
-  const byKey = new Map(fresh.map((bp) => [Obj.getMeta(bp).key, bp]));
-  for (const space of client.spaces.get()) {
-    space.db
-      .query(Filter.type(Blueprint.Blueprint))
-      .run()
-      .then((stored: Blueprint.Blueprint[]) => {
-        for (const storedBlueprint of stored) {
-          const key = Obj.getMeta(storedBlueprint).key;
-          const canonical = key ? byKey.get(key) : undefined;
-          if (!canonical) {
-            continue;
-          }
-          Obj.update(storedBlueprint, (b) => {
-            void Obj.updateFrom(b, Obj.clone(canonical, { deep: true }));
-          });
-        }
-      })
-      .catch((err: unknown) => log.catch(err));
-  }
-};

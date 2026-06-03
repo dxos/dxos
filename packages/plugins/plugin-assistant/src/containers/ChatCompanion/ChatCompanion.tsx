@@ -77,38 +77,26 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       [existingBlueprints, blueprintKeys],
     );
 
-    // Initialize related blueprints that are not already in the space.
-    useAsyncEffect(async () => {
-      if (!space) {
-        return;
-      }
-
-      // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
-      const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-      for (const key of blueprintKeys) {
-        const existingBlueprint = existingBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
-        if (existingBlueprint) {
-          continue;
-        }
-
-        const candidate = registry.list().find((e) => Entity.getMeta(e)?.key === key);
-        if (!candidate || !Obj.instanceOf(Blueprint.Blueprint, candidate)) {
-          continue;
-        }
-
-        space.db.add(Obj.clone(candidate, { deep: true }));
-      }
-    }, [space, registry, blueprintKeys]);
-
     useAsyncEffect(async () => {
       if (!binder?.isOpen) {
         return;
       }
 
-      if (pluginBlueprints.length > 0) {
-        await binder.bind({
-          blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)),
+      // Bind annotated blueprints: use key URI for registry blueprints (no DB clone needed).
+      if (blueprintKeys.length > 0) {
+        const registryKeys = blueprintKeys.filter((key) => {
+          const candidate = registry.list().find((e) => Entity.getMeta(e)?.key === key);
+          return candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate);
         });
+        // DB-forked blueprints (in space but not in registry).
+        const dbForks = pluginBlueprints.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
+
+        if (registryKeys.length > 0) {
+          await binder.bind({ blueprints: registryKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key))) });
+        }
+        if (dbForks.length > 0) {
+          await binder.bind({ blueprints: dbForks.map((blueprint) => Ref.make(blueprint)) });
+        }
       }
 
       if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {

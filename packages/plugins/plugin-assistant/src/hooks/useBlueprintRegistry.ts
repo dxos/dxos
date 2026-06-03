@@ -83,30 +83,41 @@ export const useBlueprintHandlers = ({
         return;
       }
 
-      // Find existing cloned blueprint.
-      const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
-      let storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
       if (checked) {
-        if (!storedBlueprint) {
-          // Registry is required to clone a blueprint into the space for the first time.
-          if (!registry) {
-            return;
-          }
-          const blueprint = registry
-            .query(Filter.type(Blueprint.Blueprint))
-            .runSync()
-            .find((b) => Obj.getMeta(b).key === key);
-          if (!blueprint) {
-            return;
-          }
+        // Check if the blueprint is in the registry — if so, bind via its key URI directly
+        // (no DB clone needed). Fall back to an existing DB copy for user-forked blueprints.
+        const registryBlueprint = registry
+          ?.query(Filter.type(Blueprint.Blueprint))
+          .runSync()
+          .find((b) => Obj.getMeta(b).key === key);
 
-          // NOTE: Possible race condition with other peers.
-          storedBlueprint = db.add(Obj.clone(blueprint));
+        if (registryBlueprint) {
+          // Use the blueprint key as the ref URI so the binder can resolve it from the
+          // registry across sessions without a DB copy.
+          await context.bind({ blueprints: [Ref.fromURI(Blueprint.registryURI(key))] });
+        } else {
+          // User-forked blueprint (in DB but not in registry): bind via DB ref.
+          const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
+          const storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
+          if (storedBlueprint) {
+            await context.bind({ blueprints: [Ref.make(storedBlueprint)] });
+          }
         }
-        await context.bind({ blueprints: [Ref.make(storedBlueprint)] });
-      } else if (storedBlueprint) {
-        // Unbind does not need the registry — the stored blueprint is already in the db.
-        await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
+      } else {
+        // Unbind: try registry ref first, then DB ref.
+        const registryBlueprint = registry
+          ?.query(Filter.type(Blueprint.Blueprint))
+          .runSync()
+          .find((b) => Obj.getMeta(b).key === key);
+        if (registryBlueprint) {
+          await context.unbind({ blueprints: [Ref.fromURI(Blueprint.registryURI(key))] });
+        } else {
+          const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
+          const storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
+          if (storedBlueprint) {
+            await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
+          }
+        }
       }
     },
     [db, context, registry],

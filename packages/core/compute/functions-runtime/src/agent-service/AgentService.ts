@@ -89,10 +89,11 @@ export const createSession: (
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
     Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
   );
+  const registry = yield* Registry.Service;
 
   const feed = yield* Database.add(Feed.make());
   const runtime = yield* Effect.runtime<Feed.FeedService>();
-  const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime, echoRegistry: registry }));
 
   yield* Effect.promise(() =>
     binder.bind({

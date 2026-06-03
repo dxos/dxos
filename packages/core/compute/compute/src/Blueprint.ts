@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Migration, Obj, Registry, Type, URI } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 
 import * as McpServer from './McpServer';
@@ -129,6 +129,14 @@ export type Definition = {
 };
 
 /**
+ * Returns the canonical URI used to reference this blueprint in the registry.
+ * Valid DXN keys (e.g. `org.dxos.blueprint.database`) produce `dxn:<key>`;
+ * invalid ones (e.g. keys with hyphens in the last segment) fall back to the raw key as a URI.
+ * Use this URI with `Ref.fromURI` to bind a blueprint without cloning it to the DB.
+ */
+export const registryURI = (key: string): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
+
+/**
  * Resolves a blueprint from the registry by its meta key.
  * Does not check the local database for the blueprint.
  */
@@ -143,23 +151,17 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
   });
 
 /**
- * Upserts a blueprint into the database, always keeping the DB copy in sync with the registry.
- * If the blueprint already exists in the database, its content is refreshed from the registry.
- * Otherwise, a new copy is cloned from the registry and added.
+ * Upserts a blueprint into the database.
+ * If the blueprint already exists in the database, the local (possibly forked) copy is returned as-is.
+ * Otherwise, a fresh copy is cloned from the registry and added.
  */
 export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service | Database.Service> =>
   Effect.gen(function* () {
-    const canonical = yield* resolve(key);
     const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
     if (local.length > 0) {
-      // Refresh the stored copy from the registry so stale operation keys and instructions are fixed.
-      const source = Obj.clone(canonical, { deep: true });
-      Obj.update(local[0], (blueprint) => {
-        void Obj.updateFrom(blueprint, source);
-      });
       return local[0];
     }
-    return yield* Database.add(Obj.clone(canonical, { deep: true }));
+    return yield* Database.add(Obj.clone(yield* resolve(key), { deep: true }));
   });
 
 export class NotFoundError extends BaseError.extend('BlueprintNotFound', 'Blueprint not found') {}

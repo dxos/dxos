@@ -18,15 +18,15 @@ export default EnableBlueprints.pipe(
       const rejected: { key: string; reason: string }[] = [];
 
       for (const key of keys) {
-        const blueprint = yield* Blueprint.resolve(key).pipe(
+        const result = yield* Blueprint.resolve(key).pipe(
           Effect.mapError(() => ({ key, reason: 'Blueprint not found in registry.' })),
           Effect.either,
         );
-        if (Either.isLeft(blueprint)) {
-          rejected.push(blueprint.left);
+        if (Either.isLeft(result)) {
+          rejected.push(result.left);
           continue;
         }
-        if (!blueprint.right.agentCanEnable) {
+        if (!result.right.agentCanEnable) {
           rejected.push({ key, reason: 'Blueprint does not allow agent auto-enable (agentCanEnable is not set).' });
           continue;
         }
