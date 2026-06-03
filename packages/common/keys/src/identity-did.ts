@@ -17,12 +17,35 @@ const MULTIBASE_PREFIX = 'B';
 
 const DID_PREFIX = 'did:halo:';
 
+const DECODED_BYTE_LENGTH = 20;
+
 const ENCODED_LENGTH = 42;
 
+/**
+ * RFC4648 base-32 alphabet (uppercase A–Z and digits 2–7).
+ */
+const RFC4648_BASE32_PATTERN = /^[A-Z2-7]+$/;
+
 const isValid = (value: unknown): value is IdentityDid => {
-  return (
-    typeof value === 'string' && value.startsWith(DID_PREFIX + MULTIBASE_PREFIX) && value.length === ENCODED_LENGTH
-  );
+  if (
+    typeof value !== 'string' ||
+    !value.startsWith(DID_PREFIX + MULTIBASE_PREFIX) ||
+    value.length !== ENCODED_LENGTH
+  ) {
+    return false;
+  }
+
+  const encoded = value.slice(DID_PREFIX.length + MULTIBASE_PREFIX.length);
+  if (!RFC4648_BASE32_PATTERN.test(encoded)) {
+    return false;
+  }
+
+  try {
+    // Reject inputs that pass the prefix/length check but are not decodable to the expected byte length.
+    return base32Decode(encoded, 'RFC4648').byteLength === DECODED_BYTE_LENGTH;
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -40,7 +63,7 @@ export const IdentityDid: Schema.Schema<IdentityDid, string> & {
   make: (value: string) => IdentityDid;
   random: () => IdentityDid;
 } = class extends Schema.String.pipe(Schema.filter(isValid)) {
-  static byteLength = 20;
+  static byteLength = DECODED_BYTE_LENGTH;
 
   static encode = (value: Uint8Array): IdentityDid => {
     invariant(value instanceof Uint8Array, 'Invalid type');

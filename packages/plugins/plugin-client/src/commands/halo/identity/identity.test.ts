@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
@@ -12,7 +12,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { handler } from './identity';
 
 describe('halo identity', () => {
-  it('should log if identity is not initialized', () =>
+  test('should log if identity is not initialized', ({ expect }) =>
     Effect.gen(function* () {
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
@@ -23,7 +23,7 @@ describe('halo identity', () => {
       );
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
-  it('should print identity if initialized', () =>
+  test('should print identity if initialized', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity({ displayName: 'Test' }));

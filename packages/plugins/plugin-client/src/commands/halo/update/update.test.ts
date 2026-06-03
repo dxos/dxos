@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
@@ -12,7 +12,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { handler } from './update';
 
 describe('halo update', () => {
-  it('should update identity display name', () =>
+  test('should update identity display name', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
