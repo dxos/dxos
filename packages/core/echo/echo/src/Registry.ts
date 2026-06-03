@@ -3,11 +3,14 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { type ReadOnlyEvent } from '@dxos/async';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
+import type * as Filter from './Filter';
+import type * as Query from './Query';
 
 /**
  * Identifier denoting an ECHO Registry.
@@ -137,3 +140,16 @@ export type Options = {
  * Use this to inject a registry into Effect-based code.
  */
 export class Service extends Context.Tag('@dxos/echo/Registry/Service')<Service, Registry>() {}
+
+/**
+ * Executes a query against the registry and returns the results.
+ * Analogous to {@link Database.runQuery} for the in-process registry.
+ */
+export const runQuery: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  Effect.gen(function* () {
+    const registry = yield* Service;
+    return (yield* Effect.promise(() => registry.query(queryOrFilter as any).run())) as any;
+  });
