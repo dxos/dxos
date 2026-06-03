@@ -32,7 +32,9 @@ class BaseEventEmitter {
     const list = this.#events[event];
     if (list) {
       const idx = list.indexOf(listener);
-      if (idx !== -1) list.splice(idx, 1);
+      if (idx !== -1) {
+        list.splice(idx, 1);
+      }
     }
     return this;
   }
