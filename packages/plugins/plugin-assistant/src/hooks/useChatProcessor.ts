@@ -13,7 +13,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { Credential, OperationRegistry, ServiceResolver } from '@dxos/compute';
-import { Database, Feed, Ref, type Registry as EchoRegistry } from '@dxos/echo';
+import { Database, Feed, Ref, type Registry } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
@@ -30,7 +30,7 @@ export type UseChatProcessorProps = {
   chat?: Chat.Chat;
   preset?: AiServicePreset;
   runtime?: Capabilities.ProcessManagerRuntime;
-  registry?: EchoRegistry.Registry;
+  registry?: Registry.Registry;
   settings?: Assistant.Settings;
 };
 

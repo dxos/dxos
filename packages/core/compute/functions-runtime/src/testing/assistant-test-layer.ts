@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Array from 'effect/Array';
@@ -29,7 +29,7 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, Feed, Registry as EchoRegistry, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
@@ -78,13 +78,13 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | EchoRegistry.Service
+  | Registry.Service
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
   | Process.ProcessMonitorService
-  | Registry.AtomRegistry
+  | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
@@ -168,7 +168,7 @@ export const AssistantTestLayer = ({
               Feed.FeedService,
               AiService.AiService,
               OperationRegistry.Service,
-              EchoRegistry.Service,
+              Registry.Service,
             ),
           );
         }),
@@ -198,7 +198,7 @@ export const AssistantTestLayer = ({
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),
-    Layer.provideMerge(Registry.layer),
+    Layer.provideMerge(AtomRegistry.layer),
     Layer.orDie,
   );
 };
@@ -213,7 +213,7 @@ export const AssistantTestLayerWithTriggers = (
   Layer.mergeAll(
     AssistantTestLayer(options),
     TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(Registry.layer),
+      Layer.provide(AtomRegistry.layer),
     ),
     TriggerStateStore.layerMemory,
   ) as any;

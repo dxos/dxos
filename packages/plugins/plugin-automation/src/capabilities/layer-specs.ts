@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Registry as EchoRegistry } from '@dxos/echo';
+import { Database, Feed, Registry } from '@dxos/echo';
 import {
   AgentService,
   FeedTraceSink,
@@ -63,13 +63,13 @@ const RegistrySpec = LayerSpec.make(
   {
     affinity: 'application',
     requires: [ClientService],
-    provides: [EchoRegistry.Service],
+    provides: [Registry.Service],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
         const client = yield* ClientService;
-        return Layer.succeed(EchoRegistry.Service, client.graph.registry);
+        return Layer.succeed(Registry.Service, client.graph.registry);
       }),
     ),
 );
@@ -174,7 +174,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
       Feed.FeedService,
       TriggerStateStore,
       ProcessManager.ProcessManagerService,
-      Registry.AtomRegistry,
+      AtomRegistry.AtomRegistry,
     ],
     provides: [TriggerDispatcher],
   },
