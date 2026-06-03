@@ -27,9 +27,8 @@ export const createTestSqliteRuntime = (filename = ':memory:'): TestSqliteRuntim
   const baseLayer = SqliteClient.layer({ filename });
   const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
-  // SqliteClient extends SqlClient, so this runtime satisfies SqlClient requirements.
   return {
-    runtime: rt.runtimeEffect as unknown as RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>,
+    runtime: rt.runtimeEffect,
     dispose: () => rt.dispose(),
   };
 };

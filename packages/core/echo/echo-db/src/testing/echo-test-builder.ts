@@ -206,6 +206,7 @@ export class EchoTestPeer extends Resource {
     await this._persistentRuntime.runPromise(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS _test_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)`;
         yield* sql`INSERT OR REPLACE INTO _test_metadata (key, value) VALUES (${key}, ${value})`;
       }),
     );

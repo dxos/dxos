@@ -257,6 +257,18 @@ export class SqliteMetadataStore implements IMetadataStore {
     await this._save();
   }
 
+  get deletedSpaces(): PublicKey[] {
+    return this.#metadata.deletedSpaces ?? [];
+  }
+
+  async addDeletedSpace(spaceKey: PublicKey): Promise<void> {
+    if ((this.#metadata.deletedSpaces ?? []).some((key) => key.equals(spaceKey))) {
+      return;
+    }
+    (this.#metadata.deletedSpaces ??= []).push(spaceKey);
+    await this._save();
+  }
+
   async clear(): Promise<void> {
     log('clearing all metadata');
     await RuntimeProvider.runPromise(this.#runtime)(

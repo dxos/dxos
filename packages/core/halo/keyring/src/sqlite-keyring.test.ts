@@ -6,7 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { verifySignature } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
@@ -15,8 +15,11 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { SqliteKeyring } from './sqlite-keyring';
 
-const makeRuntime = () =>
-  ManagedRuntime.make(SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory)).pipe(Layer.orDie)).runtimeEffect;
+const makeRuntime = () => {
+  const rt = ManagedRuntime.make(SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory)).pipe(Layer.orDie));
+  onTestFinished(() => rt.dispose());
+  return rt.runtimeEffect;
+};
 
 describe('SqliteKeyring', () => {
   test('creates and verifies key', async () => {

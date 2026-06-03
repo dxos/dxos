@@ -62,6 +62,9 @@ export interface IMetadataStore {
 
   getSpaceEdgeReplicationSetting(spaceKey: PublicKey): EdgeReplicationSetting | undefined;
   setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void>;
+
+  readonly deletedSpaces: PublicKey[];
+  addDeletedSpace(spaceKey: PublicKey): Promise<void>;
 }
 
 export interface AddSpaceOptions {
