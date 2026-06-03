@@ -21,6 +21,7 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   OperationHandler,
+  Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
 import { AssistantEvents, type AssistantPluginOptions } from '#types';
@@ -65,6 +66,10 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
   Plugin.addModule({
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: AiContextCapability,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvents.Startup,
+    activate: Toolkit,
   }),
   Plugin.make,
 );
