@@ -240,12 +240,7 @@ export class TestPeer {
 
   async migrate(): Promise<void> {
     await RuntimeProvider.runPromise(this._runtime.runtimeEffect)(
-      Effect.all([
-        this.metadataStore.migrate,
-        this.blobStore.migrate,
-        this.keyring.migrate,
-        this._feedStorage.migrate,
-      ]),
+      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
     );
   }
 

@@ -3,17 +3,17 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import { describe, expect, onTestFinished, test } from 'vitest';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { PublicKey } from '@dxos/keys';
 import { RuntimeProvider } from '@dxos/effect';
+import { PublicKey } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
-import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter';
 import { SqliteHeadsStore } from './sqlite-heads-store';
+import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter';
 
 const makeTestLayer = () => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });

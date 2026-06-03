@@ -245,12 +245,7 @@ export class ServiceContext extends Resource {
   @Trace.span({ op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     await RuntimeProvider.runPromise(this._runtime)(
-      Effect.all([
-        this.metadataStore.migrate,
-        this.blobStore.migrate,
-        this.keyring.migrate,
-        this._feedStorage.migrate,
-      ]),
+      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
     );
 
     await this._checkStorageVersion();

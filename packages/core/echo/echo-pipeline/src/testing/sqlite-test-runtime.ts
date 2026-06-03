@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
@@ -28,5 +28,8 @@ export const createTestSqliteRuntime = (filename = ':memory:'): TestSqliteRuntim
   const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
   // SqliteClient extends SqlClient, so this runtime satisfies SqlClient requirements.
-  return { runtime: rt.runtimeEffect as unknown as RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>, dispose: () => rt.dispose() };
+  return {
+    runtime: rt.runtimeEffect as unknown as RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>,
+    dispose: () => rt.dispose(),
+  };
 };

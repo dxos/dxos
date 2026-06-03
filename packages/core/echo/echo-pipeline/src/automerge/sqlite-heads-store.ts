@@ -8,12 +8,12 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
+import type { ProtoCodec } from '@dxos/codec-protobuf';
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import type { Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import type { ProtoCodec } from '@dxos/codec-protobuf';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -57,17 +57,18 @@ export class SqliteHeadsStore {
   /**
    * Creates the automerge_heads table if it does not exist.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> =
-    Effect.fn('SqliteHeadsStore.migrate')(() =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TABLE IF NOT EXISTS automerge_heads (
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
+    'SqliteHeadsStore.migrate',
+  )(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE IF NOT EXISTS automerge_heads (
           document_id TEXT PRIMARY KEY,
           heads BLOB NOT NULL
         )`;
-        log('automerge_heads table ready');
-      }).pipe(Effect.withSpan('SqliteHeadsStore.migrate')),
-    )();
+      log('automerge_heads table ready');
+    }).pipe(Effect.withSpan('SqliteHeadsStore.migrate')),
+  )();
 
   /**
    * Returns an Effect that sets heads for a document.

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, expect, test } from 'vitest';
@@ -10,17 +12,11 @@ import { verifySignature } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import * as SqlClient from '@effect/sql/SqlClient';
-import * as Effect from 'effect/Effect';
 
 import { SqliteKeyring } from './sqlite-keyring';
 
 const makeRuntime = () =>
-  ManagedRuntime.make(
-    SqlTransaction.layer
-      .pipe(Layer.provideMerge(sqliteLayerMemory))
-      .pipe(Layer.orDie),
-  ).runtimeEffect;
+  ManagedRuntime.make(SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory)).pipe(Layer.orDie)).runtimeEffect;
 
 describe('SqliteKeyring', () => {
   test('creates and verifies key', async () => {

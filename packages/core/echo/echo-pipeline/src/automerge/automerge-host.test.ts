@@ -13,9 +13,9 @@ import { PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
 import { createTestSqliteRuntime } from '../testing';
+import { TestReplicationNetwork } from '../testing';
 import { AutomergeHost } from './automerge-host';
 import { type EchoNetworkAdapter } from './echo-network-adapter';
-import { TestReplicationNetwork } from '../testing';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {

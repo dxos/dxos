@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import CRC32 from 'crc-32';
-
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
+import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 
 import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
@@ -79,21 +78,22 @@ export class SqliteMetadataStore implements IMetadataStore {
   /**
    * Creates the space_metadata and space_large tables if they do not exist.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> =
-    Effect.fn('SqliteMetadataStore.migrate')(() =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TABLE IF NOT EXISTS space_metadata (
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
+    'SqliteMetadataStore.migrate',
+  )(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE IF NOT EXISTS space_metadata (
           key TEXT PRIMARY KEY,
           value BLOB NOT NULL
         )`;
-        yield* sql`CREATE TABLE IF NOT EXISTS space_large (
+      yield* sql`CREATE TABLE IF NOT EXISTS space_large (
           space_key TEXT PRIMARY KEY,
           value BLOB NOT NULL
         )`;
-        log('space_metadata and space_large tables ready');
-      }).pipe(Effect.withSpan('SqliteMetadataStore.migrate')),
-    )();
+      log('space_metadata and space_large tables ready');
+    }).pipe(Effect.withSpan('SqliteMetadataStore.migrate')),
+  )();
 
   get metadata(): EchoMetadata {
     return this.#metadata;

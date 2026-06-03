@@ -42,21 +42,22 @@ export class SqliteBlobStore implements BlobStoreApi {
   /**
    * Creates the blobs_meta and blobs_data tables if they do not exist.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> =
-    Effect.fn('SqliteBlobStore.migrate')(() =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TABLE IF NOT EXISTS blobs_meta (
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
+    'SqliteBlobStore.migrate',
+  )(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE IF NOT EXISTS blobs_meta (
           id TEXT PRIMARY KEY,
           meta BLOB NOT NULL
         )`;
-        yield* sql`CREATE TABLE IF NOT EXISTS blobs_data (
+      yield* sql`CREATE TABLE IF NOT EXISTS blobs_data (
           id TEXT PRIMARY KEY,
           data BLOB NOT NULL
         )`;
-        log('blobs tables ready');
-      }).pipe(Effect.withSpan('SqliteBlobStore.migrate')),
-    )();
+      log('blobs tables ready');
+    }).pipe(Effect.withSpan('SqliteBlobStore.migrate')),
+  )();
 
   @synchronized
   async getMeta(id: Uint8Array): Promise<BlobMeta | undefined> {

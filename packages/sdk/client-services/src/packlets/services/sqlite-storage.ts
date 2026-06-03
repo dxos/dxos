@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EventEmitter } from 'node:events';
-import { join } from 'node:path';
-
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
+import { EventEmitter } from 'node:events';
+import { join } from 'node:path';
 import type { Callback, FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -184,17 +183,18 @@ export class SqliteStorage implements Storage {
     this.path = path;
   }
 
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> =
-    Effect.fn('SqliteStorage.migrate')(() =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TABLE IF NOT EXISTS hypercore_files (
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
+    'SqliteStorage.migrate',
+  )(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE IF NOT EXISTS hypercore_files (
           path TEXT PRIMARY KEY,
           data BLOB NOT NULL DEFAULT x''
         )`;
-        log('hypercore_files table ready');
-      }).pipe(Effect.withSpan('SqliteStorage.migrate')),
-    )();
+      log('hypercore_files table ready');
+    }).pipe(Effect.withSpan('SqliteStorage.migrate')),
+  )();
 
   get size(): number {
     return this.#files.size;
@@ -222,7 +222,9 @@ export class SqliteStorage implements Storage {
       const rows = await RuntimeProvider.runPromise(runtime)(
         Effect.gen(function* () {
           const sql = yield* SqlClient.SqlClient;
-          return yield* sql<{ path: string }>`SELECT path FROM hypercore_files WHERE path = ${path} OR path LIKE ${prefix + '%'}`;
+          return yield* sql<{
+            path: string;
+          }>`SELECT path FROM hypercore_files WHERE path = ${path} OR path LIKE ${prefix + '%'}`;
         }),
       );
       return rows.map((row) => row.path.replace(path + '/', '').replace(path, ''));

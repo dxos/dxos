@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/keys';
+
 import { Client } from '../client';
 import { TestBuilder } from '../testing';
 

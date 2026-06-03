@@ -31,10 +31,9 @@ import {
   initSubduction,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
-import bs58check from 'bs58check';
-
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
+import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
@@ -740,7 +739,6 @@ export class AutomergeHost extends Resource {
     const documentId = sedimentreeIdToDocumentId(sedimentreeId);
     return this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
   }
-
 
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
     // Under Subduction the Repo's `peerMetadataByPeerId` is not populated for peers that only

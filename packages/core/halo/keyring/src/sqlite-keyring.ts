@@ -41,16 +41,17 @@ export class SqliteKeyring implements KeyringApi {
     this.#runtime = runtime;
   }
 
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> =
-    Effect.fn('SqliteKeyring.migrate')(() =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TABLE IF NOT EXISTS keyring (
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
+    'SqliteKeyring.migrate',
+  )(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE IF NOT EXISTS keyring (
           public_key TEXT PRIMARY KEY,
           record BLOB NOT NULL
         )`;
-      }).pipe(Effect.withSpan('SqliteKeyring.migrate')),
-    )();
+    }).pipe(Effect.withSpan('SqliteKeyring.migrate')),
+  )();
 
   async sign(key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
     const keyPair = await this._getKey(key);
@@ -64,11 +65,7 @@ export class SqliteKeyring implements KeyringApi {
   }
 
   async createKey(): Promise<PublicKey> {
-    const keyPair = await subtleCrypto.generateKey(
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      true,
-      ['sign', 'verify'],
-    );
+    const keyPair = await subtleCrypto.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
     await this._setKey(keyPair);
     return keyPairToPublicKey(keyPair);
   }

@@ -48,17 +48,18 @@ export class SqliteStorageAdapter extends Resource implements StorageAdapterInte
   /**
    * Creates the automerge_chunks table if it does not exist.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> =
-    Effect.fn('SqliteStorageAdapter.migrate')(() =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`CREATE TABLE IF NOT EXISTS automerge_chunks (
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
+    'SqliteStorageAdapter.migrate',
+  )(() =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE IF NOT EXISTS automerge_chunks (
           key TEXT PRIMARY KEY,
           data BLOB NOT NULL
         )`;
-        log('automerge_chunks table ready');
-      }).pipe(Effect.withSpan('SqliteStorageAdapter.migrate')),
-    )();
+      log('automerge_chunks table ready');
+    }).pipe(Effect.withSpan('SqliteStorageAdapter.migrate')),
+  )();
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     if (!this.isOpen) {
@@ -186,7 +187,9 @@ export class SqliteStorageAdapter extends Resource implements StorageAdapterInte
 
 /** Coerces a value to a plain Uint8Array (Buffer is a subclass in Node.js but not identical). */
 const toUint8Array = (value: Uint8Array): Uint8Array =>
-  value instanceof Uint8Array && value.constructor === Uint8Array ? value : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  value instanceof Uint8Array && value.constructor === Uint8Array
+    ? value
+    : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
 
 /**
  * Encodes a StorageKey array to a single TEXT key for SQLite storage.
