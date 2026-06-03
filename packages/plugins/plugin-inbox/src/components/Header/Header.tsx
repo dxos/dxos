@@ -178,18 +178,38 @@ HeaderPersonRow.displayName = 'Header.PersonRow';
 
 type TagItem = { id: string; label?: string; hue?: string };
 
-type TagsRowProps = { tags: TagItem[] };
+type TagsRowProps = {
+  tags: TagItem[];
+  /** When provided, each chip renders as a clickable button invoking this callback. */
+  onTagClick?: (label: string) => void;
+};
 
-/** A Card.Row rendering a set of label+hue tag chips. */
-const HeaderTagsRow = ({ tags }: TagsRowProps) =>
+/** A Card.Row rendering a set of label+hue tag chips, optionally clickable. */
+const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) =>
   tags.length > 0 ? (
     <Card.Row icon='ph--tag--regular'>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
-        {tags.map((tag) => (
-          <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
-            {tag.label}
-          </Tag>
-        ))}
+        {tags.map((tag) =>
+          onTagClick ? (
+            <button
+              key={tag.id}
+              type='button'
+              className='dx-tag dx-focus-ring'
+              data-hue={tag.hue}
+              data-testid={`message-tag-${tag.id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onTagClick(tag.label ?? tag.id);
+              }}
+            >
+              {tag.label}
+            </button>
+          ) : (
+            <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
+              {tag.label}
+            </Tag>
+          ),
+        )}
       </div>
     </Card.Row>
   ) : null;
@@ -206,5 +226,3 @@ export const Header = {
   PersonRow: HeaderPersonRow,
   TagsRow: HeaderTagsRow,
 };
-
-export type { TagItem, TagsRowProps };

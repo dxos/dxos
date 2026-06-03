@@ -22,6 +22,7 @@ import { getHashStyles } from '@dxos/ui-theme';
 
 import { GoogleMail } from '../../apis';
 import { getMessageProps } from '../../util';
+import { Header } from '../Header';
 
 export type MessageStackAction =
   | { type: 'current'; messageId: string }
@@ -265,29 +266,15 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     [message.id, onAction],
   );
 
-  const handleTagClick = useCallback(
-    (event: MouseEvent, label: string) => {
-      event.stopPropagation();
-      onAction?.({ type: 'select-tag', label });
-    },
-    [onAction],
+  const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
+
+  const messageLabels = useMemo(
+    () =>
+      (tags ?? [])
+        .filter((tag) => !GoogleMail.isSystemLabel(tag.id) && tag.label)
+        .map((tag) => ({ id: tag.id, hue: tag.hue ?? getHashStyles(tag.id).hue, label: tag.label })),
+    [tags],
   );
-
-  const messageLabels = useMemo(() => {
-    if (!tags || tags.length === 0) {
-      return [];
-    }
-
-    return tags
-      .filter((tag) => !GoogleMail.isSystemLabel(tag.id))
-      .map((tag) => ({
-        id: tag.id,
-        // Tag's own `hue` wins; otherwise hash the id for a stable colour like before.
-        hue: tag.hue ?? getHashStyles(tag.id).hue,
-        label: tag.label,
-      }))
-      .filter((item) => item.label);
-  }, [tags]);
 
   return (
     <MessageStackTile
@@ -317,24 +304,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         </Card.Row>
       )}
 
-      {messageLabels.length > 0 && (
-        <Card.Row>
-          <div className='flex flex-wrap gap-1 py-1'>
-            {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
-              <button
-                key={labelId}
-                type='button'
-                className='dx-tag dx-focus-ring'
-                data-hue={labelHue}
-                data-label={label}
-                onClick={(event) => handleTagClick(event, label)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </Card.Row>
-      )}
+      <Header.TagsRow tags={messageLabels} onTagClick={handleTagClick} />
     </MessageStackTile>
   );
 });
