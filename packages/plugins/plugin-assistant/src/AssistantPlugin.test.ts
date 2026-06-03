@@ -3,22 +3,29 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { beforeEach, describe, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { ServiceResolver } from '@dxos/compute';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Database, Feed, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
+import { EntityId } from '@dxos/keys';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
 
-import { EntityId } from '@dxos/keys';
 import { LanguageModel } from '@effect/ai';
 import { type TestContext } from '@effect/vitest';
-import { Layer } from 'effect';
+import { Layer, Schema } from 'effect';
+
 import { meta } from './meta';
 
 EntityId.dangerouslyDisableRandomness();
@@ -58,9 +65,12 @@ describe('AssistantPlugin', () => {
   test('can memoize ai-service requests', async (ctx) => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), AssistantPlugin({
-        aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx)
-      })],
+      plugins: [
+        ClientPlugin({}),
+        AssistantPlugin({
+          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+        }),
+      ],
     });
 
     await harness.runPromise(
@@ -69,20 +79,74 @@ describe('AssistantPlugin', () => {
           prompt: 'What is the capital of France?',
         });
         expect(text.toLocaleLowerCase()).toContain('paris');
-      }).pipe(Effect.provide(AiService.model('@anthropic/claude-haiku-4-5').pipe(Layer.provideMerge(ServiceResolver.provide({}, AiService.AiService))))),
+      }).pipe(
+        Effect.provide(
+          AiService.model('@anthropic/claude-haiku-4-5').pipe(
+            Layer.provideMerge(ServiceResolver.provide({}, AiService.AiService)),
+          ),
+        ),
+      ),
+    );
+  });
+
+  test('can run memoized routine', { timeout: 120_000 }, async (ctx) => {
+    const { expect } = ctx;
+    await using harness = await createComposerTestApp({
+      plugins: [
+        ClientPlugin({}),
+        AssistantPlugin({
+          aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx),
+        }),
+        AutomationPlugin(),
+      ],
+    });
+
+    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+
+    const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const routine = yield* Database.add(
+          Routine.make({
+            name: 'capital-test',
+            instructions:
+              'Call completeJob with success set to a JSON object { "capital": "<lowercase country capital>" } for the country in input.',
+            input: Schema.Struct({
+              country: Schema.String,
+            }),
+            output: Schema.Struct({
+              capital: Schema.String,
+            }),
+          }),
+        );
+        yield* Database.flush();
+
+        const result = yield* Operation.invoke(
+          AgentPrompt,
+          {
+            prompt: Ref.make(routine),
+            input: {
+              country: 'France',
+            },
+            model: '@anthropic/claude-haiku-4-5',
+          },
+          { spaceId: personalSpace.id },
+        );
+        expect(result).toEqual({ capital: 'paris' });
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService))),
     );
   });
 });
 
-const makeMemoizedAiServiceMiddleware = (ctx: TestContext): Promise<(_upstream: AiService.Service) => AiService.Service> =>
+const makeMemoizedAiServiceMiddleware = (
+  ctx: TestContext,
+): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.AiService.pipe(
     Effect.provide(
-      TestAiService({ preset: 'direct' }).pipe(
-        Layer.provideMerge(Layer.succeed(TestContextService, ctx))
-      )
+      TestAiService({ preset: 'direct' }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     // Ignoring actual AI service the plugin contructs and using our own.
-    Effect.map(service => (_upstream: AiService.Service) => service),
+    Effect.map((service) => (_upstream: AiService.Service) => service),
     Effect.runPromise,
   );
-
