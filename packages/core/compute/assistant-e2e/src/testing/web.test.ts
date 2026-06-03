@@ -4,7 +4,6 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -16,18 +15,13 @@ describe('Web', () => {
   it.effect(
     // TODO(dmaretskyi): Agent unable to activate blueprints.
     'search the web',
-    agentTest(
-      Routine.make({
-        instructions: trim`
-          Search 5 richest people in the world and create Person objects in the database.
-
-          Completion criteria:
-          - 5 Person objects in the database.
-          - Web search works.
-        `,
-        blueprints: getDefaultBlueprints(),
-      }),
-    ),
+    agentTest({
+      instructions: trim`
+        Search 5 richest people in the world and create Person objects in the database.
+      `,
+      completionCriteria: ['5 Person objects in the database.', 'Web search works.'],
+      blueprints: getDefaultBlueprints(),
+    }),
     { timeout: DEFAULT_TEST_TIMEOUT },
   );
 });

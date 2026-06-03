@@ -46,7 +46,13 @@ const INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface AgentTestOptions {
+interface AgentTestOptions extends Pick<Routine.MakeOptions, 'name' | 'blueprints' | 'input' | 'output'> {
+  /** Agent instructions; the specification for the test. */
+  instructions: string;
+
+  /** Bullet list of expected outcomes, appended to the instructions under a "Completion criteria" heading. */
+  completionCriteria?: readonly string[];
+
   expect?: 'success' | 'failure';
 
   model?: ModelName;
@@ -61,6 +67,14 @@ interface AgentTestOptions {
   /** Additional plugins registered after the default composer plugin set. */
   plugins?: Plugin.Plugin[];
 }
+
+const formatInstructions = (instructions: string, completionCriteria: readonly string[] = []): string => {
+  if (completionCriteria.length === 0) {
+    return instructions;
+  }
+  const criteria = completionCriteria.map((item) => `- ${item}`).join('\n');
+  return `${instructions}\n\nCompletion criteria:\n${criteria}`;
+};
 
 const makeMemoizedAiServiceMiddleware = (
   ctx: TestContext,
@@ -124,14 +138,17 @@ const runAgentPrompt = (
     }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService))),
   );
 
-export const agentTest: {
-  (options: AgentTestOptions, prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
-  (prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
-} = (...args: [AgentTestOptions, Routine.Routine] | [Routine.Routine]) => {
-  const [options = {}, prompt] = args.length === 1 ? [undefined, args[0]] : args;
-
+export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
     options.model ?? (options.inferenceProvider === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
+
+  const prompt = Routine.make({
+    name: options.name,
+    instructions: formatInstructions(options.instructions, options.completionCriteria),
+    blueprints: options.blueprints,
+    input: options.input,
+    output: options.output,
+  });
 
   return Effect.fnUntraced(
     function* (ctx) {

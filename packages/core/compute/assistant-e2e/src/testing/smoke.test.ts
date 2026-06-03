@@ -4,7 +4,6 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
@@ -15,28 +14,22 @@ Obj.ID.dangerouslyDisableRandomness();
 describe('Smoke', () => {
   it.effect(
     'succeeds',
-    agentTest(
-      Routine.make({
-        instructions: trim`
-          Do nothing and succeed.
-        `,
-      }),
-    ),
+    agentTest({
+      instructions: trim`
+        Do nothing and succeed.
+      `,
+    }),
     { timeout: DEFAULT_TEST_TIMEOUT },
   );
 
   it.effect(
     'fails',
-    agentTest(
-      {
-        expect: 'failure',
-      },
-      Routine.make({
-        instructions: trim`
-          Do nothing and fail.
-        `,
-      }),
-    ),
+    agentTest({
+      expect: 'failure',
+      instructions: trim`
+        Do nothing and fail.
+      `,
+    }),
     { timeout: DEFAULT_TEST_TIMEOUT },
   );
 });
