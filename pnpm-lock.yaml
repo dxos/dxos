@@ -8002,6 +8002,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-integration':
+        specifier: workspace:*
+        version: link:../plugin-integration
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
@@ -11225,9 +11228,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-native':
-        specifier: workspace:*
-        version: link:../plugin-native
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

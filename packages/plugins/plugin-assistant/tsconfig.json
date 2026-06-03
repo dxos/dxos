@@ -219,6 +219,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-integration"
+    },
+    {
       "path": "../plugin-map"
     },
     {

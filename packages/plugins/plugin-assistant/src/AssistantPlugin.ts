@@ -21,6 +21,7 @@ import { HasSubject, Message } from '@dxos/types';
 import {
   AiContext as AiContextCapability,
   AiService,
+  AnthropicIntegrationProvider,
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
@@ -136,6 +137,12 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
+  }),
+  // Note: split into a second .pipe() to keep each call under @effect/Pipeable's 20-overload ceiling.
+).pipe(
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupIntegrationProviders,
+    activate: AnthropicIntegrationProvider,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
