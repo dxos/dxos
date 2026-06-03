@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { ClientEvents } from '../types';
@@ -19,9 +20,10 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       const manager = yield* Capability.get(Capabilities.PluginManager);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+      const spaceId = data.spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(data.spaceKey!)) : undefined;
       yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
-      return data;
+      return { identityKey: data.identityKey, ...(spaceId !== undefined && { spaceId }), ...(data.profile !== undefined && { profile: data.profile }) };
     }),
   ),
 );
