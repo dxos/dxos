@@ -180,7 +180,7 @@ type TagItem = { id: string; label?: string; hue?: string };
 
 type TagsRowProps = {
   tags: TagItem[];
-  /** When provided, each chip renders as a clickable button invoking this callback. */
+  /** When provided, each chip is clickable and stops event propagation. */
   onTagClick?: (label: string) => void;
 };
 
@@ -189,27 +189,21 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) =>
   tags.length > 0 ? (
     <Card.Row icon='ph--tag--regular'>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
-        {tags.map((tag) =>
-          onTagClick ? (
-            <button
-              key={tag.id}
-              type='button'
-              className='dx-tag dx-focus-ring'
-              data-hue={tag.hue}
-              data-testid={`message-tag-${tag.id}`}
-              onClick={(event) => {
+        {tags.map((tag) => (
+          <Tag
+            key={tag.id}
+            palette={toHue(tag.hue)}
+            data-testid={`message-tag-${tag.id}`}
+            {...(onTagClick && {
+              onClick: (event) => {
                 event.stopPropagation();
                 onTagClick(tag.label ?? tag.id);
-              }}
-            >
-              {tag.label}
-            </button>
-          ) : (
-            <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
-              {tag.label}
-            </Tag>
-          ),
-        )}
+              },
+            })}
+          >
+            {tag.label}
+          </Tag>
+        ))}
       </div>
     </Card.Row>
   ) : null;
