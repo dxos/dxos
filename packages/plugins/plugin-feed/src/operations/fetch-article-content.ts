@@ -16,8 +16,9 @@ const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> =
     Effect.fn(function* ({ post: postRef }) {
       const post = yield* Database.load(postRef);
       invariant(post.link, 'Post has no link.');
+      const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       return yield* Effect.tryPromise({
-        try: () => fetchArticle(post.link!),
+        try: () => fetchArticle(post.link!, { corsProxy }),
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       });
     }),
