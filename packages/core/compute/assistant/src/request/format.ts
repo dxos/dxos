@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Blueprint, type FunctionNotFoundError, type Operation, type OperationRegistry, Template } from '@dxos/compute';
-import { type Database, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { type EntityId } from '@dxos/keys';
@@ -33,20 +33,14 @@ export const formatSystemPrompt = ({
   Database.Service | OperationRegistry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
-    // Resolve each blueprint against the in-process registry by meta key so that
-    // instructions are always taken from the fresh registry version. If a blueprint
-    // has been user-forked (customised) and has no registry counterpart, fall back
-    // to the DB copy as-is. The registry is optional — if unavailable (e.g. in
-    // edge-worker context), the bound blueprint's instructions are used directly.
-    const registryOpt = yield* Effect.serviceOption(Registry.Service);
-    const registryByKey = Option.isSome(registryOpt)
-      ? new Map(
-          registryOpt.value
-            .query(Filter.type(Blueprint.Blueprint))
-            .runSync()
-            .map((bp) => [Obj.getMeta(bp).key, bp]),
-        )
-      : new Map<string | undefined, Blueprint.Blueprint>();
+    // Resolve each blueprint against both the space DB and the in-process registry
+    // so that instructions are always taken from the fresh registry version. If a
+    // blueprint has been user-forked (customised) and has no registry counterpart,
+    // the DB copy is used as-is.
+    const allBlueprints = yield* Database.runQuery(
+      Query.select(Filter.type(Blueprint.Blueprint)).from(Scope.registry()),
+    );
+    const registryByKey = new Map(allBlueprints.map((bp) => [Obj.getMeta(bp).key, bp]));
 
     const blueprintDefs = yield* Function.pipe(
       blueprints,

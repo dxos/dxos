@@ -17,7 +17,7 @@ import * as Runtime from 'effect/Runtime';
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -47,8 +47,6 @@ export type Options = {
   runtime: Runtime.Runtime<Feed.FeedService>;
   /** @effect-atom/atom-react Registry for reactive state. */
   registry?: AtomRegistryType.Registry;
-  /** @dxos/echo Registry for resolving registry-backed blueprint refs. */
-  echoRegistry?: Registry.Registry;
 };
 
 /**
@@ -79,7 +77,6 @@ export class Session extends Resource {
       feed: this._feed,
       runtime: this._runtime,
       registry: options.registry,
-      echoRegistry: options.echoRegistry,
     });
   }
 

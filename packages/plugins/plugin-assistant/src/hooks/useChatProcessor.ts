@@ -65,7 +65,6 @@ export const useChatProcessor = ({
       feed: feedTarget,
       runtime,
       registry: observableRegistry,
-      echoRegistry: registry,
     });
     await session.open();
     setSession(session);

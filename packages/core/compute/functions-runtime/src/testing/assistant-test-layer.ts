@@ -123,8 +123,8 @@ export const AssistantTestLayer = ({
       Layer.effect(
         ServiceResolver.ServiceResolver,
         Effect.gen(function* () {
-          const services = yield* Effect.context<Database.Service | Feed.FeedService | Registry.Service>().pipe(
-            Effect.map(Context.pick(Database.Service, Feed.FeedService, Registry.Service)),
+          const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
+            Effect.map(Context.pick(Database.Service, Feed.FeedService)),
             Effect.map(Layer.succeedContext),
           );
           return ServiceResolver.compose(
@@ -135,13 +135,11 @@ export const AssistantTestLayer = ({
                 }
                 const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const echoRegistry = yield* Registry.Service;
                 const binder = yield* acquireReleaseResource(
                   () =>
                     new AiContext.Binder({
                       feed,
                       runtime,
-                      echoRegistry,
                     }),
                 );
                 return { binder };
@@ -154,13 +152,11 @@ export const AssistantTestLayer = ({
                 }
                 const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const echoRegistry = yield* Registry.Service;
                 const session = yield* acquireReleaseResource(
                   () =>
                     new AiSession.Session({
                       feed,
                       runtime,
-                      echoRegistry,
                     }),
                 );
                 return session;
