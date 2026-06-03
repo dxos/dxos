@@ -12,9 +12,10 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, Relation, Type, DXN, URI } from '@dxos/echo';
+import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess';
@@ -157,9 +158,10 @@ export default Commentary.pipe(
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
           const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
-          const rootCollection = yield* Database.load<Collection.Collection>(
-            properties[Type.getTypename(Collection.Collection)],
-          );
+          const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+          const rootCollection = rootCollectionRef
+            ? yield* Database.load<Collection.Collection>(rootCollectionRef)
+            : undefined;
 
           log.info('rootCollection', { rootCollection });
 
@@ -173,9 +175,11 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.update(rootCollection, (rootCollection) => {
-            rootCollection.objects.push(documentRef);
-          });
+          if (rootCollection) {
+            Obj.update(rootCollection, (rootCollection) => {
+              rootCollection.objects.push(documentRef);
+            });
+          }
 
           // Create the HasSubject relation
           yield* Database.add(

@@ -1,12 +1,13 @@
 // Copyright 2025 DXOS.org
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Entity, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Entity, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -23,8 +24,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
       );
 
-      const parentCollection: Collection.Collection =
-        input.target ?? space.properties[Type.getTypename(Collection.Collection)]?.target;
+      const parentCollection =
+        input.target ?? Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target;
+      invariant(parentCollection, 'No parent collection found for space — cannot remove objects.');
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.
@@ -39,11 +41,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
         .filter(isNonNullable);
 
       for (const entity of entities) {
-        const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
-        if (index !== -1) {
-          Obj.update(parentCollection, (parentCollection) => {
-            parentCollection.objects.splice(index, 1);
-          });
+        if (Obj.instanceOf(Collection.Collection, parentCollection)) {
+          const index = parentCollection.objects.findIndex((ref) => ref.target === entity);
+          if (index !== -1) {
+            Obj.update(parentCollection, (parentCollection) => {
+              parentCollection.objects.splice(index, 1);
+            });
+          }
         }
 
         const db = Entity.getDatabase(entity);
