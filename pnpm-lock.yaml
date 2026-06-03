@@ -10354,6 +10354,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
