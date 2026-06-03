@@ -132,6 +132,8 @@ export type Definition = {
  * Returns the canonical URI used to reference this blueprint in the registry.
  * Valid DXN keys produce `dxn:<key>`; other keys use the raw key as a URI.
  * Use this URI with `Ref.fromURI` to bind a blueprint without cloning it to the DB.
+ *
+ * TODO(wittjosiah): Should use Obj.getURI instead once it supports options to prefer meta key over EID.
  */
 export const registryURI = (key: string): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
 
