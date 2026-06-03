@@ -394,10 +394,23 @@ const MapLines = ({ lines }: MapLinesProps) => {
     return null;
   }
 
+  // Merge consecutive connected segments with the same color into a single Polyline so
+  // Leaflet renders one continuous smooth path rather than N disconnected stub segments.
+  const polylines: Array<{ positions: LatLngLiteral[]; color?: string }> = [];
+  for (const { source, target, color } of lines) {
+    const last = polylines[polylines.length - 1];
+    const lastPos = last?.positions[last.positions.length - 1];
+    if (last && last.color === color && lastPos?.lat === source.lat && lastPos?.lng === source.lng) {
+      last.positions.push(target);
+    } else {
+      polylines.push({ positions: [source, target], color });
+    }
+  }
+
   return (
     <>
-      {lines.map(({ source, target, color }, index) => (
-        <Polyline key={index} positions={[source, target]} pathOptions={{ color, weight: 4, opacity: 0.8 }} />
+      {polylines.map(({ positions, color }, index) => (
+        <Polyline key={index} positions={positions} pathOptions={{ color, weight: 4, opacity: 0.8 }} />
       ))}
     </>
   );
