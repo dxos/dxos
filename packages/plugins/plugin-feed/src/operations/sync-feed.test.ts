@@ -132,6 +132,8 @@ describe('SyncFeed', () => {
         const echoFeed = yield* Database.load(subscriptionFeed.feed);
 
         yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
+        // Second sync also exercises the persisted-post dedup path for link-keyed items.
+        yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
 
         const items = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
         expect(items).toHaveLength(1);
