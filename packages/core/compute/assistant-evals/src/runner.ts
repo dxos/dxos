@@ -39,13 +39,6 @@ const SYSTEM_INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-interface RunAgentEvalOptions extends Pick<Routine.MakeOptions, 'name' | 'blueprints' | 'input' | 'output'> {
-  instructions: string;
-  completionCriteria?: readonly string[];
-  model?: ModelName;
-  plugins?: Plugin.Plugin[];
-}
-
 const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.AiService.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
@@ -53,7 +46,7 @@ const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => Ai
     runAndForwardErrors,
   );
 
-const createDefaultPlugins = async (options: RunAgentEvalOptions): Promise<Plugin.Plugin[]> => [
+const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Promise<Plugin.Plugin[]> => [
   ClientPlugin({
     types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Mailbox.Mailbox],
   }),
@@ -104,6 +97,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   output: Schema.Schema<O>;
   blueprints?: Ref.Ref<Blueprint.Blueprint>[];
   model?: ModelName;
+  plugins?: Plugin.Plugin[];
 }
 
 export type VariantConfig =
