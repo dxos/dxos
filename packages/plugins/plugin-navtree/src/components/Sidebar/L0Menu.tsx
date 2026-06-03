@@ -243,7 +243,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   // Actions.
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-text)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
