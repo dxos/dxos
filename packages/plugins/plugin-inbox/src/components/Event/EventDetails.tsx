@@ -60,12 +60,7 @@ export const EventDetails = ({
       )}
 
       {attendees.map((attendee, index) => (
-        <Header.AttendeeRow
-          key={attendee.email ?? index}
-          attendee={attendee}
-          db={db}
-          onContactCreate={onContactCreate}
-        />
+        <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
       ))}
     </>
   );

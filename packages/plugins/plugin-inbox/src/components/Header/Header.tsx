@@ -11,7 +11,6 @@ import {
   DxAnchorActivate,
   Icon,
   IconBlock,
-  type IconBlockProps,
   IconButton,
   type ThemedClassName,
   useTranslation,
@@ -24,7 +23,9 @@ import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
 
+//
 // Root
+//
 
 type HeaderRootProps = ThemedClassName<PropsWithChildren<{ 'data-testid'?: string }>>;
 
@@ -40,7 +41,9 @@ const HeaderRoot = ({ children, classNames, ...props }: HeaderRootProps) => (
 
 HeaderRoot.displayName = 'Header.Root';
 
+//
 // Title
+//
 
 type HeaderTitleProps = {
   icon: string;
@@ -60,7 +63,9 @@ const HeaderTitle = ({ icon, title, caption }: HeaderTitleProps) => (
 
 HeaderTitle.displayName = 'Header.Title';
 
+//
 // Date
+//
 
 const HeaderDate = ({ start, end }: { start: Date; end?: Date }) => (
   <Card.Row icon='ph--calendar--regular'>
@@ -70,7 +75,9 @@ const HeaderDate = ({ start, end }: { start: Date; end?: Date }) => (
 
 HeaderDate.displayName = 'Header.Date';
 
+//
 // Row
+//
 
 type HeaderRowProps = ThemedClassName<
   PropsWithChildren<{
@@ -173,35 +180,6 @@ const HeaderAnchorIconButton = ({
 
 HeaderAnchorIconButton.displayName = 'Header.AnchorIconButton';
 
-// UserIconButton
-
-type UserIconButtonProps = Pick<IconBlockProps, 'compact'> & {
-  value?: URI.URI;
-  title?: string;
-  onContactCreate?: () => void;
-};
-
-// TODO(burdon): Reconcile with Avatar if space member.
-const HeaderUserIconButton = ({ compact, value, title, onContactCreate }: UserIconButtonProps) => {
-  const { t } = useTranslation(meta.id);
-  return (
-    <IconBlock compact={compact}>
-      <HeaderAnchorIconButton
-        classNames={compact && 'min-h-0'}
-        value={value}
-        title={title}
-        icon='ph--user--regular'
-        label={t('show-contact.label')}
-        fallbackIcon='ph--user-plus--regular'
-        fallbackLabel={t('create-contact.label')}
-        onClick={onContactCreate}
-      />
-    </IconBlock>
-  );
-};
-
-HeaderUserIconButton.displayName = 'Header.UserIconButton';
-
 // ObjectRow
 
 /** A row that renders an extracted ECHO object — icon button opening the object's card preview. */
@@ -222,32 +200,47 @@ const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
 
 HeaderObjectRow.displayName = 'Header.ObjectRow';
 
-// AttendeeRow
+// PersonRow
 
-type AttendeeRowProps = {
-  attendee: Actor.Actor;
+type PersonRowProps = {
+  actor: Actor.Actor;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
 
-/** A row that renders an event attendee with a user icon button. */
-const HeaderAttendeeRow = ({ attendee, db, onContactCreate }: AttendeeRowProps) => {
-  const contactDXN = useActorContact(db, attendee);
-  const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee, onContactCreate]);
+// TODO(burdon): Reconcile with Avatar if space member.
+/** A row that renders a person (sender, attendee, etc.) with a contact anchor icon. */
+const HeaderPersonRow = ({ actor, db, onContactCreate }: PersonRowProps) => {
+  const { t } = useTranslation(meta.id);
+  const contactDXN = useActorContact(db, actor);
+  const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
   return (
     <HeaderRow
       icon={
-        <HeaderUserIconButton compact title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />
+        <IconBlock compact>
+          <HeaderAnchorIconButton
+            classNames='min-h-0'
+            value={contactDXN}
+            title={actor.name}
+            icon='ph--user--regular'
+            label={t('show-contact.label')}
+            fallbackIcon='ph--user-plus--regular'
+            fallbackLabel={t('create-contact.label')}
+            onClick={handleContactCreate}
+          />
+        </IconBlock>
       }
     >
-      <h3 className='truncate'>{attendee.name || attendee.email}</h3>
+      <h3 className='truncate'>{actor.name || actor.email}</h3>
     </HeaderRow>
   );
 };
 
-HeaderAttendeeRow.displayName = 'Header.AttendeeRow';
+HeaderPersonRow.displayName = 'Header.PersonRow';
 
+//
+// Header
 //
 
 export const Header = {
@@ -255,17 +248,9 @@ export const Header = {
   Title: HeaderTitle,
   Date: HeaderDate,
   Row: HeaderRow,
-  ObjectRow: HeaderObjectRow,
   AnchorIconButton: HeaderAnchorIconButton,
-  UserIconButton: HeaderUserIconButton,
-  AttendeeRow: HeaderAttendeeRow,
+  ObjectRow: HeaderObjectRow,
+  PersonRow: HeaderPersonRow,
 };
 
-export type {
-  HeaderRootProps,
-  HeaderTitleProps,
-  HeaderRowProps,
-  AnchorIconButtonProps,
-  UserIconButtonProps,
-  AttendeeRowProps,
-};
+export type { HeaderRootProps, HeaderTitleProps, HeaderRowProps, AnchorIconButtonProps, PersonRowProps };

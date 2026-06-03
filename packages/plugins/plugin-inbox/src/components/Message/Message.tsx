@@ -156,7 +156,7 @@ type MessageHeaderProps = ThemedClassName<{
 }>;
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
+  const { message } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
   const relationObjects = useExtractedObjects(db, message);
@@ -206,17 +206,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
       {/* Sender row. */}
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <Header.Row
-        icon={
-          <Header.UserIconButton
-            title={message.sender.name}
-            value={sender}
-            onContactCreate={() => onContactCreate?.(message.sender)}
-          />
-        }
-      >
-        <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
-      </Header.Row>
+      <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
 
       {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
       {objects.map((object) => (
