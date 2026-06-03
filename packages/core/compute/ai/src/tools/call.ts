@@ -38,15 +38,27 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     log('toolCall', { toolCall: toolCall.name, input });
     const toolResult = yield* toolkit.handle(toolCall.name as any, input as any).pipe(
       Effect.map(({ result }) => {
+        let unwrapped: unknown = result;
         if (Exit.isExit(result)) {
-          log.warn('bugcheck: tool result is an exit', { name: toolCall.name, result: JSON.stringify(result) });
+          const exit: Exit.Exit<unknown, unknown> = result;
+          if (Exit.isSuccess(exit)) {
+            unwrapped = exit.value;
+          } else {
+            return {
+              _tag: 'toolResult',
+              toolCallId: toolCall.toolCallId,
+              name: toolCall.name,
+              error: `Tool execution failed: ${Cause.pretty(exit.cause)}`,
+              providerExecuted: false,
+            } satisfies ContentBlock.ToolResult;
+          }
         }
         return {
           _tag: 'toolResult',
           toolCallId: toolCall.toolCallId,
           name: toolCall.name,
           // TODO(dmaretskyi): Should we use encodedResult?
-          result: ContentBlock.isContentBlockResult(result) ? result : JSON.stringify(result),
+          result: ContentBlock.isContentBlockResult(unwrapped) ? unwrapped : JSON.stringify(unwrapped),
           providerExecuted: false,
         } satisfies ContentBlock.ToolResult;
       }),
@@ -70,7 +82,9 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
       toolCall: toolCall.name,
       ...{
         error: 'error' in toolResult ? toolResult.error : undefined,
-        result: 'result' in toolResult ? safeParseJson(toolResult.result) : undefined,
+        result: 'result' in toolResult
+          ? (typeof toolResult.result === 'string' ? safeParseJson(toolResult.result) : toolResult.result)
+          : undefined,
       },
     });
 

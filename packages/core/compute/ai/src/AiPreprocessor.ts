@@ -275,16 +275,11 @@ const unwrapFileBase64Data = (url: string): Effect.Effect<string, PromptPreproce
         if (!meta.includes('base64')) {
           throw new Error('Data URL must use base64 encoding');
         }
-        Buffer.from(payload, 'base64');
         return payload;
       }
 
-      try {
-        return Buffer.from(url, 'base64url').toString('base64');
-      } catch {
-        Buffer.from(url, 'base64');
-        return url;
-      }
+      // Node accepts both base64 and base64url alphabets; normalize to standard base64.
+      return Buffer.from(url, 'base64url').toString('base64');
     },
     catch: (cause) =>
       new PromptPreprocesorError({
