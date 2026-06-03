@@ -20,7 +20,8 @@ const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pip
       const manager = yield* Capability.get(Capabilities.PluginManager);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
-      const spaceId = data.spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(data.spaceKey!)) : undefined;
+      const spaceKey = data.spaceKey;
+      const spaceId = spaceKey ? yield* Effect.promise(() => createIdFromSpaceKey(spaceKey)) : undefined;
       yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
       yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
       return {
