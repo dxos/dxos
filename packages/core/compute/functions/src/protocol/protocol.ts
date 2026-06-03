@@ -31,7 +31,12 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService } from '../services';
+import {
+  byokHeaderLayer,
+  configuredCredentialsLayer,
+  credentialsLayerFromDatabase,
+  FunctionInvocationService,
+} from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
@@ -209,7 +214,9 @@ class FunctionContext extends Resource {
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
-      ? InternalAiServiceLayer(this.context.services.functionsAiService)
+      ? // BYOK header injection inside InternalAiServiceLayer requires CredentialsService; provide it
+        // here so the merged layer's external requirements stay at `never`.
+        InternalAiServiceLayer(this.context.services.functionsAiService).pipe(Layer.provide(credentials))
       : AiService.notAvailable;
 
     const operationServiceLayer = this.context.services.functionsService
@@ -279,6 +286,11 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
 
 /**
  * AI service layer that proxies HTTP requests through the EDGE-provided `FunctionsAiService`.
+ *
+ * The `byokHeaderLayer('anthropic.com')` wrapper attaches `X-BYOK` to outbound requests whenever a
+ * matching `AccessToken` is present in the space, letting the user override the server's default
+ * Anthropic key on a per-space basis. The literal `'anthropic.com'` mirrors the `source` value
+ * registered by the Anthropic `IntegrationProvider` in `plugin-assistant`.
  */
 const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) =>
   AiModelResolver.AiModelResolver.buildAiService.pipe(
@@ -288,7 +300,11 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
           AnthropicClient.layer({
             // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
             apiUrl: 'http://internal/provider/anthropic',
-          }).pipe(Layer.provide(FunctionsAiHttpClient.layer(functionsAiService))),
+          }).pipe(
+            Layer.provide(
+              byokHeaderLayer('anthropic.com').pipe(Layer.provide(FunctionsAiHttpClient.layer(functionsAiService))),
+            ),
+          ),
         ),
       ),
     ),
