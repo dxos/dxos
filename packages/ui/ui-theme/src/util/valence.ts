@@ -33,3 +33,11 @@ export const messageValence = (valence?: MessageValence) => {
       return 'font-medium border-neutral-text text-neutral-text bg-neutral-surface';
   }
 };
+
+/**
+ * Classes for a Button rendered inside a Message.Root that should inherit the message's valence color.
+ * Message.Root sets --dx-valence-bg / --dx-valence-bg-hover / --dx-valence-fg on its DOM node.
+ * Pass variant='valence' to the Button so button.css reads those variables.
+ */
+export const buttonValence = (_valence?: MessageValence): string =>
+  'text-(--dx-valence-fg) bg-(--dx-valence-bg) hover:bg-(--dx-valence-bg-hover)';
