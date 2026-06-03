@@ -110,22 +110,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // Compute posts.
   const posts = useMagazinePosts(subject, sort, view, starredUri, archivedUri, revision);
 
-  // Kick off load for any Post refs that aren't yet resolved so `ref.target`
-  // becomes populated reactively on the next render cycle. Also pre-load each
-  // resolved Post's `feed` ref so `MagazineTile` can show the feed name.
-  useEffect(() => {
-    for (const ref of magazine.posts) {
-      if (!ref.target) {
-        void ref.load().catch((err) => log.catch(err));
-        continue;
-      }
-
-      const feedRef = ref.target.source;
-      if (feedRef && !feedRef.target) {
-        void feedRef.load().catch((err) => log.catch(err));
-      }
-    }
-  }, [magazine.posts]);
+  // Post ref resolution (incl. their source feed refs) is owned by
+  // `useMagazinePosts`, which loads them via `ref.load()` into state — see the
+  // note there.
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
@@ -363,21 +350,50 @@ const useMagazinePosts = (
 ) => {
   const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
+  // Resolve each Post (and its source feed) ref via `load()` into state. Curated
+  // Posts live in a queue, so their synchronous `ref.target` accessor stays
+  // `undefined` until loaded — reading `ref.target` directly would silently drop
+  // every curated post. Loading into state also re-renders once resolution
+  // completes (the ref URIs don't change when a target loads, so a memo keyed on
+  // them would never recompute).
+  const [resolved, setResolved] = useState<Subscription.Post[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      subject.posts.map(async (ref) => {
+        try {
+          const post = ref.target ?? (await ref.load());
+          if (post?.source && !post.source.target) {
+            await post.source.load().catch((err) => log.catch(err));
+          }
+          return post ?? undefined;
+        } catch (err) {
+          log.catch(err);
+          return undefined;
+        }
+      }),
+    ).then((posts) => {
+      if (!cancelled) {
+        setResolved(posts.filter((post): post is Subscription.Post => Boolean(post)));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Re-resolve whenever the set of post refs changes (add/remove/curate).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postFingerprint]);
+
   return useMemo<Subscription.Post[]>(() => {
     const seenDxn = new Set<URI.URI>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
 
-    const resolved: Subscription.Post[] = [];
-    for (const ref of subject.posts) {
-      const target = ref.target;
-      if (!target) {
-        continue;
-      }
-
-      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
-      // same article (distinct Post objects, same `link` / `guid`); without secondary
-      // dedup the masonry shows them as duplicate tiles.
+    // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
+    // same article (distinct Post objects, same `link` / `guid`); without secondary
+    // dedup the masonry shows them as duplicate tiles.
+    const deduped: Subscription.Post[] = [];
+    for (const target of resolved) {
       const uri = Obj.getURI(target);
       if (
         seenDxn.has(uri) ||
@@ -395,7 +411,7 @@ const useMagazinePosts = (
         seenGuid.add(target.guid);
       }
 
-      resolved.push(target);
+      deduped.push(target);
     }
 
     // View mode determines which posts the tile grid shows.
@@ -407,13 +423,13 @@ const useMagazinePosts = (
     let visible: Subscription.Post[];
     switch (view) {
       case 'archived':
-        visible = resolved.filter((post) => isArchived(post));
+        visible = deduped.filter((post) => isArchived(post));
         break;
       case 'starred':
-        visible = resolved.filter((post) => !isArchived(post) && isStarred(post));
+        visible = deduped.filter((post) => !isArchived(post) && isStarred(post));
         break;
       default:
-        visible = resolved.filter((post) => !isArchived(post));
+        visible = deduped.filter((post) => !isArchived(post));
         break;
     }
 
@@ -441,13 +457,10 @@ const useMagazinePosts = (
 
     return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
   }, [
-    // `subject.posts` may return the same array proxy reference even when its
-    // contents change (ECHO's reactive proxy is stable per-object).
-    // Including `.length` and a content fingerprint as deps forces re-computation on
-    // any add/remove, so the masonry tiles re-render after Curate / Clear.
-    subject.posts,
-    subject.posts.length,
-    postFingerprint,
+    // `resolved` is the state populated by the load effect above; it changes
+    // identity on every (re-)resolution, driving the masonry to re-render after
+    // Curate / Clear. `revision` bumps on Subscription tag/read mutations.
+    resolved,
     sort,
     view,
     subject.postState,

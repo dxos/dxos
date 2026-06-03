@@ -80,8 +80,6 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
     Obj.setParent(routine, magazine);
     space.db.add(magazine);
     yield* Effect.promise(() => space.db.flush());
-    // Exposed so the play function can assert the curation result directly.
-    (globalThis as any).__feedCurateMagazine = magazine;
   });
 
 const meta: Meta<typeof DefaultStory> = {
@@ -119,16 +117,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// TODO(burodn): Rename Default.
+export const Basic: Story = {};
+
 /**
  * Live curation against the The Register "AI + ML" feed (served from a bundled
- * fixture via a mock fetcher). Renders the empty magazine, then clicks Curate to
- * drive the real RefreshMagazine flow: SyncFeed fetches + parses the feed, then
- * CurateMagazine pulls the matching Posts into `magazine.posts`.
- *
- * The play asserts the curation RESULT (`magazine.posts` grows). Curated Posts
- * are queue-backed refs: their tiles render in the running app, but the storybook
- * client harness doesn't reliably resolve those refs to tiles, so the UI may
- * still show the empty-state placeholder here even though curation succeeded.
+ * fixture via a mock fetcher). Renders the empty magazine, clicks Curate to drive
+ * the real RefreshMagazine flow (SyncFeed fetches + parses the feed → CurateMagazine
+ * pulls the Posts into `magazine.posts`), and the curated Posts render as tiles.
  *
  * Skipped in CI (`!test`) — browser/timing-sensitive interactive demo. The
  * deterministic logic is covered by `theregister-fixture.test.ts` (fetch → parse)
@@ -147,13 +143,10 @@ export const Default: Story = {
     const curateButton = await canvas.findByRole('button', { name: /^curate$/i });
     await userEvent.click(curateButton);
 
-    // Verify curation populated the magazine (the fixture has 4 AI/ML articles).
-    await waitFor(
-      async () => {
-        const magazine = (globalThis as any).__feedCurateMagazine as Magazine.Magazine | undefined;
-        await expect(magazine?.posts.length ?? 0).toBeGreaterThan(0);
-      },
-      { timeout: 15_000 },
-    );
+    // Curated Posts render as tiles (the empty-state placeholder is replaced).
+    await waitFor(() => expect(canvas.queryByText(/no articles yet/i)).toBeNull(), { timeout: 15_000 });
+    // `/sovereign ai/i` appears in both the title and the snippet, so match all.
+    const matches = await canvas.findAllByText(/sovereign ai/i);
+    await expect(matches.length).toBeGreaterThan(0);
   },
 };
