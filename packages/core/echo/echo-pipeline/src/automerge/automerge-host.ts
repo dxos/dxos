@@ -22,7 +22,6 @@ import {
   type PeerDisconnectedPayload,
   type PeerId,
   Repo,
-  type StorageAdapterInterface,
   type StorageKey,
   type SubductionPeerBinding,
   type SubductionPeerId,
@@ -37,7 +36,7 @@ import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
-import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
+import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

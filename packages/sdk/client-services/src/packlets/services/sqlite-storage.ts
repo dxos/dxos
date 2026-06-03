@@ -7,7 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import { EventEmitter } from 'node:events';
 import { join } from 'node:path';
-import type { Callback, FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
+import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -191,6 +191,7 @@ export class SqliteStorage implements Storage {
 
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   readonly #files = new Map<string, File>();
+  readonly #nativeFiles = new Map<string, SqliteRandomAccessFile>();
 
   constructor({ runtime }: SqliteStorageOptions, path = '/sqlite-feeds') {
     this.#runtime = runtime;
@@ -218,18 +219,18 @@ export class SqliteStorage implements Storage {
     const dirPath = sub ? join(this.path, sub) : this.path;
     const runtime = this.#runtime;
     const files = this.#files;
+    const nativeFiles = this.#nativeFiles;
 
     const getOrCreateFile = (path: string, filename: string): File => {
       const fullPath = join(path, filename);
-      const existing = files.get(fullPath);
-      // `File` wraps the native adapter; `destroyed` is not in the File type but
-      // is a runtime property proxied from the underlying SqliteRandomAccessFile.
-      if (existing && !(existing as unknown as SqliteRandomAccessFile).destroyed) {
-        return existing;
+      const existingNative = nativeFiles.get(fullPath);
+      if (existingNative && !existingNative.destroyed) {
+        return files.get(fullPath)!;
       }
       const native = new SqliteRandomAccessFile(fullPath, runtime);
-      const file = wrapFile(native as unknown as RandomAccessStorageProperties & RandomAccessStorage, StorageType.NODE);
+      const file = wrapFile(native, StorageType.NODE);
       files.set(fullPath, file);
+      nativeFiles.set(fullPath, native);
       return file;
     };
 

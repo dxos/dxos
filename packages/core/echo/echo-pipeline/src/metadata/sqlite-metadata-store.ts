@@ -376,6 +376,12 @@ export class SqliteMetadataStore implements IMetadataStore {
         context: { fileLength: buf.length, dataSize },
       });
     }
+    if (buf.length !== dataSize + 8) {
+      throw new DataCorruptionError({
+        message: 'Metadata payload length does not match framing header.',
+        context: { fileLength: buf.length, dataSize },
+      });
+    }
     const payload = buf.subarray(8, dataSize + 8);
     const calculated = CRC32.buf(payload);
     if (calculated !== checksum) {
