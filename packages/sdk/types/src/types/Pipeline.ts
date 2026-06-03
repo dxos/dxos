@@ -26,10 +26,7 @@ export const Pipeline = Schema.Struct({
 }).pipe(
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--path--regular',
-    hue: 'purple',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--path--regular', hue: 'purple' }),
   Type.makeObject(DXN.make('org.dxos.type.pipeline', '0.1.0')),
 );
 

@@ -83,10 +83,7 @@ export const Organization = OrganizationSchema.pipe(
   ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--building-office--regular',
-    hue: 'neutral',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
   Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );
 
@@ -98,9 +95,6 @@ export const make = (props: Partial<Obj.MakeProps<typeof Organization>> = {}) =>
 export const LegacyOrganization = OrganizationSchema.pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--building-office--regular',
-    hue: 'neutral',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),
   Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );

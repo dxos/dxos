@@ -15,10 +15,7 @@ export const Scene = Schema.Struct({
   name: Schema.optional(Schema.String),
   objects: Ref.Ref(Model.Object).pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--cube--regular',
-    hue: 'teal',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }),
   Type.makeObject(DXN.make('org.dxos.type.spacetime.scene', '0.1.0')),
 );
 

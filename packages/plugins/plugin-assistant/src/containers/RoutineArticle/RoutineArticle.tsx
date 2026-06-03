@@ -65,7 +65,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2'>
-        <TemplateEditor id={subject.id} template={subject.instructions} />
+        <TemplateEditor id={subject.id} source={subject.instructions} />
         <RoutineResult state={state} />
       </Panel.Content>
     </Panel.Root>

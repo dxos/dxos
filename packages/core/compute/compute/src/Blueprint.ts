@@ -70,10 +70,7 @@ export const Blueprint = Schema.Struct({
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--blueprint--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--blueprint--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.blueprint', '0.2.0')),
 );
 

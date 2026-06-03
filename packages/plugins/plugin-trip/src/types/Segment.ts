@@ -140,10 +140,7 @@ export const Segment = Schema.Struct({
   notes: Schema.optional(Schema.String),
   details: Details,
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--ticket--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
   Annotation.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
 );

@@ -33,10 +33,7 @@ export const Score = Schema.Struct({
   loopEnd: Schema.optional(Schema.Number),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--music-notes--regular',
-    hue: 'fuchsia',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--music-notes--regular', hue: 'fuchsia' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.score', '0.1.0')),
 );

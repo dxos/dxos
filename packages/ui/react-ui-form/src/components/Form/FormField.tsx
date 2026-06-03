@@ -10,8 +10,10 @@ import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
+import { FormInlineAnnotationId } from '@dxos/echo/internal';
 import {
   createJsonPath,
+  findAnnotation,
   findNode,
   getAnnotation,
   getDiscriminatedType,
@@ -31,6 +33,7 @@ import {
   BooleanField,
   DateField,
   GeoPointField,
+  InlineRefField,
   MarkdownField,
   NumberField,
   RefField,
@@ -230,6 +233,12 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
+    // Inline a single referenced object's own fields (nested form) instead of a picker.
+    const inline = findAnnotation<boolean>(refProps.ast, FormInlineAnnotationId) === true;
+    if (inline && !refProps.isArray) {
+      return <InlineRefField {...fieldProps} {...refProps} db={db} useType={schemaHook} onCreate={onCreate} />;
+    }
+
     const isCreateTarget = !createTypename || refProps.typename === createTypename;
     return (
       <RefField

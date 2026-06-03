@@ -407,6 +407,13 @@ export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInp
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
+ * When set on a `Ref` property, the form renders the referenced object's own
+ * fields inline (a nested form bound to the target) instead of a picker.
+ */
+export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormInline');
+export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');

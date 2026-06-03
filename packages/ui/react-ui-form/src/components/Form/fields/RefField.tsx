@@ -100,14 +100,17 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
-    // Match form-value Refs against options by the bare object id (last DXN
-    // segment), not by full DXN string. Ref.make uses
-    // `DXN.fromLocalObjectId(id)` (`dxn:echo:@:<id>`), but
-    // `Entity.getURI(obj)` on a registered object produces the space-scoped
-    // form (`dxn:echo:<spaceId>:<id>`). String-comparing the two never
-    // matches, so the just-created Ref's option lookup fails and the slot
-    // displays as empty even though the underlying form value IS set.
-    const dxnToEntityId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
+    // Match form-value Refs against options by the bare entity id, not by full
+    // URI string. A just-created object's Ref (`Ref.make`) carries the LOCAL
+    // EID `echo:/<id>`, while options derived from `Entity.getURI` carry the
+    // qualified EID `echo://<spaceId>/<id>`; encoded snapshots use the DXN
+    // form `dxn:echo:<space|@>:<id>`. The entity id (a ULID) contains neither
+    // `:` nor `/`, so it is always the final delimiter-separated segment —
+    // splitting on both reconciles all three forms. Comparing full strings (or
+    // splitting on `:` alone, which leaves `/`-delimited EIDs intact) makes the
+    // just-created Ref's lookup fail and the slot render empty even though the
+    // underlying form value IS set.
+    const dxnToEntityId = (dxn: string): string => dxn.split(/[:/]/).filter(Boolean).pop() ?? dxn;
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);

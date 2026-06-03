@@ -213,9 +213,13 @@ export const CreateFeed: Story = {
     // one — guards against an off-by-one bug in the create flow that would
     // overwrite the slot with a stale ref).
     const newId = (newFeed as any).id;
+    // Extract the bare entity id across both `:` (DXN) and `/` (EID) delimiters —
+    // `Ref.make` yields a local EID `echo:/<id>`, so a plain `split(':')` would
+    // leave the leading slash and never match the bare id.
+    const toEntityId = (uri?: string) => uri?.split(/[:/]/).filter(Boolean).pop();
     await waitFor(
       'magazine.feeds[0] references the new Feed',
-      () => magazine!.feeds[0]?.uri.split(':').pop(),
+      () => toEntityId(magazine!.feeds[0]?.uri),
       (id) => id === newId,
     );
 

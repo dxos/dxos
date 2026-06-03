@@ -31,10 +31,7 @@ export const AccessToken = Schema.Struct({
     .pipe(Schema.optional),
 }).pipe(
   LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
-  Annotation.IconAnnotation.set({
-    icon: 'ph--key--regular',
-    hue: 'yellow',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--key--regular', hue: 'yellow' }),
   HiddenAnnotation.set(true),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
