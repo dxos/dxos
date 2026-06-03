@@ -75,6 +75,16 @@
           @apply bg-error-bg-hover;
         }
       }
+      &[data-variant='valence'] {
+        color: var(--dx-valence-fg, var(--color-neutral-fg));
+        background: var(--dx-valence-bg, var(--color-neutral-bg));
+        &:hover,
+        &[aria-pressed='true'],
+        &[aria-checked='true'],
+        &[data-state='open'] {
+          background: var(--dx-valence-bg-hover, var(--color-neutral-bg-hover));
+        }
+      }
     }
   }
   /* Props */

@@ -17,7 +17,7 @@ const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
 
 const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-modal-surface rounded-md p-1',
+    'dx-popover-surface rounded-md p-1',
     surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
