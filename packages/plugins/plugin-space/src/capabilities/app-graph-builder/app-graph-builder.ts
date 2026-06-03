@@ -12,9 +12,9 @@ import { type SpacePluginOptions } from '#types';
 import {
   createCollectionExtensions,
   createCompanionExtensions,
+  createDatabaseExtensions,
   createSettingsExtensions,
   createSpaceExtensions,
-  createTypeExtensions,
 } from './extensions';
 
 export default Capability.makeModule(
@@ -22,7 +22,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       createSpaceExtensions(),
       createSettingsExtensions(),
-      createTypeExtensions(),
+      createDatabaseExtensions(),
       createCollectionExtensions({ shareableLinkOrigin }),
       createCompanionExtensions(),
     ]);
