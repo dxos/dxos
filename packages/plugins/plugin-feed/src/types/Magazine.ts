@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { Routine } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, StateMap, Type } from '@dxos/echo';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
@@ -53,10 +53,8 @@ export const Magazine = Schema.Struct({
     }),
     Schema.optional,
   ),
-  /** Routine describing what content the Magazine should gather (inlined in the form). */
-  routine: Schema.optional(
-    Ref.Ref(Routine.Routine).pipe(Annotation.FormInlineAnnotation.set(true), Schema.annotations({ title: 'Routine' })),
-  ),
+  /** Routine describing what content the Magazine should gather (hidden from forms; edited via properties companion). */
+  routine: Schema.optional(Ref.Ref(Routine.Routine).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--newspaper-clipping--regular', hue: 'indigo' }),
@@ -69,18 +67,39 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-/** Creates a Magazine. */
-export const make = (
-  props: Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts'> & {
-    feeds?: Ref.Ref<Subscription.Subscription>[];
-    posts?: Ref.Ref<Subscription.Post>[];
-  } = {},
-): Magazine =>
-  Obj.make(Magazine, {
-    ...props,
+/** Default curation instructions seeded into every new Magazine's Routine. */
+export const DEFAULT_MAGAZINE_INSTRUCTIONS = 'Prefer stories relating to sovereign AI.';
+
+export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts'> & {
+  feeds?: Ref.Ref<Subscription.Subscription>[];
+  posts?: Ref.Ref<Subscription.Post>[];
+  routine?: { instructions?: string };
+  blueprint?: Ref.Ref<Blueprint.Blueprint>;
+};
+
+/**
+ * Creates a Magazine together with its companion Routine (hidden child, cascade-deleted with the magazine).
+ * The routine is pre-wired with the provided blueprint and a self-reference context so it can be
+ * passed directly to AgentPrompt without constructing an ephemeral wrapper.
+ */
+export const make = (props: MakeProps = {}): { magazine: Magazine; routine: Routine.Routine } => {
+  const magazine = Obj.make(Magazine, {
+    name: props.name,
     feeds: props.feeds ?? [],
     posts: props.posts ?? [],
+    keep: props.keep,
   });
+  const routine = Routine.make({
+    instructions: props.routine?.instructions ?? DEFAULT_MAGAZINE_INSTRUCTIONS,
+    blueprints: props.blueprint ? [props.blueprint] : [],
+    context: [Ref.make(magazine)],
+  });
+  Obj.setParent(routine, magazine);
+  Obj.update(magazine, (magazine) => {
+    (magazine as Obj.Mutable<typeof magazine>).routine = Ref.make(routine);
+  });
+  return { magazine, routine };
+};
 
 /** Schema for the create-magazine dialog form. */
 export const CreateMagazineSchema = Schema.Struct({

@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Routine } from '@dxos/compute';
-import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Filter, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
@@ -61,19 +61,9 @@ const meta = {
             url: 'https://vercel.com/changelog/feed',
           }),
         );
-        // Curation Routine, parented to (owned by) the Magazine — surfaced inline
-        // in the properties form (with its Markdown instructions editor) via
-        // `Magazine.routine`'s `FormInlineAnnotation`.
-        const routine = space.db.add(
-          Routine.make({ name: 'Curation', instructions: 'Prefer stories relating to sovereign AI.' }),
-        );
-        const magazine = space.db.add(
-          Magazine.make({
-            name: 'Distributed Systems Reading',
-            routine: Ref.make(routine),
-          }),
-        );
-        Obj.setParent(routine, magazine);
+        const { magazine, routine } = Magazine.make({ name: 'Distributed Systems Reading' });
+        space.db.add(magazine);
+        space.db.add(routine);
         // Expose the magazine + space on `window` so the play function can
         // assert directly against the underlying ECHO state (e.g. that
         // `magazine.feeds` actually grew after the create-feed flow).

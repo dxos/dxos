@@ -68,9 +68,11 @@ export const generateMagazine = (
     feeds: Subscription.Subscription[];
     posts: Subscription.Post[];
   }> = {},
-): Magazine.Magazine =>
-  Magazine.make({
+): Magazine.Magazine => {
+  const { magazine } = Magazine.make({
     name: props.name ?? random.company.name() + ' Reading List',
     feeds: (props.feeds ?? []).map((feed) => Ref.make(feed)),
     posts: (props.posts ?? []).map((post) => Ref.make(post)),
   });
+  return magazine;
+};

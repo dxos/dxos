@@ -7869,8 +7869,6 @@ importers:
         specifier: ~19.2.3
         version: 19.2.6(react@19.2.6)
 
-  packages/experimental/script-toolbox: {}
-
   packages/plugins/plugin-assistant:
     dependencies:
       '@codemirror/autocomplete':
@@ -10281,6 +10279,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant-toolkit
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client

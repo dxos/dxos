@@ -7,13 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
@@ -23,8 +22,6 @@ import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
@@ -35,59 +32,35 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      // Show Subscription.Subscription objects as nodes under each space.
+      // Show Magazine.Magazine objects as nodes under each space.
       GraphBuilder.createExtension({
-        id: 'subscriptionFeeds',
+        id: 'magazines',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Subscription)));
-          if (feeds.length === 0) {
+          const magazines = get(AtomQuery.make(space.db, Filter.type(Magazine.Magazine)));
+          if (magazines.length === 0) {
             return Effect.succeed([]);
           }
 
           return Effect.succeed([
-            // TODO(wittjosiah): Should be AppNode.makeSection() but currently has selectable data.
             Node.make({
-              id: 'feeds',
-              type: 'feeds', // TODO(burdon): Const.
-              data: 'feeds-root', // TODO(burdon): Const.
-              properties: { label: 'Feeds', icon: 'ph--rss--regular', role: 'branch', position: 'first' },
-              nodes: feeds
-                .map((feed: Subscription.Subscription) =>
+              id: 'magazines',
+              type: 'magazines',
+              data: 'magazines-root',
+              properties: {
+                label: 'Magazines',
+                icon: 'ph--newspaper-clipping--regular',
+                role: 'branch',
+                position: 'first',
+              },
+              nodes: magazines
+                .map((magazine: Magazine.Magazine) =>
                   createObjectNode({
                     db: space.db,
-                    object: feed,
+                    object: magazine,
                   }),
                 )
                 .filter((node): node is NonNullable<typeof node> => node !== null),
-            }),
-          ]);
-        },
-      }),
-
-      // Companion panel: resolve the selected feed from the SubscriptionsArticle.
-      GraphBuilder.createExtension({
-        id: 'subscriptionFeedsCompanion',
-        match: NodeMatcher.whenNodeType('feeds'),
-        connector: (matched, get) => {
-          const space = getActiveSpace(capabilities.get(ClientCapabilities.Client), capabilities);
-          const db = space?.db;
-          if (!db) {
-            return Effect.succeed([]);
-          }
-
-          // Resolve the selected feed from the attention selection.
-          const feedId = get(selectedId(matched.id));
-          const selectedFeed = feedId
-            ? get(AtomQuery.make(db, Filter.and(Filter.type(Subscription.Subscription), Filter.id(feedId))))[0]
-            : undefined;
-
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: 'feed',
-              label: ['feed-companion.label', { ns: meta.id }],
-              icon: 'ph--article--regular',
-              data: selectedFeed,
             }),
           ]);
         },

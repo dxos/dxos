@@ -65,7 +65,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     setError(undefined);
     setState('busy');
     try {
-      await invokePromise(FeedOperation.RefreshMagazine, { magazine: Ref.make(subject) });
+      await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
     } catch (err) {
       log.catch(err);
       setError(t('curate-error.message'));

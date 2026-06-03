@@ -172,12 +172,12 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     ];
     yield* Effect.promise(() => queue.append(posts));
 
-    space.db.add(
-      Magazine.make({
-        name: 'Curate Flow Test',
-        feeds: [Ref.make(subscriptionFeed)],
-      }),
-    );
+    const { magazine: mag, routine } = Magazine.make({
+      name: 'Curate Flow Test',
+      feeds: [Ref.make(subscriptionFeed)],
+    });
+    space.db.add(mag);
+    space.db.add(routine);
     yield* Effect.promise(() => space.db.flush());
   });
 

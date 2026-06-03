@@ -72,6 +72,8 @@ export const translations = [
         'show-archived.label': 'Show archived',
         'only-starred.label': 'Show starred only',
         'close.label': 'Close',
+        'routine-instructions.label': 'Curation instructions',
+        'routine-instructions.placeholder': 'Describe what content to curate…',
       },
     },
   },

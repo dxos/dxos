@@ -150,40 +150,15 @@ export const AddPostToMagazine = Operation.make({
 });
 
 /**
- * End-to-end magazine refresh: loads each referenced feed, syncs new posts from
- * the source RSS/Atom URL, runs deterministic curation, then enforces each
- * feed's `keep` bound on the magazine's curated post list. Drives the
- * MagazineArticle Curate button.
- */
-export const RefreshMagazine = Operation.make({
-  meta: {
-    key: makeKey('refreshMagazine'),
-    name: 'Refresh Magazine',
-    description: 'Syncs feeds, curates new posts, and applies per-feed keep limits.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    magazine: Ref.Ref(Magazine.Magazine).annotations({
-      description: 'The Magazine to refresh.',
-    }),
-  }),
-  output: Schema.Struct({
-    synced: Schema.Number.annotations({ description: 'Number of feeds successfully synced.' }),
-    added: Schema.Number.annotations({ description: 'Number of Posts added to the Magazine.' }),
-  }),
-  services: [Capability.Service],
-});
-
-/**
- * Deterministic one-shot curation. Used by the MagazineArticle Curate button.
- * For each uncurated Post in the Magazine's referenced feeds, derives a snippet
- * and image from the Post's existing description (no HTTP) and adds it.
+ * End-to-end magazine curation: syncs all referenced feeds, then runs the
+ * magazine's Routine through the AI blueprint to select and enrich posts, and
+ * finally enforces each feed's `keep` bound. Drives the MagazineArticle Curate button.
  */
 export const CurateMagazine = Operation.make({
   meta: {
     key: makeKey('curateMagazine'),
     name: 'Curate Magazine',
-    description: "Adds uncurated Posts from the Magazine's feeds with derived snippets.",
+    description: 'Syncs feeds, runs the magazine routine to curate posts, and applies per-feed keep limits.',
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
@@ -192,7 +167,7 @@ export const CurateMagazine = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    added: Schema.Number.annotations({ description: 'Number of Posts added to the Magazine.' }),
+    synced: Schema.Number.annotations({ description: 'Number of feeds successfully synced.' }),
   }),
   services: [Capability.Service],
 });

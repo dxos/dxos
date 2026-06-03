@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation, Routine } from '@dxos/compute';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Blueprint, Operation } from '@dxos/compute';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
+import { MagazineBlueprint } from '#blueprints';
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
@@ -20,9 +21,6 @@ const DEFAULT_MAGAZINE_FEED = {
   url: 'https://www.eff.org/rss/updates.xml',
   type: 'rss',
 } as Subscription.Subscription;
-
-/** Example curation instructions seeded into every new Magazine's Routine. */
-const DEFAULT_MAGAZINE_INSTRUCTIONS = 'Prefer stories relating to sovereign AI.';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -57,11 +55,7 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             // Seed every new Magazine with one starter Feed so the article view has
             // something to curate immediately rather than booting into an empty state.
-            // Best-effort: a seeding failure (AddObject reject, SyncFeed schedule
-            // error) must not abort Magazine creation, and partial success (feed
-            // added but schedule failed) would otherwise leave an orphaned hidden
-            // feed referenced by no magazine. Wrapping the whole block in
-            // `Effect.option` collapses both into a clean None on failure.
+            // Best-effort: a seeding failure must not abort Magazine creation.
             const seededFeed = yield* Effect.gen(function* () {
               const defaultFeed = Subscription.makeSubscription({ ...DEFAULT_MAGAZINE_FEED });
               yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -79,30 +73,39 @@ export default Capability.makeModule(
             }).pipe(Effect.option);
 
             const initialFeeds = Option.isSome(seededFeed) ? [Ref.make(seededFeed.value)] : [];
-            const object = Magazine.make({ ...props, feeds: initialFeeds });
+
+            // Find or create the magazine Blueprint entity using the seeded feed's db.
+            // Best-effort: if db is unavailable the routine starts with no blueprint.
+            const blueprintRef = yield* Effect.gen(function* () {
+              const db = Option.isSome(seededFeed) ? Obj.getDatabase(seededFeed.value) : undefined;
+              if (!db) {
+                return undefined;
+              }
+              const existing = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
+              const blueprint =
+                existing.find((b) => Obj.getMeta(b).key === Magazine.BLUEPRINT_KEY) ??
+                db.add(MagazineBlueprint.make());
+              return Ref.make(blueprint);
+            }).pipe(Effect.option);
+
+            const { magazine, routine } = Magazine.make({
+              ...props,
+              feeds: initialFeeds,
+              blueprint: Option.isSome(blueprintRef) ? (blueprintRef.value ?? undefined) : undefined,
+            });
+
             const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
+              object: magazine,
               target: options.target,
               targetNodeId: options.targetNodeId,
             });
 
-            // Seed a curation Routine owned by (parented to) the Magazine. Cascade-deleted with it.
-            // Best-effort: a seeding failure must not abort Magazine creation.
-            yield* Effect.gen(function* () {
-              const routine = Routine.make({
-                name: 'Curation',
-                instructions: DEFAULT_MAGAZINE_INSTRUCTIONS,
-              });
-              Obj.setParent(routine, object);
-              yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: routine,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-              Obj.update(object, (object) => {
-                (object as Obj.Mutable<typeof object>).routine = Ref.make(routine);
-              });
+            // Seed the companion Routine (hidden, cascade-deleted with magazine). Best-effort.
+            yield* Operation.invoke(SpaceOperation.AddObject, {
+              object: routine,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
             }).pipe(Effect.option);
 
             return result;

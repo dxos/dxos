@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Routine } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -76,11 +76,9 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
       Subscription.makeSubscription({ name: 'The Register — AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
     );
 
-    // Magazine pointed at a curation Routine (parented to the magazine).
-    const routine = Routine.make({ name: 'Curation', instructions: 'Prefer stories relating to sovereign AI.' });
-    const magazine = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)], routine: Ref.make(routine) });
-    Obj.setParent(routine, magazine);
+    const { magazine, routine } = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)] });
     space.db.add(magazine);
+    space.db.add(routine);
     yield* Effect.promise(() => space.db.flush());
   });
 
