@@ -104,7 +104,7 @@ type ToolbarIconButtonProps = IconButtonProps;
 const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
   return (
     <ToolbarPrimitive.Button asChild>
-      <IconButton {...props} noTooltip ref={forwardedRef} />
+      <IconButton {...props} ref={forwardedRef} />
     </ToolbarPrimitive.Button>
   );
 });

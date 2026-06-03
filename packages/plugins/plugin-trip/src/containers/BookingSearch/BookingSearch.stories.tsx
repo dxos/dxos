@@ -69,7 +69,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-trip/BookingSearch',
+  title: 'plugins/plugin-trip/containers/BookingSearch',
   render: DefaultStory,
   parameters: { layout: 'fullscreen' },
   decorators: [

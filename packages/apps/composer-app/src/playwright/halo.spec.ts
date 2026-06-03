@@ -66,4 +66,38 @@ test.describe('HALO tests', () => {
     //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
     // });
   });
+
+  test('deleting a space replicates across devices', async () => {
+    test.setTimeout(120_000);
+
+    // Host creates a space; guest joins the host's identity and inherits it.
+    await host.createSpace();
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    const authCode = await host.getAuthCode();
+    await guest.openUserDevices();
+    await Promise.all([
+      guest.page.waitForRequest(INITIAL_URL + '/?deviceInvitationCode=', { timeout: 10_000 }),
+      guest.joinNewIdentity(),
+    ]);
+    await guest.shell.acceptDeviceInvitation(invitationCode);
+    await guest.shell.authenticateDevice(authCode);
+
+    // Both devices see the shared space.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 60_000 });
+
+    // Return the host to a clean navtree (the device-join flow left the account panel open).
+    await host.page.goto(INITIAL_URL);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 30_000 });
+
+    // Delete the shared space on the host.
+    await host.deleteSpace();
+
+    // The deletion is applied locally on the host...
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 30_000 });
+    // ...and replicates to the guest via the HALO.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+  });
 });
