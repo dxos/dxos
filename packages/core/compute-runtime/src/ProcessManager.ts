@@ -13,6 +13,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
@@ -23,7 +24,9 @@ import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
+import { ProcessDefinitionRegistry } from './process-definition-registry';
 import { ProcessManagerService } from './process-manager-service';
+import { ProcessStore } from './process-store';
 import { createProcessTraceService } from './process-trace';
 import * as ProcessHandle from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
@@ -36,6 +39,8 @@ export {
   SequentialProcessIdGenerator as SequentialIdGenerator,
 } from './process-id';
 
+export { ProcessDefinitionRegistry } from './process-definition-registry';
+export { ProcessStore } from './process-store';
 export { ProcessOperationInvoker };
 
 export interface Status {
@@ -192,6 +197,12 @@ export interface Manager {
   shutdown(): Effect.Effect<void>;
 
   /**
+   * Restores non-terminal processes from durable storage after a restart.
+   * Should be called once after construction, before handling new events.
+   */
+  restore(): Effect.Effect<void>;
+
+  /**
    * Operation handlers supplied at construction (same set used for nested {@link Operation.Service} in processes).
    */
   readonly operationHandlerSet: OperationHandlerSet.OperationHandlerSet;
@@ -207,6 +218,7 @@ export interface ProcessManagerImplOpts {
   serviceResolver?: ServiceResolver.ServiceResolver;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
   idGenerator?: ProcessIdGenerator;
+  definitions?: ProcessDefinitionRegistry;
 
   /**
    * Runtime name to stamp on trace messages emitted by processes spawned by this manager.
@@ -225,6 +237,8 @@ export class ProcessManagerImpl implements Manager {
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
   readonly #traceSink: Trace.Sink;
   readonly #runtimeName: Trace.RuntimeName | undefined;
+  readonly #store: ProcessStore;
+  readonly #definitions: ProcessDefinitionRegistry;
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
@@ -237,6 +251,8 @@ export class ProcessManagerImpl implements Manager {
     this.#handlerSet = opts.handlerSet;
     this.#traceSink = opts.traceSink;
     this.#runtimeName = opts.runtimeName;
+    this.#store = new ProcessStore(opts.kvStore);
+    this.#definitions = opts.definitions ?? new ProcessDefinitionRegistry();
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
@@ -274,10 +290,9 @@ export class ProcessManagerImpl implements Manager {
   }
 
   /**
-   * Terminates every spawned process handle (children before parents), clears alarms, and empties the handle map.
-   * Safe to call when there are no handles. Per-handle `terminate` is idempotent.
+   * Suspends every spawned process handle (preserving durable state) and clears the handle map.
+   * Suspended processes can be restored on the next boot via {@link restore}.
    */
-  // TODO(dmaretskyi): Make it so that the ProcessManager is durable, then this will not terminate processes. just stop scheduling callbacks.
   shutdown(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const handleCount = this.#handles.size;
@@ -285,55 +300,21 @@ export class ProcessManagerImpl implements Manager {
         log('lifecycle: manager shutdown skipped');
         return;
       }
-      log('lifecycle: manager shutting down', { handleCount, pids: [...this.#handles.keys()] });
-      const order = this.#shutdownTerminationOrder();
-      for (const handle of order) {
-        yield* handle.terminate();
+      log('lifecycle: manager suspending', { handleCount, pids: [...this.#handles.keys()] });
+      for (const handle of this.#handles.values()) {
+        yield* handle.suspend();
       }
       this.#handles.clear();
       this.#refreshProcessTree();
-      log('lifecycle: manager shutdown complete', { terminated: order.length });
+      log('lifecycle: manager suspended', { suspended: handleCount });
     });
-  }
-
-  /**
-   * Pids with no pending children in the handle map first, so child processes shut down before parents.
-   */
-  #shutdownTerminationOrder(): ProcessHandle.ProcessHandleImpl<any, any, any>[] {
-    const byPid = new Map(this.#handles);
-    const pending = new Set<Process.ID>(byPid.keys());
-    const result: ProcessHandle.ProcessHandleImpl<any, any, any>[] = [];
-
-    const pendingChildCount = (pid: Process.ID): number => {
-      let count = 0;
-      for (const childPid of pending) {
-        const child = byPid.get(childPid)!;
-        if (child.parentId === pid) {
-          count++;
-        }
-      }
-      return count;
-    };
-
-    while (pending.size > 0) {
-      let leaves = [...pending].filter((pid) => pendingChildCount(pid) === 0);
-      if (leaves.length === 0) {
-        leaves = [[...pending][0]!];
-      }
-      for (const pid of leaves) {
-        pending.delete(pid);
-        const handle = byPid.get(pid);
-        if (handle) {
-          result.push(handle);
-        }
-      }
-    }
-
-    return result;
   }
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
+      // Auto-register the definition so it can be looked up during restore.
+      this.#definitions.register(definition);
+
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -458,6 +439,19 @@ export class ProcessManagerImpl implements Manager {
           }
         });
 
+      // Persistence adapter bound to this process id.
+      const persistence: ProcessHandle.Persistence = {
+        setAlarm: (dueAt) => this.#store.setAlarm(id, dueAt),
+        setState: (state) => this.#store.setState(id, state),
+        removeEvent: (seq) => this.#store.removeEvent(id, seq),
+        appendEvent: (event) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id),
+      };
+
+      // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
+      const defRaw = definition as unknown as { input: Schema.Schema<I, any, never> };
+      const encodeInput = (input: I): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
+
       const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
@@ -474,16 +468,209 @@ export class ProcessManagerImpl implements Manager {
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
+        persistence,
+        false,
+        encodeInput,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
       this.#refreshProcessTree();
 
-      // TODO(dmaretskyi): Background?
-      yield* handle.runOnSpawn();
+      // Write initial durable record before running onSpawn.
+      yield* this.#store.putProcess({
+        id,
+        key: definition.key,
+        params: { name: params.name ?? null, target: params.target ?? null, notify: params.notify ?? null },
+        environment: { space: environment.space, conversation: environment.conversation },
+        parentId: Option.getOrNull(parentOption),
+        state: Process.State.RUNNING,
+        alarmDueAt: null,
+        events: [],
+      });
+
+      // Append spawn event; seq is passed to runOnSpawn so it's removed when the handler settles.
+      const spawnSeq = yield* this.#store.appendEvent(id, { _tag: 'spawn' });
+      yield* handle.runOnSpawn(spawnSeq);
       log('lifecycle: started', { pid: id, key: definition.key });
 
       return handle;
+    });
+  }
+
+  /**
+   * Re-hydrates a persisted process record into a live handle without running onSpawn.
+   */
+  #rehydrate(record: import('./process-store').PersistedProcess, definition: Process.Process<any, any, any>): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const id = record.id;
+      log('lifecycle: rehydrate', { pid: id, key: record.key });
+
+      const scope = yield* Scope.make();
+      const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
+      const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
+
+      const parentOption = Option.fromNullable(record.parentId);
+      const environment: Environment = {
+        space: record.environment.space as SpaceId | undefined,
+        conversation: record.environment.conversation as URI.URI | undefined,
+      };
+
+      const resolutionContext: LayerSpec.LayerContext = {
+        space: environment.space,
+        conversation: environment.conversation,
+        process: id,
+      };
+
+      let handleRef: ProcessHandle.ProcessHandleImpl<any, any, any> | null = null;
+
+      const params: Process.Params = {
+        name: record.params.name,
+        target: record.params.target as URI.URI | null,
+        ...(record.params.notify != null ? { notify: record.params.notify as Process.Params['notify'] } : {}),
+      };
+
+      const ctx: Process.ProcessContext<any, any> = {
+        id,
+        params,
+        succeed: () => { handleRef?.requestSucceed(); },
+        fail: (error: Error) => { handleRef?.requestFail(error); },
+        submitOutput: (output: any) => { handleRef?.requestSubmitOutput(output); },
+        setAlarm: (timeout?: number) => { handleRef?.requestAlarm(timeout); },
+      };
+
+      let builtinCtx = Context.empty().pipe(
+        Context.add(StorageService.StorageService, storage),
+        Context.add(Scope.Scope, scope),
+        Context.add(
+          Trace.TraceService,
+          createProcessTraceService({
+            pid: id,
+            parentPid: record.parentId ?? undefined,
+            processName: params.name ?? undefined,
+            runtimeName: this.#runtimeName,
+            space: environment.space,
+            sink: this.#traceSink,
+            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+          }),
+        ),
+      );
+
+      if (this.#handlerSet) {
+        const childInvoker = ProcessOperationInvoker.make({
+          manager: this,
+          handlerSet: this.#handlerSet,
+          parentProcessId: id,
+        });
+        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
+        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
+      }
+
+      const builtinTagKeys = new Set([
+        StorageService.StorageService.key,
+        Scope.Scope.key,
+        Trace.TraceService.key,
+        Operation.Service.key,
+        ProcessOperationInvoker.Service.key,
+      ]);
+      const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
+
+      let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
+      if (externalServices.length > 0) {
+        serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+          Effect.orDie,
+        );
+      }
+
+      const fullCtx = Context.merge(builtinCtx, serviceCtx);
+      const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+
+      const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
+        Effect.gen(this, function* () {
+          log('lifecycle: ended', { pid: handle.pid, state });
+          if (handle.parentId !== null) {
+            const parentHandle = this.#handles.get(handle.parentId);
+            if (parentHandle) {
+              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
+              parentHandle.requestChildEvent({
+                _tag: 'exited',
+                pid: handle.pid,
+                result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
+              });
+            }
+          }
+        });
+
+      const persistence: ProcessHandle.Persistence = {
+        setAlarm: (dueAt) => this.#store.setAlarm(id, dueAt),
+        setState: (state) => this.#store.setState(id, state),
+        removeEvent: (seq) => this.#store.removeEvent(id, seq),
+        appendEvent: (event) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id),
+      };
+
+      const defRaw = definition as unknown as { input: Schema.Schema<any, any, never> };
+      const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
+
+      const handle = new ProcessHandle.ProcessHandleImpl<any, any, any>(
+        id,
+        Option.getOrNull(parentOption),
+        callbacks,
+        scope,
+        fullCtx,
+        this.#registry,
+        outputQueue,
+        storage,
+        definition.key,
+        params,
+        environment,
+        this.#traceSink,
+        onFinished,
+        () => this.#refreshProcessTree(),
+        () => this.#hasNonTerminalChildren(id),
+        persistence,
+        true, // restoring — suppresses onSpawn
+        encodeInput,
+      );
+      handleRef = handle;
+      this.#handles.set(id, handle);
+      this.#refreshProcessTree();
+
+      // Re-arm a still-pending alarm.
+      if (record.alarmDueAt !== null) {
+        handle.rearmAlarm(record.alarmDueAt);
+      }
+
+      // Re-deliver events that never settled (interrupted by shutdown), in seq order.
+      const pendingEvents = [...record.events].sort((a, b) => a.seq - b.seq);
+      for (const event of pendingEvents) {
+        yield* handle.redeliver(event, definition);
+      }
+    });
+  }
+
+  restore(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const records = yield* this.#store.listProcesses();
+      log('lifecycle: restore', { count: records.length });
+      for (const record of records) {
+        if (
+          record.state === Process.State.SUCCEEDED ||
+          record.state === Process.State.FAILED ||
+          record.state === Process.State.TERMINATED
+        ) {
+          // Stale terminal record; clean it up.
+          yield* this.#store.deleteProcess(record.id);
+          continue;
+        }
+        const definition = this.#definitions.get(record.key);
+        if (!definition) {
+          log.warn('lifecycle: restore skipped (definition not registered)', { pid: record.id, key: record.key });
+          continue;
+        }
+        yield* this.#rehydrate(record, definition);
+      }
     });
   }
 
@@ -532,8 +719,8 @@ export class ProcessManagerImpl implements Manager {
 
 /**
  * Scoped layer that provides ProcessManager and ProcessMonitorService.
- * On scope close, the manager's `shutdown()` runs (layer finalizer), stopping
- * alarms and process work so the shared Atom registry is not updated after disposal.
+ * On scope close, the manager's `shutdown()` runs (layer finalizer), suspending
+ * process state so it can be restored on the next boot.
  *
  * Requires KeyValueStore, ServiceResolver, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.
@@ -545,6 +732,10 @@ export const layer = (opts?: {
    * See {@link Trace.CommonRuntimeName} for well-known values.
    */
   runtimeName?: Trace.RuntimeName;
+  /**
+   * Registry of process definitions used during restore.
+   */
+  definitions?: ProcessDefinitionRegistry;
 }): Layer.Layer<
   ProcessManagerService | Process.ProcessMonitorService,
   never,
@@ -571,6 +762,7 @@ export const layer = (opts?: {
         handlerSet,
         idGenerator: opts?.idGenerator,
         runtimeName: opts?.runtimeName,
+        definitions: opts?.definitions,
       });
 
       yield* Effect.addFinalizer(() => manager.shutdown());
