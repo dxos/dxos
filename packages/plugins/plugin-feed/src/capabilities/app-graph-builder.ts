@@ -38,9 +38,6 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const magazines = get(AtomQuery.make(space.db, Filter.type(Magazine.Magazine)));
-          if (magazines.length === 0) {
-            return Effect.succeed([]);
-          }
 
           return Effect.succeed([
             Node.make({
@@ -50,17 +47,33 @@ export default Capability.makeModule(
               properties: {
                 label: 'Magazines',
                 icon: 'ph--newspaper-clipping--regular',
+                iconHue: 'indigo',
                 role: 'branch',
                 position: 'first',
               },
-              nodes: magazines
-                .map((magazine: Magazine.Magazine) =>
-                  createObjectNode({
-                    db: space.db,
-                    object: magazine,
-                  }),
-                )
-                .filter((node): node is NonNullable<typeof node> => node !== null),
+              nodes: [
+                Node.makeAction({
+                  id: 'create-magazine',
+                  data: () =>
+                    Operation.invoke(SpaceOperation.OpenCreateObject, {
+                      target: space.db,
+                      typename: Type.getTypename(Magazine.Magazine),
+                    }),
+                  properties: {
+                    label: ['add-object.label', { ns: Type.getTypename(Magazine.Magazine) }],
+                    icon: 'ph--plus--regular',
+                    disposition: 'list-item-primary',
+                  },
+                }),
+                ...magazines
+                  .map((magazine: Magazine.Magazine) =>
+                    createObjectNode({
+                      db: space.db,
+                      object: magazine,
+                    }),
+                  )
+                  .filter((node): node is NonNullable<typeof node> => node !== null),
+              ],
             }),
           ]);
         },
