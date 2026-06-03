@@ -82,9 +82,8 @@ export default Capability.makeModule(
             }
             try {
               batch.push(Operation.serialize(handler));
-            } catch (error) {
-              log.warn('skipping operation that failed to serialize', { key, error });
-              // Mark as seen so we don't warn on every subsequent subscription fire.
+            } catch {
+              log.verbose('skipping operation with unserializable schema', { key });
               prevOperationKeys.add(key);
             }
           }
