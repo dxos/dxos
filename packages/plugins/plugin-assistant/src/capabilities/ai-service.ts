@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Context } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { Context } from 'effect';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';

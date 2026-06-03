@@ -9,10 +9,10 @@ import * as Layer from 'effect/Layer';
 
 import { AiService, type ModelName } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
-import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref, Tag } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -23,8 +23,8 @@ import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { Mailbox } from '@dxos/plugin-inbox';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -116,12 +116,7 @@ const seedPrompt = (prompt: Routine.Routine) =>
     yield* Database.flush();
   });
 
-const runAgentPrompt = (
-  harness: TestHarness,
-  prompt: Routine.Routine,
-  model: ModelName,
-  spaceId: SpaceId,
-) =>
+const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedPrompt(prompt);
@@ -150,44 +145,41 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     output: options.output,
   });
 
-  return Effect.fnUntraced(
-    function* (ctx) {
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const harness = yield* Effect.acquireRelease(
-            Effect.promise(async () =>
-              createComposerTestApp({
-                plugins: await createDefaultPlugins(ctx, options),
-              }),
+  return Effect.fnUntraced(function* (ctx) {
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* Effect.acquireRelease(
+          Effect.promise(async () =>
+            createComposerTestApp({
+              plugins: await createDefaultPlugins(ctx, options),
+            }),
+          ),
+          (testHarness) => Effect.promise(() => testHarness.dispose()),
+        );
+
+        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
+
+        const { personalSpace } = yield* Effect.promise(() =>
+          runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+        );
+
+        if (options.expect === 'failure') {
+          const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
+            runAgentPrompt(harness, prompt, model, personalSpace.id).then(
+              (value): Exit.Exit<unknown, unknown> => Exit.succeed(value),
+              (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
             ),
-            (testHarness) => Effect.promise(() => testHarness.dispose()),
           );
-
-          yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
-
-          const { personalSpace } = yield* Effect.promise(() =>
-            runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
-          );
-
-          if (options.expect === 'failure') {
-            const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
-              runAgentPrompt(harness, prompt, model, personalSpace.id).then(
-                (value): Exit.Exit<unknown, unknown> => Exit.succeed(value),
-                (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
-              ),
-            );
-            if (!Exit.isFailure(exit)) {
-              return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
-            }
-          } else {
-            yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id));
+          if (!Exit.isFailure(exit)) {
+            return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
           }
-        }),
-      );
-    },
-    TestHelpers.provideTestContext,
-  );
+        } else {
+          yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id));
+        }
+      }),
+    );
+  }, TestHelpers.provideTestContext);
 };
 
 // If generation is enabled, use long timeout, stick to default vite timeout if generation is disabled.
-export const agentTestTimeout = () => MemoizedAiService.isGenerationEnabled() ? DEFAULT_TEST_TIMEOUT : undefined;
+export const agentTestTimeout = () => (MemoizedAiService.isGenerationEnabled() ? DEFAULT_TEST_TIMEOUT : undefined);

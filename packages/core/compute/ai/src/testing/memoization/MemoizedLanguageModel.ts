@@ -170,10 +170,7 @@ const replaceTokens = (prompt: unknown, mapping: ReadonlyMap<string, string>): u
  */
 const canonicalizeDynamicValues = (prompt: unknown, matcher: RegExp): unknown => {
   const values = collectDynamicValues(prompt, matcher);
-  return replaceTokens(
-    prompt,
-    new Map(values.map((value, index) => [value, dynamicPlaceholder(index)])),
-  );
+  return replaceTokens(prompt, new Map(values.map((value, index) => [value, dynamicPlaceholder(index)])));
 };
 
 /**

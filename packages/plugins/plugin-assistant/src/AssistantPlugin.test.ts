@@ -2,13 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { LanguageModel } from '@effect/ai';
+import { type TestContext } from '@effect/vitest';
+import { Layer, Schema } from 'effect';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -21,10 +24,6 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
-
-import { LanguageModel } from '@effect/ai';
-import { type TestContext } from '@effect/vitest';
-import { Layer, Schema } from 'effect';
 
 import { meta } from './meta';
 

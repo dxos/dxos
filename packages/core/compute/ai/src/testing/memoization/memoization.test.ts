@@ -15,14 +15,14 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { TestHelpers } from '@dxos/effect/testing';
+import { EntityId } from '@dxos/keys';
+import { dbg } from '@dxos/log';
 
 import * as AiService from '../../AiService';
 import { AiServiceTestingPreset } from '../test-layers';
 import { TestingToolkit, testingLayer } from '../toolkit';
 import * as MemoizedAiService from './MemoizedAiService';
 import * as MemoizedLanguageModel from './MemoizedLanguageModel';
-import { EntityId } from '@dxos/keys';
-import { dbg } from '@dxos/log';
 
 const DateToolkit = Toolkit.make(
   Tool.make('get-date', {
@@ -48,7 +48,7 @@ class TestObjectReadToolkit extends Toolkit.make(
     parameters: {
       objectId: EntityId,
     },
-  })
+  }),
 ) {
   static layer = TestObjectReadToolkit.toLayer({
     'read-object': Effect.fnUntraced(function* () {
@@ -207,12 +207,9 @@ describe('dynamic value matching', () => {
       { type: 'text', text: `Created object in echo://${SPACE_A}.` },
     ];
 
-    const remapped = __testing.remapResponse(
-      promptWith(SPACE_A),
-      storedResponse,
-      promptWith(SPACE_B),
-      [SPACE_ID_PATTERN],
-    );
+    const remapped = __testing.remapResponse(promptWith(SPACE_A), storedResponse, promptWith(SPACE_B), [
+      SPACE_ID_PATTERN,
+    ]);
 
     const serialized = JSON.stringify(remapped);
     expect(serialized).toContain(SPACE_B);
@@ -229,15 +226,15 @@ describe('dynamic value matching', () => {
     expect(tokens).toEqual([SPACE_A, OBJECT_ID]);
   });
 
-
   it.effect(
     'works with tool calsl',
     Effect.fnUntraced(
       function* (_) {
         const id = EntityId.random(); // Random every run. Substituted in the memoization layer.
         dbg(id);
-        const chat = yield* Chat.fromPrompt(`What does object ${id} contain? You must use the read-object tool to answer this question.`);
-
+        const chat = yield* Chat.fromPrompt(
+          `What does object ${id} contain? You must use the read-object tool to answer this question.`,
+        );
 
         while (true) {
           const response = yield* chat.generateText({
@@ -253,12 +250,16 @@ describe('dynamic value matching', () => {
           }
         }
       },
-      Effect.provide(Layer.mergeAll(TestObjectReadToolkit.layer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
-        Layer.provideMerge(MemoizedAiService.layerTest({
-          dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],
-        })),
-        Layer.provide(AiServiceTestingPreset('edge-remote')),
-      )),
+      Effect.provide(
+        Layer.mergeAll(TestObjectReadToolkit.layer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+          Layer.provideMerge(
+            MemoizedAiService.layerTest({
+              dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],
+            }),
+          ),
+          Layer.provide(AiServiceTestingPreset('edge-remote')),
+        ),
+      ),
       TestHelpers.provideTestContext,
     ),
   );
