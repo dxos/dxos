@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Registry as AtomRegistryType } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -46,7 +46,7 @@ export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
   /** @effect-atom/atom-react Registry for reactive state. */
-  registry?: AtomRegistryType.Registry;
+  registry?: Registry.Registry;
 };
 
 /**
