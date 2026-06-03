@@ -10,7 +10,6 @@ import { type Actor } from '@dxos/types';
 import { useActorContact } from '#hooks';
 
 import { Header } from '../Header';
-import { UserIconButton } from '../UserIconButton';
 
 export type EventAttendeeProps = {
   attendee: Actor.Actor;
@@ -24,9 +23,11 @@ export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeePr
 
   return (
     <Header.Row
-      icon={<UserIconButton compact title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />}
+      icon={
+        <Header.UserIconButton compact title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />
+      }
     >
-      <h3 className='truncate text-primary-text'>{attendee.name || attendee.email}</h3>
+      <h3 className='truncate'>{attendee.name || attendee.email}</h3>
     </Header.Row>
   );
 };

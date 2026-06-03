@@ -2,10 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type JSX, type PropsWithChildren, type ReactNode } from 'react';
+import React, { type JSX, type PropsWithChildren, type ReactNode, useCallback, useRef } from 'react';
 
-import { Card, Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
+import { type URI } from '@dxos/keys';
+import {
+  Card,
+  DxAnchorActivate,
+  Icon,
+  IconBlock,
+  type IconBlockProps,
+  IconButton,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
 
@@ -83,7 +95,6 @@ const HEADER_ROW_NAME = 'Header.Row';
 
 type HeaderRowProps = ThemedClassName<
   PropsWithChildren<{
-    /** Leading element placed in the icon column — a phosphor icon name or a custom element (e.g. an icon button). */
     icon?: string | JSX.Element;
     /**
      * Render a string `icon` as a compact (content-height) block rather than a full rail-height square.
@@ -114,6 +125,113 @@ const HeaderRow = ({ icon, compact, children, classNames, ...props }: HeaderRowP
 HeaderRow.displayName = HEADER_ROW_NAME;
 
 //
+// AnchorIconButton
+//
+
+const HEADER_ANCHOR_ICON_BUTTON_NAME = 'Header.AnchorIconButton';
+
+/**
+ * Icon-only button that opens an ECHO object's preview card via `DxAnchorActivate`.
+ * When `value` is missing the button falls back to `onClick` for a "create"-style action.
+ */
+export type AnchorIconButtonProps = ThemedClassName<{
+  /** Phosphor icon shown when `value` is present. */
+  icon: string;
+  /** Phosphor icon shown when `value` is absent. Defaults to `icon`. */
+  fallbackIcon?: string;
+  /** Accessible label when `value` is present. */
+  label: string;
+  /** Accessible label when `value` is absent. Defaults to `label`. */
+  fallbackLabel?: string;
+  /** DXN of the target object — opens the card preview on click via `DxAnchorActivate`. */
+  value?: URI.URI;
+  /** Optional title passed to the DxAnchorActivate event (shown in the preview header). */
+  title?: string;
+  /** Fallback action when no `value` is provided. */
+  onClick?: () => void;
+  /** IconButton size; defaults to 4. */
+  size?: 4 | 5 | 6;
+}>;
+
+const HeaderAnchorIconButton = ({
+  classNames,
+  icon,
+  fallbackIcon,
+  label,
+  fallbackLabel,
+  value,
+  title,
+  onClick,
+  size = 4,
+}: AnchorIconButtonProps) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const handleClick = useCallback(() => {
+    if (value) {
+      buttonRef.current?.dispatchEvent(
+        new DxAnchorActivate({
+          trigger: buttonRef.current,
+          dxn: value.toString(),
+          label: 'never',
+          kind: 'card',
+          title,
+        }),
+      );
+    } else {
+      onClick?.();
+    }
+  }, [value, title, onClick]);
+
+  return (
+    <IconButton
+      classNames={classNames}
+      variant='ghost'
+      disabled={!value && !onClick}
+      icon={value ? icon : (fallbackIcon ?? icon)}
+      iconOnly
+      size={size}
+      label={value ? label : (fallbackLabel ?? label)}
+      onClick={handleClick}
+      ref={buttonRef}
+    />
+  );
+};
+
+HeaderAnchorIconButton.displayName = HEADER_ANCHOR_ICON_BUTTON_NAME;
+
+//
+// UserIconButton
+//
+
+const HEADER_USER_ICON_BUTTON_NAME = 'Header.UserIconButton';
+
+export type UserIconButtonProps = Pick<IconBlockProps, 'compact'> & {
+  value?: URI.URI;
+  title?: string;
+  onContactCreate?: () => void;
+};
+
+// TODO(burdon): Reconcile with Avatar if space member.
+const HeaderUserIconButton = ({ compact, value, title, onContactCreate }: UserIconButtonProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <IconBlock compact={compact}>
+      <HeaderAnchorIconButton
+        classNames={compact && 'min-h-0'}
+        value={value}
+        title={title}
+        icon='ph--user--regular'
+        label={t('show-contact.label')}
+        fallbackIcon='ph--user-plus--regular'
+        fallbackLabel={t('create-contact.label')}
+        onClick={onContactCreate}
+      />
+    </IconBlock>
+  );
+};
+
+HeaderUserIconButton.displayName = HEADER_USER_ICON_BUTTON_NAME;
+
+//
 // Header
 //
 
@@ -122,6 +240,8 @@ export const Header = {
   Title: HeaderTitle,
   Date: HeaderDate,
   Row: HeaderRow,
+  AnchorIconButton: HeaderAnchorIconButton,
+  UserIconButton: HeaderUserIconButton,
 };
 
 export type { HeaderRootProps, HeaderTitleProps, HeaderDateProps, HeaderRowProps };

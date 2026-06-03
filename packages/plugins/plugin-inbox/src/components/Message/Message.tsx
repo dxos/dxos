@@ -21,10 +21,8 @@ import { InboxCapabilities, Mailbox } from '#types';
 
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
-import { AnchorIconButton } from '../AnchorIconButton';
 import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
-import { UserIconButton } from '../UserIconButton';
 import { type ViewMode } from '../ViewMode';
 import { useMessageActions } from './useToolbar';
 
@@ -210,7 +208,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       {/* TODO(burdon): List other To/CC/BCC. */}
       <Header.Row
         icon={
-          <UserIconButton
+          <Header.UserIconButton
             title={message.sender.name}
             value={sender}
             onContactCreate={() => onContactCreate?.(message.sender)}
@@ -250,7 +248,7 @@ const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
 
   return (
     <Header.Row
-      icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
+      icon={<Header.AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
       data-testid={`extracted-tag-${object.id}`}
     >
       <h3 className='truncate text-primary-text'>{label}</h3>
