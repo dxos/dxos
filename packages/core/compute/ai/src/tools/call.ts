@@ -82,9 +82,12 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
       toolCall: toolCall.name,
       ...{
         error: 'error' in toolResult ? toolResult.error : undefined,
-        result: 'result' in toolResult
-          ? (typeof toolResult.result === 'string' ? safeParseJson(toolResult.result) : toolResult.result)
-          : undefined,
+        result:
+          'result' in toolResult
+            ? typeof toolResult.result === 'string'
+              ? safeParseJson(toolResult.result)
+              : toolResult.result
+            : undefined,
       },
     });
 
