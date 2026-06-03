@@ -8,7 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -37,17 +37,29 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
       const binder = new AiContext.Binder({ feed, runtime, registry });
 
-      // Bind default blueprints via registry refs — no DB clone needed since the ECHO ref
-      // resolver already spans the hypergraph registry.
-      yield* Effect.promise(() =>
-        binder.use((b: AiContext.Binder) =>
-          b.bind({
-            blueprints: [AssistantBlueprint, DatabaseBlueprint, AgentWizardBlueprint, BlueprintManagerBlueprint].map(
-              ({ key }) => Ref.fromURI(Blueprint.registryURI(key)),
-            ),
-          }),
-        ),
-      );
+      // Build blueprint refs. Blueprints with valid DXN keys (no hyphens in the last segment) are
+      // bound directly via registry refs — no DB clone needed. Blueprints with invalid DXN keys
+      // (e.g. `agent-wizard`, `blueprint-manager`) must be cloned into the space first.
+      const defaultDefs = [AssistantBlueprint, DatabaseBlueprint, AgentWizardBlueprint, BlueprintManagerBlueprint];
+      const existingBlueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
+      const blueprintRefs: Ref.Ref<Blueprint.Blueprint>[] = [];
+
+      for (const def of defaultDefs) {
+        const uri = Blueprint.registryURI(def.key);
+        if (uri) {
+          // Valid DXN key — resolve directly from the registry via the ECHO ref resolver.
+          blueprintRefs.push(Ref.fromURI(uri));
+        } else {
+          // Invalid DXN key — clone into space if not already present.
+          let stored = existingBlueprints.find((bp) => Obj.getMeta(bp).key === def.key);
+          if (!stored) {
+            stored = db.add(def.make());
+          }
+          blueprintRefs.push(Ref.make(stored));
+        }
+      }
+
+      yield* Effect.promise(() => binder.use((b: AiContext.Binder) => b.bind({ blueprints: blueprintRefs })));
 
       return { object: chat };
     }),

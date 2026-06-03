@@ -92,7 +92,14 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         const dbForks = pluginBlueprints.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
 
         if (registryKeys.length > 0) {
-          await binder.bind({ blueprints: registryKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key))) });
+          await binder.bind({
+            blueprints: registryKeys
+              .map((key) => {
+                const uri = Blueprint.registryURI(key);
+                return uri ? Ref.fromURI(uri) : null;
+              })
+              .filter((ref): ref is Ref.Ref<Blueprint.Blueprint> => ref != null),
+          });
         }
         if (dbForks.length > 0) {
           await binder.bind({ blueprints: dbForks.map((blueprint) => Ref.make(blueprint)) });

@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 
 import { AgentRules, CreateAgent, SyncTriggers } from './functions';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.agentWizard';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.agent-wizard';
 
 /**
  * Creates the Agent Wizard blueprint. This is a function to avoid circular dependency issues.
