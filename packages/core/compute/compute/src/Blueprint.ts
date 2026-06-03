@@ -143,17 +143,23 @@ export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, Re
   });
 
 /**
- * Upserts a blueprint into the database.
- * If the blueprint already exists in the database, local blueprint is returned.
- * Otherwise, it will be added.
+ * Upserts a blueprint into the database, always keeping the DB copy in sync with the registry.
+ * If the blueprint already exists in the database, its content is refreshed from the registry.
+ * Otherwise, a new copy is cloned from the registry and added.
  */
 export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, Registry.Service | Database.Service> =>
   Effect.gen(function* () {
+    const canonical = yield* resolve(key);
     const local = yield* Database.runQuery(Filter.and(Filter.type(Blueprint), Filter.key(key)));
     if (local.length > 0) {
+      // Refresh the stored copy from the registry so stale operation keys and instructions are fixed.
+      const source = Obj.clone(canonical, { deep: true });
+      Obj.update(local[0], (blueprint) => {
+        void Obj.updateFrom(blueprint, source);
+      });
       return local[0];
     }
-    return yield* Database.add(Obj.clone(yield* resolve(key), { deep: true }));
+    return yield* Database.add(Obj.clone(canonical, { deep: true }));
   });
 
 export class NotFoundError extends BaseError.extend('BlueprintNotFound', 'Blueprint not found') {}
