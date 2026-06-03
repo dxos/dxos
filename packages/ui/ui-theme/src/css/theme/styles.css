@@ -70,15 +70,6 @@
    * Hue.
    */
 
-  /*
-  --color-xxx-bg: var(--color-xxx-600);
-  --color-xxx-bg-hover: var(--color-xxx-700);
-  --color-xxx-fg: var(--color-xxx-800);
-  --color-xxx-surface: var(--color-xxx-300);
-  --color-xxx-text: light-dark(var(--color-xxx-800), var(--color-xxx-500));
-  --color-xxx-border: var(--color-xxx-600);
-  */
-
   --color-neutral-bg: var(--color-neutral-600);
   --color-neutral-bg-hover: var(--color-neutral-700);
   --color-neutral-fg: var(--color-neutral-800);

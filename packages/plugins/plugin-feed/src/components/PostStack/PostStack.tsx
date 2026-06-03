@@ -124,7 +124,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             {post.description && (
               <Card.Row>
                 {/* TODO(burdon): Convert to HTML. */}
-                <Card.Html variant='description' classNames='line-clamp-5' html={post.description} />
+                <Card.Html variant='description' classNames='line-clamp-5' html={post.description ?? post.content} />
               </Card.Row>
             )}
             {published && (

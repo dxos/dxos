@@ -4196,6 +4196,19 @@ importers:
         specifier: workspace:*
         version: link:../log
 
+  packages/common/markdown:
+    dependencies:
+      linkedom:
+        specifier: 'catalog:'
+        version: 0.18.12(canvas@3.2.0)
+      turndown:
+        specifier: 'catalog:'
+        version: 7.2.1
+    devDependencies:
+      '@types/turndown':
+        specifier: 'catalog:'
+        version: 5.0.5
+
   packages/common/merkle-search-tree:
     dependencies:
       '@dxos/invariant':
@@ -10286,6 +10299,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10977,6 +10993,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11082,15 +11101,9 @@ importers:
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
-      linkedom:
-        specifier: 'catalog:'
-        version: 0.18.12(canvas@3.2.0)
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      turndown:
-        specifier: 'catalog:'
-        version: 7.2.1
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -11125,9 +11138,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      '@types/turndown':
-        specifier: 'catalog:'
-        version: 5.0.5
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -16520,6 +16530,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention

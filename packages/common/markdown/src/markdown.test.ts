@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { normalizeText } from './util';
+import { normalizeText } from './markdown';
 
-describe('util', () => {
+describe('markdown', () => {
   test('stripNewlines', ({ expect }) => {
     const text = '<p>aaa</p><p><br></p><p><br></p><p>bbb</p>';
     expect(normalizeText(text)).to.equal('aaa\n\nbbb');
