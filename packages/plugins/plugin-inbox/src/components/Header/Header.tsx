@@ -185,8 +185,12 @@ type TagsRowProps = {
 };
 
 /** A Card.Row rendering a set of label+hue tag chips, optionally clickable. */
-const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) =>
-  tags.length > 0 ? (
+const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) => {
+  if (!tags.length) {
+    return null;
+  }
+
+  return (
     <Card.Row icon='ph--tag--regular'>
       <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
         {tags.map((tag) => (
@@ -204,7 +208,8 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) =>
         ))}
       </div>
     </Card.Row>
-  ) : null;
+  );
+};
 
 HeaderTagsRow.displayName = 'Header.TagsRow';
 
