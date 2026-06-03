@@ -153,6 +153,7 @@ export const CreateFeed: Story = {
         }
         await new Promise((resolve) => setTimeout(resolve, interval));
       }
+
       throw new Error(`waitFor timed out: ${label} (last value: ${JSON.stringify(last)})`);
     };
 

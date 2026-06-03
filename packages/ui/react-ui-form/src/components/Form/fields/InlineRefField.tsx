@@ -19,7 +19,7 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
-import { Form } from '../Form';
+import { Form, omitId } from '../Form';
 import { FormFieldLabel } from '../FormFieldComponent';
 import { type RefFieldProps } from './RefField';
 
@@ -98,7 +98,10 @@ const InlineForm = ({ reference, db, readonly }: InlineFormProps) => {
   const typename = target ? (Obj.getTypename(target) ?? undefined) : undefined;
   const typeFromRegistry = defaultUseType(db, typename);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;
-  const formSchema = useMemo(() => (targetType ? Type.getSchema(targetType) : undefined), [targetType]);
+  // Drop the ECHO `id` property (mirrors `ObjectProperties` via `withMetaTags`);
+  // otherwise the nested form renders an "Id" field. Hidden fields
+  // (`FormInputAnnotation.set(false)`) are already filtered by the field set.
+  const formSchema = useMemo(() => (targetType ? omitId(Type.getSchema(targetType)) : undefined), [targetType]);
   const defaultValues = useMemo(() => (target ? { ...target } : {}), [target]);
 
   const handleChange = useCallback(
