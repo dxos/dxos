@@ -5,6 +5,7 @@
 import * as Reactivity from '@effect/experimental/Reactivity';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import { join } from 'node:path';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -117,8 +118,10 @@ export class TestBuilder {
    * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
   createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean; sqlitePath?: string }): LocalClientServices {
-    // When a sqlitePath is provided (options or builder), run FILE-backed SQLite; otherwise use MEMORY.
-    const sqlitePath = options?.sqlitePath ?? this.sqlitePath;
+    // When a sqlitePath is provided (options or builder or config.dataRoot), run FILE-backed SQLite; otherwise use MEMORY.
+    const configDataRoot = this.config.get('runtime.client.storage.dataRoot');
+    const sqlitePath =
+      options?.sqlitePath ?? this.sqlitePath ?? (configDataRoot ? join(configDataRoot, 'storage.db') : undefined);
     const sqliteMode = sqlitePath ? Runtime.Client.Storage.SqliteMode.FILE : Runtime.Client.Storage.SqliteMode.MEMORY;
     const config = new Config({ runtime: { client: { storage: { sqliteMode } } } }, this.config.values);
     const services = new LocalClientServices({

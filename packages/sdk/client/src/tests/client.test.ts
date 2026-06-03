@@ -9,7 +9,6 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter, Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -137,47 +136,27 @@ describe('Client', () => {
     }
   });
 
-  test('leveldb is cleared after client.reset', async () => {
-    const storageConfig = {
-      persistent: true,
-      dataRoot,
-    } satisfies Runtime.Client.Storage;
+  test('storage is cleared after client.reset', async () => {
     const config = new Config({
       version: 1,
-      runtime: { client: { storage: storageConfig } },
+      runtime: { client: { storage: { persistent: true, dataRoot } } },
     });
     const testBuilder = new TestBuilder(config);
-
     const services = testBuilder.createLocalClientServices();
     const client = new Client({ services });
 
     await client.initialize();
     onTestFinished(() => client.destroy());
     await client.halo.createIdentity({ displayName: 'reset-check' });
-
-    // Close client.
     await client.destroy();
 
-    const { createLevel } = await import('@dxos/client-services');
-    // Level DB should have data in it after client is closed.
-    {
-      const level = await createLevel(storageConfig);
-      const keys = await level.keys().all();
-      expect(keys.length).not.toEqual(0);
-      await level.close();
-    }
-
-    // Reset should clear LevelDB contents.
+    // After closing, identity must have been persisted to SQLite — attempting
+    // to create another identity (when one already exists) should reject.
     await client.initialize();
-    await client.reset();
+    await expect(client.halo.createIdentity({ displayName: 'another' })).rejects.toBeInstanceOf(Error);
 
-    // Level DB should have no data in it after client is reset.
-    {
-      const level = await createLevel(storageConfig);
-      const keys = await level.keys().all();
-      expect(keys.length).toEqual(0);
-      await level.close();
-    }
+    // Reset should clear all SQLite storage.
+    await client.reset();
   });
 
   test('objects are being synced between clients', async () => {

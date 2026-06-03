@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { rmSync } from 'node:fs';
+
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import type { Config } from '@dxos/config';
@@ -56,10 +58,30 @@ export const createInitializedClientsWithContext = async (
 ): Promise<Client[]> => {
   const testBuilder = new TestBuilder(options?.config);
 
+  // When storage is requested, allocate a unique SQLite file per client so
+  // each peer's data persists independently across destroy/initialize cycles.
+  const sqlitePaths = options?.storage
+    ? range(count, () => `/tmp/dxos-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`)
+    : [];
+
+  if (sqlitePaths.length > 0) {
+    ctx.onDispose(() => {
+      for (const path of sqlitePaths) {
+        rmSync(path, { force: true });
+      }
+    });
+  }
+
   const clients = range(
     count,
-    () =>
-      new Client({ config: options?.config, services: testBuilder.createLocalClientServices(options?.serviceConfig) }),
+    (index) =>
+      new Client({
+        config: options?.config,
+        services: testBuilder.createLocalClientServices({
+          ...options?.serviceConfig,
+          ...(sqlitePaths.length > 0 ? { sqlitePath: sqlitePaths[index] } : {}),
+        }),
+      }),
   );
   const initialized = await Promise.all(
     clients.map(async (client, index) => {
