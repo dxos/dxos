@@ -27,6 +27,7 @@ const make = () =>
         and can describe, transcribe, or otherwise reason over its contents.
       `,
     }),
+    agentCanEnable: true,
   });
 
 const blueprint: Blueprint.Definition = {
