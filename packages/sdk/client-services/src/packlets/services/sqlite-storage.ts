@@ -5,7 +5,6 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
-import { EventEmitter } from 'node:events';
 import { join } from 'node:path';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
@@ -21,11 +20,87 @@ export type SqliteStorageOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
 };
 
+/** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
+class BaseEventEmitter {
+  readonly #events: Record<string, ((...args: unknown[]) => void)[]> = Object.create(null);
+
+  on(event: string, listener: (...args: unknown[]) => void): this {
+    (this.#events[event] ??= []).push(listener);
+    return this;
+  }
+  off(event: string, listener: (...args: unknown[]) => void): this {
+    const list = this.#events[event];
+    if (list) {
+      const idx = list.indexOf(listener);
+      if (idx !== -1) list.splice(idx, 1);
+    }
+    return this;
+  }
+  emit(event: string, ...args: unknown[]): boolean {
+    const list = this.#events[event];
+    if (!list?.length) {
+      return false;
+    }
+    for (const fn of [...list]) {
+      fn(...args);
+    }
+    return true;
+  }
+  addListener = this.on;
+  removeListener = this.off;
+  once(event: string, listener: (...args: unknown[]) => void): this {
+    const wrapper = (...args: unknown[]) => {
+      this.off(event, wrapper);
+      listener(...args);
+    };
+    return this.on(event, wrapper);
+  }
+  removeAllListeners(event?: string): this {
+    if (event) {
+      delete this.#events[event];
+    } else {
+      for (const key of Object.keys(this.#events)) {
+        delete this.#events[key];
+      }
+    }
+    return this;
+  }
+  listeners(event: string): ((...args: unknown[]) => void)[] {
+    return this.#events[event] ?? [];
+  }
+  rawListeners(event: string): ((...args: unknown[]) => void)[] {
+    return this.#events[event] ?? [];
+  }
+  listenerCount(event: string): number {
+    return this.#events[event]?.length ?? 0;
+  }
+  prependListener(event: string, listener: (...args: unknown[]) => void): this {
+    (this.#events[event] ??= []).unshift(listener);
+    return this;
+  }
+  prependOnceListener(event: string, listener: (...args: unknown[]) => void): this {
+    const wrapper = (...args: unknown[]) => {
+      this.off(event, wrapper);
+      listener(...args);
+    };
+    return this.prependListener(event, wrapper);
+  }
+  eventNames(): string[] {
+    return Object.keys(this.#events);
+  }
+  getMaxListeners(): number {
+    return 0;
+  }
+  setMaxListeners(): this {
+    return this;
+  }
+}
+
 /**
  * SQLite-backed random-access file for hypercore storage.
  * Stores each file as a blob in `hypercore_files`. Read-modify-write for writes.
  */
-class SqliteRandomAccessFile extends EventEmitter implements RandomAccessStorage {
+class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessStorage {
   readonly opened: boolean = false;
   readonly suspended: boolean = false;
   readonly writing: boolean = false;

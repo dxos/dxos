@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { rmSync } from 'node:fs';
-
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import type { Config } from '@dxos/config';
 import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
-import { range } from '@dxos/util';
+import { isNode, range } from '@dxos/util';
 
 import { Client } from '../client';
 import { TestBuilder } from './test-builder';
@@ -65,9 +63,12 @@ export const createInitializedClientsWithContext = async (
     : [];
 
   if (sqlitePaths.length > 0) {
-    ctx.onDispose(() => {
-      for (const path of sqlitePaths) {
-        rmSync(path, { force: true });
+    ctx.onDispose(async () => {
+      if (isNode()) {
+        const { rmSync } = await import('node:fs');
+        for (const path of sqlitePaths) {
+          rmSync(path, { force: true });
+        }
       }
     });
   }
