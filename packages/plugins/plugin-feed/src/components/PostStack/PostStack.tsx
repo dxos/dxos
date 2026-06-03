@@ -124,7 +124,10 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             )}
             {(post.description || post.content) && (
               <Card.Row>
-                <MarkdownView content={post.description ?? post.content} classNames='line-clamp-5 text-sm text-description' />
+                <MarkdownView
+                  content={post.description ?? post.content}
+                  classNames='line-clamp-5 text-sm text-description'
+                />
               </Card.Row>
             )}
             {published && (
