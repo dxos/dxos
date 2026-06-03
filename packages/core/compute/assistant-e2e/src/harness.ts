@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AiService, type ModelName } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { type Plugin } from '@dxos/app-framework';
@@ -71,6 +71,9 @@ const makeMemoizedAiServiceMiddleware = (
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
+        // Space keys are derived from a fresh keypair every run, so canonicalize them for matching
+        // and substitute the live values back into memoized responses on a cache hit.
+        dynamicValuePatterns: [MemoizedLanguageModel.SPACE_ID_PATTERN],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),
