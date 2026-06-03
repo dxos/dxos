@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout, DEFAULT_TEST_TIMEOUT } from '../harness';
+import { agentTest, agentTestTimeout } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 

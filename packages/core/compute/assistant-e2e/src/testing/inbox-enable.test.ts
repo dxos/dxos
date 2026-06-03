@@ -29,7 +29,6 @@ describe('InboxBlueprintEnable', () => {
         'The inbox blueprint is successfully enabled, or you report the exact tool error if it cannot be enabled.',
         'You have called [read-email] and it completes successfully.',
       ],
-      blueprints: getDefaultBlueprints(),
     }),
     { timeout: agentTestTimeout() },
   );

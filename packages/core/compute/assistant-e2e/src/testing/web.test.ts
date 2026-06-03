@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, agentTestTimeout, getDefaultBlueprints } from '../harness';
+import { agentTest, agentTestTimeout } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
@@ -19,8 +19,11 @@ describe('Web', () => {
       instructions: trim`
         Search 5 richest people in the world and create Person objects in the database.
       `,
-      completionCriteria: ['5 Person objects in the database.', 'Web search works.'],
-      blueprints: getDefaultBlueprints(),
+      completionCriteria: [
+        //
+        '5 Person objects in the database.',
+        'Web search works.',
+      ],
     }),
     { timeout: agentTestTimeout() },
   );

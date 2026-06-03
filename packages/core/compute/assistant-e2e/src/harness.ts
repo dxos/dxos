@@ -145,7 +145,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   const prompt = Routine.make({
     name: options.name,
     instructions: formatInstructions(options.instructions, options.completionCriteria),
-    blueprints: options.blueprints,
+    blueprints: options.blueprints ?? getDefaultBlueprints(),
     input: options.input,
     output: options.output,
   });

@@ -19,7 +19,6 @@ describe('Database', () => {
         Create a new organization called "Cyberdyne Systems".
         Query the database to confirm that the organization is created and the query tool is working.
       `,
-      blueprints: getDefaultBlueprints(),
     }),
     { timeout: agentTestTimeout() },
   );
