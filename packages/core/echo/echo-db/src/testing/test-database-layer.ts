@@ -62,9 +62,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
 
       if (storagePath) {
         const metaJson = yield* Effect.promise(() => peer.getStorageMetadata('test_db'));
-        const testMetadata: { key: string; rootUrl: string } | undefined = metaJson
-          ? JSON.parse(metaJson)
-          : undefined;
+        const testMetadata: { key: string; rootUrl: string } | undefined = metaJson ? JSON.parse(metaJson) : undefined;
         log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
           db = yield* Effect.promise(() => peer.createDatabase(key));
