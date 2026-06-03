@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
 import { AiService, type ModelName } from '@dxos/ai';
