@@ -21,8 +21,8 @@
    *  - Anchors — the Tailwind hundreds (50…950), defined by explicit lightness.
    *  - In-between steps — `color-mix` interpolations of the surrounding anchors.
    */
-  --dx-neutral-hue: 90;
-  --dx-neutral-chroma: 0.002;
+  --dx-neutral-hue: 190;
+  --dx-neutral-chroma: 0.001;
 
   --color-neutral-50: oklch(0.985 var(--dx-neutral-chroma) var(--dx-neutral-hue));
   --color-neutral-75: color-mix(in oklch, var(--color-neutral-50) 50%, var(--color-neutral-100) 50%);

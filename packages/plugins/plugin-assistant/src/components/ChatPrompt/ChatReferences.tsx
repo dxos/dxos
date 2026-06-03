@@ -31,7 +31,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
         const styles = hue ? getStyles(hue) : undefined;
         return (
           <li key={uri.toString()} className='dx-tag py-0 flex items-center gap-1' data-hue='neutral'>
-            <Icon icon={icon} size={4} classNames={styles?.foreground} />
+            <Icon icon={icon} size={4} />
             {toLocalizedString(label, t)}
             <IconButton
               icon='ph--x--bold'
