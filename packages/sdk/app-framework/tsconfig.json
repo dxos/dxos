@@ -2,7 +2,9 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "exclude": [
-    "/node_modules/"
+    "/node_modules/",
+    "src/**/*.solid-stories.tsx",
+    "src/vite-plugin/boot-loader/loader-app"
   ],
   "include": [
     "src"

@@ -53,12 +53,7 @@ const TestPlugin = Plugin.define<{ error?: boolean }>(
 type DefaultStoryProps = { plugins?: Plugin.Plugin[] };
 
 const DefaultStory = ({ plugins }: DefaultStoryProps) => {
-  const App = useApp({
-    plugins,
-    placeholder: () => {
-      return <div className='text-description'>Loading...</div>;
-    },
-  });
+  const App = useApp({ plugins });
 
   return <App />;
 };
