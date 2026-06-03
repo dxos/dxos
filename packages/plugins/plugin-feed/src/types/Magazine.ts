@@ -68,7 +68,7 @@ export type Magazine = Type.InstanceType<typeof Magazine>;
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
 /** Default curation instructions seeded into every new Magazine's Routine. */
-export const DEFAULT_MAGAZINE_INSTRUCTIONS = 'Prefer stories relating to sovereign AI.';
+export const DEFAULT_MAGAZINE_INSTRUCTIONS = '';
 
 export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts'> & {
   feeds?: Ref.Ref<Subscription.Subscription>[];
@@ -108,4 +108,7 @@ export const CreateMagazineSchema = Schema.Struct({
       title: 'Name',
     }),
   ),
+  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)).annotations({
+    title: 'Feeds',
+  }),
 });
