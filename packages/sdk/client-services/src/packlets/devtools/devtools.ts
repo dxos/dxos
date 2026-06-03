@@ -81,7 +81,7 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
     return {
       type: 'sqlite',
-      storageUsage: 0,
+      storageUsage: navigatorInfo?.usage ?? 0,
       originUsage: navigatorInfo?.usage ?? 0,
       usageQuota: navigatorInfo?.quota ?? 0,
     };

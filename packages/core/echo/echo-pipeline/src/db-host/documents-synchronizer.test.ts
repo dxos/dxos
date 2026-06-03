@@ -3,6 +3,8 @@
 //
 
 import { type DocumentId } from '@automerge/automerge-repo';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
@@ -115,7 +117,7 @@ describe('DocumentsSynchronizer', () => {
 
   describe('persistence', () => {
     test('document created on host persists without explicit flush', async () => {
-      const dbPath = `/tmp/dxos-${PublicKey.random().toHex()}.db`;
+      const dbPath = join(tmpdir(), `dxos-${PublicKey.random().toHex()}.db`);
       let documentId: DocumentId;
       const text = 'Hello World!';
 

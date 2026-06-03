@@ -72,7 +72,13 @@ export class SqliteBlobStore implements BlobStoreApi {
     }
 
     const { offset = 0, length = metadata.length } = options;
-    if (offset + length > metadata.length) {
+    if (
+      !Number.isInteger(offset) ||
+      !Number.isInteger(length) ||
+      offset < 0 ||
+      length < 0 ||
+      offset + length > metadata.length
+    ) {
       throw new Error('Invalid range');
     }
 
@@ -117,7 +123,7 @@ export class SqliteBlobStore implements BlobStoreApi {
   @synchronized
   async set(data: Uint8Array): Promise<BlobMeta> {
     const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data as Uint8Array<ArrayBuffer>));
-    const bitfield = BitField.ones(data.length / DEFAULT_CHUNK_SIZE);
+    const bitfield = BitField.ones(Math.ceil(data.length / DEFAULT_CHUNK_SIZE));
     const meta: BlobMeta = {
       id,
       state: BlobMeta.State.FULLY_PRESENT,
@@ -153,7 +159,7 @@ export class SqliteBlobStore implements BlobStoreApi {
         chunkSize: chunk.chunkSize ?? DEFAULT_CHUNK_SIZE,
         created: new Date(),
       };
-      meta.bitfield = BitField.zeros(meta.length / meta.chunkSize);
+      meta.bitfield = BitField.zeros(Math.ceil(meta.length / meta.chunkSize));
     }
 
     if (chunk.chunkSize && chunk.chunkSize !== meta.chunkSize) {
@@ -163,6 +169,10 @@ export class SqliteBlobStore implements BlobStoreApi {
     invariant(meta.bitfield, 'Bitfield not present');
     invariant(chunk.chunkOffset !== undefined, 'chunkOffset is not present');
 
+    if (chunk.chunkOffset < 0 || chunk.chunkOffset + chunk.payload.length > meta.length) {
+      throw new Error('Invalid chunk range');
+    }
+
     // Write chunk into existing or new data blob.
     const existingData = (await this.#getData(chunk.id)) ?? new Uint8Array(meta.length);
     const newData = Buffer.from(existingData);
@@ -170,7 +180,8 @@ export class SqliteBlobStore implements BlobStoreApi {
 
     BitField.set(meta.bitfield, Math.floor(chunk.chunkOffset / meta.chunkSize), true);
 
-    if (BitField.count(meta.bitfield, 0, meta.length) * meta.chunkSize >= meta.length) {
+    const totalChunks = Math.ceil(meta.length / meta.chunkSize);
+    if (BitField.count(meta.bitfield, 0, totalChunks) === totalChunks) {
       meta.state = BlobMeta.State.FULLY_PRESENT;
     }
     meta.updated = new Date();

@@ -182,6 +182,35 @@ export class EchoTestPeer extends Resource {
     }
   }
 
+  /** Reads a persistent metadata value from the SQLite storage (key-value table). */
+  async getStorageMetadata(key: string): Promise<string | undefined> {
+    invariant(this._persistentRuntime, 'getStorageMetadata requires a storagePath peer');
+    await this._persistentRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS _test_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)`;
+      }),
+    );
+    const rows = await this._persistentRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        return yield* sql<{ value: string }>`SELECT value FROM _test_metadata WHERE key = ${key}`;
+      }),
+    );
+    return rows.length > 0 ? rows[0].value : undefined;
+  }
+
+  /** Writes a persistent metadata value to the SQLite storage (key-value table). */
+  async setStorageMetadata(key: string, value: string): Promise<void> {
+    invariant(this._persistentRuntime, 'setStorageMetadata requires a storagePath peer');
+    await this._persistentRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`INSERT OR REPLACE INTO _test_metadata (key, value) VALUES (${key}, ${value})`;
+      }),
+    );
+  }
+
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */

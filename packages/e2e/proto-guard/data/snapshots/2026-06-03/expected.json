@@ -1,0 +1,147 @@
+{
+  "BJNRIOQY6WXVOK3ZHETWBZFWDUNDIQQFM": {
+    "01KT6MX1EBDSX1JAVATWBYYGFT": {
+      "id": "01KT6MX1EBDSX1JAVATWBYYGFT",
+      "@type": "dxn:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BJNRIOQY6WXVOK3ZHETWBZFWDUNDIQQFM/01KT6MX1EBDSX1JAVATWBYYGFT",
+      "name": "My Space"
+    }
+  },
+  "BIAM7J2NFQ7MIU44L6MWPJDGQXWWYXKB6": {
+    "01KT6MX1XEB20KQN30XSVYHZ2T": {
+      "id": "01KT6MX1XEB20KQN30XSVYHZ2T",
+      "@type": "dxn:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BIAM7J2NFQ7MIU44L6MWPJDGQXWWYXKB6/01KT6MX1XEB20KQN30XSVYHZ2T",
+      "name": "first-space"
+    },
+    "01KT6MX1YKDXYK6HYNAN3QTADF": {
+      "id": "01KT6MX1YKDXYK6HYNAN3QTADF",
+      "@type": "dxn:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BIAM7J2NFQ7MIU44L6MWPJDGQXWWYXKB6/01KT6MX1YKDXYK6HYNAN3QTADF",
+      "array": [
+        "one",
+        "two",
+        "three"
+      ],
+      "string": "hello world!",
+      "value": 100
+    },
+    "01KT6MX2D6N5XGRJTKP8Z1XAKX": {
+      "id": "01KT6MX2D6N5XGRJTKP8Z1XAKX",
+      "@type": "dxn:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BIAM7J2NFQ7MIU44L6MWPJDGQXWWYXKB6/01KT6MX2D6N5XGRJTKP8Z1XAKX",
+      "value": [
+        1,
+        2,
+        3,
+        {
+          "/": "echo:/01KT6MX2DC54SA403KXJ05W9EJ"
+        }
+      ]
+    },
+    "01KT6MX2DC54SA403KXJ05W9EJ": {
+      "id": "01KT6MX2DC54SA403KXJ05W9EJ",
+      "@type": "dxn:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BIAM7J2NFQ7MIU44L6MWPJDGQXWWYXKB6/01KT6MX2DC54SA403KXJ05W9EJ",
+      "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    }
+  },
+  "BW7WTULHFQNLAP46YJ5DKYA3VFBEY4NEZ": {
+    "01KT6MX2WMXS1NV9J5S035R2VZ": {
+      "id": "01KT6MX2WMXS1NV9J5S035R2VZ",
+      "@type": "dxn:org.dxos.type.spaceProperties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BW7WTULHFQNLAP46YJ5DKYA3VFBEY4NEZ/01KT6MX2WMXS1NV9J5S035R2VZ",
+      "name": "second-space"
+    },
+    "01KT6MX2XQ1X236X9GTG629HN4": {
+      "id": "01KT6MX2XQ1X236X9GTG629HN4",
+      "@type": "dxn:org.dxos.type.schema:0.1.0",
+      "@meta": {
+        "key": "com.example.type.test",
+        "keys": [],
+        "version": "0.1.0"
+      },
+      "@uri": "echo://BW7WTULHFQNLAP46YJ5DKYA3VFBEY4NEZ/01KT6MX2XQ1X236X9GTG629HN4",
+      "jsonSchema": {
+        "$id": "echo:/01KT6MX2XQ1X236X9GTG629HN4",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "entityKind": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "testField": {
+            "type": "string"
+          },
+          "todo": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:com.example.type.todo"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          }
+        },
+        "propertyOrder": [
+          "testField",
+          "id",
+          "name",
+          "todo"
+        ],
+        "required": [
+          "testField",
+          "id"
+        ],
+        "type": "object",
+        "typename": "com.example.type.test",
+        "version": "0.1.0"
+      }
+    },
+    "01KT6MX2Y37ZQ57ZJD9M759W3A": {
+      "id": "01KT6MX2Y37ZQ57ZJD9M759W3A",
+      "@type": "echo:/01KT6MX2XQ1X236X9GTG629HN4",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BW7WTULHFQNLAP46YJ5DKYA3VFBEY4NEZ/01KT6MX2Y37ZQ57ZJD9M759W3A",
+      "testField": "Test",
+      "name": "Test",
+      "todo": {
+        "/": "echo:/01KT6MX2YJ62R71S98EXBF4G3Z"
+      }
+    },
+    "01KT6MX2YJ62R71S98EXBF4G3Z": {
+      "id": "01KT6MX2YJ62R71S98EXBF4G3Z",
+      "@type": "dxn:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@uri": "echo://BW7WTULHFQNLAP46YJ5DKYA3VFBEY4NEZ/01KT6MX2YJ62R71S98EXBF4G3Z",
+      "name": "Test todo"
+    }
+  }
+}

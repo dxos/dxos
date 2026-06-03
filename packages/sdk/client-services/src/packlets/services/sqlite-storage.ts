@@ -28,8 +28,6 @@ export type SqliteStorageOptions = {
 class SqliteRandomAccessFile extends EventEmitter implements RandomAccessStorage {
   readonly opened: boolean = false;
   readonly suspended: boolean = false;
-  readonly closed: boolean = false;
-  readonly unlinked: boolean = false;
   readonly writing: boolean = false;
   readonly readable: boolean = true;
   readonly writable: boolean = true;
@@ -38,6 +36,22 @@ class SqliteRandomAccessFile extends EventEmitter implements RandomAccessStorage
   // Setting statable=false prevents hypercore's statAndReadAll() from computing a negative
   // read-size (stat.size - offset) for new empty files, which causes an infinite async loop.
   readonly statable: boolean = false;
+
+  #closed = false;
+  #unlinked = false;
+  #destroyed = false;
+
+  get closed(): boolean {
+    return this.#closed;
+  }
+
+  get unlinked(): boolean {
+    return this.#unlinked;
+  }
+
+  get destroyed(): boolean {
+    return this.#destroyed;
+  }
 
   // Filesystem-like metadata for compatibility with wrapFile.
   readonly directory: string;
@@ -144,7 +158,7 @@ class SqliteRandomAccessFile extends EventEmitter implements RandomAccessStorage
   }
 
   close(cb: Callback<Error>): void {
-    (this as any).closed = true;
+    this.#closed = true;
     cb(null);
   }
 
@@ -158,9 +172,9 @@ class SqliteRandomAccessFile extends EventEmitter implements RandomAccessStorage
     )
       .then(() => {
         this.#buffer = Buffer.alloc(0);
-        (this as any).destroyed = true;
-        (this as any).unlinked = true;
-        (this as any).closed = true;
+        this.#destroyed = true;
+        this.#unlinked = true;
+        this.#closed = true;
         cb(null);
       })
       .catch((err) => cb(err));
@@ -208,7 +222,9 @@ export class SqliteStorage implements Storage {
     const getOrCreateFile = (path: string, filename: string): File => {
       const fullPath = join(path, filename);
       const existing = files.get(fullPath);
-      if (existing && !(existing as any).destroyed) {
+      // `File` wraps the native adapter; `destroyed` is not in the File type but
+      // is a runtime property proxied from the underlying SqliteRandomAccessFile.
+      if (existing && !(existing as unknown as SqliteRandomAccessFile).destroyed) {
         return existing;
       }
       const native = new SqliteRandomAccessFile(fullPath, runtime);
@@ -240,7 +256,7 @@ export class SqliteStorage implements Storage {
       );
       // Clean up in-memory file cache.
       for (const [filePath] of files) {
-        if (filePath.startsWith(dirPath)) {
+        if (filePath === dirPath || filePath.startsWith(prefix)) {
           files.delete(filePath);
         }
       }

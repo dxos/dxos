@@ -6,7 +6,8 @@ import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as NodeFs from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import { Database, Feed, Type, View } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -21,7 +22,7 @@ import { EchoTestBuilder } from './echo-test-builder';
 const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 
 export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => {
-  return `/tmp/dxos-${name}`;
+  return join(tmpdir(), `dxos-${name}`);
 };
 
 const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
@@ -60,19 +61,18 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
       let queues: QueueFactory | undefined;
 
       if (storagePath) {
-        const metaPath = storagePath + '.meta.json';
-        let testMetadata: { key: string; rootUrl: string } | undefined;
-        try {
-          testMetadata = JSON.parse(NodeFs.readFileSync(metaPath, 'utf-8'));
-        } catch {
-          testMetadata = undefined;
-        }
+        const metaJson = yield* Effect.promise(() => peer.getStorageMetadata('test_db'));
+        const testMetadata: { key: string; rootUrl: string } | undefined = metaJson
+          ? JSON.parse(metaJson)
+          : undefined;
         log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
           db = yield* Effect.promise(() => peer.createDatabase(key));
           queues = peer.client.constructQueueFactory(db.spaceId);
 
-          NodeFs.writeFileSync(metaPath, JSON.stringify({ key: key.toHex(), rootUrl: db.rootUrl }));
+          yield* Effect.promise(() =>
+            peer.setStorageMetadata('test_db', JSON.stringify({ key: key.toHex(), rootUrl: db!.rootUrl })),
+          );
 
           if (onInit) {
             yield* onInit().pipe(

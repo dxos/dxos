@@ -82,7 +82,11 @@ export class SqliteKeyring implements KeyringApi {
         return yield* sql<{ record: Uint8Array }>`SELECT record FROM keyring`;
       }),
     );
-    return rows.map((row) => KeyRecordCodec.decode(row.record));
+    return rows.map((row) => {
+      const record = KeyRecordCodec.decode(row.record);
+      // Never expose private key material to callers.
+      return { publicKey: record.publicKey };
+    });
   }
 
   @synchronized
@@ -133,7 +137,6 @@ export class SqliteKeyring implements KeyringApi {
   private async _setKey(keyPair: CryptoKeyPair): Promise<void> {
     const publicKey = await keyPairToPublicKey(keyPair);
     this.#keyCache.set(publicKey, keyPair);
-    this.keysUpdate.emit();
 
     const record: KeyRecord = {
       publicKey: publicKey.asUint8Array(),
@@ -148,6 +151,7 @@ export class SqliteKeyring implements KeyringApi {
         yield* sql`INSERT OR REPLACE INTO keyring (public_key, record) VALUES (${keyHex}, ${encodedRecord})`;
       }),
     );
+    this.keysUpdate.emit();
   }
 }
 

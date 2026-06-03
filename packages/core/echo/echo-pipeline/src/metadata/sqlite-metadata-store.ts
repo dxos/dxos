@@ -358,9 +358,9 @@ export class SqliteMetadataStore implements IMetadataStore {
     }
     const dataSize = buf.readInt32LE(0);
     const checksum = buf.readInt32LE(4);
-    if (buf.length < dataSize + 8) {
+    if (dataSize < 0 || dataSize > buf.length - 8) {
       throw new DataCorruptionError({
-        message: 'Metadata size is smaller than expected.',
+        message: 'Metadata size header is invalid.',
         context: { fileLength: buf.length, dataSize },
       });
     }

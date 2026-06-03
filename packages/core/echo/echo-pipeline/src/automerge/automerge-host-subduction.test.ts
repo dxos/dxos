@@ -269,8 +269,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // explicitly exercises `_subductionPolicy.authorizeFetch` via the per-connection
     // `shouldAdvertise` predicate.
     test('authorized holder allows fetcher', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ runtime: createRuntime().runtime });
-      const host2 = await setupAutomergeHost({ runtime: createRuntime().runtime });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const handle = await host2.createDoc({ text: 'authorized' });
       await host2.flush(Context.default());
       await waitForSubductionSave();
@@ -294,8 +298,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // on the holder rejects the fetcher's request → fetcher's query never reaches
     // `'ready'` and the local doc stays empty.
     test('unauthorized holder blocks fetcher (authorizeFetch denial)', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ runtime: createRuntime().runtime });
-      const host2 = await setupAutomergeHost({ runtime: createRuntime().runtime });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const handle = await host2.createDoc({ text: 'should-not-fetch' });
       await host2.flush(Context.default());
       await waitForSubductionSave();
@@ -326,8 +334,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       'shareConfigChanged() recovers after authorizeFetch denial flips to allow',
       { timeout: 5_000 },
       async ({ expect }) => {
-        const host1 = await setupAutomergeHost({ runtime: createRuntime().runtime });
-        const host2 = await setupAutomergeHost({ runtime: createRuntime().runtime });
+        const rt1 = createRuntime();
+        onTestFinished(() => rt1.dispose());
+        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+        const rt2 = createRuntime();
+        onTestFinished(() => rt2.dispose());
+        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
         const handle = await host2.createDoc({ text: 'recover-me' });
         await host2.flush(Context.default());
         await waitForSubductionSave();
@@ -367,8 +379,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // the binding fields rather than count of events: the responder's binding must
     // carry the connector's repo PeerId and a distinct subduction PeerId.
     test('subduction-peer-bound event surfaces verified peer ids', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ runtime: createRuntime().runtime });
-      const host2 = await setupAutomergeHost({ runtime: createRuntime().runtime });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       // The Subduction handshake only triggers when there is data to sync. Create a
       // doc on host2 before connecting so the adapter-connect flow runs end-to-end.
       await host2.createDoc({ text: 'binding-fixture' });
@@ -475,8 +491,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // 3s deny window + up to 10s convergence poll + teardown — give CI headroom.
       { timeout: 25_000 },
       async ({ expect }) => {
-        const host1 = await setupAutomergeHost({ runtime: createRuntime().runtime });
-        const host2 = await setupAutomergeHost({ runtime: createRuntime().runtime });
+        const rt1 = createRuntime();
+        onTestFinished(() => rt1.dispose());
+        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+        const rt2 = createRuntime();
+        onTestFinished(() => rt2.dispose());
+        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
         const documentIds = await createDivergentDocs(host1, host2);
 
         const network = await new TestReplicationNetwork().open();
@@ -502,8 +522,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     );
 
     test('control: docs converge when policy never denies', { timeout: 15_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ runtime: createRuntime().runtime });
-      const host2 = await setupAutomergeHost({ runtime: createRuntime().runtime });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const documentIds = await createDivergentDocs(host1, host2);
 
       const network = await new TestReplicationNetwork().open();
@@ -585,8 +609,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const host1 = await setupMeshAutomergeHost({ runtime: createRuntime().runtime, spaceKey, teleportBuilder });
-      const host2 = await setupMeshAutomergeHost({ runtime: createRuntime().runtime, spaceKey, teleportBuilder });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
 
       const handle = await host2.host.createDoc({ text: 'mesh-authorized' });
       await host2.host.flush(Context.default());
@@ -614,8 +642,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const host1 = await setupMeshAutomergeHost({ runtime: createRuntime().runtime, spaceKey, teleportBuilder });
-      const host2 = await setupMeshAutomergeHost({ runtime: createRuntime().runtime, spaceKey, teleportBuilder });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
 
       const handle = await host2.host.createDoc({ text: 'mesh-denied' });
       await host2.host.flush(Context.default());
@@ -639,8 +671,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const host1 = await setupMeshAutomergeHost({ runtime: createRuntime().runtime, spaceKey, teleportBuilder });
-      const host2 = await setupMeshAutomergeHost({ runtime: createRuntime().runtime, spaceKey, teleportBuilder });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
 
       const handle = await host2.host.createDoc({ text: 'mesh-recover' });
       await host2.host.flush(Context.default());
@@ -694,13 +730,17 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const spaceLookup = (documentId: string): PublicKey | undefined =>
         documentId === spaceADocId ? spaceA : documentId === spaceBDocId ? spaceB : undefined;
 
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
       const host1 = await setupMeshAutomergeHost({
-        runtime: createRuntime().runtime,
+        runtime: rt1.runtime,
         spaceLookup,
         teleportBuilder,
       });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
       const host2 = await setupMeshAutomergeHost({
-        runtime: createRuntime().runtime,
+        runtime: rt2.runtime,
         spaceLookup,
         teleportBuilder,
       });

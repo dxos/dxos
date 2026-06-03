@@ -5,7 +5,9 @@
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Record from 'effect/Record';
-import { describe, expect, test } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -110,7 +112,7 @@ describe('RepoProxy', () => {
   });
 
   test('load document from disk', async () => {
-    const dbPath = `/tmp/repo-proxy-test-${Date.now()}.db`;
+    const dbPath = join(tmpdir(), `repo-proxy-test-${Date.now()}.db`);
 
     let url: AutomergeUrl;
     {
@@ -136,7 +138,8 @@ describe('RepoProxy', () => {
     }
 
     {
-      const { runtime } = createTestSqliteRuntime(dbPath);
+      const { runtime, dispose: disposeRuntime } = createTestSqliteRuntime(dbPath);
+      onTestFinished(() => disposeRuntime());
       const { dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
@@ -210,7 +213,7 @@ describe('RepoProxy', () => {
   });
 
   test('new document persists without `flush`', async () => {
-    const dbPath = `/tmp/repo-proxy-test-${Date.now()}.db`;
+    const dbPath = join(tmpdir(), `repo-proxy-test-${Date.now()}.db`);
     let url: AutomergeUrl;
 
     {
@@ -229,7 +232,8 @@ describe('RepoProxy', () => {
     }
 
     {
-      const { runtime } = createTestSqliteRuntime(dbPath);
+      const { runtime, dispose: disposeRuntime } = createTestSqliteRuntime(dbPath);
+      onTestFinished(() => disposeRuntime());
       const { dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
@@ -242,7 +246,7 @@ describe('RepoProxy', () => {
   });
 
   test('document mutation persists with `flush`', async () => {
-    const dbPath = `/tmp/repo-proxy-test-${Date.now()}.db`;
+    const dbPath = join(tmpdir(), `repo-proxy-test-${Date.now()}.db`);
     let url: AutomergeUrl;
 
     {
@@ -264,7 +268,8 @@ describe('RepoProxy', () => {
     }
 
     {
-      const { runtime } = createTestSqliteRuntime(dbPath);
+      const { runtime, dispose: disposeRuntime } = createTestSqliteRuntime(dbPath);
+      onTestFinished(() => disposeRuntime());
       const { dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
@@ -430,7 +435,12 @@ describe('RepoProxy', () => {
   });
 });
 
-const setup = async (runtime = createTestSqliteRuntime().runtime) => {
+const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime']) => {
+  if (!runtime) {
+    const handle = createTestSqliteRuntime();
+    onTestFinished(() => handle.dispose());
+    runtime = handle.runtime;
+  }
   const host = new AutomergeHost({ runtime });
   await openAndClose(host);
 
