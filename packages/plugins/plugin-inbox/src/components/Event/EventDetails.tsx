@@ -27,7 +27,7 @@ export type EventDetailsProps = {
 /**
  * Presentational event summary rendered as `Card` rows (title · date · description · attendees).
  * Shared by the Event article header, the calendar `EventCard`, and the `EventStack` tile so all three
- * render the same field layout; callers supply the surrounding Card chrome (`Header.Root`, `Card.Root`, …).
+ * render the same field layout; callers supply the surrounding `Card.Root` chrome.
  */
 export const EventDetails = ({
   event,
@@ -43,7 +43,9 @@ export const EventDetails = ({
   return (
     <>
       {title === 'heading' && (
-        <Header.Title icon='ph--check--regular' title={event.title ?? t('event-untitled.label')} />
+        <Card.Row icon='ph--check--regular'>
+          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
+        </Card.Row>
       )}
       {title === 'text' && (
         <Card.Row>
@@ -51,7 +53,7 @@ export const EventDetails = ({
         </Card.Row>
       )}
 
-      <Header.Date start={new Date(event.startDate)} end={new Date(event.endDate)} />
+      <Header.DateRow start={new Date(event.startDate)} end={new Date(event.endDate)} />
 
       {description && event.description && (
         <Card.Row>

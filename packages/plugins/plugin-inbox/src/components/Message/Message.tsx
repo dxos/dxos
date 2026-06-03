@@ -10,7 +10,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Card, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -196,36 +196,43 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <Header.Root data-testid='message-header'>
-      {/* Subject row. */}
-      <Header.Title
-        icon='ph--envelope-open--regular'
-        title={message.properties?.subject}
-        caption={message.created && formatDateTime(new Date(message.created), new Date())}
-      />
-
-      {/* Sender row. */}
-      {/* TODO(burdon): List other To/CC/BCC. */}
-      <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
-
-      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-      {objects.map((object) => (
-        <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
-      ))}
-
-      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-      {tags.length > 0 && (
-        <Header.Row icon='ph--tag--regular'>
-          <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
-            {tags.map((tag) => (
-              <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
-                {tag.label}
-              </Tag>
-            ))}
+    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
+      <Card.Body>
+        {/* Subject row. */}
+        <Card.Row icon='ph--envelope-open--regular'>
+          <div className='flex flex-col gap-1 overflow-hidden'>
+            <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+            {message.created && (
+              <div className='whitespace-nowrap text-sm text-description'>
+                {formatDateTime(new Date(message.created), new Date())}
+              </div>
+            )}
           </div>
-        </Header.Row>
-      )}
-    </Header.Root>
+        </Card.Row>
+
+        {/* Sender row. */}
+        {/* TODO(burdon): List other To/CC/BCC. */}
+        <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
+
+        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+        {objects.map((object) => (
+          <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
+        ))}
+
+        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+        {tags.length > 0 && (
+          <Card.Row icon='ph--tag--regular'>
+            <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
+              {tags.map((tag) => (
+                <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
+                  {tag.label}
+                </Tag>
+              ))}
+            </div>
+          </Card.Row>
+        )}
+      </Card.Body>
+    </Card.Root>
   );
 };
 

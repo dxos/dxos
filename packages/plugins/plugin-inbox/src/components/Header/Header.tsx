@@ -2,141 +2,37 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type JSX, type PropsWithChildren, type ReactNode, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import {
-  Card,
-  DxAnchorActivate,
-  Icon,
-  IconBlock,
-  IconButton,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Card, DxAnchorActivate, IconBlock, IconButton, useTranslation } from '@dxos/react-ui';
 import { type Actor } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { useActorContact } from '#hooks';
 import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
 
-//
-// Root
-//
+// AnchorIconButton — internal helper, not exported on Header.
 
-type HeaderRootProps = ThemedClassName<PropsWithChildren<{ 'data-testid'?: string }>>;
-
-/**
- * Shared header chrome for object articles (Message, Event, …). Implemented as a borderless
- * `Card` so rows align to the Card column grid (icon · content) and reuse `Card.Row`/`Card.Title`.
- */
-const HeaderRoot = ({ children, classNames, ...props }: HeaderRootProps) => (
-  <Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
-    <Card.Body>{children}</Card.Body>
-  </Card.Root>
-);
-
-HeaderRoot.displayName = 'Header.Root';
-
-//
-// Title
-//
-
-type HeaderTitleProps = {
+type AnchorIconButtonProps = {
+  classNames?: string;
   icon: string;
-  title?: string;
-  /** Optional secondary line rendered beneath the title (e.g. a timestamp). */
-  caption?: ReactNode;
-};
-
-const HeaderTitle = ({ icon, title, caption }: HeaderTitleProps) => (
-  <Card.Row icon={icon}>
-    <div className='flex flex-col gap-1 overflow-hidden'>
-      <h2 className='text-lg line-clamp-2'>{title}</h2>
-      {caption && <div className='whitespace-nowrap text-sm text-description'>{caption}</div>}
-    </div>
-  </Card.Row>
-);
-
-HeaderTitle.displayName = 'Header.Title';
-
-//
-// Date
-//
-
-const HeaderDate = ({ start, end }: { start: Date; end?: Date }) => (
-  <Card.Row icon='ph--calendar--regular'>
-    <DateComponent start={start} end={end} />
-  </Card.Row>
-);
-
-HeaderDate.displayName = 'Header.Date';
-
-//
-// Row
-//
-
-type HeaderRowProps = ThemedClassName<
-  PropsWithChildren<{
-    icon?: string | JSX.Element;
-    /**
-     * Render a string `icon` as a compact (content-height) block rather than a full rail-height square.
-     * Use for repeated rows (e.g. attendees) so the list stays dense. Ignored for element icons.
-     */
-    compact?: boolean;
-    'data-testid'?: string;
-  }>
->;
-
-const HeaderRow = ({ icon, compact, children, classNames, ...props }: HeaderRowProps) => {
-  const resolvedIcon =
-    compact && typeof icon === 'string' ? (
-      <IconBlock compact square>
-        <Icon icon={icon} classNames='text-subdued' size={4} />
-      </IconBlock>
-    ) : (
-      icon
-    );
-
-  return (
-    <Card.Row icon={resolvedIcon} classNames={mx('items-center', classNames)} {...props}>
-      {children}
-    </Card.Row>
-  );
-};
-
-HeaderRow.displayName = 'Header.Row';
-
-// AnchorIconButton
-
-type AnchorIconButtonProps = ThemedClassName<{
-  /** Phosphor icon shown when `value` is present. */
-  icon: string;
-  /** Phosphor icon shown when `value` is absent. Defaults to `icon`. */
   fallbackIcon?: string;
-  /** Accessible label when `value` is present. */
   label: string;
-  /** Accessible label when `value` is absent. Defaults to `label`. */
   fallbackLabel?: string;
-  /** DXN of the target object — opens the card preview on click via `DxAnchorActivate`. */
   value?: URI.URI;
-  /** Optional title passed to the DxAnchorActivate event (shown in the preview header). */
   title?: string;
-  /** Fallback action when no `value` is provided. */
   onClick?: () => void;
-  /** IconButton size; defaults to 4. */
   size?: 4 | 5 | 6;
-}>;
+};
 
 /**
  * Icon-only button that opens an ECHO object's preview card via `DxAnchorActivate`.
- * When `value` is missing the button falls back to `onClick` for a "create"-style action.
+ * Falls back to `onClick` when `value` is absent.
  */
-const HeaderAnchorIconButton = ({
-  classNames,
+const AnchorIconButton = ({
   icon,
   fallbackIcon,
   label,
@@ -165,7 +61,6 @@ const HeaderAnchorIconButton = ({
 
   return (
     <IconButton
-      classNames={classNames}
       variant='ghost'
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
@@ -178,23 +73,32 @@ const HeaderAnchorIconButton = ({
   );
 };
 
-HeaderAnchorIconButton.displayName = 'Header.AnchorIconButton';
+// DateRow
+
+/** A Card.Row rendering a date range with a calendar icon. */
+const HeaderDateRow = ({ start, end }: { start: Date; end?: Date }) => (
+  <Card.Row icon='ph--calendar--regular'>
+    <DateComponent start={start} end={end} />
+  </Card.Row>
+);
+
+HeaderDateRow.displayName = 'Header.DateRow';
 
 // ObjectRow
 
-/** A row that renders an extracted ECHO object — icon button opening the object's card preview. */
+/** A Card.Row rendering an extracted ECHO object with a card-preview anchor icon. */
 const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
   const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
   const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
   const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
   return (
-    <HeaderRow
-      icon={<HeaderAnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
+    <Card.Row
+      icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
       data-testid={`extracted-tag-${object.id}`}
     >
       <h3 className='truncate text-primary-text'>{label}</h3>
-    </HeaderRow>
+    </Card.Row>
   );
 };
 
@@ -209,17 +113,17 @@ type PersonRowProps = {
 };
 
 // TODO(burdon): Reconcile with Avatar if space member.
-/** A row that renders a person (sender, attendee, etc.) with a contact anchor icon. */
+/** A Card.Row rendering a person (sender, attendee) with a contact anchor icon. */
 const HeaderPersonRow = ({ actor, db, onContactCreate }: PersonRowProps) => {
   const { t } = useTranslation(meta.id);
   const contactDXN = useActorContact(db, actor);
   const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
   return (
-    <HeaderRow
+    <Card.Row
       icon={
         <IconBlock compact>
-          <HeaderAnchorIconButton
+          <AnchorIconButton
             classNames='min-h-0'
             value={contactDXN}
             title={actor.name}
@@ -233,24 +137,18 @@ const HeaderPersonRow = ({ actor, db, onContactCreate }: PersonRowProps) => {
       }
     >
       <h3 className='truncate'>{actor.name || actor.email}</h3>
-    </HeaderRow>
+    </Card.Row>
   );
 };
 
 HeaderPersonRow.displayName = 'Header.PersonRow';
 
 //
-// Header
-//
 
 export const Header = {
-  Root: HeaderRoot,
-  Title: HeaderTitle,
-  Date: HeaderDate,
-  Row: HeaderRow,
-  AnchorIconButton: HeaderAnchorIconButton,
+  DateRow: HeaderDateRow,
   ObjectRow: HeaderObjectRow,
   PersonRow: HeaderPersonRow,
 };
 
-export type { HeaderRootProps, HeaderTitleProps, HeaderRowProps, AnchorIconButtonProps, PersonRowProps };
+export type { PersonRowProps };
