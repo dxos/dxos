@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { Context } from 'effect';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
+
 import type { AssistantPluginOptions } from '#types';
-import { Context } from 'effect';
 
 export default Capability.makeModule<AssistantPluginOptions | void>(
   Effect.fnUntraced(function* (options) {
@@ -27,10 +28,12 @@ export default Capability.makeModule<AssistantPluginOptions | void>(
     );
 
     if (options?.aiServiceMiddleware) {
-      aiServiceLayer = aiServiceLayer.pipe(Layer.map(context => {
-        const aiService = Context.get(context, AiService.AiService);
-        return Context.make(AiService.AiService, options.aiServiceMiddleware!(aiService));
-      }));
+      aiServiceLayer = aiServiceLayer.pipe(
+        Layer.map((context) => {
+          const aiService = Context.get(context, AiService.AiService);
+          return Context.make(AiService.AiService, options.aiServiceMiddleware!(aiService));
+        }),
+      );
     }
 
     const aiServiceSpec = LayerSpec.make(

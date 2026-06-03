@@ -104,12 +104,13 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: LocalModelResolver,
   }),
-  Plugin.addModule({
+  Plugin.addModule((options) => ({
+    id: Capability.getModuleTag(AiService),
     firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: ActivationEvents.SetupProcessManager,
-    activate: AiService,
-  }),
+    activate: () => AiService(options),
+  })),
   Plugin.addModule({
     // Process-affinity `AiContext.Service` LayerSpec — needed so operations
     // dispatched as their own processes (e.g. via `Operation.invoke` from

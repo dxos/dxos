@@ -6,21 +6,22 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { TestAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ServiceResolver } from '@dxos/compute';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { TestContextService } from '@dxos/effect/testing';
 
 import { AssistantPlugin } from '#plugin';
 
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { LanguageModel } from '@effect/ai';
-import { beforeEach, type TestContext } from '@effect/vitest';
+import { type TestContext } from '@effect/vitest';
 import { Layer } from 'effect';
 import { meta } from './meta';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -58,7 +59,7 @@ describe('AssistantPlugin', () => {
     const { expect } = ctx;
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), AssistantPlugin({
-        aiServiceMiddleware: makeMemoizedAiServiceMiddleware(ctx)
+        aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx)
       })],
     });
 
@@ -73,8 +74,15 @@ describe('AssistantPlugin', () => {
   });
 });
 
-const makeMemoizedAiServiceMiddleware = (ctx: TestContext) => (upstream: AiService.Service): AiService.Service =>
-  MemoizedAiService.make({
-    upstream, storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
-    allowGeneration: MemoizedAiService.isGenerationEnabled()
-  });
+const makeMemoizedAiServiceMiddleware = (ctx: TestContext): Promise<(_upstream: AiService.Service) => AiService.Service> =>
+  AiService.AiService.pipe(
+    Effect.provide(
+      TestAiService({ preset: 'direct' }).pipe(
+        Layer.provideMerge(Layer.succeed(TestContextService, ctx))
+      )
+    ),
+    // Ignoring actual AI service the plugin contructs and using our own.
+    Effect.map(service => (_upstream: AiService.Service) => service),
+    Effect.runPromise,
+  );
+
