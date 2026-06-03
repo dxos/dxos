@@ -4383,6 +4383,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
       '@dxos/wa-sqlite':
         specifier: 'catalog:'
         version: 0.2.1
