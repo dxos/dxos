@@ -115,7 +115,6 @@
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-native": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
