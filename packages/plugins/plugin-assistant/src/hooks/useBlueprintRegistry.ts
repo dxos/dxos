@@ -91,10 +91,8 @@ export const useBlueprintHandlers = ({
           .runSync()
           .find((b) => Obj.getMeta(b).key === key);
 
-        const uri = Blueprint.registryURI(key);
-        if (registryBlueprint && uri) {
-          // Use the DXN URI so the binder resolves from the registry without a DB clone.
-          await context.bind({ blueprints: [Ref.fromURI(uri)] });
+        if (registryBlueprint) {
+          await context.bind({ blueprints: [Ref.fromURI(Blueprint.registryURI(key))] });
         } else {
           // User-forked blueprint (in DB but not in registry): bind via DB ref.
           const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
@@ -109,9 +107,8 @@ export const useBlueprintHandlers = ({
           ?.query(Filter.type(Blueprint.Blueprint))
           .runSync()
           .find((b) => Obj.getMeta(b).key === key);
-        const unbindUri = Blueprint.registryURI(key);
-        if (registryBlueprint && unbindUri) {
-          await context.unbind({ blueprints: [Ref.fromURI(unbindUri)] });
+        if (registryBlueprint) {
+          await context.unbind({ blueprints: [Ref.fromURI(Blueprint.registryURI(key))] });
         } else {
           const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
           const storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);

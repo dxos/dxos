@@ -129,12 +129,11 @@ export type Definition = {
 };
 
 /**
- * Returns the canonical DXN URI used to bind this blueprint via the registry (no DB clone needed),
- * or `undefined` if the key is not a valid DXN (e.g. contains hyphens in the last segment).
- * When `undefined` is returned, fall back to {@link upsert} + `Ref.make`.
+ * Returns the canonical URI used to reference this blueprint in the registry.
+ * Valid DXN keys produce `dxn:<key>`; other keys use the raw key as a URI.
+ * Use this URI with `Ref.fromURI` to bind a blueprint without cloning it to the DB.
  */
-export const registryURI = (key: string): URI.URI | undefined =>
-  (DXN.tryMake(`dxn:${key}`) as URI.URI | undefined) ?? undefined;
+export const registryURI = (key: string): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
 
 /**
  * Resolves a blueprint from the registry by its meta key.
