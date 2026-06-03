@@ -39,13 +39,14 @@ const originalFetch = globalThis.fetch.bind(globalThis);
 
 const installRegisterFetchMock = async () => {
   const { default: registerFeedXml } = await import('./fixtures/theregister-ai.xml?raw');
-  globalThis.fetch = (async (input: any, init?: any) => {
-    const url = typeof input === 'string' ? input : (input?.url ?? '');
+  const registerFetchMock: typeof fetch = async (input, init) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     if (url.includes('theregister.com')) {
       return new Response(registerFeedXml, { status: 200, headers: { 'content-type': 'application/rss+xml' } });
     }
     return originalFetch(input, init);
-  }) as typeof fetch;
+  };
+  globalThis.fetch = registerFetchMock;
 };
 
 const DefaultStory = () => {

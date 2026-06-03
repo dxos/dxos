@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { fetchRss } from '../util';
 import registerFeedXml from './fixtures/theregister-ai.xml?raw';
@@ -23,7 +23,7 @@ describe('theregister fixture', () => {
     vi.unstubAllGlobals();
   });
 
-  test('parses into Posts via the mock fetcher', async () => {
+  test('parses into Posts via the mock fetcher', async ({ expect }) => {
     const { feed, posts } = await fetchRss(REGISTER_FEED_URL);
     expect(feed.name).toMatch(/register/i);
     expect(posts.length).toBe(4);

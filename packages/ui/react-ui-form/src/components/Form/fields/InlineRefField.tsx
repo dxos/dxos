@@ -73,7 +73,7 @@ export const InlineRefField = (props: RefFieldProps) => {
     <Input.Root>
       {layout !== 'inline' && <FormFieldLabel readonly={readonly} label={label} path={jsonPath} />}
       {reference ? (
-        <InlineForm reference={reference} db={db} readonly={readonly} />
+        <InlineForm reference={reference} db={db} readonly={readonly} useType={useType} />
       ) : (
         !readonly &&
         onCreate && (
@@ -91,12 +91,14 @@ type InlineFormProps = {
   reference: Ref.Ref<any>;
   db?: Database.Database;
   readonly?: boolean;
+  // Accepts both the generic `defaultUseType` and `RefFieldProps['useType']`.
+  useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity | undefined;
 };
 
-const InlineForm = ({ reference, db, readonly }: InlineFormProps) => {
+const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: InlineFormProps) => {
   const target = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
   const typename = target ? (Obj.getTypename(target) ?? undefined) : undefined;
-  const typeFromRegistry = defaultUseType(db, typename);
+  const typeFromRegistry = useType(db, typename);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;
   // Drop the ECHO `id` property (mirrors `ObjectProperties` via `withMetaTags`);
   // otherwise the nested form renders an "Id" field. Hidden fields
@@ -104,6 +106,10 @@ const InlineForm = ({ reference, db, readonly }: InlineFormProps) => {
   const formSchema = useMemo(() => (targetType ? omitId(Type.getSchema(targetType)) : undefined), [targetType]);
   const defaultValues = useMemo(() => (target ? { ...target } : {}), [target]);
 
+  // `formSchema` is resolved at runtime (the referenced object's schema), so the
+  // form's value type is not statically known here — `any` at this form-value
+  // boundary mirrors `ObjectProperties`. Each changed path is written back to the
+  // live target via `Obj.setValue`.
   const handleChange = useCallback(
     (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
       if (!isValid || !target) {
