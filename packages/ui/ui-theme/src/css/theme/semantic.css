@@ -109,7 +109,7 @@
 
   /* Separator */
   --color-primary-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
-  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
   --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 

@@ -87,10 +87,7 @@ export const Task = Schema.Struct({
   // tags: [String],
 }).pipe(
   LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--check-circle--regular',
-    hue: 'neutral',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
   Type.makeObject(DXN.make('org.dxos.type.task', '0.1.0')),
 );
 

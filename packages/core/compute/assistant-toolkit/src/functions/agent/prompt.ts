@@ -62,7 +62,7 @@ export default AgentPrompt.pipe(
           Effect.map(Array.map((option) => option.value)),
         );
 
-        const promptInstructions = yield* Database.load(prompt.instructions.source);
+        const promptInstructions = yield* Database.load(prompt.instructions);
         let promptText = Template.process(promptInstructions.content, input);
 
         if (input !== undefined) {

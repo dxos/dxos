@@ -25,10 +25,7 @@ export const Transcript = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
   HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--subtitles--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.transcript', '0.1.0')),
 );
 

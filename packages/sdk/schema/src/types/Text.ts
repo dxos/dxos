@@ -14,10 +14,7 @@ export const Text = Schema.Struct({
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--text-t--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--text-t--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.text', '0.1.0')),
 );
 

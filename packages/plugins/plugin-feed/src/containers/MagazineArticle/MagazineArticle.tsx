@@ -107,25 +107,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     return map;
   }, [allFeeds]);
 
-  // Compute posts.
-  const posts = useMagazinePosts(subject, sort, view, starredUri, archivedUri, revision);
+  // Compute posts. `byId` exposes every hydrated post (regardless of view) for
+  // consumers that must not read an unresolved `ref.target` (prune, Clear).
+  const { posts, byId } = useMagazinePosts(subject, sort, view, starredUri, archivedUri, revision);
 
-  // Kick off load for any Post refs that aren't yet resolved so `ref.target`
-  // becomes populated reactively on the next render cycle. Also pre-load each
-  // resolved Post's `feed` ref so `MagazineTile` can show the feed name.
-  useEffect(() => {
-    for (const ref of magazine.posts) {
-      if (!ref.target) {
-        void ref.load().catch((err) => log.catch(err));
-        continue;
-      }
-
-      const feedRef = ref.target.source;
-      if (feedRef && !feedRef.target) {
-        void feedRef.load().catch((err) => log.catch(err));
-      }
-    }
-  }, [magazine.posts]);
+  // Post ref resolution (incl. their source feed refs) is owned by
+  // `useMagazinePosts`, which loads them via `ref.load()` into state — see the
+  // note there.
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
@@ -138,7 +126,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     const feedIds = new Set(magazine.feeds.map((ref) => dxnToEntityId(ref.uri)));
     const orphanIds = new Set<string>();
     for (const postRef of magazine.posts) {
-      const post = postRef.target;
+      // Use the hydrated post (queue-backed `ref.target` is undefined until
+      // loaded); skip unresolved posts so they're never pruned prematurely. The
+      // `byId` dep reruns this effect once hydration completes.
+      const post = byId.get(dxnToEntityId(postRef.uri));
       const feedRef = post?.source;
       if (!feedRef) {
         continue;
@@ -154,7 +145,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     Obj.update(subject, (subject) => {
       subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToEntityId(ref.uri)));
     });
-  }, [subject, magazine.feeds, magazine.posts]);
+  }, [subject, magazine.feeds, magazine.posts, byId]);
 
   // Reset the magazine's curated post list. Starred posts are preserved so
   // the user doesn't lose manually-saved items; a follow-up Curate will
@@ -165,9 +156,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     const next = magazine.posts.filter((ref) => {
-      const post = ref.target;
+      const post = byId.get(dxnToEntityId(ref.uri));
+      // Preserve posts that haven't hydrated yet — we can't determine their
+      // starred state, and dropping them would lose manually-saved items.
       if (!post) {
-        return false;
+        return true;
       }
       const subscription = post.source?.target;
       return hasTag(subscription, (post as { id: string }).id, starredUri);
@@ -180,7 +173,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     Obj.update(subject, (subject) => {
       subject.posts = next;
     });
-  }, [subject, magazine.posts, db, starredUri]);
+  }, [subject, magazine.posts, db, starredUri, byId]);
 
   const handleOpen = useCallback(
     (post: Subscription.Post) => {
@@ -363,21 +356,61 @@ const useMagazinePosts = (
 ) => {
   const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
-  return useMemo<Subscription.Post[]>(() => {
+  // Resolve each Post (and its source feed) ref via `load()` into state. Curated
+  // Posts live in a queue, so their synchronous `ref.target` accessor stays
+  // `undefined` until loaded — reading `ref.target` directly would silently drop
+  // every curated post. Loading into state also re-renders once resolution
+  // completes (the ref URIs don't change when a target loads, so a memo keyed on
+  // them would never recompute).
+  const [resolved, setResolved] = useState<Subscription.Post[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      subject.posts.map(async (ref) => {
+        try {
+          const post = ref.target ?? (await ref.load());
+          if (post?.source && !post.source.target) {
+            await post.source.load().catch((err) => log.catch(err));
+          }
+          return post ?? undefined;
+        } catch (err) {
+          log.catch(err);
+          return undefined;
+        }
+      }),
+    ).then((posts) => {
+      if (!cancelled) {
+        setResolved(posts.filter((post): post is Subscription.Post => Boolean(post)));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Re-resolve whenever the set of post refs changes (add/remove/curate).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postFingerprint]);
+
+  // All hydrated posts keyed by bare object id. Consumers that operate on the
+  // full set regardless of view (prune, Clear) read from this so they never act
+  // on an unresolved `ref.target` mid-hydration.
+  const byId = useMemo(() => {
+    const map = new Map<string, Subscription.Post>();
+    for (const post of resolved) {
+      map.set((post as { id: string }).id, post);
+    }
+    return map;
+  }, [resolved]);
+
+  const posts = useMemo<Subscription.Post[]>(() => {
     const seenDxn = new Set<URI.URI>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
 
-    const resolved: Subscription.Post[] = [];
-    for (const ref of subject.posts) {
-      const target = ref.target;
-      if (!target) {
-        continue;
-      }
-
-      // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
-      // same article (distinct Post objects, same `link` / `guid`); without secondary
-      // dedup the masonry shows them as duplicate tiles.
+    // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
+    // same article (distinct Post objects, same `link` / `guid`); without secondary
+    // dedup the masonry shows them as duplicate tiles.
+    const deduped: Subscription.Post[] = [];
+    for (const target of resolved) {
       const uri = Obj.getURI(target);
       if (
         seenDxn.has(uri) ||
@@ -395,7 +428,7 @@ const useMagazinePosts = (
         seenGuid.add(target.guid);
       }
 
-      resolved.push(target);
+      deduped.push(target);
     }
 
     // View mode determines which posts the tile grid shows.
@@ -407,13 +440,13 @@ const useMagazinePosts = (
     let visible: Subscription.Post[];
     switch (view) {
       case 'archived':
-        visible = resolved.filter((post) => isArchived(post));
+        visible = deduped.filter((post) => isArchived(post));
         break;
       case 'starred':
-        visible = resolved.filter((post) => !isArchived(post) && isStarred(post));
+        visible = deduped.filter((post) => !isArchived(post) && isStarred(post));
         break;
       default:
-        visible = resolved.filter((post) => !isArchived(post));
+        visible = deduped.filter((post) => !isArchived(post));
         break;
     }
 
@@ -441,13 +474,10 @@ const useMagazinePosts = (
 
     return [...visible].sort((postA, postB) => timestamp(postB) - timestamp(postA));
   }, [
-    // `subject.posts` may return the same array proxy reference even when its
-    // contents change (ECHO's reactive proxy is stable per-object).
-    // Including `.length` and a content fingerprint as deps forces re-computation on
-    // any add/remove, so the masonry tiles re-render after Curate / Clear.
-    subject.posts,
-    subject.posts.length,
-    postFingerprint,
+    // `resolved` is the state populated by the load effect above; it changes
+    // identity on every (re-)resolution, driving the masonry to re-render after
+    // Curate / Clear. `revision` bumps on Subscription tag/read mutations.
+    resolved,
     sort,
     view,
     subject.postState,
@@ -455,4 +485,6 @@ const useMagazinePosts = (
     archivedUri,
     revision,
   ]);
+
+  return { posts, byId };
 };

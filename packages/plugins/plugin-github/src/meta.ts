@@ -34,6 +34,6 @@ export const meta = Plugin.makeMeta({
     without requiring each member to hold their own GitHub token.
   `,
   icon: 'ph--github-logo--regular',
-  iconHue: 'neutral',
+  iconHue: 'purple',
   tags: ['labs', 'integration'],
 });

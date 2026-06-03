@@ -17,10 +17,7 @@ export const SourceFile = Schema.Struct({
   mode: Schema.optional(Schema.Number),
 }).pipe(
   Annotation.LabelAnnotation.set(['path']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--file-code--regular',
-    hue: meta.iconHue,
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--file-code--regular', hue: meta.iconHue }),
   Type.makeObject(DXN.make('org.dxos.type.sourceFile', '0.1.0')),
 );
 

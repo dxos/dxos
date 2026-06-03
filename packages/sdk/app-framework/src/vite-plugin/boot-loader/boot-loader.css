@@ -291,6 +291,15 @@ body {
   }
 }
 
+#boot-loader-rss {
+  background: var(--boot-loader-bg-light, #fafafa);
+}
+@media (prefers-color-scheme: dark) {
+  #boot-loader-rss {
+    background: var(--boot-loader-bg-dark, #0a0a0a);
+  }
+}
+
 /*
  * Track of every appended `.boot-loader-status-line`. The driver writes
  * `--boot-loader-line` (0 = first line visible, 1 = second, …) on this

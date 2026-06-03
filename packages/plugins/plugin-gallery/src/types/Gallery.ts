@@ -14,10 +14,7 @@ export const Gallery = Schema.Struct({
   images: Schema.Array(Ref.Ref(File.File)).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--images--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--images--regular', hue: 'rose' }),
   Type.makeObject(DXN.make('org.dxos.type.gallery', '0.1.0')),
 );
 

@@ -4,6 +4,26 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-03 — plugin-feed (Magazine routine + inline form), react-ui-form, compute
+
+### Inline a referenced object in a Form
+
+- `FormInlineAnnotation` (`@dxos/echo` `Annotation.FormInlineAnnotation`, id from `@dxos/echo/internal`): set `.set(true)` on a single `Ref` property to render the referenced object's own fields inline (nested form) instead of the `RefField` picker. `FormField` checks it via `findAnnotation(refProps.ast, FormInlineAnnotationId)` and dispatches to `InlineRefField` (`react-ui-form/.../fields/InlineRefField.tsx`). Array refs are unaffected.
+- `InlineRefField` resolves the target via `AtomRef.make(reference)` in an inner component (hook can't be conditional), then renders `<Form.Root schema={Type.getSchema(targetType)} defaultValues={{...target}} db onValuesChanged={writeBack}>`; write-back mirrors `ObjectProperties` (per changed path: `Obj.setValue(target, splitJsonPath(path), Obj.getValue(values, parts))` inside `Obj.update`), minus the meta-tags row. Empty ref → create button (via `onCreate`).
+
+### RefField ref-matching across URI schemes (bug)
+
+- `Ref.make(obj)` yields a LOCAL EID `echo:/<id>`; `Entity.getURI(obj)` yields the qualified EID `echo://<spaceId>/<id>`; encoded snapshots use DXN `dxn:echo:<space|@>:<id>`. To match a form-value Ref against picker options, extract the bare entity id with `uri.split(/[:/]/).filter(Boolean).pop()` — splitting on `:` alone leaves `/`-delimited EIDs intact, so a just-created object's slot renders empty even though the array IS updated. Fixed in `RefField.handleGetValue`.
+
+### Routine.instructions is `Ref<Text>` (like Agent), not `Template`
+
+- `Routine.instructions` is now `Ref.Ref(Text.Text)` with `Format.Markdown` (mirrors `Agent.instructions`); `Routine.make({ instructions: string })` wraps via `Ref.make(Text.make({ content }))`. Agent-execution consumers load it directly (`Database.load(prompt.instructions)` then `Template.process(text.content, input)` — Handlebars preserved). `Blueprint.instructions` stays a `Template`.
+- `TemplateEditor` (`plugin-assistant/components`) now takes `source: Ref<Text>` (it only ever used `template.source`). Routine callers pass `routine.instructions`; Blueprint callers pass `blueprint.instructions.source`. `TemplateForm` still owns the `Template` (manages `inputs`) and passes `template.source` down.
+
+### Owned child objects
+
+- Seed an owned child via `Obj.setParent(child, parent)` (cascade-deletes with parent), then `Operation.invoke(SpaceOperation.AddObject, { object: child, hidden: true, target, targetNodeId })`, then set the parent's ref field in `Obj.update`. See `plugin-feed/capabilities/create-object.ts` (Magazine → Routine).
+
 ## 2026-06-02 — plugin-inbox (Header + view-mode factoring)
 
 ### Shared header chrome via borderless Card
