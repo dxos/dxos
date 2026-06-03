@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Filter, Obj } from '@dxos/echo';
+import { Annotation, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
+import { MigrationVersionAnnotation } from './annotations';
 import { Migrations } from './migrations';
 
 Migrations.define('test', [
@@ -72,12 +74,14 @@ describe.skip('Migrations', () => {
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(6);
-    expect(space.properties['test.version']).to.equal('1970-01-03');
+    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal(
+      '1970-01-03',
+    );
   });
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
-    Obj.update(space.properties, (obj) => {
-      obj['test.version'] = '1970-01-02';
+    Obj.update(space.properties, (properties) => {
+      Annotation.set(properties, MigrationVersionAnnotation, '1970-01-02');
     });
     space.db.graph.registry.add([TestSchema.Expando]);
     space.db.add(Obj.make(TestSchema.Expando, { namespace: 'test', count: 5 }));
@@ -86,12 +90,14 @@ describe.skip('Migrations', () => {
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(15);
-    expect(space.properties['test.version']).to.equal('1970-01-03');
+    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal(
+      '1970-01-03',
+    );
   });
 
   test('if all migrations have been run before, does nothing', async () => {
-    Obj.update(space.properties, (obj) => {
-      obj['test.version'] = '1970-01-03';
+    Obj.update(space.properties, (properties) => {
+      Annotation.set(properties, MigrationVersionAnnotation, '1970-01-03');
     });
     await Migrations.migrate(space);
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
@@ -103,6 +109,8 @@ describe.skip('Migrations', () => {
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);
     expect(objects[0].count).to.equal(2);
-    expect(space.properties['test.version']).to.equal('1970-01-02');
+    expect(Annotation.get(space.properties, MigrationVersionAnnotation).pipe(Option.getOrUndefined)).to.equal(
+      '1970-01-02',
+    );
   });
 });

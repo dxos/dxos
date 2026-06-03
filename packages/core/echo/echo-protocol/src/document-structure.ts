@@ -157,7 +157,7 @@ export const EntityStructure = Object.freeze({
     return references;
   },
 
-  getTags: (object: EntityStructure): string[] => {
+  getTags: (object: EntityStructure): (EncodedReference | string)[] => {
     return object.meta.tags ?? [];
   },
 
@@ -238,11 +238,12 @@ export type EntityMeta = {
 
   /**
    * Tags.
-   * An array of DXNs of Tag objects within the space.
+   * Encoded references to Tag objects within the space.
    *
-   * NOTE: Optional for backwards compatibilty.
+   * NOTE: Optional for backwards compatibility; legacy data may store bare DXN strings, which are
+   * upgraded to encoded references on read (see `object-core.ts`).
    */
-  tags?: string[];
+  tags?: (EncodedReference | string)[];
 
   /**
    * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
@@ -255,6 +256,14 @@ export type EntityMeta = {
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version?: string;
+
+  /**
+   * Dictionary of annotations to this entity.
+   *
+   * NOTE: Optional for backwards compatibility. Values are arbitrary decoded automerge primitives;
+   * typed as `any` so `EntityStructure` stays assignable to `DecodedAutomergePrimaryValue`.
+   */
+  annotations?: { readonly [key: string]: any };
 };
 
 /**

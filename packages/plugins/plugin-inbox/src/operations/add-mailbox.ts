@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { getSpacePath } from '@dxos/app-toolkit';
+import { CollectionModel } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
-import { CollectionModel } from '@dxos/schema';
 
 import { InboxOperation } from '../types';
 

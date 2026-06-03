@@ -7,9 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { URI } from '@dxos/keys';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { isNonNullable } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -36,7 +34,8 @@ const createFieldMap: FormFieldMap = {
 export const ObjectForm = ({ object, type }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
+  // `meta.tags` already holds `Ref<Tag>`s (materialized by the database handler).
+  const tags = [...meta.tags];
   const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...object }), [object, tags]);
   const formSchema = useMemo(() => withMetaTags(Type.getSchema(type)), [type]);
 
@@ -46,7 +45,7 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
     const newObject = db.add(Obj.make(type, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getURI(newObject)];
+        Obj.getMeta(object).tags = [...Obj.getMeta(object).tags, Ref.make(newObject)];
       });
     }
   }, []);
@@ -67,7 +66,8 @@ export const ObjectForm = ({ object, type }: ObjectFormProps) => {
       const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === META_TAGS_KEY);
       if (hasTagsChange) {
         Obj.update(object, (object) => {
-          Obj.getMeta(object).tags = metaTags?.map((tag: Ref.Ref<Tag.Tag>) => tag.uri) ?? [];
+          // Copy so later in-place form mutations don't bypass the `Obj.update` boundary.
+          Obj.getMeta(object).tags = Array.isArray(metaTags) ? [...(metaTags as Ref.Ref<Tag.Tag>[])] : [];
         });
       }
 

@@ -4,12 +4,11 @@
 
 import { Collection, Feed, Type, View } from '@dxos/echo';
 
-import * as CollectionModel from './CollectionModel';
 import * as Expando from './Expando';
 import * as Text from './Text';
 import * as ViewModel from './ViewModel';
 
-export { Expando, Text, CollectionModel, ViewModel };
+export { Expando, Text, ViewModel };
 export { APIKey } from './APIKey';
 
 export const DataTypes: Type.AnyEntity[] = [
