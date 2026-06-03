@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, DXN, Feed, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Feed, Ref, Type } from '@dxos/echo';
 
 /**
  * Where do triggers get executed.
@@ -55,9 +55,3 @@ export const SpaceProperties = SpacePropertiesSchema.pipe(
 );
 
 export type SpaceProperties = Type.InstanceType<typeof SpaceProperties>;
-
-/** Root navigation collection for a space. */
-export const RootCollectionAnnotation = Annotation.make({
-  id: 'org.dxos.space.rootCollection',
-  schema: Ref.Ref(Collection.Collection),
-});

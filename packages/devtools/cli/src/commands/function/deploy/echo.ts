@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import path from 'node:path';
 
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig } from '@dxos/cli-util';
-import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
 import { type Space } from '@dxos/client/echo';
 import { Script, Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';

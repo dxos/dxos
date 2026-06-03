@@ -4,11 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation } from '@dxos/echo';
+import { Annotation, Collection, Ref } from '@dxos/echo';
 
-// Re-exported here for convenience; authoritative definition lives in @dxos/client-protocol
-// to avoid a circular dep with @dxos/schema.
-export { RootCollectionAnnotation } from '@dxos/client-protocol/types';
+/** Root navigation collection for a space. */
+export const RootCollectionAnnotation = Annotation.make({
+  id: 'org.dxos.space.rootCollection',
+  schema: Ref.Ref(Collection.Collection),
+});
 
 /** Blueprint keys associated with a schema type. Used by AI companion to auto-load blueprints. */
 export const BlueprintsAnnotation = Annotation.make<string[]>({

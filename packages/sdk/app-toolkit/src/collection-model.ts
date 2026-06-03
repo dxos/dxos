@@ -7,9 +7,11 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { RootCollectionAnnotation, SpaceProperties } from '@dxos/client-protocol/types';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+
+import { RootCollectionAnnotation } from './annotations';
 
 type AddProps = {
   object: Obj.Unknown;
@@ -17,7 +19,6 @@ type AddProps = {
   hidden?: boolean;
 };
 
-// TODO(dmaretskyi): Move up to the composer level.
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {

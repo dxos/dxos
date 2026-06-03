@@ -38,8 +38,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
-import { RootCollectionAnnotation } from '@dxos/client-protocol/types';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';

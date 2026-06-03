@@ -5,7 +5,8 @@
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
-import { RootCollectionAnnotation, SpaceProperties } from '@dxos/client-protocol';
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
