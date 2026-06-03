@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { Type, View } from '@dxos/echo';
@@ -35,7 +35,10 @@ const waitForViewEditor = async () => {
 };
 
 describe('ViewEditor', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
   });
 

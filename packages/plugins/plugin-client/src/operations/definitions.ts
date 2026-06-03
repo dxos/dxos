@@ -5,16 +5,15 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { PublicKey } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, IdentityDid, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 const IdentitySchema = Schema.Struct({
-  identityKey: Schema.instanceOf(PublicKey),
+  identityDid: IdentityDid,
   spaceId: Schema.optional(SpaceId),
   profile: Schema.optional(
     Schema.Struct({
