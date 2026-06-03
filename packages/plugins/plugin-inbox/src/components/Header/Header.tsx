@@ -194,12 +194,10 @@ const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) =>
             key={tag.id}
             palette={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
-            {...(onTagClick && {
-              onClick: (event) => {
-                event.stopPropagation();
-                onTagClick(tag.label ?? tag.id);
-              },
-            })}
+            onClick={(event) => {
+              event.stopPropagation();
+              onTagClick?.(tag.label ?? tag.id);
+            }}
           >
             {tag.label}
           </Tag>
