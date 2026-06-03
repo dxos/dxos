@@ -121,7 +121,7 @@ export const toolDefinitions = ({
 }: {
   tools?: string[];
   operations?: Operation.Definition.Any[];
-}) => [...operations.map((op) => ToolId.make(op.meta.key)), ...tools.map((tool) => ToolId.make(tool))];
+}) => [...operations.map((op) => ToolId.make(DXN.getName(op.meta.key))), ...tools.map((tool) => ToolId.make(tool))];
 
 /**
  * Factory for the blueprints.

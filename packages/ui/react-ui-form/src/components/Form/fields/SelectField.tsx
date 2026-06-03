@@ -73,5 +73,5 @@ export const SelectField = ({
 const getIconHueStyles = (iconHue?: string): string | undefined => {
   const styles = iconHue ? getStyles(iconHue) : undefined;
 
-  return styles?.foreground;
+  return styles?.fg;
 };

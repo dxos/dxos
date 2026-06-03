@@ -31,6 +31,7 @@ export const translations = [
         'display-space-invite-qr-code.label': 'Show QR',
         'add-contact.label': 'Add a contact',
         'open-apps-directory.label': 'Open apps directory',
+        'open-plugin-registry.label': 'Open plugin registry',
         'pending.label': 'Pending',
         'more-options.label': 'More options',
         'not-found.heading': 'Not Found',

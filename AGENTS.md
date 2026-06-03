@@ -28,10 +28,10 @@
 ## Planning
 
 - **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
-  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error.
+  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error. `as const` is NOT a cast in this sense — it narrows a literal rather than bypassing the checker, and is always acceptable (no comment or justification needed).
   - Default: fix the type at its source (inference, signature, generic), not the call site that surfaced the error. A red typecheck during a refactor is a finding, not an obstacle to paper over.
   - Casts are only acceptable at genuine type-system boundaries (external/untyped data, deliberate coercions), and must carry a concise comment saying why no typed alternative exists.
-  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|const|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review.
+  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review. (`as const` is intentionally excluded from this pattern.)
   - Casts accumulate fastest during large codemods — treat each as a deliberate decision, never an autopilot stopgap.
 
 ## Knowledge
@@ -94,6 +94,12 @@
 
 - When collaborating closely with the User, determine if the user's role can be automated.
 - Be precise about what you are asking the user to do and actively manage the process.
+- **IMPORTANT**: Model the user as a very expensive, intermittent resource and minimize round-trips to them. The wasteful pattern to avoid: the user waits a long time for the agent to finish, only to be asked to test or supply something the agent could have anticipated.
+  - At task start, analyze ALL human dependencies up-front (test credentials, assets, design decisions, accounts, manual verification steps).
+  - Gather/build/scaffold anything obtainable autonomously BEFORE asking the user for anything.
+  - Request all needed resources from the user in ONE batch, alongside a very concise plan; get a single go-ahead.
+  - Then execute the remainder of the task uninterrupted; do not bounce back for things that could have been front-loaded.
+  - If you hit an unforeseen human dependency mid-task, park it and continue all other reachable work; only surface an immediate ask when you are fully blocked and cannot make progress otherwise. Batch parked asks for the next checkpoint.
 
 ## PR Naming Convention
 

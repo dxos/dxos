@@ -17,7 +17,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExtractedFrom, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
@@ -42,21 +42,29 @@ import { Message, Person } from '@dxos/types';
 const PNR = 'ABC123';
 
 const LEG_1 = {
-  number: 'AF0001',
-  origin: { code: 'JFK', name: 'New York' },
-  destination: { code: 'CDG', name: 'Paris' },
-  departAt: '2026-06-01T17:30:00.000Z',
-  arriveAt: '2026-06-02T07:00:00.000Z',
   confirmationCode: PNR,
+  segments: [
+    {
+      number: 'AF0001',
+      origin: { code: 'JFK', name: 'New York' },
+      destination: { code: 'CDG', name: 'Paris' },
+      departAt: '2026-06-01T17:30:00.000Z',
+      arriveAt: '2026-06-02T07:00:00.000Z',
+    },
+  ],
 };
 
 const LEG_2 = {
-  number: 'AF0002',
-  origin: { code: 'CDG', name: 'Paris' },
-  destination: { code: 'LIS', name: 'Lisbon' },
-  departAt: '2026-06-05T11:00:00.000Z',
-  arriveAt: '2026-06-05T13:15:00.000Z',
   confirmationCode: PNR,
+  segments: [
+    {
+      number: 'AF0002',
+      origin: { code: 'CDG', name: 'Paris' },
+      destination: { code: 'LIS', name: 'Lisbon' },
+      departAt: '2026-06-05T11:00:00.000Z',
+      arriveAt: '2026-06-05T13:15:00.000Z',
+    },
+  ],
 };
 
 const FEED_MESSAGES = [
@@ -93,7 +101,12 @@ const resolvePayload = (prompt: string): unknown => {
  * returns a static summary, so the template-driven TripMessageExtractor runs end-to-end without a
  * real provider.
  */
-const MockAiServicePlugin = Plugin.define({ id: 'story.mock-ai-service', name: 'Story Mock AI Service' }).pipe(
+const MockAiServicePlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('story.inbox.mockAiService'),
+    name: 'Story Mock AI Service',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'ai-service',
     activatesOn: ActivationEvents.SetupProcessManager,

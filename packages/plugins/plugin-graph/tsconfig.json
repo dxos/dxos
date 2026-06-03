@@ -26,6 +26,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {

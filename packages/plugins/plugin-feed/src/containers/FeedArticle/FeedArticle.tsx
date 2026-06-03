@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Entity, Filter, Obj, Query } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
@@ -37,7 +37,11 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
 
   const handleSync = useCallback(() => {
     setError(undefined);
-    void invokePromise(FeedOperation.SyncFeed, { feed: subject }).catch((err) => {
+    void invokePromise(
+      FeedOperation.SyncFeed,
+      { feed: Ref.make(subject) },
+      { spaceId: Obj.getDatabase(subject)?.spaceId },
+    ).catch((err) => {
       setError(String(err));
     });
   }, [subject, invokePromise]);

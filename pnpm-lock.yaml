@@ -1410,6 +1410,9 @@ catalogs:
     node-fetch:
       specifier: ^2.6.0
       version: 2.7.0
+    node-html-parser:
+      specifier: ^7.0.1
+      version: 7.1.0
     node-notifier:
       specifier: ^10.0.1
       version: 10.0.1
@@ -2536,6 +2539,9 @@ importers:
       '@dxos/plugin-code':
         specifier: workspace:*
         version: link:../../plugins/plugin-code
+      '@dxos/plugin-commerce':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-commerce
       '@dxos/plugin-conductor':
         specifier: workspace:*
         version: link:../../plugins/plugin-conductor
@@ -2554,9 +2560,15 @@ importers:
       '@dxos/plugin-doctor':
         specifier: workspace:*
         version: link:../../plugins/plugin-doctor
+      '@dxos/plugin-duffel':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-duffel
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
+      '@dxos/plugin-extension':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-extension
       '@dxos/plugin-feed':
         specifier: workspace:*
         version: link:../../plugins/plugin-feed
@@ -2623,6 +2635,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../../plugins/plugin-observability
+      '@dxos/plugin-osrm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-osrm
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../../plugins/plugin-outliner
@@ -3224,6 +3239,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4177,6 +4195,19 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+
+  packages/common/markdown:
+    dependencies:
+      linkedom:
+        specifier: 'catalog:'
+        version: 0.18.12(canvas@3.2.0)
+      turndown:
+        specifier: 'catalog:'
+        version: 7.2.1
+    devDependencies:
+      '@types/turndown':
+        specifier: 'catalog:'
+        version: 5.0.5
 
   packages/common/merkle-search-tree:
     dependencies:
@@ -5479,6 +5510,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -8176,6 +8210,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -8397,6 +8434,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8763,6 +8803,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8893,6 +8936,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9017,6 +9063,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9094,6 +9143,109 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-commerce:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant-toolkit
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      node-html-parser:
+        specifier: 'catalog:'
+        version: 7.1.0
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+    devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+
   packages/plugins/plugin-conductor:
     dependencies:
       '@dxos/ai':
@@ -9126,6 +9278,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/compute/functions
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9211,6 +9366,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9242,9 +9400,6 @@ importers:
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/compute/functions-runtime
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
@@ -9266,6 +9421,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9571,9 +9729,15 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/compute/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -9792,6 +9956,9 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/compute/functions
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9811,6 +9978,79 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.6(react@19.2.6)
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-duffel:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-trip':
+        specifier: workspace:*
+        version: link:../plugin-trip
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.6)(scheduler@0.27.0)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
@@ -9859,6 +10099,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9981,6 +10224,49 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-extension:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.6)(scheduler@0.27.0)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+      vite:
+        specifier: '>=8.0.0'
+        version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.7(patch_hash=a7bf6a3d21c2bc782d60d0f0f916d76f304c0eb6fbf2827e8d981408c7b5120e)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.7)(@vitest/coverage-v8@4.1.7)(@vitest/ui@4.1.7)(esbuild@0.28.0)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@29.1.1(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/plugins/plugin-feed:
     dependencies:
       '@dxos/app-framework':
@@ -10013,6 +10299,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10065,6 +10354,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -10234,6 +10526,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10340,6 +10635,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10419,6 +10717,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10568,6 +10869,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -10692,6 +10996,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10797,15 +11104,9 @@ importers:
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
-      linkedom:
-        specifier: 'catalog:'
-        version: 0.18.12(canvas@3.2.0)
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      turndown:
-        specifier: 'catalog:'
-        version: 7.2.1
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -10840,9 +11141,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      '@types/turndown':
-        specifier: 'catalog:'
-        version: 5.0.5
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -11312,6 +11610,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11409,6 +11710,9 @@ importers:
       '@dxos/echo-solid':
         specifier: workspace:*
         version: link:../../core/echo/echo-solid
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -11630,6 +11934,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11914,6 +12221,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -11981,6 +12291,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12184,6 +12497,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
@@ -12320,6 +12636,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12388,6 +12707,30 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-osrm:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/plugin-trip':
+        specifier: workspace:*
+        version: link:../plugin-trip
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+
   packages/plugins/plugin-outliner:
     dependencies:
       '@codemirror/state':
@@ -12423,6 +12766,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12556,6 +12902,9 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12689,6 +13038,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12931,6 +13283,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13010,6 +13365,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13107,6 +13465,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -13554,6 +13915,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13672,6 +14036,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13748,6 +14115,12 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14026,6 +14399,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../plugin-outliner
@@ -14102,6 +14478,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14226,6 +14605,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14649,6 +15031,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14734,12 +15119,18 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14798,6 +15189,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -14901,6 +15295,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -15004,6 +15401,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15061,6 +15461,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.14)(react@19.2.6)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -15140,6 +15543,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15246,6 +15652,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -15313,6 +15722,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15377,6 +15789,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -15643,6 +16058,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15930,6 +16348,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16106,9 +16527,15 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -16121,6 +16548,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -16139,6 +16569,9 @@ importers:
       '@dxos/react-ui-geo':
         specifier: workspace:*
         version: link:../../ui/react-ui-geo
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -16164,6 +16597,9 @@ importers:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../common/keyboard
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
@@ -16215,6 +16651,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16681,6 +17120,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16784,6 +17226,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -18281,6 +18726,9 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

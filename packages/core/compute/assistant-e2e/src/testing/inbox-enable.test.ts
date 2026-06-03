@@ -12,10 +12,7 @@ import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harnes
 
 Obj.ID.dangerouslyDisableRandomness();
 
-// Quarantined: stale memoized conversation after the Mailbox `labels` → `tags` schema rename
-// (PR #11576). Regenerate the fixture via `ALLOW_LLM_GENERATION=1 moon run assistant-e2e:test`
-// and remove `.skip` once the conversation is refreshed.
-describe.skip('InboxBlueprintEnable', () => {
+describe('InboxBlueprintEnable', () => {
   it.effect(
     'enables the inbox blueprint and queries emails',
     agentTest(
@@ -27,7 +24,7 @@ describe.skip('InboxBlueprintEnable', () => {
 
           Then enable the inbox blueprint (key: org.dxos.blueprint.inbox) using the blueprint manager.
 
-          Call the ReadEmail operation (org.dxos.plugin.inbox.operation.read-email) for that mailbox. With no messages in the feed, it should return zero emails — the important part is that ReadEmail completes successfully, not the count.
+          Call the ReadEmail operation (org.dxos.plugin.inbox.operation.readEmail) for that mailbox. With no messages in the feed, it should return zero emails — the important part is that ReadEmail completes successfully, not the count.
 
           Completion criteria:
           - A Mailbox object exists in the database.

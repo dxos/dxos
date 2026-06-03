@@ -65,6 +65,11 @@ export interface CapabilityManager {
    * @returns An atom containing a record from module ID to capability implementations.
    */
   atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>>;
+
+  /**
+   * Lists capability interface identifiers that currently have at least one contribution.
+   */
+  listRegisteredIdentifiers(): string[];
 }
 
 /**
@@ -72,6 +77,8 @@ export interface CapabilityManager {
  */
 class CapabilityManagerImpl implements CapabilityManager {
   private readonly _registry: Registry.Registry;
+
+  private readonly _registeredIdentifiers = new Set<string>();
 
   private readonly _capabilityEntries = Atom.family<string, Atom.Writable<CapabilityEntry<unknown>[]>>(() => {
     return Atom.make<CapabilityEntry<unknown>[]>([]).pipe(Atom.keepAlive);
@@ -125,6 +132,7 @@ class CapabilityManagerImpl implements CapabilityManager {
 
     const entry: CapabilityEntry<T> = { moduleId, implementation };
     this._registry.set(this._capabilityEntries(interfaceDef.identifier), [...current, entry]);
+    this._registeredIdentifiers.add(interfaceDef.identifier);
     log('capability contributed', {
       id: interfaceDef.identifier,
       moduleId,
@@ -141,6 +149,9 @@ class CapabilityManagerImpl implements CapabilityManager {
     const next = current.filter((c) => c.implementation !== implementation);
     if (next.length !== current.length) {
       this._registry.set(this._capabilityEntries(interfaceDef.identifier), next);
+      if (next.length === 0) {
+        this._registeredIdentifiers.delete(interfaceDef.identifier);
+      }
       log('capability removed', { id: interfaceDef.identifier, count: current.length });
     } else {
       log.warn('capability not removed', { id: interfaceDef.identifier });
@@ -158,8 +169,18 @@ class CapabilityManagerImpl implements CapabilityManager {
 
   get<T>(interfaceDef: Capability.InterfaceDef<T>): T {
     const capabilities = this.getAll(interfaceDef);
-    invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+    if (capabilities.length === 0) {
+      log('capability not available', {
+        requested: interfaceDef.identifier,
+        registered: this.listRegisteredIdentifiers(),
+      });
+      invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+    }
     return capabilities[0];
+  }
+
+  listRegisteredIdentifiers(): string[] {
+    return [...this._registeredIdentifiers].sort();
   }
 
   waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T, Error> {

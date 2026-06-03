@@ -9,6 +9,7 @@ import { random } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
+import { Button } from '../Button';
 import { Message } from './Message';
 
 random.seed(123);
@@ -51,7 +52,31 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     valence: 'neutral',
-    title: 'Alert title',
+    title: 'Default',
+    body: random.lorem.paragraphs(1),
+  },
+};
+
+export const Success: Story = {
+  args: {
+    valence: 'success',
+    title: 'Success',
+    body: random.lorem.paragraphs(1),
+  },
+};
+
+export const Info: Story = {
+  args: {
+    valence: 'info',
+    title: 'Info',
+    body: random.lorem.paragraphs(1),
+  },
+};
+
+export const Warning: Story = {
+  args: {
+    valence: 'warning',
+    title: 'Warning',
     body: random.lorem.paragraphs(1),
   },
 };
@@ -59,7 +84,26 @@ export const Default: Story = {
 export const Error: Story = {
   args: {
     valence: 'error',
-    title: 'Error title',
+    title: 'Error',
     body: random.lorem.paragraphs(1),
   },
+};
+
+export const WithButton: Story = {
+  args: {
+    valence: 'success',
+    title: 'Action required',
+    body: random.lorem.paragraphs(1),
+  },
+  render: ({ valence, title, body }) => (
+    <div className='w-[30rem]'>
+      <Message.Root valence={valence}>
+        {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
+        {body && <Message.Content>{body}</Message.Content>}
+        <Button variant='valence' classNames='col-start-2'>
+          Confirm
+        </Button>
+      </Message.Root>
+    </div>
+  ),
 };

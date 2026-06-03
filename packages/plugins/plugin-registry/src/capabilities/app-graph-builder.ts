@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, type Registry, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
@@ -23,8 +24,8 @@ import { LOAD_PLUGIN_DIALOG } from '../containers';
 const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
-    meta: {
-      id: entry.id,
+    meta: Plugin.makeMeta({
+      key: DXN.make(entry.id),
       name: entry.name,
       description: entry.description,
       homePage: entry.homePage,
@@ -33,7 +34,7 @@ const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
       tags: entry.tags,
       icon: entry.icon,
       iconHue: entry.iconHue,
-    },
+    }),
     modules: [],
   }) as Plugin.Plugin;
 
@@ -43,12 +44,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'open-registry',
+        id: 'openRegistry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: 'open-registry',
+              id: 'openRegistry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
               properties: {
                 label: ['open-plugin-registry.label', { ns: meta.id }],
@@ -156,7 +157,7 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             {
-              id: 'load-by-url',
+              id: 'loadByUrl',
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                   subject: LOAD_PLUGIN_DIALOG,
@@ -193,7 +194,7 @@ export default Capability.makeModule(
 
           const registryEntries = get(manager.pluginRegistry.plugins).entries;
           const registryNodes = registryEntries
-            .filter((entry) => !installedIds.has(entry.id))
+            .filter((entry) => !installedIds.has(DXN.make(entry.id)))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({

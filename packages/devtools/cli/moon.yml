@@ -1,23 +1,24 @@
 layer: application
 language: typescript
 tags:
-  - ts-build
+  - typecheck
   - ts-test
 tasks:
-  build:
-    options:
-      mergeOutputs: replace
-    outputs: []
-  compile:
+  # Bundles the CLI into per-platform executables. This is the CLI's real build
+  # artifact (not a library `compile`), so it is intentionally NOT named `compile`
+  # and the project is not tagged `ts-build` — that keeps `cli` out of the
+  # `^:compile` / `#ts-build:build` fan-out (e.g. storybook serve no longer waits
+  # on it). Type-checking is provided by the `typecheck` tag's `build` task.
+  bundle:
     command: bun
     args:
       - ./scripts/build.ts
+    deps:
+      - ^:compile
     options:
-      mergeArgs: replace
-      mergeInputs: append
-      mergeOutputs: replace
       timeout: 60
     inputs:
+      - src/**/*
       - scripts/build.ts
       - bunfig.toml
       - package.json
@@ -38,7 +39,7 @@ tasks:
     args:
       - ./scripts/publish.ts
     deps:
-      - compile
+      - bundle
     inputs:
       - scripts/publish.ts
       - dist/**/*

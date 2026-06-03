@@ -277,7 +277,7 @@ describe('AppSurface', () => {
   describe('Surface.create + SurfaceFilter integration', () => {
     test('derives role and runs guard on matching role', ({ expect }) => {
       const definition = SurfaceInternals.create({
-        id: 'test/article',
+        id: 'testArticle',
         filter: AppSurface.object(AppSurface.Article, TypeA),
         component: () => null,
       });
@@ -288,7 +288,7 @@ describe('AppSurface', () => {
 
     test('registers multi-role with role-scoped guards via oneOf', ({ expect }) => {
       const definition = SurfaceInternals.create({
-        id: 'test/multi',
+        id: 'testMulti',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, TypeA),
           AppSurface.object(AppSurface.Section, TypeA),

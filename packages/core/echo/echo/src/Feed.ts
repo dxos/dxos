@@ -43,7 +43,7 @@ export const Feed = Schema.Struct({
    */
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
-  internal.SystemTypeAnnotation.set(true),
+  internal.HiddenAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--rows--regular',
     hue: 'yellow',

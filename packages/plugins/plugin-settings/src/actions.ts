@@ -17,7 +17,7 @@ export namespace SettingsAction {
     output: Schema.Void,
   }) {}
 
-  export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(`${meta.id}.open-plugin-registry`, {
+  export class OpenPluginRegistry extends Schema.TaggedClass<OpenPluginRegistry>()(`${meta.id}.openPluginRegistry`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}

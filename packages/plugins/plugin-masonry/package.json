@@ -79,6 +79,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

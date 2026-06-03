@@ -13,7 +13,7 @@ import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { HiddenAnnotation } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
@@ -47,7 +47,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Types section virtual node under each space.
     GraphBuilder.createExtension({
-      id: 'types-section',
+      id: 'typesSection',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -91,7 +91,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             return false;
           }
           const schema = Type.getSchema(type);
-          if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
@@ -120,7 +120,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // {All} virtual node + view objects under each schema node.
     GraphBuilder.createExtension({
-      id: 'schema-children',
+      id: 'schemaChildren',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
@@ -169,7 +169,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Objects of the schema type under the {All} node.
     GraphBuilder.createExtension({
-      id: 'type-collection-objects',
+      id: 'typeCollectionObjects',
       match: (node) => {
         if (node.type !== TYPE_COLLECTION_TYPE || !node.data?.space || !node.data?.typename) {
           return Option.none();
@@ -206,7 +206,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
     // Actions for schema nodes.
     GraphBuilder.createExtension({
-      id: 'schema-actions',
+      id: 'schemaActions',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();

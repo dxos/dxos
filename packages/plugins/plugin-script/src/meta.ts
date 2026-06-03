@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.script',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.script'),
   name: 'Scripts',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -22,10 +23,10 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-scripts-dark.png'],
-};
+});
 
 // TODO(ZaymonFC): Configure by scopes?
 export const defaultScriptsForIntegration: Record<string, string[]> = {
   // TODO(wittjosiah): Also include content extraction scripts in the default set.
-  'gmail.com': ['org.dxos.script.gmail'],
+  'gmail.com': [DXN.make('org.dxos.script.gmail')],
 };

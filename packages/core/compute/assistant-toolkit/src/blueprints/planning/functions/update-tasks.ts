@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
@@ -17,7 +18,7 @@ const SimpleTask = Plan.Task.omit('chat');
 
 export const UpdateTasks = Operation.make({
   meta: {
-    key: 'org.dxos.function.planning.update-tasks', // TODO(burdon): Are hyphens allowed?
+    key: DXN.make('org.dxos.function.planning.updateTasks'),
     name: 'Update tasks',
     description: INSTRUCTIONS,
     icon: 'ph--check-square-offset--regular',

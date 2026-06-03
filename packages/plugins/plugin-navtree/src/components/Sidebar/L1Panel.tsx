@@ -125,7 +125,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   return (
     <div
       data-tauri-drag-region
-      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center border-b border-subdued-separator dx-app-drag dx-density-lg'
+      className='grid grid-cols-[28px_1fr_min-content_min-content] w-full items-center dx-app-drag dx-density-lg'
     >
       {backCapableWorkspace ? (
         <IconButton

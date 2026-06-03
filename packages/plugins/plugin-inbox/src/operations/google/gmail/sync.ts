@@ -16,7 +16,7 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Tagging } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
@@ -25,6 +25,7 @@ import { Message } from '@dxos/types';
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
+import { isAiServiceUnavailable } from '../../extractor/ai-gate';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -100,13 +101,13 @@ const syncSingleMailbox = (input: {
 
     const feed = yield* Database.load(mailbox.feed);
 
-    const labelCount = yield* syncLabels(mailbox, userId).pipe(
+    const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
-        return Effect.succeed(0);
+        return Effect.succeed(new Map<string, string>());
       }),
     );
-    log('synced labels', { count: labelCount });
+    log('synced labels', { count: labelMap.size });
 
     const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
     const lastMessage = objects.at(-1);
@@ -134,6 +135,7 @@ const syncSingleMailbox = (input: {
       defaultLabel,
       existingGmailIds,
       restrictedMode,
+      labelMap,
       targetOptions.filter,
     );
     log('sync complete', { newMessages: newMessagesCount });
@@ -179,22 +181,21 @@ export default InboxOperation.GoogleMailSync.pipe(
   ),
 );
 
+// Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
+// a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  Obj.update(mailbox, (mailbox) => {
-    const tags = (mailbox.tags ??= {});
-    labels.forEach((labelItem) => {
-      // Preserve any existing inverse-index (messages already tagged with this Gmail label
-      // shouldn't be dropped when the label dictionary re-syncs).
-      const existing = tags[labelItem.id];
-      tags[labelItem.id] = {
-        label: labelItem.name,
-        source: 'provider',
-        messages: existing?.messages ?? [],
-      };
-    });
-  });
-  return labels.length;
+  const labelMap = new Map<string, string>();
+  const db = Obj.getDatabase(mailbox);
+  if (db) {
+    for (const labelItem of labels) {
+      const tag = yield* Effect.promise(() =>
+        Mailbox.findOrCreateGmailTag(db, { id: labelItem.id, name: labelItem.name }),
+      );
+      labelMap.set(labelItem.id, Mailbox.tagUri(tag));
+    }
+  }
+  return labelMap;
 });
 
 const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =>
@@ -266,6 +267,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
   label: string,
   existingGmailIds: Set<string>,
   restricted: boolean,
+  labelMap: Map<string, string>,
   searchFilter?: string,
 ) {
   const config: DateRangeConfig = {
@@ -310,20 +312,16 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
         });
         yield* Feed.append(feed, messages);
 
-        // Apply provider-label tags. `syncLabels` populated `mailbox.tags[gmailLabelId]`
-        // with the label dictionary; here we add each just-appended message to the
-        // `messages` inverse-index of every label Gmail assigned to it.
-        Obj.update(mailbox, (mailbox) => {
-          const tags = (mailbox.tags ??= {});
-          for (const { message, labelIds } of mapped) {
-            for (const labelId of labelIds) {
-              const entry = (tags[labelId] ??= { label: labelId, source: 'provider', messages: [] });
-              if (!entry.messages.some((ref) => Ref.isRef(ref) && ref.target?.id === message.id)) {
-                entry.messages = [...entry.messages, Ref.make(message)];
-              }
+        // Apply provider-label tags: index each just-appended message under the Tag uri for every
+        // Gmail label assigned to it (`syncLabels` created/updated those Tag objects).
+        for (const { message, labelIds } of mapped) {
+          for (const labelId of labelIds) {
+            const uri = labelMap.get(labelId);
+            if (uri) {
+              Tagging.set(message, uri, { host: mailbox });
             }
           }
-        });
+        }
 
         const extractorsConfig = mailbox.extractors;
         if (extractorsConfig && extractorsConfig.enabled.length > 0) {
@@ -362,7 +360,15 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
                   extractorId: best.extractor.id,
                 }).pipe(
                   Effect.catchAll((err) => {
-                    log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    // The AI service can be momentarily absent from the process-manager LayerStack
+                    // during startup (the assistant plugin's `AiService` LayerSpec races the
+                    // runtime build). Treat that as a deferrable skip — a later sync (or app load,
+                    // once the stack carries the spec) re-attempts — rather than a hard failure.
+                    if (isAiServiceUnavailable(err)) {
+                      log.info('auto-on-arrival extract skipped: AI service not ready', { messageId: message.id });
+                    } else {
+                      log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    }
                     return Effect.void;
                   }),
                 );

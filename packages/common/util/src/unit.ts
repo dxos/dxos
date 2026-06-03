@@ -53,6 +53,8 @@ export const Unit: Record<string, UnitFormat> = {
   Minute: createFormat({ symbol: 'm', quotient: MS_MINUTES }),
   Second: createFormat({ symbol: 's', quotient: MS_SECONDS, precision: 1 }),
   Millisecond: createFormat({ symbol: 'ms', quotient: 1 }),
+
+  // TODO(burdon): Inconsistent formattedValue.
   Duration: (n: number) => {
     const hours = Math.floor(n / MS_HOURS);
     const minutes = Math.floor((n % MS_HOURS) / MS_MINUTES);
@@ -68,7 +70,7 @@ export const Unit: Record<string, UnitFormat> = {
 
     if (minutes) {
       const seconds = (n - MS_MINUTES * minutes) / MS_SECONDS;
-      const formattedValue = seconds ? `${minutes}m ${seconds}s` : `${minutes}m`;
+      const formattedValue = seconds ? `${minutes}m ${Math.round(seconds)}s` : `${minutes}m`;
       return {
         unit: { symbol: 'm', quotient: MS_MINUTES },
         value: minutes,

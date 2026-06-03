@@ -48,7 +48,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'mailboxes-section',
+        id: 'mailboxesSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
@@ -71,7 +71,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'mailbox-listing',
+        id: 'mailboxListing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -165,7 +165,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'mailbox-drafts',
+        id: 'mailboxDrafts',
         match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
         connector: (node, get) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
@@ -198,7 +198,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             Node.makeAction({
-              id: 'create-draft',
+              id: 'createDraft',
               data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
               properties: {
                 label: ['create-draft.label', { ns: meta.id }],
@@ -211,7 +211,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'mailbox-message',
+        id: 'mailboxMessage',
         match: (node) =>
           Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -243,7 +243,7 @@ export default Capability.makeModule(
       // Feed object node extension: creates hidden, navigable nodes for mailbox messages.
       // Uses ~ prefix for attention propagation to the parent mailbox.
       GraphBuilder.createExtension({
-        id: 'feed-object-node',
+        id: 'feedObjectNode',
         match: (node) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
           return node.type === Type.getTypename(Mailbox.Mailbox) && mailbox
@@ -312,7 +312,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'calendar-event',
+        id: 'calendarEvent',
         match: (node) =>
           Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -339,7 +339,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'sync-mailbox',
+        id: 'syncMailbox',
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -359,10 +359,20 @@ export default Capability.makeModule(
             {
               id: 'sync',
               data: () =>
-                Operation.invoke(InboxOperation.SyncMailbox, {
-                  integration: Ref.make(integration),
-                  mailbox: Ref.make(mailbox),
-                }),
+                Operation.invoke(
+                  InboxOperation.GoogleMailSync,
+                  {
+                    integration: Ref.make(integration),
+                    mailbox: Ref.make(mailbox),
+                  },
+                  {
+                    spaceId: db.spaceId,
+                    notify: {
+                      success: ['sync-mailbox-success.title', { ns: meta.id }],
+                      error: ['sync-mailbox-error.title', { ns: meta.id }],
+                    },
+                  },
+                ),
               properties: {
                 label: ['sync-mailbox.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
@@ -374,7 +384,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'sync-calendar',
+        id: 'syncCalendar',
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar, get) => {
           const db = Obj.getDatabase(calendar);
@@ -394,10 +404,20 @@ export default Capability.makeModule(
             {
               id: 'sync',
               data: () =>
-                Operation.invoke(InboxOperation.SyncCalendar, {
-                  integration: Ref.make(integration),
-                  calendar: Ref.make(calendar),
-                }),
+                Operation.invoke(
+                  InboxOperation.GoogleCalendarSync,
+                  {
+                    integration: Ref.make(integration),
+                    calendar: Ref.make(calendar),
+                  },
+                  {
+                    spaceId: db.spaceId,
+                    notify: {
+                      success: ['sync-calendar-success.title', { ns: meta.id }],
+                      error: ['sync-calendar-error.title', { ns: meta.id }],
+                    },
+                  },
+                ),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

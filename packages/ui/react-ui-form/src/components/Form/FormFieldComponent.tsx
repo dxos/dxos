@@ -46,6 +46,8 @@ export type Presentation = 'full' | 'compact' | 'inline' | 'static';
  * Props passed to input components.
  */
 export type FormFieldComponentProps<T = any> = {
+  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
+  db?: Database.Database;
   type: SchemaAST.AST;
   format?: Format.TypeFormat;
   readonly?: boolean;
@@ -60,22 +62,17 @@ export type FormFieldComponentProps<T = any> = {
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
-  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
-  db?: Database.Database;
 } & FormFieldStateProps<T>;
 
-/**
- * Form field component.
- */
 export type FormFieldComponent = FC<FormFieldComponentProps>;
 
 export type FormFieldMap = Record<string, FormFieldComponent>;
 
 export type FormFieldProvider = (props: {
-  prop: string; // TODO(burdon): Path?
+  prop: string;
   schema: Schema.Schema<any>;
   fieldProps: FormFieldComponentProps;
-}) => ReactElement | undefined;
+}) => ReactElement | null | undefined;
 
 //
 // FormFieldLabel
@@ -216,8 +213,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
-          <span className='bg-rose-fill text-base-foreground px-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-bg font-mono text-sm'>
+          <span className='bg-rose-bg text-base-fg px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

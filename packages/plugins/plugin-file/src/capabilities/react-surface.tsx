@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => <FileArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: 'create-form',
+        id: 'createForm',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any; fieldPropertyAst?: SchemaAST.AST } => {
           const annotation = findAnnotation<Record<string, string[]>>(
@@ -56,7 +56,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

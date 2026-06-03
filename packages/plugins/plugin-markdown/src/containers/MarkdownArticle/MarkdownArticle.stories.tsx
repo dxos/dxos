@@ -12,6 +12,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -35,7 +36,12 @@ random.seed(1);
 const generator: ValueGenerator = random as any;
 
 /** Minimal plugin that contributes an empty Extensions capability for stories. */
-const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions', name: 'Story Extensions' }).pipe(
+const MarkdownExtensionsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.markdown.story.markdownExtensions'),
+    name: 'Story Extensions',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'extensions',
     activatesOn: MarkdownEvents.SetupExtensions,

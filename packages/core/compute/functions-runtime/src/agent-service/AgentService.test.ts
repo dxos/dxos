@@ -15,7 +15,7 @@ import { Process } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -69,7 +69,7 @@ const TEST_DATA = {
 
 const Research = Operation.make({
   meta: {
-    key: 'org.dxos.function.research',
+    key: DXN.make('org.dxos.function.research'),
     name: 'Research',
     description: 'Research an organization',
   },

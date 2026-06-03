@@ -7,32 +7,23 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Icon, IconBlock, Tag, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Card, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
-import {
-  EditorView,
-  compactSlots,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  preview,
-} from '@dxos/ui-editor';
-import { mx, toHue } from '@dxos/ui-theme';
+import { decorateMarkdown, preview } from '@dxos/ui-editor';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
-import { AnchorIconButton } from '../AnchorIconButton';
-import { UserIconButton } from '../UserIconButton';
-import { type ViewMode, useMessageActions } from './useToolbar';
+import { Header } from '../Header';
+import { MarkdownViewer } from '../MarkdownViewer';
+import { type ViewMode } from '../ViewMode';
+import { useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -164,7 +155,7 @@ type MessageHeaderProps = ThemedClassName<{
 }>;
 
 const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
-  const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
+  const { message } = useMessageContext(MESSAGE_HEADER_NAME);
   const space = getSpace(message);
   const db = space?.db;
   const relationObjects = useExtractedObjects(db, message);
@@ -177,7 +168,15 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
     const unsubs = mailboxes.map((mailbox) => Obj.subscribe(mailbox, bump));
     return () => unsubs.forEach((unsub) => unsub());
   }, [mailboxes]);
-  const tags = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+
+  // Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
+  const tagObjects = useQuery(db, Filter.type(EchoTag.Tag));
+  const tagByUri = new Map(tagObjects.map((tag) => [Obj.getURI(tag).toString(), tag]));
+  const tagUris = mailboxes.flatMap((mailbox) => Mailbox.getTagsForMessage(mailbox, message));
+  const tags = [...new Set(tagUris)].flatMap((uri) => {
+    const tag = tagByUri.get(uri);
+    return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
+  });
 
   // Merge objects from `ExtractedFrom` relations (live space-db sources) with those recorded on
   // the Mailbox keyed by message id (feed-stored sources, which can't be relation endpoints),
@@ -196,72 +195,37 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   }, [relationObjects, mailboxes, message.id, db]);
 
   return (
-    <div
-      data-testid='message-header'
-      className='grid grid-cols-[2rem_1fr] gap-y-0.5 gap-x-1 p-1 mb-2 border-b border-subdued-separator'
-    >
-      {/* Subject row. */}
-      <div className='col-span-2 grid grid-cols-subgrid'>
-        <IconBlock classNames='text-subdued'>
-          <Icon icon='ph--envelope-open--regular' />
-        </IconBlock>
-        <div className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div className='whitespace-nowrap text-sm text-description'>
-            {message.created && formatDateTime(new Date(message.created), new Date())}
+    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator' data-testid='message-header'>
+      <Card.Body>
+        {/* Subject row. */}
+        <Card.Row icon='ph--envelope-open--regular'>
+          <div className='flex flex-col gap-1 overflow-hidden'>
+            <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
+            {message.created && (
+              <div className='whitespace-nowrap text-sm text-description'>
+                {formatDateTime(new Date(message.created), new Date())}
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        </Card.Row>
 
-      {/* Sender row. */}
-      {/* TODO(burdon): List other To/CC/BCC. */}
-      <div className='col-span-2 grid grid-cols-subgrid items-center'>
-        <UserIconButton
-          title={message.sender.name}
-          value={sender}
-          onContactCreate={() => onContactCreate?.(message.sender)}
-        />
-        <h3 className='truncate text-primary-text'>{message.sender.name || message.sender.email}</h3>
-      </div>
+        {/* Sender row. */}
+        {/* TODO(burdon): List other To/CC/BCC. */}
+        <Header.PersonRow actor={message.sender} db={db} onContactCreate={onContactCreate} />
 
-      {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
-      {objects.map((object) => (
-        <ExtractedObjectRow key={Obj.getURI(object).toString()} object={object} />
-      ))}
+        {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
+        {objects.map((object) => (
+          <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
+        ))}
 
-      {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-      {tags.length > 0 && (
-        <div className='col-span-2 grid grid-cols-subgrid items-center'>
-          <IconBlock classNames='text-subdued'>
-            <Icon icon='ph--tag--regular' />
-          </IconBlock>
-          <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
-            {tags.map((tag) => (
-              <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
-                {tag.label}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+        {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
+        <Header.TagsRow tags={tags} />
+      </Card.Body>
+    </Card.Root>
   );
 };
 
 MessageHeader.displayName = MESSAGE_HEADER_NAME;
-
-const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
-  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
-  const echoUri = EID.tryParse(Obj.getURI(object).toString());
-
-  return (
-    <div className='col-span-2 grid grid-cols-subgrid items-center' data-testid={`extracted-tag-${object.id}`}>
-      <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      <h3 className='truncate text-primary-text'>{label}</h3>
-    </div>
-  );
-};
 
 //
 // Content
@@ -273,7 +237,6 @@ type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
-  const { themeMode } = useThemeContext();
   // Settings capability is optional — the Message component can be rendered in contexts (e.g.,
   // standalone storybook) where plugin-inbox isn't fully installed. Fall back to safe defaults.
   const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
@@ -287,49 +250,42 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
     return (viewMode === 'enriched' ? textBlocks[1]?.text : textBlocks[0]?.text) || '';
   }, [message.blocks, viewMode]);
 
-  const extensions = useMemo(() => {
-    const exts = [
-      createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-      createThemeExtensions({ themeMode, slots: compactSlots }),
-    ];
-    if (viewMode !== 'plain') {
-      exts.push(
-        createMarkdownExtensions(),
-        decorateMarkdown({
-          skip: (node) => {
-            // Skip dxn: links and images entirely (handled by preview()).
-            if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
-              return true;
-            }
-            // When remote-image loading is disabled, suppress http(s) image rendering;
-            // the markdown source is left visible as a plain link instead.
-            if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
-              return true;
-            }
-            return false;
-          },
-        }),
-        preview(),
-        EditorView.domEventHandlers({
-          click: (event) => {
-            const anchor = (event.target as Element | null)?.closest('a.cm-link') as HTMLAnchorElement | null;
-            if (anchor?.href) {
-              event.preventDefault();
-              window.open(anchor.href, '_blank', 'noopener,noreferrer');
-              return true;
-            }
-            return false;
-          },
-        }),
-      );
-    }
-    return exts;
-  }, [themeMode, viewMode, loadRemoteImages]);
+  const markdown = viewMode !== 'plain';
 
-  const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
+  // Message-specific decorations layered on the shared MarkdownViewer core (which already provides
+  // read-only / markdown / theme / open-links). Only meaningful in markdown/enriched views.
+  const extensions = useMemo(
+    () =>
+      markdown
+        ? [
+            decorateMarkdown({
+              skip: (node) => {
+                // Skip dxn: links and images entirely (handled by preview()).
+                if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
+                  return true;
+                }
+                // When remote-image loading is disabled, suppress http(s) image rendering;
+                // the markdown source is left visible as a plain link instead.
+                if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
+                  return true;
+                }
+                return false;
+              },
+            }),
+            preview(),
+          ]
+        : [],
+    [markdown, loadRemoteImages],
+  );
 
   return (
-    <div className={mx('flex overflow-hidden', classNames)} data-popover-collision-boundary={true} ref={parentRef} />
+    <MarkdownViewer
+      content={content}
+      markdown={markdown}
+      slots={{ content: { className: 'mx-4!' } }}
+      extensions={extensions}
+      classNames={classNames}
+    />
   );
 };
 

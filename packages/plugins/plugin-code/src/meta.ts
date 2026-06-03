@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.code',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.code'),
   name: 'Code',
   author: 'DXOS',
   description: trim`
@@ -47,6 +48,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-code',
   spec: 'PLUGIN.mdl',
-  version: '0.1.0',
   tags: ['labs'],
-};
+});

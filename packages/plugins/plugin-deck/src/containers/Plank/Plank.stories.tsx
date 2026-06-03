@@ -42,7 +42,7 @@ random.seed(101);
 const storySurfaceExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
-    id: 'story-article',
+    id: 'storyArticle',
     role: 'article',
     component: ({ data }) => {
       const subject = (data as any)?.subject;
