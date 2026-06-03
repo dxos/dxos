@@ -40,8 +40,8 @@ import {
 // Extension Factory
 //
 
-/** Creates type-related extensions: types section, schema nodes, schema children, and schema actions. */
-export const createTypeExtensions = Effect.fnUntraced(function* () {
+/** Creates database extensions: types section, schema nodes, schema children, and schema actions. */
+export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
 
   return yield* Effect.all([
@@ -181,7 +181,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const schemas = client ? get(AtomQuery.make(client.graph.registry, Filter.type(Type.Type))) : [];
         const viewIndex = buildViewIndex(get, space, schemas);
         const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
-          (object: Obj.Unknown) => !viewIndex.isView(object),
+          (object: Obj.Unknown) => !viewIndex.isView(object) && !Obj.getParent(object),
         );
 
         return Effect.succeed(
