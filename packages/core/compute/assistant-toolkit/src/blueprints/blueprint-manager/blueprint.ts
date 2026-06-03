@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { EnableBlueprints, QueryBlueprints } from './functions';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprint-manager';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprintManager';
 
 const make = () =>
   Blueprint.make({
