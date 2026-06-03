@@ -38,6 +38,9 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const magazines = get(AtomQuery.make(space.db, Filter.type(Magazine.Magazine)));
+          if (magazines.length === 0) {
+            return Effect.succeed([]);
+          }
 
           return Effect.succeed([
             Node.make({
