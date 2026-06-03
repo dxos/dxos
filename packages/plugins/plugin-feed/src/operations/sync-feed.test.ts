@@ -74,7 +74,7 @@ describe('SyncFeed', () => {
     vi.unstubAllGlobals();
   });
 
-  it.scoped(
+  it.effect(
     're-syncing the same upstream response does not duplicate posts',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -91,6 +91,51 @@ describe('SyncFeed', () => {
         expect(items).toHaveLength(2);
         const guids = items.map((post) => post.guid).sort();
         expect(guids).toEqual(['post-a', 'post-b']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'within-batch and link-fallback dedup: same link served twice in one response is appended once',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        // RSS items with NO `<guid>` element — the dedup key falls back to
+        // `link`. Two items share the same link, simulating a misbehaving
+        // upstream that serves the same post twice in one response.
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Duplicate Feed</title>
+    <item>
+      <title>First copy</title>
+      <link>https://example.com/shared</link>
+      <description>body</description>
+    </item>
+    <item>
+      <title>Second copy</title>
+      <link>https://example.com/shared</link>
+      <description>body</description>
+    </item>
+  </channel>
+</rss>`;
+        vi.stubGlobal(
+          'fetch',
+          vi.fn(async () => new Response(xml, { headers: { 'content-type': 'application/xml' } })),
+        );
+
+        const subscriptionFeed = yield* Database.add(
+          Subscription.makeSubscription({ name: 'feed', url: 'https://example.com/rss' }),
+        );
+        yield* Database.flush();
+        const echoFeed = yield* Database.load(subscriptionFeed.feed);
+
+        yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
+
+        const items = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
+        expect(items).toHaveLength(1);
+        expect(items[0].link).toBe('https://example.com/shared');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

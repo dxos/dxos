@@ -11,6 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { FeedOperation, Subscription } from '../types';
 import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
 
+/** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, atproto uses the post URI). */
+const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
+
 /** Resolves the appropriate fetcher for the given feed type. */
 const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
   switch (type) {
@@ -36,21 +39,41 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       const fetcher = getFetcher(subscriptionFeed.type);
       const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () => fetcher(url, { corsProxy }));
 
-      // Dedup by guid against existing posts already in the backing queue. The
+      // Dedup against existing posts already in the backing queue. The
       // `cursor` field on the subscription was previously used as a single-guid
       // filter, but RSS feeds re-serve the same items across polls — filtering
       // out only the cursor's own guid let every other previously-synced post
-      // re-pass the filter and re-append on each sync. Guid-based dedup against
+      // re-pass the filter and re-append on each sync. Key-based dedup against
       // the queue is the source of truth and tolerant of out-of-order or
       // rotated-off-the-window upstream responses.
+      //
+      // The dedup key is `guid ?? link`: `Post.guid` is optional in the schema,
+      // and while every current fetcher populates it (RSS falls back to `link`,
+      // atproto uses the post URI), a future fetcher or malformed item could
+      // omit it. Falling back to `link` keeps such items dedup-able. Items
+      // with neither field cannot be deduplicated and will sync as new every
+      // time — that's an upstream data quality issue with no clean recovery.
       const existing = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
-      const seenGuids = new Set<string>();
+      const seenKeys = new Set<string>();
       for (const post of existing) {
-        if (post.guid) {
-          seenGuids.add(post.guid);
+        const key = postKey(post);
+        if (key) {
+          seenKeys.add(key);
         }
       }
-      const newPosts = posts.filter((post) => !post.guid || !seenGuids.has(post.guid));
+      const newPosts: typeof posts = [];
+      for (const post of posts) {
+        const key = postKey(post);
+        // Within-batch dedup: if the upstream serves the same item twice in one
+        // response, only the first occurrence is appended.
+        if (key && seenKeys.has(key)) {
+          continue;
+        }
+        if (key) {
+          seenKeys.add(key);
+        }
+        newPosts.push(post);
+      }
 
       // Append new posts to the ECHO feed.
       // NOTE: The `Subscription.Subscription.keep` bound is currently NOT enforced
