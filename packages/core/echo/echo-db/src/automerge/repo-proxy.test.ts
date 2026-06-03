@@ -5,8 +5,6 @@
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Record from 'effect/Record';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
@@ -18,6 +16,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
+import { createTmpPath } from '../testing';
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
 
@@ -112,7 +111,7 @@ describe('RepoProxy', () => {
   });
 
   test('load document from disk', async () => {
-    const dbPath = join(tmpdir(), `repo-proxy-test-${Date.now()}.db`);
+    const dbPath = createTmpPath();
 
     let url: AutomergeUrl;
     {
@@ -213,7 +212,7 @@ describe('RepoProxy', () => {
   });
 
   test('new document persists without `flush`', async () => {
-    const dbPath = join(tmpdir(), `repo-proxy-test-${Date.now()}.db`);
+    const dbPath = createTmpPath();
     let url: AutomergeUrl;
 
     {
@@ -246,7 +245,7 @@ describe('RepoProxy', () => {
   });
 
   test('document mutation persists with `flush`', async () => {
-    const dbPath = join(tmpdir(), `repo-proxy-test-${Date.now()}.db`);
+    const dbPath = createTmpPath();
     let url: AutomergeUrl;
 
     {
