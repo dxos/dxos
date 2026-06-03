@@ -815,11 +815,12 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
+      const tagRef = Ref.make(tag);
       const tagUri = Obj.getURI(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagUri];
+          Obj.getMeta(person).tags = [tagRef];
         });
       });
 
@@ -843,7 +844,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagUri];
+          Obj.getMeta(research).tags = [tagRef];
         });
       });
 
@@ -851,7 +852,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagUri];
+          Obj.getMeta(organization).tags = [tagRef];
         });
       });
 

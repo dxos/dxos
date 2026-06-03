@@ -271,8 +271,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.2.6
-      version: 2.2.6
+      specifier: 2.3.0
+      version: 2.3.0
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -1058,7 +1058,7 @@ catalogs:
       version: 4.22.0
     emoji-mart:
       specifier: ^5.5.2
-      version: 5.6.0
+      version: 5.5.2
     enquirer:
       specifier: ^2.3.6
       version: 2.3.6
@@ -1994,7 +1994,7 @@ importers:
         version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.2.6
+        version: 2.3.0
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -2557,6 +2557,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../../plugins/plugin-observability
+      '@dxos/plugin-osrm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-osrm
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../../plugins/plugin-outliner
@@ -3455,6 +3458,9 @@ importers:
       classnames:
         specifier: 'catalog:'
         version: 2.3.2
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
       react:
         specifier: ~19.2.3
         version: 19.2.6
@@ -4009,6 +4015,19 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+
+  packages/common/markdown:
+    dependencies:
+      linkedom:
+        specifier: 'catalog:'
+        version: 0.18.12(canvas@3.2.0)
+      turndown:
+        specifier: 'catalog:'
+        version: 7.2.1
+    devDependencies:
+      '@types/turndown':
+        specifier: 'catalog:'
+        version: 5.0.5
 
   packages/common/merkle-search-tree:
     dependencies:
@@ -8446,6 +8465,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -8749,6 +8771,9 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@effect/vitest':
         specifier: 'catalog:'
         version: 0.29.0(effect@3.20.0)(vitest@4.1.7)
@@ -9176,6 +9201,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/compute/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -9695,6 +9723,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -9744,6 +9775,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/functions-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/functions-runtime
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -10332,6 +10366,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10422,12 +10459,6 @@ importers:
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
-      linkedom:
-        specifier: 'catalog:'
-        version: 0.18.12(canvas@3.2.0)
-      turndown:
-        specifier: 'catalog:'
-        version: 7.2.1
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -10462,9 +10493,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      '@types/turndown':
-        specifier: 'catalog:'
-        version: 5.0.5
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -11811,6 +11839,30 @@ importers:
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-osrm:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/plugin-trip':
+        specifier: workspace:*
+        version: link:../plugin-trip
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
 
   packages/plugins/plugin-outliner:
     dependencies:
@@ -13879,6 +13931,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -15050,6 +15105,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -15790,6 +15848,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -16325,6 +16386,9 @@ importers:
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.1(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
 
   packages/sdk/observability:
     dependencies:
@@ -18856,6 +18920,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -19921,13 +19988,13 @@ importers:
         version: 1.1.2
       '@emoji-mart/react':
         specifier: 'catalog:'
-        version: 1.1.1(emoji-mart@5.6.0)(react@19.2.6)
+        version: 1.1.1(emoji-mart@5.5.2)(react@19.2.6)
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.14)(react@19.2.6)
       emoji-mart:
         specifier: 'catalog:'
-        version: 5.6.0
+        version: 5.5.2
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -24319,46 +24386,46 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.2.6':
-    resolution: {integrity: sha512-u5W0GCC5bPyr9XpE9alQJc1kCJ75tNmLdTepI9GJihSpY2YpUlhMaP8PWZ+g85YCEIZTyU0v3dBGIOXv7ds7VA==}
+  '@moonrepo/cli@2.3.0':
+    resolution: {integrity: sha512-8Za9r9sLPvnzvaaDWqEBnoSRG1QRsHZHWZZmQBp2s/Fr6qAcqMS1sF3zZonqo3zL1lW4srOUICUR1JQUzhlBvQ==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.2.6':
-    resolution: {integrity: sha512-rM2Y7Nvuhg6vO3zfVSUFt1wZfazEjRyAqA/r+TEih85Z8c3KGFZB+YFaZ1P767mh7aQujRu6opVzrm0+E9GBIQ==}
+  '@moonrepo/core-linux-arm64-gnu@2.3.0':
+    resolution: {integrity: sha512-mXB5y58BihYwafRGY8K+LRsEYcB6qmBh30J+0bE3sYNPum1eT2QAuG+fQhhbLhTos1REP1eUJgjSAZ2pIjrQmA==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-arm64-musl@2.2.6':
-    resolution: {integrity: sha512-/NjDDEbGGDq3iLIUXE7gGocO3yPgwoUyA0DyDnHohUxOxeMA/epcpxiJ4WRUKxca1M68ue5qLlbiN4Dj2Nr+3g==}
+  '@moonrepo/core-linux-arm64-musl@2.3.0':
+    resolution: {integrity: sha512-gCw9fL/XqEGGqjUxCs0awCY5QZIm4V7UJIZ8eHm0OlospNmjMXJbCzAOgp+XYIns4kezINcs+bmm4cUl7VaszA==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-linux-x64-gnu@2.2.6':
-    resolution: {integrity: sha512-VaInaf1wj5v384mNdjcagfth7QBKD/XOWzZGK2ObnKABst2HyvRcrNWeIU/KuAihsuKdsd0AUHskYkXSSRhvrA==}
+  '@moonrepo/core-linux-x64-gnu@2.3.0':
+    resolution: {integrity: sha512-vZmzqSJbzqIwdkAROlbkb5OIXL+pFWbu96P4hc3SG7iu3e9TQ8JnuL21i2Jd1mULbqA4zfcu25gbzECdSXPpOA==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@moonrepo/core-linux-x64-musl@2.2.6':
-    resolution: {integrity: sha512-uB8kEclwXagrbMeiikXftPr8LdsL/WVDd9EX3cveXeFKNTUWfQRxJCunUGBzO3zFmU9QzOwNZv68B49BvnwEHg==}
+  '@moonrepo/core-linux-x64-musl@2.3.0':
+    resolution: {integrity: sha512-5oA4/q3/ryI7YCYbKEKZ0ZWGyU7KoKqi60Eqe2HfAXvkMiJCfUtsAmdZ8ybsWFQlQcbnKUPbqDCiacm67fcmdA==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@moonrepo/core-macos-arm64@2.2.6':
-    resolution: {integrity: sha512-jrU9mSilQUc2jGmllrwgGXtwEnLpAsJ3By4HMCLoidr0yhxi5d+OG1jroHn7YL1G51X5u8xdmr/EmQRXWUgoIw==}
+  '@moonrepo/core-macos-arm64@2.3.0':
+    resolution: {integrity: sha512-QZaqPABNid8pDBfQFp6I/G78qY2vTjQrpoAjhB936LXt4GrQAGJTDQSzdyIkuzLZaHrkw7jeLAD3ktVtgI/94w==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-macos-x64@2.2.6':
-    resolution: {integrity: sha512-ou9WLdo3yPjD4MHk0LsA9kTi+E1XGKl8ZMr03E9rENCEqI2LNcgco1CG3c2aA6r+LrP0hu1zNnOsKSAErNc32w==}
+  '@moonrepo/core-macos-x64@2.3.0':
+    resolution: {integrity: sha512-UP8P0y0VyXTy2PwLOnC5LXasV5OQYlmZIVaGFyDZK60SAtBjJ8pcq8L2P+gBYYjkbseejs8GJiL0peM/B621vg==}
     cpu: [x64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.2.6':
-    resolution: {integrity: sha512-ybpepBnG3BHlVEjok5+/T1QsWSRWU7wMbOYuUnoP/4vwrS08nR+Xna7i3QBXUTBeBPr01F7qBBsnRh6CtD1LYg==}
+  '@moonrepo/core-windows-x64-msvc@2.3.0':
+    resolution: {integrity: sha512-4is1mItYa/zYHDkSkFZZfVsqg0gIHZGzMpjRT9XRn4XZ+SOILCqGX2tDtdOecuI+jHYKZ1V5ElnFsX7a3L6Nwg==}
     cpu: [x64]
     os: [win32]
 
@@ -32107,8 +32174,8 @@ packages:
   elkjs@0.9.3:
     resolution: {integrity: sha512-f/ZeWvW/BCXbhGEf1Ujp29EASo/lk1FDnETgNKwJrsVvGZhUWCZyg3xLJjAsxfOmt8KjswHmI5EwCQcPMpOYhQ==}
 
-  emoji-mart@5.6.0:
-    resolution: {integrity: sha512-eJp3QRe79pjwa+duv+n7+5YsNhRcMl812EcFVwrnRvYKoNPoQb5qxU8DG6Bgwji0akHdp6D4Ln6tYLG58MFSow==}
+  emoji-mart@5.5.2:
+    resolution: {integrity: sha512-Sqc/nso4cjxhOwWJsp9xkVm8OF5c+mJLZJFoFfzRuKO+yWiN7K8c96xmtughYb0d/fZ8UC6cLIQ/p4BR6Pv3/A==}
 
   emoji-regex@10.3.0:
     resolution: {integrity: sha512-QpLs9D9v9kArv4lfDEgg1X/gN5XLnf/A6l9cs8SPZLRZR3ZkY9+kwIQTxm+fsSej5UMYGE8fdoaZVIBlqG0XTw==}
@@ -42651,9 +42718,9 @@ snapshots:
 
   '@emoji-mart/data@1.1.2': {}
 
-  '@emoji-mart/react@1.1.1(emoji-mart@5.6.0)(react@19.2.6)':
+  '@emoji-mart/react@1.1.1(emoji-mart@5.5.2)(react@19.2.6)':
     dependencies:
-      emoji-mart: 5.6.0
+      emoji-mart: 5.5.2
       react: 19.2.6
 
   '@emotion/hash@0.9.0': {}
@@ -43682,37 +43749,37 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.2.6':
+  '@moonrepo/cli@2.3.0':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.2.6
-      '@moonrepo/core-linux-arm64-musl': 2.2.6
-      '@moonrepo/core-linux-x64-gnu': 2.2.6
-      '@moonrepo/core-linux-x64-musl': 2.2.6
-      '@moonrepo/core-macos-arm64': 2.2.6
-      '@moonrepo/core-macos-x64': 2.2.6
-      '@moonrepo/core-windows-x64-msvc': 2.2.6
+      '@moonrepo/core-linux-arm64-gnu': 2.3.0
+      '@moonrepo/core-linux-arm64-musl': 2.3.0
+      '@moonrepo/core-linux-x64-gnu': 2.3.0
+      '@moonrepo/core-linux-x64-musl': 2.3.0
+      '@moonrepo/core-macos-arm64': 2.3.0
+      '@moonrepo/core-macos-x64': 2.3.0
+      '@moonrepo/core-windows-x64-msvc': 2.3.0
 
-  '@moonrepo/core-linux-arm64-gnu@2.2.6':
+  '@moonrepo/core-linux-arm64-gnu@2.3.0':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.2.6':
+  '@moonrepo/core-linux-arm64-musl@2.3.0':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.2.6':
+  '@moonrepo/core-linux-x64-gnu@2.3.0':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.2.6':
+  '@moonrepo/core-linux-x64-musl@2.3.0':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.2.6':
+  '@moonrepo/core-macos-arm64@2.3.0':
     optional: true
 
-  '@moonrepo/core-macos-x64@2.2.6':
+  '@moonrepo/core-macos-x64@2.3.0':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.2.6':
+  '@moonrepo/core-windows-x64-msvc@2.3.0':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':
@@ -52066,7 +52133,7 @@ snapshots:
 
   elkjs@0.9.3: {}
 
-  emoji-mart@5.6.0: {}
+  emoji-mart@5.5.2: {}
 
   emoji-regex@10.3.0: {}
 

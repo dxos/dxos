@@ -480,7 +480,9 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
   }
 };
 
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
+// Accepts any encoded type: the typed handler operates on the decoded representation, so schemas
+// whose encoded form differs (e.g. refs encode as `{ '/': uri }`) are valid here.
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');

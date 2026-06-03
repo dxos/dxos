@@ -18,7 +18,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { TREEGRID_PARENT_OF_SEPARATOR, DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -114,7 +114,7 @@ const ObjectsTreeRow = ({
             {node.type === 'incoming-relation' && (
               <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
             )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.foreground]} />
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
             {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
           </Treegrid.Cell>
@@ -299,7 +299,7 @@ class ObjectsTreeModel {
         `${Obj.isObject(entity) ? 'Object' : 'Relation'}-${entity.id.slice(-4)}`,
       icon,
       iconHue: hue,
-      role: dbg(computeRole(dbg(entity))),
+      role: computeRole(entity),
       entity,
     };
   }
@@ -319,7 +319,6 @@ const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
 );
 
 const computeRole = (entity: Entity.Snapshot): string | undefined => {
-  dbg(Entity.getLabel(entity) ?? Entity.getTypename(entity));
   if (!Obj.isSnapshot(entity)) {
     log.info('not an object');
     return undefined;

@@ -41,8 +41,8 @@ describe('Tagging', () => {
 
     Tagging.set(person, tagId);
     expect(Tagging.get(person)).toEqual([tagId]);
-    // Written through the object's own meta.
-    expect([...(Obj.getMeta(person).tags ?? [])]).toEqual([tagId]);
+    // Written through the object's own meta (as refs to Tag objects).
+    expect(Obj.getMeta(person).tags.map((ref) => ref.uri)).toEqual([tagId]);
 
     Tagging.unset(person, tagId);
     expect(Tagging.get(person)).toEqual([]);

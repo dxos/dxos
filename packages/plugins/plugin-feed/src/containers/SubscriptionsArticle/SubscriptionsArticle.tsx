@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
@@ -57,7 +57,11 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
         case 'sync': {
           const feedToSync = feeds.find((feed) => feed.id === action.feedId);
           if (feedToSync) {
-            void invokePromise(FeedOperation.SyncFeed, { feed: feedToSync });
+            void invokePromise(
+              FeedOperation.SyncFeed,
+              { feed: Ref.make(feedToSync) },
+              { spaceId: Obj.getDatabase(feedToSync)?.spaceId },
+            );
           }
           break;
         }

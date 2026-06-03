@@ -55,6 +55,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

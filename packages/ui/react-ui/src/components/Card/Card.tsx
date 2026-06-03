@@ -335,13 +335,13 @@ CardText.displayName = CARD_TEXT_NAME;
 
 const CARD_HTML_NAME = 'Card.Html';
 
-type CardHtmlProps = { html: string; variant?: 'default' | 'description' };
+type CardHtmlProps = { html?: string; variant?: 'default' | 'description' };
 
 /**
  * Renders sanitized HTML content inside a card text slot.
  * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
  */
-function CardHtml({ html, variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) {
+function CardHtml({ html = '', variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) {
   const { tx } = useThemeContext();
   const sanitized = useMemo(() => DOMPurify.sanitize(html), [html]);
 

@@ -33,7 +33,8 @@ const TestLayer = AssistantTestLayerWithTriggers({
   tracing: 'pretty',
 });
 
-describe('Browser', () => {
+// NOTE: Not run by default since it acceses internet.
+describe('Browser', { tags: ['llm'] }, () => {
   it.effect(
     'scrape effect blog',
     Effect.fnUntraced(

@@ -50,6 +50,7 @@ import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
@@ -140,6 +141,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       GamePlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
+      OsrmPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
       CommercePlugin.meta.id,
@@ -220,6 +222,7 @@ export const getPlugins = ({
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
+    OsrmPlugin(),
     OutlinerPlugin(),
     PipelinePlugin(),
     PresenterPlugin(),

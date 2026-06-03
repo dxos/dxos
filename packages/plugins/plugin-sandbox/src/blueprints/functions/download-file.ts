@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CollectionModel } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { CollectionModel } from '@dxos/schema';
 import { File } from '@dxos/types';
 
 import { SandboxClient } from '../../services/SandboxClient';

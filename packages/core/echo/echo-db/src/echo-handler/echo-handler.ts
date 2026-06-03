@@ -79,7 +79,6 @@ import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { findTypeByDXN } from '../registry';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
@@ -637,8 +636,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typeURI = EncodedReference.toURI(typeRef);
     const registry = target[symbolInternals].database.graph.registry;
     // Look up by the raw typeURI string — the registry normalises DXN forms.
-    const fromRegistry = findTypeByDXN(registry, typeURI);
-    if (fromRegistry != null) {
+    const fromRegistry = registry.getByURI(typeURI);
+    if (fromRegistry != null && Type.isType(fromRegistry)) {
       return fromRegistry;
     }
     const database = target[symbolInternals].database;
@@ -648,8 +647,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoRefMatch) {
       const echoId = echoRefMatch[1];
       if (echoId != null) {
-        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
-        if (found != null) {
+        const found = registry.getByURI(`dxn:echo:@:${echoId}`);
+        if (found != null && Type.isType(found)) {
           return found;
         }
         const schemaObject = database.getObjectById(echoId);
@@ -664,8 +663,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoUri) {
       const echoId = EID.getEntityId(echoUri);
       if (echoId != null) {
-        const found = findTypeByDXN(registry, `dxn:echo:@:${echoId}`);
-        if (found != null) {
+        const found = registry.getByURI(`dxn:echo:@:${echoId}`);
+        if (found != null && Type.isType(found)) {
           return found;
         }
         const schemaObject = database.getObjectById(echoId);
@@ -709,8 +708,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const fromRegistry = findTypeByDXN(database.graph.registry, typeURI);
-    if (fromRegistry != null) {
+    const fromRegistry = database.graph.registry.getByURI(typeURI);
+    if (fromRegistry != null && Type.isType(fromRegistry)) {
       return Type.getSchema(fromRegistry);
     }
 
@@ -1088,7 +1087,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
       [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
-      [ATTR_META]: { ...this.getMeta(target) } as EntityMetaJSON,
+      // Codec boundary: meta holds live refs in `tags`; they serialize to encoded references via
+      // each ref's `toJSON`. Typed as the JSON meta shape.
+      [ATTR_META]: compactMeta(this.getMeta(target)) as unknown as EntityMetaJSON,
     };
 
     if (target[symbolInternals].core.isDeleted()) {
@@ -1296,7 +1297,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     setRelationSourceAndTarget(target, core, schema);
 
     if (meta && metaNotEmpty(meta)) {
-      target[symbolInternals].core.setMeta(meta);
+      target[symbolInternals].core.setMeta(linkMetaRefs(target, meta));
     }
 
     return obj as CreateObjectReturn<T>;
@@ -1335,15 +1336,32 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // proxy branch above does the equivalent via `Entity.getMeta`.
     const seededMeta = (obj as any)[MetaId] as EntityMeta | undefined;
     if (seededMeta && metaNotEmpty(seededMeta)) {
-      core.setMeta(seededMeta);
+      core.setMeta(linkMetaRefs(target, seededMeta));
     }
 
     return proxy as unknown as CreateObjectReturn<T>;
   }
 };
 
+/**
+ * Drops empty `tags`/`annotations` from serialized meta to keep JSON output minimal (matching the
+ * typed-handler serializer); `objectFromJSON` backfills the defaults on read.
+ */
+const compactMeta = (meta: EntityMeta): Partial<EntityMeta> => {
+  const { tags, annotations, ...rest } = meta;
+  return {
+    ...rest,
+    ...(tags != null && tags.length > 0 ? { tags } : {}),
+    ...(annotations != null && Object.keys(annotations).length > 0 ? { annotations } : {}),
+  };
+};
+
 const metaNotEmpty = (meta: EntityMeta) =>
-  meta.keys.length > 0 || (meta.tags && meta.tags.length > 0) || meta.key !== undefined || meta.version !== undefined;
+  meta.keys.length > 0 ||
+  meta.tags.length > 0 ||
+  (meta.annotations != null && Object.keys(meta.annotations).length > 0) ||
+  meta.key !== undefined ||
+  meta.version !== undefined;
 
 /**
  * @internal
@@ -1491,6 +1509,21 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
     return recurse(value);
   });
 };
+
+/**
+ * Encodes any `Ref`s held in meta (e.g. `meta.tags`) to encoded references before persisting, since
+ * `core.setMeta` (unlike the reactive `set` trap) does not run link assignment.
+ */
+const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta =>
+  deepMapValues(meta, (value, recurse) => {
+    if (Ref.isRef(value)) {
+      return refToEncodedReference(target, value);
+    }
+    if (value instanceof Uint8Array) {
+      return value;
+    }
+    return recurse(value);
+  }) as EntityMeta;
 
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);

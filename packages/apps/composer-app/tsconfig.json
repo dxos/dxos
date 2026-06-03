@@ -344,6 +344,9 @@
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-osrm"
+    },
+    {
       "path": "../../plugins/plugin-outliner"
     },
     {

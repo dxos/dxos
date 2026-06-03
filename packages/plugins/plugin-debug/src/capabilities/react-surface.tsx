@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, RootCollectionAnnotation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import {
   AutomergePanel,
@@ -35,7 +36,7 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Collection, Feed, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
@@ -51,6 +52,7 @@ import {
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
+  RegistryPanel,
   SpaceGenerator,
   Wireframe,
 } from '#containers';
@@ -120,7 +122,8 @@ export default Capability.makeModule(
 
               const collection =
                 data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                data.subject.space.properties[Type.getTypename(Collection.Collection)]?.target;
+                Annotation.get(data.subject.space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)
+                  ?.target;
               if (!Obj.instanceOf(Collection.Collection, collection)) {
                 return;
               }
@@ -148,6 +151,11 @@ export default Capability.makeModule(
         id: 'toolsExplorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
+      }),
+      Surface.create({
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Echo.Registry),
+        component: () => <RegistryPanel />,
       }),
       Surface.create({
         id: 'wireframe',

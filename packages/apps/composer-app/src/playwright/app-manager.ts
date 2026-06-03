@@ -212,6 +212,39 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
+  /**
+   * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
+   * expanding the Settings section first if necessary.
+   */
+  async openSpaceSettings(): Promise<void> {
+    const generalHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.general')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await generalHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await generalHeading.click();
+  }
+
+  /**
+   * Deletes the space at the given index (default: the first non-personal space) via its
+   * settings danger zone, including the confirmation step.
+   */
+  async deleteSpace(nth = 1): Promise<void> {
+    // Select the space so its Settings section is available in the navtree.
+    await this.getSpaceItems().nth(nth).click();
+    await this.openSpaceSettings();
+    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+    await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
+  }
+
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean): Promise<void> {
     const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
