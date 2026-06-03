@@ -11,6 +11,7 @@ import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
 import { Place } from './Place';
+import * as Routing from './Routing';
 
 //
 // Enums
@@ -78,11 +79,16 @@ export const BoatDetails = Schema.extend(
 );
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 
-// TODO(burdon): Separate structure for route?
 export const RoadDetails = Schema.extend(
   TransportFields,
   Schema.TaggedStruct('road', {
     subKind: Schema.optional(RoadSubKind).annotations({ title: 'Mode' }),
+    /**
+     * Computed driving route(s) for this leg, populated by `PlanRoute` (the primary route is
+     * `routes[0]`; additional entries are alternatives). Each route carries distance, duration, the
+     * decoded geometry, and per-leg detail. Rendered on the map.
+     */
+    routes: Schema.optional(Schema.Array(Routing.Route)),
   }),
 );
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}

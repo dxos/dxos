@@ -2635,6 +2635,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../../plugins/plugin-observability
+      '@dxos/plugin-osrm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-osrm
       '@dxos/plugin-outliner':
         specifier: workspace:*
         version: link:../../plugins/plugin-outliner
@@ -4192,6 +4195,19 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+
+  packages/common/markdown:
+    dependencies:
+      linkedom:
+        specifier: 'catalog:'
+        version: 0.18.12(canvas@3.2.0)
+      turndown:
+        specifier: 'catalog:'
+        version: 7.2.1
+    devDependencies:
+      '@types/turndown':
+        specifier: 'catalog:'
+        version: 5.0.5
 
   packages/common/merkle-search-tree:
     dependencies:
@@ -10283,6 +10299,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10974,6 +10993,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11079,15 +11101,9 @@ importers:
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
-      linkedom:
-        specifier: 'catalog:'
-        version: 0.18.12(canvas@3.2.0)
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      turndown:
-        specifier: 'catalog:'
-        version: 7.2.1
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -11122,9 +11138,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      '@types/turndown':
-        specifier: 'catalog:'
-        version: 5.0.5
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -12690,6 +12703,30 @@ importers:
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/plugins/plugin-osrm:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/plugin-trip':
+        specifier: workspace:*
+        version: link:../plugin-trip
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
 
   packages/plugins/plugin-outliner:
     dependencies:
@@ -16493,6 +16530,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/markdown':
+        specifier: workspace:*
+        version: link:../../common/markdown
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention

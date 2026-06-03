@@ -25,9 +25,9 @@
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
-  --dx-elevation-0: light-dark(var(--color-neutral-200), var(--color-neutral-950));
-  --dx-elevation-1: light-dark(var(--color-neutral-175), var(--color-neutral-900));
-  --dx-elevation-2: light-dark(var(--color-neutral-150), var(--color-neutral-875));
+  --dx-elevation-0: light-dark(var(--color-neutral-300), var(--color-neutral-950));
+  --dx-elevation-1: light-dark(var(--color-neutral-200), var(--color-neutral-900));
+  --dx-elevation-2: light-dark(var(--color-neutral-125), var(--color-neutral-875));
   --dx-elevation-3: light-dark(var(--color-neutral-125), var(--color-neutral-850));
   --dx-elevation-4: light-dark(var(--color-neutral-100), var(--color-neutral-825));
   --dx-elevation-5: light-dark(var(--color-neutral-75), var(--color-neutral-800));
@@ -108,8 +108,8 @@
   --color-un-accent-hover: var(--color-neutral-500);
 
   /* Separator */
-  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
   --color-primary-separator: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 

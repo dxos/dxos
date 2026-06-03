@@ -2,126 +2,224 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type JSX, type PropsWithChildren, type ReactNode } from 'react';
+import { format, intervalToDuration } from 'date-fns';
+import React, { useCallback, useRef } from 'react';
 
-import { Card, Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { Obj, type Database } from '@dxos/echo';
+import { EID, type URI } from '@dxos/keys';
+import { Card, DxAnchorActivate, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { type Actor } from '@dxos/types';
+import { toHue } from '@dxos/ui-theme';
 
-import { DateComponent } from '../DateComponent';
+import { useActorContact } from '#hooks';
+import { meta } from '#meta';
 
 //
-// Root
+// AnchorIconButton — internal helper, not exported on Header.
 //
 
-const HEADER_ROOT_NAME = 'Header.Root';
-
-type HeaderRootProps = ThemedClassName<PropsWithChildren<{ 'data-testid'?: string }>>;
+type AnchorIconButtonProps = {
+  compact?: boolean;
+  icon: string;
+  fallbackIcon?: string;
+  label: string;
+  fallbackLabel?: string;
+  title?: string;
+  value?: URI.URI;
+  size?: 4 | 5 | 6;
+  onClick?: () => void;
+};
 
 /**
- * Shared header chrome for object articles (Message, Event, …). Implemented as a borderless
- * `Card` so rows align to the Card column grid (icon · content) and reuse `Card.Row`/`Card.Title`.
+ * Icon-only button that opens an ECHO object's preview card via `DxAnchorActivate`.
+ * Falls back to `onClick` when `value` is absent.
  */
-const HeaderRoot = ({ children, classNames, ...props }: HeaderRootProps) => {
+const AnchorIconButton = ({
+  compact,
+  icon,
+  fallbackIcon,
+  label,
+  fallbackLabel,
+  title,
+  value,
+  size = 4,
+  onClick,
+}: AnchorIconButtonProps) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleClick = useCallback(() => {
+    if (value) {
+      buttonRef.current?.dispatchEvent(
+        new DxAnchorActivate({
+          trigger: buttonRef.current,
+          dxn: value.toString(),
+          label: 'never',
+          kind: 'card',
+          title,
+        }),
+      );
+    } else {
+      onClick?.();
+    }
+  }, [value, title, onClick]);
+
   return (
-    <Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)} {...props}>
-      <Card.Body>{children}</Card.Body>
-    </Card.Root>
+    <IconButton
+      classNames={compact && 'min-h-0'}
+      variant='ghost'
+      disabled={!value && !onClick}
+      icon={value ? icon : (fallbackIcon ?? icon)}
+      iconOnly
+      size={size}
+      label={value ? label : (fallbackLabel ?? label)}
+      onClick={handleClick}
+      ref={buttonRef}
+    />
   );
 };
 
-HeaderRoot.displayName = HEADER_ROOT_NAME;
-
 //
-// Title
+// DateRow
 //
 
-const HEADER_TITLE_NAME = 'Header.Title';
-
-type HeaderTitleProps = {
-  icon: string;
-  title?: string;
-  /** Optional secondary line rendered beneath the title (e.g. a timestamp). */
-  caption?: ReactNode;
+type HeaderDateRowProps = {
+  start: Date;
+  end?: Date;
 };
 
-const HeaderTitle = ({ icon, title, caption }: HeaderTitleProps) => {
+/** A Card.Row rendering a date range with a calendar icon. */
+const HeaderDateRow = ({ start, end }: HeaderDateRowProps) => {
+  let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
+  // Prefer 90m over 1h 30m.
+  if (hours === 1 && minutes !== 0) {
+    hours = 0;
+    minutes += 60;
+  }
+  const duration = [hours > 0 && `${hours}h`, minutes > 0 && `${minutes}m`].filter(Boolean).join(' ');
+
   return (
-    <Card.Row icon={icon}>
-      <div className='flex flex-col gap-1 overflow-hidden'>
-        <h2 className='text-lg line-clamp-2'>{title}</h2>
-        {caption && <div className='whitespace-nowrap text-sm text-description'>{caption}</div>}
+    <Card.Row icon='ph--calendar--regular'>
+      <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
+        <div className='truncate text-description'>{format(start, 'PPp')}</div>
+        {(hours || minutes) && <div className='text-description text-xs'>({duration})</div>}
       </div>
     </Card.Row>
   );
 };
 
-HeaderTitle.displayName = HEADER_TITLE_NAME;
+HeaderDateRow.displayName = 'Header.DateRow';
 
 //
-// Date
+// ObjectRow
 //
 
-const HEADER_DATE_NAME = 'Header.Date';
+type HeaderObjectRowProps = {
+  object: Obj.Any;
+};
 
-type HeaderDateProps = { start: Date; end?: Date };
+/** A Card.Row rendering an extracted ECHO object with a card-preview anchor icon. */
+const HeaderObjectRow = ({ object }: HeaderObjectRowProps) => {
+  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
+  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
+  const echoUri = EID.tryParse(Obj.getURI(object).toString());
 
-const HeaderDate = ({ start, end }: HeaderDateProps) => {
   return (
-    <Card.Row icon='ph--calendar--regular'>
-      <DateComponent start={start} end={end} />
+    <Card.Row icon={<AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}>
+      <h3 className='truncate text-primary-text'>{label}</h3>
     </Card.Row>
   );
 };
 
-HeaderDate.displayName = HEADER_DATE_NAME;
+HeaderObjectRow.displayName = 'Header.ObjectRow';
 
 //
-// Row
+// PersonRow
 //
 
-const HEADER_ROW_NAME = 'Header.Row';
+type HeaderPersonRowProps = {
+  actor: Actor.Actor;
+  db?: Database.Database;
+  onContactCreate?: (actor: Actor.Actor) => void;
+};
 
-type HeaderRowProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Leading element placed in the icon column — a phosphor icon name or a custom element (e.g. an icon button). */
-    icon?: string | JSX.Element;
-    /**
-     * Render a string `icon` as a compact (content-height) block rather than a full rail-height square.
-     * Use for repeated rows (e.g. attendees) so the list stays dense. Ignored for element icons.
-     */
-    compact?: boolean;
-    'data-testid'?: string;
-  }>
->;
+/** A Card.Row rendering a person (sender, attendee) with a contact anchor icon. */
+const HeaderPersonRow = ({ actor, db, onContactCreate }: HeaderPersonRowProps) => {
+  const { t } = useTranslation(meta.id);
+  const contactDXN = useActorContact(db, actor);
 
-const HeaderRow = ({ icon, compact, children, classNames, ...props }: HeaderRowProps) => {
-  const resolvedIcon =
-    compact && typeof icon === 'string' ? (
-      <IconBlock compact square>
-        <Icon icon={icon} classNames='text-subdued' size={4} />
-      </IconBlock>
-    ) : (
-      icon
-    );
+  const handleContactCreate = useCallback(() => onContactCreate?.(actor), [actor, onContactCreate]);
 
+  // TODO(burdon): Reconcile with Avatar if space member.
   return (
-    <Card.Row icon={resolvedIcon} classNames={mx('items-center', classNames)} {...props}>
-      {children}
+    <Card.Row
+      icon={
+        <AnchorIconButton
+          compact
+          icon='ph--user--regular'
+          fallbackIcon='ph--user-plus--regular'
+          label={t('show-contact.label')}
+          fallbackLabel={t('create-contact.label')}
+          title={actor.name}
+          value={contactDXN}
+          onClick={onContactCreate ? handleContactCreate : undefined}
+        />
+      }
+    >
+      <h3 className='truncate'>{actor.name || actor.email}</h3>
     </Card.Row>
   );
 };
 
-HeaderRow.displayName = HEADER_ROW_NAME;
+HeaderPersonRow.displayName = 'Header.PersonRow';
+
+//
+// TagsRow
+//
+
+type TagItem = { id: string; label?: string; hue?: string };
+
+type TagsRowProps = {
+  tags: TagItem[];
+  /** When provided, each chip is clickable and stops event propagation. */
+  onTagClick?: (label: string) => void;
+};
+
+/** A Card.Row rendering a set of label+hue tag chips, optionally clickable. */
+const HeaderTagsRow = ({ tags, onTagClick }: TagsRowProps) => {
+  if (!tags.length) {
+    return null;
+  }
+
+  return (
+    <Card.Row icon='ph--tag--regular'>
+      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
+        {tags.map((tag) => (
+          <Tag
+            key={tag.id}
+            palette={toHue(tag.hue)}
+            data-testid={`message-tag-${tag.id}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onTagClick?.(tag.label ?? tag.id);
+            }}
+          >
+            {tag.label}
+          </Tag>
+        ))}
+      </div>
+    </Card.Row>
+  );
+};
+
+HeaderTagsRow.displayName = 'Header.TagsRow';
 
 //
 // Header
 //
 
 export const Header = {
-  Root: HeaderRoot,
-  Title: HeaderTitle,
-  Date: HeaderDate,
-  Row: HeaderRow,
+  DateRow: HeaderDateRow,
+  ObjectRow: HeaderObjectRow,
+  PersonRow: HeaderPersonRow,
+  TagsRow: HeaderTagsRow,
 };
-
-export type { HeaderRootProps, HeaderTitleProps, HeaderDateProps, HeaderRowProps };

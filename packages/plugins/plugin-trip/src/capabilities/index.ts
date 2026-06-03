@@ -4,11 +4,16 @@
 
 import { Capability } from '@dxos/app-framework';
 import type { OperationHandlerSet } from '@dxos/compute';
+import { MapCapabilities } from '@dxos/plugin-map/types';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export { default as BlueprintDefinition } from './blueprint-definition';
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export { default as MarkerProvider } from './marker-provider';
+// Explicit return type keeps the emitted declaration portable (TS2883).
+export const MarkerProvider: Capability.LazyCapability<
+  void,
+  Capability.Capability<typeof MapCapabilities.MarkerProvider>
+> = Capability.lazy('MarkerProvider', () => import('./marker-provider'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

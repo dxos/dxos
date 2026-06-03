@@ -11,7 +11,6 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 import { meta } from '#meta';
 
 import { Header } from '../Header';
-import { EventAttendee } from './EventAttendee';
 
 export type EventDetailsProps = {
   event: EventType.Event;
@@ -21,8 +20,6 @@ export type EventDetailsProps = {
   description?: boolean;
   /** Maximum attendee rows shown; omit for all. */
   maxAttendees?: number;
-  /** Render attendees as interactive contact buttons (resolves DXN + contact-create); default static text rows. */
-  interactiveAttendees?: boolean;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
@@ -30,14 +27,13 @@ export type EventDetailsProps = {
 /**
  * Presentational event summary rendered as `Card` rows (title · date · description · attendees).
  * Shared by the Event article header, the calendar `EventCard`, and the `EventStack` tile so all three
- * render the same field layout; callers supply the surrounding Card chrome (`Header.Root`, `Card.Root`, …).
+ * render the same field layout; callers supply the surrounding `Card.Root` chrome.
  */
 export const EventDetails = ({
   event,
   title = 'heading',
   description = false,
   maxAttendees,
-  interactiveAttendees = false,
   db,
   onContactCreate,
 }: EventDetailsProps) => {
@@ -47,7 +43,9 @@ export const EventDetails = ({
   return (
     <>
       {title === 'heading' && (
-        <Header.Title icon='ph--check--regular' title={event.title ?? t('event-untitled.label')} />
+        <Card.Row icon='ph--check--regular'>
+          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
+        </Card.Row>
       )}
       {title === 'text' && (
         <Card.Row>
@@ -55,7 +53,7 @@ export const EventDetails = ({
         </Card.Row>
       )}
 
-      <Header.Date start={new Date(event.startDate)} end={new Date(event.endDate)} />
+      <Header.DateRow start={new Date(event.startDate)} end={new Date(event.endDate)} />
 
       {description && event.description && (
         <Card.Row>
@@ -63,15 +61,9 @@ export const EventDetails = ({
         </Card.Row>
       )}
 
-      {attendees.map((attendee, index) =>
-        interactiveAttendees ? (
-          <EventAttendee key={attendee.email ?? index} attendee={attendee} db={db} onContactCreate={onContactCreate} />
-        ) : (
-          <Header.Row key={attendee.email ?? index} compact icon='ph--user--regular'>
-            <span className='truncate text-description'>{attendee.name ?? attendee.email}</span>
-          </Header.Row>
-        ),
-      )}
+      {attendees.map((attendee, index) => (
+        <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
+      ))}
     </>
   );
 };

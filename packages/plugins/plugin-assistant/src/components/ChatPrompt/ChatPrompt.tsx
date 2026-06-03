@@ -154,7 +154,7 @@ export const ChatPrompt = ({
             onPresetChange={onPresetChange}
           />
 
-          <div className='flex h-8 grow overflow-x-auto scrollbar-none'>
+          <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
             <ChatReferences db={db} context={processor.context} />
           </div>
 

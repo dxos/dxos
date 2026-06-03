@@ -14,21 +14,23 @@ export const textValence = (valence?: MessageValence) => {
       return 'font-medium text-warning-text';
     case 'error':
       return 'font-medium text-error-text';
+    default:
+      return 'font-medium';
   }
 };
 
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'font-medium border-success-text bg-success-surface';
+      return 'font-medium border-success-text text-success-fg bg-success-surface';
     case 'info':
-      return 'font-medium border-info-text bg-info-surface';
+      return 'font-medium border-info-text text-info-fg bg-info-surface';
     case 'warning':
-      return 'font-medium border-warning-text bg-warning-surface';
+      return 'font-medium border-warning-text text-warning-fg bg-warning-surface';
     case 'error':
-      return 'font-medium border-error-text bg-error-surface';
+      return 'font-medium border-error-text text-error-fg bg-error-surface';
     default:
-      return 'font-medium border-neutral-text bg-neutral-surface';
+      return 'font-medium border-neutral-text text-neutral-fg bg-neutral-surface';
   }
 };
 

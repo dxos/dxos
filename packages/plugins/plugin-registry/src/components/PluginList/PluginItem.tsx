@@ -141,7 +141,7 @@ export const PluginItem = ({
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
         <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
-          <Icon classNames={styles.foreground} icon={icon} size={14} />
+          <Icon classNames={styles.fg} icon={icon} size={14} />
         </div>
       </div>
 
@@ -157,7 +157,7 @@ export const PluginItem = ({
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag) => (
-            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
+            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>
           ))}

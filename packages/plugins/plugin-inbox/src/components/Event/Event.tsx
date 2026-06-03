@@ -6,13 +6,12 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database } from '@dxos/echo';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { Card, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Header } from '../Header';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode } from '../ViewMode';
 import { EventDetails } from './EventDetails';
@@ -111,9 +110,11 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <Header.Root>
-      <EventDetails event={event} title='heading' interactiveAttendees db={db} onContactCreate={onContactCreate} />
-    </Header.Root>
+    <Card.Root border={false} fullWidth classNames='p-1 border-b border-subdued-separator'>
+      <Card.Body>
+        <EventDetails event={event} title='heading' db={db} onContactCreate={onContactCreate} />
+      </Card.Body>
+    </Card.Root>
   );
 };
 
