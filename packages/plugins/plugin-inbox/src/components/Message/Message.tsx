@@ -220,7 +220,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 
       {/* Per-relation rows — one per ECHO object the message produced (Trip, Person, …). */}
       {objects.map((object) => (
-        <ExtractedObjectRow key={Obj.getURI(object).toString()} object={object} />
+        <Header.ObjectRow key={Obj.getURI(object).toString()} object={object} />
       ))}
 
       {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
@@ -240,21 +240,6 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
 };
 
 MessageHeader.displayName = MESSAGE_HEADER_NAME;
-
-const ExtractedObjectRow = ({ object }: { object: Obj.Any }) => {
-  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
-  const echoUri = EID.tryParse(Obj.getURI(object).toString());
-
-  return (
-    <Header.Row
-      icon={<Header.AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
-      data-testid={`extracted-tag-${object.id}`}
-    >
-      <h3 className='truncate text-primary-text'>{label}</h3>
-    </Header.Row>
-  );
-};
 
 //
 // Content

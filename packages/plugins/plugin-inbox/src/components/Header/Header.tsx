@@ -4,7 +4,8 @@
 
 import React, { type JSX, type PropsWithChildren, type ReactNode, useCallback, useRef } from 'react';
 
-import { type URI } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
+import { EID, type URI } from '@dxos/keys';
 import {
   Card,
   DxAnchorActivate,
@@ -232,6 +233,30 @@ const HeaderUserIconButton = ({ compact, value, title, onContactCreate }: UserIc
 HeaderUserIconButton.displayName = HEADER_USER_ICON_BUTTON_NAME;
 
 //
+// ObjectRow
+//
+
+const HEADER_OBJECT_ROW_NAME = 'Header.ObjectRow';
+
+/** A row that renders an extracted ECHO object — icon button opening the object's card preview. */
+const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
+  const label = Obj.getLabel(object, { fallback: 'typename' }) ?? 'object';
+  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
+  const echoUri = EID.tryParse(Obj.getURI(object).toString());
+
+  return (
+    <HeaderRow
+      icon={<HeaderAnchorIconButton icon={icon} label={label} title={label} value={echoUri} />}
+      data-testid={`extracted-tag-${object.id}`}
+    >
+      <h3 className='truncate text-primary-text'>{label}</h3>
+    </HeaderRow>
+  );
+};
+
+HeaderObjectRow.displayName = HEADER_OBJECT_ROW_NAME;
+
+//
 // Header
 //
 
@@ -242,6 +267,7 @@ export const Header = {
   Row: HeaderRow,
   AnchorIconButton: HeaderAnchorIconButton,
   UserIconButton: HeaderUserIconButton,
+  ObjectRow: HeaderObjectRow,
 };
 
 export type { HeaderRootProps, HeaderTitleProps, HeaderDateProps, HeaderRowProps };
