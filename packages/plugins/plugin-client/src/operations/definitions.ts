@@ -15,6 +15,7 @@ const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 const IdentitySchema = Schema.Struct({
   identityKey: Schema.instanceOf(PublicKey),
+  // TODO(dmaretskyi): Error "Generating a JSON Schema for this schema requires a "jsonSchema" annotation" --- change this to spaceId
   spaceKey: Schema.optional(Schema.instanceOf(PublicKey)),
   profile: Schema.optional(
     Schema.Struct({
