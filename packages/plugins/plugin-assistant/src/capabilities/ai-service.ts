@@ -13,7 +13,7 @@ import { LayerSpec } from '@dxos/compute';
 
 import type { AssistantPluginOptions } from '#types';
 
-export default Capability.makeModule<AssistantPluginOptions | void>(
+export default Capability.makeModule<AssistantPluginOptions | void, Capability.Any[]>(
   Effect.fnUntraced(function* (options) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
