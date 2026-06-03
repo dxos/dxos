@@ -22,15 +22,15 @@ export const textValence = (valence?: MessageValence) => {
 export const messageValence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'font-medium border-success-text text-success-text bg-success-surface';
+      return 'font-medium border-success-text text-success-fg bg-success-surface';
     case 'info':
-      return 'font-medium border-info-text text-info-text bg-info-surface';
+      return 'font-medium border-info-text text-info-fg bg-info-surface';
     case 'warning':
-      return 'font-medium border-warning-text text-warning-text bg-warning-surface';
+      return 'font-medium border-warning-text text-warning-fg bg-warning-surface';
     case 'error':
-      return 'font-medium border-error-text text-error-text bg-error-surface';
+      return 'font-medium border-error-text text-error-fg bg-error-surface';
     default:
-      return 'font-medium border-neutral-text text-neutral-text bg-neutral-surface';
+      return 'font-medium border-neutral-text text-neutral-fg bg-neutral-surface';
   }
 };
 

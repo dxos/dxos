@@ -157,7 +157,7 @@ export const PluginItem = ({
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag) => (
-            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
+            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>
           ))}
