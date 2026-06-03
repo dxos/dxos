@@ -157,9 +157,6 @@ export default Capability.makeModule(
       spaces
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
         .forEach((space) => {
-          // Seed typed annotations from legacy string-keyed data properties for spaces
-          // created before DX-971. The annotation's presence is the migration marker —
-          // no secondary tracking needed.
           if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
             const legacyRef = (space.properties as any)[Type.getTypename(Collection.Collection)];
             if (legacyRef) {
