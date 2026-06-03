@@ -53,8 +53,9 @@ export default FeedOperation.CurateMagazine.pipe(
       }
 
       // Run the magazine's routine through the AI blueprint to select and enrich posts.
-      if (magazine.routine) {
-        yield* Operation.invoke(AgentPrompt, { prompt: magazine.routine, input: {} }).pipe(Effect.ignore);
+      const spaceId = Obj.getDatabase(magazine)?.spaceId;
+      if (magazine.routine && spaceId) {
+        yield* Operation.invoke(AgentPrompt, { prompt: magazine.routine, input: {} }, { spaceId }).pipe(Effect.ignore);
       }
 
       const db = Obj.getDatabase(magazine);
