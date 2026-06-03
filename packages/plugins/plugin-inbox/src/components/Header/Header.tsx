@@ -4,7 +4,7 @@
 
 import React, { type JSX, type PropsWithChildren, type ReactNode, useCallback, useRef } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
 import {
   Card,
@@ -16,8 +16,10 @@ import {
   type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
+import { type Actor } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
+import { useActorContact } from '#hooks';
 import { meta } from '#meta';
 
 import { DateComponent } from '../DateComponent';
@@ -257,6 +259,36 @@ const HeaderObjectRow = ({ object }: { object: Obj.Any }) => {
 HeaderObjectRow.displayName = HEADER_OBJECT_ROW_NAME;
 
 //
+// AttendeeRow
+//
+
+const HEADER_ATTENDEE_ROW_NAME = 'Header.AttendeeRow';
+
+export type AttendeeRowProps = {
+  attendee: Actor.Actor;
+  db?: Database.Database;
+  onContactCreate?: (actor: Actor.Actor) => void;
+};
+
+/** A row that renders an event attendee with a user icon button. */
+const HeaderAttendeeRow = ({ attendee, db, onContactCreate }: AttendeeRowProps) => {
+  const contactDXN = useActorContact(db, attendee);
+  const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee]);
+
+  return (
+    <HeaderRow
+      icon={
+        <HeaderUserIconButton compact title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />
+      }
+    >
+      <h3 className='truncate'>{attendee.name || attendee.email}</h3>
+    </HeaderRow>
+  );
+};
+
+HeaderAttendeeRow.displayName = HEADER_ATTENDEE_ROW_NAME;
+
+//
 // Header
 //
 
@@ -268,6 +300,7 @@ export const Header = {
   AnchorIconButton: HeaderAnchorIconButton,
   UserIconButton: HeaderUserIconButton,
   ObjectRow: HeaderObjectRow,
+  AttendeeRow: HeaderAttendeeRow,
 };
 
 export type { HeaderRootProps, HeaderTitleProps, HeaderDateProps, HeaderRowProps };

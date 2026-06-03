@@ -11,7 +11,6 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 import { meta } from '#meta';
 
 import { Header } from '../Header';
-import { EventAttendee } from './EventAttendee';
 
 export type EventDetailsProps = {
   event: EventType.Event;
@@ -21,8 +20,6 @@ export type EventDetailsProps = {
   description?: boolean;
   /** Maximum attendee rows shown; omit for all. */
   maxAttendees?: number;
-  /** Render attendees as interactive contact buttons (resolves DXN + contact-create); default static text rows. */
-  interactiveAttendees?: boolean;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
 };
@@ -37,7 +34,6 @@ export const EventDetails = ({
   title = 'heading',
   description = false,
   maxAttendees,
-  interactiveAttendees = false,
   db,
   onContactCreate,
 }: EventDetailsProps) => {
@@ -63,15 +59,14 @@ export const EventDetails = ({
         </Card.Row>
       )}
 
-      {attendees.map((attendee, index) =>
-        interactiveAttendees ? (
-          <EventAttendee key={attendee.email ?? index} attendee={attendee} db={db} onContactCreate={onContactCreate} />
-        ) : (
-          <Header.Row key={attendee.email ?? index} compact icon='ph--user--regular'>
-            <span className='truncate text-description'>{attendee.name ?? attendee.email}</span>
-          </Header.Row>
-        ),
-      )}
+      {attendees.map((attendee, index) => (
+        <Header.AttendeeRow
+          key={attendee.email ?? index}
+          attendee={attendee}
+          db={db}
+          onContactCreate={onContactCreate}
+        />
+      ))}
     </>
   );
 };
