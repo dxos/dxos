@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { isSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -53,33 +54,44 @@ export default Capability.makeModule(
                 iconHue: 'indigo',
                 role: 'branch',
                 position: 'first',
+                space,
               },
-              nodes: [
-                Node.makeAction({
-                  id: 'create-magazine',
-                  data: () =>
-                    Operation.invoke(SpaceOperation.OpenCreateObject, {
-                      target: space.db,
-                      typename: Type.getTypename(Magazine.Magazine),
-                    }),
-                  properties: {
-                    label: ['add-object.label', { ns: Type.getTypename(Magazine.Magazine) }],
-                    icon: 'ph--plus--regular',
-                    disposition: 'list-item-primary',
-                  },
-                }),
-                ...magazines
-                  .map((magazine: Magazine.Magazine) =>
-                    createObjectNode({
-                      db: space.db,
-                      object: magazine,
-                    }),
-                  )
-                  .filter((node): node is NonNullable<typeof node> => node !== null),
-              ],
+              nodes: magazines
+                .map((magazine: Magazine.Magazine) =>
+                  createObjectNode({
+                    db: space.db,
+                    object: magazine,
+                  }),
+                )
+                .filter((node): node is NonNullable<typeof node> => node !== null),
             }),
           ]);
         },
+      }),
+
+      // Add-magazine action on the Magazines section header.
+      GraphBuilder.createExtension({
+        id: 'magazinesSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === 'magazines' && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-magazine',
+              data: () =>
+                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: space.db,
+                  typename: Type.getTypename(Magazine.Magazine),
+                }),
+              properties: {
+                label: ['add-object.label', { ns: Type.getTypename(Magazine.Magazine) }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
+            }),
+          ]),
       }),
 
       // Companion panel: resolve the selected Post under a Magazine node.
