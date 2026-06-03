@@ -2,14 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type ChangeEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref } from '@dxos/echo';
 import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/react-client/echo';
 
 import { FILTER } from '../constants';
-import { Todo, TodoList } from '../types';
+import { Todo, TodoListAnnotation } from '../types';
 import { Header } from './Header';
 import { TodoContainer } from './TodoContainer';
 import { TodoFooter } from './TodoFooter';
@@ -24,8 +25,8 @@ export const Todos = () => {
   // Get space properties with reactive updates (waits for space to be ready).
   const [spaceProperties] = useSpaceProperties(space?.id);
 
-  // Get the TodoList reference from space.properties.
-  const listRef = spaceProperties?.[Type.getTypename(TodoList)] as Ref.Ref<TodoList> | undefined;
+  // Get the TodoList reference from space.properties via typed annotation.
+  const listRef = spaceProperties && Annotation.get(spaceProperties, TodoListAnnotation).pipe(Option.getOrUndefined);
 
   // Subscribe to the list ref (handles async loading and reactive updates).
   const [listSnapshot, updateList] = useObject(listRef);

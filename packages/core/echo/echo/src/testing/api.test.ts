@@ -23,6 +23,8 @@ describe('Experimental API review', () => {
     // schema-kind brand lives on `[SchemaKindId]`, not in meta.
     expect(Type.getMeta(type)).to.deep.eq({
       keys: [],
+      tags: [],
+      annotations: {},
       key: 'com.example.type.person',
       version: '0.1.0',
     });

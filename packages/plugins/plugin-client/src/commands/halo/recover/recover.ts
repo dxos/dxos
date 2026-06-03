@@ -29,7 +29,7 @@ export const recover = Command.make(
       yield* Console.log(
         JSON.stringify(
           {
-            identityKey: identity.identityKey.toHex(),
+            identityDid: identity.did,
             displayName: identity.profile?.displayName,
           },
           null,
@@ -38,7 +38,7 @@ export const recover = Command.make(
       );
     } else {
       yield* Console.log('Identity recovered successfully');
-      yield* Console.log(print(printIdentity(identity)));
+      yield* Console.log(print(printIdentity({ identityDid: identity.did, profile: identity.profile })));
     }
   }),
 ).pipe(Command.withDescription('Recover an existing identity using a recovery code.'));

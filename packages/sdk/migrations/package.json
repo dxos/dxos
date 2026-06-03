@@ -37,7 +37,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:"
+    "@effect-atom/atom": "catalog:",
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

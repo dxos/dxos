@@ -5,10 +5,13 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Collection, Database, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+
+import { RootCollectionAnnotation } from './annotations';
 
 type AddProps = {
   object: Obj.Unknown;
@@ -16,7 +19,6 @@ type AddProps = {
   hidden?: boolean;
 };
 
-// TODO(dmaretskyi): Move up to the composer level.
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {
@@ -30,18 +32,21 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Obj.Any = objects[0];
 
-    const collectionRef: Ref.Ref<Collection.Collection> | undefined =
-      properties[Type.getTypename(Collection.Collection)];
+    const collectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
     if (collectionRef) {
-      const collection = yield* Effect.promise(() => collectionRef.load());
+      const collection = yield* Database.load(collectionRef);
       Obj.update(collection, (collection) => {
         collection.objects.push(objectRef);
       });
     } else {
       const newCollection = Collection.make({ objects: [objectRef] });
-      const collectionRef = Ref.make(newCollection);
+      const newCollectionRef = Ref.make(newCollection);
       Obj.update(properties, (properties) => {
-        properties[Type.getTypename(Collection.Collection)] = collectionRef;
+        const meta = Obj.getMeta(properties);
+        if (!meta.annotations) {
+          meta.annotations = {};
+        }
+        Annotation.setDictionary(meta.annotations, RootCollectionAnnotation, newCollectionRef);
       });
     }
   }

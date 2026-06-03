@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, EXEMPLAR_SPACE_TAG } from '@dxos/app-toolkit';
@@ -20,10 +21,10 @@ const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ generateExemplarSpace }: WelcomeOptions) {
-    const { Collection, Obj, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
-    const { Migrations } = yield* Effect.tryPromise(() => import('@dxos/migrations'));
+    const { Annotation, Collection, Obj, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { MigrationVersionAnnotation, Migrations } = yield* Effect.tryPromise(() => import('@dxos/migrations'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
-    const { getPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
+    const { RootCollectionAnnotation, getPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
     const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
@@ -42,7 +43,9 @@ export default Capability.makeModule(
     // depend on a fresh space (e.g. blueprints) wire themselves up. The exemplar space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
-    const personalRootCollection = personalSpace.properties[Type.getTypename(Collection.Collection)]?.target;
+    const personalRootCollection = Option.getOrUndefined(
+      Annotation.get(personalSpace.properties, RootCollectionAnnotation),
+    )?.target;
     if (personalRootCollection) {
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
       yield* Effect.all(
@@ -73,9 +76,9 @@ export default Capability.makeModule(
 
       // Stamp the migration version so the exemplar space is treated as already migrated,
       // the same way create.ts and identity-created.ts do for newly created spaces.
-      if (Migrations.versionProperty) {
+      if (Migrations.targetVersion) {
         Obj.update(exemplarSpace.properties, (properties) => {
-          properties[Migrations.versionProperty!] = Migrations.targetVersion;
+          Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion!);
         });
       }
 
