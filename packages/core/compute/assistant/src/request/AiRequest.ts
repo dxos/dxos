@@ -269,7 +269,7 @@ export class Request {
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );
-      log.info('messages', { messages });
+      log('messages', { messages });
 
       const toolCalls = this.getToolCalls();
 

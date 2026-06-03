@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
+import { MemoizedAiService } from '@dxos/ai/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ServiceResolver } from '@dxos/compute';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -13,7 +14,13 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
 
+import { ObjectId } from '@dxos/keys';
+import { LanguageModel } from '@effect/ai';
+import { beforeEach, type TestContext } from '@effect/vitest';
+import { Layer } from 'effect';
 import { meta } from './meta';
+
+ObjectId.dangerouslyDisableRandomness();
 
 const moduleId = (name: string) => `${meta.id}.module.${name}`;
 
@@ -47,7 +54,27 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('runs prompts with memoized model', async ({ expect }) => {
+  test('can memoize ai-service requests', async (ctx) => {
+    const { expect } = ctx;
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin({}), AssistantPlugin({
+        aiServiceMiddleware: makeMemoizedAiServiceMiddleware(ctx)
+      })],
+    });
 
+    await harness.runPromise(
+      Effect.gen(function* () {
+        const { text } = yield* LanguageModel.generateText({
+          prompt: 'What is the capital of France?',
+        });
+        expect(text.toLocaleLowerCase()).toContain('paris');
+      }).pipe(Effect.provide(AiService.model('@anthropic/claude-haiku-4-5').pipe(Layer.provideMerge(ServiceResolver.provide({}, AiService.AiService))))),
+    );
   });
 });
+
+const makeMemoizedAiServiceMiddleware = (ctx: TestContext) => (upstream: AiService.Service): AiService.Service =>
+  MemoizedAiService.make({
+    upstream, storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
+    allowGeneration: MemoizedAiService.isGenerationEnabled()
+  });
