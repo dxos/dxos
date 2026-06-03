@@ -4,5 +4,5 @@
 
 export * from './blueprints';
 export * from './meta';
-export { normalizeText, parseFromHeader } from './operations';
+export { parseFromHeader } from './operations';
 export * from './types';

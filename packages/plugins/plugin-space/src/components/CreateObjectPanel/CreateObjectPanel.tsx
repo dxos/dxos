@@ -113,22 +113,24 @@ export const CreateObjectPanel = ({
 
   if (metadata.inputSchema) {
     return (
-      <Form.Root
-        autoFocus
-        schema={inputSchema}
-        defaultValues={initialFormValues}
-        fieldProvider={inputSurfaceLookup}
-        db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
-        onSave={handleCreateObject}
-        testId='create-object-form'
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Submit />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
+      <div className='[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid'>
+        <Form.Root
+          autoFocus
+          schema={inputSchema}
+          defaultValues={initialFormValues}
+          fieldProvider={inputSurfaceLookup}
+          db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
+          onSave={handleCreateObject}
+          testId='create-object-form'
+        >
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+              <Form.Submit />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </div>
     );
   }
 
@@ -249,5 +251,5 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
 
 const getIconHueStyles = (iconHue?: string): string | undefined => {
   const styles = iconHue ? getStyles(iconHue) : undefined;
-  return styles?.foreground;
+  return styles?.text;
 };

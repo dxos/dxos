@@ -13,6 +13,7 @@ import {
   CheckAppScheme,
   DeckSettings,
   DeckState,
+  NotificationTracker,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -63,6 +64,10 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
     activate: UrlHandler,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
+    activate: NotificationTracker,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

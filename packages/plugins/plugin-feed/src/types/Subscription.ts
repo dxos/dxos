@@ -167,8 +167,10 @@ export const Post = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
   /** URL link to the original article. */
   link: Schema.String.pipe(Schema.optional),
-  /** Plain-text or HTML description/summary. */
+  /** Plain-text or summary. */
   description: Schema.String.pipe(Schema.optional),
+  /** Plain-text or HTML content. */
+  content: Schema.String.pipe(Schema.optional),
   /** Author name. */
   author: Schema.String.pipe(Schema.optional),
   /** ISO 8601 publication date. */

@@ -13,7 +13,6 @@ export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./scroll-into-view'),
   () => import('./set'),
   () => import('./set-layout-mode'),
-  () => import('./show-undo'),
   () => import('./switch-workspace'),
   () => import('./update-companion'),
   () => import('./update-complementary'),

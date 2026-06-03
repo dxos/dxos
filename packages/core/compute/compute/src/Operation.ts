@@ -418,6 +418,26 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
 };
 
 /**
+ * Translatable label — a plain string or an i18next-style `[key, options]` tuple.
+ * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
+ * the app-level `Label` type so values flow into UI toasts unchanged.
+ */
+export type Label = string | [string, { ns: string | readonly string[]; count?: number; defaultValue?: string }];
+
+/**
+ * Per-phase user notification messages for an invocation.
+ * A phase is notified to the user iff its message is provided; messages are translatable {@link Label}s.
+ */
+export interface NotifyOptions {
+  /** Shown when the invocation starts. */
+  start?: Label;
+  /** Shown when the invocation succeeds. */
+  success?: Label;
+  /** Shown when the invocation fails. */
+  error?: Label;
+}
+
+/**
  * Options for operation invocation.
  */
 export interface InvokeOptions {
@@ -425,6 +445,10 @@ export interface InvokeOptions {
    * Space ID to provide database context for the handler.
    */
   spaceId?: Key.SpaceId;
+  /**
+   * Request user-facing notifications at the given invocation phases.
+   */
+  notify?: NotifyOptions;
   /**
    * URI of the conversation feed (queue) — today always an EID, but typed as
    * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`

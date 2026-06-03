@@ -3,27 +3,52 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
+import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMapZoomHandler } from '../../hooks';
 import { type GeoMarker } from '../../types';
-import { Map, type MapController } from './Map';
+import { Map, MapMarkersProps, MapTilesProps, type MapController } from './Map';
 
-const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {
+type DefaultStoryProps = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
+
+const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
   const [controller, setController] = useState<MapController>();
+  const [key, setKey] = useState('');
+  // Substitute the `${key}` placeholder in a keyed tile URL (e.g. MapTiler); undefined → default OSM tiles.
+  const url = useMemo(() => urlProp?.replace('${key}', key), [urlProp, key]);
+
   const handleZoomAction = useMapZoomHandler(controller);
 
   return (
-    <Map.Root>
-      <Map.Content ref={setController}>
-        <Map.Tiles />
-        <Map.Markers markers={markers} />
-        <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
-        <Map.Action position='bottomright' />
-      </Map.Content>
-    </Map.Root>
+    <Panel.Root>
+      {urlProp && (
+        <Panel.Toolbar>
+          <Toolbar.Root>
+            <Input.Root>
+              <Input.TextInput
+                spellCheck={false}
+                placeholder='API KEY'
+                value={key}
+                onChange={(ev) => setKey(ev.target.value)}
+              />
+            </Input.Root>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+      )}
+      <Panel.Content asChild>
+        <Map.Root>
+          <Map.Content ref={setController}>
+            <Map.Tiles url={url} />
+            <Map.Markers markers={markers} />
+            <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
+            <Map.Action position='bottomright' />
+          </Map.Content>
+        </Map.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -42,6 +67,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Bounds: Story = {
+  args: {
+    markers: [
+      { id: 'london', title: 'London', location: { lat: 51.5074, lng: -0.1278 } },
+      { id: 'barcelona', title: 'Barcelona', location: { lat: 41.3851, lng: 2.1734 } },
+      { id: 'warsaw', title: 'Warsaw', location: { lat: 52.2297, lng: 21.0122 } },
+    ] as GeoMarker[],
+  },
+};
 
 export const WithMarkers: Story = {
   args: {
@@ -69,5 +104,14 @@ export const WithMarkers: Story = {
       { id: 'vientiane', title: 'Vientiane', location: { lat: 17.9757, lng: 102.6331 } },
       { id: 'yangon', title: 'Yangon', location: { lat: 16.8661, lng: 96.1951 } },
     ] as GeoMarker[],
+  },
+};
+
+/**
+ * https://docs.maptiler.com/leaflet
+ */
+export const MapTiler: Story = {
+  args: {
+    url: 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?&key=${key}',
   },
 };

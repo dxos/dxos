@@ -42,7 +42,11 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
       target={mailbox}
       targetKey='mailbox'
       providerId={GMAIL_PROVIDER_ID}
-      operation={InboxOperation.SyncMailbox}
+      operation={InboxOperation.GoogleMailSync}
+      notify={{
+        success: ['sync-mailbox-success.title', { ns: meta.id }],
+        error: ['sync-mailbox-error.title', { ns: meta.id }],
+      }}
       syncLabel={t('sync-mailbox.label')}
     />
   );

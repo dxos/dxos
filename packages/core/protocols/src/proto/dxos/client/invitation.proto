@@ -43,6 +43,9 @@ enum SpaceState {
   /// Space is active. Swarming and replication will be done.
   SPACE_ACTIVE = 6;
 
+  /// Space is tombstoned (soft-deleted). Replicated to other devices; never auto-opened.
+  SPACE_DELETED = 9;
+
   ///
   /// Runtime states:
   ///

@@ -141,6 +141,12 @@ export interface Params {
    * URI of the target this process is assigned to.
    */
   readonly target: URI.URI | null;
+
+  /**
+   * User-facing notifications requested for this process's lifecycle phases.
+   * Surfaced on {@link Info} so a notification tracker can subscribe to the process monitor.
+   */
+  readonly notify?: Operation.NotifyOptions;
 }
 
 //
