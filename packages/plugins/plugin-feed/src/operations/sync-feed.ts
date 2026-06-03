@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';
@@ -35,10 +35,22 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       const fetcher = getFetcher(subscriptionFeed.type);
       const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () => fetcher(url, { corsProxy }));
-      const cursor = subscriptionFeed.cursor;
 
-      // Filter posts newer than the cursor.
-      const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
+      // Dedup by guid against existing posts already in the backing queue. The
+      // `cursor` field on the subscription was previously used as a single-guid
+      // filter, but RSS feeds re-serve the same items across polls — filtering
+      // out only the cursor's own guid let every other previously-synced post
+      // re-pass the filter and re-append on each sync. Guid-based dedup against
+      // the queue is the source of truth and tolerant of out-of-order or
+      // rotated-off-the-window upstream responses.
+      const existing = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
+      const seenGuids = new Set<string>();
+      for (const post of existing) {
+        if (post.guid) {
+          seenGuids.add(post.guid);
+        }
+      }
+      const newPosts = posts.filter((post) => !post.guid || !seenGuids.has(post.guid));
 
       // Append new posts to the ECHO feed.
       // NOTE: The `Subscription.Subscription.keep` bound is currently NOT enforced

@@ -42,6 +42,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
