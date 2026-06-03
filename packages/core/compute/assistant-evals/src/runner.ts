@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { AiService, type ModelName } from '@dxos/ai';
-import { AiServiceTestingPreset, TestAiService } from '@dxos/ai/testing';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Operation, Routine, ServiceResolver, type Blueprint } from '@dxos/compute';
 import { Database, Feed, Ref, Tag } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
@@ -24,6 +24,8 @@ import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
+import type { Schema } from 'effect';
+import type { Evalite } from 'evalite';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
@@ -37,20 +39,13 @@ const SYSTEM_INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-export interface RunAgentEvalOptions extends Pick<Routine.MakeOptions, 'name' | 'blueprints' | 'input' | 'output'> {
+interface RunAgentEvalOptions extends Pick<Routine.MakeOptions, 'name' | 'blueprints' | 'input' | 'output'> {
   instructions: string;
   completionCriteria?: readonly string[];
   model?: ModelName;
   plugins?: Plugin.Plugin[];
 }
 
-const formatInstructions = (instructions: string, completionCriteria: readonly string[] = []): string => {
-  if (completionCriteria.length === 0) {
-    return instructions;
-  }
-  const criteria = completionCriteria.map((item) => `- ${item}`).join('\n');
-  return `${instructions}\n\nCompletion criteria:\n${criteria}`;
-};
 
 const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.AiService.pipe(
@@ -81,7 +76,7 @@ const seedPrompt = (prompt: Routine.Routine) =>
     yield* Database.flush();
   });
 
-const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId) =>
+const runAgentPrompt = <I>(harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId, input: I) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedPrompt(prompt);
@@ -89,7 +84,7 @@ const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: Mo
         AgentPrompt,
         {
           prompt: Ref.make(prompt),
-          input: {},
+          input,
           systemInstructions: SYSTEM_INSTRUCTIONS,
           model,
         },
@@ -98,40 +93,50 @@ const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: Mo
     }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService))),
   );
 
-/**
- * Run an agent prompt in a composer test harness (live LLM, no memoization).
- */
-export const runAgentEval = (options: RunAgentEvalOptions): Promise<unknown> => {
-  const model = options.model ?? DEFAULT_MODEL;
+export interface CreateEvalRunnerOptions<I, O> {
+  instructions: string;
+  input: Schema.Schema<I>;
+  output: Schema.Schema<O>;
+  blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+  model?: ModelName;
+}
 
-  const prompt = Routine.make({
-    name: options.name,
-    instructions: formatInstructions(options.instructions, options.completionCriteria),
-    blueprints: options.blueprints ?? [],
-    input: options.input,
-    output: options.output,
-  });
-
-  return runAndForwardErrors(
-    Effect.scoped(
-      Effect.gen(function* () {
-        const harness = yield* Effect.acquireRelease(
-          Effect.promise(async () =>
-            createComposerTestApp({
-              plugins: await createDefaultPlugins(options),
-            }),
-          ),
-          (testHarness) => Effect.promise(() => testHarness.dispose()),
-        );
-
-        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
-
-        const { personalSpace } = yield* Effect.promise(() =>
-          runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
-        );
-
-        return yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id));
-      }),
-    ),
-  );
+export type VariantConfig = undefined | {
+  model?: ModelName;
 };
+
+export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
+  return async (input: I, variant: VariantConfig) => {
+    const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
+
+    const prompt = Routine.make({
+      instructions: options.instructions,
+      blueprints: options.blueprints ?? [],
+      input: options.input,
+      output: options.output,
+    });
+
+    return runAndForwardErrors(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const harness = yield* Effect.acquireRelease(
+            Effect.promise(async () =>
+              createComposerTestApp({
+                plugins: await createDefaultPlugins(options),
+              }),
+            ),
+            (testHarness) => Effect.promise(() => testHarness.dispose()),
+          );
+
+          yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
+
+          const { personalSpace } = yield* Effect.promise(() =>
+            runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+          );
+
+          return yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id, input));
+        }),
+      ),
+    );
+  };
+}
