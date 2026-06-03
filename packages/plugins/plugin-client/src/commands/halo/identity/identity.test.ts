@@ -33,7 +33,7 @@ describe('halo identity', () => {
       expect(logs).toHaveLength(1);
       const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
-        identityKey: client.halo.identity.get()?.identityKey.toHex(),
+        identityDid: client.halo.identity.get()?.did,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));

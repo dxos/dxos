@@ -20,9 +20,9 @@ describe('halo update', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const parsed = TestConsole.parseJson<{ identityKey: string; displayName: string }>(logs[0]);
-      expect(parsed).toHaveProperty('identityKey');
+      const parsed = TestConsole.parseJson<{ identityDid: string; displayName: string }>(logs[0]);
+      expect(parsed).toHaveProperty('identityDid');
       expect(parsed).toHaveProperty('displayName', 'Updated Name');
-      expect(parsed.identityKey).toBe(client.halo.identity.get()?.identityKey.toHex());
+      expect(parsed.identityDid).toBe(client.halo.identity.get()?.did);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

@@ -7,12 +7,9 @@ import { FormBuilder } from '@dxos/cli-util';
 /**
  * Pretty prints an identity with ANSI colors.
  */
-export const printIdentity = (identity: {
-  identityKey: { toHex(): string; truncate(): string };
-  profile?: { displayName?: string };
-}) =>
+export const printIdentity = (identity: { identityDid: string; profile?: { displayName?: string } }) =>
   FormBuilder.make({ title: 'Identity' }).pipe(
-    FormBuilder.set('identityKey', identity.identityKey.truncate()),
+    FormBuilder.set('identityDid', identity.identityDid),
     FormBuilder.set('displayName', identity.profile?.displayName ?? '<none>'),
     FormBuilder.build,
   );
