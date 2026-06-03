@@ -25,6 +25,6 @@ describe('Local AI', () => {
       `,
       blueprints: [Ref.make(DatabaseBlueprint.make())],
     }),
-    { timeout: agentTestTimeout(), tags: ['llm'] },
+    { timeout: agentTestTimeout({ disableLlmMemoization: true }), tags: ['llm'] },
   );
 });

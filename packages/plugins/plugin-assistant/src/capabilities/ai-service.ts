@@ -27,11 +27,12 @@ export default Capability.makeModule<AssistantPluginOptions | void, Capability.A
       Layer.provide(combinedLayer),
     );
 
-    if (options?.aiServiceMiddleware) {
+    const aiServiceMiddleware = options?.aiServiceMiddleware;
+    if (aiServiceMiddleware) {
       aiServiceLayer = aiServiceLayer.pipe(
         Layer.map((context) => {
           const aiService = Context.get(context, AiService.AiService);
-          return Context.make(AiService.AiService, options.aiServiceMiddleware!(aiService));
+          return Context.make(AiService.AiService, aiServiceMiddleware(aiService));
         }),
       );
     }

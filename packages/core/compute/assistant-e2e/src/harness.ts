@@ -181,5 +181,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
   }, TestHelpers.provideTestContext);
 };
 
-// If generation is enabled, use long timeout, stick to default vite timeout if generation is disabled.
-export const agentTestTimeout = () => (MemoizedAiService.isGenerationEnabled() ? DEFAULT_TEST_TIMEOUT : undefined);
+// Use long timeout when generation is enabled or when running live (memoization disabled).
+export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
+  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : undefined;

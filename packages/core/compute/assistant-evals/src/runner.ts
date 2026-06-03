@@ -112,6 +112,16 @@ export type VariantConfig =
       model?: ModelName;
     };
 
+/**
+ * Creates an Evalite task that runs the assistant against a Routine and returns the agent's output.
+ *
+ * Model precedence: `variant.model` → `options.model` → `DEFAULT_MODEL`.
+ *
+ * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
+ * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runAgentPrompt` with the
+ * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
+ * propagated to the caller via `runAndForwardErrors`.
+ */
 export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;

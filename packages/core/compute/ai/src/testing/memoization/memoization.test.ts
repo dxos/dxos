@@ -8,7 +8,7 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -51,8 +51,8 @@ class TestObjectReadToolkit extends Toolkit.make(
   }),
 ) {
   static layer = TestObjectReadToolkit.toLayer({
-    'read-object': Effect.fnUntraced(function* () {
-      return 'Apples';
+    'read-object': Effect.fnUntraced(function* (params) {
+      return params.objectId;
     }),
   });
 }
@@ -180,19 +180,19 @@ describe('dynamic value matching', () => {
     },
   ];
 
-  it('canonicalized prompts match across differing space keys', () => {
+  test('canonicalized prompts match across differing space keys', ({ expect }) => {
     const a = __testing.normalizeForMatching(promptWith(SPACE_A), [SPACE_ID_PATTERN]);
     const b = __testing.normalizeForMatching(promptWith(SPACE_B), [SPACE_ID_PATTERN]);
     expect(a).toEqual(b);
   });
 
-  it('without patterns the differing space keys do not match (opt-in)', () => {
+  test('without patterns the differing space keys do not match (opt-in)', ({ expect }) => {
     const a = __testing.normalizeForMatching(promptWith(SPACE_A), []);
     const b = __testing.normalizeForMatching(promptWith(SPACE_B), []);
     expect(a).not.toEqual(b);
   });
 
-  it('prompts with a different count of dynamic values do not match', () => {
+  test('prompts with a different count of dynamic values do not match', ({ expect }) => {
     const single = __testing.normalizeForMatching([{ text: `echo://${SPACE_A}` }], [SPACE_ID_PATTERN]);
     const pair = __testing.normalizeForMatching(
       [{ text: `echo://${SPACE_A} and echo://${SPACE_B}` }],
@@ -201,7 +201,7 @@ describe('dynamic value matching', () => {
     expect(single).not.toEqual(pair);
   });
 
-  it('remaps stored response space keys to the live prompt values', () => {
+  test('remaps stored response space keys to the live prompt values', ({ expect }) => {
     const storedResponse = [
       { type: 'tool-call', input: { uri: `echo://${SPACE_A}/${OBJECT_ID}` } },
       { type: 'text', text: `Created object in echo://${SPACE_A}.` },
@@ -218,10 +218,14 @@ describe('dynamic value matching', () => {
     expect(serialized).toContain(OBJECT_ID);
   });
 
-  it('space-key pattern takes precedence over the entity-id pattern (no partial overlap)', () => {
+  test('space-key pattern takes precedence over the entity-id pattern (no partial overlap)', ({ expect }) => {
     // The space key is base-32 and could contain a 26-char window matching the ULID pattern; the
     // longer space-key alternative must win so the whole key is treated as a single token.
-    const matcher = __testing.buildDynamicMatcher([SPACE_ID_PATTERN, ENTITY_ID_PATTERN])!;
+    const matcher = __testing.buildDynamicMatcher([SPACE_ID_PATTERN, ENTITY_ID_PATTERN]);
+    expect(matcher).toBeDefined();
+    if (!matcher) {
+      return;
+    }
     const tokens = [...`echo://${SPACE_A}/${OBJECT_ID}`.matchAll(matcher)].map((match) => match[0]);
     expect(tokens).toEqual([SPACE_A, OBJECT_ID]);
   });

@@ -93,15 +93,17 @@ const cloneForMemoNormalization = (prompt: unknown): unknown => {
 
 /**
  * Matches a SpaceId: multibase base-32 (RFC4648), a `B` prefix followed by 32 chars.
+ * Requires token boundaries so a space key is not matched as a substring of a longer base-32 token.
  * @example BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE
  */
-export const SPACE_ID_PATTERN = /B[A-Z2-7]{32}/;
+export const SPACE_ID_PATTERN = /(?<![A-Z2-7])B[A-Z2-7]{32}(?![A-Z2-7])/;
 
 /**
  * Matches an EntityId (ULID): 26 Crockford base-32 chars (excludes I, L, O, U).
+ * Requires token boundaries so a ULID is not matched as a substring of a space key or other longer token.
  * @example 01J00J9B45YHYSGZQTQMSKMGJ6
  */
-export const ENTITY_ID_PATTERN = /[0-9A-HJKMNP-TV-Z]{26}/;
+export const ENTITY_ID_PATTERN = /(?<![0-9A-HJKMNP-TV-Z])[0-9A-HJKMNP-TV-Z]{26}(?![0-9A-HJKMNP-TV-Z])/;
 
 const dynamicPlaceholder = (index: number): string => `<memoized-dynamic-${index}>`;
 

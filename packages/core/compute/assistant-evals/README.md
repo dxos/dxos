@@ -9,4 +9,4 @@ export DX_ANTHROPIC_API_KEY=...
 moon run assistant-evals:evals
 ```
 
-Eval files live under `src/evals/*.eval.ts`. Shared harness setup is in `src/harness.ts`.
+Eval files live under `src/evals/*.eval.ts`. Shared runner setup is in `src/runner.ts`.
