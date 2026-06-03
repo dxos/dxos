@@ -3,6 +3,7 @@
 //
 
 export * from './activation-events';
+export * as CollectionModel from './CollectionModel';
 export * from './annotations';
 export * from './active-space';
 export * as AppNode from './app-node';

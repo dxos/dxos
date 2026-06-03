@@ -3,12 +3,12 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
+import { CollectionModel, getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
-import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
 

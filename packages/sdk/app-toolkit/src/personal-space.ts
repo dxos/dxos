@@ -14,6 +14,11 @@ export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
 // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
+// Intentional escape hatch: reads a pre-schema marker that lives outside the typed SpaceProperties
+// struct, written by old clients before immutable space tags existed.
+const hasLegacyDefaultSpaceMarker = (properties: Record<string, unknown>): boolean =>
+  properties[DEFAULT_SPACE_KEY] === true;
+
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Pick<Space, 'tags'>, tag: string): boolean => space.tags.includes(tag);
 
@@ -28,7 +33,7 @@ export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): bool
 
   // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
   try {
-    return space.properties[DEFAULT_SPACE_KEY] === true;
+    return hasLegacyDefaultSpaceMarker(space.properties as unknown as Record<string, unknown>);
   } catch {
     return false;
   }
