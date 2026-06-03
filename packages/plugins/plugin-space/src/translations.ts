@@ -289,20 +289,15 @@ export const translations = [
 
         'danger-zone.title': 'Danger Zone',
         'danger-zone.description': 'Destructive actions that cannot be undone.',
-        'space-contents.title': 'Space contents',
-        'space-contents.description': 'Current contents of this space.',
-        'schema-count.label': 'Schema',
-        'object-count.label': 'Objects',
-        'relation-count.label': 'Relations',
-        'feed-count.label': 'Feeds',
-        'reset-space.title': 'Reset Space',
-        'reset-space.description':
-          'Permanently delete all objects, relations, schema, and feeds in this space. This action cannot be undone.',
-        'reset-space.label': 'Reset space',
-        'reset-space-confirm.title': 'Reset this space?',
-        'reset-space-confirm.description':
-          'All objects, relations, schema, and feeds in this space will be permanently deleted. This action cannot be undone.',
-        'reset-space-failed.message': 'Failed to reset space.',
+
+        'delete-space.title': 'Delete Space',
+        'delete-space.description':
+          'Remove this space from all of your devices. The space stops replicating and is hidden everywhere. This action cannot be undone.',
+        'delete-space.label': 'Delete space',
+        'delete-space-confirm.title': 'Delete this space?',
+        'delete-space-confirm.description':
+          'This space will be removed from all of your devices and will stop replicating. This action cannot be undone.',
+        'delete-space-failed.message': 'Failed to delete space.',
 
         'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',

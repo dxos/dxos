@@ -61,6 +61,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -85,6 +86,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-outliner": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",

@@ -46,7 +46,7 @@ const OpenAiLayer = OpenAiClient.layerConfig({
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+  apiKey: Config.redacted('DX_ANTHROPIC_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const createChat = Effect.fn(function* (prompt: string) {
@@ -154,7 +154,7 @@ describe('LanguageModel', () => {
       const result = yield* createProgram('What is six times seven?');
       log.info('result', { result });
       expect(result).toContain('42');
-    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
+    }, TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY)),
     { tags: ['llm'] },
   );
 
@@ -172,7 +172,7 @@ describe('LanguageModel', () => {
       },
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['llm'] },
   );
@@ -193,7 +193,7 @@ describe('LanguageModel', () => {
       },
       Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['llm'] },
   );
@@ -225,7 +225,7 @@ describe('LanguageModel', () => {
       Effect.provide(CalculatorLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['llm'] },
   ); //
@@ -258,7 +258,7 @@ describe('LanguageModel', () => {
       Effect.provide(CalculatorLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['llm'] },
   ); //
@@ -294,7 +294,7 @@ describe('LanguageModel', () => {
       Effect.provide(CalculatorLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['llm'] },
   );
@@ -318,7 +318,7 @@ describe('LanguageModel', () => {
       },
       Effect.provide(AnthropicLanguageModel.model('claude-opus-4-0')),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000, tags: ['llm'] },
   ); //

@@ -34,6 +34,9 @@ message EchoMetadata {
 
   // TODO(burdon): Circular dep.
   repeated dxos.client.services.Invitation invitations = 12;
+
+  /// Keys of spaces that have been tombstoned (soft-deleted). Survives restart; prevents re-acceptance.
+  repeated dxos.keys.PublicKey deleted_spaces = 13;
 }
 
 /// Per-space metadata. Frequent updates. Keep small.

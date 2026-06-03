@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 
-import { type Database, Entity, Filter, Format, Obj, Query, Ref, type SchemaRegistry, Type, View } from '@dxos/echo';
+import { type Database, Entity, Filter, Format, Obj, Query, Ref, type Registry, Scope, Type, View } from '@dxos/echo';
 import {
   type JsonSchemaType,
   LabelAnnotation,
@@ -117,7 +117,7 @@ export const make = ({
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  registry?: SchemaRegistry.SchemaRegistry;
+  registry?: Registry.Registry;
 };
 
 /**
@@ -226,13 +226,16 @@ export const makeFromDatabase = async ({
   ...props
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
-    const [type] = await db.schemaRegistry.register([createDefaultSchema()]);
+    const type = await db.addType(createDefaultSchema());
+    // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the
+    // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
     typename = Type.getTypename(type);
   } else {
     createInitial = 0;
   }
 
-  const type = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
+  const allTypes = await db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run();
+  const type = allTypes.find((t) => Type.getTypename(t) === typename);
   invariant(type, `Type not found: ${typename}`);
   // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
   // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
@@ -252,7 +255,7 @@ export const makeFromDatabase = async ({
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
       type,
-      registry: db.schemaRegistry,
+      registry: db.graph.registry,
     }),
   };
 };

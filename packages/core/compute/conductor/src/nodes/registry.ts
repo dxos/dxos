@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
@@ -193,7 +193,7 @@ export const registry: Record<NodeType, Executable> = {
   thread: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({
-      id: ObjectId,
+      id: EntityId,
       messages: Schema.Array(Type.getSchema(Message.Message)),
     }),
   }),
@@ -203,7 +203,7 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const feed = yield* Database.resolve(EchoURI.parse(id), Feed.Feed).pipe(Effect.orDie);
+        const feed = yield* Database.resolve(EID.parse(id), Feed.Feed).pipe(Effect.orDie);
         const messages = yield* Feed.runQuery(feed, Filter.everything());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
@@ -223,16 +223,16 @@ export const registry: Record<NodeType, Executable> = {
         if (typeof id === 'string' && id.startsWith('dxn:queue:')) {
           const mappedItems = items.map((item: any) => ({
             ...item,
-            id: item.id ?? ObjectId.random(),
+            id: item.id ?? EntityId.random(),
           }));
-          const feed = yield* Database.resolve(EchoURI.parse(id), Feed.Feed).pipe(Effect.orDie);
+          const feed = yield* Database.resolve(EID.parse(id), Feed.Feed).pipe(Effect.orDie);
           yield* Feed.append(feed, mappedItems);
           return {};
         } else {
-          const echoUri = EchoURI.parse(id);
-          const echoId = EchoURI.getObjectId(echoUri);
-          const spaceId = EchoURI.getSpaceId(echoUri);
-          invariant(echoId, 'Object ID missing from EchoURI');
+          const echoUri = EID.parse(id);
+          const echoId = EID.getEntityId(echoUri);
+          const spaceId = EID.getSpaceId(echoUri);
+          invariant(echoId, 'Object ID missing from EID');
           const { db } = yield* Database.Service;
           if (spaceId != null) {
             invariant(db.spaceId === spaceId, 'Space mismatch');
@@ -240,18 +240,16 @@ export const registry: Record<NodeType, Executable> = {
 
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
-            const schema = yield* Effect.promise(async () =>
-              db.schemaRegistry
-                .query({
-                  typename: getTypenameFromQuery(container.query.ast),
-                })
-                .first(),
-            );
+            const schemaTypename = getTypenameFromQuery(container.query.ast);
+            const types = yield* Database.runQuery(Filter.type(Type.Type));
+            const type = types.find((t) => Type.getTypename(t) === schemaTypename);
+            invariant(type, `Schema not found: ${schemaTypename}`);
+            invariant(Type.isObject(type), `Schema is not an object schema: ${schemaTypename}`);
 
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item as any;
               // TODO(dmaretskyi): Forbid type on create.
-              db.add(Obj.make(Type.assertObject(schema), rest));
+              db.add(Obj.make(type, rest));
             }
             yield* Effect.promise(() => db.flush());
           } else {

@@ -20,7 +20,9 @@ import * as Scheduler from './scheduler';
 // @import-as-namespace
 
 /**
- * Invocation event emitted after each operation.
+ * Emitted after an operation completes successfully. (The in-progress / failure lifecycle is observed
+ * via the process monitor; this stream surfaces successful invocations for layered consumers — e.g.
+ * the undo history tracker, which derives undoability from the operation/input/output.)
  */
 export type InvocationEvent<I = any, O = any> = {
   operation: Operation.Definition<I, O>;
@@ -167,13 +169,9 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     return Effect.gen(this, function* () {
       const output = yield* this._invokeCore(op, input, options);
 
-      // Publish event after successful invocation.
-      yield* PubSub.publish(this._pubsub, {
-        operation: op,
-        input,
-        output,
-        timestamp: Date.now(),
-      });
+      // Publish a success event. Failures propagate without an event; in-progress/failure lifecycle is
+      // observed via the process monitor, and undoability is derived by downstream consumers.
+      yield* PubSub.publish(this._pubsub, { operation: op, input, output, timestamp: Date.now() });
 
       return output;
     });

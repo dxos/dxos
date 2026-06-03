@@ -259,7 +259,7 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { fill, border, surface } = getStyles(this._hue);
+    const { bg: fill, border, surface } = getStyles(this._hue);
     return container(
       border,
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs', fill)).text('#'),

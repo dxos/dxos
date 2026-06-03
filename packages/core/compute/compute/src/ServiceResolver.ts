@@ -65,8 +65,8 @@ export interface ResolutionContext {
   readonly space?: SpaceId;
 
   /**
-   * URI of the conversation feed the process is running in. Today always an EchoURI;
-   * narrow with `EchoURI.parse` at the point of use.
+   * URI of the conversation feed the process is running in. Today always an EID;
+   * narrow with `EID.parse` at the point of use.
    */
   readonly conversation?: URI.URI;
 

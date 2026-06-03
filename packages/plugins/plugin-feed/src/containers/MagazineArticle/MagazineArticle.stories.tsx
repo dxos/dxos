@@ -180,7 +180,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
   });
 
 // TODO(jdw): Re-enable on jdw/identifiers — the queue identifier refactor
-// (commit e730a97246: `Feed.getQueueDxn` now returns the feed's own EchoURI
+// (commit e730a97246: `Feed.getQueueDxn` now returns the feed's own EID
 // instead of constructing a separate QUEUE-kind DXN) breaks this story's
 // `space.queues.get(feedUri).append(posts)` seed path even though every
 // `curate-magazine.test.ts` unit case passes. The unit tests drive

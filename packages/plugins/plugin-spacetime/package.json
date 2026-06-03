@@ -56,6 +56,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -71,7 +72,8 @@
   "files": [
     "dist",
     "src",
-    "docs/PLUGIN.mdl"
+    "docs/PLUGIN.mdl",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@babylonjs/core": "catalog:",
@@ -83,6 +85,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

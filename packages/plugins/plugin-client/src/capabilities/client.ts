@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
@@ -61,6 +62,58 @@ export default Capability.makeModule(
       }
     });
 
+    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
+    const operationHandlersAtom = capabilityManager.atom(Capabilities.OperationHandler);
+
+    // TODO(wittjosiah): Unregister operations when they are disabled.
+    let previousOperationKeys = new Set<string>();
+    const operationRegistryCancel = atomRegistry.subscribe(
+      operationHandlersAtom,
+      async (handlerSets) => {
+        try {
+          const handlers = (await Promise.all(handlerSets.map((set) => set.getHandlers()))).flat();
+          const seenOperationKeys = new Set<string>();
+          const batch: Operation.PersistentOperation[] = [];
+          for (const handler of handlers) {
+            const key = handler.meta.key;
+            if (!key) {
+              log.warn('skipping operation handler without key');
+              continue;
+            }
+
+            if (seenOperationKeys.has(key)) {
+              log('skipping duplicate operation for echo registration', { key });
+              continue;
+            }
+
+            seenOperationKeys.add(key);
+            if (previousOperationKeys.has(key)) {
+              continue;
+            }
+
+            try {
+              batch.push(Operation.serialize(handler));
+            } catch (error) {
+              log.warn('skipping operation that failed to serialize for echo registration', { key, error });
+            }
+          }
+
+          if (batch.length > 0) {
+            client.graph.registry.add(batch);
+            for (const operation of batch) {
+              const operationKey = Operation.getKey(operation);
+              if (operationKey) {
+                previousOperationKeys.add(operationKey);
+              }
+            }
+          }
+        } catch (error) {
+          log.catch(error);
+        }
+      },
+      { immediate: true },
+    );
+
     log('client capability ready');
 
     return [
@@ -69,7 +122,9 @@ export default Capability.makeModule(
       Capability.contributes(ClientCapabilities.Client, client, () =>
         Effect.gen(function* () {
           log.info('client capability: destroying client');
+          // TODO(dmaretskyi): use scope for destroy.
           subscription.unsubscribe();
+          operationRegistryCancel();
           yield* Effect.tryPromise(() => client.destroy());
         }),
       ),

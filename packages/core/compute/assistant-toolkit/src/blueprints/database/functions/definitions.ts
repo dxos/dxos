@@ -7,11 +7,12 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const Query = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.query',
+    key: DXN.make('org.dxos.function.database.query'),
     name: 'Query',
     icon: 'ph--magnifying-glass--regular',
     description: trim`
@@ -52,7 +53,7 @@ export const Query = Operation.make({
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "dxn:echo:@:YYYYYY"}, {"/" : "dxn:echo:@:XXXXXXX"}],
+          "in": [{"/" : "echo:/YYYYYY"}, {"/" : "echo:/XXXXXXX"}],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
@@ -102,11 +103,11 @@ export const Query = Operation.make({
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const Load = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.load',
+    key: DXN.make('org.dxos.function.database.load'),
     name: 'Load object',
     icon: 'ph--download--regular',
     description: trim`
@@ -114,7 +115,7 @@ export const Load = Operation.make({
       Can load multiple objects at at time.
       Use the to read the data when you have a DXN.
       Call this tool with an array of one or more DXNs or object IDs.
-      When use see a reference ({ '/': 'dxn:...' }), you can call this function to load the object.
+      When use see a reference ({ '/': 'echo:...' }), you can call this function to load the object.
       Note that returned data is only a snapshot in time, and might have changed since the object was last loaded.
     `,
   },
@@ -123,18 +124,18 @@ export const Load = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ObjectCreate = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.object-create',
+    key: DXN.make('org.dxos.function.database.objectCreate'),
     name: 'Create object',
     icon: 'ph--plus--regular',
     description: trim`
       Creates a new object and adds it to the current space.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
-      References are provided in the following format: { "/": "dxn:..." }.
-      Reference examples: { "/": "dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "dxn:queue:data:01KG7R1ZXWFMWQ4DA1Q6TN1DG4:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      References are provided in the following format: { "/": "echo:..." }.
+      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
@@ -143,17 +144,17 @@ export const ObjectCreate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ObjectUpdate = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.object-update',
+    key: DXN.make('org.dxos.function.database.objectUpdate'),
     name: 'Update object',
     icon: 'ph--pencil--regular',
     description: trim`
       Updates the object properties.
-      References are provided in the following format: { "/": "dxn:..." }.
-      Reference examples: { "/": "dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "dxn:queue:data:01KG7R1ZXWFMWQ4DA1Q6TN1DG4:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      References are provided in the following format: { "/": "echo:..." }.
+      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
@@ -162,11 +163,11 @@ export const ObjectUpdate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ObjectDelete = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.object-delete',
+    key: DXN.make('org.dxos.function.database.objectDelete'),
     name: 'Delete object',
     description: trim`
       Deletes the object.
@@ -178,11 +179,11 @@ export const ObjectDelete = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const SchemaAdd = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.schema-add',
+    key: DXN.make('org.dxos.function.database.schemaAdd'),
     name: 'Add schema',
     icon: 'ph--plus--regular',
     description: trim`
@@ -199,11 +200,11 @@ export const SchemaAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const SchemaList = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.schema-list',
+    key: DXN.make('org.dxos.function.database.schemaList'),
     name: 'List schemas',
     icon: 'ph--list--regular',
     description: trim`
@@ -215,11 +216,11 @@ export const SchemaList = Operation.make({
   }),
   output: Schema.Array(Schema.Unknown),
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ContextAdd = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.context-add',
+    key: DXN.make('org.dxos.function.database.contextAdd'),
     name: 'Add to context',
     icon: 'ph--plus-circle--regular',
     description: trim`
@@ -234,11 +235,11 @@ export const ContextAdd = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContext.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const ContextRemove = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.context-remove',
+    key: DXN.make('org.dxos.function.database.contextRemove'),
     name: 'Remove from context',
     icon: 'ph--minus-circle--regular',
     description: trim`
@@ -253,11 +254,11 @@ export const ContextRemove = Operation.make({
   }),
   output: Schema.Void,
   services: [AiContext.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const RelationCreate = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.relation-create',
+    key: DXN.make('org.dxos.function.database.relationCreate'),
     name: 'Create relation',
     icon: 'ph--arrows-merge--regular',
     description: trim`
@@ -275,11 +276,11 @@ export const RelationCreate = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const RelationDelete = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.relation-delete',
+    key: DXN.make('org.dxos.function.database.relationDelete'),
     name: 'Delete relation',
     description: trim`
       Deletes the relation.
@@ -291,11 +292,11 @@ export const RelationDelete = Operation.make({
   }),
   output: Schema.Void,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const TagAdd = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.tag-add',
+    key: DXN.make('org.dxos.function.database.tagAdd'),
     name: 'Add tag',
     icon: 'ph--tag--regular',
     description: trim`
@@ -310,11 +311,11 @@ export const TagAdd = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});
 
 export const TagRemove = Operation.make({
   meta: {
-    key: 'org.dxos.function.database.tag-remove',
+    key: DXN.make('org.dxos.function.database.tagRemove'),
     name: 'Remove tag',
     icon: 'ph--tag--regular',
     description: trim`
@@ -328,4 +329,4 @@ export const TagRemove = Operation.make({
   }),
   output: Schema.Unknown,
   services: [Database.Service],
-}).pipe(Operation.intrinsic);
+});

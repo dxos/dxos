@@ -18,6 +18,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -155,7 +156,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * in col 3.
            */}
           <div className='dx-document grid grid-cols-[4rem_minmax(0,1fr)_4rem] gap-x-4 p-4 items-start'>
-            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.fill, styles.foreground)} icon={icon} size={14} />
+            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.bg, styles.fg)} icon={icon} size={14} />
 
             <div className='row-start-1 col-start-2 col-span-2 grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
               <div className='flex items-center gap-2'>
@@ -177,16 +178,18 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               </div>
             </div>
 
-            <Section.Root>
-              <Section.Heading title='Description' />
-              <Section.Body>
-                <p className='text-description'>{description}</p>
-              </Section.Body>
-            </Section.Root>
+            {description && (
+              <Section.Root>
+                <Section.Heading title={t('description.label')} />
+                <Section.Body>
+                  <MarkdownView classNames='text-description' content={description} />
+                </Section.Body>
+              </Section.Root>
+            )}
 
             {screenshots && screenshots.length > 0 && (
               <Section.Root>
-                <Section.Heading title='Preview' />
+                <Section.Heading title={t('preview.label')} />
                 <Section.Body>
                   <Carousel.Root classNames='contents' count={screenshots.length}>
                     <Carousel.Viewport>

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.slack',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.slack'),
   name: 'Slack',
   author: 'DXOS',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-slack',
@@ -37,4 +38,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--slack-logo--regular',
   iconHue: 'purple',
   tags: ['labs', 'integration'],
-};
+});

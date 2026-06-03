@@ -3,26 +3,12 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import {
-  EchoURI,
-  Entity,
-  Feed,
-  Filter,
-  Format,
-  Obj,
-  Query,
-  QueryAST,
-  Ref,
-  type SchemaRegistry,
-  Type,
-  View,
-} from '@dxos/echo';
+import { EID, Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type Registry, Type, View } from '@dxos/echo';
 import { type JsonProp } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -55,9 +41,9 @@ export type ViewEditorProps = ThemedClassName<
     type: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
-    registry?: SchemaRegistry.SchemaRegistry;
+    registry?: Registry.Registry;
     showHeading?: boolean;
-    onQueryChanged?: (query: QueryAST.Query, target?: EchoURI.EchoURI) => void;
+    onQueryChanged?: (query: QueryAST.Query, target?: EID.EID) => void;
     onDelete?: (fieldId: string) => void;
   } & Pick<QueryFormProps, 'types' | 'tags'> &
     Pick<FormRootProps<any>, 'readonly' | 'db'>
@@ -112,9 +98,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
-        return Option.fromNullable(from.scope.feeds).pipe(
-          Option.flatMap((feeds) => Array.head(feeds)),
-          Option.map(String),
+        const feedScope = from.scopes.find((s) => s._tag === 'feed');
+        return Option.fromNullable(feedScope).pipe(
+          Option.map((s) => s.feedUri),
           Option.getOrUndefined,
         );
       }),
@@ -172,7 +158,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const handleUpdate = useCallback(
       (values: any) => {
         const targetValue = values.target;
-        let queueDxn: EchoURI.EchoURI | undefined;
+        let queueDxn: EID.EID | undefined;
 
         if (Ref.isRef(targetValue)) {
           const feedUri = targetValue.uri;

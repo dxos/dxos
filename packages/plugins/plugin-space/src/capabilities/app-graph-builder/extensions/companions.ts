@@ -58,7 +58,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
 
     // View selected objects companion.
     GraphBuilder.createExtension({
-      id: 'selected-objects',
+      id: 'selectedObjects',
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();

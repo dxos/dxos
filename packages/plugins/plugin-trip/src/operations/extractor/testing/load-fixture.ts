@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { normalizeText } from '@dxos/plugin-inbox';
+import { normalizeText } from '@dxos/markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
 /**
@@ -13,11 +13,11 @@ import { ContentBlock, Message } from '@dxos/types';
  * (`Key: value` lines) followed by a blank line and the body. Recognised
  * headers are `From:` (mapped to `sender.email`) and `Subject:` (mapped to
  * `properties.subject`). The body may be plain text, markdown, or raw HTML —
- * `@dxos/plugin-inbox`'s `normalizeText` runs the same HTML→Markdown
+ * `@dxos/markdown`'s `normalizeText` runs the same HTML→Markdown
  * conversion the Gmail mapper applies before storing the message, so paste
  * the email body straight from your inbox's "View source" / "Show original".
  *
- * Paste real email content into the `.txt` files in this directory to extend
+ * Paste real email content into the `.md` files in this directory to extend
  * fixture coverage; one file = one `Message`.
  */
 export const parseFixtureMessage = (raw: string): Message.Message => {

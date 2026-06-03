@@ -7,6 +7,6 @@
     @apply text-accent-text hover:text-accent-text-hover;
   }
   .dx-link-hover {
-    @apply hover:text-accent-text-hover;
+    @apply hover:text-accent-text-hover!;
   }
 }

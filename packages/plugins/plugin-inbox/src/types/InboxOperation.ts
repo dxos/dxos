@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref, Type, DXN } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 import { Actor, Message } from '@dxos/types';
 
@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import * as Calendar from './Calendar';
 import * as Mailbox from './Mailbox';
 
-const INBOX_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for getSyncTargets-style operations. */
 const RemoteTarget = Schema.Struct({
@@ -32,7 +32,7 @@ export const GetGoogleCalendars = Operation.make({
   //   runs because composer's invoker doesn't carry per-space Database. The handler provides
   //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
   meta: {
-    key: `${INBOX_OPERATION}.get-google-calendars`,
+    key: makeKey('getGoogleCalendars'),
     name: 'Get Google Calendars',
     description:
       'Discover Google Calendars reachable from an integration and materialize a Calendar object per remote calendar.',
@@ -47,7 +47,7 @@ export const GetGoogleCalendars = Operation.make({
 });
 
 export const AddMailbox = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.add-mailbox`, name: 'Add Mailbox', icon: 'ph--envelope--regular' },
+  meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
@@ -62,7 +62,7 @@ export const AddMailbox = Operation.make({
 
 export const DraftEmail = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.draft-email`,
+    key: makeKey('draftEmail'),
     name: 'Draft email',
     description: 'Creates a new email draft.',
     icon: 'ph--pencil--regular',
@@ -93,7 +93,7 @@ export const DraftEmail = Operation.make({
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.draft-email-and-open`,
+    key: makeKey('draftEmailAndOpen'),
     name: 'Draft email and open',
     icon: 'ph--pencil--regular',
   },
@@ -112,7 +112,7 @@ export const DraftEmailAndOpen = Operation.make({
 
 export const GmailSend = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-mail-send`,
+    key: makeKey('googleMailSend'),
     name: 'Send Gmail',
     description: 'Send emails via Gmail.',
     icon: 'ph--paper-plane-tilt--regular',
@@ -133,7 +133,7 @@ export const GmailSend = Operation.make({
 
 export const GoogleMailSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-mail-sync`,
+    key: makeKey('googleMailSync'),
     name: 'Sync Google Mail',
     description: 'Sync emails from Gmail to the mailbox feed.',
     icon: 'ph--arrows-clockwise--regular',
@@ -171,25 +171,9 @@ export const GoogleMailSync = Operation.make({
   services: [Capability.Service, Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
 });
 
-// TODO(wittjosiah): Factor out notify of failures to invocation option.
-export const SyncMailbox = Operation.make({
-  meta: {
-    key: `${INBOX_OPERATION}.sync-mailbox`,
-    name: 'Sync Mailbox',
-    description: 'Runs Google Mail sync and notifies of progress.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-});
-
 export const GoogleCalendarSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-calendar-sync`,
+    key: makeKey('googleCalendarSync'),
     name: 'Sync Google Calendar',
     description:
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
@@ -216,25 +200,9 @@ export const GoogleCalendarSync = Operation.make({
   services: [Database.Service, Feed.FeedService, Credential.CredentialsService],
 });
 
-// TODO(wittjosiah): Factor out notify of failures to invocation option.
-export const SyncCalendar = Operation.make({
-  meta: {
-    key: `${INBOX_OPERATION}.sync-calendar`,
-    name: 'Sync Calendar',
-    description: 'Runs Google Calendar sync and notifies of progress.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    integration: Ref.Ref(Integration.Integration),
-    calendar: Ref.Ref(Calendar.Calendar).pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-});
-
 export const GetGoogleContactGroups = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.get-google-contact-groups`,
+    key: makeKey('getGoogleContactGroups'),
     name: 'Get Google Contact Groups',
     description: 'Discover Google Contact Groups reachable from an integration.',
     icon: 'ph--users--regular',
@@ -249,7 +217,7 @@ export const GetGoogleContactGroups = Operation.make({
 
 export const GoogleContactsSync = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.google-contacts-sync`,
+    key: makeKey('googleContactsSync'),
     name: 'Sync Google Contacts',
     description: 'Sync contacts from a Google Contact group into Person objects in the space.',
     icon: 'ph--arrows-clockwise--regular',
@@ -272,7 +240,7 @@ export const GoogleContactsSync = Operation.make({
 
 export const SyncContacts = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.sync-contacts`,
+    key: makeKey('syncContacts'),
     name: 'Sync Contacts',
     description: 'Runs Google Contacts sync and notifies of progress.',
     icon: 'ph--arrows-clockwise--regular',
@@ -286,7 +254,7 @@ export const SyncContacts = Operation.make({
 
 export const ReadEmail = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.read-email`,
+    key: makeKey('readEmail'),
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
     icon: 'ph--envelope-open--regular',
@@ -315,7 +283,7 @@ export const ReadEmail = Operation.make({
 });
 export const ClassifyEmail = Operation.make({
   meta: {
-    key: `${INBOX_OPERATION}.classify-email`,
+    key: makeKey('classifyEmail'),
     name: 'Classify email',
     description:
       'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',
@@ -341,7 +309,7 @@ export const ClassifyEmail = Operation.make({
 });
 
 export const ExtractContact = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact', icon: 'ph--user--regular' },
+  meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -350,14 +318,68 @@ export const ExtractContact = Operation.make({
   output: Schema.Void,
 });
 
-export const ExtractMessage = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
+/**
+ * Operation form of the contact extractor — runs against a full Message and returns
+ * Person/Organization proposals via the shared ExtractResult shape, without touching the
+ * database. The dispatcher (ExtractMessage) is responsible for db.add + ExtractedFrom. The
+ * actor-targeted `ExtractContact` above stays as the avatar-button entry point and commits
+ * directly via SpaceOperation.AddObject (no preview interposition there by design).
+ */
+/**
+ * Uniform input shape every extractor operation receives — generalised over any source ECHO
+ * object (`source`), not just messages. Defined late in this file (after the other
+ * Operation.make calls) so its `Schema.Struct` call doesn't run before `Database.Database` is
+ * initialised — moving it earlier triggers a load-order cycle that leaves `Database.Database`
+ * undefined when the struct is constructed.
+ */
+export const ExtractInputSchema = Schema.Struct({
+  db: Database.Database,
+  source: Obj.Unknown,
+});
+
+/** Runtime Schema for `@dxos/extractor` `ExtractResult`. See ExtractInputSchema for rationale. */
+export const ExtractResultSchema = Schema.Struct({
+  created: Schema.Array(Schema.Any),
+  updated: Schema.optional(Schema.Array(Schema.Any)),
+  relations: Schema.Array(Schema.Any),
+  tags: Schema.optional(Schema.Array(Schema.Struct({ label: Schema.String, hue: Schema.optional(Schema.String) }))),
+  summary: Schema.optional(Schema.String),
+});
+
+export const ExtractContactFromMessage = Operation.make({
+  meta: {
+    key: makeKey('extractContactFromMessage'),
+    name: 'Extract Contact from Message',
+    icon: 'ph--user--regular',
+  },
   services: [Capability.Service],
+  input: ExtractInputSchema,
+  output: ExtractResultSchema,
+});
+
+/**
+ * Operation form of the summarize extractor — runs against a full Message and returns a
+ * Markdown.Document containing an AI-generated summary of the message body. The dispatcher
+ * (`ExtractMessage`) is responsible for `db.add` + `ExtractedFrom`.
+ */
+export const ExtractSummaryFromMessage = Operation.make({
+  meta: {
+    key: makeKey('extractSummaryFromMessage'),
+    name: 'Extract Summary from Message',
+    icon: 'ph--text-aa--regular',
+  },
+  services: [Capability.Service, AiService.AiService],
+  input: ExtractInputSchema,
+  output: ExtractResultSchema,
+});
+
+export const ExtractMessage = Operation.make({
+  meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
+  services: [Capability.Service, AiService.AiService],
   input: Schema.Struct({
     db: Database.Database,
-    message: Type.getSchema(Message.Message),
+    source: Obj.Unknown,
     extractorId: Schema.optional(Schema.String),
-    targetTripId: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
     extractorId: Schema.String,

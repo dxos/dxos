@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, type Plugin as PluginNS } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import { Capability, Plugin, type Plugin as PluginNS } from '@dxos/app-framework';
+import { AppActivationEvents, AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
@@ -24,34 +24,19 @@ import {
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';
 import { makePluginSpecSubject } from '../plugin-spec';
 
-// Eager raw-text imports of every PLUGIN.mdl that lives next to a plugin
-// package in this monorepo. The connector below maps a plugin's
-// `Plugin.Meta.spec` (relative to its package root) back to one of these
-// entries by looking for a key that ends with `/plugin-<dir>/<spec>`.
-// First pattern catches package-root specs (e.g. `plugin-chess/PLUGIN.mdl`);
-// the second catches nested specs (e.g. `plugin-spacetime/docs/PLUGIN.mdl`).
-const PLUGIN_MDLS = {
-  ...import.meta.glob<string>('../../../plugin-*/PLUGIN.mdl', {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-  }),
-  ...import.meta.glob<string>('../../../plugin-*/**/PLUGIN.mdl', {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-  }),
-};
-
-const resolveSpecContent = (pluginId: string, specPath: string): string | undefined => {
-  const dirSegment = pluginId.replace(/^org\.dxos\.plugin\./, '');
-  const suffix = `/plugin-${dirSegment}/${specPath}`;
-  const key = Object.keys(PLUGIN_MDLS).find((candidate) => candidate.endsWith(suffix));
-  return key ? PLUGIN_MDLS[key] : undefined;
-};
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Fire the asset-contribution event so each plugin's `addPluginAssetModule`
+    // has activated by the time the graph queries the registry. The connector
+    // below reads contributions live (via `capabilities.getAll`) so that
+    // plugins enabled later in the session also get spec nodes.
+    yield* Plugin.activate(AppActivationEvents.SetupPluginAssets);
+    const capabilities = yield* Capability.Service;
+    const resolveSpecContent = (pluginId: string, specPath: string): string | undefined =>
+      capabilities
+        .getAll(AppCapabilities.PluginAsset)
+        .find((entry) => entry.pluginId === pluginId && entry.path === specPath)?.content;
+
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's
       // `org.dxos.plugin` nodes when the plugin declares a bundled MDL via
@@ -63,7 +48,7 @@ export default Capability.makeModule(
       // plugin-code isn't enabled) or the spec content can't be resolved,
       // the node is absent and the button stays hidden.
       GraphBuilder.createExtension({
-        id: 'plugin-spec',
+        id: 'pluginSpec',
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node) => {
           const plugin = node.data as PluginNS.Plugin;
@@ -92,7 +77,7 @@ export default Capability.makeModule(
 
       // Top-level "Code Projects" section in each space that has at least one CodeProject.
       GraphBuilder.createExtension({
-        id: 'code-projects-section',
+        id: 'codeProjectsSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const projects = get(AtomQuery.make(space.db, Filter.type(CodeProject.CodeProject)));
@@ -116,7 +101,7 @@ export default Capability.makeModule(
 
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       GraphBuilder.createExtension({
-        id: 'code-project-listing',
+        id: 'codeProjectListing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();

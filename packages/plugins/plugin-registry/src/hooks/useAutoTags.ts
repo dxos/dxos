@@ -6,6 +6,8 @@ import { useMemo } from 'react';
 
 import { type Registry, UrlLoader } from '@dxos/app-framework';
 
+import { getRemotePluginIds } from '../categories';
+
 /**
  * Auto-tags that are derived at display time rather than persisted to `Plugin.Meta`.
  * - `registry`: plugin id appears in the registry catalog manifest.
@@ -47,5 +49,4 @@ export const useAutoTags = (registryEntries: readonly Registry.Plugin[]): AutoTa
  * Returns the set of plugin ids known to originate from a remote URL (not bundled).
  * Used to filter the Official/Recommended sections so third-party plugins are excluded.
  */
-export const useRemotePluginIds = (): ReadonlySet<string> =>
-  useMemo(() => new Set(UrlLoader.getRemoteEntries().map((entry) => entry.id)), []);
+export const useRemotePluginIds = (): ReadonlySet<string> => useMemo(() => getRemotePluginIds(), []);

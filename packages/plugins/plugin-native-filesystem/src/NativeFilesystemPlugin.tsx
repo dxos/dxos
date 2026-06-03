@@ -12,6 +12,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { NativeFilesystemCapabilities } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 const StateReady = AppActivationEvents.createStateEvent(NativeFilesystemCapabilities.State.identifier);
 
 export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
@@ -35,6 +38,9 @@ export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
     id: 'markdown',
     activatesOn: ActivationEvent.allOf(MarkdownEvents.SetupExtensions, StateReady),
     activate: Markdown,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

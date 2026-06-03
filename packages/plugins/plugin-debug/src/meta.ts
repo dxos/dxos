@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.debug',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.debug'),
   name: 'Debug',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -34,4 +35,4 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-debug',
   screenshots: ['https://dxos.network/plugin-details-debug-dark.png'],
   tags: ['labs'],
-};
+});

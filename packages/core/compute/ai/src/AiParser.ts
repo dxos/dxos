@@ -15,7 +15,7 @@ import type * as Types from 'effect/Types';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
@@ -589,17 +589,17 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoURI.parse(block.attributes.dxn)),
+        reference: Ref.fromURI(EID.parse(block.attributes.dxn)),
       };
     } catch {}
   }
 
   // <object id="..." />
-  if (typeof block.attributes?.id === 'string' && ObjectId.isValid(block.attributes.id)) {
+  if (typeof block.attributes?.id === 'string' && EntityId.isValid(block.attributes.id)) {
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoURI.make({ objectId: block.attributes.id })),
+        reference: Ref.fromURI(EID.make({ entityId: block.attributes.id })),
       };
     } catch {}
   }
@@ -609,7 +609,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoURI.parse(block.content[0].content)),
+        reference: Ref.fromURI(EID.parse(block.content[0].content)),
       };
     } catch {}
   }
@@ -620,7 +620,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoURI.parse(dxnTag.content[0].content)),
+        reference: Ref.fromURI(EID.parse(dxnTag.content[0].content)),
       };
     } catch {}
   }

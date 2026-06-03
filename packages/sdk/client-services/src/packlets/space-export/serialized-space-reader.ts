@@ -4,7 +4,7 @@
 
 import { type Obj, Type } from '@dxos/echo';
 import { type SerializedSpace } from '@dxos/echo-db';
-import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { URI } from '@dxos/keys';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -51,10 +51,10 @@ export const readSerializedSpaceArchive = (archive: SpaceArchive): SerializedSpa
 };
 
 /**
- * Convert an {@link Obj.JSON} back into an internal {@link ObjectStructure} suitable
+ * Convert an {@link Obj.JSON} back into an internal {@link EntityStructure} suitable
  * for embedding into a {@link DatabaseDirectory}.
  */
-export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
+export const objJsonToObjectStructure = (obj: Obj.JSON): EntityStructure => {
   const data: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (INTERNAL_KEYS.has(key)) {
@@ -63,7 +63,7 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     data[key] = value;
   }
 
-  const system: NonNullable<ObjectStructure['system']> = {};
+  const system: NonNullable<EntityStructure['system']> = {};
 
   const type = obj[ATTR_TYPE];
   if (type) {
@@ -102,6 +102,11 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     meta: {
       keys: meta?.keys ?? [],
       ...(meta?.tags ? { tags: meta.tags } : {}),
+      // Preserve registry-provenance fields so persisted `Type.Type` entities
+      // round-trip with their typename / semver (see the symmetric write in
+      // `objectStructureToObjJson`).
+      ...(meta?.key !== undefined ? { key: meta.key } : {}),
+      ...(meta?.version !== undefined ? { version: meta.version } : {}),
     },
     data,
   };
@@ -113,7 +118,7 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
  * and version fields after the document is created.
  */
 export const buildDatabaseDirectoryFromObjects = (objects: readonly Obj.JSON[]): DatabaseDirectory => {
-  const map: Record<string, ObjectStructure> = {};
+  const map: Record<string, EntityStructure> = {};
   for (const obj of objects) {
     map[obj.id] = objJsonToObjectStructure(obj);
   }

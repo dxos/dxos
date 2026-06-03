@@ -39,6 +39,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { AssistantEvents, AssistantOperation, type AssistantPluginOptions } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta).pipe(
@@ -133,6 +136,9 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
   Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

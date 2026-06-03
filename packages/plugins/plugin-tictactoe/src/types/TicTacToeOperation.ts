@@ -7,14 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { GameRef } from '@dxos/plugin-game';
 
 import { TicTacToe } from '#types';
 
 export const MakeMove = Operation.make({
   meta: {
-    key: 'org.dxos.function.tictactoe.move',
+    key: DXN.make('org.dxos.function.tictactoe.move'),
     name: 'Make Move',
     description: 'Places a marker on the board and updates game state.',
     icon: 'ph--x--regular',
@@ -40,7 +40,7 @@ export const MakeMove = Operation.make({
 
 export const AiMove = Operation.make({
   meta: {
-    key: 'org.dxos.function.tictactoe.ai-move',
+    key: DXN.make('org.dxos.function.tictactoe.aiMove'),
     name: 'AI Move',
     description: 'Uses the AI engine to play the next move.',
     icon: 'ph--brain--regular',
@@ -71,7 +71,7 @@ export const AiMove = Operation.make({
 
 export const Print = Operation.make({
   meta: {
-    key: 'org.dxos.function.tictactoe.print',
+    key: DXN.make('org.dxos.function.tictactoe.print'),
     name: 'Print board',
     description: 'Prints the Tic-Tac-Toe board to ASCII.',
     icon: 'ph--terminal--regular',

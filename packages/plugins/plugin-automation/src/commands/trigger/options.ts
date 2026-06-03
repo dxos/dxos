@@ -43,5 +43,5 @@ export const Cron = Options.text('cron').pipe(
 //
 
 export const Feed = Options.text('feed').pipe(
-  Options.withDescription('The EchoURI of the feed for the feed trigger (echo://<spaceId>/<objectId>).'),
+  Options.withDescription('The EID of the feed for the feed trigger (echo://<spaceId>/<objectId>).'),
 );

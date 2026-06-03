@@ -40,6 +40,9 @@
       "path": "../../common/keyboard"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"

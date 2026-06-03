@@ -23,7 +23,7 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { Builder, LABELS, MessagesOptions, initializeMailbox } from '#testing';
+import { Builder, MessagesOptions, initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
@@ -98,7 +98,6 @@ export const Default: Story = {
 export const WithMessages: Story = {
   args: {
     id: 'story',
-    labels: LABELS,
     count: 100,
   },
 };
@@ -106,7 +105,6 @@ export const WithMessages: Story = {
 export const WithThreads: Story = {
   args: {
     id: 'story',
-    labels: LABELS,
     threads: true,
     count: 100,
     options: {

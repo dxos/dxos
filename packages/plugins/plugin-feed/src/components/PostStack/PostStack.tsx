@@ -7,6 +7,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Type } from '@dxos/echo';
 import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Subscription } from '#types';
@@ -121,9 +122,12 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
                 <Card.Text variant='description'>{post.author}</Card.Text>
               </Card.Row>
             )}
-            {post.description && (
+            {(post.description || post.content) && (
               <Card.Row>
-                <Card.Html variant='description' html={post.description} />
+                <MarkdownView
+                  content={post.description ?? post.content}
+                  classNames='line-clamp-5 text-sm text-description'
+                />
               </Card.Row>
             )}
             {published && (

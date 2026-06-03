@@ -8,8 +8,8 @@ import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
-import { type QueryAST } from '@dxos/echo-protocol';
-import { type ObjectId } from '@dxos/keys';
+import { QueryAST } from '@dxos/echo-protocol';
+import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
@@ -98,6 +98,7 @@ export class GraphQueryContext implements QueryContext {
   }
 
   getResults(): QueryResult.EntityEntry[] {
+    // TODO: dedup by meta.key based on scope order (space results take precedence over registry).
     if (!this._query) {
       return [];
     }
@@ -232,7 +233,7 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
+        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as EntityId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),
@@ -310,6 +311,21 @@ export class SpaceQuerySource implements QuerySource {
     const targetSpaces = getTargetSpacesForQuery(query);
     // Disabled by spaces filter.
     if (targetSpaces.length > 0 && !targetSpaces.includes(this.spaceId)) {
+      return false;
+    }
+
+    // Disabled if the from clause has explicit scopes but none target spaces (e.g. registry-only).
+    let hasExplicitNonEmptyScope = false;
+    let hasSpaceScope = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length > 0) {
+        hasExplicitNonEmptyScope = true;
+        if (node.from.scopes.some((s) => s._tag === 'space')) {
+          hasSpaceScope = true;
+        }
+      }
+    });
+    if (hasExplicitNonEmptyScope && !hasSpaceScope) {
       return false;
     }
 

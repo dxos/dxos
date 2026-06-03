@@ -10,7 +10,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { PluginRegistryButton, useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -45,6 +45,7 @@ export const CreateObjectDialog = ({
   const { t } = useTranslation(meta.id);
   const manager = usePluginManager();
   const operationInvoker = useOperationInvoker();
+  const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
@@ -54,7 +55,12 @@ export const CreateObjectDialog = ({
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
-  const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
+  const schemas = db
+    ? db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .filter((t) => !Type.isTypeKind(t))
+    : undefined;
 
   const entriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 
@@ -78,6 +84,9 @@ export const CreateObjectDialog = ({
     (id) => createObjectEntries.find((entry) => entry.id === id),
     [createObjectEntries],
   );
+
+  // The type selector is shown while no type has been resolved; the registry button is only relevant then.
+  const showTypeSelector = !(typename && resolve(typename));
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
@@ -121,22 +130,18 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const result = yield* metadata.createObject(data, {
-          db,
-          target,
-          targetNodeId,
-        });
+        const result = yield* metadata.createObject(data, { db, target, targetNodeId });
         const shouldNavigate = _shouldNavigate ?? (() => true);
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
           if (layout.mode === 'multi') {
-            yield* operationInvoker.invoke(LayoutOperation.Set, {
+            yield* invoke(LayoutOperation.Set, {
               subject: [...result.subject],
             });
-            yield* operationInvoker.invoke(LayoutOperation.Expose, {
+            yield* invoke(LayoutOperation.Expose, {
               subject: result.subject[0],
             });
           } else {
-            yield* operationInvoker.invoke(LayoutOperation.Open, {
+            yield* invoke(LayoutOperation.Open, {
               subject: [...result.subject],
               navigation: 'immediate',
             });
@@ -149,7 +154,7 @@ export const CreateObjectDialog = ({
         Effect.provideService(Operation.Service, operationInvoker),
         runAndForwardErrors,
       ),
-    [target, _shouldNavigate, onCreateObject, manager.capabilities, operationInvoker, layout.mode],
+    [target, _shouldNavigate, onCreateObject, manager.capabilities, invoke, layout.mode],
   );
 
   return (
@@ -178,6 +183,13 @@ export const CreateObjectDialog = ({
           onTypenameChange={setTypename}
         />
       </Dialog.Body>
+      {showTypeSelector && (
+        <Dialog.ActionBar>
+          <Dialog.Close asChild>
+            <PluginRegistryButton />
+          </Dialog.Close>
+        </Dialog.ActionBar>
+      )}
     </Dialog.Content>
   );
 };

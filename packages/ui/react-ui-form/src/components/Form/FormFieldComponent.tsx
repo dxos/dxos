@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { format as formatDate } from 'date-fns';
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, {
@@ -13,8 +14,7 @@ import React, {
   type ReactNode,
 } from 'react';
 
-import { type Database } from '@dxos/echo';
-import { type Format } from '@dxos/echo/internal';
+import { type Database, Format } from '@dxos/echo';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -46,6 +46,8 @@ export type Presentation = 'full' | 'compact' | 'inline' | 'static';
  * Props passed to input components.
  */
 export type FormFieldComponentProps<T = any> = {
+  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
+  db?: Database.Database;
   type: SchemaAST.AST;
   format?: Format.TypeFormat;
   readonly?: boolean;
@@ -60,22 +62,17 @@ export type FormFieldComponentProps<T = any> = {
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
-  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
-  db?: Database.Database;
 } & FormFieldStateProps<T>;
 
-/**
- * Form field component.
- */
 export type FormFieldComponent = FC<FormFieldComponentProps>;
 
 export type FormFieldMap = Record<string, FormFieldComponent>;
 
 export type FormFieldProvider = (props: {
-  prop: string; // TODO(burdon): Path?
+  prop: string;
   schema: Schema.Schema<any>;
   fieldProps: FormFieldComponentProps;
-}) => ReactElement | undefined;
+}) => ReactElement | null | undefined;
 
 //
 // FormFieldLabel
@@ -125,13 +122,39 @@ FormFieldLabel.displayName = 'Form.FieldLabel';
 
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldComponentProps,
-  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue' | 'jsonPath'
+  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue' | 'jsonPath' | 'format'
 > & {
   children?: (props: { value: T }) => ReactNode;
 };
 
+/**
+ * Formats a value for `static` (read-only, plain-DOM) presentation based on its
+ * type `format`. Dates/times are rendered human-readable; everything else falls
+ * back to `String(value)`.
+ */
+const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string => {
+  if (value == null) {
+    return '';
+  }
+
+  switch (format) {
+    case Format.TypeFormat.DateTime:
+    case Format.TypeFormat.Date:
+    case Format.TypeFormat.Time: {
+      const date = new Date(value as string);
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+      const pattern = format === Format.TypeFormat.DateTime ? 'PPp' : format === Format.TypeFormat.Date ? 'PP' : 'p';
+      return formatDate(date, pattern);
+    }
+    default:
+      return String(value);
+  }
+};
+
 export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
-  const { children, readonly, layout, label, jsonPath, getStatus, getValue } = props;
+  const { children, readonly, layout, label, jsonPath, format, getStatus, getValue } = props;
   const { status, error } = getStatus();
 
   const value = getValue();
@@ -139,7 +162,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
     return null;
   }
 
-  const str = String(value ?? '');
+  const str = formatStaticValue(value, format);
 
   return (
     <div className='contents'>
@@ -190,8 +213,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
-          <span className='bg-rose-fill text-base-foreground px-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-bg font-mono text-sm'>
+          <span className='bg-rose-bg text-base-fg px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

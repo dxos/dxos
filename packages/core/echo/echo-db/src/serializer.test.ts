@@ -30,7 +30,7 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Task]);
+      graph.registry.add([TestSchema.Task]);
 
       const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
@@ -201,7 +201,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        await graph.schemaRegistry.register([TestSchema.Person]);
+        graph.registry.add([TestSchema.Person]);
         const contact = Obj.make(TestSchema.Person, { name });
         db.add(contact);
         await db.flush();
@@ -213,7 +213,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        await graph.schemaRegistry.register([TestSchema.Person]);
+        graph.registry.add([TestSchema.Person]);
 
         await new Serializer().import(db, data);
         expect(await db.query(Query.select(Filter.everything())).run()).to.have.length(1);
@@ -230,14 +230,16 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        await db.schemaRegistry.register([
-          {
+        const roundTrip = await db.addType(
+          Type.makeObjectFromJsonSchema({
             typename,
             version: '0.1.0',
             jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
-            name: 'Round Trip Type',
-          },
-        ]);
+          }),
+        );
+        Type.update(roundTrip, (draft) => {
+          draft.name = 'Round Trip Type';
+        });
         await db.flush();
         data = await new Serializer().export(db);
       }
@@ -246,7 +248,7 @@ describe('Serializer', () => {
       // brand (lives on [KindId] / SYSTEM namespace), not a data field on
       // TypeSchema. Earlier the export side was leaking it.
       // `typename` / `version` are not data fields either; they live in
-      // `ObjectMeta` (the canonical registry-provenance pair) and surface
+      // `EntityMeta` (the canonical registry-provenance pair) and surface
       // through `@meta.key` / `@meta.version` in the JSON snapshot.
       const typeRow = data.objects.find((o: any) => o['@meta']?.key === typename);
       expect(typeRow).toBeDefined();
@@ -262,19 +264,22 @@ describe('Serializer', () => {
         await new Serializer().import(db, data);
 
         // The reconstituted Type.Type entity must brand `KindId = Type`.
+        // `Filter.type(Type.Type)` fans into both the DB and the in-process
+        // registry (which holds the pre-seeded `Type.Type` and builder defaults),
+        // so locate the round-tripped entity by typename rather than by count.
         const entities = await db.query(Filter.type(Type.Type)).run();
-        expect(entities.length).to.eq(1);
-        expect(Type.isType(entities[0])).to.be.true;
-        expect(Type.getTypename(entities[0] as any)).to.eq(typename);
+        const roundTrip = entities.find((entity) => Type.getTypename(entity) === typename);
+        expect(roundTrip).toBeDefined();
+        expect(Type.isType(roundTrip!)).to.be.true;
+        expect(Type.getTypename(roundTrip!)).to.eq(typename);
 
-        // And the registry query path — the one Composer's markdown editor
-        // hits via `useLinkQuery` — must not throw `Invalid typename` from
-        // `getSortKey` for any returned schema.
-        const results = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
-        for (const schema of results) {
+        // Every returned schema must have a valid typename — the `getSortKey` path that
+        // Composer's markdown editor hits via `useLinkQuery` must not throw `Invalid typename`.
+        // Persisted types live in the db (not the shared registry), so query the space.
+        for (const schema of entities) {
           expect(() => Type.getTypename(schema as any)).not.to.throw();
         }
-        expect(results.some((schema) => Type.getTypename(schema as any) === typename)).to.be.true;
+        expect(entities.some((schema) => Type.getTypename(schema as any) === typename)).to.be.true;
       }
     });
 

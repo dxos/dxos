@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -38,7 +38,11 @@ export default Capability.makeModule(
             });
             // Auto-sync after creation if URL is provided.
             if (object.url) {
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(object) },
+                { spaceId: Obj.getDatabase(object)?.spaceId },
+              );
             }
             return result;
           }),
@@ -63,7 +67,11 @@ export default Capability.makeModule(
                 hidden: true,
                 targetNodeId: options.targetNodeId,
               });
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(defaultFeed) },
+                { spaceId: Obj.getDatabase(defaultFeed)?.spaceId },
+              );
               return defaultFeed;
             }).pipe(Effect.option);
 

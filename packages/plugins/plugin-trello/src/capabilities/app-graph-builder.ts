@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
-import { EchoURI } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -24,7 +24,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'trello-sync-board',
+        id: 'trelloSyncBoard',
         match: (node) => {
           if (!Obj.instanceOf(Kanban.Kanban, node.data)) {
             return Option.none();
@@ -47,7 +47,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === kanban.id,
+              (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === kanban.id,
             ),
           );
           if (!integration) {
@@ -55,7 +55,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             {
-              id: 'trello-sync-this-board',
+              id: 'trelloSyncThisBoard',
               data: () =>
                 Operation.invoke(
                   TrelloOperation.SyncTrelloBoard,

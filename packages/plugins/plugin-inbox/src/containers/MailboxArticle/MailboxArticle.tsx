@@ -8,25 +8,22 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useArticleKeyboardNavigation, useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { HasSubject, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
-import { useArticleKeyboardNavigation } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
-import { InboxCapabilities, type Mailbox } from '#types';
+import { InboxCapabilities, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
@@ -60,12 +57,25 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const sortDescending = useAtomState(true);
   const menuActions = useMailboxActions({ db, mailbox: subject, sortDescending: sortDescending.atom });
 
-  // Build message-to-tags map from HasSubject relations incrementally.
-  const messageTagsMap = useMessageTagsMap(db, feed);
-  const tags = useTags(db);
+  const tagMap = useTags(db);
+
+  // Build message-to-tags map by inverting the Mailbox tag index.
+  // NOT memoized: `Mailbox.applyTag`/`removeTag` mutate nested data under `mailbox.tags`,
+  // which a `[mailbox.tags]` dependency wouldn't observe — same ECHO reactivity pitfall
+  // documented in `ExtractedTags.tsx`.
+  // `messageTagUris` is the raw tag-uri index (used for client-side filtering, same id space as the
+  // query); `messageTagsMap` resolves those uris to label/hue chips for rendering.
+  const messageTagUris = Mailbox.buildMessageTagsIndex(mailbox);
+  const messageTagsMap: Record<string, { id: string; label: string; hue?: string }[]> = {};
+  for (const [messageId, uris] of Object.entries(messageTagUris)) {
+    messageTagsMap[messageId] = uris.flatMap((uri) => {
+      const tag = tagMap[uri];
+      return tag ? [{ id: uri, label: tag.label, hue: tag.hue }] : [];
+    });
+  }
 
   // Filter.
-  const builder = useMemo(() => new QueryBuilder(tags), [tags]);
+  const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
   const [filter, setFilter] = useState<Filter.Any>();
   useEffect(() => {
@@ -84,9 +94,9 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const filteredMessages = useMemo(
     () =>
       filter
-        ? messages.filter((message) => matchesFilter(filter, message, messageTagsMap[message.id] ?? []))
+        ? messages.filter((message) => matchesFilter(filter, message, messageTagUris[message.id] ?? []))
         : messages,
-    [messages, filter, messageTagsMap],
+    [messages, filter, messageTagUris],
   );
 
   const sortedMessages = useMemo(
@@ -94,36 +104,12 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     [filteredMessages, sortDescending.value],
   );
 
-  // Merge tags into mailbox labels.
-  const mergedLabels = useMemo(() => {
-    const labels = { ...mailbox.labels };
-    for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
-      for (const tag of messageTags) {
-        labels[tag.id] = tag.label;
-      }
-    }
-    return labels;
-  }, [messageTagsMap, mailbox.labels]);
-
-  // Update message properties to include tag IDs in labels array.
-  const messagesWithTags = useMemo(() => {
-    return sortedMessages.map((message) => {
-      const messageTags = messageTagsMap[message.id] ?? [];
-      const tagIds = [...new Set(messageTags.map((tag) => tag.id))]; // Deduplicate tag IDs
-      const existingLabels = Array.isArray(message.properties?.labels) ? message.properties.labels : [];
-      // Deduplicate existing labels and filter out tag IDs that are already present.
-      const uniqueExistingLabels = [...new Set(existingLabels)];
-      const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
-      const finalLabels = [...uniqueExistingLabels, ...newTagIds];
-      return {
-        ...message,
-        properties: {
-          ...message.properties,
-          labels: finalLabels,
-        },
-      };
-    });
-  }, [sortedMessages, messageTagsMap]);
+  // Mark the mailbox as viewed when opened, advancing its `viewedAt` cursor so the navtree new-message
+  // badge clears. Uses the live `subject` (not the `mailbox` snapshot) since this mutates, and is keyed on
+  // the mailbox id so it runs once per opened mailbox rather than on every update.
+  useEffect(() => {
+    Mailbox.markViewed(subject);
+  }, [subject.id]);
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.
@@ -140,8 +126,6 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     setFilter(builder.build(filterProp ?? '').filter);
   }, [filterProp, builder]);
 
-  // n / p keyboard navigation: clamp at the ends of the sorted message list.
-  const messageIds = useMemo(() => sortedMessages.map((message) => message.id), [sortedMessages]);
   const handleNavigate = useCallback(
     (messageId: string) => {
       const message = sortedMessages.find((m) => m.id === messageId);
@@ -157,7 +141,8 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
     },
     [db, id, mailbox.id, sortedMessages, showItem],
   );
-  useArticleKeyboardNavigation({ articleId: id, ids: messageIds, currentId, onSelect: handleNavigate });
+
+  useArticleKeyboardNavigation({ articleId: id, items: sortedMessages, currentId, onSelect: handleNavigate });
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
@@ -221,7 +206,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
                   db={db}
-                  tags={tags}
+                  tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
                   ref={filterEditorRef}
@@ -251,9 +236,9 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
         ) : (
           <MessageStack
             id={id}
-            messages={messagesWithTags}
+            messages={sortedMessages}
             currentId={currentId}
-            labels={mergedLabels}
+            tags={messageTagsMap}
             threads={settings.threads}
             onAction={handleAction}
           />
@@ -267,78 +252,18 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
  * Return map of tags;
  */
 // TODO(burdon): Factor out.
+// Tag registry keyed by the Tag object's URI — the id space used by meta.tags, the Mailbox tag
+// index, and the QueryBuilder's `tag:` filter.
 const useTags = (db: Database.Database | undefined): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
   return useMemo(
     () =>
       tags.reduce<Tag.Map>((acc, tag) => {
-        acc[tag.id] = tag;
+        acc[Obj.getURI(tag).toString()] = tag;
         return acc;
       }, {}),
     [tags],
   );
-};
-
-/**
- * Hook that builds an object mapping message IDs to tags from HasSubject relations.
- */
-const useMessageTagsMap = (
-  db: Database.Database | undefined,
-  feed: Feed.Feed | undefined,
-): Record<string, Tag.Tag[]> => {
-  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
-
-  const hasSubjectRelations = useQuery(
-    db,
-    feed ? Query.select(Filter.type(HasSubject.HasSubject)).from(feed) : Query.select(Filter.nothing()),
-  );
-
-  useEffect(() => {
-    const map: Record<string, Tag.Tag[]> = {};
-    for (const relation of hasSubjectRelations) {
-      try {
-        const source = Relation.getSource(relation);
-        if (!Obj.instanceOf(Tag.Tag, source)) {
-          continue;
-        }
-
-        // Try to get message ID from target URI (echo URI with objectId).
-        const targetURI = Relation.getTargetURI(relation);
-        const targetEchoId = EchoURI.tryParse(targetURI);
-        let messageId: string | undefined;
-
-        if (targetEchoId) {
-          messageId = EchoURI.getObjectId(targetEchoId);
-        } else {
-          // Fallback: try to resolve target object.
-          try {
-            const target = Relation.getTarget(relation);
-            if (Obj.instanceOf(Message.Message, target)) {
-              messageId = target.id;
-            }
-          } catch {
-            // Target not resolved, skip this relation.
-          }
-        }
-
-        if (messageId) {
-          if (!map[messageId]) {
-            map[messageId] = [];
-          }
-          // Prevent duplicates.
-          if (!map[messageId].some((tag) => tag.id === source.id)) {
-            map[messageId].push(source);
-          }
-        }
-      } catch {
-        // Skip relations with unresolved source or target.
-      }
-    }
-
-    setMessageTagsMap(map);
-  }, [hasSubjectRelations]);
-
-  return messageTagsMap;
 };
 
 type UseMailboxActionsProps = {

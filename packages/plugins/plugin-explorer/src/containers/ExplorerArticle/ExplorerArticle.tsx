@@ -10,9 +10,6 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-// Side-effect import: Visualization drives `SVG.Graph` directly. Without the CSS the
-// `g.dx-edge path` rules — including `fill: none` — never reach the bundle and SVG
-// defaults (stroke: none, fill: black) make every edge invisible.
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type TreeNode } from '#components';
@@ -25,11 +22,6 @@ export type { ExplorerArticleVariant } from './variants';
 
 export type ExplorerArticleProps = AppSurface.ObjectArticleProps<View.View>;
 
-/**
- * Thin wrapper: owns the query editor, the variant toggle, and the DxAnchor preview
- * dispatch. The actual rendering — SVG projector swaps and the swarm canvas — lives in
- * `Visualization`.
- */
 export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps) => {
   const [view] = useObject(subject);
   const [filter, setFilter] = useState<Filter.Any>();
@@ -58,16 +50,18 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     }
   }, []);
 
+  // Dismiss the preview popover. The dxn/label/trigger fields are placeholders ignored on
+  // `state: false`.
+  const handleDismiss = useCallback(() => {
+    document.defaultView?.dispatchEvent(
+      new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
+    );
+  }, []);
+
   const handleHover = useCallback((node: TreeNode | null, event?: MouseEvent) => {
-    // Pointer left the node/label: dispatch a close event so the preview popover
-    // dismisses (the dxn/label/trigger fields are placeholders ignored on `state: false`).
-    if (!node) {
-      document.defaultView?.dispatchEvent(
-        new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
-      );
-      return;
-    }
-    if (!event) {
+    // Pointer left the node/label: keep the popover open so it can be hovered/interacted with.
+    // The popover is dismissed only on an explicit click on the component surface (handleDismiss).
+    if (!node || !event) {
       return;
     }
     const obj = node.data;
@@ -113,7 +107,13 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         </Panel.Toolbar>
       )}
       <Panel.Content>
-        <Visualization classNames='bg-base-surface' variant={selected} model={model} onNodeHover={handleHover} />
+        <Visualization
+          classNames='bg-base-surface'
+          variant={selected}
+          model={model}
+          onNodeHover={handleHover}
+          onSurfaceClick={handleDismiss}
+        />
       </Panel.Content>
     </Panel.Root>
   );

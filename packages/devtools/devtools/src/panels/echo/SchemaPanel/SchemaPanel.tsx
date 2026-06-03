@@ -41,12 +41,10 @@ const useSchemaQuery = (space?: Space): Type.AnyEntity[] => {
       return;
     }
 
-    return space.db.schemaRegistry.query().subscribe(
-      (query) => {
-        setSchema([...space.internal.db.graph.schemaRegistry.schemas, ...query.results]);
-      },
-      { fire: true },
-    );
+    setSchema([...space.db.graph.registry.list().filter(Type.isType)]);
+    return space.db.graph.registry.changed.on(() => {
+      setSchema([...space.db.graph.registry.list().filter(Type.isType)]);
+    });
   }, [space]);
 
   return schema;

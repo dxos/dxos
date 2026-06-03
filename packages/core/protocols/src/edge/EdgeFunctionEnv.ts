@@ -172,7 +172,7 @@ export type ObjectSnapshot = {
   type?: string;
   documentId: string;
   objectId: string;
-  // TODO(mykola): Use ObjectStructure from @dxos/echo-protocol.
+  // TODO(mykola): Use EntityStructure from @dxos/echo-protocol.
   object: unknown;
 };
 

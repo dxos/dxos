@@ -13,6 +13,7 @@ export * from './hypergraph';
 export * from './proxy-db';
 export * from './query';
 export * from './queue';
+export * from './registry';
 export * from './serialized-space';
 export * from './serializer';
 export * from './text';

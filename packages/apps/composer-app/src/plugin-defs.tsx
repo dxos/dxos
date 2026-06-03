@@ -18,13 +18,16 @@ import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
+import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
+import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
+import { ExtensionPlugin } from '@dxos/plugin-extension/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
@@ -47,6 +50,7 @@ import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
 import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
@@ -131,13 +135,16 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     (isDev || isLabs) && [
       CallsPlugin.meta.id,
       CodePlugin.meta.id,
+      DuffelPlugin.meta.id,
       FeedPlugin.meta.id,
       GalleryPlugin.meta.id,
       GamePlugin.meta.id,
       IrohBeaconPlugin.meta.id,
       MeetingPlugin.meta.id,
+      OsrmPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
+      CommercePlugin.meta.id,
       SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
@@ -191,7 +198,9 @@ export const getPlugins = ({
     DebugPlugin({ logStore }),
     DiscordPlugin(),
     DoctorPlugin(),
+    DuffelPlugin(),
     ExplorerPlugin(),
+    !isTauri && ExtensionPlugin(),
     FeedPlugin(),
     GamePlugin(),
     GeneratorPlugin(),
@@ -213,11 +222,13 @@ export const getPlugins = ({
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
+    OsrmPlugin(),
     OutlinerPlugin(),
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
     ProcessManagerPlugin(),
+    CommercePlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     isLocal && SamplePlugin(),
@@ -244,7 +255,7 @@ export const getPlugins = ({
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
-    WelcomePlugin(),
+    WelcomePlugin({ generateExemplarSpace: !isLocal }),
 
     // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
     BlueskyPlugin(),

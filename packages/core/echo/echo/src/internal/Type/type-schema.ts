@@ -14,8 +14,8 @@ import { JsonSchemaType } from '../JsonSchema';
  * (the TS type) can derive its data fields via `Schema.Schema.Type<typeof ...>`;
  * runtime callers should use {@link TypeSchema} (the piped, branded entity).
  *
- * `typename` and `version` are NOT data fields — they live in `ObjectMeta.key` /
- * `ObjectMeta.version` (the canonical registry-provenance pair, queryable via
+ * `typename` and `version` are NOT data fields — they live in `EntityMeta.key` /
+ * `EntityMeta.version` (the canonical registry-provenance pair, queryable via
  * `Filter.key(...)`). The same `jsonSchema` payload also embeds them so a
  * standalone JSON-Schema export remains self-describing, but the schema-registry
  * reads/writes them through meta.
@@ -39,7 +39,7 @@ export const TypeSchema = TypeSchemaStruct.pipe(
 
 /**
  * Persistent representation of a schema — the runtime shape that
- * `db.add(Type.makeObjectFromJsonSchema(...))` / `db.schemaRegistry.register([...])` produces
+ * `db.addType(Type.makeObjectFromJsonSchema(...))` produces
  * and `Filter.type(Type.Type).run()` returns.
  *
  * Structurally identical to a static `Type.Type` entity: the entity-handler's

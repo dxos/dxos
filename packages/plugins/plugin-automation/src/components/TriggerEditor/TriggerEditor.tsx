@@ -8,8 +8,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { Annotation, type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { Annotation, type Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { DXN, EID } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -25,6 +25,7 @@ import {
 
 import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
+import { getOperationUri } from './util';
 
 type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
 
@@ -81,7 +82,11 @@ type UseCustomInputsProps = {
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
-  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
+  const functions = useQuery(
+    db,
+    Query.select(Filter.type(Operation.PersistentOperation)).from(Scope.space(), Scope.registry()),
+  );
+
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
   const feeds = useQuery(db, Filter.type(Feed.Feed));
@@ -100,7 +105,8 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 
         const handleOnValueChange = useCallback(
           (_type: any, uriString: string) => {
-            const uri = EchoURI.tryParse(uriString);
+            // Function references are either an EID (space-resident) or a key DXN (registry).
+            const uri = EID.tryParse(uriString) ?? (DXN.isDXN(uriString) ? uriString : undefined);
             if (uri) {
               props.onValueChange(props.type, Ref.fromURI(uri));
             }
@@ -133,7 +139,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const uri = EchoURI.tryParse(dxnString);
+            const uri = EID.tryParse(dxnString);
             if (uri) {
               props.onValueChange(props.type, Ref.fromURI(uri));
             }
@@ -196,7 +202,7 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
     const { icon: schemaIcon, iconHue } = getObjectIconProps(fn);
     return {
       label: getLabel(fn),
-      value: Obj.getURI(fn),
+      value: getOperationUri(fn),
       icon: fn.icon ?? schemaIcon,
       iconHue,
     };

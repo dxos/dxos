@@ -39,13 +39,13 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/keyboard"
-    },
-    {
       "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/markdown"
     },
     {
       "path": "../../common/random"
@@ -70,6 +70,9 @@
     },
     {
       "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/extractor"
     },
     {
       "path": "../../core/compute/functions"

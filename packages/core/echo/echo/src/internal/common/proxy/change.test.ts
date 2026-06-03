@@ -13,7 +13,7 @@ import { TestSchema } from '../../../testing';
  *
  * These tests verify:
  * 1. Mutator functions require Mutable<T> at compile-time.
- * 2. getMeta returns ReadonlyMeta outside change callbacks and ObjectMeta inside.
+ * 2. getMeta returns ReadonlyMeta outside change callbacks and EntityMeta inside.
  * 3. Mutations outside Obj.update throw at runtime.
  * 4. Nested object/property mutations work correctly.
  * 5. Array mutations (push, pop, splice) require change context.
@@ -56,13 +56,13 @@ describe('Obj.update enforcement', () => {
       expect(() => ((meta as any).tags = ['tag'])).toThrow(/outside of Obj.update/);
     });
 
-    test('getMeta returns mutable ObjectMeta inside change callback', ({ expect }) => {
+    test('getMeta returns mutable EntityMeta inside change callback', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
       Obj.update(obj, (obj) => {
         const meta = Obj.getMeta(obj);
 
-        // These should compile without errors because meta is ObjectMeta (mutable).
+        // These should compile without errors because meta is EntityMeta (mutable).
         meta.keys = [];
         meta.tags = ['tag'];
         meta.keys.push({ source: 'test', id: '123' });

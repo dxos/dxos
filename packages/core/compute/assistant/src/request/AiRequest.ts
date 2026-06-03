@@ -370,6 +370,7 @@ const enrichToolCallBlock = (
     ...block,
     operationKey: meta.key,
     operationName: meta.name,
+    operationIcon: meta.icon,
   } satisfies ContentBlock.ToolCall;
 };
 

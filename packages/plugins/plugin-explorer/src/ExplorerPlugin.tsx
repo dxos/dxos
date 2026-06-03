@@ -10,11 +10,17 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Graph } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const ExplorerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addSchemaModule({ schema: [Graph.Graph] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   Plugin.make,
 );
 

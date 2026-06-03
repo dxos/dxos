@@ -16,8 +16,8 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
+import { Database, Feed, Filter, Obj, Ref, Tagging } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { Message } from '@dxos/types';
@@ -25,6 +25,7 @@ import { Message } from '@dxos/types';
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
+import { isAiServiceUnavailable } from '../../extractor/ai-gate';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -49,7 +50,7 @@ const STREAMING_CONFIG = {
 
 const readMailboxTargetOptions = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) => {
   const match = (integration.targets ?? []).find(
-    (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === mailbox.id,
+    (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
   );
   const raw = match?.options;
   if (!raw || typeof raw !== 'object') {
@@ -100,13 +101,13 @@ const syncSingleMailbox = (input: {
 
     const feed = yield* Database.load(mailbox.feed);
 
-    const labelCount = yield* syncLabels(mailbox, userId).pipe(
+    const labelMap = yield* syncLabels(mailbox, userId).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
-        return Effect.succeed(0);
+        return Effect.succeed(new Map<string, string>());
       }),
     );
-    log('synced labels', { count: labelCount });
+    log('synced labels', { count: labelMap.size });
 
     const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
     const lastMessage = objects.at(-1);
@@ -134,6 +135,7 @@ const syncSingleMailbox = (input: {
       defaultLabel,
       existingGmailIds,
       restrictedMode,
+      labelMap,
       targetOptions.filter,
     );
     log('sync complete', { newMessages: newMessagesCount });
@@ -179,14 +181,21 @@ export default InboxOperation.GoogleMailSync.pipe(
   ),
 );
 
+// Syncs the Gmail label dictionary to `Tag` objects (one per label, carrying the Gmail label-id as
+// a foreign key). Returns a `gmailLabelId -> Tag uri` map used to index messages by tag.
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  Obj.update(mailbox, (mailbox) => {
-    labels.forEach((labelItem) => {
-      (mailbox.labels ??= {})[labelItem.id] = labelItem.name;
-    });
-  });
-  return labels.length;
+  const labelMap = new Map<string, string>();
+  const db = Obj.getDatabase(mailbox);
+  if (db) {
+    for (const labelItem of labels) {
+      const tag = yield* Effect.promise(() =>
+        Mailbox.findOrCreateGmailTag(db, { id: labelItem.id, name: labelItem.name }),
+      );
+      labelMap.set(labelItem.id, Mailbox.tagUri(tag));
+    }
+  }
+  return labelMap;
 });
 
 const generateDateRanges = (config: DateRangeConfig): Stream.Stream<DateChunk> =>
@@ -258,6 +267,7 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
   label: string,
   existingGmailIds: Set<string>,
   restricted: boolean,
+  labelMap: Map<string, string>,
   searchFilter?: string,
 ) {
   const config: DateRangeConfig = {
@@ -295,15 +305,27 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),
     Stream.mapEffect((batch) =>
       Effect.gen(function* () {
-        const messages = Chunk.toArray(batch);
+        const mapped = Chunk.toArray(batch);
+        const messages = mapped.map((m) => m.message);
         log('appending batch to feed', {
           count: messages.length,
         });
         yield* Feed.append(feed, messages);
 
+        // Apply provider-label tags: index each just-appended message under the Tag uri for every
+        // Gmail label assigned to it (`syncLabels` created/updated those Tag objects).
+        for (const { message, labelIds } of mapped) {
+          for (const labelId of labelIds) {
+            const uri = labelMap.get(labelId);
+            if (uri) {
+              Tagging.set(message, uri, { host: mailbox });
+            }
+          }
+        }
+
         const extractorsConfig = mailbox.extractors;
         if (extractorsConfig && extractorsConfig.enabled.length > 0) {
-          const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
+          const extractors = yield* Capability.getAll(InboxCapabilities.ObjectExtractor);
           const db = Obj.getDatabase(mailbox);
           if (db) {
             for (const message of messages) {
@@ -334,12 +356,19 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
               if (best) {
                 yield* Operation.invoke(InboxOperation.ExtractMessage, {
                   db,
-                  message,
+                  source: message,
                   extractorId: best.extractor.id,
-                  targetTripId: undefined,
                 }).pipe(
                   Effect.catchAll((err) => {
-                    log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    // The AI service can be momentarily absent from the process-manager LayerStack
+                    // during startup (the assistant plugin's `AiService` LayerSpec races the
+                    // runtime build). Treat that as a deferrable skip — a later sync (or app load,
+                    // once the stack carries the spec) re-attempts — rather than a hard failure.
+                    if (isAiServiceUnavailable(err)) {
+                      log.info('auto-on-arrival extract skipped: AI service not ready', { messageId: message.id });
+                    } else {
+                      log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    }
                     return Effect.void;
                   }),
                 );

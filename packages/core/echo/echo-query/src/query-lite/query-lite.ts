@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as Type$ } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-// `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
+// `DXN`/`EID` are type-only imports to keep the `query-lite` bundle free of
 // `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
-import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
+import type { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -85,9 +85,9 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static id(...ids: ObjectId[]): Filter$.Any {
+  static id(...ids: EntityId[]): Filter$.Any {
     // assertArgument(
-    //   ids.every((id) => ObjectId.isValid(id)),
+    //   ids.every((id) => EntityId.isValid(id)),
     //   'ids',
     //   'ids must be valid',
     // );
@@ -269,9 +269,9 @@ class FilterClass implements Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isEchoUriLike(item)) {
-        return item.toString() as EchoURI.EchoURI;
+        return item.toString() as EID.EID;
       }
-      throw new TypeError('childOf requires EchoURI values in query-lite');
+      throw new TypeError('childOf requires EID values in query-lite');
     });
     return new FilterClass({
       type: 'child-of',
@@ -343,7 +343,7 @@ export { Filter1 as Filter };
 type RefPropKey<T> = keyof T & string;
 
 const propsFilterToAst = (predicates: Filter$.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
-  let idFilter: readonly ObjectId[] | undefined;
+  let idFilter: readonly EntityId[] | undefined;
   if ('id' in predicates) {
     assertArgument(
       typeof predicates.id === 'string' || Array.isArray(predicates.id),
@@ -457,26 +457,31 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  static from(source: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  static from(...args: any[]): Query$.Any {
     const baseQuery: QueryAST.Query = {
       type: 'select',
       filter: FilterClass.everything().ast,
     };
     const wrapper = new QueryClass(baseQuery);
-    return wrapper.from(source, options);
+    return (wrapper.from as (...args: any[]) => Query$.Any)(...args);
   }
 
-  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  from(...args: any[]): Query$.Any {
+    // Variadic raw scopes: `.from(Scope.space(), Scope.registry())`.
+    if (args.length > 1 && args.every((arg) => _isScopeLike(arg))) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: args as QueryAST.Scope[] },
+      });
+    }
+
+    const [arg] = args;
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
-        },
+        from: { _tag: 'scope', scopes: [] },
       });
     }
 
@@ -484,7 +489,7 @@ class QueryClass implements Query$.Any {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: { _tag: 'scope', scope: arg },
+        from: { _tag: 'scope', scopes: Array.isArray(arg) ? arg : [arg] },
       });
     }
 
@@ -655,7 +660,7 @@ const isDxnLike = (value: unknown): value is DXN.DXN => {
   );
 };
 
-const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
+const isEchoUriLike = (value: unknown): value is EID.EID => {
   if (typeof value === 'string') {
     return value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:');
   }
@@ -668,13 +673,24 @@ const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
   );
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
+const SCOPE_TAGS = new Set(['space', 'feed', 'registry']);
 
-const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
+const _isScopeLike = (value: unknown): value is QueryAST.Scope | QueryAST.Scope[] => {
+  if (Array.isArray(value)) {
+    return value.every((item) => _isSingleScopeLike(item));
   }
-  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
+  return _isSingleScopeLike(value);
+};
+
+const _isSingleScopeLike = (value: unknown): value is QueryAST.Scope => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    '_tag' in value &&
+    typeof value._tag === 'string' &&
+    SCOPE_TAGS.has(value._tag)
+  );
 };
 
 const prettyFilter = (filter: QueryAST.Filter): string => {
@@ -777,18 +793,21 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'from': {
       if (query.from._tag === 'scope') {
-        const scope = query.from.scope;
-        const parts: string[] = [];
-        if (scope.spaceIds !== undefined) {
-          parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
+        if (query.from.scopes.length === 0) {
+          return `${prettyQuery(query.query)}.from('all-accessible-spaces')`;
         }
-        if (scope.feeds !== undefined) {
-          parts.push(`feeds: [${scope.feeds.join(', ')}]`);
-        }
-        if (scope.allFeedsFromSpaces !== undefined) {
-          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
-        }
-        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+        const scopeStrs = query.from.scopes.map((scope) => {
+          if (scope._tag === 'space') {
+            return scope.includeAllFeeds
+              ? `{ space: ${JSON.stringify(scope.spaceId)}, includeAllFeeds: true }`
+              : `{ space: ${JSON.stringify(scope.spaceId)} }`;
+          }
+          if (scope._tag === 'feed') {
+            return `{ feed: ${String(scope.feedUri)} }`;
+          }
+          return `{ registry: ${JSON.stringify(scope.location)} }`;
+        });
+        return `${prettyQuery(query.query)}.from([${scopeStrs.join(', ')}])`;
       }
       return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
     }

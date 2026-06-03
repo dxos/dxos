@@ -60,6 +60,19 @@ export type GraphRendererOptions<NodeData = any, EdgeData = any> = RendererOptio
    * whatever this callback creates instead. Use for lattice rects, custom icons, etc.
    */
   renderNode?: RenderNode<NodeData>;
+  /**
+   * Per-tick per-node callback invoked from `applyPositions` AFTER the dx-node group's
+   * transform is updated. Use it to keep node-local SVG (trail paths, gradient axes,
+   * per-frame decorations) in sync with the node's current position. The group is the
+   * dx-node `<g>` (head at 0,0 in local coords); the node is the live layout node.
+   * Runs only on the positions fast-path; full `render` calls don't invoke it.
+   */
+  applyNode?: (group: SVGGElement, node: GraphLayoutNode<NodeData>) => void;
+  /**
+   * Opacity applied to the `dx-edges` group. Set < 1 to dim edges relative to nodes
+   * (e.g. swarm trails over routing edges). Default is the inherited group opacity.
+   */
+  edgeOpacity?: number;
   transition?: () => any;
   /**
    * On node pointerenter, color outgoing edges orange, incoming edges sky-blue, dim
@@ -188,7 +201,8 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
       .selectAll('g.dx-edges')
       .data([{ id: 'edges' }], (d: any) => d.id)
       .join('g')
-      .classed('dx-edges', true);
+      .classed('dx-edges', true)
+      .style('opacity', this.options.edgeOpacity != null ? String(this.options.edgeOpacity) : null);
 
     const nodeGroup = root
       .selectAll('g.dx-nodes')
@@ -277,10 +291,20 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
     const root = select(this.root);
 
     // Transforms only — no attribute callback, no label measurement.
+    const applyNode = this.options.applyNode;
     root
       .select('g.dx-nodes')
       .selectAll<SVGGElement, GraphLayoutNode<NodeData>>('g.dx-node')
-      .attr('transform', (d) => (d.x != null && d.y != null ? `translate(${d.x},${d.y})` : null));
+      .attr('transform', (d) => (d.x != null && d.y != null ? `translate(${d.x},${d.y})` : null))
+      .each(
+        applyNode
+          ? function (d) {
+              // Per-tick consumer hook (e.g. swarm trail). Group transform is already up to date,
+              // so node-local coords land in the same frame as the head position.
+              applyNode(this, d);
+            }
+          : () => {},
+      );
 
     // Edge geometry — either precomputed (`edge.path`) or derived from endpoint positions.
     root

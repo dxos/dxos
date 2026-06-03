@@ -1,0 +1,53 @@
+{
+  "name": "@dxos/extractor",
+  "version": "0.8.3",
+  "description": "Template-driven extraction of ECHO objects from source objects.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/neutral/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@effect/ai": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

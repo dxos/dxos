@@ -2,40 +2,104 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useEffect } from 'react';
 
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter } from '@dxos/echo';
+import { Keyboard } from '@dxos/keyboard';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { AttendableContainer, useSelected } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { PLACES, TripBuilder } from '#testing';
-import { Booking, Segment, Trip } from '#types';
+import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
+import { Booking, type Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
+import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
 import { TripArticle } from './TripArticle';
 
-const DefaultStory = () => {
+/** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
+const RoutingStoryPlugin = (service: Routing.RoutingService) =>
+  Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.trip.story.routing'), name: 'Story Routing' })).pipe(
+    Plugin.addModule({
+      id: 'story-routing',
+      activatesOn: ActivationEvents.Startup,
+      activate: () => Effect.succeed(Capability.contributes(TripCapabilities.RoutingService, service)),
+    }),
+    Plugin.make,
+  )();
+
+/** Seeds a trip with a pre-planned road segment per consecutive city pair (deterministic fake router). */
+const seedRoadTrip = (space: Space, name: string, cities: string[]): void => {
+  const trip = Trip.make({ name });
+  for (let index = 0; index < cities.length - 1; index++) {
+    const { waypoints, routes } = fakeRoute([cities[index], cities[index + 1]]);
+    const segment = Segment.make({
+      details: { _tag: 'road', subKind: 'car', origin: waypoints[0], destination: waypoints[1], routes },
+    });
+    Trip.addSegment(trip, segment);
+    space.db.add(segment);
+  }
+  space.db.add(trip);
+};
+
+const ATTENDABLE_ID = 'story';
+
+// Initialize the global keyboard system (normally done by plugin-navtree) so the
+// article's 'j'/'k' bindings dispatch in isolation.
+const withKeyboard: Decorator = (Story) => {
+  useEffect(() => {
+    Keyboard.singleton.initialize();
+    return () => Keyboard.singleton.destroy();
+  }, []);
+  return <Story />;
+};
+
+const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   const spaces = useSpaces();
   const spaceId = spaces[0]?.id;
   const db = useDatabase(spaceId ?? '');
   const trips = useQuery(db, Filter.type(Trip.Trip));
   const trip = trips[0];
+  // The segment shown in the companion column tracks the article's selection (defaults to the first).
+  const selectedId = useSelected(ATTENDABLE_ID, 'single');
 
   if (!spaceId || !db || !trip) {
     return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
   }
 
-  return <TripArticle role='article' subject={trip} attendableId='story' />;
+  const segments = Trip.getSegments(trip);
+  const selected = segments.find((segment) => segment.id === selectedId) ?? segments[0];
+
+  // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
+  // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
+  return (
+    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
+      <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
+      <div className='min-bs-0 overflow-hidden border-is border-separator'>
+        {selected && (
+          <SegmentArticle role='article' subject={selected} companionTo={trip} attendableId={ATTENDABLE_ID} />
+        )}
+      </div>
+    </AttendableContainer>
+  );
 };
 
-const baseDecorators = (seedFn: (space: Space) => void) => [
+const baseDecorators = (
+  seedFn: (space: Space) => void,
+  routingService: Routing.RoutingService = fakeRoutingService(),
+) => [
+  withKeyboard,
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
     setupEvents: [AppActivationEvents.SetupSettings],
@@ -52,10 +116,31 @@ const baseDecorators = (seedFn: (space: Space) => void) => [
       }),
       StorybookPlugin({}),
       TripPlugin(),
+      MapPlugin(),
+      RoutingStoryPlugin(routingService),
       PreviewPlugin(),
     ],
   })),
 ];
+
+// Renders the trip plotted on the generic plugin-map `map` surface (markers + route polyline).
+const MapStory = () => {
+  const spaces = useSpaces();
+  const spaceId = spaces[0]?.id;
+  const db = useDatabase(spaceId ?? '');
+  const trips = useQuery(db, Filter.type(Trip.Trip));
+  const trip = trips[0];
+
+  if (!spaceId || !db || !trip) {
+    return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
+  }
+
+  return (
+    <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
+      <Surface.Surface role='map' data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+    </AttendableContainer>
+  );
+};
 
 const meta = {
   title: 'plugins/plugin-trip/containers/TripArticle',
@@ -146,6 +231,25 @@ export const Default: Story = {
     bookings.forEach((booking: Booking.Booking) => space.db.add(booking));
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
+  }),
+};
+
+// A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake
+// router. The Route section seeds its city list from these planned road segments; adding / removing
+// a city re-plans via the contributed RoutingService and updates the map polyline.
+export const RoadTrip: Story = {
+  args: { showMap: true },
+  decorators: baseDecorators((space) => {
+    seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
+  }),
+};
+
+// The same pre-planned road trip rendered on the plugin-map `map` surface: a marker per stop plus
+// the route polyline between cities, resolved via plugin-trip's contributed MarkerProvider.
+export const RoadTripMap: Story = {
+  render: MapStory,
+  decorators: baseDecorators((space) => {
+    seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
 };
 

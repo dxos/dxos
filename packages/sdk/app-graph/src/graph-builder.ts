@@ -566,6 +566,24 @@ export type CreateExtensionRawOptions = {
 };
 
 /**
+ * Validates that a graph extension or surface local ID follows NSID conventions:
+ * the final dot-separated segment must be camelCase (letters and digits only,
+ * starting with a letter — no hyphens or underscores). This mirrors the rule
+ * enforced when the id is appended to a plugin's NSID to form a full DXN path.
+ *
+ * @example Valid:   'about', 'devtools', 'integrationsSection'
+ * @example Invalid: 'integration-article', 'plugin-spec'
+ */
+const validateLocalId = (id: string): void => {
+  const finalSegment = id.split('.').pop()!;
+  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
+    throw new Error(
+      `Invalid extension id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
+    );
+  }
+};
+
+/**
  * Create a graph builder extension (low-level API that works directly with Atoms).
  */
 export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
@@ -578,6 +596,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
+  validateLocalId(id);
   const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
 

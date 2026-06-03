@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type ObjectId } from '@dxos/keys';
+import { type EntityId } from '@dxos/keys';
 
-import { type ATTR_META, type ObjectMeta } from './meta';
+import { type ATTR_META, type EntityMeta } from './meta';
 
 /**
  * Base type for all data objects (reactive, ECHO, and other raw objects).
@@ -23,7 +23,7 @@ export type AnyProperties = Record<string, any>;
  */
 // TODO(wittjosiah): Remove. Prefer higher level types (e.g. Entity.Unknown).
 export interface AnyEntity {
-  readonly id: ObjectId;
+  readonly id: EntityId;
 }
 
 export type ExcludeId<T extends AnyProperties> = Omit<T, 'id'>;
@@ -31,7 +31,7 @@ export type ExcludeId<T extends AnyProperties> = Omit<T, 'id'>;
 export type PropertyKey<T extends AnyProperties> = Extract<keyof ExcludeId<T>, string>;
 
 // TODO(dmaretskyi): Remove. This should be using the symbol type.
-type WithMeta = { [ATTR_META]?: ObjectMeta };
+type WithMeta = { [ATTR_META]?: EntityMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.

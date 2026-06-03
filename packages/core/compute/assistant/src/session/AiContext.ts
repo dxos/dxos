@@ -16,7 +16,7 @@ import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { EchoURI, type URI } from '@dxos/keys';
+import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
@@ -46,8 +46,8 @@ export class Bindings {
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
-    const echoUri = EchoURI.tryParse(ref.uri);
-    return echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+    const echoUri = EID.tryParse(ref.uri);
+    return echoUri ? EID.getEntityId(echoUri) : undefined;
   });
 
   toJSON(): { blueprints: URI.URI[]; objects: URI.URI[] } {
@@ -341,9 +341,9 @@ export class Binder extends Resource {
           for (const obj of context.objects) {
             if (
               obj.uri === ref.uri ||
-              (EchoURI.tryParse(obj.uri) &&
-                EchoURI.tryParse(ref.uri) &&
-                EchoURI.getObjectId(EchoURI.tryParse(obj.uri)!) === EchoURI.getObjectId(EchoURI.tryParse(ref.uri)!))
+              (EID.tryParse(obj.uri) &&
+                EID.tryParse(ref.uri) &&
+                EID.getEntityId(EID.tryParse(obj.uri)!) === EID.getEntityId(EID.tryParse(ref.uri)!))
             ) {
               context.objects.delete(obj);
             }

@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/compute';
-import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -392,14 +391,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Option.fromNullable(Obj.getType(object)).pipe(
-                Option.map(Type.getSchema),
-                Option.flatMap(Annotation.IconAnnotation.get),
-                Option.getOrElse(() => ({
-                  icon: 'ph--cube--regular',
-                  hue: undefined as string | undefined,
-                })),
-              );
+              const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
               const styles = hue ? getStyles(hue) : undefined;
               return (
                 <SearchList.Item
@@ -407,7 +399,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   key={object.id}
                   value={object.id}
                   icon={icon}
-                  iconClassNames={styles?.foreground}
+                  iconClassNames={styles?.text}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
                   onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}

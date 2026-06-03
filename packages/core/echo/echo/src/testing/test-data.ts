@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
-import { EchoURI, ObjectId, PublicKey } from '@dxos/keys';
+import { DatabaseDirectory, EntityStructure } from '@dxos/echo-protocol';
+import { EID, EntityId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
 import { TestSchema } from './test-schema';
@@ -34,7 +34,7 @@ export const PEOPLE = {
       cachedPeopleAlice = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeObject({
+          [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Person)!,
             data: {
               name: 'Alice',
@@ -51,7 +51,7 @@ export const PEOPLE = {
       cachedPeopleBob = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeObject({
+          [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Person)!,
             data: {
               name: 'Bob',
@@ -70,7 +70,7 @@ export const ORGS = {
       cachedOrgsDxos = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeObject({
+          [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Organization)!,
             data: {
               name: 'DXOS',
@@ -88,7 +88,7 @@ export const ORGS = {
       cachedOrgsCyberdyne = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeObject({
+          [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Organization)!,
             data: {
               name: 'Cyberdyne Systems',
@@ -108,10 +108,10 @@ export const WORKS_FOR = {
       cachedWorksFredCyberdyne = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeRelation({
+          [EntityId.random()]: EntityStructure.makeRelation({
             type: Type.getURI(TestSchema.EmployedBy)!,
-            source: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.bob.objects!)[0] }) },
-            target: { '/': EchoURI.make({ objectId: Object.keys(ORGS.cyberdyne.objects!)[0] }) },
+            source: { '/': EID.make({ entityId: Object.keys(PEOPLE.bob.objects!)[0] }) },
+            target: { '/': EID.make({ entityId: Object.keys(ORGS.cyberdyne.objects!)[0] }) },
             data: {
               since: '2020',
               position: 'Engineer',
@@ -128,10 +128,10 @@ export const WORKS_FOR = {
       cachedWorksAliceAperture = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeRelation({
+          [EntityId.random()]: EntityStructure.makeRelation({
             type: Type.getURI(TestSchema.EmployedBy)!,
-            source: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.alice.objects!)[0] }) },
-            target: { '/': EchoURI.make({ objectId: Object.keys(ORGS.dxos.objects!)[0] }) },
+            source: { '/': EID.make({ entityId: Object.keys(PEOPLE.alice.objects!)[0] }) },
+            target: { '/': EID.make({ entityId: Object.keys(ORGS.dxos.objects!)[0] }) },
             data: {
               since: '2018',
               position: 'Research Scientist',
@@ -150,14 +150,14 @@ export const TASKS = {
       cachedTasksTask1 = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeObject({
+          [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Task)!,
             data: {
               title: 'Complete project documentation',
               description: 'Write comprehensive documentation for the new system',
               status: 'in-progress',
               dueDate: '2023-12-31',
-              assignee: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.bob.objects!)[0] }) },
+              assignee: { '/': EID.make({ entityId: Object.keys(PEOPLE.bob.objects!)[0] }) },
             },
           }),
         },
@@ -171,14 +171,14 @@ export const TASKS = {
       cachedTasksTask2 = DatabaseDirectory.make({
         spaceKey: getSpaceKeyHex(),
         objects: {
-          [ObjectId.random()]: ObjectStructure.makeObject({
+          [EntityId.random()]: EntityStructure.makeObject({
             type: Type.getURI(TestSchema.Task)!,
             data: {
               title: 'Run experiments',
               description: 'Conduct series of experiments on the portal device',
               status: 'pending',
               dueDate: '2023-11-15',
-              assignee: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.alice.objects!)[0] }) },
+              assignee: { '/': EID.make({ entityId: Object.keys(PEOPLE.alice.objects!)[0] }) },
             },
           }),
         },

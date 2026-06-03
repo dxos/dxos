@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp, findAnnotation } from '@dxos/effect';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { TestSchema, prepareAstForCompare } from '../../testing';
@@ -309,7 +309,7 @@ describe('effect-to-json', () => {
 
   test('label prop', () => {
     const Organization = Schema.Struct({
-      id: ObjectId,
+      id: EntityId,
       name: Schema.String,
     }).pipe(LabelAnnotation.set(['name']), EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
@@ -342,9 +342,9 @@ describe('effect-to-json', () => {
 
   test('object id with description', () => {
     const schema = Schema.Struct({
-      id: ObjectId.annotations({ description: 'The id' }),
+      id: EntityId.annotations({ description: 'The id' }),
     });
-    // log.info('schema', { schema: ObjectId.ast });
+    // log.info('schema', { schema: EntityId.ast });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toMatchInlineSnapshot(`
       {

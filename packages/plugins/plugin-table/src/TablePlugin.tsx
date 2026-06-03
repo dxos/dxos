@@ -17,6 +17,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { TableOperation } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
@@ -46,6 +49,9 @@ export const TablePlugin = Plugin.define(meta).pipe(
           Operation.invoke(TableOperation.OnTypeAdded, { db, type, show }),
         ),
       ),
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

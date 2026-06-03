@@ -7,7 +7,6 @@ import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
-import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
@@ -15,11 +14,11 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import React from 'react';
 
 import { raise } from '@dxos/debug';
-import { Annotation, type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId } from '@dxos/keys';
-import { dbg, log } from '@dxos/log';
+import { EID, EntityId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { TREEGRID_PARENT_OF_SEPARATOR, DropdownMenu, Icon, IconButton, Treegrid } from '@dxos/react-ui';
 import { TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -115,7 +114,7 @@ const ObjectsTreeRow = ({
             {node.type === 'incoming-relation' && (
               <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
             )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.foreground]} />
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
             {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
           </Treegrid.Cell>
@@ -236,7 +235,7 @@ class ObjectsTreeModel {
   #makeNodeAtom(anchor: string | null): Atom.Atom<ObjectsTreeItem[]> {
     log('makeNodeAtom', { anchor });
     if (typeof anchor === 'string') {
-      invariant(ObjectId.isValid(anchor));
+      invariant(EntityId.isValid(anchor));
 
       const entities: Atom.Atom<Entity.Unknown[]> = AtomQuery.fromQuery(
         this.#database.query(
@@ -282,18 +281,14 @@ class ObjectsTreeModel {
   }
 
   #mapEntityToTreeItems(entity: Entity.Snapshot, anchor: string | null): ObjectsTreeItem {
-    const { icon, hue } = Option.fromNullable(Entity.getType(entity)).pipe(
-      Option.map(Type.getSchema),
-      Option.flatMap(Annotation.IconAnnotation.get),
-      Option.getOrElse(() => ({
-        icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,
-        hue: undefined,
-      })),
-    );
+    const { icon, hue } = Entity.getIcon(entity) ?? {
+      icon: Obj.isSnapshot(entity) ? DEFAULT_OBJECT_ICON : DEFAULT_RELATION_ICON,
+      hue: undefined,
+    };
     return {
       id: entity.id,
       type: Relation.isSnapshot(entity)
-        ? EchoURI.getObjectId(Relation.getSourceURI(entity)) === anchor
+        ? EID.getEntityId(Relation.getSourceURI(entity)) === anchor
           ? 'outgoing-relation'
           : 'incoming-relation'
         : 'object',
@@ -304,7 +299,7 @@ class ObjectsTreeModel {
         `${Obj.isObject(entity) ? 'Object' : 'Relation'}-${entity.id.slice(-4)}`,
       icon,
       iconHue: hue,
-      role: dbg(computeRole(dbg(entity))),
+      role: computeRole(entity),
       entity,
     };
   }
@@ -324,7 +319,6 @@ const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
 );
 
 const computeRole = (entity: Entity.Snapshot): string | undefined => {
-  dbg(Entity.getLabel(entity) ?? Entity.getTypename(entity));
   if (!Obj.isSnapshot(entity)) {
     log.info('not an object');
     return undefined;
