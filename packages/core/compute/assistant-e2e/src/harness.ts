@@ -5,35 +5,33 @@
 import { TestContext } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 
-import { ModelName } from '@dxos/ai';
-import {
-  AgentHandlers,
-  AgentPrompt,
-  AutomationBlueprint,
-  BlueprintManagerBlueprint,
-  BlueprintManagerHandlers,
-  DatabaseBlueprint,
-  DatabaseHandlers,
-  MemoryBlueprint,
-  WebSearchBlueprint,
-  WebSearchHandlers,
-  WebSearchToolkitOpaque,
-} from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect/testing';
-import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { InboxBlueprint } from '@dxos/plugin-inbox';
+import { AiService, type ModelName } from '@dxos/ai';
+import { TestAiService } from '@dxos/ai/testing';
+import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { type Plugin } from '@dxos/app-framework';
+import { type TestHarness } from '@dxos/app-framework/testing';
+import { Operation, Routine, ServiceResolver } from '@dxos/compute';
+import { Database, Feed, Ref, Tag } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
+import { TestContextService, TestHelpers } from '@dxos/effect/testing';
+import { type SpaceId } from '@dxos/keys';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { Mailbox } from '@dxos/plugin-inbox';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/plugin';
+import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export const DEFAULT_TEST_TIMEOUT = 120_000;
 
 export const getDefaultBlueprints = () => [
-  // Ref.make(AssistantBlueprint.make()),
   Ref.make(BlueprintManagerBlueprint.make()),
   Ref.make(DatabaseBlueprint.make()),
 ];
@@ -59,7 +57,69 @@ interface AgentTestOptions {
   inferenceProvider?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
 
   disableLlmMemoization?: boolean;
+
+  /** Additional plugins registered after the default composer plugin set. */
+  plugins?: Plugin.Plugin[];
 }
+
+const makeMemoizedAiServiceMiddleware = (
+  ctx: TestContext,
+  options: Pick<AgentTestOptions, 'inferenceProvider' | 'disableLlmMemoization'>,
+): Promise<(_upstream: AiService.Service) => AiService.Service> =>
+  AiService.AiService.pipe(
+    Effect.provide(
+      TestAiService({
+        preset: options.inferenceProvider ?? 'direct',
+        disableMemoization: options.disableLlmMemoization ?? false,
+      }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
+    ),
+    Effect.map((service) => (_upstream: AiService.Service) => service),
+    Effect.runPromise,
+  );
+
+const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions): Promise<Plugin.Plugin[]> => [
+  ClientPlugin({
+    types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Mailbox.Mailbox],
+  }),
+  AssistantPlugin({
+    aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx, options),
+  }),
+  AutomationPlugin(),
+  InboxPlugin(),
+  ...(options.plugins ?? []),
+];
+
+const seedPrompt = (prompt: Routine.Routine) =>
+  Effect.gen(function* () {
+    for (const blueprintRef of prompt.blueprints) {
+      const blueprint = yield* Database.load(blueprintRef);
+      yield* Database.add(blueprint);
+    }
+    yield* Database.add(prompt);
+    yield* Database.flush();
+  });
+
+const runAgentPrompt = (
+  harness: TestHarness,
+  prompt: Routine.Routine,
+  model: ModelName,
+  spaceId: SpaceId,
+) =>
+  harness.runPromise(
+    Effect.gen(function* () {
+      yield* seedPrompt(prompt);
+      return yield* Operation.invoke(
+        AgentPrompt,
+        {
+          prompt: Ref.make(prompt),
+          input: {},
+          systemInstructions: INSTRUCTIONS,
+          model,
+        },
+        { spaceId },
+      );
+    }).pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, Feed.FeedService))),
+  );
 
 export const agentTest: {
   (options: AgentTestOptions, prompt: Routine.Routine): (ctx: TestContext) => Effect.Effect<void, any>;
@@ -70,64 +130,41 @@ export const agentTest: {
   const model =
     options.model ?? (options.inferenceProvider === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
 
-  const TestLayer = AssistantTestLayer({
-    aiServicePreset: options.inferenceProvider ?? 'direct',
-    model,
-    disableLlmMemoization: options.disableLlmMemoization ?? false,
-    operationHandlers: [
-      AgentHandlers,
-      DatabaseHandlers,
-      BlueprintManagerHandlers,
-      InboxOperationHandlerSet,
-      WebSearchHandlers,
-    ],
-    types: [
-      Organization.Organization,
-      Person.Person,
-      Employer.Employer,
-      Tag.Tag,
-      Blueprint.Blueprint,
-      Feed.Feed,
-      Mailbox.Mailbox,
-    ],
-    blueprints: [
-      BlueprintManagerBlueprint.make(),
-      DatabaseBlueprint.make(),
-      WebSearchBlueprint.make(),
-      MemoryBlueprint.make(),
-      AutomationBlueprint.make(),
-      // AssistantBlueprint.make(),
-      InboxBlueprint.make(),
-    ],
-    toolkits: [WebSearchToolkitOpaque],
-  });
-
   return Effect.fnUntraced(
-    function* (_) {
-      yield* Database.add(prompt);
-      const conversationFeed = Feed.make();
-      yield* Database.add(conversationFeed);
-      yield* Database.flush();
-      const exit = yield* Operation.invoke(
-        AgentPrompt,
-        {
-          prompt: Ref.make(prompt),
-          input: {},
-          systemInstructions: INSTRUCTIONS,
-          model,
-        },
-        { conversation: Obj.getURI(conversationFeed) },
-      ).pipe(Effect.exit);
+    function* (ctx) {
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const harness = yield* Effect.acquireRelease(
+            Effect.promise(async () =>
+              createComposerTestApp({
+                plugins: await createDefaultPlugins(ctx, options),
+              }),
+            ),
+            (testHarness) => Effect.promise(() => testHarness.dispose()),
+          );
 
-      if (options.expect === 'failure') {
-        if (!Exit.isFailure(exit)) {
-          throw new Error('Expected the agent to fail, but it succeeded');
-        }
-      } else {
-        yield* exit;
-      }
+          yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
+
+          const { personalSpace } = yield* Effect.promise(() =>
+            runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+          );
+
+          if (options.expect === 'failure') {
+            const exit: Exit.Exit<unknown, unknown> = yield* Effect.promise(() =>
+              runAgentPrompt(harness, prompt, model, personalSpace.id).then(
+                (value): Exit.Exit<unknown, unknown> => Exit.succeed(value),
+                (cause): Exit.Exit<unknown, unknown> => Exit.fail(cause),
+              ),
+            );
+            if (!Exit.isFailure(exit)) {
+              return yield* Effect.fail(new Error('Expected the agent to fail, but it succeeded'));
+            }
+          } else {
+            yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id));
+          }
+        }),
+      );
     },
-    Effect.provide(TestLayer),
     TestHelpers.provideTestContext,
   );
 };
