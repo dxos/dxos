@@ -7,7 +7,7 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -72,7 +72,9 @@ export class Migrations {
           const builder = new MigrationBuilder(space);
           await migration.next({ space, builder });
           await builder._commit();
-          Annotation.set(space.properties, MigrationVersionAnnotation, migration.version);
+          Obj.update(space.properties, (properties) => {
+            Annotation.set(properties, MigrationVersionAnnotation, migration.version);
+          });
         }
       }
     } finally {

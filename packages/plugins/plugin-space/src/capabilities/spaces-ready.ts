@@ -163,13 +163,17 @@ export default Capability.makeModule(
           if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
             const legacyRef = (space.properties as any)[Type.getTypename(Collection.Collection)];
             if (legacyRef) {
-              Annotation.set(space.properties, RootCollectionAnnotation, legacyRef);
+              Obj.update(space.properties, (properties) => {
+                Annotation.set(properties, RootCollectionAnnotation, legacyRef);
+              });
             }
           }
           if (Migrations.namespace && Option.isNone(Annotation.get(space.properties, MigrationVersionAnnotation))) {
             const legacyVersion = (space.properties as any)[`${Migrations.namespace}.version`];
             if (typeof legacyVersion === 'string') {
-              Annotation.set(space.properties, MigrationVersionAnnotation, legacyVersion);
+              Obj.update(space.properties, (properties) => {
+                Annotation.set(properties, MigrationVersionAnnotation, legacyVersion);
+              });
             }
           }
 

@@ -9,7 +9,7 @@ import * as Raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 
 import type { Space } from '@dxos/client/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { type WnfsCapabilities } from '#types';
@@ -53,9 +53,11 @@ export const upload = async ({
   if (!currentState) {
     throw new Error('WnfsStateAnnotation missing after loadWnfs; cannot persist forest CID.');
   }
-  Annotation.set(space.properties, WnfsStateAnnotation, {
-    ...currentState,
-    privateForestCid: CID.decode(cidBytes).toString(),
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, WnfsStateAnnotation, {
+      ...currentState,
+      privateForestCid: CID.decode(cidBytes).toString(),
+    });
   });
 
   // Generate `wnfs://` URL & return the info.

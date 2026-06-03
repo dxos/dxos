@@ -40,9 +40,9 @@ export const loadWnfs = async ({
   }
   // Migrate legacy wnfs data key to annotation.
   if (propsAny.wnfs !== undefined && Option.isNone(Annotation.get(space.properties, WnfsStateAnnotation))) {
-    Annotation.set(space.properties, WnfsStateAnnotation, propsAny.wnfs);
-    Obj.update(space.properties, (obj) => {
-      delete (obj as any)['wnfs'];
+    Obj.update(space.properties, (properties) => {
+      Annotation.set(properties, WnfsStateAnnotation, propsAny.wnfs);
+      delete (properties as any)['wnfs'];
     });
   }
 
@@ -84,9 +84,11 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 
   const cidBytes = await newForest.store(wnfsStore);
 
-  Annotation.set(space.properties, WnfsStateAnnotation, {
-    accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
-    privateForestCid: CID.decode(cidBytes).toString(),
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, WnfsStateAnnotation, {
+      accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
+      privateForestCid: CID.decode(cidBytes).toString(),
+    });
   });
 
   return {

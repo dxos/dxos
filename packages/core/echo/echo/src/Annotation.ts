@@ -126,11 +126,11 @@ export const get: {
  * For setting an annotation value on a dictionary, use `setDictionary`.
  */
 export const set: {
-  <T>(annotation: Annotation<T>, value: T): (target: Entity.Unknown) => void;
-  <T>(target: Entity.Unknown, annotation: Annotation<T>, value: T): void;
+  <T>(annotation: Annotation<T>, value: T): (target: Entity.Mutable<Entity.Unknown>) => void;
+  <T>(target: Entity.Mutable<Entity.Unknown>, annotation: Annotation<T>, value: T): void;
 } = Function.dual<
-  <T>(annotation: Annotation<T>, value: T) => (target: Entity.Unknown) => void,
-  <T>(target: Entity.Unknown, annotation: Annotation<T>, value: T) => void
+  <T>(annotation: Annotation<T>, value: T) => (target: Entity.Mutable<Entity.Unknown>) => void,
+  <T>(target: Entity.Mutable<Entity.Unknown>, annotation: Annotation<T>, value: T) => void
 >(3, (target, annotation, value) => {
   return internalAnnotations.set(target, annotation, value);
 });
