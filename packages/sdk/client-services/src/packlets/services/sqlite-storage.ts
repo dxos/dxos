@@ -5,7 +5,6 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
-import { join } from 'node:path';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
@@ -293,13 +292,13 @@ export class SqliteStorage implements Storage {
   }
 
   createDirectory(sub = ''): Directory {
-    const dirPath = sub ? join(this.path, sub) : this.path;
+    const dirPath = sub ? `${this.path}/${sub}` : this.path;
     const runtime = this.#runtime;
     const files = this.#files;
     const nativeFiles = this.#nativeFiles;
 
     const getOrCreateFile = (path: string, filename: string): File => {
-      const fullPath = join(path, filename);
+      const fullPath = `${path}/${filename}`;
       const existingNative = nativeFiles.get(fullPath);
       if (existingNative && !existingNative.destroyed) {
         return files.get(fullPath)!;
