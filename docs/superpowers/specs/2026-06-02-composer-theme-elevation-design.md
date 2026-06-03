@@ -42,16 +42,16 @@ plugins beyond what the token remap implies.
 A numbered scale, **z-order low → high**. The toolbar is a _raised, shadowed bar_ that floats above
 scrolling content (decision "B" from brainstorming).
 
-| Level | Name     | Roles (named surfaces)                                  | Dark  | Light          |
-| ----- | -------- | ------------------------------------------------------- | ----- | -------------- |
-| 0     | `void`   | window gaps, scrim base                                 | n-950 | n-200          |
-| 1     | `rail`   | L0 icon rail                                            | n-900 | n-175          |
-| 2     | `chrome` | L1 / R0 / R1 sidebars, header                           | n-875 | n-150          |
-| 3     | `canvas` | base, deck                                              | n-850 | n-125          |
-| 4     | `raised` | card, group, input                                      | n-825 | n-100          |
-| 5     | `bar`    | toolbar (sticky, shadowed)                              | n-800 | n-75           |
-| 6     | `modal`  | dialog, modal                                           | n-775 | n-50           |
-| 7     | `float`  | popover, menu, toast, tooltip                           | n-750 | white          |
+| Level | Name     | Roles (named surfaces)        | Dark  | Light |
+| ----- | -------- | ----------------------------- | ----- | ----- |
+| 0     | `void`   | window gaps, scrim base       | n-950 | n-200 |
+| 1     | `rail`   | L0 icon rail                  | n-900 | n-175 |
+| 2     | `chrome` | L1 / R0 / R1 sidebars, header | n-875 | n-150 |
+| 3     | `canvas` | base, deck                    | n-850 | n-125 |
+| 4     | `raised` | card, group, input            | n-825 | n-100 |
+| 5     | `bar`    | toolbar (sticky, shadowed)    | n-800 | n-75  |
+| 6     | `modal`  | dialog, modal                 | n-775 | n-50  |
+| 7     | `float`  | popover, menu, toast, tooltip | n-750 | white |
 
 Notes:
 
@@ -86,9 +86,9 @@ Introduce an ordered, mode-aware primitive at the top of the `@theme` block:
 --dx-elevation-2: light-dark(var(--color-neutral-150), var(--color-neutral-875)); /* chrome */
 --dx-elevation-3: light-dark(var(--color-neutral-125), var(--color-neutral-850)); /* canvas */
 --dx-elevation-4: light-dark(var(--color-neutral-100), var(--color-neutral-825)); /* raised */
---dx-elevation-5: light-dark(var(--color-neutral-75),  var(--color-neutral-800)); /* bar    */
---dx-elevation-6: light-dark(var(--color-neutral-50),  var(--color-neutral-775)); /* modal  */
---dx-elevation-7: light-dark(var(--color-white),       var(--color-neutral-750)); /* float  */
+--dx-elevation-5: light-dark(var(--color-neutral-75), var(--color-neutral-800)); /* bar    */
+--dx-elevation-6: light-dark(var(--color-neutral-50), var(--color-neutral-775)); /* modal  */
+--dx-elevation-7: light-dark(var(--color-white), var(--color-neutral-750)); /* float  */
 ```
 
 `--color-neutral-775` is the only **new** ramp step (dark: `color-mix(n-750, n-800)`); light mode reuses
@@ -101,20 +101,20 @@ Every existing `--color-*-surface` is redefined as `var(--dx-elevation-N)` — n
 (`bg-card-surface`, `dx-modal-surface`, …) keep working:
 
 ```css
---color-base-surface:    var(--dx-elevation-3);
---color-deck-surface:    var(--dx-elevation-3);
---color-card-surface:    var(--dx-elevation-4);
---color-group-surface:   var(--dx-elevation-4);
---color-input-surface:   var(--dx-elevation-4);
+--color-base-surface: var(--dx-elevation-3);
+--color-deck-surface: var(--dx-elevation-3);
+--color-card-surface: var(--dx-elevation-4);
+--color-group-surface: var(--dx-elevation-4);
+--color-input-surface: var(--dx-elevation-4);
 --color-toolbar-surface: var(--dx-elevation-5);
---color-modal-surface:   var(--dx-elevation-6);
+--color-modal-surface: var(--dx-elevation-6);
 --color-popover-surface: var(--dx-elevation-7); /* NEW */
 --color-sidebar-surface: var(--dx-elevation-2);
---color-header-surface:  var(--dx-elevation-2);
---color-l0-surface:      var(--dx-elevation-1);
---color-l1-surface:      var(--dx-elevation-2);
---color-r0-surface:      var(--dx-elevation-2);
---color-r1-surface:      var(--dx-elevation-2);
+--color-header-surface: var(--dx-elevation-2);
+--color-l0-surface: var(--dx-elevation-1);
+--color-l1-surface: var(--dx-elevation-2);
+--color-r0-surface: var(--dx-elevation-2);
+--color-r1-surface: var(--dx-elevation-2);
 ```
 
 - `group-alt-surface`, `attention-surface`, `focus-surface` etc. are reconciled to the nearest level (to

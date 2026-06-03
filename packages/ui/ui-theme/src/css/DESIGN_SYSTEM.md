@@ -6,11 +6,11 @@ This document describes how color tokens are organized in `ui-theme`, the naming
 
 Three layers, each consuming the one below:
 
-| Tier        | File                                         | Purpose                                                                                                                                                                              | Example                                                                 |
-| ----------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| 1. Scale    | [`theme/palette.css`](./theme/palette.css)   | Raw color values. Extends Tailwind's neutral/blue scales with intermediate stops and aliases the `primary-*` ramp to `blue-*`.                                                       | `--color-neutral-150`, `--color-primary-500`                            |
-| 2. Hue role | [`theme/styles.css`](./theme/styles.css)     | Per-hue role tokens for every Tailwind hue plus `neutral`. Six roles each: `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`. Light/dark resolved via `light-dark()`.              | `--color-red-surface`, `--color-neutral-border`                         |
-| 3. Semantic | [`theme/semantic.css`](./theme/semantic.css) | Named UI surfaces and states. May reference hue-role tokens (e.g. `error-surface` → `rose-surface`) or compose directly from the scale.                                              | `--color-card-surface`, `--color-current-surface`, `--color-error-text` |
+| Tier        | File                                         | Purpose                                                                                                                                                                 | Example                                                                 |
+| ----------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1. Scale    | [`theme/palette.css`](./theme/palette.css)   | Raw color values. Extends Tailwind's neutral/blue scales with intermediate stops and aliases the `primary-*` ramp to `blue-*`.                                          | `--color-neutral-150`, `--color-primary-500`                            |
+| 2. Hue role | [`theme/styles.css`](./theme/styles.css)     | Per-hue role tokens for every Tailwind hue plus `neutral`. Six roles each: `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`. Light/dark resolved via `light-dark()`. | `--color-red-surface`, `--color-neutral-border`                         |
+| 3. Semantic | [`theme/semantic.css`](./theme/semantic.css) | Named UI surfaces and states. May reference hue-role tokens (e.g. `error-surface` → `rose-surface`) or compose directly from the scale.                                 | `--color-card-surface`, `--color-current-surface`, `--color-error-text` |
 
 A consumer should reach for the highest tier that fits. Use `bg-card-surface`, not `bg-neutral-825`. Use `text-error-text`, not `text-rose-700`.
 
@@ -42,16 +42,16 @@ mode; inverted toward white in light mode. Every named surface token is an alias
 `--dx-elevation-N` level. Never set a surface to a raw scale value — pick the level that matches the
 role and point the token there.
 
-| Level | Name     | Dark      | Light    | Named surfaces                                                                              |
-| ----- | -------- | --------- | -------- | ------------------------------------------------------------------------------------------- |
-| 0     | `void`   | `n-950`   | `n-200`  | scrim base, window gaps                                                                     |
-| 1     | `rail`   | `n-900`   | `n-175`  | `l0-surface` (icon rail)                                                                    |
-| 2     | `chrome` | `n-875`   | `n-150`  | `sidebar-surface`, `header-surface`, `l1-surface`, `r0-surface`, `r1-surface`               |
-| 3     | `canvas` | `n-850`   | `n-125`  | `base-surface`, `deck-surface`                                                              |
-| 4     | `raised` | `n-825`   | `n-100`  | `card-surface`, `group-surface`, `input-surface`                                            |
-| 5     | `bar`    | `n-800`   | `n-75`   | `toolbar-surface` (sticky, drop-shadowed)                                                   |
-| 6     | `modal`  | `n-775`   | `n-50`   | `modal-surface` (dialogs)                                                                   |
-| 7     | `float`  | `n-750`   | `white`  | `popover-surface` (menus, popovers, toasts, tooltips)                                       |
+| Level | Name     | Dark    | Light   | Named surfaces                                                                |
+| ----- | -------- | ------- | ------- | ----------------------------------------------------------------------------- |
+| 0     | `void`   | `n-950` | `n-200` | scrim base, window gaps                                                       |
+| 1     | `rail`   | `n-900` | `n-175` | `l0-surface` (icon rail)                                                      |
+| 2     | `chrome` | `n-875` | `n-150` | `sidebar-surface`, `header-surface`, `l1-surface`, `r0-surface`, `r1-surface` |
+| 3     | `canvas` | `n-850` | `n-125` | `base-surface`, `deck-surface`                                                |
+| 4     | `raised` | `n-825` | `n-100` | `card-surface`, `group-surface`, `input-surface`                              |
+| 5     | `bar`    | `n-800` | `n-75`  | `toolbar-surface` (sticky, drop-shadowed)                                     |
+| 6     | `modal`  | `n-775` | `n-50`  | `modal-surface` (dialogs)                                                     |
+| 7     | `float`  | `n-750` | `white` | `popover-surface` (menus, popovers, toasts, tooltips)                         |
 
 The primitive `--dx-elevation-0…7` is defined in `semantic.css` using `light-dark()`. Raw scale values
 (`n-*`) are in `palette.css` — the table above is for human reference only.
