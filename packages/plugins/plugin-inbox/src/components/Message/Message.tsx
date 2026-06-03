@@ -10,12 +10,11 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Card, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Card, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import { decorateMarkdown, preview } from '@dxos/ui-editor';
-import { toHue } from '@dxos/ui-theme';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
@@ -220,17 +219,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
         ))}
 
         {/* Tags row — Gmail-synced provider labels and user-applied tags. */}
-        {tags.length > 0 && (
-          <Card.Row icon='ph--tag--regular'>
-            <div className='flex flex-wrap gap-1 -mx-0.5' data-testid='extracted-tags'>
-              {tags.map((tag) => (
-                <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
-                  {tag.label}
-                </Tag>
-              ))}
-            </div>
-          </Card.Row>
-        )}
+        <Header.TagsRow tags={tags} />
       </Card.Body>
     </Card.Root>
   );

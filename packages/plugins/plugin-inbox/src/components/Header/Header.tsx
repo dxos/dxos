@@ -7,8 +7,9 @@ import React, { useCallback, useRef } from 'react';
 
 import { Obj, type Database } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import { Card, DxAnchorActivate, IconButton, useTranslation } from '@dxos/react-ui';
+import { Card, DxAnchorActivate, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { type Actor } from '@dxos/types';
+import { toHue } from '@dxos/ui-theme';
 
 import { useActorContact } from '#hooks';
 import { meta } from '#meta';
@@ -77,10 +78,17 @@ const AnchorIconButton = ({
   );
 };
 
+//
 // DateRow
+//
+
+type HeaderDateRowProps = {
+  start: Date;
+  end?: Date;
+};
 
 /** A Card.Row rendering a date range with a calendar icon. */
-const HeaderDateRow = ({ start, end }: { start: Date; end?: Date }) => {
+const HeaderDateRow = ({ start, end }: HeaderDateRowProps) => {
   let { hours = 0, minutes = 0 } = (end && intervalToDuration({ start, end })) ?? {};
   // Prefer 90m over 1h 30m.
   if (hours === 1 && minutes !== 0) {
@@ -165,6 +173,30 @@ const HeaderPersonRow = ({ actor, db, onContactCreate }: HeaderPersonRowProps) =
 HeaderPersonRow.displayName = 'Header.PersonRow';
 
 //
+// TagsRow
+//
+
+type TagItem = { id: string; label?: string; hue?: string };
+
+type TagsRowProps = { tags: TagItem[] };
+
+/** A Card.Row rendering a set of label+hue tag chips. */
+const HeaderTagsRow = ({ tags }: TagsRowProps) =>
+  tags.length > 0 ? (
+    <Card.Row icon='ph--tag--regular'>
+      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
+        {tags.map((tag) => (
+          <Tag key={tag.id} palette={toHue(tag.hue)} data-testid={`message-tag-${tag.id}`}>
+            {tag.label}
+          </Tag>
+        ))}
+      </div>
+    </Card.Row>
+  ) : null;
+
+HeaderTagsRow.displayName = 'Header.TagsRow';
+
+//
 // Header
 //
 
@@ -172,4 +204,7 @@ export const Header = {
   DateRow: HeaderDateRow,
   ObjectRow: HeaderObjectRow,
   PersonRow: HeaderPersonRow,
+  TagsRow: HeaderTagsRow,
 };
+
+export type { TagItem, TagsRowProps };
