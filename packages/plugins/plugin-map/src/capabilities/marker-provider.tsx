@@ -65,7 +65,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
 
 /** Built-in provider plotting a {@link Map.Map}'s view rows. */
 export const viewMarkerProvider: MapCapabilities.MarkerProvider = {
-  id: DXN.make('org.dxos.plugin.map/view').toString(),
+  id: DXN.make('org.dxos.plugin.map.view').toString(),
   match: (subject) => Obj.instanceOf(Map.Map, subject),
   useMarkers: useViewMarkers,
 };
