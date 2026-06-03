@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/react-client/echo';
@@ -13,12 +13,10 @@ import { Magazine } from '#types';
 
 export const MagazineProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Magazine.Magazine>) => {
   const { t } = useTranslation(meta.id);
-  const [magazine] = useObject(subject);
-  const routine = useMemo(() => magazine.routine?.target, [magazine.routine]);
-  const textObj = useMemo(() => routine?.instructions?.target, [routine]);
-  const [content, setContent] = useObject(textObj, 'content');
+  const [routine] = useObject(subject?.routine);
+  const [content, setContent] = useObject(routine?.instructions, 'content');
 
-  if (!routine || !textObj) {
+  if (!routine) {
     return null;
   }
 

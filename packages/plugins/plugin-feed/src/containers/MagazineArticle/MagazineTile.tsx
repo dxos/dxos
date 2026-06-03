@@ -4,9 +4,10 @@
 
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { useObject } from '@dxos/react-client/echo';
 import { Card, Focus, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { Obj } from '@dxos/echo';
 
 import { type Subscription } from '#types';
 
@@ -14,15 +15,15 @@ import { formatDate } from '../../util/format-date';
 import { getImageUrl, getSnippet } from '../../util/post-state';
 
 export type MagazineTileProps = {
-  post: Subscription.Post;
+  post: Subscription.Post | Obj.Snapshot<Subscription.Post>;
   current?: boolean;
   /** Per-Post state owned by the parent (resolved from the Subscription's tags / read marker). */
   read?: boolean;
   starred?: boolean;
-  onToggleStar?: (post: Subscription.Post) => void;
+  onToggleStar?: (post: Subscription.Post | Obj.Snapshot<Subscription.Post>) => void;
   feedName?: string;
   published?: string;
-  onOpen?: (post: Subscription.Post) => void;
+  onOpen?: (post: Subscription.Post | Obj.Snapshot<Subscription.Post>) => void;
 };
 
 export const MagazineTile = ({
@@ -35,8 +36,8 @@ export const MagazineTile = ({
   published,
   onOpen,
 }: MagazineTileProps) => {
-  useObject(post);
   // snippet/imageUrl are derived from the Post's description (grid posts aren't content-fetched).
+  // Reactivity is handled by the parent's useObjects subscription — queue posts are immutable.
   const imageUrl = getImageUrl(post);
   const snippet = getSnippet(post) || undefined;
 
@@ -100,5 +101,5 @@ export const MagazineTile = ({
 };
 
 /** Convenience: format a Post's published date the way the magazine view shows it. */
-export const formatPublished = (post: Subscription.Post): string | undefined =>
+export const formatPublished = (post: Subscription.Post | Obj.Snapshot<Subscription.Post>): string | undefined =>
   post.published ? formatDate(post.published) : undefined;

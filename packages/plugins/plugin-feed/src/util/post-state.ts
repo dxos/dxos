@@ -35,8 +35,16 @@ export type SystemTag = keyof typeof SYSTEM_TAG;
 //
 
 /** ISO timestamp the Post was first opened, or undefined. */
-export const getReadAt = (subscription: Subscription.Subscription | undefined, postId: string): string | undefined =>
-  subscription ? StateMap.bind<Subscription.PostState>(subscription, 'postState').get(postId).readAt : undefined;
+export const getReadAt = (
+  subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription> | undefined,
+  postId: string,
+): string | undefined => {
+  if (!subscription) {
+    return undefined;
+  }
+  // Snapshot<T> omits OfKind but preserves all data fields; StateMap.bind works at runtime.
+  return StateMap.bind<Subscription.PostState>(subscription as Subscription.Subscription, 'postState').get(postId).readAt;
+};
 
 /** Sets/clears the Post's read marker. */
 export const setReadAt = (subscription: Subscription.Subscription, postId: string, value: string | undefined): void =>
@@ -53,10 +61,12 @@ export const findSystemTagUri = async (
 
 /** Whether a Post carries the given (resolved) tag uri on its Subscription. Pure. */
 export const hasTag = (
-  subscription: Subscription.Subscription | undefined,
+  subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription> | undefined,
   postId: string,
   tagUri: string | undefined,
-): boolean => (subscription && tagUri ? TagIndex.bind(subscription, 'tags').objects(tagUri).includes(postId) : false);
+): boolean =>
+  // Snapshot<T> omits OfKind but preserves all data fields; TagIndex.bind works at runtime.
+  subscription && tagUri ? TagIndex.bind(subscription as Subscription.Subscription, 'tags').objects(tagUri).includes(postId) : false;
 
 /** Sets/clears a system tag (`starred`/`archived`) on a Post (find-or-creates the Tag object). Async. */
 export const setTag = async (

@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
@@ -22,11 +22,16 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const [currentPostId, setCurrentPostId] = useState<string>();
   const [error, setError] = useState<string>();
-  const [feed] = useObject(subject);
-  const feedTarget = feed.feed?.target;
+  const [subscription] = useObject(subject);
+  // Subscribe to the backing queue via its Ref — `.target` alone does not re-render when the
+  // feed loads after navigation (same pitfall as plugin-inbox MailboxArticle).
+  const [postFeed] = useObject(subscription?.feed);
+  const db = Obj.getDatabase(subscription);
   const posts = useQuery(
-    Obj.getDatabase(feed),
-    feedTarget ? Query.select(Filter.everything()).from(feedTarget) : Query.select(Filter.nothing()),
+    db,
+    postFeed
+      ? Query.select(Filter.type(Subscription.Post)).from(Scope.feed(Obj.getURI(postFeed)))
+      : Query.select(Filter.nothing()),
   );
 
   const handleAction = useCallback((action: PostStackAction) => {
@@ -50,7 +55,7 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
     <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{Entity.getLabel(feed)}</Toolbar.Text>
+          <Toolbar.Text>{subscription ? Entity.getLabel(subscription) : ''}</Toolbar.Text>
           <Toolbar.Separator />
           <Toolbar.IconButton
             label={t('sync-feed.label')}
@@ -61,7 +66,12 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <PostStack id={feed.id} posts={posts} currentId={currentPostId} onAction={handleAction} />
+        <PostStack
+          id={subscription?.id ?? subject.id}
+          posts={posts}
+          currentId={currentPostId}
+          onAction={handleAction}
+        />
       </Panel.Content>
       {error && (
         <Panel.Statusbar>
