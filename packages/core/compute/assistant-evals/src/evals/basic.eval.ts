@@ -3,11 +3,12 @@
 //
 
 import { Levenshtein } from 'autoevals';
+import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { createEvalRunner, type VariantConfig } from '../runner';
 import { trim } from '@dxos/util';
-import { Schema } from 'effect';
+
+import { createEvalRunner, type VariantConfig } from '../runner';
 
 // TODO(dmaretskyi): Still some ways to go. I want this to be able to perform complex tasks inside composer, and then evaluate the output and effects (i.e. Database changes).
 // To that end:
@@ -35,7 +36,6 @@ evalite.each<VariantConfig>([
     name: 'claude-opus-4-6',
     input: { model: '@anthropic/claude-opus-4-6' },
   },
-
 ])('Question answering', {
   data: [
     {

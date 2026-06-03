@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import * as Effect from 'effect/Effect';
+import type { Evalite } from 'evalite';
 
 import { AiService, type ModelName } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -24,8 +26,6 @@ import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
-import type { Schema } from 'effect';
-import type { Evalite } from 'evalite';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
 
@@ -45,7 +45,6 @@ interface RunAgentEvalOptions extends Pick<Routine.MakeOptions, 'name' | 'bluepr
   model?: ModelName;
   plugins?: Plugin.Plugin[];
 }
-
 
 const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.AiService.pipe(
@@ -76,7 +75,13 @@ const seedPrompt = (prompt: Routine.Routine) =>
     yield* Database.flush();
   });
 
-const runAgentPrompt = <I>(harness: TestHarness, prompt: Routine.Routine, model: ModelName, spaceId: SpaceId, input: I) =>
+const runAgentPrompt = <I>(
+  harness: TestHarness,
+  prompt: Routine.Routine,
+  model: ModelName,
+  spaceId: SpaceId,
+  input: I,
+) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedPrompt(prompt);
@@ -101,9 +106,11 @@ export interface CreateEvalRunnerOptions<I, O> {
   model?: ModelName;
 }
 
-export type VariantConfig = undefined | {
-  model?: ModelName;
-};
+export type VariantConfig =
+  | undefined
+  | {
+      model?: ModelName;
+    };
 
 export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
   return async (input: I, variant: VariantConfig) => {
@@ -139,4 +146,4 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
       ),
     );
   };
-}
+};

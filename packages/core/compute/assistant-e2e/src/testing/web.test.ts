@@ -13,7 +13,6 @@ Obj.ID.dangerouslyDisableRandomness();
 
 describe('Web', () => {
   it.effect(
-    // TODO(dmaretskyi): Agent unable to activate blueprints.
     'search the web',
     agentTest({
       instructions: trim`
