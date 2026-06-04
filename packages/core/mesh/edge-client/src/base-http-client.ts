@@ -79,7 +79,12 @@ export abstract class BaseHttpClient {
 
   protected async _call<T>(ctx: Context, url: URL, args: HttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
-    log('fetch', { url, request: args.body });
+    // Log presence/size only — never log raw body contents which may contain PII.
+    log('fetch', {
+      url,
+      hasBody: args.body !== undefined,
+      bodySize: typeof args.body === 'string' ? args.body.length : undefined,
+    });
 
     const traceHeaders = getTraceHeaders(ctx);
 
@@ -100,8 +105,19 @@ export abstract class BaseHttpClient {
         const response = await fetch(url, request);
 
         if (response.ok) {
+          const contentType = response.headers.get('Content-Type') ?? '';
+          // No-content responses (204, empty body, non-JSON) — return undefined.
+          if (
+            response.status === 204 ||
+            response.headers.get('Content-Length') === '0' ||
+            !contentType.includes('application/json')
+          ) {
+            return undefined as T;
+          }
           const body = await response.clone().json();
-          invariant(body, 'Expected body to be present');
+          if (typeof body !== 'object' || body === null) {
+            return body;
+          }
           if (!('success' in body)) {
             return body;
           }
@@ -161,7 +177,7 @@ const createRequest = (
   const headers: HeadersInit = {};
 
   if (json) {
-    requestBody = body && JSON.stringify(body);
+    requestBody = body === undefined ? undefined : JSON.stringify(body);
     headers['Content-Type'] = 'application/json';
   } else {
     requestBody = body;

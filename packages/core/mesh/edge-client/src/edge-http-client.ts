@@ -4,6 +4,7 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
@@ -470,7 +471,7 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   public async _fetch<T>(url: URL, _args: { method: string }): Promise<T> {
     return Function.pipe(
-      HttpClient.get(url),
+      HttpClient.execute(HttpClientRequest.make(_args.method as any)(url.toString())),
       withLogging,
       withRetryConfig,
       Effect.provide(FetchHttpClient.layer),
