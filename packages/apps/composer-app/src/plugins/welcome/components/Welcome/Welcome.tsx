@@ -24,6 +24,13 @@ const ATMOSPHERE_PROVIDER = 'atproto';
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
+// Underline tab style (overrides the react-ui Tabs.Tab button chrome) to match the prior look:
+// flat, full-width tabs with a bottom border that highlights the active one.
+const TAB_CLASSNAMES =
+  'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
+  'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
+  'data-[state=active]:border-white data-[state=active]:text-white';
+
 type Tab = 'login' | 'signup';
 type LoginMethod = 'passkey' | 'email' | 'atproto';
 type SignupMode = 'code' | 'waitlist';
@@ -219,7 +226,7 @@ export const Welcome = ({
       className={mx(
         'dark',
         'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
-        'rounded-xl shadow-md lg:translate-x-[-40%]',
+        'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
       )}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
@@ -232,6 +239,7 @@ export const Welcome = ({
 
         {state === WelcomeState.INIT && (
           <Tabs.Root
+            classNames='shrink-0'
             orientation='horizontal'
             defaultActivePart='list'
             value={tab}
@@ -245,9 +253,13 @@ export const Welcome = ({
             }}
           >
             <Tabs.Viewport classNames='flex flex-col gap-6'>
-              <Tabs.Tablist classNames='border-b border-neutral-700'>
-                <Tabs.Tab value='login'>{t('login-tab.label')}</Tabs.Tab>
-                <Tabs.Tab value='signup'>{t('signup-tab.label')}</Tabs.Tab>
+              <Tabs.Tablist classNames='p-0 gap-1 border-b border-neutral-700'>
+                <Tabs.Tab value='login' classNames={TAB_CLASSNAMES}>
+                  {t('login-tab.label')}
+                </Tabs.Tab>
+                <Tabs.Tab value='signup' classNames={TAB_CLASSNAMES}>
+                  {t('signup-tab.label')}
+                </Tabs.Tab>
               </Tabs.Tablist>
 
               <Tabs.Panel value='login'>
@@ -420,7 +432,7 @@ export const Welcome = ({
           </div>
         )}
 
-        <div className='z-[11] flex flex-col h-full justify-end'>
+        <div className='z-[11] mt-auto flex flex-col'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
             <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
               <span className='text-description'>Powered by</span>
