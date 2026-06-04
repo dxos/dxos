@@ -74,3 +74,24 @@ describe('formats', () => {
     }
   });
 });
+
+describe('GeoPoint', () => {
+  const decode = Schema.decodeUnknownSync(Format.GeoPoint);
+
+  test('rounds high-precision coordinates to 7 decimal places', ({ expect }) => {
+    // Live geocoders (e.g. Nominatim/OSRM) emit > 7 decimals; rounding keeps them valid GeoPoints.
+    expect(decode([-0.12776534, 51.50744561])).toEqual([-0.1277653, 51.5074456]);
+  });
+
+  test('passes through coordinates already within precision', ({ expect }) => {
+    expect(decode([2.3522, 48.8566])).toEqual([2.3522, 48.8566]);
+  });
+
+  test('preserves an optional altitude', ({ expect }) => {
+    expect(decode([-0.12776534, 51.50744561, 42])).toEqual([-0.1277653, 51.5074456, 42]);
+  });
+
+  test('clamps out-of-range coordinates', ({ expect }) => {
+    expect(decode([200, 100])).toEqual([180, 90]);
+  });
+});

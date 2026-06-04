@@ -42,10 +42,7 @@ export const Message = Schema.Struct({
   ),
 }).pipe(
   LabelAnnotation.set(['properties.subject']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--note--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
   Type.makeObject(DXN.make('org.dxos.type.message', '0.1.0')),
 );
 

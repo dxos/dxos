@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Type } from '@dxos/echo';
+import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 export const QueryBlueprints = Operation.make({
@@ -18,7 +18,7 @@ export const QueryBlueprints = Operation.make({
   },
   input: Schema.Struct({}),
   output: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
-  services: [Blueprint.RegistryService],
+  services: [Registry.Service],
 });
 
 export const EnableBlueprints = Operation.make({
@@ -44,18 +44,5 @@ export const EnableBlueprints = Operation.make({
       }),
     ),
   }),
-  services: [Blueprint.RegistryService, Database.Service, AiContext.Service],
-});
-
-export const UpdateBlueprints = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.function.blueprintManager.refreshBlueprints'),
-    name: 'Refresh blueprints',
-    description:
-      'Updates the blueprints saved to the database with the latest version from the registry. Sometimes blueprints in the database can become outdated. Use this function to pull in the latest versions.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({}),
-  output: Schema.Void,
-  services: [Blueprint.RegistryService, Database.Service],
+  services: [Registry.Service, Database.Service, AiContext.Service],
 });

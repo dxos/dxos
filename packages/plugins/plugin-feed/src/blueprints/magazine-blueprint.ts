@@ -14,6 +14,7 @@ const operations = [
   FeedOperation.AddPostToMagazine,
 ];
 
+// TODO(burdon): This is just sync? Use routine?
 const make = () =>
   Blueprint.make({
     key: Magazine.BLUEPRINT_KEY,

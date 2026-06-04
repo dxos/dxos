@@ -44,10 +44,7 @@ export const SampleItem = Schema.Struct({
 
   // `IconAnnotation` sets the default icon and color for objects of this type.
   // These appear in the navigation tree, breadcrumbs, and object headers.
-  Annotation.IconAnnotation.set({
-    icon: 'ph--book-open--regular',
-    hue: 'cyan',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--book-open--regular', hue: 'cyan' }),
   // `Type.makeObject` registers this schema as an ECHO type with a globally unique typename.
   // The typename is used for storage, queries, and cross-plugin type resolution.
   Type.makeObject(DXN.make('org.dxos.type.sample', '0.1.0')),

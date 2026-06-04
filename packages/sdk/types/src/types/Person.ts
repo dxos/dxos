@@ -115,10 +115,7 @@ export const Person = PersonSchema.pipe(
   ),
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--user--regular',
-    hue: 'neutral',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'neutral' }),
   Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0')),
 );
 

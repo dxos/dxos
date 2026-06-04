@@ -15,18 +15,16 @@ import type * as Obj from '../../Obj';
 import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
-  ATTR_META,
   ATTR_PARENT,
   ATTR_TYPE,
   type AnyEntity,
   EntityKind,
   KindId,
-  MetaId,
-  EntityMetaSchema,
   ParentId,
   setSchema,
   setType,
 } from '../common/types';
+import { ATTR_META, MetaId, EntityMetaSchema } from '../common/types/meta';
 import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
@@ -149,12 +147,14 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
+    const meta = await EntityMetaSchema.pipe(Schema.decodeUnknownPromise)(normalizeMeta(jsonData[ATTR_META]));
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
   } else {
     defineHiddenProperty(obj, MetaId, {
       keys: [],
+      tags: [],
+      annotations: {},
     });
   }
 
@@ -183,6 +183,23 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
   return obj;
+};
+
+/**
+ * Backfills required meta fields and upgrades legacy `tags` (bare URI strings) to encoded references
+ * so serialized data produced before the tags-as-refs migration still decodes.
+ */
+const normalizeMeta = (meta: any): any => {
+  const tags = Array.isArray(meta?.tags)
+    ? meta.tags.map((tag: unknown) => (typeof tag === 'string' ? { '/': URI.make(tag) } : tag))
+    : [];
+  // Coalesce required fields so explicit `undefined` in legacy input doesn't override the defaults.
+  return {
+    ...meta,
+    keys: Array.isArray(meta?.keys) ? meta.keys : [],
+    tags,
+    annotations: meta?.annotations ?? {},
+  };
 };
 
 const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }) => {

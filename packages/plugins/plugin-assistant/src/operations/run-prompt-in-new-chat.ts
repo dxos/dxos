@@ -94,8 +94,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
               ? prompt
               : yield* Effect.gen(function* () {
                   const promptObj = yield* Effect.promise(() => prompt.load());
-                  const source = yield* Effect.promise(() => promptObj.instructions.source.load());
-                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt template source must be Text.');
+                  const source = yield* Effect.promise(() => promptObj.instructions.load());
+                  invariant(Obj.instanceOf(Text.Text, source), 'Prompt instructions must be Text.');
                   return Template.process(source.content ?? '');
                 });
           yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({

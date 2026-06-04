@@ -56,7 +56,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   });
 
   return (
-    <TemplateEditor classNames='dx-document bg-base-surface' id={blueprint.id} template={blueprint.instructions} />
+    <TemplateEditor classNames='dx-document bg-base-surface' id={blueprint.id} source={blueprint.instructions.source} />
   );
 };
 

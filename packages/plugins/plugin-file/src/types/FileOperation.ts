@@ -39,8 +39,6 @@ export const Read = Operation.make({
       description: 'The file to read.',
     }),
   }),
-  output: Schema.Struct({
-    content: ContentBlock.File,
-  }),
+  output: ContentBlock.ContentBlockResult,
   services: [Database.Service],
 });

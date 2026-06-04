@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import type { Blockstore } from 'interface-blockstore';
 import { CID } from 'multiformats';
 import * as Raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 
 import type { Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { type WnfsCapabilities } from '#types';
 
+import { WnfsStateAnnotation } from '../annotations';
 import { Rng, filePath, store } from './common';
 import { loadWnfs } from './load';
 import { wnfsUrl } from './wnfs-url';
@@ -47,8 +49,15 @@ export const upload = async ({
   const cidBytes = await updatedForest.store(wnfsStore);
 
   // Update the forest pointer on the associated space.
-  Obj.update(space.properties, (obj) => {
-    obj.wnfs.privateForestCid = CID.decode(cidBytes).toString();
+  const currentState = Annotation.get(space.properties, WnfsStateAnnotation).pipe(Option.getOrUndefined);
+  if (!currentState) {
+    throw new Error('WnfsStateAnnotation missing after loadWnfs; cannot persist forest CID.');
+  }
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, WnfsStateAnnotation, {
+      ...currentState,
+      privateForestCid: CID.decode(cidBytes).toString(),
+    });
   });
 
   // Generate `wnfs://` URL & return the info.

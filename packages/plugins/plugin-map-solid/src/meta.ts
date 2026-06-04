@@ -25,7 +25,7 @@ export const meta = Plugin.makeMeta({
     This plugin is designed to complement plugin-map, which owns the Map ECHO schema and object-creation flow.
   `,
   icon: 'ph--compass--regular',
-  iconHue: 'green',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map-solid',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],

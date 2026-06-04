@@ -11,13 +11,13 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint } from '@dxos/compute';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery, useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '#components';
-import { useBlueprintRegistry, useContextBinder } from '#hooks';
+import { useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
 
 import ChatArticle from '../ChatArticle';
@@ -27,7 +27,7 @@ export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unkn
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role, subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
-    const blueprintRegistry = useBlueprintRegistry();
+    const registry = useRegistry();
     const space = getSpace(companionTo);
     const feedTarget = chat?.feed.target;
     const binder = useContextBinder(space, feedTarget);
@@ -77,38 +77,26 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       [existingBlueprints, blueprintKeys],
     );
 
-    // Initialize related blueprints that are not already in the space.
-    useAsyncEffect(async () => {
-      if (!space) {
-        return;
-      }
-
-      // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
-      const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-      for (const key of blueprintKeys) {
-        const existingBlueprint = existingBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
-        if (existingBlueprint) {
-          continue;
-        }
-
-        const blueprint = blueprintRegistry.getByKey(key);
-        if (!blueprint) {
-          continue;
-        }
-
-        space.db.add(Obj.clone(blueprint, { deep: true }));
-      }
-    }, [space, blueprintRegistry, blueprintKeys]);
-
     useAsyncEffect(async () => {
       if (!binder?.isOpen) {
         return;
       }
 
-      if (pluginBlueprints.length > 0) {
-        await binder.bind({
-          blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)),
+      // Bind annotated blueprints: use key URI for registry blueprints (no DB clone needed).
+      if (blueprintKeys.length > 0) {
+        const registryKeys = blueprintKeys.filter((key) => {
+          const candidate = registry.list().find((e) => Entity.getMeta(e)?.key === key);
+          return candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate);
         });
+        // DB-forked blueprints (in space but not in registry).
+        const dbForks = pluginBlueprints.filter((bp) => !registryKeys.includes(Obj.getMeta(bp).key ?? ''));
+
+        if (registryKeys.length > 0) {
+          await binder.bind({ blueprints: registryKeys.map((key) => Ref.fromURI(Blueprint.registryURI(key))) });
+        }
+        if (dbForks.length > 0) {
+          await binder.bind({ blueprints: dbForks.map((blueprint) => Ref.make(blueprint)) });
+        }
       }
 
       if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {
@@ -116,7 +104,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       } else {
         await binder.bind({ objects: [Ref.make(companionTo)] });
       }
-    }, [binder, companionTo, blueprintKeys]);
+    }, [binder, companionTo, pluginBlueprints]);
 
     return (
       <ChatArticle

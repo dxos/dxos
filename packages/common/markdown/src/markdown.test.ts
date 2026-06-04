@@ -57,6 +57,15 @@ describe('markdown', () => {
     expect(normalizeText('aaa  \nbbb')).to.equal('aaa\nbbb');
   });
 
+  test('strips trailing invisible characters from each line', ({ expect }) => {
+    // Zero-width space, soft hyphen, word joiner, combining grapheme joiner, ZWNBSP — the invisible
+    // chars that `.trim()` and the visible-whitespace pass leave behind when they trail visible text.
+    expect(normalizeText('aaa​​\nbbb')).to.equal('aaa\nbbb');
+    expect(normalizeText('word­')).to.equal('word');
+    expect(normalizeText('a⁠﻿\nb͏')).to.equal('a\nb');
+    expect(normalizeText('mixed ​  \nnext')).to.equal('mixed\nnext');
+  });
+
   test('collapses multiple blank lines in plain text', ({ expect }) => {
     // Three or more blank lines between text → one blank line.
     expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');

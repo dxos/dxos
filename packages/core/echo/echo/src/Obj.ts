@@ -24,6 +24,7 @@ import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
 import * as Ref from './Ref';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 /**
@@ -119,9 +120,13 @@ export interface BaseObjJson {
   id: string;
 }
 
-const defaultMeta: internal.EntityMeta = {
+// Factory (not a shared const): each object must get its own `keys`/`tags`/`annotations` containers,
+// otherwise mutating one object's meta would leak into every other object via the shared references.
+const defaultMeta = (): internal.EntityMeta => ({
   keys: [],
-};
+  tags: [],
+  annotations: {},
+});
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
@@ -180,7 +185,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
 
   // Set default fields on meta on creation.
   if (props[internal.MetaId] != null) {
-    meta = { ...structuredClone(defaultMeta), ...props[internal.MetaId] };
+    meta = { ...defaultMeta(), ...props[internal.MetaId] };
     delete props[internal.MetaId];
   }
 
@@ -199,7 +204,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     schema,
     filterUndefined,
     {
-      ...defaultMeta,
+      ...defaultMeta(),
       ...meta,
     },
     input,
@@ -581,8 +586,7 @@ export type Meta = internal.Meta;
  * // Mutable access inside change callback
  * Obj.update(person, (obj) => {
  *   const meta = Obj.getMeta(obj);     // EntityMeta (mutable)
- *   meta.tags ??= [];
- *   meta.tags.push('important');
+ *   meta.tags.push(Ref.make(tag));     // tags are refs to Tag objects
  * });
  * ```
  */
@@ -618,7 +622,7 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the object.
@@ -627,7 +631,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the object is deleted.
