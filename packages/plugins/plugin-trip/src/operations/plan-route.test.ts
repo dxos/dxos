@@ -111,7 +111,7 @@ describe('PlanRoute', () => {
     await expect(plan(trip)).rejects.toThrow(/No routing service/);
   });
 
-  test('geocoding query prefers code, then "city, country", then name', async ({ expect }) => {
+  test('geocoding query prefers geo, then code, then "city, country", then name', async ({ expect }) => {
     const seen: Routing.Waypoint[] = [];
     const recordingService: Routing.RoutingService = {
       id: 'recording',
@@ -124,6 +124,15 @@ describe('PlanRoute', () => {
     };
 
     const segments = [
+      // Resolved coordinates win over every string fallback — the Place passes through unchanged.
+      Segment.make({
+        details: {
+          _tag: 'road',
+          subKind: 'car',
+          origin: { geo: [2.3522, 48.8566], code: 'CDG', city: 'Paris' },
+          destination: { geo: [4.8357, 45.764], city: 'Lyon' },
+        },
+      }),
       // Code wins over city/name; city + country are joined.
       Segment.make({
         details: {
@@ -142,6 +151,8 @@ describe('PlanRoute', () => {
     await db.flush();
 
     await plan(trip, recordingService);
-    expect(seen).toEqual(['CDG', 'Lyon, France', 'Bath', 'Stonehenge']);
+    // Geo waypoints pass through as the Place (compared by their coordinates); the rest are query strings.
+    const normalized = seen.map((waypoint) => (typeof waypoint === 'string' ? waypoint : waypoint.geo));
+    expect(normalized).toEqual([[2.3522, 48.8566], [4.8357, 45.764], 'CDG', 'Lyon, France', 'Bath', 'Stonehenge']);
   });
 });

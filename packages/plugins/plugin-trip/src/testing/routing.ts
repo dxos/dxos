@@ -90,7 +90,9 @@ export const fakeRoute = (
     if (typeof waypoint !== 'string') {
       return waypoint;
     }
-    const geo = coords[normalize(waypoint)];
+    // `toWaypoint` emits "City, Country" for city-based geocoding; fall back to the city-only key.
+    const normalized = normalize(waypoint);
+    const geo = coords[normalized] ?? coords[normalized.split(',')[0]!.trim()];
     if (!geo) {
       throw new Routing.GeocodeError(waypoint);
     }
