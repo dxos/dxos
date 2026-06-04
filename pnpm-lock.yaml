@@ -8533,6 +8533,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/credentials':
+        specifier: workspace:*
+        version: link:../../core/halo/credentials
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -8542,6 +8545,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

@@ -57,6 +57,12 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

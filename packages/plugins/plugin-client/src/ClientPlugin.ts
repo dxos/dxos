@@ -6,8 +6,10 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
 import {
+  AccountCache,
   AppGraphBuilder,
   Client,
+  HubHttpClient,
   LayerSpecs,
   Migrations,
   NavigationHandler,
@@ -36,6 +38,14 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
       firesAfterActivation: [ClientEvents.ClientReady],
       activate: () => Client(options),
     };
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: AccountCache,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: HubHttpClient,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
