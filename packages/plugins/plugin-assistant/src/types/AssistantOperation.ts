@@ -126,7 +126,7 @@ export const ResolveNavigationTargets = Operation.make({
 });
 
 export const ForkChat = Operation.make({
-  meta: { key: makeKey('forkChat'), name: 'Fork Chat', icon: 'ph--git-branch--regular' },
+  meta: { key: makeKey('forkChat'), name: 'Fork Chat', icon: 'ph--git-branch--regular', skipRegistry: true },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
