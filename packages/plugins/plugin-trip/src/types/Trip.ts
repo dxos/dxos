@@ -24,10 +24,7 @@ export const Trip = Schema.Struct({
   segments: Schema.Array(Ref.Ref(Segment.Segment)).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--airplane-takeoff--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--airplane-takeoff--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.trip', '0.1.0')),
 );
 

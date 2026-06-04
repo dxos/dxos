@@ -8,11 +8,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
+import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 
 import { SpotlightCapabilities } from '#types';
-
-/** Commands dialog surface identifier (from plugin-navtree). */
-const COMMANDS_DIALOG = 'org.dxos.plugin.navtree.commands-dialog';
 
 const defaultState: SpotlightCapabilities.SpotlightState = {
   dialogOpen: true,

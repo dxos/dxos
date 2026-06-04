@@ -18,14 +18,22 @@ import { type ClientPluginOptions } from '#types';
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   Pick<ClientPluginOptions, 'onReset'> & {
     capabilityManager: CapabilityManager.CapabilityManager;
+    /**
+     * Optional async action run before `client.reset()`. Throwing here aborts the
+     * reset so callers can surface errors without wiping local state.
+     */
+    onBeforeReset?: () => Promise<void>;
   };
 
-export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogProps) => {
+export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }: ResetDialogProps) => {
   const { t } = useTranslation(translationKey);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
 
   const handleReset = useCallback(async () => {
+    if (onBeforeReset) {
+      await onBeforeReset();
+    }
     await client.reset();
     const target =
       mode === 'join-new-identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;

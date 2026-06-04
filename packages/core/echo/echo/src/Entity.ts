@@ -10,7 +10,9 @@ import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
+import type * as Ref from './Ref';
 import type * as Relation from './Relation';
+import type * as Tag from './Tag';
 import * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
@@ -103,12 +105,7 @@ export type Properties<T> = Omit<T, 'id' | KindId | Relation.Source | Relation.T
  * Check if a value is an ECHO entity (object or relation).
  * Returns `false` for snapshots.
  */
-export const isEntity = (value: unknown): value is Unknown => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  return (value as any)[KindId] !== undefined;
-};
+export const isEntity: (value: unknown) => value is Unknown = internal.isEntity;
 
 /**
  * Test if a value is an instance of a given object or relation type.
@@ -330,10 +327,10 @@ export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCa
  * Add a tag to an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: string): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: string): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);

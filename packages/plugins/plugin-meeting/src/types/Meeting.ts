@@ -46,10 +46,7 @@ export const Meeting = Schema.Struct({
   summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--note--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
   Type.makeObject(DXN.make('org.dxos.type.meeting', '0.1.0')),
 );
 

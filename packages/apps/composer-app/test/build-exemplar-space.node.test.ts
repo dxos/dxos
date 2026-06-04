@@ -31,12 +31,14 @@ import {
   type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
+import * as Option from 'effect/Option';
 import * as S from 'effect/Schema';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -199,13 +201,11 @@ describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
-  const collectionTypename = Type.getTypename(Collection.Collection);
-  Obj.update(space.properties, (properties) => {
-    if (!properties[collectionTypename]) {
-      properties[collectionTypename] = Ref.make(Collection.make());
-    }
-  });
-  const rootCollection = space.properties[collectionTypename]?.target as Collection.Collection | undefined;
+  if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+    Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+  }
+  const rootCollectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+  const rootCollection = rootCollectionRef?.target;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');
   }

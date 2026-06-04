@@ -20,10 +20,7 @@ export const Dream = Schema.Struct({
   sequences: Schema.optional(Schema.Array(Sequence)),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--moon-stars--regular',
-    hue: 'violet',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--moon-stars--regular', hue: 'violet' }),
   Type.makeObject(DXN.make('dxos.org.type.Dream', '0.1.0')),
 );
 

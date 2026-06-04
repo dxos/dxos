@@ -12,7 +12,8 @@ import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
 import { getTypeURI, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
-import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
+import { ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import { MetaId } from '../common/types/meta';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import * as JsonSchema from '../JsonSchema';
 import { Ref, StaticRefResolver } from '../Ref';
@@ -65,6 +66,8 @@ describe('Object JSON serializer', () => {
           source: 'example.com',
         },
       ],
+      tags: [],
+      annotations: {},
     });
     expect(getTypeURI(contactFromJson)?.toString()).toBe(Type.getURI(TestSchema.Person).toString());
     expect(getTypename(contactFromJson)).toBe(Type.getTypename(TestSchema.Person));
@@ -80,7 +83,7 @@ describe('Object JSON serializer', () => {
     expect((taskFromJson as any)[KindId]).toBe(EntityKind.Object);
     expect((taskFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((taskFromJson as any)[RelationTargetId]).toBeUndefined();
-    expect((taskFromJson as any)[MetaId]).toEqual({ keys: [] });
+    expect((taskFromJson as any)[MetaId]).toEqual({ keys: [], tags: [], annotations: {} });
     expect(getSchema(taskFromJson)).toEqual(Type.getSchema(TestSchema.Task));
   });
 
@@ -95,6 +98,17 @@ describe('Object JSON serializer', () => {
     expect(getTypename(contactFromJson)).toEqual(Type.getTypename(TestSchema.Person));
     expect(getObjectEchoUri(contactFromJson)).toEqual(getObjectEchoUri(contact));
     expect(getTypeURI(contactFromJson)).toEqual(Type.getURI(TestSchema.Person));
+  });
+
+  test('upgrades legacy string tags to encoded references on deserialize', async () => {
+    const expando = Obj.make(TestSchema.Expando, { message: 'hi' });
+    const json = objectToJSON(expando) as any;
+    // Simulate data serialized before the tags-as-refs migration: bare DXN strings.
+    json['@meta'] = { keys: [], tags: ['dxn:echo:@:TAGLEGACY'] };
+
+    const fromJson = (await objectFromJSON(json)) as any;
+    // Decodes to a materialized `Ref` (the shared ref codec), not a raw encoded reference.
+    expect(fromJson[MetaId].tags.map((ref: any) => ref.uri)).toEqual(['dxn:echo:@:TAGLEGACY']);
   });
 
   test('deserializes expando without leaking internal json keys', async () => {

@@ -27,9 +27,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/display-name"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -43,6 +40,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/markdown"
     },
     {
       "path": "../../common/random"
@@ -60,13 +60,7 @@
       "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/compute/assistant-toolkit"
-    },
-    {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/conductor"
     },
     {
       "path": "../../core/compute/extractor"
@@ -141,16 +135,10 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-grid"
-    },
-    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-table"
@@ -165,13 +153,7 @@
       "path": "../plugin-attention"
     },
     {
-      "path": "../plugin-automation"
-    },
-    {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"
@@ -193,9 +175,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-table"
     },
     {
       "path": "../plugin-testing"

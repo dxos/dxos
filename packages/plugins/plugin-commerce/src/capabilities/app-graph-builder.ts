@@ -21,7 +21,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Show Provider.Provider objects as nodes under each space.
       GraphBuilder.createExtension({
-        id: 'commerce-providers',
+        id: 'commerceProviders',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const providers = get(AtomQuery.make(space.db, Filter.type(Provider.Provider)));
@@ -56,7 +56,7 @@ export default Capability.makeModule(
 
       // Run action on each Search.Search node.
       GraphBuilder.createExtension({
-        id: 'commerce-run',
+        id: 'commerceRun',
         match: (node) => (Search.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (search) =>
           Effect.succeed([
@@ -88,7 +88,7 @@ export default Capability.makeModule(
 
       // Re-analyze action on each Provider.Provider node.
       GraphBuilder.createExtension({
-        id: 'commerce-analyze',
+        id: 'commerceAnalyze',
         match: (node) => (Provider.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (provider) =>
           Effect.succeed([

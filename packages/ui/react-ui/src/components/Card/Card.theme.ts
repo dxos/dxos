@@ -18,15 +18,15 @@ export type CardStyleProps = {
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
-    border &&
-      'bg-card-surface border border-separator dark:border-subdued-separator rounded-sm dx-focus-ring-group-y-indicator',
+    'bg-card-surface',
+    border && 'border border-subdued-separator rounded-sm dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
   );
 
 const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
-    'dx-card__header dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
+    'dx-card__header dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! shadow-none [contain:none]',
     ...etc,
   );
 

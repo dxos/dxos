@@ -9,14 +9,16 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
   LayoutOperation,
+  RootCollectionAnnotation,
   getSpacePath,
   resolvePersonalSpace,
   setPersonalSpace,
 } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
-import { Filter, Obj } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
@@ -155,6 +157,23 @@ export default Capability.makeModule(
       spaces
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
         .forEach((space) => {
+          if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+            const legacyRef = (space.properties as any)[Type.getTypename(Collection.Collection)];
+            if (legacyRef) {
+              Obj.update(space.properties, (properties) => {
+                Annotation.set(properties, RootCollectionAnnotation, legacyRef);
+              });
+            }
+          }
+          if (Migrations.namespace && Option.isNone(Annotation.get(space.properties, MigrationVersionAnnotation))) {
+            const legacyVersion = (space.properties as any)[`${Migrations.namespace}.version`];
+            if (typeof legacyVersion === 'string') {
+              Obj.update(space.properties, (properties) => {
+                Annotation.set(properties, MigrationVersionAnnotation, legacyVersion);
+              });
+            }
+          }
+
           const updateSpaceName = () => {
             const name = space.properties.name;
             if (!name) {

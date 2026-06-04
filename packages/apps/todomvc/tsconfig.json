@@ -31,9 +31,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -44,9 +41,6 @@
     },
     {
       "path": "../../sdk/config"
-    },
-    {
-      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"

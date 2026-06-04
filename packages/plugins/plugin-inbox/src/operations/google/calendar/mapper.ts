@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Ref } from '@dxos/echo';
 import { type Resolver, resolve } from '@dxos/extractor';
+import { normalizeText } from '@dxos/markdown';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../../apis';
-import { normalizeText } from '../util';
 
 /**
  * Maps Google Calendar event to ECHO event object.

@@ -15,7 +15,7 @@ const Fallback = () => {
     <div className='min-h-screen w-full flex items-center justify-center p-8'>
       <p
         role='alert'
-        className='flex items-center justify-center p-8 font-normal text-lg text-error-text border border-rose-fill rounded-md'
+        className='flex items-center justify-center p-8 font-normal text-lg text-error-text border border-rose-bg rounded-md'
       >
         {t('plugin-error.message')}
       </p>

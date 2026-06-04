@@ -18,9 +18,9 @@ type ViewMode = 'form' | 'search';
 
 /**
  * Companion surface for a selected Segment. A toolbar toggles between the
- * schema-driven edit Form and the BookingSearch surface. Defaults to Search
- * when the segment has no booking yet, otherwise Form. The user can switch
- * either way — the toolbar drives the view, it is not a hard conditional.
+ * schema-driven edit Form and the BookingSearch surface. Defaults to the Form
+ * view; the user can switch either way — the toolbar drives the view, it is not
+ * a hard conditional.
  */
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;
 
@@ -29,7 +29,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   const type = Obj.getType(segment);
   const echoSchema = type && Type.getSchema(type);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
-  const [viewMode, setViewMode] = useState<ViewMode>(segment.booking ? 'form' : 'search');
+  const [viewMode, setViewMode] = useState<ViewMode>('form');
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {

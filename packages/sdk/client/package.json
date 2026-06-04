@@ -119,7 +119,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -145,12 +144,10 @@
     "@dxos/websocket-rpc": "workspace:*",
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
-    "base-x": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",
     "jwt-decode": "catalog:",
-    "lodash.isequalwith": "catalog:",
-    "web-worker": "1.5.0"
+    "lodash.isequalwith": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",

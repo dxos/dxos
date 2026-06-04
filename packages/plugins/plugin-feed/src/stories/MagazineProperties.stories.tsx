@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Filter, Tag } from '@dxos/echo';
+import { Routine } from '@dxos/compute';
+import { Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
@@ -44,7 +45,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Magazine.Magazine, Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
+      types: [Magazine.Magazine, Subscription.Subscription, Subscription.Post, Routine.Routine, Tag.Tag, Text.Text],
       onCreateSpace: async ({ space }) => {
         // Pre-seed a couple of feeds so the Feeds combobox has options to pick from,
         // exercising both "select existing" and "create new" flows.
@@ -60,11 +61,19 @@ const meta = {
             url: 'https://vercel.com/changelog/feed',
           }),
         );
+        // Curation Routine, parented to (owned by) the Magazine — surfaced inline
+        // in the properties form (with its Markdown instructions editor) via
+        // `Magazine.routine`'s `FormInlineAnnotation`.
+        const routine = space.db.add(
+          Routine.make({ name: 'Curation', instructions: 'Prefer stories relating to sovereign AI.' }),
+        );
         const magazine = space.db.add(
           Magazine.make({
             name: 'Distributed Systems Reading',
+            routine: Ref.make(routine),
           }),
         );
+        Obj.setParent(routine, magazine);
         // Expose the magazine + space on `window` so the play function can
         // assert directly against the underlying ECHO state (e.g. that
         // `magazine.feeds` actually grew after the create-feed flow).
@@ -84,8 +93,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Default Magazine ObjectProperties — exercises the auto-generated form,
- * including the Routine picker and the Feeds picker.
+ * Default Magazine ObjectProperties — exercises the auto-generated form: the
+ * Feeds picker and the inline Routine (rendered via `FormInlineAnnotation` as a
+ * nested form with its Markdown instructions editor), seeded with an example
+ * curation prompt.
  *
  * Manual flow:
  *  1. Open the Feeds combobox.
@@ -142,16 +153,23 @@ export const CreateFeed: Story = {
         }
         await new Promise((resolve) => setTimeout(resolve, interval));
       }
+
       throw new Error(`waitFor timed out: ${label} (last value: ${JSON.stringify(last)})`);
     };
 
     // 1. Click the Feeds "Add" button. ECHO/space setup is async via
     //    `withClientProvider.onCreateSpace`, so wait long enough for the
-    //    magazine to be queried and the form to render.
-    const addButtons = await canvas.findAllByRole('button', { name: /add/i }, { timeout: 30_000 });
-    // Two array fields render an "Add item" button (Tags + Feeds). Pick the
-    // Feeds one — it's the second.
-    const feedsAddButton = addButtons[addButtons.length - 1];
+    //    magazine to be queried and the form to render. Several array fields
+    //    render an "Add item" button (Tags, Feeds, and the inline Routine's
+    //    Blueprints), so scope the lookup to the Feeds field's row (the
+    //    `ArrayField` label + add button share a `.gap-2` flex row) rather than
+    //    relying on positional ordering.
+    const feedsLabel = await canvas.findByText('Feeds', {}, { timeout: 30_000 });
+    const feedsRow = feedsLabel.closest('.gap-2');
+    if (!feedsRow) {
+      throw new Error('Feeds array-field row not found.');
+    }
+    const feedsAddButton = within(feedsRow as HTMLElement).getByRole('button', { name: /add/i });
     await userEvent.click(feedsAddButton);
 
     // 2. Wait for the new combobox slot to render, then open it.
@@ -213,9 +231,13 @@ export const CreateFeed: Story = {
     // one — guards against an off-by-one bug in the create flow that would
     // overwrite the slot with a stale ref).
     const newId = (newFeed as any).id;
+    // Extract the bare entity id across both `:` (DXN) and `/` (EID) delimiters —
+    // `Ref.make` yields a local EID `echo:/<id>`, so a plain `split(':')` would
+    // leave the leading slash and never match the bare id.
+    const toEntityId = (uri?: string) => uri?.split(/[:/]/).filter(Boolean).pop();
     await waitFor(
       'magazine.feeds[0] references the new Feed',
-      () => magazine!.feeds[0]?.uri.split(':').pop(),
+      () => toEntityId(magazine!.feeds[0]?.uri),
       (id) => id === newId,
     );
 

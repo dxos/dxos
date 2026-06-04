@@ -230,6 +230,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
+        // Recompute actions when a migration completes (state transition or versionProperty stamp).
+        get(CreateAtom.fromObservable(space.state));
+        if (space.state.get() === SpaceState.SPACE_READY) {
+          get(AtomObj.make(space.properties));
+        }
+
         return Effect.succeed(
           constructSpaceActions({
             space,

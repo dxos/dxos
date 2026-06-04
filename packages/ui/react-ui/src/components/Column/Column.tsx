@@ -57,6 +57,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
         role={role ?? 'none'}
         style={
           {
+            ...rest.style,
             '--gutter': gutterSize,
             '--dx-col': '2 / span 1',
             gridTemplateColumns: [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),

@@ -12,3 +12,4 @@ export const SpaceGenerator: ComponentType<any> = lazy(() => import('./SpaceGene
 export const Wireframe: ComponentType<any> = lazy(() => import('./Wireframe'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel'));
 export const GithubPanel: ComponentType<any> = lazy(() => import('./GithubPanel'));
+export const RegistryPanel: ComponentType<any> = lazy(() => import('./RegistryPanel'));

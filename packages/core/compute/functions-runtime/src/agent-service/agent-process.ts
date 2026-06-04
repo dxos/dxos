@@ -318,12 +318,12 @@ const ToolExecutionService = ({
               ? yield* awaitWithReport.pipe(
                   Effect.timeout(backgroundThreshold),
                   Effect.catchTag('TimeoutException', () =>
-                    Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid)),
+                    Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
                   ),
                 )
               : yield* awaitWithReport;
             log('result', { result });
-            return result;
+            return yield* result;
           }),
       });
     }),

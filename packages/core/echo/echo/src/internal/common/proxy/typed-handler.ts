@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 
-import { getSchemaURI } from '../../Annotation';
+import { getSchemaURI } from '../../Annotation/annotations';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
@@ -480,7 +480,9 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
   }
 };
 
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
+// Accepts any encoded type: the typed handler operates on the decoded representation, so schemas
+// whose encoded form differs (e.g. refs encode as `{ '/': uri }`) are valid here.
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T, any>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');

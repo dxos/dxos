@@ -129,7 +129,6 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
-        'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       output: {
         chunkFileNames,
@@ -146,9 +145,8 @@ export default defineConfig((env) => ({
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
-    // to `internal.html` / `devtools.html` / `reset.html` /
-    // `script-frame/index.html` don't trip a "discovered new dependencies"
-    // reload mid-session.
+    // to `internal.html` / `devtools.html` / `reset.html` don't trip a
+    // "discovered new dependencies" reload mid-session.
     //
     // Additionally, point the scanner at every plugin's entry files. Plugins
     // are loaded via `await import(...)` at runtime so their bare-module
@@ -163,7 +161,6 @@ export default defineConfig((env) => ({
       './internal.html',
       './devtools.html',
       './reset.html',
-      './script-frame/index.html',
       path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },

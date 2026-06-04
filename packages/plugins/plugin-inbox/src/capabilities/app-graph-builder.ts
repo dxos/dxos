@@ -135,7 +135,7 @@ export default Capability.makeModule(
                       properties: {
                         label: name,
                         icon: 'ph--funnel--regular',
-                        iconHue: 'neutral',
+                        iconHue: 'blue',
                         filter,
                       },
                       nodes: [
@@ -359,10 +359,20 @@ export default Capability.makeModule(
             {
               id: 'sync',
               data: () =>
-                Operation.invoke(InboxOperation.SyncMailbox, {
-                  integration: Ref.make(integration),
-                  mailbox: Ref.make(mailbox),
-                }),
+                Operation.invoke(
+                  InboxOperation.GoogleMailSync,
+                  {
+                    integration: Ref.make(integration),
+                    mailbox: Ref.make(mailbox),
+                  },
+                  {
+                    spaceId: db.spaceId,
+                    notify: {
+                      success: ['sync-mailbox-success.title', { ns: meta.id }],
+                      error: ['sync-mailbox-error.title', { ns: meta.id }],
+                    },
+                  },
+                ),
               properties: {
                 label: ['sync-mailbox.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
@@ -394,10 +404,20 @@ export default Capability.makeModule(
             {
               id: 'sync',
               data: () =>
-                Operation.invoke(InboxOperation.SyncCalendar, {
-                  integration: Ref.make(integration),
-                  calendar: Ref.make(calendar),
-                }),
+                Operation.invoke(
+                  InboxOperation.GoogleCalendarSync,
+                  {
+                    integration: Ref.make(integration),
+                    calendar: Ref.make(calendar),
+                  },
+                  {
+                    spaceId: db.spaceId,
+                    notify: {
+                      success: ['sync-calendar-success.title', { ns: meta.id }],
+                      error: ['sync-calendar-error.title', { ns: meta.id }],
+                    },
+                  },
+                ),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

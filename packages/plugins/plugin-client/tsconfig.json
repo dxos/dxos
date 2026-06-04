@@ -54,6 +54,15 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -91,9 +100,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

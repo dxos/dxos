@@ -32,7 +32,7 @@ import { getDate, getRowIndex, isSameDay } from './util';
 
 const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
-const size = 48;
+const size = 40;
 const defaultWidth = 7 * size;
 
 // Auto-scroll while dragging near a vertical edge.
@@ -300,15 +300,18 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         if (!visibleHeight) {
           return;
         }
-        const firstVisibleRow = Math.floor(scrollTopRef.current / size);
-        const lastVisibleRow = firstVisibleRow + Math.floor(visibleHeight / size) - 1;
-        if (targetRow < firstVisibleRow) {
-          listRef.current?.scrollToRow(targetRow);
-        } else if (targetRow > lastVisibleRow) {
-          // Place the target row at the bottom of the viewport.
-          listRef.current?.scrollToPosition(
-            Math.max(0, (targetRow + 1) * size - Math.floor(visibleHeight / size) * size),
-          );
+        // Rows fully inside the viewport. Use ceil/floor (not floor of scrollTop) so a partially
+        // visible row at either edge counts as "not fully visible" even when scrollTop is not a
+        // multiple of the row height (which it isn't after a bottom-aligned scroll).
+        const firstFullyVisibleRow = Math.ceil(scrollTopRef.current / size);
+        const lastFullyVisibleRow = Math.floor((scrollTopRef.current + visibleHeight) / size) - 1;
+        if (targetRow < firstFullyVisibleRow) {
+          // Align the top edge of the target row with the top edge of the viewport.
+          listRef.current?.scrollToPosition(targetRow * size);
+        } else if (targetRow > lastFullyVisibleRow) {
+          // Align the bottom edge of the target row with the bottom edge of the viewport (using the
+          // full visible height, not a row-rounded height, so the row sits flush against the edge).
+          listRef.current?.scrollToPosition(Math.max(0, (targetRow + 1) * size - visibleHeight));
         }
       },
       [height, maxHeight, weekStartsOn],
@@ -563,7 +566,10 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const rowRenderer = useCallback<ListRowRenderer>(
       ({ key, index, style }) => {
-        const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
+        // Zebra-stripe alternating months with a subtle neutral overlay over the grid surface, so
+        // the banding is independent of (and robust to) surface-token retuning.
+        const getBgColor = (date: Date) => (date.getMonth() % 2 === 0 ? 'bg-group-surface' : 'bg-group-alt-surface');
+
         return (
           <div key={key} style={style} className='grid'>
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
@@ -591,7 +597,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
                     {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
-                    <span className='relative text-description'>{date.getDate()}</span>
+                    <span className='relative text-description text-sm'>{date.getDate()}</span>
                     {!border && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}

@@ -8,7 +8,7 @@ import { For, Match, Switch, createEffect, createMemo, createSignal, useContext 
 
 import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/compute';
+import { Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
@@ -52,12 +52,15 @@ export const Chat = (props: ChatProps) => {
   const contextBlueprints = useAtomValue(() => props.conversation.context.blueprints);
   const objects = useAtomValue(() => props.conversation.context.objects);
 
+  // All blueprint entities in the registry, typed. Memoized so the query runs once per registry change.
+  const allRegistryBlueprints = createMemo(() => blueprintRegistry.query(Filter.type(Blueprint.Blueprint)).runSync());
+
   // Transform blueprints to full blueprint definitions from registry.
   const blueprints = createMemo(() =>
     contextBlueprints()
       .map((blueprint) => {
         const key = Obj.getMeta(blueprint).key;
-        return key !== undefined ? blueprintRegistry.getByKey(key) : undefined;
+        return key !== undefined ? allRegistryBlueprints().find((b) => Obj.getMeta(b).key === key) : undefined;
       })
       .filter(isTruthy),
   );
@@ -248,16 +251,22 @@ const Artifacts = (props: { objects: Obj.Unknown[] }) => {
 };
 
 const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>) => {
+  const items = createMemo(() =>
+    blueprintRegistry
+      .query(Filter.type(Blueprint.Blueprint))
+      .runSync()
+      .map((blueprint) => {
+        const key = Obj.getMeta(blueprint).key;
+        return key !== undefined ? { id: key, label: blueprint.name } : undefined;
+      })
+      .filter((item): item is { id: string; label: string } => item !== undefined),
+  );
+
   return (
     <Picker
       multi
       title='Select Blueprints'
-      items={blueprintRegistry.blueprints
-        .map((blueprint) => {
-          const key = Obj.getMeta(blueprint).key;
-          return key !== undefined ? { id: key, label: blueprint.name } : undefined;
-        })
-        .filter((item): item is { id: string; label: string } => item !== undefined)}
+      items={items()}
       selected={props.selected}
       onSave={(ids) => props.onSave?.(ids)}
       onCancel={() => props.onCancel?.()}
