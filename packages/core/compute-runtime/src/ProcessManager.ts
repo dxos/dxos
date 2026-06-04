@@ -510,6 +510,8 @@ export class ProcessManagerImpl implements Manager {
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
       const parentOption = Option.fromNullable(record.parentId);
+      // Deserialization boundary: schema stores space/conversation as plain strings;
+      // cast back to opaque branded types.
       const environment: Environment = {
         space: record.environment.space as SpaceId | undefined,
         conversation: record.environment.conversation as URI.URI | undefined,
@@ -523,6 +525,8 @@ export class ProcessManagerImpl implements Manager {
 
       let handleRef: ProcessHandle.ProcessHandleImpl<any, any, any> | null = null;
 
+      // Deserialization boundary: schema stores target/notify as plain unknown values;
+      // cast back to their structural types.
       const params: Process.Params = {
         name: record.params.name,
         target: record.params.target as URI.URI | null,
@@ -610,6 +614,7 @@ export class ProcessManagerImpl implements Manager {
         deleteRecord: () => this.#store.deleteProcess(id),
       };
 
+      // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Schema<any, any, never> };
       const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
 
@@ -632,6 +637,7 @@ export class ProcessManagerImpl implements Manager {
         persistence,
         true, // restoring — suppresses onSpawn
         encodeInput,
+        record.state, // restore the persisted state instead of defaulting to RUNNING
       );
       handleRef = handle;
       this.#handles.set(id, handle);

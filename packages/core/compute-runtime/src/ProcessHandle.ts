@@ -149,6 +149,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     persistence?: Persistence,
     restoring?: boolean,
     encodeInput?: (input: I) => Effect.Effect<unknown>,
+    initialState?: Process.State,
   ) {
     this.parentId = parentId;
     this.key = key;
@@ -169,7 +170,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     this.#encodeInput = encodeInput ?? ((input) => Effect.succeed(input));
 
     this.#currentStatus = {
-      state: Process.State.RUNNING,
+      state: initialState ?? Process.State.RUNNING,
       exit: Option.none(),
       startedAt: new Date(),
       completedAt: Option.none(),
@@ -450,7 +451,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     const dueAt = Date.now() + delay;
     this.#alarmDueAt = dueAt;
     log('lifecycle: alarm scheduled', { delayMs: delay, dueAt });
-    Effect.runFork(this.#persistence.setAlarm(dueAt));
+    // alarmDueAt is persisted after the handler settles (in #runHandler success pipeline).
     this.#alarmTimer = setTimeout(() => this.#fireAlarm(), delay);
   }
 
@@ -524,10 +525,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
           }),
           Effect.tap(() => (eventSeq !== undefined ? this.#persistence.removeEvent(eventSeq) : Effect.void)),
           Effect.tap(() => this.#handlerCompleted()),
+          // Persist alarm due-time and state after each handler settles. These are awaited (not
+          // fire-and-forget) so the durable record is consistent before spawn() returns. The
+          // calls are no-ops when the record has already been deleted (terminal state).
+          Effect.tap(() => this.#persistence.setAlarm(this.#alarmDueAt)),
+          Effect.tap(() => this.#persistence.setState(this.#currentStatus.state)),
           Effect.catchAllCause((cause) =>
             Effect.gen(this, function* () {
               recordWall();
-              if (eventSeq !== undefined) {
+              // Do NOT remove the event on a pure interruption — the scope was closed for
+              // suspend/restart, so the event must stay in the mailbox for re-delivery.
+              if (eventSeq !== undefined && !Cause.isInterruptedOnly(cause)) {
                 yield* this.#persistence.removeEvent(eventSeq);
               }
               yield* this.#handleError(cause);
@@ -620,10 +628,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     log('state updated', { pid: this.pid, state });
     this.#registry.set(this.statusAtom, this.#currentStatus);
     this.#onStatusChanged?.();
-    // Persist non-transient state transitions for durability.
-    if (state !== Process.State.RUNNING && state !== Process.State.TERMINATING) {
-      Effect.runFork(this.#persistence.setState(state));
-    }
+    // State is persisted after handlers settle (in #runHandler success pipeline).
   }
 }
 

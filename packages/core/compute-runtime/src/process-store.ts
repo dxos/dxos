@@ -171,6 +171,7 @@ export class ProcessStore {
       this.#seq.set(id, seq);
       yield* this.#modify(id, (record) => ({
         ...record,
+        // Cast required: TypeScript cannot narrow the spread + added `seq` field to a union member.
         events: [...record.events, { ...event, seq } as PersistedEvent],
       }));
       return seq;

@@ -30,6 +30,7 @@ import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
 import * as ProcessManager from './ProcessManager';
+import { ProcessStore } from './process-store';
 import { TestDatabaseLayer } from './testing';
 
 //
@@ -661,5 +662,250 @@ describe('ProcessOperationInvoker invocations', () => {
       const handle = yield* manager.spawn(makeSumAggregator(), { notify });
       expect(handle.params.notify).toEqual(notify);
     }, Effect.provide(TestLayer)),
+  );
+});
+
+// Minimal layer for durability tests: no auto-created ProcessManager; supplies raw deps.
+const DurabilityTestLayer = Layer.mergeAll(
+  Layer.succeed(ServiceResolver.ServiceResolver, ServiceResolver.empty),
+  KeyValueStore.layerMemory,
+  OperationHandlerSet.provide(handlers),
+  Registry.layer,
+  Trace.layerNoop,
+);
+
+describe('durability', () => {
+  it.effect(
+    'persists a spawned process record and clears it on terminate',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const definitions = new ProcessManager.ProcessDefinitionRegistry();
+      const waiting = makeWaitingExecutable();
+      definitions.register(waiting);
+
+      const manager = new ProcessManager.ProcessManagerImpl({
+        registry,
+        kvStore: kv,
+        traceSink,
+        serviceResolver: resolver,
+        handlerSet,
+        definitions,
+        idGenerator: ProcessManager.UUIDProcessIdGenerator,
+      });
+
+      const store = new ProcessStore(kv);
+
+      const handle = yield* manager.spawn(waiting, { name: 'agent' });
+      const persisted = yield* store.getProcess(handle.pid);
+      expect(persisted?.key).toEqual('test.waiting');
+      expect(persisted?.params.name).toEqual('agent');
+      // The waiting process schedules a 500ms alarm in onSpawn.
+      expect(persisted?.alarmDueAt).toBeGreaterThan(Date.now());
+
+      yield* handle.terminate();
+      expect(yield* store.getProcess(handle.pid)).toBeUndefined();
+      expect(yield* store.listProcessIds()).not.toContain(handle.pid);
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'restores a hibernating process and fires its alarm after restart',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const definitions = new ProcessManager.ProcessDefinitionRegistry();
+      const waiting = makeWaitingExecutable();
+      definitions.register(waiting);
+
+      const mkManager = () =>
+        new ProcessManager.ProcessManagerImpl({
+          registry,
+          kvStore: kv,
+          traceSink,
+          serviceResolver: resolver,
+          handlerSet,
+          definitions,
+          idGenerator: ProcessManager.UUIDProcessIdGenerator,
+        });
+
+      const managerA = mkManager();
+      const handle = yield* managerA.spawn(waiting);
+      const pid = handle.pid;
+      expect(handle.status.state).toEqual(Process.State.HYBERNATING);
+
+      // Simulate app close BEFORE the alarm fires.
+      yield* managerA.shutdown();
+
+      // New manager over the same KV + definitions = app reopen.
+      const managerB = mkManager();
+      yield* managerB.restore();
+
+      const restored = yield* managerB.attach(pid);
+      expect(restored.status.state).toEqual(Process.State.HYBERNATING);
+
+      // Alarm re-armed; wait past the original due-time and assert it fired.
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 700)));
+      expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
+
+      // Record cleaned up after success.
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    're-runs onSpawn only when its spawn event is still pending',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      let spawnCount = 0;
+      const counting = Process.make(
+        { key: 'test.counting-spawn', input: Schema.Void, output: Schema.Void, services: [] },
+        (ctx) =>
+          Effect.succeed({
+            onSpawn: () =>
+              Effect.sync(() => {
+                spawnCount++;
+                ctx.setAlarm(10_000);
+              }),
+            onInput: () => Effect.void,
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+      const definitions = new ProcessManager.ProcessDefinitionRegistry();
+      definitions.register(counting);
+      const mkManager = () =>
+        new ProcessManager.ProcessManagerImpl({
+          registry,
+          kvStore: kv,
+          traceSink,
+          serviceResolver: resolver,
+          handlerSet,
+          definitions,
+          idGenerator: ProcessManager.UUIDProcessIdGenerator,
+        });
+
+      const managerA = mkManager();
+      const handle = yield* managerA.spawn(counting);
+      expect(spawnCount).toEqual(1); // onSpawn ran, settled, spawn event removed.
+      yield* managerA.shutdown();
+
+      const managerB = mkManager();
+      yield* managerB.restore();
+      // onSpawn NOT re-run because its event already settled; alarm re-armed instead.
+      expect(spawnCount).toEqual(1);
+      yield* (yield* managerB.attach(handle.pid)).terminate();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    're-delivers an input whose handler never settled before shutdown',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      let handled = 0;
+      let gate = true; // first manager: block; after restore: allow.
+      const blocking = Process.make(
+        { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [] },
+        () =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () =>
+              Effect.gen(function* () {
+                if (gate) {
+                  yield* Effect.never;
+                }
+                handled++;
+              }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+      const definitions = new ProcessManager.ProcessDefinitionRegistry();
+      definitions.register(blocking);
+      const mkManager = () =>
+        new ProcessManager.ProcessManagerImpl({
+          registry,
+          kvStore: kv,
+          traceSink,
+          serviceResolver: resolver,
+          handlerSet,
+          definitions,
+          idGenerator: ProcessManager.UUIDProcessIdGenerator,
+        });
+
+      const managerA = mkManager();
+      const handle = yield* managerA.spawn(blocking);
+      // Submit input and fork it (it will block forever in manager A).
+      yield* Effect.fork(handle.submitInput('hello'));
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      yield* managerA.shutdown();
+
+      gate = false; // allow handling after restart.
+      const managerB = mkManager();
+      yield* managerB.restore();
+      yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
+      yield* (yield* managerB.attach(handle.pid)).terminate();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'terminal processes are not restored',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const definitions = new ProcessManager.ProcessDefinitionRegistry();
+      const opProcess = Process.fromOperation(Double, handlers);
+      definitions.register(opProcess);
+
+      const mkManager = () =>
+        new ProcessManager.ProcessManagerImpl({
+          registry,
+          kvStore: kv,
+          traceSink,
+          serviceResolver: resolver,
+          handlerSet,
+          definitions,
+          idGenerator: ProcessManager.UUIDProcessIdGenerator,
+        });
+
+      const managerA = mkManager();
+      const handle = yield* managerA.spawn(opProcess);
+      const outputs = yield* handle.runAndExit({ inputs: [{ value: 5 }] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
+      expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager();
+      yield* managerB.restore();
+      // No non-terminal processes should be in manager B.
+      const remaining = yield* managerB.list();
+      expect(remaining).toHaveLength(0);
+
+      const store = new ProcessStore(kv);
+      expect(yield* store.listProcessIds()).toEqual([]);
+    }, Effect.provide(DurabilityTestLayer)),
   );
 });
