@@ -12,6 +12,58 @@
 
 **Tech Stack:** TypeScript, Effect-TS (`@effect/platform/HttpClient`, `Effect.gen`, `Layer`), DXOS ECHO (`@dxos/echo`, `@dxos/types`), DXOS app-framework (`@dxos/app-framework`), Hono (edge ai-service), Cloudflare Workers + Analytics Engine, vitest.
 
+**Measurable success criterion:** With a Composer dev session running locally, a user can open an active space, paste an Anthropic API key via the standard "Create Integration → Anthropic" flow, and from that moment **every** outbound HTTP request triggered by sending a message in the assistant chat — observed in DevTools → Network on the `/ai/generate/anthropic` (or `/provider/anthropic/messages`) request — carries an `X-BYOK: <that-key>` header. Removing the integration causes subsequent requests to drop the header (server-key fallback).
+
+## Page-side BYOK pipeline (Composer chat → edge)
+
+The chat path is independent from the worker/function path (which `Task 2` covers via `InternalAiServiceLayer`). For the Composer chat sidebar to attach `X-BYOK`, five pieces must line up:
+
+1. **AccessToken written to the space DB.** `plugin-assistant`'s `IntegrationProvider` `onSubmit` (`packages/plugins/plugin-assistant/src/capabilities/integration-provider.ts`) creates an `AccessToken` with `source: 'anthropic.com'` and `token: <user-key>`, plus a paired `Integration` (`providerId: 'anthropic'`). `plugin-integration`'s coordinator persists both into the active space's ECHO database. **No new code in this fix — this exists today.**
+2. **`CredentialsService` materialised from the space DB.** `plugin-client` contributes `CredentialsLayerSpec` (`packages/plugins/plugin-client/src/capabilities/layer-specs.ts:77-84`) with `affinity: 'space'`, `requires: [Database.Service]`, backed by `credentialsLayerFromDatabase()` from `@dxos/functions`. That function queries `AccessToken` objects in the space and maps each to `{ service: token.source, apiKey: token.token }`. So whenever the LayerSpec graph is materialised for a specific `space`, `Credential.CredentialsService` is wired to a real lookup into that space's tokens.
+3. **`byokHeaderLayer` reads the credential.** `byokHeaderLayer('anthropic.com')` (`packages/core/compute/compute/src/byok.ts`) wraps the underlying `HttpClient.HttpClient` via `mapRequestEffect`: on every request it yields `Credential.CredentialsService`, calls `queryCredentials({ service: 'anthropic.com' })`, takes the first hit's `apiKey`, and `HttpClientRequest.setHeader(request, 'X-BYOK', apiKey)`. If no credential is present the request is forwarded unchanged.
+4. **`EdgeAiHttpClient` carries the header upstream.** `EdgeAiHttpClient.layerWithByok(getEdgeClient, byokHeaderLayer(ANTHROPIC_SOURCE))` (`packages/core/mesh/edge-client/src/edge-ai-http-client.ts:96-99`) composes the BYOK injector over `EdgeAiHttpClient.layer`, so the wrapped `HttpClient` is what `AnthropicClient.layer({ apiUrl: 'http://edge.internal' })` consumes. `EdgeAiHttpClient.make` then forwards `request.headers` (now including `X-BYOK`) to `edgeClient.anthropicAiRequest(new Request(url, { headers, … }))`.
+5. **AI service spec declares the requirement.** `plugin-assistant`'s AI-service `LayerSpec` (`packages/plugins/plugin-assistant/src/capabilities/ai-service.ts`) must be `affinity: 'space'`, `requires: [Credential.CredentialsService]`. Without these, `ServiceResolver.provide({ space }, AiService.AiService, …)` in `useChatProcessor.ts:85-94` materialises `AiService.AiService` in an app-scoped fiber with no `CredentialsService` in context, and step 3 dies at runtime with `Service not found: @dxos/functions/CredentialsService`.
+
+The fix in this branch makes step 5 honest and removes the `as Layer<…, never, never>` cast in `edge-model-resolver.ts` that previously hid step 3's requirement from the type system. The deprecated `AppCapabilities.AiServiceLayer` contribution is preserved with an empty-credentials fallback (`configuredCredentialsLayer([])`) so the legacy storybook + comment-thread agent paths still typecheck — but those paths intentionally do not carry BYOK, mirroring the worker fallback at `functions/src/protocol/protocol.ts:208-210` when no space context is available.
+
+**Pipeline diagram:**
+
+```
+[Integration UI] → IntegrationProvider.onSubmit
+                 → AccessToken{ source: 'anthropic.com', token } in space DB
+                                                                 │
+                                                                 ▼
+                              CredentialsLayerSpec (affinity: 'space')
+                                                                 │
+                          credentialsLayerFromDatabase() reads AccessTokens
+                                                                 ▼
+                                  Credential.CredentialsService
+                                                                 │
+        ai-service LayerSpec (affinity: 'space', requires: CredentialsService)
+                                                                 ▼
+                                          byokHeaderLayer('anthropic.com')
+                                                                 │
+                              mapRequestEffect → setHeader('X-BYOK', apiKey)
+                                                                 ▼
+                                            EdgeAiHttpClient.layerWithByok
+                                                                 │
+                                        edgeClient.anthropicAiRequest(request)
+                                                                 ▼
+                       POST {edge}/ai/generate/anthropic  (headers include X-BYOK)
+                                                                 │
+                                              proxyAnthropicRoute (edge repo)
+                                                                 ▼
+                              Anthropic API request with x-api-key = X-BYOK
+```
+
+**What breaks the pipeline (regression checklist):**
+
+- Re-introducing the cast in `edge-model-resolver.ts` (`as Layer<…, never, never>`) — silently hides the dependency.
+- Changing the AI-service `LayerSpec` back to `affinity: 'application'` or dropping `requires: [Credential.CredentialsService]` — `ServiceResolver` materialises the layer without space context.
+- Providing a stub `Credential.CredentialsService` into the resolver layer (e.g. `configuredCredentialsLayer([])`) before the LayerSpec wraps it — the empty store shadows the real per-space store.
+- Removing `EdgeAiHttpClient.layerWithByok` in favour of plain `EdgeAiHttpClient.layer` — the request bypasses the BYOK wrapper.
+- `IntegrationProvider.onSubmit` writing the AccessToken to the wrong space (e.g. personal space when the chat is in a shared space) — `queryCredentials` runs against the chat's space DB and finds nothing.
+
 **Working directories:**
 - dxos worktree: `/Users/mykola/dev/dxos/.claude/worktrees/eager-noyce-ab89ce` (branch assigned by the harness).
 - edge worktree: `/Users/mykola/dev/edge/.claude/worktrees/dx-979-byok` (branch `claude/dx-979-byok-x-header`).
@@ -501,6 +553,72 @@ git commit -m "feat(plugin-assistant): register Anthropic IntegrationProvider fo
 
 ---
 
+## Task 3b: dxos — wire the page-side AI service through `byokHeaderLayer`
+
+Task 2 only wires BYOK on the **worker/function** side (via `InternalAiServiceLayer` in `protocol.ts`). The Composer chat sidebar talks to the edge through a *different* layer graph — `plugin-assistant`'s `edge-model-resolver.ts` and `ai-service.ts`. This task makes that path attach `X-BYOK` per-space.
+
+**Files:**
+- Modify: `packages/sdk/app-toolkit/src/capabilities.ts` — widen the `AppCapabilities.AiModelResolver` capability tag so a resolver layer can carry a `Credential.CredentialsService` requirement.
+- Modify: `packages/plugins/plugin-assistant/src/capabilities/edge-model-resolver.ts` — drop the `as Layer<…, never, never>` cast that silenced the requirement, remove the now-unused `AiModelResolver` import.
+- Modify: `packages/plugins/plugin-assistant/src/capabilities/ai-service.ts` — change the AI-service `LayerSpec` to `affinity: 'space'` + `requires: [Credential.CredentialsService]`; wrap the deprecated `AppCapabilities.AiServiceLayer` contribution with `configuredCredentialsLayer([])` so its `R` stays `never` (storybook + comment-thread agent fallback, no BYOK on that path).
+
+- [x] **Step 1: Widen the `AiModelResolver` capability tag**
+
+In `packages/sdk/app-toolkit/src/capabilities.ts`, add `Credential` to the `@dxos/compute` import and change the `AiModelResolver` capability's `Layer$.Layer<AiModelResolver$.AiModelResolver>` to `Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>`. Document why with a comment. `Layer<…, never, never>` is contravariantly assignable to the new shape, so existing contributors (LMStudio, Ollama, storybook resolvers) keep typechecking.
+
+- [x] **Step 2: Drop the cast in `edge-model-resolver.ts`**
+
+Remove the `as Layer.Layer<AiModelResolver.AiModelResolver, never, never>` cast at the end of the `anthropicResolverLayer` `.pipe(...)` chain. Remove the `AiModelResolver` import which becomes unused. Add a comment above `EdgeModelResolverCapabilities` explaining that the contributed layer carries a `Credential.CredentialsService` requirement (the LayerSpec graph supplies it).
+
+- [x] **Step 3: Update the `ai-service.ts` LayerSpec**
+
+Add `Credential` to the `@dxos/compute` import and `configuredCredentialsLayer` to the `@dxos/functions` import. Drop the explicit `: Layer.Layer<AiService.AiService>` annotation on `aiServiceLayer` (its real type is now `Layer<AiService, never, CredentialsService>`). Change the `LayerSpec.make` call to:
+
+```ts
+const aiServiceSpec = LayerSpec.make(
+  {
+    affinity: 'space',
+    requires: [Credential.CredentialsService],
+    provides: [AiService.AiService],
+  },
+  () => aiServiceLayer,
+);
+```
+
+Wrap the deprecated contribution: `Capability.contributes(AppCapabilities.AiServiceLayer, aiServiceLayer.pipe(Layer.provide(configuredCredentialsLayer([]))))` — comment that BYOK is intentionally absent on the legacy path (mirroring `protocol.ts:208-210`).
+
+- [x] **Step 4: Verify the type system caught it**
+
+Force-recompile downstream consumers to confirm no hidden cast remained:
+
+```bash
+moon run app-toolkit:compile plugin-assistant:compile plugin-thread:compile plugin-client:compile composer-app:compile --force
+```
+
+All five must succeed. `plugin-assistant:compile` (not `:build`) is the right check here — `:build` is red on this branch due to pre-existing TS errors in `integration-provider.test.ts` that are unrelated to this task.
+
+- [x] **Step 5: Confirm the original crash is gone**
+
+Restart `moon run composer-app:serve`, open the assistant chat in a space that has an Anthropic integration set up, and submit a message. Then:
+
+```bash
+grep -c "Service not found: @dxos/functions/CredentialsService" packages/apps/composer-app/app.log
+```
+
+Must be `0` for runs after the rebuild. Compare to before: the pre-fix log showed this error on every AI request (see `packages/plugins/plugin-assistant/src/processor/processor.ts:253` `request failed` traces).
+
+- [x] **Step 6: Commit**
+
+```bash
+cd /Users/mykola/dev/dxos/.claude/worktrees/eager-noyce-ab89ce
+git add packages/sdk/app-toolkit/src/capabilities.ts \
+        packages/plugins/plugin-assistant/src/capabilities/edge-model-resolver.ts \
+        packages/plugins/plugin-assistant/src/capabilities/ai-service.ts
+git commit -m "fix(plugin-assistant): provide CredentialsService to page-side AI requests (DX-979)"
+```
+
+---
+
 # Phase B — edge repo
 
 ## Task 4: edge — extend metering with `keySource` dimension
@@ -793,9 +911,17 @@ Open `http://localhost:5173`, create or open a space, and use the existing "Crea
 
 Expected: an `Integration` and `AccessToken` object are created in the space; no console errors.
 
-- [ ] **Step 5: Send a chat message — BYOK path**
+- [ ] **Step 5: Send a chat message — BYOK path (measurable goal)**
 
-In the assistant chat, send any message. In the local edge dev terminal, verify the incoming `/provider/anthropic/messages` request has an `X-BYOK` header set to the user's key. The upstream Anthropic request (logged by the worker) uses the BYOK value as `x-api-key`.
+This is the success criterion stated at the top of the plan.
+
+In the assistant chat, send 3 messages in a row (e.g. "hi", "what is 2+2?", "tell me a haiku"). For **every** one of them:
+
+a. In Composer's DevTools → Network, locate the outbound request initiated by the assistant chat (the request URL contains `/ai/generate/anthropic` or `/provider/anthropic/messages` — depending on whether you point at edge or hit the worker directly). Confirm Request Headers include `X-BYOK: sk-ant-…` matching the key pasted in Step 4.
+b. In the local edge dev terminal log (or with a temporary `console.log(c.req.header('X-BYOK'))` at the top of `proxyAnthropicRoute`), confirm the worker observed the header on each request.
+c. Confirm the upstream Anthropic request the worker emits uses the BYOK value as `x-api-key`.
+
+If even one of the 3 requests is missing the header, the page-side pipeline is broken — re-check the "regression checklist" in the **Page-side BYOK pipeline** section and look for a `Service not found: @dxos/functions/CredentialsService` entry in `app.log`.
 
 - [ ] **Step 6: Delete the integration and re-test — server path**
 
