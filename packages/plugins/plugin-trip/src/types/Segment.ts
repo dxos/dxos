@@ -252,6 +252,35 @@ export const getDestination = (seg: Segment): Place | undefined => {
   }
 };
 
+/**
+ * Sets the "from" Place across variants, mirroring {@link getOrigin} — `origin`
+ * for transport, `location` for accommodation, `venue` for activity. Writes a
+ * fresh copy: the decoded `Place` carries a readonly `geo` tuple, so the value
+ * is normalized to the live object's mutable shape before assignment.
+ */
+export const setOrigin = (seg: Segment, place: Place): void => {
+  const value = {
+    name: place.name,
+    code: place.code,
+    city: place.city,
+    country: place.country,
+    geo: place.geo ? [...place.geo] : undefined,
+  };
+  Obj.update(seg, (seg) => {
+    switch (seg.details._tag) {
+      case 'accommodation':
+        seg.details.location = value;
+        break;
+      case 'activity':
+        seg.details.venue = value;
+        break;
+      default:
+        seg.details.origin = value;
+        break;
+    }
+  });
+};
+
 //
 // Display helpers
 //
