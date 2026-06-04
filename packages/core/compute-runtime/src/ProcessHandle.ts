@@ -46,8 +46,6 @@ export interface Persistence {
   appendEvent(event: PersistedEventInput): Effect.Effect<number>;
   /** Delete the durable record entirely (terminal state / explicit terminate). */
   deleteRecord(): Effect.Effect<void>;
-  /** Mark an input event as actively running so a restart can detect interrupted handlers. */
-  setEventRunning(seq: number): Effect.Effect<void>;
 }
 
 const NOOP_PERSISTENCE: Persistence = {
@@ -56,7 +54,6 @@ const NOOP_PERSISTENCE: Persistence = {
   removeEvent: () => Effect.void,
   appendEvent: () => Effect.succeed(0),
   deleteRecord: () => Effect.void,
-  setEventRunning: () => Effect.void,
 };
 
 const toPersistedChildEvent = (event: Process.ChildEvent<unknown>) =>
@@ -125,7 +122,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   readonly #persistence: Persistence;
   readonly #restoring: boolean;
   readonly #encodeInput: (input: I) => Effect.Effect<unknown>;
-  readonly #idempotent: boolean;
 
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
   readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
@@ -154,7 +150,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     restoring?: boolean,
     encodeInput?: (input: I) => Effect.Effect<unknown>,
     initialState?: Process.State,
-    idempotent?: boolean,
   ) {
     this.parentId = parentId;
     this.key = key;
@@ -173,7 +168,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     this.#persistence = persistence ?? NOOP_PERSISTENCE;
     this.#restoring = restoring ?? false;
     this.#encodeInput = encodeInput ?? ((input) => Effect.succeed(input));
-    this.#idempotent = idempotent ?? false;
 
     this.#currentStatus = {
       state: initialState ?? Process.State.RUNNING,
@@ -328,16 +322,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
         return this.#runHandler('spawn', () => this.#callbacks.onSpawn(), event.seq).pipe(Effect.flatMap(Fiber.join));
       case 'input':
         return Effect.gen(this, function* () {
-          // If the event was marked as running it was interrupted mid-handler on the previous run.
-          // Only idempotent processes may be safely retried; non-idempotent ones must fail instead.
-          if (event.running && !this.#idempotent) {
-            yield* this.#failImmediately(
-              Cause.die(
-                new Error(`non-idempotent input handler was interrupted (seq=${event.seq}); cannot retry safely`),
-              ),
-            );
-            return;
-          }
+          // The runtime assumes handlers are idempotent: an input whose handler was interrupted
+          // is always re-delivered. Operations that are not idempotent guard against unsafe
+          // retries themselves (see `Process.fromOperation`).
           // event.value is persisted JSON; cast required at deserialization boundary since
           // Process.Process<I,O,R> does not expose the input Schema (runtime object does).
           const defWithSchema = definition as unknown as { input: Schema.Schema<I, unknown, never> };
@@ -520,11 +507,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
         const recordWall = () => {
           this.#wallTimeMs += performance.now() - t0;
         };
-        // Mark input events as running before the interruptible section so a restart can detect
-        // whether this handler was in-flight when the process was interrupted.
-        if (name === 'input' && eventSeq !== undefined) {
-          yield* this.#persistence.setEventRunning(eventSeq);
-        }
         return yield* restore(fn()).pipe(
           Effect.provide(this.#services),
           Effect.tap(() => Effect.sync(recordWall)),

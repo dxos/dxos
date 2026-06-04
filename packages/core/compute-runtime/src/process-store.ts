@@ -25,12 +25,10 @@ const PersistedChildEvent = Schema.Struct({
 export const PersistedEvent = Schema.Union(
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('spawn') }),
   // `value` is the input encoded via the process definition's input schema.
-  // `running` is set to true once the handler begins executing so a restart can detect interruptions.
   Schema.Struct({
     seq: Schema.Number,
     _tag: Schema.Literal('input'),
     value: Schema.Unknown,
-    running: Schema.optional(Schema.Boolean),
   }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('alarm') }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('childEvent'), event: PersistedChildEvent }),
@@ -198,16 +196,5 @@ export class ProcessStore {
   /** Removes the event with the given sequence number from the process event journal. */
   removeEvent(id: Process.ID, seq: number): Effect.Effect<void> {
     return this.#modify(id, (record) => ({ ...record, events: record.events.filter((event) => event.seq !== seq) }));
-  }
-
-  /** Marks the input event with the given sequence number as actively running. */
-  setEventRunning(id: Process.ID, seq: number): Effect.Effect<void> {
-    return this.#modify(id, (record) => ({
-      ...record,
-      events: record.events.map((event) =>
-        // Cast required: TypeScript cannot narrow the spread union member.
-        event._tag === 'input' && event.seq === seq ? ({ ...event, running: true } as PersistedEvent) : event,
-      ),
-    }));
   }
 }

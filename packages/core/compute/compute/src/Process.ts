@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
+import * as StorageService from './StorageService';
 import * as Trace from './Trace';
 
 //
@@ -80,8 +81,10 @@ export interface Callbacks<I, O, R> {
 
 /**
  * Services that are always available to all processes.
+ * Provided unconditionally by the runtime, so handlers may use them without declaring them
+ * in {@link MakeProcessOpts.services}.
  */
-export type BaseServices = Trace.TraceService;
+export type BaseServices = Trace.TraceService | StorageService.StorageService;
 
 export type ChildEvent<T> =
   | {
@@ -176,12 +179,6 @@ export interface Process<I, O, R> extends Process.Variance<I, O, R> {
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
-   * When true, the runtime may safely retry an input handler that was interrupted mid-execution.
-   * When false (default), an interrupted handler causes the process to fail on restart.
-   */
-  readonly idempotent?: boolean;
-
-  /**
    * Create a new instance of the process.
    */
   create(ctx: ProcessContext<I, O>): Effect.Effect<Callbacks<I, O, R>, never, R | BaseServices | Scope.Scope>;
@@ -211,12 +208,6 @@ export interface MakeProcessOpts {
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
-
-  /**
-   * When true, the runtime may safely retry an input handler that was interrupted mid-execution.
-   * When false (default), an interrupted handler causes the process to fail on restart.
-   */
-  readonly idempotent?: boolean;
 }
 
 export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
@@ -243,7 +234,6 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   return {
     [ProcessTypeId]: {} as any,
     ...opts,
-    idempotent: opts.idempotent ?? false,
     create: (ctx) =>
       create(ctx).pipe(
         Effect.map((partial) => ({
@@ -257,6 +247,16 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   };
 };
 
+/**
+ * Durable marker recording that an operation's input handler has begun executing.
+ * Persisted before the handler runs so that, after an interruption (suspend/restart), a
+ * re-delivered input can tell that the previous attempt was in-flight. Cleared automatically
+ * when the process reaches a terminal state (the runtime clears the process's storage).
+ */
+const OperationStartedKey = StorageService.key(Schema.parseJson(Schema.Boolean), 'operation/started').pipe(
+  StorageService.withDefault(() => false),
+);
+
 export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,
@@ -267,15 +267,29 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
       input: op.input,
       output: op.output,
       services: op.services,
-      idempotent: Operation.isIdempotent(op),
     },
     (ctx) =>
       Effect.gen(function* () {
         const semaphore = yield* Effect.makeSemaphore(1);
+        // The process runtime assumes handlers are idempotent and always re-delivers an input
+        // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
+        // a re-delivery that observes the durable "started" marker fails instead of repeating
+        // side effects. Idempotent operations skip the marker and are simply re-run.
+        const idempotent = Operation.isIdempotent(op);
 
         return {
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
+              if (!idempotent) {
+                const started = yield* OperationStartedKey.get;
+                if (started) {
+                  return yield* Effect.die(
+                    new Error(`non-idempotent operation "${op.meta.key}" was interrupted; cannot retry safely`),
+                  );
+                }
+                yield* OperationStartedKey.set(true);
+              }
+
               // Emit operation start event.
               log('operation process invoking', { key: op.meta.key, name: op.meta.name });
               yield* Trace.write(Trace.OperationStart, {

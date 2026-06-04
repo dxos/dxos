@@ -25,7 +25,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, DXN } from '@dxos/echo';
+import { Annotation, Database, DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -824,7 +824,7 @@ describe('durability', () => {
       let handled = 0;
       let gate = true; // first manager: block; after restore: allow.
       const blocking = Process.make(
-        { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [], idempotent: true },
+        { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [] },
         () =>
           Effect.succeed({
             onSpawn: () => Effect.void,
@@ -868,7 +868,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'fails a non-idempotent process whose input handler was interrupted',
+    'fails a non-idempotent operation whose handler was interrupted on restore',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -877,24 +877,26 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       let gate = true;
-      // idempotent defaults to false → non-idempotent.
-      const nonIdempotentProcess = Process.make(
-        { key: 'test.non-idempotent', input: Schema.String, output: Schema.Void, services: [] },
-        () =>
-          Effect.succeed({
-            onSpawn: () => Effect.void,
-            onInput: () =>
-              Effect.gen(function* () {
-                if (gate) {
-                  yield* Effect.never;
-                }
-              }),
-            onAlarm: () => Effect.void,
-            onChildEvent: () => Effect.void,
-          }),
+      // No IdempotentAnnotation → treated as non-idempotent by `fromOperation`.
+      const SlowOp = Operation.make({
+        meta: { key: DXN.make('org.dxos.test.slowNonIdempotent'), name: 'SlowNonIdempotent' },
+        input: Schema.Struct({ value: Schema.Number }),
+        output: Schema.Void,
+      });
+      const opHandlers = OperationHandlerSet.make(
+        SlowOp.pipe(
+          Operation.withHandler(
+            Effect.fn(function* () {
+              if (gate) {
+                yield* Effect.never;
+              }
+            }),
+          ),
+        ),
       );
+      const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const definitions = new ProcessManager.ProcessDefinitionRegistry();
-      definitions.register(nonIdempotentProcess);
+      definitions.register(opProcess);
       const mkManager = () =>
         new ProcessManager.ProcessManagerImpl({
           registry,
@@ -907,13 +909,13 @@ describe('durability', () => {
         });
 
       const managerA = mkManager();
-      const handle = yield* managerA.spawn(nonIdempotentProcess);
-      // Submit input and let handler enter the blocked section before shutdown.
-      yield* Effect.fork(handle.submitInput('hello'));
+      const handle = yield* managerA.spawn(opProcess);
+      // Submit input and let the handler enter the blocked section before shutdown.
+      yield* Effect.fork(handle.submitInput({ value: 1 }));
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
       yield* managerA.shutdown();
 
-      // Restore: the interrupted input event has running=true; process is non-idempotent → FAILED.
+      // Restore: the operation observes its durable "started" marker → fails instead of retrying.
       gate = false;
       const managerB = mkManager();
       yield* managerB.restore();
@@ -924,7 +926,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'retries an idempotent process whose input handler was interrupted',
+    'retries an idempotent operation whose handler was interrupted on restore',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -934,24 +936,32 @@ describe('durability', () => {
 
       let handled = 0;
       let gate = true;
-      const idempotentProcess = Process.make(
-        { key: 'test.idempotent', input: Schema.String, output: Schema.Void, services: [], idempotent: true },
-        () =>
-          Effect.succeed({
-            onSpawn: () => Effect.void,
-            onInput: () =>
-              Effect.gen(function* () {
-                if (gate) {
-                  yield* Effect.never;
-                }
-                handled++;
-              }),
-            onAlarm: () => Effect.void,
-            onChildEvent: () => Effect.void,
-          }),
+      const idempotentAnnotations: Annotation.Dictionary = {};
+      Annotation.setDictionary(idempotentAnnotations, Operation.IdempotentAnnotation, true);
+      const SlowOp = Operation.make({
+        meta: {
+          key: DXN.make('org.dxos.test.slowIdempotent'),
+          name: 'SlowIdempotent',
+          annotations: idempotentAnnotations,
+        },
+        input: Schema.Struct({ value: Schema.Number }),
+        output: Schema.Void,
+      });
+      const opHandlers = OperationHandlerSet.make(
+        SlowOp.pipe(
+          Operation.withHandler(
+            Effect.fn(function* () {
+              if (gate) {
+                yield* Effect.never;
+              }
+              handled++;
+            }),
+          ),
+        ),
       );
+      const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const definitions = new ProcessManager.ProcessDefinitionRegistry();
-      definitions.register(idempotentProcess);
+      definitions.register(opProcess);
       const mkManager = () =>
         new ProcessManager.ProcessManagerImpl({
           registry,
@@ -964,17 +974,18 @@ describe('durability', () => {
         });
 
       const managerA = mkManager();
-      const handle = yield* managerA.spawn(idempotentProcess);
-      yield* Effect.fork(handle.submitInput('hello'));
+      const handle = yield* managerA.spawn(opProcess);
+      yield* Effect.fork(handle.submitInput({ value: 1 }));
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
       yield* managerA.shutdown();
 
-      // Restore: the interrupted input event has running=true but process is idempotent → retry.
+      // Restore: idempotent operations skip the marker and are simply re-run to completion.
       gate = false;
       const managerB = mkManager();
       yield* managerB.restore();
       yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
-      yield* (yield* managerB.attach(handle.pid)).terminate();
+      const restoredHandle = yield* managerB.attach(handle.pid);
+      expect(restoredHandle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(DurabilityTestLayer)),
   );
 
