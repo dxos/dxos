@@ -9,6 +9,7 @@ import React, { type KeyboardEvent, type ReactNode, useCallback, useRef, useStat
 import { supportsNativePasskeys } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, DropdownMenu, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -230,148 +231,152 @@ export const Welcome = ({
         </h1>
 
         {state === WelcomeState.INIT && (
-          <div className='flex flex-col gap-6'>
-            {/* Tabs */}
-            <div className='flex gap-1 border-b border-neutral-700'>
-              <TabButton active={tab === 'login'} onClick={() => setTab('login')}>
-                {t('login-tab.label')}
-              </TabButton>
-              <TabButton
-                active={tab === 'signup'}
-                onClick={() => {
-                  setTab('signup');
-                  setSignupStep('collect');
-                  setSignupMode('code');
-                }}
-              >
-                {t('signup-tab.label')}
-              </TabButton>
-            </div>
+          <Tabs.Root
+            orientation='horizontal'
+            defaultActivePart='list'
+            value={tab}
+            onValueChange={(value) => {
+              const next = value as Tab;
+              setTab(next);
+              if (next === 'signup') {
+                setSignupStep('collect');
+                setSignupMode('code');
+              }
+            }}
+          >
+            <Tabs.Viewport classNames='flex flex-col gap-6'>
+              <Tabs.Tablist classNames='border-b border-neutral-700'>
+                <Tabs.Tab value='login'>{t('login-tab.label')}</Tabs.Tab>
+                <Tabs.Tab value='signup'>{t('signup-tab.label')}</Tabs.Tab>
+              </Tabs.Tablist>
 
-            {tab === 'login' && (
-              <LoginTab
-                t={t}
-                identity={identity}
-                primary={loginPrimary}
-                setPrimary={setLoginPrimary}
-                emailValue={email}
-                setEmailValue={setEmail}
-                emailRef={emailRef}
-                emailError={error}
-                pending={pending}
-                onPasskey={onPasskey}
-                onSendSignInLink={handleSendSignInLink}
-                onEmailKeyDown={handleEmailKeyDown}
-                onJoinIdentity={onJoinIdentity}
-                onRecoverIdentity={onRecoverIdentity}
-                onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
-              />
-            )}
-
-            {tab === 'signup' && signupStep === 'collect' && signupMode === 'code' && (
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col gap-2'>
-                  <h2 className='text-2xl'>{t('signup-code.title')}</h2>
-                  <p className='text-description'>{t('signup-code.description')}</p>
-                </div>
-                <InlineForm
-                  inputProps={{
-                    autoFocus: true,
-                    ref: codeRef,
-                    classNames: 'font-mono uppercase tracking-widest',
-                    placeholder: 'XXXX-XXXX',
-                    value: code,
-                    onChange: (ev) => setCode(ev.target.value.trim()),
-                    onKeyDown: handleCodeKeyDown,
-                  }}
-                  submitLabel={t('continue-button.label')}
-                  submitDisabled={!validInvitationCode(code) || pending}
-                  onSubmit={handleValidateCode}
-                  validation={codeError}
+              <Tabs.Panel value='login'>
+                <LoginTab
+                  t={t}
+                  identity={identity}
+                  primary={loginPrimary}
+                  setPrimary={setLoginPrimary}
+                  emailValue={email}
+                  setEmailValue={setEmail}
+                  emailRef={emailRef}
+                  emailError={error}
+                  pending={pending}
+                  onPasskey={onPasskey}
+                  onSendSignInLink={handleSendSignInLink}
+                  onEmailKeyDown={handleEmailKeyDown}
+                  onJoinIdentity={onJoinIdentity}
+                  onRecoverIdentity={onRecoverIdentity}
+                  onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
                 />
-                <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
-              </div>
-            )}
+              </Tabs.Panel>
 
-            {tab === 'signup' && signupStep === 'collect' && signupMode === 'waitlist' && (
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col gap-2'>
-                  <h2 className='text-2xl'>{t('waitlist.title')}</h2>
-                  <p className='text-description'>{t('waitlist.description')}</p>
-                </div>
-                <InlineForm
-                  inputProps={{
-                    autoFocus: true,
-                    placeholder: t('email-input.placeholder'),
-                    value: waitlistEmail,
-                    onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
-                    onKeyDown: handleWaitlistEmailKeyDown,
-                  }}
-                  submitLabel={t('waitlist-submit-button.label')}
-                  submitDisabled={!validEmail(waitlistEmail) || pending}
-                  onSubmit={handleJoinWaitlist}
-                />
-                <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
-              </div>
-            )}
-
-            {tab === 'signup' && signupStep === 'auth' && (
-              <div className='flex flex-col gap-6'>
-                <div className='flex flex-col gap-2'>
-                  <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
-                  <p className='text-description'>{t('signup-auth.description')}</p>
-                </div>
-                <InlineForm
-                  inputProps={{
-                    autoFocus: true,
-                    ref: emailRef,
-                    placeholder: t('email-input.placeholder'),
-                    value: email,
-                    onChange: (ev) => setEmail(ev.target.value.trim()),
-                    onKeyDown: handleAuthEmailKeyDown,
-                  }}
-                  submitLabel={t('continue-button.label')}
-                  submitDisabled={!validEmail(email) || pending}
-                  onSubmit={handleCreateAccount}
-                  validation={error ? t('email-error.message') : null}
-                />
-                {onCreateAccountWithOAuth && (
-                  <>
-                    <OrDivider>{t('or-divider.label')}</OrDivider>
+              <Tabs.Panel value='signup'>
+                {signupStep === 'collect' && signupMode === 'code' && (
+                  <div className='flex flex-col gap-6'>
                     <div className='flex flex-col gap-2'>
-                      <p className='text-description'>{t('atmosphere-account-button.label')}</p>
-                      <InlineForm
-                        inputProps={{
-                          placeholder: t('atmosphere-handle-input.placeholder'),
-                          value: atmosphereHandle,
-                          onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
-                          onKeyDown: (ev) => {
-                            if (ev.key === 'Enter' && atmosphereHandle && !pending) {
-                              void handleCreateAccountWithOAuth({
+                      <h2 className='text-2xl'>{t('signup-code.title')}</h2>
+                      <p className='text-description'>{t('signup-code.description')}</p>
+                    </div>
+                    <InlineForm
+                      inputProps={{
+                        autoFocus: true,
+                        ref: codeRef,
+                        classNames: 'font-mono uppercase tracking-widest',
+                        placeholder: 'XXXX-XXXX',
+                        value: code,
+                        onChange: (ev) => setCode(ev.target.value.trim()),
+                        onKeyDown: handleCodeKeyDown,
+                      }}
+                      submitLabel={t('continue-button.label')}
+                      submitDisabled={!validInvitationCode(code) || pending}
+                      onSubmit={handleValidateCode}
+                      validation={codeError}
+                    />
+                    <SwapLink onClick={() => setSignupMode('waitlist')}>{t('no-invitation-code-link.label')}</SwapLink>
+                  </div>
+                )}
+
+                {signupStep === 'collect' && signupMode === 'waitlist' && (
+                  <div className='flex flex-col gap-6'>
+                    <div className='flex flex-col gap-2'>
+                      <h2 className='text-2xl'>{t('waitlist.title')}</h2>
+                      <p className='text-description'>{t('waitlist.description')}</p>
+                    </div>
+                    <InlineForm
+                      inputProps={{
+                        autoFocus: true,
+                        placeholder: t('email-input.placeholder'),
+                        value: waitlistEmail,
+                        onChange: (ev) => setWaitlistEmail(ev.target.value.trim()),
+                        onKeyDown: handleWaitlistEmailKeyDown,
+                      }}
+                      submitLabel={t('waitlist-submit-button.label')}
+                      submitDisabled={!validEmail(waitlistEmail) || pending}
+                      onSubmit={handleJoinWaitlist}
+                    />
+                    <SwapLink onClick={() => setSignupMode('code')}>{t('have-invitation-code-link.label')}</SwapLink>
+                  </div>
+                )}
+
+                {signupStep === 'auth' && (
+                  <div className='flex flex-col gap-6'>
+                    <div className='flex flex-col gap-2'>
+                      <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
+                      <p className='text-description'>{t('signup-auth.description')}</p>
+                    </div>
+                    <InlineForm
+                      inputProps={{
+                        autoFocus: true,
+                        ref: emailRef,
+                        placeholder: t('email-input.placeholder'),
+                        value: email,
+                        onChange: (ev) => setEmail(ev.target.value.trim()),
+                        onKeyDown: handleAuthEmailKeyDown,
+                      }}
+                      submitLabel={t('continue-button.label')}
+                      submitDisabled={!validEmail(email) || pending}
+                      onSubmit={handleCreateAccount}
+                      validation={error ? t('email-error.message') : null}
+                    />
+                    {onCreateAccountWithOAuth && (
+                      <>
+                        <OrDivider>{t('or-divider.label')}</OrDivider>
+                        <div className='flex flex-col gap-2'>
+                          <p className='text-description'>{t('atmosphere-account-button.label')}</p>
+                          <InlineForm
+                            inputProps={{
+                              placeholder: t('atmosphere-handle-input.placeholder'),
+                              value: atmosphereHandle,
+                              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+                              onKeyDown: (ev) => {
+                                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                                  void handleCreateAccountWithOAuth({
+                                    code,
+                                    provider: ATMOSPHERE_PROVIDER,
+                                    loginHint: atmosphereHandle,
+                                  });
+                                }
+                              },
+                            }}
+                            submitLabel={t('continue-button.label')}
+                            submitDisabled={!atmosphereHandle || pending}
+                            onSubmit={() =>
+                              handleCreateAccountWithOAuth({
                                 code,
                                 provider: ATMOSPHERE_PROVIDER,
                                 loginHint: atmosphereHandle,
-                              });
+                              })
                             }
-                          },
-                        }}
-                        submitLabel={t('continue-button.label')}
-                        submitDisabled={!atmosphereHandle || pending}
-                        onSubmit={() =>
-                          handleCreateAccountWithOAuth({
-                            code,
-                            provider: ATMOSPHERE_PROVIDER,
-                            loginHint: atmosphereHandle,
-                          })
-                        }
-                      />
-                    </div>
-                  </>
+                          />
+                        </div>
+                      </>
+                    )}
+                    <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
+                  </div>
                 )}
-                <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
-              </div>
-            )}
-          </div>
+              </Tabs.Panel>
+            </Tabs.Viewport>
+          </Tabs.Root>
         )}
 
         {state === WelcomeState.SPACE_INVITATION && (
@@ -431,19 +436,6 @@ export const Welcome = ({
 //
 // Sub-components
 //
-
-const TabButton = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) => (
-  <button
-    type='button'
-    onClick={onClick}
-    className={mx(
-      'flex-1 px-4 py-2 text-sm border-b-2 -mb-px transition-colors',
-      active ? 'border-white text-white' : 'border-transparent text-description hover:text-white',
-    )}
-  >
-    {children}
-  </button>
-);
 
 /**
  * Small "swap" link used at the bottom of forms to switch between alternative
