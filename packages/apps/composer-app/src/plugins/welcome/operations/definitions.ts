@@ -19,7 +19,7 @@ const WELCOME_OPERATION = 'org.dxos.plugin.welcome.operation';
  */
 export const RedeemOAuthRecovery = Operation.make({
   meta: {
-    key: DXN.make(`${WELCOME_OPERATION}.redeem-oauth-recovery`),
+    key: DXN.make(`${WELCOME_OPERATION}.redeemOAuthRecovery`),
     name: 'Redeem OAuth Recovery',
     icon: 'ph--cloud--regular',
   },
@@ -44,7 +44,7 @@ export const RedeemOAuthRecovery = Operation.make({
  */
 export const RegisterOAuthRecovery = Operation.make({
   meta: {
-    key: DXN.make(`${WELCOME_OPERATION}.register-oauth-recovery`),
+    key: DXN.make(`${WELCOME_OPERATION}.registerOAuthRecovery`),
     name: 'Register OAuth Recovery',
     icon: 'ph--cloud--regular',
   },
@@ -68,7 +68,7 @@ export const RegisterOAuthRecovery = Operation.make({
  */
 export const CompleteOAuthRegistration = Operation.make({
   meta: {
-    key: DXN.make(`${WELCOME_OPERATION}.complete-oauth-registration`),
+    key: DXN.make(`${WELCOME_OPERATION}.completeOAuthRegistration`),
     name: 'Complete OAuth Registration',
     icon: 'ph--cloud--regular',
   },
