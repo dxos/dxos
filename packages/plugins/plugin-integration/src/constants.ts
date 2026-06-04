@@ -17,6 +17,18 @@ export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.id}.providerFormDialog`);
 export const CUSTOM_PROVIDER_ID = 'custom';
 
 /**
+ * Provider id for the default atproto integration. Credential-only (no sync, no OAuth/credential
+ * form): its Integrations are created by the OAuth account-recovery flow, not selected by the user.
+ */
+export const ATPROTO_PROVIDER_ID = 'atproto';
+
+/**
+ * `AccessToken.source` for the default atproto integration. atproto accounts are portable — the PDS
+ * and handle can change — so we don't pin to a hostname.
+ */
+export const ATPROTO_SOURCE = 'atproto.local';
+
+/**
  * `localStorage` key prefix for redirect-flow OAuth pending state. The key
  * itself is built via {@link pendingIntegrationStorageKey} — call sites
  * shouldn't concatenate the prefix manually.

@@ -12,7 +12,7 @@ import { AccessToken } from '@dxos/types';
 
 import { Integration, IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import { CUSTOM_PROVIDER_ID } from '../constants';
+import { ATPROTO_PROVIDER_ID, ATPROTO_SOURCE, CUSTOM_PROVIDER_ID } from '../constants';
 
 /** Default form for manually entered access tokens (custom provider). */
 const CustomTokenForm = Schema.Struct({
@@ -63,6 +63,16 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
               return { kind: 'complete', accessToken, integration };
             }),
         },
+      },
+      {
+        // Default atproto integration. Credential-only: no sync, no OAuth/credential form. Its
+        // Integrations are created by the OAuth account-recovery flow (which already holds the
+        // verified token), so it's hidden from the manual "add integration" picker; lookups by id
+        // still resolve it (e.g. to label the connected account).
+        id: ATPROTO_PROVIDER_ID,
+        source: ATPROTO_SOURCE,
+        label: 'Atmosphere',
+        hidden: true,
       },
       // GitHub, Linear, and Slack are implemented as dedicated plugins
       // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).

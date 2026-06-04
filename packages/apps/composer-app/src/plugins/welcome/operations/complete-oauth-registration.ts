@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Integration } from '@dxos/plugin-integration';
+import { ATPROTO_PROVIDER_ID, ATPROTO_SOURCE, Integration } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
@@ -26,7 +26,16 @@ import { createEdgeHttpClient } from './shared';
  */
 const SOURCE_BY_PROVIDER: Record<string, string> = {
   [OAuthProvider.GOOGLE]: 'google.com',
-  [OAuthProvider.ATPROTO]: 'atproto.local',
+  [OAuthProvider.ATPROTO]: ATPROTO_SOURCE,
+};
+
+/**
+ * Maps OAuth provider to the `Integration.providerId` for the wrapping Integration. atproto routes
+ * to the default credential-only atproto provider (no sync). Providers without a default integration
+ * provider leave `providerId` unset.
+ */
+const PROVIDER_ID_BY_PROVIDER: Record<string, string> = {
+  [OAuthProvider.ATPROTO]: ATPROTO_PROVIDER_ID,
 };
 
 /**
@@ -95,6 +104,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
         personalSpace.db.add(
           Integration.make({
             name: result.email ?? result.identifier,
+            providerId: PROVIDER_ID_BY_PROVIDER[result.provider],
             accessToken: Ref.make(tokenObject),
             targets: [],
           }),
