@@ -38,8 +38,7 @@ const OAUTH_RECOVERY_PENDING_KEY_PREFIX = 'dxos:oauth-recovery-pending:' as cons
  */
 export const oauthRecoveryPendingKey = (
   accessTokenId: string,
-): `${typeof OAUTH_RECOVERY_PENDING_KEY_PREFIX}${string}` =>
-  `${OAUTH_RECOVERY_PENDING_KEY_PREFIX}${accessTokenId}`;
+): `${typeof OAUTH_RECOVERY_PENDING_KEY_PREFIX}${string}` => `${OAUTH_RECOVERY_PENDING_KEY_PREFIX}${accessTokenId}`;
 
 /**
  * Persisted snapshot of an in-flight OAuth-recovery register flow (recovered after the redirect
