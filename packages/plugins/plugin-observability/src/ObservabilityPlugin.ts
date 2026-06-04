@@ -8,7 +8,14 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
-import { ClientReady, ObservabilitySettings, ObservabilityState, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  ClientReady,
+  ObservabilitySettings,
+  ObservabilityState,
+  OperationHandler,
+  PrivacyNotice,
+  ReactSurface,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
@@ -59,6 +66,10 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       ),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.make('org.dxos.plugin.client.event.identity-created'),
+    activate: PrivacyNotice,
+  }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(

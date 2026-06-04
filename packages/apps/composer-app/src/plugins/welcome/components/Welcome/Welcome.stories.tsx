@@ -26,7 +26,7 @@ const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Par
         <Welcome
           identity={identity}
           state={state}
-          onSignup={() => setState(WelcomeState.EMAIL_SENT)}
+          onEmailLogin={() => setState(WelcomeState.LOGIN_SENT)}
           onGoToLogin={() => setState(WelcomeState.INIT)}
           {...props}
         />
