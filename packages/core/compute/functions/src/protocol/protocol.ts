@@ -20,7 +20,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, Entity, Feed, JsonSchema, Ref, Registry } from '@dxos/echo';
 import {
   createFeedServiceLayer,
   EchoClient,
@@ -41,9 +41,13 @@ import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {
   /**
-   * Additional types to register with the database.
+   * Additional entities to seed into the `Registry.Service` for the invocation.
+   * Accepts any ECHO entity — type schemas (`Type.AnyEntity`) as well as runtime
+   * object instances (e.g. blueprint instances from `Blueprint.make()`).
+   * When a space DB is present the entities are added to `db.graph.registry`;
+   * when there is no DB they are used to initialise a standalone in-memory registry.
    */
-  types?: Type.AnyEntity[];
+  entities?: Entity.Unknown[];
 
   /**
    * Toolkits to make available via the `OpaqueToolkitProvider`.
@@ -98,10 +102,19 @@ export const wrapFunctionHandler = (
 
         await using funcContext = await new FunctionContext(context, opts).open();
 
-        const types = [...(opts.types ?? []), ...(func.types ?? [])];
-        if (types.length > 0) {
+        // Schema types declared by the operation definition require a space DB for
+        // ECHO to decode objects of those types.
+        const schemaTypes = func.types ?? [];
+        if (schemaTypes.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
-          funcContext.db.graph.registry.add(types);
+          funcContext.db.graph.registry.add(schemaTypes);
+        }
+
+        // Caller-supplied entities (e.g. blueprint instances) are added to the DB
+        // registry when available; the no-DB path is handled in createLayer() via
+        // makeRegistry({ initial: opts.entities }).
+        if (funcContext.db && opts.entities?.length) {
+          funcContext.db.graph.registry.add(opts.entities);
         }
 
         const dataWithDecodedRefs =
@@ -230,12 +243,16 @@ class FunctionContext extends Resource {
       spaceId: this.context.spaceId,
       spaceRootUrl: this.context.spaceRootUrl,
       toolkits: this.opts.toolkits?.length ?? 0,
-      types: this.opts.types?.length ?? 0,
+      entities: this.opts.entities?.length ?? 0,
     });
 
+    // When a DB is open, opts.entities were already added to db.graph.registry before
+    // createLayer() was called (see wrapFunctionHandler). For the no-DB case seed a
+    // standalone in-memory registry with the caller-supplied entities so that e.g.
+    // blueprint instances are still resolvable via Blueprint.resolve().
     const registryLayer = this.db
       ? Layer.succeed(Registry.Service, this.db.graph.registry)
-      : Layer.succeed(Registry.Service, makeRegistry());
+      : Layer.succeed(Registry.Service, makeRegistry({ initial: this.opts.entities ?? [] }));
 
     return Layer.mergeAll(
       dbLayer,
