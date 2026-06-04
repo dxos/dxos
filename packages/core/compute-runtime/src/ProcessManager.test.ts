@@ -882,12 +882,15 @@ describe('durability', () => {
         { key: 'test.non-idempotent', input: Schema.String, output: Schema.Void, services: [] },
         () =>
           Effect.succeed({
+            onSpawn: () => Effect.void,
             onInput: () =>
               Effect.gen(function* () {
                 if (gate) {
                   yield* Effect.never;
                 }
               }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
           }),
       );
       const definitions = new ProcessManager.ProcessDefinitionRegistry();
@@ -935,6 +938,7 @@ describe('durability', () => {
         { key: 'test.idempotent', input: Schema.String, output: Schema.Void, services: [], idempotent: true },
         () =>
           Effect.succeed({
+            onSpawn: () => Effect.void,
             onInput: () =>
               Effect.gen(function* () {
                 if (gate) {
@@ -942,6 +946,8 @@ describe('durability', () => {
                 }
                 handled++;
               }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
           }),
       );
       const definitions = new ProcessManager.ProcessDefinitionRegistry();
