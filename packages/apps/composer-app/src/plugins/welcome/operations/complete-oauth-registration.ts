@@ -8,12 +8,11 @@ import { Capability } from '@dxos/app-framework';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE } from '@dxos/plugin-bluesky';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Integration } from '@dxos/plugin-integration';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Integration } from '@dxos/plugin-integration';
 import { AccessToken } from '@dxos/types';
 
 import { CompleteOAuthRegistration } from './definitions';
@@ -72,26 +71,18 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
       });
 
       // Wrap the AccessToken in an Integration so the connected account surfaces as a first-class
-      // object in the personal space. De-dup against prior logins/recovery: the AccessToken id is
-      // stable across re-registration, so only create the Integration if one doesn't already
-      // reference this token.
-      const integrations = yield* Effect.promise(() =>
-        personalSpace.db.query(Filter.type(Integration.Integration)).run(),
+      // object in the personal space. Registration completes exactly once (first sign-up); login and
+      // server-side token refresh never re-run this, so the AccessToken/Integration pair is created
+      // unconditionally with no de-dup query.
+      personalSpace.db.add(
+        Integration.make({
+          name: result.email ?? result.identifier,
+          providerId: ATMOSPHERE_PROVIDER_ID,
+          accessToken: Ref.make(tokenObject),
+          targets: [],
+        }),
       );
-      const alreadyWrapped = integrations.some(
-        (integration) => integration.accessToken.target?.id === result.accessTokenId,
-      );
-      if (!alreadyWrapped) {
-        personalSpace.db.add(
-          Integration.make({
-            name: result.email ?? result.identifier,
-            providerId: ATMOSPHERE_PROVIDER_ID,
-            accessToken: Ref.make(tokenObject),
-            targets: [],
-          }),
-        );
-        log.info('Integration ECHO object created', { accessTokenId: result.accessTokenId, provider: result.provider });
-      }
+      log.info('Integration ECHO object created', { accessTokenId: result.accessTokenId, provider: result.provider });
 
       return { email: result.email };
     }),

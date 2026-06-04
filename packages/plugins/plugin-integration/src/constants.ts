@@ -17,6 +17,19 @@ export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.id}.providerFormDialog`);
 export const CUSTOM_PROVIDER_ID = 'custom';
 
 /**
+ * `IntegrationProvider.id` for the built-in Atmosphere (atproto) integration: the same atproto OAuth
+ * flow as Bluesky but without any sync targets. Also the provider the OAuth account-recovery flow
+ * routes its Integration to.
+ */
+export const ATMOSPHERE_PROVIDER_ID = 'atmosphere';
+
+/**
+ * `AccessToken.source` for the Atmosphere integration. atproto accounts are portable — the PDS and
+ * handle can change — so we don't pin to a hostname.
+ */
+export const ATMOSPHERE_SOURCE = 'atproto.local';
+
+/**
  * `localStorage` key prefix for redirect-flow OAuth pending state. The key
  * itself is built via {@link pendingIntegrationStorageKey} — call sites
  * shouldn't concatenate the prefix manually.
