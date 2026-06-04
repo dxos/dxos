@@ -27,7 +27,8 @@ export const fetchRoute = async (
   const path = coordinates.map(([lon, lat]) => `${lon},${lat}`).join(';');
   const url = `${baseUrl}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=true`;
 
-  log('osrm route request', { url, waypoints: coordinates.length });
+  // Log the host + waypoint count only — the URL path embeds the user's exact coordinates.
+  log('osrm route request', { host: new URL(baseUrl).host, profile: 'driving', waypoints: coordinates.length });
   const response = await fetchFn(url);
   log('osrm route response', { status: response.status, ok: response.ok });
   if (!response.ok) {

@@ -68,8 +68,9 @@ export namespace GeoLocation {
    */
   export const toGeoPoint = ({ longitude, latitude, height }: GeoLocation): GeoPoint => {
     // TODO(ZaymonFC): Use schema validation instead of doing this manually.
-    const clampedLongitude = clamp(longitude, -180, 180);
-    const clampedLatitude = clamp(latitude, -90, 90);
+    // Clamp + round to match the `Format.GeoPoint` decode/encode path so both produce identical tuples.
+    const clampedLongitude = roundCoordinate(clamp(longitude, -180, 180));
+    const clampedLatitude = roundCoordinate(clamp(latitude, -90, 90));
     return height !== undefined ? [clampedLongitude, clampedLatitude, height] : [clampedLongitude, clampedLatitude];
   };
 

@@ -78,7 +78,7 @@
 
 ## Workflow
 
-- Never work on `main`; always work within the session generated worktree.
+- Never work on `main`; always work within the session-generated worktree.
   - If there are unstaged changes, stash these and move them into the worktree; tell the user.
   - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.

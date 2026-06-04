@@ -39,19 +39,10 @@ body {
    */
   --boot-loader-mark-size: min(300px, 62.5vmin);
   --boot-loader-status-gap: 32px;
-  /*
-   * Arc + marker colour. Defaults to the loader's text colour (`currentcolor`)
-   * so the ring matches the status text out of the box; a host can recolour the
-   * ring independently by setting `--boot-loader-accent-light` / `-dark` on
-   * `:root` (same pattern as the `--boot-loader-bg-*` / `-fg-*` tokens).
-   */
-  --boot-loader-accent: var(--boot-loader-accent-light, #5ac2f8);
 
   position: fixed;
   inset: 0;
   z-index: 10;
-  background: var(--boot-loader-bg-light, #fafafa);
-  color: var(--boot-loader-fg-light, #0a0a0a);
   font-size: 13px;
   font-family:
     ui-sans-serif,
@@ -69,14 +60,10 @@ body {
   transition: opacity 500ms ease-out;
 }
 
-#boot-loader[data-dismissing] {
-  opacity: 0;
-}
-
-/* Gently shrink the disc + mark as the loader fades, echoing the prior handoff. */
-#boot-loader[data-dismissing] #boot-loader-disc {
-  transform: translate(-50%, -50%) scale(0.92);
-  transition: transform 500ms ease-out;
+#boot-loader {
+  background: var(--boot-loader-bg-light, #fafafa);
+  color: var(--boot-loader-fg-light, #0a0a0a);
+  --boot-loader-accent: var(--boot-loader-accent-light, #5ac2f8);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -85,6 +72,16 @@ body {
     color: var(--boot-loader-fg-dark, #fafafa);
     --boot-loader-accent: var(--boot-loader-accent-dark, #06c5fd);
   }
+}
+
+#boot-loader[data-dismissing] {
+  opacity: 0;
+}
+
+/* Gently shrink the disc + mark as the loader fades, echoing the prior handoff. */
+#boot-loader[data-dismissing] #boot-loader-disc {
+  transform: translate(-50%, -50%) scale(0.92);
+  transition: transform 500ms ease-out;
 }
 
 /*
@@ -189,7 +186,7 @@ body {
   /* opacity: 0.5; */
   stroke-linecap: round;
   /* Dashed line: dash + gap lengths in viewBox units (~2 units ≈ 7.7px @384px). */
-  stroke-dasharray: 1 2;
+  stroke-dasharray: 2 1;
 }
 
 /* The `marker-end` dot at the arc's leading edge. */

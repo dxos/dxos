@@ -20,8 +20,9 @@ import {
   isLiteralUnion,
   isNestedType,
 } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -295,18 +296,25 @@ export const FormField = (props: FormFieldProps) => {
 
 FormField.displayName = 'Form.FormField';
 
-/**
- * Nesting
- */
+//
+// Layout components
+//
 
 // TODO(burdon): Options (nested or flat).
 // TODO(burdon): Support collapsible.
 export const Nesting = ({ children }: PropsWithChildren) => (
-  <div className='flex flex-col px-2 border border-subdued-separator rounded-sm mt-2'>
-    {children}
-    <div className='pb-2' />
+  <div className='px-2 border border-subdued-separator rounded-sm mt-2'>
+    <div className='pb-2'>{children}</div>
   </div>
 );
+
+export const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
+  return (
+    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col pt-2.5')}>
+      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
+    </div>
+  );
+};
 
 /**
  * Get property input component.

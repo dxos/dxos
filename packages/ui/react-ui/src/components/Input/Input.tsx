@@ -130,7 +130,8 @@ Root.displayName = 'Input.Root';
 //
 
 // `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Input.TriggerIcon />`).
-type TriggerIconProps = Omit<IconButtonProps, 'label'> & { label?: string };
+// `onClick` is reserved — the trigger always opens the registered picker.
+type TriggerIconProps = Omit<IconButtonProps, 'label' | 'onClick'> & { label?: string };
 
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
   ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
@@ -142,12 +143,15 @@ const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
 
     return (
       <IconButton
+        ref={forwardedRef}
         variant='ghost'
         icon={icon}
         iconOnly
-        label={label ?? t('trigger-button.label')}
-        onClick={ctx.trigger}
+        classNames={classNames}
+        aria-label={ariaLabel}
+        label={label ?? ariaLabel ?? t('trigger-button.label')}
         {...props}
+        onClick={ctx.trigger}
       />
     );
   },

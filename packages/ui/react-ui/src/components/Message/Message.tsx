@@ -149,14 +149,13 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
           {children}
         </h2>
         {onClose && (
-          <div>
+          <div className={tx('message.close', {})}>
             <IconButton
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
               density='sm'
               label={t('toolbar-close.label')}
-              classNames={tx('message.close', {})}
               onClick={onClose}
             />
           </div>

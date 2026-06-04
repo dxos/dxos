@@ -9,10 +9,17 @@ import { Annotation } from '@dxos/echo';
 import { type SchemaProperty, getProperties, isArrayType, isNestedType } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
-const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST =>
-  prop.isOptional && SchemaAST.isUnion(prop.type)
-    ? (prop.type.types.find((type) => type._tag !== 'UndefinedKeyword') ?? prop.type)
-    : prop.type;
+const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
+  if (!prop.isOptional || !SchemaAST.isUnion(prop.type)) {
+    return prop.type;
+  }
+  // Drop the `undefined` member, preserving the remaining union (don't collapse `A | B | undefined` to `A`).
+  const defined = prop.type.types.filter((type) => type._tag !== 'UndefinedKeyword');
+  if (defined.length === 0) {
+    return prop.type;
+  }
+  return defined.length === 1 ? defined[0] : SchemaAST.Union.make(defined, prop.type.annotations);
+};
 
 /**
  * Get the property types of an AST and filter out properties that are not form inputs.

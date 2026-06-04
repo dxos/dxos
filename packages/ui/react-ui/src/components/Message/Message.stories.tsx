@@ -26,9 +26,11 @@ const DefaultStory = ({ valence, title, body, button }: DefaultStoryProps) => (
     <Message.Root valence={valence}>
       {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
       {body && (
-        <Message.Content classNames='gap-2'>
-          <p>{body}</p>
-          {button && <Button>Test</Button>}
+        <Message.Content asChild classNames='gap-2'>
+          <div>
+            <p>{body}</p>
+            {button && <Button>Test</Button>}
+          </div>
         </Message.Content>
       )}
     </Message.Root>

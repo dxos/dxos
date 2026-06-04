@@ -15,14 +15,13 @@ import {
   isDiscriminatedUnion,
   isNestedType,
 } from '@dxos/effect';
-import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
 import { getFormProperties } from '../../../util';
 import { useFormValues } from '../Form';
-import { FormField, Nesting, type FormFieldProps } from '../FormField';
+import { FormField, IconBlock, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 
 export type ArrayFieldProps = {
@@ -105,6 +104,7 @@ export const ArrayField = ({
       <div className='flex flex-col'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
+
           // Object items: each row contains a recursively-rendered FormField
           //   (multiple sub-rows for the object's fields) wrapped in a border,
           //   with the delete button bottom-aligned next to it.
@@ -129,9 +129,14 @@ export const ArrayField = ({
 
           return (
             <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
-              {renderItemAsObject ? <Nesting>{fieldField}</Nesting> : fieldField}
+              {fieldField}
               {!readonly && layout !== 'static' && (
-                <IconBlock icon='ph--x--regular' label={t('remove-item.button')} onClick={() => handleDelete(index)} />
+                <IconBlock
+                  inline={!renderItemAsObject}
+                  icon='ph--x--regular'
+                  label={t('remove-item.button')}
+                  onClick={() => handleDelete(index)}
+                />
               )}
             </div>
           );
@@ -142,14 +147,6 @@ export const ArrayField = ({
 };
 
 ArrayField.displayName = 'Form.ArrayField';
-
-const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
-  return (
-    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col')}>
-      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
-    </div>
-  );
-};
 
 /**
  * Returns the default empty value for a given AST.

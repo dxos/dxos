@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Place, type Routing, RoutingOperation, Segment, TripCapabilities, Trip } from '#types';
+import { type Place, Routing, RoutingOperation, Segment, TripCapabilities, Trip } from '#types';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 
@@ -23,7 +23,7 @@ export default RoutingOperation.PlanRoute.pipe(
       const services = yield* Capability.getAll(TripCapabilities.RoutingService);
       const service = provider ? services.find((candidate) => candidate.id === provider) : services[0];
       if (!service) {
-        return yield* Effect.fail(new Error('No routing service configured.'));
+        return yield* Effect.fail(new Routing.RouteError('No routing service configured.'));
       }
 
       // Road segments with both endpoints, in itinerary order. Each is routed independently so the
@@ -40,7 +40,7 @@ export default RoutingOperation.PlanRoute.pipe(
         const waypoints = [toWaypoint(Segment.getOrigin(segment)), toWaypoint(Segment.getDestination(segment))].filter(
           (waypoint): waypoint is Routing.Waypoint => waypoint != null,
         );
-        log.info('request', { waypoints });
+        log.info('request', { provider: service.id, waypoints: waypoints.length });
         if (waypoints.length < 2) {
           continue;
         }
@@ -53,7 +53,7 @@ export default RoutingOperation.PlanRoute.pipe(
         });
 
         const route = result.routes[0];
-        log.info('response', { route });
+        log.info('response', { provider: service.id, routes: result.routes.length });
         if (!route) {
           continue;
         }
