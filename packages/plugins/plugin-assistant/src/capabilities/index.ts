@@ -8,9 +8,9 @@ import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const AiContext = Capability.lazy<void, Capability.Any[]>('AiContext', () => import('./ai-context'));
 export const AiService = Capability.lazy<void, Capability.Any[]>('AiService', () => import('./ai-service'));
-export const AnthropicIntegrationProvider = Capability.lazy(
+export const IntegrationProvider = Capability.lazy(
   'AnthropicIntegrationProvider',
-  () => import('./anthropic-integration-provider'),
+  () => import('./integration-provider'),
 );
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));

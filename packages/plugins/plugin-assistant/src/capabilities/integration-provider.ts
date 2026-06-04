@@ -14,11 +14,7 @@ import {
 } from '@dxos/plugin-integration';
 import { AccessToken } from '@dxos/types';
 
-/** Provider id — routes Integration-specific behaviour (no sync ops for Anthropic). */
-export const ANTHROPIC_PROVIDER_ID = 'anthropic';
-/** Matches `AccessToken.source`; consumed by `byokHeaderLayer('anthropic.com')` on the AI HTTP path. */
-export const ANTHROPIC_SOURCE = 'anthropic.com';
-export const ANTHROPIC_LABEL = 'Anthropic';
+import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
 
 /**
  * Manual-credential form for the Anthropic BYOK provider.
@@ -56,7 +52,7 @@ const validateAnthropicKey = (token: string) =>
     }
   });
 
-export const anthropicCredentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenForm>> = {
+const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenForm>> = {
   schema: AnthropicTokenForm,
   defaultValues: { token: '' },
   onSubmit: ({ values, provider }) =>
@@ -71,7 +67,7 @@ export const anthropicCredentialForm: CredentialForm<Schema.Schema.Type<typeof A
         token,
       });
       const integration = Obj.make(Integration.Integration, {
-        name: provider.label ?? ANTHROPIC_LABEL,
+        name: provider.label ?? 'Anthropic',
         providerId: provider.id,
         accessToken: Ref.make(accessToken),
         targets: [],
@@ -93,8 +89,8 @@ export default Capability.makeModule(
       {
         id: ANTHROPIC_PROVIDER_ID,
         source: ANTHROPIC_SOURCE,
-        label: ANTHROPIC_LABEL,
-        credentialForm: anthropicCredentialForm,
+        label: 'Anthropic',
+        credentialForm,
       },
     ]);
   }),

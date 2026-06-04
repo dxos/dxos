@@ -6,41 +6,40 @@ import * as Effect from 'effect/Effect';
 import { describe, test, vi } from 'vitest';
 
 import { runAndForwardErrors } from '@dxos/effect';
+import { IntegrationProvider as IntegrationProviderCapability } from '@dxos/plugin-integration';
 
-import { type IntegrationProviderEntry } from '@dxos/plugin-integration';
+import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
+import activate from './integration-provider';
 
-import {
-  ANTHROPIC_LABEL,
-  ANTHROPIC_PROVIDER_ID,
-  ANTHROPIC_SOURCE,
-  anthropicCredentialForm,
-} from './anthropic-integration-provider';
-
-const providerStub: IntegrationProviderEntry = {
-  id: ANTHROPIC_PROVIDER_ID,
-  source: ANTHROPIC_SOURCE,
-  label: ANTHROPIC_LABEL,
-  credentialForm: anthropicCredentialForm,
+const anthropicProvider = async () => {
+  const capability = await Effect.runPromise(activate());
+  if (capability.interface.identifier !== IntegrationProviderCapability.identifier) {
+    throw new Error('expected IntegrationProvider contribution');
+  }
+  const entry = capability.implementation.find((provider) => provider.id === ANTHROPIC_PROVIDER_ID);
+  if (!entry?.credentialForm) {
+    throw new Error('expected Anthropic credentialForm');
+  }
+  return entry;
 };
 
 describe('Anthropic integration provider', () => {
   test('uses anthropic.com as the AccessToken source', ({ expect }) => {
     expect(ANTHROPIC_SOURCE).toBe('anthropic.com');
     expect(ANTHROPIC_PROVIDER_ID).toBe('anthropic');
-    expect(ANTHROPIC_LABEL).toBe('Anthropic');
   });
 
   test('credentialForm.onSubmit returns kind=complete and binds source/providerId on a valid key', async ({
     expect,
   }) => {
+    const provider = await anthropicProvider();
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [] }), { status: 200 }));
     try {
-      const result = await anthropicCredentialForm
-        .onSubmit({
+      const result = await provider
+        .credentialForm!.onSubmit({
           values: { token: 'sk-ant-abc' },
-          provider: providerStub,
-          // Test stub: onSubmit does not touch the database; the coordinator passes the active space's db at runtime.
+          provider,
           db: undefined as never,
         })
         .pipe(runAndForwardErrors);
@@ -56,14 +55,14 @@ describe('Anthropic integration provider', () => {
   });
 
   test('credentialForm.onSubmit dies when Anthropic rejects the key (401)', async ({ expect }) => {
+    const provider = await anthropicProvider();
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue(new Response('unauthorized', { status: 401 }));
     try {
       const exit = await Effect.exit(
-        anthropicCredentialForm.onSubmit({
+        provider.credentialForm!.onSubmit({
           values: { token: 'bad' },
-          provider: providerStub,
-          // Test stub: onSubmit does not touch the database; the coordinator passes the active space's db at runtime.
+          provider,
           db: undefined as never,
         }),
       ).pipe(runAndForwardErrors);
@@ -74,11 +73,12 @@ describe('Anthropic integration provider', () => {
   });
 
   test('credentialForm.onSubmit dies on an empty token', async ({ expect }) => {
+    const provider = await anthropicProvider();
     const exit = await Effect.exit(
-      anthropicCredentialForm.onSubmit({
+      provider.credentialForm!.onSubmit({
         values: { token: '   ' },
-        provider: providerStub as any,
-        db: {} as any,
+        provider,
+        db: undefined as never,
       }),
     ).pipe(runAndForwardErrors);
     expect(exit._tag).toBe('Failure');
