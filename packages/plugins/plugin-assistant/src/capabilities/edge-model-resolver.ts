@@ -6,13 +6,17 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { AiModelResolver } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { byokHeaderLayer } from '@dxos/compute';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+
+import { ANTHROPIC_SOURCE } from '../constants';
 
 // Named alias so the module's inferred type stays portable (avoids TS2883 leaking the internal
 // `@dxos/ai/AiModelResolver` Layer type into the emitted declarations).
@@ -48,17 +52,19 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
       return edgeClient;
     };
 
+    const anthropicResolverLayer = AnthropicResolver.make().pipe(
+      Layer.provide(
+        AnthropicClient.layer({
+          // Host-only sentinel; `EdgeAiHttpClient` re-bases the request onto the EDGE
+          // `/ai/generate/anthropic` route and signs it with the verifiable presentation.
+          apiUrl: 'http://edge.internal',
+        }).pipe(Layer.provide(EdgeAiHttpClient.layerWithByok(getEdgeClient, byokHeaderLayer(ANTHROPIC_SOURCE)))),
+      ),
+    ) as Layer.Layer<AiModelResolver.AiModelResolver, never, never>;
+
     const contribution: Capability.Capability<typeof AppCapabilities.AiModelResolver> = Capability.contributes(
       AppCapabilities.AiModelResolver,
-      AnthropicResolver.make().pipe(
-        Layer.provide(
-          AnthropicClient.layer({
-            // Host-only sentinel; `EdgeAiHttpClient` re-bases the request onto the EDGE
-            // `/ai/generate/anthropic` route and signs it with the verifiable presentation.
-            apiUrl: 'http://edge.internal',
-          }).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient))),
-        ),
-      ),
+      anthropicResolverLayer,
       () => Effect.sync(() => identitySubscription?.unsubscribe()),
     );
 

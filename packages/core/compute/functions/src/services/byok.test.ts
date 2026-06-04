@@ -33,16 +33,11 @@ describe('byokHeaderLayer', () => {
       yield* client.execute(HttpClientRequest.get('http://internal/provider/anthropic/messages'));
     });
 
-    await Effect.runPromise(
-      program.pipe(
-        Effect.provide(
-          byokHeaderLayer('anthropic.com').pipe(
-            Layer.provide(captureHeaderClient(sink)),
-            Layer.provide(Layer.succeed(Credential.CredentialsService, credentials)),
-          ),
-        ),
-      ),
+    const runnable = program.pipe(
+      Effect.provideService(Credential.CredentialsService, credentials),
+      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
     );
+    await Effect.runPromise(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBe('sk-ant-user');
   });
@@ -56,16 +51,11 @@ describe('byokHeaderLayer', () => {
       yield* client.execute(HttpClientRequest.get('http://internal/provider/anthropic/messages'));
     });
 
-    await Effect.runPromise(
-      program.pipe(
-        Effect.provide(
-          byokHeaderLayer('anthropic.com').pipe(
-            Layer.provide(captureHeaderClient(sink)),
-            Layer.provide(Layer.succeed(Credential.CredentialsService, credentials)),
-          ),
-        ),
-      ),
+    const runnable = program.pipe(
+      Effect.provideService(Credential.CredentialsService, credentials),
+      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
     );
+    await Effect.runPromise(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBeUndefined();
   });
@@ -79,16 +69,11 @@ describe('byokHeaderLayer', () => {
       yield* client.execute(HttpClientRequest.get('http://internal/provider/anthropic/messages'));
     });
 
-    await Effect.runPromise(
-      program.pipe(
-        Effect.provide(
-          byokHeaderLayer('anthropic.com').pipe(
-            Layer.provide(captureHeaderClient(sink)),
-            Layer.provide(Layer.succeed(Credential.CredentialsService, credentials)),
-          ),
-        ),
-      ),
+    const runnable = program.pipe(
+      Effect.provideService(Credential.CredentialsService, credentials),
+      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
     );
+    await Effect.runPromise(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBeUndefined();
   });
