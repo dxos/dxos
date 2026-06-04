@@ -22,7 +22,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Credential, McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
@@ -72,6 +72,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
+        // `byokHeaderLayer` inside the resolver's HTTP client `mapRequestEffect` yields
+        // `CredentialsService` per request — it must be in the process fiber's context at
+        // execution time, not just at AiService-build time (Layer.provide consumes it during
+        // build). Mirrors the worker fallback in `functions/protocol.ts:208-210`.
+        Credential.CredentialsService,
       ],
     },
     (ctx) =>
