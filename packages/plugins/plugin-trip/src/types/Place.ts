@@ -20,9 +20,11 @@ export const Place = Schema.Struct({
       examples: ['JFK', 'CDG', 'LAX', 'BKK'],
     }),
   ),
+  // TODO(burdon): Change to Address (short format).
   city: Schema.optional(Schema.String.annotations({ title: 'City' })),
   country: Schema.optional(Schema.String.annotations({ title: 'Country' })),
-  geo: Format.GeoPoint.pipe(Schema.optional),
+  // Coordinates are set by geocoding (PlanRoute), not user-editable.
+  geo: Format.GeoPoint.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 }).pipe(Annotation.LabelAnnotation.set(['name']));
 
 export interface Place extends Schema.Schema.Type<typeof Place> {}

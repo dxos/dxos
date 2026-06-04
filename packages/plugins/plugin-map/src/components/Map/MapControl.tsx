@@ -43,7 +43,7 @@ export const MapControl = composable<HTMLDivElement, MapControlProps>(
 
     return (
       <Map.Root {...props} onChange={onChange} ref={forwardedRef}>
-        <Map.Content ref={setController} center={center} zoom={zoom}>
+        <Map.Content ref={setController} center={center} zoom={zoom} minZoom={3}>
           <Map.Tiles url={tileUrl} />
           <Map.Lines lines={lines} />
           <Map.Markers markers={markers} lines={lines} selected={selected} onSelect={onSelect} />

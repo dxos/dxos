@@ -15,9 +15,9 @@ import { type StatusPayload } from './types';
 /** Creep timer cadence, in milliseconds. */
 export const CREEP_TICK_MS = 100;
 /** State-1 ease rate — a gentle "we're alive" hint before real progress lands. */
-export const STATE_1_RATE = 0.04;
+export const STATE_1_RATE = 0.05;
 /** State-1 asymptote (percent) the creep eases toward before host progress. */
-export const STATE_1_ASYMPTOTE = 20;
+export const STATE_1_ASYMPTOTE = 40;
 /** State-2 ease rate — bridges the gap between sparse host `progress()` calls. */
 export const STATE_2_RATE = 0.05;
 /** State-2 lead (percent) the ceiling sits ahead of the last host value. */

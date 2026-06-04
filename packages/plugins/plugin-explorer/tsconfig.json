@@ -20,9 +20,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/graph"
     },
     {
@@ -77,9 +74,6 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
       "path": "../../ui/react-ui-components"
     },
     {
@@ -98,13 +92,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-graph"
-    },
-    {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

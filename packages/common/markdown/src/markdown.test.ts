@@ -73,16 +73,25 @@ describe('markdown', () => {
     }
   });
 
-  test('collapses multiple blank lines in plain text', ({ expect }) => {
-    // Three or more blank lines between text → one blank line.
-    expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');
-    // Whitespace-only lines also count as blank.
-    expect(normalizeText('aaa\n   \n\n   \nbbb')).to.equal('aaa\n\nbbb');
-    // One blank line is preserved unchanged.
-    expect(normalizeText('aaa\n\nbbb')).to.equal('aaa\n\nbbb');
-    // No blank line is preserved unchanged.
-    expect(normalizeText('aaa\nbbb')).to.equal('aaa\nbbb');
+  test('strips trailing invisible characters from each line', ({ expect }) => {
+    // Zero-width space, soft hyphen, word joiner, combining grapheme joiner, ZWNBSP — the invisible
+    // chars that `.trim()` and the visible-whitespace pass leave behind when they trail visible text.
+    expect(normalizeText('aaa​​\nbbb')).to.equal('aaa\nbbb');
+    expect(normalizeText('word­')).to.equal('word');
+    expect(normalizeText('a⁠﻿\nb͏')).to.equal('a\nb');
+    expect(normalizeText('mixed ​  \nnext')).to.equal('mixed\nnext');
   });
+
+  test('collapses multiple blank lines in plain text', ({ expect }) => {
+  // Three or more blank lines between text → one blank line.
+  expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');
+  // Whitespace-only lines also count as blank.
+  expect(normalizeText('aaa\n   \n\n   \nbbb')).to.equal('aaa\n\nbbb');
+  // One blank line is preserved unchanged.
+  expect(normalizeText('aaa\n\nbbb')).to.equal('aaa\n\nbbb');
+  // No blank line is preserved unchanged.
+  expect(normalizeText('aaa\nbbb')).to.equal('aaa\nbbb');
+});
 
   describe('residual tags', () => {
     test('strips MS Office namespaced tags', ({ expect }) => {

@@ -28,3 +28,29 @@
     --surface-bg: var(--color-popover-surface);
   }
 }
+
+@layer dx-tokens {
+  /*
+   * Elevated surfaces (modal, popover) sit higher than the hover/current base tokens, so the
+   * un-offset state colours collide with the surface itself (e.g. in dark mode the popover surface
+   * and hover surface are both neutral-750 → the highlight is invisible). Re-derive the state
+   * colours off the actual surface (--surface-bg) via relative oklch — darker in light mode,
+   * lighter in dark — so highlights stay visible regardless of how the surface tokens are tuned.
+   * Mirrors the .dx-main-sidebar offset in state.css.
+   */
+  .dx-modal-surface,
+  .dx-popover-surface {
+    --color-hover-surface: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.05) c h),
+      oklch(from var(--surface-bg) calc(l + 0.05) c h)
+    );
+    --color-current-surface: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.08) c h),
+      oklch(from var(--surface-bg) calc(l + 0.08) c h)
+    );
+    --color-current-surface-hover: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.12) c h),
+      oklch(from var(--surface-bg) calc(l + 0.12) c h)
+    );
+  }
+}

@@ -26,6 +26,7 @@ export const translations = [
         'calendar.nav.previous.label': 'Previous month',
         'calendar.nav.next.label': 'Next month',
         'calendar.footer.today.label': 'Today',
+        'trigger-button.label': 'Open',
       },
     },
   },

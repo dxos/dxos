@@ -19,9 +19,6 @@
       "path": "../../../common/context"
     },
     {
-      "path": "../../../common/crypto"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
@@ -74,9 +71,6 @@
     },
     {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../feed"
     }
   ]
 }

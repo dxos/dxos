@@ -34,8 +34,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "effect": "catalog:"

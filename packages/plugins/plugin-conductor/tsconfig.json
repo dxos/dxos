@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -35,9 +32,6 @@
     },
     {
       "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
@@ -71,12 +65,6 @@
     },
     {
       "path": "../../ui/react-ui-canvas-editor"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

@@ -35,15 +35,20 @@
   --dx-elevation-7: light-dark(white, var(--color-neutral-750));
 
   /* Surfaces — each maps to exactly one elevation level */
-  --color-deck-surface: var(--dx-elevation-3);
-  --color-base-surface: var(--dx-elevation-3);
   --color-sidebar-surface: var(--dx-elevation-2);
   --color-header-surface: var(--dx-elevation-2);
-  --color-toolbar-surface: var(--dx-elevation-5);
-  --color-card-surface: var(--dx-elevation-4);
+  --color-deck-surface: var(--dx-elevation-3);
+  --color-base-surface: var(--dx-elevation-3);
+  --color-card-surface: var(--dx-elevation-3);
   --color-group-surface: var(--dx-elevation-4);
-  --color-group-alt-surface: var(--dx-elevation-4);
+  /* Subtle alternate of group-surface for zebra striping (e.g. calendar months) — offset off
+   * elevation-4 via relative oklch so it tracks the ramp: darker in light mode, lighter in dark. */
+  --color-group-alt-surface: light-dark(
+    oklch(from var(--dx-elevation-4) calc(l - 0.03) c h),
+    oklch(from var(--dx-elevation-4) calc(l + 0.03) c h)
+  );
   --color-input-surface: var(--dx-elevation-4);
+  --color-toolbar-surface: var(--dx-elevation-5);
   --color-modal-surface: var(--dx-elevation-6);
   --color-popover-surface: var(--dx-elevation-7);
 

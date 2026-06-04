@@ -21,10 +21,11 @@ body {
  * to the rendered React shell.
  */
 #boot-loader {
-  /*
-   * Tunable sizes — change these in one place and every derived calc()
-   * (mark size, status offset, …) follows.
-   */
+  --color-composer-100: rgb(5 40 61);
+  --color-composer-200: rgb(10 75 105);
+  --color-composer-300: rgb(1 122 183);
+  --color-composer-400: rgb(6 197 253);
+
   /*
    * Caps the disc / mark at the design pixel sizes on roomy viewports while
    * shrinking proportionally on narrow ones (`vmin` follows the smaller of
@@ -39,19 +40,10 @@ body {
    */
   --boot-loader-mark-size: min(300px, 62.5vmin);
   --boot-loader-status-gap: 32px;
-  /*
-   * Arc + marker colour. Defaults to the loader's text colour (`currentcolor`)
-   * so the ring matches the status text out of the box; a host can recolour the
-   * ring independently by setting `--boot-loader-accent-light` / `-dark` on
-   * `:root` (same pattern as the `--boot-loader-bg-*` / `-fg-*` tokens).
-   */
-  --boot-loader-accent: var(--boot-loader-accent-light, #5ac2f8);
 
   position: fixed;
   inset: 0;
   z-index: 10;
-  background: var(--boot-loader-bg-light, #fafafa);
-  color: var(--boot-loader-fg-light, #0a0a0a);
   font-size: 13px;
   font-family:
     ui-sans-serif,
@@ -69,6 +61,20 @@ body {
   transition: opacity 500ms ease-out;
 }
 
+#boot-loader {
+  background: var(--boot-loader-bg-light, #fafafa);
+  color: var(--boot-loader-fg-light, #0a0a0a);
+  --boot-loader-accent: var(--boot-loader-accent-light, var(--color-composer-200));
+}
+
+@media (prefers-color-scheme: dark) {
+  #boot-loader {
+    background: var(--boot-loader-bg-dark, #0a0a0a);
+    color: var(--boot-loader-fg-dark, #fafafa);
+    --boot-loader-accent: var(--boot-loader-accent-dark, var(--color-composer-300));
+  }
+}
+
 #boot-loader[data-dismissing] {
   opacity: 0;
 }
@@ -77,14 +83,6 @@ body {
 #boot-loader[data-dismissing] #boot-loader-disc {
   transform: translate(-50%, -50%) scale(0.92);
   transition: transform 500ms ease-out;
-}
-
-@media (prefers-color-scheme: dark) {
-  #boot-loader {
-    background: var(--boot-loader-bg-dark, #0a0a0a);
-    color: var(--boot-loader-fg-dark, #fafafa);
-    --boot-loader-accent: var(--boot-loader-accent-dark, #06c5fd);
-  }
 }
 
 /*
@@ -163,17 +161,18 @@ body {
    * curve — `Loader.tsx` writes the eased progress into `--boot-loader-arc`
    * (0–100), and the arc occupies the conic range `(100 - arc)%`…`100%`, so the
    * head sits at `(100 - arc)%` (opaque) and the tail at `100%` (transparent).
+   * NOTE: We start at -1.16deg so that we don't mask the marker.
    */
   --boot-loader-arc: 0;
   mask: conic-gradient(
-    from 0deg at 50% 50%,
+    from -1.16deg at 50% 50%,
     transparent 0,
     transparent calc((100 - var(--boot-loader-arc)) * 1%),
     #000 calc((100 - var(--boot-loader-arc)) * 1%),
     transparent 100%
   );
   -webkit-mask: conic-gradient(
-    from 0deg at 50% 50%,
+    from -1.16deg at 50% 50%,
     transparent 0,
     transparent calc((100 - var(--boot-loader-arc)) * 1%),
     #000 calc((100 - var(--boot-loader-arc)) * 1%),
@@ -181,21 +180,34 @@ body {
   );
 }
 
+/*
+ * The leading-edge dot's layer — same geometry as `#boot-loader-ring` but with no
+ * mask, so the dot renders as a full circle (the ring's conic fade mask would
+ * otherwise bisect it where it sits on the mask's transparent→opaque edge).
+ */
+#boot-loader-ring-head {
+  width: var(--boot-loader-disc-size);
+  height: var(--boot-loader-disc-size);
+  overflow: visible;
+}
+
 .boot-loader-ring-progress {
   fill: none;
   stroke: var(--boot-loader-accent);
   /* viewBox units: ~1.9px on the 384px disc, scaling down on smaller viewports. */
-  stroke-width: 0.125;
-  /* opacity: 0.5; */
-  stroke-linecap: round;
+  stroke-width: 0.5;
+  opacity: 0.5;
+  stroke-linecap: butt;
+  overflow: visible;
   /* Dashed line: dash + gap lengths in viewBox units (~2 units ≈ 7.7px @384px). */
-  stroke-dasharray: 1 2;
+  /* stroke-dasharray: 2 1; */
 }
 
 /* The `marker-end` dot at the arc's leading edge. */
 .boot-loader-ring-marker {
   fill: var(--boot-loader-accent);
   stroke: none;
+  overflow: visible;
   /* opacity: 0.5; */
 }
 
@@ -259,6 +271,7 @@ body {
 
 #boot-loader-rss {
   background: var(--boot-loader-bg-light, #fafafa);
+  text-wrap: balance;
 }
 @media (prefers-color-scheme: dark) {
   #boot-loader-rss {

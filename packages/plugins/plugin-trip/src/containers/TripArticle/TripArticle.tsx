@@ -9,6 +9,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -19,7 +20,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
-import { RoutingOperation, Segment, Trip } from '#types';
+import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
   /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
@@ -160,11 +161,15 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         throw error;
       }
     } catch (err) {
-      // Surface routing failures (no provider / geocode / network) as a toast.
+      // Log the technical error; surface a friendly, non-technical toast. Known routing errors
+      // (no provider / geocode miss / OSRM failure) already carry user-facing messages.
+      log.catch(err);
+      const friendly =
+        err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
       await invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}/plan-route-error`,
         title: ['route.error.label', { ns: meta.id }],
-        description: err instanceof Error ? err.message : undefined,
+        description: friendly ?? ['route.error.message', { ns: meta.id }],
         icon: 'ph--warning--regular',
       });
     } finally {

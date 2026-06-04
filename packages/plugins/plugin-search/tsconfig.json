@@ -16,9 +16,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -46,9 +43,6 @@
       "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
@@ -56,9 +50,6 @@
     },
     {
       "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-query"
     },
     {
       "path": "../../sdk/app-framework"
@@ -82,12 +73,6 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/react-ui-menu"
     },
     {
@@ -97,25 +82,16 @@
       "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
       "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

@@ -5,7 +5,9 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 
+export const AccountCache = Capability.lazy('AccountCache', () => import('./account-cache'));
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const HubHttpClient = Capability.lazy('HubHttpClient', () => import('./hub-http-client'));
 export const Client = Capability.lazy('Client', () => import('./client'));
 export const LayerSpecs = Capability.lazy<void, Capability.Any[]>('LayerSpecs', () => import('./layer-specs'));
 export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));

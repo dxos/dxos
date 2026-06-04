@@ -20,6 +20,7 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 
 import { Form, omitId } from '../Form';
+import { Nesting } from '../FormField';
 import { FormFieldLabel } from '../FormFieldComponent';
 import { type RefFieldProps } from './RefField';
 
@@ -134,12 +135,12 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
   }
 
   return (
-    <div className='p-1 border border-subdued-separator rounded-sm'>
+    <Nesting>
       <Form.Root schema={formSchema} defaultValues={defaultValues as any} db={db} onValuesChanged={handleChange}>
         <Form.Content>
           <Form.FieldSet readonly={readonly} />
         </Form.Content>
       </Form.Root>
-    </div>
+    </Nesting>
   );
 };
