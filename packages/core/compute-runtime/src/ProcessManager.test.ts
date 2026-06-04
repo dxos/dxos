@@ -29,8 +29,8 @@ import { Database, DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
-import * as ProcessManager from './ProcessManager';
 import { ProcessStore } from './process-store';
+import * as ProcessManager from './ProcessManager';
 import { TestDatabaseLayer } from './testing';
 
 //

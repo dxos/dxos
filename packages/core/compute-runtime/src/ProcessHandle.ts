@@ -22,8 +22,8 @@ import type * as StorageService from '@dxos/compute/StorageService';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import type * as ProcessManager from './ProcessManager';
 import type { PersistedEvent, PersistedEventInput } from './process-store';
+import type * as ProcessManager from './ProcessManager';
 import { EphemeralTraceBuffer } from './trace-buffer';
 
 /**
@@ -326,7 +326,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
           // Process.Process<I,O,R> does not expose the input Schema (runtime object does).
           const defWithSchema = definition as unknown as { input: Schema.Schema<I, unknown, never> };
           const input = yield* Schema.decode(defWithSchema.input)(event.value).pipe(Effect.orDie);
-          yield* (yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq));
+          yield* yield* this.#runHandler('input', () => this.#callbacks.onInput(input), event.seq);
         });
       case 'alarm':
         return this.#dispatchAlarm(event.seq);
@@ -463,9 +463,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       return;
     }
     Effect.runFork(
-      this.#persistence.appendEvent({ _tag: 'alarm' }).pipe(
-        Effect.flatMap((seq) => this.#dispatchAlarm(seq)),
-      ),
+      this.#persistence.appendEvent({ _tag: 'alarm' }).pipe(Effect.flatMap((seq) => this.#dispatchAlarm(seq))),
     );
   }
 
@@ -486,9 +484,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
     log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
     Effect.runFork(
-      this.#persistence.appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) }).pipe(
-        Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
-      ),
+      this.#persistence
+        .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
+        .pipe(Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq))),
     );
   }
 
@@ -631,4 +629,3 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     // State is persisted after handlers settle (in #runHandler success pipeline).
   }
 }
-

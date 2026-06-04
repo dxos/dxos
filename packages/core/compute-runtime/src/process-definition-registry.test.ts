@@ -12,15 +12,13 @@ import { ProcessDefinitionRegistry } from './process-definition-registry';
 
 describe('ProcessDefinitionRegistry', () => {
   it('registers and resolves definitions by key', ({ expect }) => {
-    const definition = Process.make(
-      { key: 'test.demo', input: Schema.Void, output: Schema.Void, services: [] },
-      () =>
-        Effect.succeed({
-          onSpawn: () => Effect.void,
-          onInput: () => Effect.void,
-          onAlarm: () => Effect.void,
-          onChildEvent: () => Effect.void,
-        }),
+    const definition = Process.make({ key: 'test.demo', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+      Effect.succeed({
+        onSpawn: () => Effect.void,
+        onInput: () => Effect.void,
+        onAlarm: () => Effect.void,
+        onChildEvent: () => Effect.void,
+      }),
     );
     const registry = new ProcessDefinitionRegistry();
     registry.register(definition);

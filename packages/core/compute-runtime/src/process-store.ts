@@ -125,7 +125,10 @@ export class ProcessStore {
           const nextIndex = yield* Schema.encode(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
           yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);
         }
-        this.#seq.set(record.id, record.events.reduce((max, event) => Math.max(max, event.seq), 0));
+        this.#seq.set(
+          record.id,
+          record.events.reduce((max, event) => Math.max(max, event.seq), 0),
+        );
       }),
     );
   }

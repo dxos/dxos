@@ -23,8 +23,8 @@ import * as StorageService from '@dxos/compute/StorageService';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessDefinitionRegistry } from './process-definition-registry';
+import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessManagerService } from './process-manager-service';
 import { ProcessStore } from './process-store';
 import { createProcessTraceService } from './process-trace';
@@ -500,7 +500,10 @@ export class ProcessManagerImpl implements Manager {
   /**
    * Re-hydrates a persisted process record into a live handle without running onSpawn.
    */
-  #rehydrate(record: import('./process-store').PersistedProcess, definition: Process.Process<any, any, any>): Effect.Effect<void> {
+  #rehydrate(
+    record: import('./process-store').PersistedProcess,
+    definition: Process.Process<any, any, any>,
+  ): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
@@ -536,10 +539,18 @@ export class ProcessManagerImpl implements Manager {
       const ctx: Process.ProcessContext<any, any> = {
         id,
         params,
-        succeed: () => { handleRef?.requestSucceed(); },
-        fail: (error: Error) => { handleRef?.requestFail(error); },
-        submitOutput: (output: any) => { handleRef?.requestSubmitOutput(output); },
-        setAlarm: (timeout?: number) => { handleRef?.requestAlarm(timeout); },
+        succeed: () => {
+          handleRef?.requestSucceed();
+        },
+        fail: (error: Error) => {
+          handleRef?.requestFail(error);
+        },
+        submitOutput: (output: any) => {
+          handleRef?.requestSubmitOutput(output);
+        },
+        setAlarm: (timeout?: number) => {
+          handleRef?.requestAlarm(timeout);
+        },
       };
 
       let builtinCtx = Context.empty().pipe(
