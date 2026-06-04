@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
           (id: string) => {
             const index = state.toasts.findIndex((toast) => toast.id === id);
             if (index !== -1) {
-              // Allow time for the toast to animate out.
+              // Allow time for the toast exit animation (animate-toast-hide, 100ms) before unmounting.
               // TODO(burdon): Factor out and unregister timeout.
               setTimeout(() => {
                 updateEphemeral((s) => {
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
                     toasts: s.toasts.filter((_, i) => i !== index),
                   };
                 });
-              }, 1_000);
+              }, 150);
             }
           },
           [state.toasts, updateEphemeral],
