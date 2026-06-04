@@ -19,6 +19,7 @@ import {
   Operation,
   OperationRegistry,
   Trace,
+  byokHeaderLayer,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
@@ -31,12 +32,7 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { type FunctionServices } from '../sdk';
-import {
-  byokHeaderLayer,
-  configuredCredentialsLayer,
-  credentialsLayerFromDatabase,
-  FunctionInvocationService,
-} from '../services';
+import { configuredCredentialsLayer, credentialsLayerFromDatabase, FunctionInvocationService } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 export interface FunctionWrappingOptions {

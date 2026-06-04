@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Credential } from '@dxos/compute';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { byokHeaderLayer } from './byok';
-import { ConfiguredCredentialsService } from './credentials';
+import * as Credential from './Credential';
 
 const captureHeaderClient = (sink: { lastHeader?: string }) =>
   Layer.succeed(
@@ -23,10 +23,21 @@ const captureHeaderClient = (sink: { lastHeader?: string }) =>
     }),
   );
 
+const credentialsLayer = (credentials: Credential.ServiceCredential[]) =>
+  Layer.succeed(Credential.CredentialsService, {
+    queryCredentials: async ({ service }) => credentials.filter((credential) => credential.service === service),
+    getCredential: async ({ service }) => {
+      const credential = credentials.find((entry) => entry.service === service);
+      if (!credential) {
+        throw new Error(`Credential not found for service: ${service}`);
+      }
+      return credential;
+    },
+  });
+
 describe('byokHeaderLayer', () => {
   test('attaches X-BYOK header when a credential is found for the provider host', async ({ expect }) => {
     const sink: { lastHeader?: string } = {};
-    const credentials = new ConfiguredCredentialsService([{ service: 'anthropic.com', apiKey: 'sk-ant-user' }]);
 
     const program = Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
@@ -34,17 +45,16 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provideService(Credential.CredentialsService, credentials),
+      Effect.provide(credentialsLayer([{ service: 'anthropic.com', apiKey: 'sk-ant-user' }])),
       Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
     );
-    await Effect.runPromise(runnable as Effect.Effect<void>);
+    await runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBe('sk-ant-user');
   });
 
   test('does not attach X-BYOK when no credential is found', async ({ expect }) => {
     const sink: { lastHeader?: string } = {};
-    const credentials = new ConfiguredCredentialsService([]);
 
     const program = Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
@@ -52,17 +62,16 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provideService(Credential.CredentialsService, credentials),
+      Effect.provide(credentialsLayer([])),
       Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
     );
-    await Effect.runPromise(runnable as Effect.Effect<void>);
+    await runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBeUndefined();
   });
 
   test('does not attach X-BYOK when the matching credential has no apiKey', async ({ expect }) => {
     const sink: { lastHeader?: string } = {};
-    const credentials = new ConfiguredCredentialsService([{ service: 'anthropic.com' }]);
 
     const program = Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
@@ -70,10 +79,10 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provideService(Credential.CredentialsService, credentials),
+      Effect.provide(credentialsLayer([{ service: 'anthropic.com' }])),
       Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
     );
-    await Effect.runPromise(runnable as Effect.Effect<void>);
+    await runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBeUndefined();
   });
