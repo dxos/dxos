@@ -4,4 +4,3 @@
 
 export * from './meta';
 export * from './types';
-export { consumeRecoveryFlag } from './recovery-flag';
