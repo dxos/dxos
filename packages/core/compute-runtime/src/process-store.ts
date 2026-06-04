@@ -26,7 +26,12 @@ export const PersistedEvent = Schema.Union(
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('spawn') }),
   // `value` is the input encoded via the process definition's input schema.
   // `running` is set to true once the handler begins executing so a restart can detect interruptions.
-  Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('input'), value: Schema.Unknown, running: Schema.optional(Schema.Boolean) }),
+  Schema.Struct({
+    seq: Schema.Number,
+    _tag: Schema.Literal('input'),
+    value: Schema.Unknown,
+    running: Schema.optional(Schema.Boolean),
+  }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('alarm') }),
   Schema.Struct({ seq: Schema.Number, _tag: Schema.Literal('childEvent'), event: PersistedChildEvent }),
 );
