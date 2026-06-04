@@ -26,11 +26,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-ui-dnd": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
     "storybook": "10.2.0"
   },
   "devDependencies": {

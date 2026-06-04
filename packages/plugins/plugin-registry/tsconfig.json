@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -43,9 +40,6 @@
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/echo/echo"
     },
     {
       "path": "../../devtools/cli-util"

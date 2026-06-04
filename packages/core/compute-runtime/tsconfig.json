@@ -29,9 +29,6 @@
       "path": "../compute/compute"
     },
     {
-      "path": "../compute/functions"
-    },
-    {
       "path": "../compute/operation"
     },
     {
@@ -39,9 +36,6 @@
     },
     {
       "path": "../echo/echo-db"
-    },
-    {
-      "path": "../protocols"
     }
   ]
 }

@@ -20,9 +20,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/display-name"
     },
     {
@@ -42,9 +39,6 @@
     },
     {
       "path": "../../common/test-utils"
-    },
-    {
-      "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
@@ -71,13 +65,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/ui-types"
-    },
-    {
       "path": "../client-protocol"
-    },
-    {
-      "path": "../client-services"
     },
     {
       "path": "../config"
