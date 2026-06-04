@@ -13,7 +13,7 @@ import { AccessToken } from '@dxos/types';
 
 import { type CredentialForm, Integration, IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, CUSTOM_PROVIDER_ID } from '../constants';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
 
 /** Default form for manually entered access tokens (custom provider). */
 const CustomTokenForm = Schema.Struct({
@@ -89,9 +89,7 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
         label: 'Atmosphere',
         oauth: {
           provider: OAuthProvider.ATPROTO,
-          // `transition:generic` is the coarse read+write scope edge declares in its atproto
-          // client_metadata (same as the Bluesky provider).
-          scopes: ['transition:generic'],
+          scopes: [...ATPROTO_OAUTH_SCOPES],
           // bsky.social nullifies window.opener, so popup + postMessage can't be used; rely on Edge
           // redirecting to `/redirect/oauth`.
           useRedirectFlow: true,

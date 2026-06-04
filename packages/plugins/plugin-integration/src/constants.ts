@@ -30,6 +30,13 @@ export const ATMOSPHERE_PROVIDER_ID = 'atmosphere';
 export const ATMOSPHERE_SOURCE = 'atproto.local';
 
 /**
+ * atproto OAuth scopes for the Atmosphere integration and the account-recovery flows.
+ * `transition:generic` grants full offline-access so the stored token is usable for space
+ * operations; `transition:email` exposes the verified email the recovery flow binds the Account to.
+ */
+export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
+
+/**
  * `localStorage` key prefix for redirect-flow OAuth pending state. The key
  * itself is built via {@link pendingIntegrationStorageKey} — call sites
  * shouldn't concatenate the prefix manually.
