@@ -63,12 +63,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {
@@ -81,16 +75,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
@@ -99,13 +84,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-stack"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

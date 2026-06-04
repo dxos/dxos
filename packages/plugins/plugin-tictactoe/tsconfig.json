@@ -42,9 +42,6 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -55,9 +52,6 @@
     },
     {
       "path": "../plugin-game"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

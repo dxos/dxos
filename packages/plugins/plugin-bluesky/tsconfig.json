@@ -51,9 +51,6 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../plugin-client"
     },
     {
