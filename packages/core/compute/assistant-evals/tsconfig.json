@@ -2,12 +2,17 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
-    "src",
-    "src/**/*.json"
+    "src"
   ],
   "references": [
     {
+      "path": "../../../../tools/vite-plugin-import-source"
+    },
+    {
       "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/keys"
     },
     {
       "path": "../../../common/util"
@@ -41,9 +46,6 @@
     },
     {
       "path": "../ai"
-    },
-    {
-      "path": "../assistant"
     },
     {
       "path": "../assistant-toolkit"
