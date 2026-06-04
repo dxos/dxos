@@ -216,15 +216,8 @@ export const Welcome = ({
   //
 
   return (
-    // `dark` class forces the welcome surface into dark mode regardless of the
-    // system theme. The gradient backdrop is fixed-dark and text colors inside
-    // (text-description, theme-aware input/button tokens) need the .dark
-    // ancestor to resolve to the light-on-dark variant. AlertDialog's overlay
-    // already carries `dark` in OVERLAY_CLASSES, but its content may be
-    // portaled outside that ancestor chain, so we anchor it here too.
     <div
       className={mx(
-        'dark',
         'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
       )}
