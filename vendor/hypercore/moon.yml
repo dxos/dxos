@@ -16,7 +16,7 @@ tasks:
       - '--entryPoint=src/hypercore-crypto.js'
       - '--injectGlobals'
       - >-
-        --alias='{"events":"node:events","hypercore-default-storage":"./src/empty.js","os":"node:os","timers":"node:timers","tty":"node:tty","util":"node:util","sodium-native":"sodium-javascript","sodium-universal":"sodium-javascript","crypto":"node:crypto","worker_threads":"node:worker_threads"}'
+        --alias='{"events":"node:events","events-universal":"node:events","hypercore-default-storage":"./src/empty.js","os":"node:os","timers":"node:timers","tty":"node:tty","util":"node:util","sodium-native":"sodium-javascript","sodium-universal":"sodium-javascript","crypto":"node:crypto","worker_threads":"node:worker_threads"}'
       - '--bundlePackage=abstract-extension'
       - '--bundlePackage=atomic-batcher'
       - '--bundlePackage=b4a'
@@ -68,7 +68,6 @@ tasks:
       - '--bundlePackage=simple-hypercore-protocol'
       - '--bundlePackage=simple-message-channels'
       - '--bundlePackage=sparse-bitfield'
-      - '--bundlePackage=events-universal'
       - '--bundlePackage=streamx'
       - '--bundlePackage=text-decoder'
       - '--bundlePackage=supports-color'
