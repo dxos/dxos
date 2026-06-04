@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as EffectFunction from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { type Database, Filter, Key, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -18,6 +17,7 @@ import {
   unwrapOptional,
 } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -35,34 +35,36 @@ export const evalQuery = (queryString: string): Query.Any => {
   }
 };
 
-export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
+export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
-    const typename = DXN.parse(dxn).asTypeDXN()?.type;
+    const typename = DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined;
     if (!typename) {
-      return Option.none();
+      return Option.none<Type.AnyEntity>();
     }
 
-    const query = registry.query({ typename, location: ['database', 'runtime'] });
-    const schemas = yield* Effect.promise(() => query.run());
-    return Array.head(schemas);
+    const types = yield* Effect.promise(() =>
+      db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
+    );
+    const schema = types.find((t) => Type.getTypename(t) === typename);
+    return Option.fromNullable(schema);
   });
 
-  return resolveSchema(query, resolve).pipe(
-    Effect.map((schema) => Option.getOrUndefined(schema)),
+  return resolveType(query, resolve).pipe(
+    Effect.map((type) => Option.getOrUndefined(type)),
     runAndForwardErrors,
   );
 };
 
-const resolveSchema = (
+const resolveType = (
   query: QueryAST.Query,
-  resolve: (dxn: string) => Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>>,
-): Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>> => {
+  resolve: (dxn: string) => Effect.Effect<Option.Option<Type.AnyEntity>>,
+): Effect.Effect<Option.Option<Type.AnyEntity>> => {
   return Match.value(query).pipe(
-    Match.withReturnType<Effect.Effect<Option.Option<Schema.Schema.AnyNoContext>>>(),
+    Match.withReturnType<Effect.Effect<Option.Option<Type.AnyEntity>>>(),
     Match.when({ type: 'select' }, ({ filter }) =>
       typenameFromFilter(filter).pipe(
         Option.map((typename) => resolve(typename)),
-        Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+        Option.getOrElse(() => Effect.succeed(Option.none<Type.AnyEntity>())),
       ),
     ),
     Match.when({ type: 'filter' }, ({ filter, selection }) => {
@@ -70,15 +72,15 @@ const resolveSchema = (
       return Option.isSome(filterResult)
         ? filterResult.pipe(
             Option.map((typename) => resolve(typename)),
-            Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+            Option.getOrElse(() => Effect.succeed(Option.none<Type.AnyEntity>())),
           )
-        : resolveSchema(selection, resolve);
+        : resolveType(selection, resolve);
     }),
     Match.when({ type: 'reference-traversal' }, ({ anchor, property }) =>
-      resolveSchema(anchor, resolve).pipe(
+      resolveType(anchor, resolve).pipe(
         Effect.map((base) =>
           base.pipe(
-            Option.map((schema) => SchemaAST.getPropertySignatures(schema.ast)),
+            Option.map((type) => SchemaAST.getPropertySignatures(Type.getSchema(type).ast)),
             Option.flatMap((properties) => Array.findFirst(properties, (p) => p.name === property)),
             Option.flatMap((property) =>
               SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(unwrapOptional(property)),
@@ -88,8 +90,8 @@ const resolveSchema = (
         ),
         Effect.flatMap(
           Option.match({
-            onNone: () => Effect.succeed(Option.none()),
-            onSome: (typename) => resolve(DXN.fromTypename(typename).toString()),
+            onNone: () => Effect.succeed(Option.none<Type.AnyEntity>()),
+            onSome: (typename) => resolve(DXN.make(typename)),
           }),
         ),
       ),
@@ -97,14 +99,14 @@ const resolveSchema = (
     Match.when({ type: 'relation', filter: Match.defined }, ({ filter }) =>
       typenameFromFilter(filter).pipe(
         Option.map((typename) => resolve(typename)),
-        Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+        Option.getOrElse(() => Effect.succeed(Option.none<Type.AnyEntity>())),
       ),
     ),
     Match.when({ type: 'relation-traversal' }, ({ anchor, direction }) =>
-      resolveSchema(anchor, resolve).pipe(
+      resolveType(anchor, resolve).pipe(
         Effect.map((base) =>
           base.pipe(
-            Option.map((schema) => getTypeAnnotation(schema)),
+            Option.map((type) => getTypeAnnotation(Type.getSchema(type))),
             Option.flatMap((annotation) =>
               Option.fromNullable(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
             ),
@@ -112,16 +114,16 @@ const resolveSchema = (
         ),
         Effect.flatMap(
           Option.match({
-            onNone: () => Effect.succeed(Option.none()),
+            onNone: () => Effect.succeed(Option.none<Type.AnyEntity>()),
             onSome: (typename) => resolve(typename),
           }),
         ),
       ),
     ),
-    Match.when({ type: 'options' }, ({ query }) => resolveSchema(query, resolve)),
+    Match.when({ type: 'options' }, ({ query }) => resolveType(query, resolve)),
     Match.orElse((_q) => {
       // TODO(wittjosiah): Implement other cases.
-      return Effect.succeed(Option.none());
+      return Effect.succeed(Option.none<Type.AnyEntity>());
     }),
   );
 };
@@ -146,21 +148,22 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       if (from._tag !== 'scope') {
         return space?.db;
       }
-      const result = Option.fromNullable(from.scope.feeds).pipe(
-        Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedDXN) => Option.fromNullable(DXN.tryParse(String(feedDXN)))),
-        Option.flatMap((parsed) => {
-          const q = parsed.asQueueDXN();
-          if (!q || !Key.ObjectId.isValid(q.queueId)) {
+      const feedScopes = from._tag === 'scope' ? from.scopes.filter((s) => s._tag === 'feed') : [];
+      const result = Option.fromNullable(feedScopes[0]).pipe(
+        Option.map((s) => s.feedUri),
+        Option.flatMap((feedUri) => Option.fromNullable(EID.tryParse(String(feedUri)))),
+        Option.flatMap((echoUri) => {
+          const objectId = EID.getEntityId(echoUri);
+          if (!objectId || !Key.EntityId.isValid(objectId)) {
             return Option.none();
           }
-          return Option.fromNullable(space?.queues.get(parsed));
+          return Option.fromNullable(space?.queues.get(echoUri));
         }),
       );
       // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN
       // referencing a feed not present in space.queues, e.g. not yet synced) to avoid 400 errors.
       // TODO(wittjosiah): Can we handle this upstream?
-      if (from.scope.feeds?.length && Option.isNone(result)) {
+      if (feedScopes.length > 0 && Option.isNone(result)) {
         return undefined;
       }
       return Option.getOrElse(result, () => space?.db);

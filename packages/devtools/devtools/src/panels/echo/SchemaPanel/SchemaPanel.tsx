@@ -6,7 +6,8 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DXN, Entity, Format, JsonSchema, Type } from '@dxos/echo';
+import { DXN, Entity, Format, Type } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -24,10 +25,11 @@ const textFilter = (text?: string) => {
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
   return (item: Type.AnyEntity) => {
+    const schema = Type.getSchema(item);
     let match = false;
-    match ||= !!Type.getDXN(item)?.toString().match(matcher);
-    match ||= !!SchemaAST.getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
-    match ||= !!SchemaAST.getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!Type.getURI(item)?.toString().match(matcher);
+    match ||= !!SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
     return match;
   };
 };
@@ -39,12 +41,10 @@ const useSchemaQuery = (space?: Space): Type.AnyEntity[] => {
       return;
     }
 
-    return space.db.schemaRegistry.query().subscribe(
-      (query) => {
-        setSchema([...space.internal.db.graph.schemaRegistry.schemas, ...query.results]);
-      },
-      { fire: true },
-    );
+    setSchema([...space.db.graph.registry.list().filter(Type.isType)]);
+    return space.db.graph.registry.changed.on(() => {
+      setSchema([...space.db.graph.registry.list().filter(Type.isType)]);
+    });
   }, [space]);
 
   return schema;
@@ -59,16 +59,16 @@ export const SchemaPanel = (props: { space?: Space }) => {
   // NOTE: Always call setSelected with a function: setSelected(() => item) because schema is a class constructor.
   const [selected, setSelected] = useState<Type.AnyEntity>();
 
-  const onNavigate = (dxn: DXN) => {
-    const selectedSchema = schema.find((item) => Type.getDXN(item) && DXN.equals(Type.getDXN(item)!, dxn));
+  const onNavigate = (dxn: URI.URI) => {
+    const selectedSchema = schema.find((item) => Type.getURI(item) === dxn);
     if (selectedSchema) {
       setSelected(() => selectedSchema);
       return;
     }
 
-    const typeDXN = dxn.asTypeDXN();
-    if (typeDXN && typeDXN.version === undefined) {
-      const latestSchema = schema.find((item) => Type.getDXN(item)?.toString().startsWith(dxn.toString()));
+    // If the DXN is a valid new-style DXN without a version, find the latest versioned schema.
+    if (DXN.isDXN(dxn) && DXN.getVersion(dxn) === undefined) {
+      const latestSchema = schema.find((item) => Type.getURI(item)?.toString().startsWith(dxn.toString()));
       if (latestSchema) {
         setSelected(() => latestSchema);
       }
@@ -101,14 +101,17 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const dataRows = useMemo(() => {
     return schema
       .filter(textFilter(filter))
-      .map((item) => ({
-        id: Type.getDXN(item),
-        typename: Type.getTypename(item) ?? '',
-        version: Type.getVersion(item) ?? '',
-        kind: Entity.getKind(item),
+      .map((item) => {
+        const itemSchema = Type.getSchema(item);
+        return {
+          id: Type.getURI(item),
+          typename: Type.getTypename(item) ?? '',
+          version: Type.getVersion(item) ?? '',
+          kind: Entity.getKind(itemSchema),
 
-        _original: item, // Store the original item for selection
-      }))
+          _original: item, // Store the original item for selection
+        };
+      })
       .toSorted((a, b) => (a.id?.toString() ?? '').localeCompare(b.id?.toString() ?? ''));
   }, [schema, filter]);
 
@@ -155,8 +158,8 @@ export const SchemaPanel = (props: { space?: Space }) => {
           <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
             {selected ? (
               <ObjectViewer
-                object={JsonSchema.toJsonSchema(selected)}
-                id={Type.getDXN(selected)?.toString()}
+                object={selected.jsonSchema}
+                id={Type.getURI(selected)?.toString()}
                 onNavigate={onNavigate}
               />
             ) : (

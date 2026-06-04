@@ -59,7 +59,7 @@ export const createCompanionActions = (
       id: `${idPrefix}-companion-${companion.id}`,
       type: Node.ActionType,
       properties: {
-        icon: companion.properties.icon ?? 'ph--placeholder--regular',
+        icon: companion.properties.icon ?? 'ph--circle-dashed--regular',
         label: companion.properties.label,
         iconOnly: true,
         ...(selectedVariant !== undefined && {

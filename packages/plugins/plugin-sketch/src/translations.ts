@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Sketch } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Sketch.Sketch.typename]: {
+      [Type.getTypename(Sketch.Sketch)]: {
         'typename.label': 'Sketch',
         'typename.label_zero': 'Sketches',
         'typename.label_one': 'Sketch',

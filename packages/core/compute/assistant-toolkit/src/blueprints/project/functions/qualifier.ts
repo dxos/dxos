@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { Plan, Agent } from '../../../types';
 import { Qualifier } from './definitions';
 
-export default Qualifier.pipe(
+const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ agent: agentRef, event }) {
@@ -88,3 +88,4 @@ export default Qualifier.pipe(
     ),
   ),
 );
+export default handler;

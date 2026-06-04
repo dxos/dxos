@@ -3,19 +3,22 @@
 //
 
 import { useAtom, useAtomSet } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
+import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Clipboard, Icon, IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Icon, IconButton, List, ListItem, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
-import { type AccountCacheInvitation, accountCacheAtom } from '../../state/account-cache';
+import { type AccountCacheInvitation } from '../../state/account-cache';
 import { useHubHttpClient } from '../../state/use-hub-http';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.id);
+  const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);
@@ -23,25 +26,16 @@ export const InvitationsContainer = () => {
   // Account/invitation routes live on hub-service, not the edge worker.
   const hubHttp = useHubHttpClient();
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!hubHttp) {
       return;
     }
-    let cancelled = false;
-    hubHttp
-      .listAccountInvitations(new Context())
-      .then((result) => {
-        if (cancelled) {
-          return;
-        }
-        setCache((prev) => ({ ...prev, invitations: result.invitations, fetchedAt: Date.now() }));
-      })
-      .catch(() => {
-        // Offline: keep cache.
-      });
-    return () => {
-      cancelled = true;
-    };
+    try {
+      const result = await hubHttp.listAccountInvitations(new Context());
+      setCache((prev) => ({ ...prev, invitations: result.invitations, fetchedAt: Date.now() }));
+    } catch {
+      // Offline: keep cache.
+    }
   }, [hubHttp, setCache]);
 
   const handleIssue = useCallback(async () => {
@@ -67,8 +61,8 @@ export const InvitationsContainer = () => {
 
   const remaining = cache.account?.invitationsRemaining ?? 0;
   const list = cache.invitations ?? [];
-  const available = list.filter((row) => !row.redeemedByIdentityKey);
-  const redeemed = list.filter((row) => Boolean(row.redeemedByIdentityKey));
+  const available = list.filter((row) => !row.redeemedByIdentityDid);
+  const redeemed = list.filter((row) => Boolean(row.redeemedByIdentityDid));
 
   return (
     <Clipboard.Provider>

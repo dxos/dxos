@@ -178,6 +178,15 @@ export class ServiceContext extends Resource {
           shouldPull: request.shouldPull,
         });
       },
+      getSyncState: async (ctx, request) => {
+        // Mirror `syncQueue` above: in non-edge / partially-initialised modes the
+        // feed syncer is absent. Return an empty state instead of throwing so
+        // callers (e.g. devtools sync panel) keep working.
+        if (!this._feedSyncer) {
+          return { namespaces: [] };
+        }
+        return this._feedSyncer.getSyncState(ctx, request);
+      },
     });
 
     this.invitations = new InvitationsHandler(
@@ -427,6 +436,27 @@ export class ServiceContext extends Resource {
     this._deviceSpaceSync = {
       processCredential: async (credential: Credential) => {
         const assertion = getCredentialAssertion(credential);
+
+        // A space was tombstoned on another device: replicate the deletion locally.
+        if (assertion['@type'] === 'dxos.halo.credentials.SpaceDeleted') {
+          if (assertion.spaceKey.equals(identity.space.key)) {
+            // ignore halo space
+            return;
+          }
+          if (!this.dataSpaceManager) {
+            log('dataSpaceManager not initialized yet, ignoring space deletion', { details: assertion });
+            return;
+          }
+
+          try {
+            log('tombstoning space recorded in halo', { details: assertion });
+            await this.dataSpaceManager.handleRemoteSpaceDeleted(this._ctx, assertion.spaceKey);
+          } catch (err) {
+            log.catch(err);
+          }
+          return;
+        }
+
         if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
           return;
         }
@@ -436,6 +466,11 @@ export class ServiceContext extends Resource {
         }
         if (!this.dataSpaceManager) {
           log('dataSpaceManager not initialized yet, ignoring space admission', { details: assertion });
+          return;
+        }
+        // Do not re-accept a space that has been tombstoned (handles out-of-order credential replay).
+        if (this.dataSpaceManager.isSpaceDeleted(assertion.spaceKey)) {
+          log('space is deleted, ignoring space admission', { details: assertion });
           return;
         }
         if (this.dataSpaceManager.spaces.has(assertion.spaceKey)) {

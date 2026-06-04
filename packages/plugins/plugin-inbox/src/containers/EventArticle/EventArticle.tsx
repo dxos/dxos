@@ -20,7 +20,7 @@ export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj
 
 export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
-  const id = Obj.getDXN(subject).toString();
+  const id = Obj.getURI(subject);
   const db = Obj.getDatabase(calendar);
   const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
@@ -54,7 +54,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
         <Panel.Content asChild>
           <Event.Viewport>
             <Event.Header db={db} onContactCreate={handleContactCreate} />
-            <Event.Content />
+            <Event.Body />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
             {notes && (
               <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />

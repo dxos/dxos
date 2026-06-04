@@ -351,10 +351,18 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
             .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
             .rotate(rotation ?? [0, 0, 0]);
 
-          renderLayers(generator, layers, zoom, styles);
+          // Provide a view-center for per-frame culling — only meaningful for
+          // projections that present a single visible hemisphere (e.g.
+          // orthographic). For Mercator/transverse-mercator the whole sphere
+          // is always visible, so we skip culling.
+          const isOrthographic = !projectionProp || projectionProp === 'orthographic';
+          const [lambda, phi] = (rotation ?? [0, 0, 0]) as Vector;
+          const viewCenter: [number, number] | undefined = isOrthographic ? [-lambda, -phi] : undefined;
+
+          renderLayers(generator, layers, zoom, styles, viewCenter);
         });
       }
-    }, [generator, size, zoom, translation, rotation, layers]);
+    }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
 
     if (!size.width || !size.height) {
       return null;

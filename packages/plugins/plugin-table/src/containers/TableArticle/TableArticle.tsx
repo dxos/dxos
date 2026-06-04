@@ -13,7 +13,7 @@ import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
@@ -45,7 +45,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const [view] = useObject(object.view);
     const queryAst = view?.query?.ast;
     const typename = getTypenameFromQuery(queryAst);
-    const schema = useSchema(db, typename);
+    const schema = useType(db, typename);
     // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
     const queriedObjects = useQueryWorkaround(db, queryAst, schema);
@@ -63,7 +63,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       });
     }, [graph, attendableId]);
 
-    const addRow = useAddRow({ db, schema });
+    const objectSchema = schema && Type.isObject(schema) ? schema : undefined;
+    const addRow = useAddRow({ db, schema: objectSchema });
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {
@@ -85,7 +86,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       () => ({
         selection: { enabled: true, mode: 'multiple' },
         dataEditable: true,
-        schemaEditable: schema && Type.isMutable(schema),
+        schemaEditable: schema != null && Type.getDatabase(schema) != null,
       }),
       [],
     );
@@ -115,7 +116,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const handleCreate = useCallback(
       (schema: Type.AnyEntity, values: any) => {
         invariant(db);
-        invariant(Type.isObjectSchema(schema));
+        invariant(Type.isObject(schema));
         return db.add(Obj.make(schema, values));
       },
       [db],

@@ -16,9 +16,8 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
+import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Composer } from '@dxos/brand';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
@@ -210,9 +209,17 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
   }
 
+  // Read the persisted opt-out state up front so we can suppress PostHog's heavy
+  // instrumentation (session recorder, dead-clicks autocapture) at init time —
+  // opting out after init only stops event capture, not script loading.
+  const [observabilityDisabled, observabilityGroup] = await Promise.all([
+    Observability.isObservabilityDisabled(APP_KEY),
+    Observability.getObservabilityGroup(APP_KEY),
+  ]);
+
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore);
+  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled);
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
   // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
@@ -266,9 +273,6 @@ const main = async () => {
     },
     { once: true },
   );
-  const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
-  const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
-
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(
@@ -380,6 +384,7 @@ const main = async () => {
     logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
@@ -459,14 +464,12 @@ const main = async () => {
     );
   };
 
-  const ComposerPlaceholder = (props: PlaceholderComponentProps) => (
-    <Placeholder {...props} logo={(logoProps) => <Composer {...logoProps} />} />
-  );
-
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      placeholder: ComposerPlaceholder,
+      // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
+      // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
+      // relays startup progress into it and dismisses it — no placeholder here.
       pluginLoader,
       onPluginRemove,
       pluginRegistryProvider,

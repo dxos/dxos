@@ -6,20 +6,17 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
-import { trim } from '@dxos/util';
+import { EntityId } from '@dxos/keys';
 
 import { DatabaseBlueprint, DiscordBlueprint, MemoryBlueprint } from '../index';
-import BlueprintManagerDefinition from './blueprint';
 import { BlueprintManagerHandlers, EnableBlueprints, QueryBlueprints } from './functions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -36,7 +33,7 @@ const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(L
  */
 const getConversationDXN = Effect.gen(function* () {
   const session = yield* AiSession.Service;
-  return Obj.getDXN(session.feed).toString() as DXN.String;
+  return Obj.getURI(session.feed);
 });
 
 describe('Blueprint Manager', () => {
@@ -154,49 +151,5 @@ describe('Blueprint Manager', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },
-  );
-
-  it.scoped(
-    'refresh-blueprints: agent syncs a mutated database blueprint from the registry',
-    Effect.fnUntraced(
-      function* (_) {
-        const registry = yield* Blueprint.RegistryService;
-        const canonical = registry.getByKey('org.dxos.blueprint.database');
-        expect(canonical).toBeDefined();
-
-        const stored = yield* Blueprint.upsert('org.dxos.blueprint.database');
-        const originalName = stored.name;
-        Obj.update(stored, (stored) => {
-          stored.name = '___TEST_MUTATED_BLUEPRINT_NAME___';
-        });
-        yield* Database.flush();
-        expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
-
-        const session = yield* AiSession.Service;
-        yield* Effect.promise(() => session.context.open());
-        yield* Effect.promise(() =>
-          session.context.bind({
-            blueprints: [Ref.make(BlueprintManagerDefinition.make())],
-          }),
-        );
-
-        yield* session
-          .createRequest({
-            system: trim`
-            You can call blueprint manager tools. When asked to refresh or sync blueprints from the registry,
-            call the refresh blueprints tool once and then stop.
-          `,
-            prompt: trim`
-            Refresh blueprints from the registry so database copies match the built-in definitions.
-          `,
-          })
-          .pipe(Effect.provide(session.makeToolExecutionServices()));
-
-        expect(stored.name).toBe(originalName);
-      },
-      provideTestLayers,
-      TestHelpers.provideTestContext,
-    ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : 60_000,
   );
 });

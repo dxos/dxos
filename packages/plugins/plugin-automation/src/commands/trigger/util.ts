@@ -13,7 +13,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Scope, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -62,7 +63,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         'function',
         FormBuilder.make().pipe(
           FormBuilder.set('key', Obj.getMeta(fn as Operation.PersistentOperation).key),
-          FormBuilder.set('dxn', Obj.getDXN(fn as Obj.Unknown).toString()),
+          FormBuilder.set('dxn', Obj.getURI(fn as Obj.Unknown)),
         ),
       ),
     ),
@@ -95,7 +96,7 @@ const printWebhook = (spec: Trigger.WebhookSpec) =>
   FormBuilder.make({}).pipe(FormBuilder.set('method', spec.method), FormBuilder.set('port', spec.port));
 
 const printFeed = (spec: Trigger.FeedSpec) =>
-  FormBuilder.make({}).pipe(FormBuilder.set('feed', spec.feed ? spec.feed.dxn.toString() : '(none)'));
+  FormBuilder.make({}).pipe(FormBuilder.set('feed', spec.feed ? spec.feed.uri.toString() : '(none)'));
 
 /**
  * Prompts for input values based on an Effect schema.
@@ -344,10 +345,11 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
  */
 export const selectFeed = Effect.fn(function* () {
   // Query schema registry for schemas with FeedAnnotation.
-  const schemas = yield* Database.runSchemaQuery({ location: ['database', 'runtime'] });
+  const schemas = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
 
   // Filter schemas that have FeedAnnotation.
-  const feedSchemas = schemas.filter((schema) => {
+  const feedSchemas = schemas.filter((type) => {
+    const schema = Type.getSchema(type);
     const annotation = FeedAnnotation.get(schema);
     return Option.isSome(annotation) && annotation.value === true;
   });

@@ -48,7 +48,7 @@ The existing `Channel` wrapper in `plugin-thread` (the `defaultThread + threads[
 export const Channel = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-}).pipe(Type.object({ typename: 'org.dxos.type.channel', version: '0.1.0' }), FeedAnnotation.set(true));
+}).pipe(Type.makeObject({ typename: 'org.dxos.type.channel', version: '0.1.0' }), FeedAnnotation.set(true));
 
 export const make = (props: Omit<Obj.MakeProps<typeof Channel>, 'feed'> = {}) => {
   const feed = Feed.make();

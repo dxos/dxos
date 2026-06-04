@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
@@ -18,13 +20,10 @@ export namespace TestSchema {
    * This is the test variant with example.com namespace.
    */
   export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
-    Type.object({
-      typename: 'com.example.type.expando',
-      version: '0.1.0',
-    }),
+    Type.makeObject(DXN.make('com.example.type.expando', '0.1.0')),
   );
 
-  export interface Expando extends Schema.Schema.Type<typeof Expando> {}
+  export type Expando = Type.InstanceType<typeof Expando>;
 
   //
   // Example
@@ -63,15 +62,10 @@ export namespace TestSchema {
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export const Example = ExampleSchema.pipe(
-    Type.object({
-      typename: 'com.example.type.example',
-      version: '0.1.0',
-    }),
-  );
+  export const Example = ExampleSchema.pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export interface Example extends Schema.Schema.Type<typeof Example> {}
+  export interface Example extends Type.InstanceType<typeof Example> {}
 
   //
   // Message
@@ -87,14 +81,9 @@ export namespace TestSchema {
     ),
   });
 
-  export const Message = MessageStruct.pipe(
-    Type.object({
-      typename: 'com.example.type.message',
-      version: '0.1.0',
-    }),
-  );
+  export const Message = MessageStruct.pipe(Type.makeObject(DXN.make('com.example.type.message', '0.1.0')));
 
-  export interface Message extends Schema.Schema.Type<typeof Message> {}
+  export type Message = Type.InstanceType<typeof Message>;
 
   //
   // Organization
@@ -108,14 +97,9 @@ export namespace TestSchema {
         value: Schema.String,
       }),
     ),
-  }).pipe(
-    Type.object({
-      typename: 'com.example.type.organization',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
-  export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+  export type Organization = Type.InstanceType<typeof Organization>;
 
   //
   // Person
@@ -141,15 +125,9 @@ export namespace TestSchema {
       label: Schema.String,
       value: Schema.String,
     }).pipe(Schema.Array, Schema.optional),
-  }).pipe(
-    Schema.partial,
-    Type.object({
-      typename: 'com.example.type.person',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-  export interface Person extends Schema.Schema.Type<typeof Person> {}
+  export interface Person extends Type.InstanceType<typeof Person> {}
 
   //
   // Task
@@ -163,30 +141,23 @@ export namespace TestSchema {
     previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
     subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
     description: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.partial,
-    Type.object({
-      typename: 'com.example.type.task',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-  export interface Task extends Schema.Schema.Type<typeof Task> {}
+  export interface Task extends Type.InstanceType<typeof Task> {}
 
   //
   // HasManager
   //
 
   export const HasManager = Schema.Struct({}).pipe(
-    Type.relation({
-      typename: 'com.example.type.has-manager',
-      version: '0.1.0',
+    Type.makeRelation({
+      dxn: DXN.make('com.example.type.hasManager', '0.1.0'),
       source: Person,
       target: Person,
     }),
   );
 
-  export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}
+  export type HasManager = Type.InstanceType<typeof HasManager>;
 
   //
   // EmployedBy
@@ -196,15 +167,14 @@ export namespace TestSchema {
     role: Schema.String,
     since: Schema.optional(Schema.String),
   }).pipe(
-    Type.relation({
-      typename: 'com.example.type.employed-by',
-      version: '0.1.0',
+    Type.makeRelation({
+      dxn: DXN.make('com.example.type.employedBy', '0.1.0'),
       source: Person,
       target: Organization,
     }),
   );
 
-  export interface EmployedBy extends Schema.Schema.Type<typeof EmployedBy> {}
+  export type EmployedBy = Type.InstanceType<typeof EmployedBy>;
 
   //
   // RecordType
@@ -228,13 +198,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(
-    Schema.partial,
-    Type.object({
-      typename: 'com.example.type.container',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.container', '0.1.0')));
 
-  export interface Container extends Schema.Schema.Type<typeof Container> {}
+  export type Container = Type.InstanceType<typeof Container>;
 }

@@ -129,7 +129,7 @@ export const PluginItem = ({
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const styles = getStyles(iconHue);
   const gridCols = 'grid grid-cols-[5rem_1fr]';
-  const gridRows = 'grid grid-rows-[40px_1fr_min-content_40px]';
+  const gridRows = 'grid grid-cols-1 grid-rows-[40px_1fr_min-content_40px]';
 
   return (
     <ListItem.Root
@@ -139,28 +139,25 @@ export const PluginItem = ({
       aria-describedby={descriptionId}
       classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
     >
-      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.surface)}>
-        <Icon
-          classNames={mx('row-start-2 cursor-pointer', styles.foreground)}
-          icon={icon}
-          size={14}
-          onClick={handleClick}
-        />
+      <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
+        <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
+          <Icon classNames={styles.fg} icon={icon} size={14} />
+        </div>
       </div>
 
-      <div className={mx(gridRows)}>
+      <div className={mx(gridRows, 'min-w-0')}>
         <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
           <span className='text-lg truncate'>{name ?? id}</span>
           {failure && <PluginFailureBadge failure={failure} />}
         </div>
 
         <div>
-          <p className={mx('text-description', 'line-clamp-4 min-w-0')}>{description}</p>
+          <p className='text-description line-clamp-4 min-w-0'>{description}</p>
         </div>
 
         <div className='flex -ms-0.5 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag) => (
-            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
+            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
             </Tag>
           ))}

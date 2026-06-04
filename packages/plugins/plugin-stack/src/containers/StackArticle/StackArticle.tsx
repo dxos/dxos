@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, type Collection, Obj, type Ref } from '@dxos/echo';
+import { type Collection, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -58,21 +58,17 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   const collectionObjects = useAtomValue(collectionObjectsFamily(collection));
   const items = collectionObjects.map((object: Obj.Unknown) => {
-    const schema = Obj.getSchema(object);
-    const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+    const iconAnnotation = Obj.getIcon(object);
     const metadata: StackSectionMetadata = { icon: iconAnnotation?.icon };
     const view = {
       // ...stack.sections[object.id],
-      collapsed: collapsedSections[Obj.getDXN(object).toString()],
+      collapsed: collapsedSections[Obj.getURI(object)],
       title:
         (object as any)?.title ??
         // TODO(wittjosiah): `getNode` is not reactive.
-        toLocalizedString(
-          Graph.getNode(graph, Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label,
-          t,
-        ),
+        toLocalizedString(Graph.getNode(graph, Obj.getURI(object)).pipe(Option.getOrNull)?.properties.label, t),
     } as StackSectionView;
-    return { id: Obj.getDXN(object).toString(), object, metadata, view } satisfies StackSectionItem;
+    return { id: Obj.getURI(object), object, metadata, view } satisfies StackSectionItem;
   });
 
   const handleDelete = useCallback(
@@ -80,7 +76,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
       const index = collection.objects
         .map((object) => object.target)
         .filter(isNonNullable)
-        .findIndex((section) => Obj.getDXN(section).toString() === id);
+        .findIndex((section) => Obj.getURI(section) === id);
       const object = collection.objects[index].target;
       if (Obj.isObject(object)) {
         await invokePromise(SpaceOperation.RemoveObjects, {
@@ -155,7 +151,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
         <Stack
           orientation='vertical'
           size='intrinsic'
-          id={Obj.getDXN(collection).toString()}
+          id={Obj.getURI(collection)}
           data-testid='main.stack'
           classNames='overflow-y-auto'
         >

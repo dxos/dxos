@@ -6,15 +6,20 @@ import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
+import { type ViewMode, viewModeGroup } from '../ViewMode';
+
 export type UseEventToolbarActionsProps = {
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   onNoteCreate?: () => void;
 };
 
-export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsProps) => {
+export const useEventToolbarActions = ({ viewMode, setViewMode, onNoteCreate }: UseEventToolbarActionsProps) => {
   return useMenuBuilder(
     () =>
       MenuBuilder.make()
         .root({ label: ['event-toolbar.menu', { ns: meta.id }] })
+        .subgraph(viewModeGroup({ ns: meta.id, viewMode, setViewMode, modes: ['markdown', 'plain'] }))
         .action(
           'createNote',
           {
@@ -23,8 +28,7 @@ export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsP
           },
           () => onNoteCreate?.(),
         )
-        .separator('gap')
         .build(),
-    [onNoteCreate],
+    [viewMode, setViewMode, onNoteCreate],
   );
 };

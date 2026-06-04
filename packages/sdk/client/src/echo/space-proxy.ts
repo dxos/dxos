@@ -17,7 +17,6 @@ import {
 import {
   type ClientServicesProvider,
   type ExportSpaceOptions,
-  LegacySpaceProperties,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
@@ -34,12 +33,11 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import {
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
-  Filter,
   type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-db';
@@ -467,21 +465,19 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db
-        .query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties)))
-        .subscribe(
-          (query) => {
-            if (query.results.length === 1) {
-              this._properties = query.results[0];
-              propertiesAvailable.wake();
-              this._stateUpdate.emit(this._currentState);
-              scheduleMicroTask(this._ctx, () => {
-                unsubscribe();
-              });
-            }
-          },
-          { fire: true },
-        );
+      const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
+        (query) => {
+          if (query.results.length === 1) {
+            this._properties = query.results[0];
+            propertiesAvailable.wake();
+            this._stateUpdate.emit(this._currentState);
+            scheduleMicroTask(this._ctx, () => {
+              unsubscribe();
+            });
+          }
+        },
+        { fire: true },
+      );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
@@ -534,6 +530,21 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
+      { timeout: RPC_TIMEOUT, ctx },
+    );
+  }
+
+  async delete(): Promise<void> {
+    await this._deleteInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _deleteInternal(ctx: Context): Promise<void> {
+    if (this._databaseOpen) {
+      await this._db.flush();
+    }
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.SPACE_DELETED },
       { timeout: RPC_TIMEOUT, ctx },
     );
   }

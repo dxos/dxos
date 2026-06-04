@@ -13,8 +13,9 @@ import { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { type Trace, Blueprint, McpServer } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
+import { EID } from '@dxos/keys';
 
 import { AgentProcess } from './agent-process';
 
@@ -83,7 +84,7 @@ export const createSession: (
 ) => Effect.Effect<
   Session,
   Blueprint.NotFoundError,
-  Database.Service | Feed.FeedService | Blueprint.RegistryService | AgentService
+  Database.Service | Feed.FeedService | Registry.Service | AgentService
 > = Effect.fn('createSession')(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
     Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
@@ -137,9 +138,9 @@ export const layer = (opts?: {
               return cached;
             }
 
-            const feedDxn = Obj.getDXN(feed);
-            const target = feedDxn.toString();
-            const spaceId = feedDxn.asEchoDXN()?.spaceId;
+            const target = Obj.getURI(feed);
+            const parsedEchoUri = EID.tryParse(target);
+            const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,

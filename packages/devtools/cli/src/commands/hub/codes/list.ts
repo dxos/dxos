@@ -15,7 +15,7 @@ const statusOf = (row: AdminListInvitationCodesResponse['codes'][number]): strin
   if (row.revokedAt) {
     return 'revoked';
   }
-  if (row.redeemedByIdentityKey) {
+  if (row.redeemedByIdentityDid) {
     return 'redeemed';
   }
   return 'available';
@@ -25,7 +25,7 @@ export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
-    const result = yield* hubApiRequest<AdminListInvitationCodesResponse>('GET', '/api/codes').pipe(
+    const result = yield* hubApiRequest<AdminListInvitationCodesResponse>('GET', '/api/code').pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
     );
 
@@ -41,7 +41,7 @@ export const list = Command.make(
     yield* Console.log(`Invitation codes (${result.codes.length}):\n`);
     for (const row of result.codes) {
       const status = statusOf(row);
-      const issuer = row.issuedByIdentityKey ? row.issuedByIdentityKey.slice(0, 12) + '…' : 'bootstrap';
+      const issuer = row.issuedByIdentityDid ? row.issuedByIdentityDid.slice(0, 20) + '…' : 'bootstrap';
       const created = new Date(row.createdAt).toLocaleString();
       yield* Console.log(
         `  ${row.code}  ${status.padEnd(10)} issued-by=${issuer.padEnd(13)} ${created}  ${row.note ?? ''}`,

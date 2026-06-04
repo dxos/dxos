@@ -26,7 +26,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
     Effect.all([
       // Create app menu actions.
       GraphBuilder.createExtension({
-        id: 'app-menu',
+        id: 'appMenu',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed(
@@ -45,7 +45,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create user account node.
       GraphBuilder.createExtension({
-        id: 'user-account',
+        id: 'userAccount',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -127,7 +127,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create space actions.
       GraphBuilder.createExtension({
-        id: 'space-actions',
+        id: 'spaceActions',
         match: NodeMatcher.whenNodeType('space'),
         actions: () =>
           Effect.succeed(
@@ -171,6 +171,8 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
                 properties: getProperties(`object-${i}`, {
                   label: `Object ${i}`,
                   icon: random.properties.icon(),
+                  ...(i % 3 === 0 && { count: (i + 1) * 2 }),
+                  ...(i % 3 === 1 && { modifiedCount: i + 1 }),
                 }),
               }),
             );
@@ -178,14 +180,14 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create object actions.
       GraphBuilder.createExtension({
-        id: 'object-actions',
+        id: 'objectActions',
         match: NodeMatcher.whenNodeType('object'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
               id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
-                log.info('action', { id: 'object-actions', index: i });
+                log.info('action', { id: 'objectActions', index: i });
               }),
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,

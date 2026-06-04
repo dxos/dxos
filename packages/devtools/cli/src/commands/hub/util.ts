@@ -24,6 +24,10 @@ const hubBaseUrl = Effect.gen(function* () {
 
 /**
  * Makes an authenticated request to the Hub API and unwraps the response envelope.
+ *
+ * Uses admin API-key auth (`DX_HUB_API_KEY`) for privileged CLI operations.
+ * User-facing hub calls use VP auth via `HubHttpClient` in `@dxos/edge-client`.
+ * TODO(wittjosiah): Reconcile with hub client.
  */
 export const hubApiRequest = <T>(
   method: 'GET' | 'POST' | 'DELETE',

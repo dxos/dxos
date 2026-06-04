@@ -17,7 +17,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'space-settings-automation',
+        id: 'spaceSettingsAutomation',
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () =>
           Effect.succeed([
@@ -32,7 +32,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: 'space-settings-functions',
+        id: 'spaceSettingsFunctions',
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () =>
           Effect.succeed([
@@ -47,7 +47,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: 'script-companion',
+        id: 'scriptCompanion',
         type: Script.Script,
         connector: (script) =>
           Effect.succeed([

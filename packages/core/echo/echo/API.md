@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import {
   Annotation, // Schema annotations (labels, descriptions, etc.)
   Database, // Database interface for persistence
-  Entity, // Generic entity types & functions (works for both Obj and Relation)
+  Entity, // Generic entity types & functions (works for Obj/Relation/Type)
   Feed, // Feed (queue) types & functions
   Filter, // Filter construction for queries
   Obj, // Object types & functions
@@ -16,43 +16,42 @@ import {
   QueryResult, // Query result types
   Ref, // Reference types & functions
   Relation, // Relation types & functions
-  Type, // Schema types and factories
+  Type, // Type construction & factories
 } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 ```
 
 ---
 
-## Defining Schemas
+## Defining Types
 
-### Object schemas
+`Type.makeObject` / `Type.makeRelation` turn a plain Effect `Schema` into a **type entity** (`Type.Type`). A type entity is itself an ECHO entity (branded `Kind.Type`); its `typename` and `version` live in its `EntityMeta` and are read via `Type.getTypename` / `Type.getVersion` (not as direct fields). Retrieve the underlying Effect `Schema` with `Type.getSchema`.
+
+### Object types
 
 ```ts
 const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
-}).pipe(
-  Type.object({ typename: 'com.example.type.person', version: '0.1.0' }),
-  Annotation.LabelAnnotation.set(['name']),
-);
+}).pipe(Annotation.LabelAnnotation.set(['name']), Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
-interface Person extends Schema.Schema.Type<typeof Person> {}
+type Person = Type.InstanceType<typeof Person>;
 ```
 
-### Relation schemas
+### Relation types
 
 ```ts
 const AnchoredTo = Schema.Struct({
   anchor: Schema.optional(Schema.String),
 }).pipe(
-  Type.relation({
-    typename: 'org.dxos.relation.anchoredTo',
-    version: '0.1.0',
-    source: Type.Obj,
+  Type.makeRelation({
+    dxn: DXN.make('org.dxos.relation.anchoredTo', '0.1.0'),
+    source: Obj.Unknown,
     target: Document,
   }),
 );
 
-interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
+type AnchoredTo = Type.InstanceType<typeof AnchoredTo>;
 ```
 
 ### Reference fields
@@ -61,9 +60,9 @@ interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
 const Task = Schema.Struct({
   assignee: Ref.Ref(Person),
   watchers: Ref.Array(Ref.Ref(Person)),
-}).pipe(Type.object({ typename: 'com.example.type.task', version: '0.1.0' }));
+}).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
 
-interface Task extends Schema.Schema.Type<typeof Task> {}
+type Task = Type.InstanceType<typeof Task>;
 ```
 
 ---

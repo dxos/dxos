@@ -22,6 +22,9 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -44,9 +47,6 @@
     },
     {
       "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"

@@ -38,7 +38,11 @@ export const createViewActions =
         );
         group.action(
           'showDebug',
-          { label: ['view.debug.label', { ns: meta.id }], checked: editorState.showDebug, icon: 'ph--bug--regular' },
+          {
+            label: ['view.debug.label', { ns: meta.id }],
+            checked: editorState.showDebug,
+            icon: 'ph--bug--regular',
+          },
           () => update({ showDebug: !editorState.showDebug }),
         );
       },

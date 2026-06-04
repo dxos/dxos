@@ -165,6 +165,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/merkle-search-tree/package.json",
           "jsonpath": "$.version"
         },
@@ -275,6 +280,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/assistant-evals/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/assistant-toolkit/package.json",
           "jsonpath": "$.version"
         },
@@ -291,6 +301,11 @@
         {
           "type": "json",
           "path": "packages/core/compute/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute/extractor/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -366,11 +381,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-react/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-registry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -520,11 +530,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/script-toolbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-assistant/package.json",
           "jsonpath": "$.version"
         },
@@ -570,6 +575,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-commerce/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-conductor/package.json",
           "jsonpath": "$.version"
         },
@@ -605,7 +615,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-duffel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-explorer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-extension/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -720,6 +740,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-osrm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-outliner/package.json",
           "jsonpath": "$.version"
         },
@@ -751,6 +776,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-sample/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-sandbox/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -996,6 +1026,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-inbox/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -7,8 +7,8 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
-import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
+import { OptionsAnnotationId, HiddenAnnotation } from '@dxos/echo/internal';
 
 /**
  * Type discriminator for TriggerType.
@@ -184,15 +184,12 @@ const TriggerSchema = Schema.Struct({
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trigger',
-    version: '0.1.0',
-  }),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
-  SystemTypeAnnotation.set(true),
+  HiddenAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
 );
 
-export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
+export type Trigger = Type.InstanceType<typeof TriggerSchema>;
 export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

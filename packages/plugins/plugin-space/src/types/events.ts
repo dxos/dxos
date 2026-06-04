@@ -12,5 +12,5 @@ export namespace SpaceEvents {
   export const SetupSettingsPanel = ActivationEvent.make(`${meta.id}.event.setup-settings-panel`);
   export const PersonalSpaceReady = ActivationEvent.make(`${meta.id}.event.default-space-ready`);
   export const SpaceCreated = ActivationEvent.make(`${meta.id}.event.space-created`);
-  export const SchemaAdded = ActivationEvent.make(`${meta.id}.event.schema-added`);
+  export const TypeAdded = ActivationEvent.make(`${meta.id}.event.type-added`);
 }

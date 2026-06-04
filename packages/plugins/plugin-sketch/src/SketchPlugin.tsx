@@ -17,6 +17,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Sketch } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const SketchPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
@@ -29,6 +32,9 @@ export const SketchPlugin = Plugin.define(meta).pipe(
     id: 'app-graph-serializer',
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: AppGraphSerializer,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

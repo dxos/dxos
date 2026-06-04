@@ -18,7 +18,7 @@ export const useShadowObject = <T extends Obj.Unknown>(
   subject: T,
   type: Type.AnyObj,
 ): [T | undefined, () => T] => {
-  const id = Obj.getDXN(subject).toString();
+  const id = Obj.getURI(subject);
   const objects = useQuery(db, Filter.type(type));
 
   const [target, setTarget] = useState<T | undefined>();
@@ -27,7 +27,7 @@ export const useShadowObject = <T extends Obj.Unknown>(
       const meta = Obj.getMeta(event);
       return meta.keys.find((key) => key.source === 'echo' && key.id === id);
     });
-    setTarget(target);
+    setTarget(target as T | undefined);
   }, [id, objects]);
 
   const createTarget = useCallback(() => {
@@ -36,7 +36,8 @@ export const useShadowObject = <T extends Obj.Unknown>(
       return target;
     }
 
-    const newObject = db.add(Obj.clone(subject));
+    const newObject = Obj.clone(subject);
+    db.add<Obj.Unknown>(newObject);
     Obj.update(newObject, (newObject) => {
       Obj.getMeta(newObject).keys.push({ source: 'echo', id }); // TODO(burdon): Factor out const?
     });

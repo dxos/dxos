@@ -10,6 +10,7 @@ import {
   Surface,
   useAtomCapability,
   useAtomCapabilityState,
+  useCapabilities,
   useCapability,
   useSettingsState,
 } from '@dxos/app-framework/ui';
@@ -36,7 +37,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => {
           return (
             <Container
-              id={Obj.getDXN(data.subject).toString()}
+              id={Obj.getURI(data.subject)}
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
@@ -57,7 +58,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => {
           return (
             <Container
-              id={Obj.getDXN(data.subject).toString()}
+              id={Obj.getURI(data.subject)}
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
@@ -67,7 +68,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.plugin-settings',
+        id: 'surface.pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
@@ -100,7 +101,7 @@ const Container = forwardRef<
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
   const editorState = useCapability(MarkdownCapabilities.EditorState);
-  const extensions = useCapability(MarkdownCapabilities.Extensions);
+  const extensions = useCapabilities(MarkdownCapabilities.Extensions);
   const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
   const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';

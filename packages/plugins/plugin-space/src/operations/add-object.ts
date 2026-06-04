@@ -3,12 +3,12 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
+import { CollectionModel, getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
-import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
+import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
 
@@ -36,9 +36,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const [runtimeSchema] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
+      const types = yield* Effect.promise(() =>
+        db.query(Query.select(Filter.type(Type.Type)).from(Scope.registry())).run(),
+      );
+      const [runtimeSchema] = types.filter((t) => !Type.isTypeKind(t) && Type.getTypename(t) === typename);
       const echoViewPath =
-        runtimeSchema !== undefined ? ViewAnnotation.get(runtimeSchema).pipe(Option.getOrElse(() => [])) : [];
+        runtimeSchema !== undefined
+          ? ViewAnnotation.get(Type.getSchema(runtimeSchema)).pipe(Option.getOrElse(() => []))
+          : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;
       const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
       const subject = getSubjectPathForNewObject({
@@ -50,7 +55,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       });
 
       return {
-        id: Obj.getDXN(object).toString(),
+        id: Obj.getURI(object),
         subject: [subject],
         object,
       };
@@ -70,7 +75,7 @@ const getSubjectPathForNewObject = (props: {
   if (typeof nodeId === 'string') {
     return `${nodeId}/${objectId}`;
   }
-  if (typename === Collection.Collection.typename) {
+  if (typename === Type.getTypename(Collection.Collection)) {
     return getCollectionsPath(spaceId, objectId);
   }
   if (viewTargetTypename) {

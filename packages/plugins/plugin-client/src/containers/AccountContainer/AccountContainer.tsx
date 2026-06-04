@@ -3,16 +3,20 @@
 //
 
 import { useAtom, useAtomSet } from '@effect-atom/atom-react';
-import React, { type FormEvent, useCallback, useEffect, useState } from 'react';
+import React, { type FormEvent, useCallback, useState } from 'react';
 
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Context } from '@dxos/context';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Icon, IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { ClientCapabilities } from '#types';
 
-import { accountCacheAtom } from '../../state/account-cache';
+import { RESET_DIALOG } from '../../constants';
 import { useHubHttpClient } from '../../state/use-hub-http';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
@@ -20,6 +24,8 @@ type AccountState = 'loading' | 'present' | 'missing' | 'error';
 export const AccountContainer = () => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
+  const { invokePromise } = useOperationInvoker();
+  const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
@@ -31,34 +37,22 @@ export const AccountContainer = () => {
   // retry) at one round-trip per session instead of one per panel.
   const hubHttp = useHubHttpClient();
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!hubHttp) {
       return;
     }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const account = await hubHttp.getAccount(new Context());
-        if (cancelled) {
-          return;
-        }
-        setCache((prev) => ({ ...prev, account, fetchedAt: Date.now() }));
-        setAccountState('present');
-      } catch (err: any) {
-        if (cancelled) {
-          return;
-        }
-        if (err?.data?.type === 'no_account') {
-          setCache((prev) => ({ ...prev, account: undefined, fetchedAt: Date.now() }));
-          setAccountState('missing');
-        } else {
-          setAccountState((prev) => (prev === 'present' ? 'present' : 'error'));
-        }
+    try {
+      const account = await hubHttp.getAccount(new Context());
+      setCache((prev) => ({ ...prev, account, fetchedAt: Date.now() }));
+      setAccountState('present');
+    } catch (err: any) {
+      if (err?.data?.type === 'no_account') {
+        setCache((prev) => ({ ...prev, account: undefined, fetchedAt: Date.now() }));
+        setAccountState('missing');
+      } else {
+        setAccountState((prev) => (prev === 'present' ? 'present' : 'error'));
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    }
   }, [hubHttp, setCache]);
 
   const handleResend = useCallback(async () => {
@@ -87,8 +81,8 @@ export const AccountContainer = () => {
         return;
       }
       try {
-        const identityKey = identity?.identityKey.toHex();
-        await hubHttp.requestAccess(new Context(), { email, identityKey });
+        const identityDid = identity ? await createDidFromIdentityKey(identity.identityKey) : undefined;
+        await hubHttp.requestAccess(new Context(), { email, identityDid });
       } catch {
         // Surface a generic confirmation; failure details would leak signal.
       }
@@ -96,6 +90,26 @@ export const AccountContainer = () => {
     },
     [hubHttp, identity, requestEmail],
   );
+
+  // Opens the standard reset confirmation dialog. The `onBeforeReset` hook
+  // deletes the hub account first; if that fails the reset is aborted so the
+  // local identity is not wiped while the server record remains.
+  const handleDeleteAccount = useCallback(() => {
+    if (!hubHttp) {
+      return;
+    }
+    void invokePromise(LayoutOperation.UpdateDialog, {
+      subject: RESET_DIALOG,
+      blockAlign: 'start',
+      props: {
+        mode: 'reset-storage',
+        onBeforeReset: async () => {
+          await hubHttp.deleteAccount(new Context());
+          setCache(() => ({}));
+        },
+      },
+    });
+  }, [hubHttp, invokePromise, setCache]);
 
   const account = cache.account;
 
@@ -136,21 +150,28 @@ export const AccountContainer = () => {
             <Message.Content>{t('account-offline.description')}</Message.Content>
           </Message.Root>
         ) : account ? (
-          <Settings.Item title={t('email.label')} description={account.email}>
-            {account.emailVerified ? (
-              <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
-            ) : (
-              <div className='flex flex-col gap-1 items-end'>
-                <IconButton
-                  icon='ph--paper-plane-tilt--regular'
-                  label={t('resend-verification.label')}
-                  onClick={handleResend}
-                  density='sm'
-                />
-                {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
-              </div>
-            )}
-          </Settings.Item>
+          <>
+            <Settings.Item title={t('email.label')} description={account.email}>
+              {account.emailVerified ? (
+                <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
+              ) : (
+                <div className='flex flex-col gap-1 items-end'>
+                  <IconButton
+                    icon='ph--paper-plane-tilt--regular'
+                    label={t('resend-verification.label')}
+                    onClick={handleResend}
+                    density='sm'
+                  />
+                  {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
+                </div>
+              )}
+            </Settings.Item>
+            <Settings.Item title={t('delete-account.label')} description={t('delete-account.description')}>
+              <Button variant='destructive' density='sm' onClick={handleDeleteAccount}>
+                {t('delete-account.label')}
+              </Button>
+            </Settings.Item>
+          </>
         ) : null}
       </Settings.Section>
     </Settings.Viewport>

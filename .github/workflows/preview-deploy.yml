@@ -70,9 +70,4 @@ jobs:
           number: ${{ steps.meta.outputs.pr_number }}
           header: composer-preview
           message: |
-            ### Composer preview
-
-            - Branch alias: ${{ steps.deploy.outputs.alias }}
-            - Deployment: ${{ steps.deploy.outputs.url }}
-
-            Built from ${{ steps.meta.outputs.head_sha }}.
+            ${{ steps.deploy.outputs.alias }}

@@ -100,6 +100,31 @@ export namespace AppPlugin {
     });
   }
 
+  export type PluginAssetModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+    asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>;
+  };
+
+  /**
+   * Creates a module that contributes one or more static plugin assets
+   * (typically the bundled `PLUGIN.mdl` spec).
+   */
+  export function addPluginAssetModule<T = void>(
+    options: PluginAssetModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: options.id ?? 'plugin-asset',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupPluginAssets,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: Effect.fnUntraced(function* () {
+        const assets: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(options.asset)
+          ? (options.asset as ReadonlyArray<AppCapabilities.PluginAsset>)
+          : [options.asset as AppCapabilities.PluginAsset];
+        return assets.map((asset) => Capability$.contributes(AppCapabilities.PluginAsset, asset));
+      }),
+    });
+  }
+
   export type SchemaModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
     schema: ReadonlyArray<Type.AnyEntity>;
   };

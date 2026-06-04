@@ -76,6 +76,12 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "default": "./dist/lib/neutral/blueprints/index.mjs"
+    },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -95,12 +101,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@codemirror/state": "catalog:",
@@ -111,13 +123,9 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -125,23 +133,13 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-deck": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-edge-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
-    "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -153,10 +151,6 @@
     "date-fns": "catalog:",
     "extendable-media-recorder": "catalog:",
     "extendable-media-recorder-wav-encoder": "catalog:",
-    "main-thread-scheduling": "catalog:",
-    "react-resize-detector": "catalog:",
-    "react-router-dom": "catalog:",
-    "react-use": "catalog:",
     "wavefile": "catalog:"
   },
   "devDependencies": {

@@ -8,7 +8,7 @@ import React, { useContext, useMemo, useRef } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useType } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import {
   Table as TableComponent,
@@ -29,7 +29,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   const db = Obj.getDatabase(object);
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target?.query.ast) : undefined;
-  const schema = useSchema(db, typename);
+  const schema = useType(db, typename);
   const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
@@ -54,15 +54,18 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
-    <Card.Content>
-      <TableComponent.Root ref={tableRef}>
-        <TableComponent.Content
-          key={Obj.getDXN(object).toString()}
-          model={model}
-          presentation={presentation}
-          schema={schema}
-        />
-      </TableComponent.Root>
-    </Card.Content>
+    <Card.Body>
+      <Card.Row fullWidth>
+        <TableComponent.Root ref={tableRef}>
+          <TableComponent.Content
+            key={Obj.getURI(object)}
+            model={model}
+            presentation={presentation}
+            schema={schema}
+            classNames='scale-75'
+          />
+        </TableComponent.Root>
+      </Card.Row>
+    </Card.Body>
   );
 };

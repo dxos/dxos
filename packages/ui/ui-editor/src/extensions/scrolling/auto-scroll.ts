@@ -35,6 +35,10 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
   let jumpPending = false;
   let enabled = true;
   let firstUpdate = true;
+  // Latches once the thread streams real content. Until then (initial open of a populated
+  // thread, whose height grows only as widgets measure) we snap instantly; afterwards we follow
+  // the bottom smoothly — so the first paint jumps to the end, then streaming eases.
+  let streamed = false;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
@@ -54,11 +58,11 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             if (enabled) {
               setPinned(true);
               view.dispatch({
-                effects: crawlerActiveEffect.of(true),
+                effects: crawlerActiveEffect.of({ active: true }),
               });
             } else {
               view.dispatch({
-                effects: crawlerActiveEffect.of(false),
+                effects: crawlerActiveEffect.of({ active: false }),
               });
             }
           }
@@ -94,9 +98,17 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           // NOTE: Use scroll geometry instead of coordsAtPos to avoid forced layout/scroll side-effects.
           const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
           const delta = scrollHeight - scrollTop - clientHeight;
+          if (update.docChanged) {
+            streamed = true;
+          }
           if (delta > 0) {
             setPinned(true);
-            view.dispatch({ effects: crawlerActiveEffect.of(true) });
+            // Before the thread has streamed any real content, height grows only from layout
+            // (widgets measuring on open) — snap instantly so we don't animate through the
+            // backlog. Once content has streamed, follow the bottom smoothly with the spring,
+            // including reflow frames interleaved with token edits. Both keep following until
+            // the height stabilizes.
+            view.dispatch({ effects: crawlerActiveEffect.of({ active: true, instant: !streamed }) });
           } else if (delta < -1) {
             setPinned(false);
           }
@@ -133,7 +145,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
                   }
 
                   view.scrollDOM.scrollTo({ top: view.scrollDOM.scrollHeight, behavior: 'instant' });
-                  view.dispatch({ effects: crawlerActiveEffect.of(false) });
+                  view.dispatch({ effects: crawlerActiveEffect.of({ active: false }) });
                 });
               }, 50);
 
@@ -173,7 +185,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
               const pinned = Math.abs(delta) <= 1;
               setPinned(pinned);
               if (!pinned) {
-                view.dispatch({ effects: crawlerActiveEffect.of(false) });
+                view.dispatch({ effects: crawlerActiveEffect.of({ active: false }) });
               }
             });
           }, 500);
@@ -181,7 +193,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           this.cleanup = createUserScrollDetector(view.scrollDOM, () => {
             if (isPinned) {
               setPinned(false);
-              view.dispatch({ effects: crawlerActiveEffect.of(false) });
+              view.dispatch({ effects: crawlerActiveEffect.of({ active: false }) });
             }
             onUserScroll();
           });
@@ -200,18 +212,23 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             .classNames(getSize(4))
             .attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
-            .classNames('dx-button bg-accent-surface')
+            .classNames('dx-button bg-accent-bg')
             .attributes({ 'data-density': 'md' })
             .append(icon)
             .on('click', () => {
               setPinned(true);
               view.dispatch({
-                effects: crawlerLineEffect.of({ line: -1, position: 'end', behavior: 'smooth' }),
+                effects: [
+                  crawlerLineEffect.of({ line: -1, position: 'end', behavior: 'smooth' }),
+                  // Re-engage the follower so it keeps tracking the bottom as content continues
+                  // to stream after the catch-up jump.
+                  crawlerActiveEffect.of({ active: true, instant: !streamed }),
+                ],
               });
             });
 
           buttonContainer = Domino.of('div')
-            .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
+            .classNames('cm-scroll-button transition-opacity duration-300 opacity-0 z-1')
             .append(button).root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);

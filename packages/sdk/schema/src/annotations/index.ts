@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './api-key';
 export * from './factory';
 export * from './feed';
 export * from './icon';

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Entity, Relation, Type } from '@dxos/echo';
+import { Database, Entity, Filter, Query, Relation, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { RelationCreate } from './definitions';
@@ -14,10 +14,13 @@ export default RelationCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, source, target, properties }) {
       const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() =>
-        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      const types = yield* Database.runQuery(
+        Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
       );
-      invariant(Type.isRelationSchema(schema), 'Schema is not a relation schema');
+      const foundSchema = types.find((t) => Type.getTypename(t) === typename);
+      invariant(foundSchema, `Schema not found: ${typename}`);
+      invariant(Type.isRelation(foundSchema), 'Schema is not a relation schema');
+      const schema = foundSchema;
 
       const sourceObj = yield* Database.load(source);
       const targetObj = yield* Database.load(target);

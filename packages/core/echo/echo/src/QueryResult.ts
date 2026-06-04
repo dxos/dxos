@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
 import { type CleanupFn } from '@dxos/async';
 
 import type * as Entity from './Entity';
@@ -103,4 +106,12 @@ export interface QueryResult<T> {
    * Subscribes to changes in query results.
    */
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: SubscriptionOptions): CleanupFn;
+}
+
+/**
+ * Effect that returns a QueryResult when evaluated, but also has shorthand methods for running the query or getting the first result.
+ */
+export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
+  run: Effect.Effect<T[], E, R>;
+  first: Effect.Effect<Option.Option<T>, E, R>;
 }

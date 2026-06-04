@@ -19,7 +19,7 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>
-              <Syntax.Code testId='debug' classNames='text-xs' />
+              <Syntax.Code testId='debug' classNames='text-sm' />
             </Syntax.Viewport>
           </Syntax.Content>
         </Syntax.Root>
@@ -30,9 +30,9 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
 
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
-const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
+export const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
-    <div {...composableProps({ classNames: 'dx-container bg-modal-surface rounded-md' })} ref={forwardedRef}>
+    <div {...composableProps({ classNames: 'dx-container bg-card-surface rounded-md' })} ref={forwardedRef}>
       {children}
     </div>
   );

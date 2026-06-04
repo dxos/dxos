@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { ComputeGraph } from '@dxos/conductor';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
 import { Sketch } from '@dxos/plugin-sketch';
@@ -44,7 +44,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     // Create type generators.
     const typeMap = useMemo(() => {
       const recordGenerators = new Map<string, ObjectGenerator<any>>(
-        recordTypes.map((type) => [type.typename, createGenerator(client, invokePromise, type)]),
+        recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invokePromise, type)]),
       );
 
       return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
@@ -52,8 +52,9 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
-      const echoSchema = await space.db.schemaRegistry.query().run();
-      const staticSchema = await space.db.graph.schemaRegistry.query().run();
+      const allSchema = [...space.db.graph.registry.list().filter(Type.isType)];
+      const echoSchema = allSchema.filter((t) => Type.isTypeKind(t));
+      const staticSchema = allSchema.filter((t) => !Type.isTypeKind(t));
 
       const objects = await space.db.query(Filter.everything()).run();
       const objectMap = sortKeys(

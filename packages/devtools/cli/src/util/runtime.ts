@@ -16,7 +16,7 @@ import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import { type QueueService, credentialsLayerFromDatabase } from '@dxos/functions';
+import { credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =
   | AiService.AiService
@@ -25,7 +25,6 @@ export type AiChatServices =
   | Feed.FeedService
   | Operation.Service
   | OperationRegistry.Service
-  | QueueService
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.

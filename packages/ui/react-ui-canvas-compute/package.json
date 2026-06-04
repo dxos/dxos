@@ -38,7 +38,6 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -62,7 +61,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "chess.js": "catalog:"
+    "chess.js": "catalog:",
+    "workerize-loader": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

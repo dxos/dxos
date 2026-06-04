@@ -212,7 +212,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
       if (block.pending) {
         return;
       }
-      const dxn = block.reference.dxn;
+      const dxn = block.reference.uri;
       return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
     }
 

@@ -8,7 +8,7 @@ import { assert, describe, test } from 'vitest';
 import { Trigger, TriggerEvent } from '@dxos/compute';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 describe('jsonata', () => {
@@ -52,8 +52,8 @@ describe('jsonata', () => {
   });
 
   describe('evaluates expression with trigger event', () => {
-    const feedRef: Ref.Ref<Feed.Feed> = Ref.fromDXN(
-      DXN.parse('dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6'),
+    const feedRef: Ref.Ref<Feed.Feed> = Ref.fromURI(
+      EID.parse('echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6'),
     );
     const event: TriggerEvent.TriggerEvent = {
       feed: feedRef,
@@ -109,7 +109,7 @@ describe('jsonata', () => {
           "name": event.item.name
         },
         "ref": {
-          "/": "${Obj.getDXN(obj).toString()}"
+          "/": "${Obj.getURI(obj)}"
         },
         "value": "Hello, " & event.item.name & "!"
       }
@@ -123,7 +123,7 @@ describe('jsonata', () => {
           name: event.item.name,
         },
         ref: {
-          '/': Obj.getDXN(obj).toString(),
+          '/': Obj.getURI(obj),
         },
         value: 'Hello, John!',
       });
@@ -152,7 +152,7 @@ describe('jsonata', () => {
           name: event.item.name,
         },
         ref: {
-          '/': Obj.getDXN(obj).toString(),
+          '/': Obj.getURI(obj),
         },
         value: 'Hello, John!',
       });

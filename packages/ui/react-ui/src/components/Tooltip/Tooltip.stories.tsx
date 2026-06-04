@@ -50,9 +50,6 @@ export const Default: Story = {
       },
     ],
   },
-  parameters: {
-    chromatic: { delay: 500 },
-  },
 };
 
 export const DefaultOpen: Story = {
@@ -64,9 +61,6 @@ export const DefaultOpen: Story = {
         content: 'This is the tooltip content',
       },
     ],
-  },
-  parameters: {
-    chromatic: { delay: 500 },
   },
 };
 
@@ -80,8 +74,5 @@ export const StressTest: Story = {
       }),
       { count: 32 },
     ),
-  },
-  parameters: {
-    chromatic: { disableSnapshot: true },
   },
 };

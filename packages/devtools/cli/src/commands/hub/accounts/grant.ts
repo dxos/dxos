@@ -15,14 +15,14 @@ import { formatHubError, hubApiRequest } from '../util';
 export const grant = Command.make(
   'grant',
   {
-    identityKey: Args.text({ name: 'identity-key' }).pipe(Args.withDescription('Account identity key.')),
+    identityDid: Args.text({ name: 'identity-did' }).pipe(Args.withDescription('Account identity DID.')),
     count: Options.integer('count').pipe(
       Options.withDescription('Number of invitations to add.'),
       Options.withAlias('n'),
     ),
   },
-  Effect.fn(function* ({ identityKey, count }) {
-    const result = yield* hubApiRequest<GetAccountResponse>('POST', `/api/accounts/${identityKey}/invitations/grant`, {
+  Effect.fn(function* ({ identityDid, count }) {
+    const result = yield* hubApiRequest<GetAccountResponse>('POST', `/api/account/${identityDid}/invitations/grant`, {
       body: { count },
     }).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))));
 

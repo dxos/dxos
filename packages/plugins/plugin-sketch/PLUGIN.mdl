@@ -1,0 +1,312 @@
+---
+id: org.dxos.plugin.sketch
+name: SketchPlugin
+version: 0.1.0
+---
+
+A collaborative whiteboard plugin for `DXOS` Composer — powered by tldraw, persisted in ECHO, and available as a first-class workspace object.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type Canvas
+  desc: Low-level drawing document backed by a tldraw store.
+  fields:
+    schema?: string              # external schema reference (default: tldraw.com/2)
+    content: Map<string, any>    # tldraw store snapshot — shapes, bindings, assets
+```
+
+```mdl
+type Sketch
+  desc: User-facing whiteboard object that wraps a Canvas.
+  fields:
+    name?: string
+    canvas: Ref<Canvas>          # reference to the tldraw content store
+```
+
+```mdl
+type SketchGrid
+  literals: mesh | dotted
+```
+
+```mdl
+type Settings
+  fields:
+    showGrid?: boolean           # display a background grid on the canvas
+    gridType?: SketchGrid        # mesh or dotted pattern
+```
+
+## Components
+
+```mdl
+component SketchArticle
+  desc: Full-screen whiteboard surface for a Sketch object. Renders inside article, section, and slide roles.
+  props:
+    subject: Sketch
+    settings: Settings
+    attendableId: string
+    role: article | section | slide
+  state:
+    editor?: Editor              # tldraw Editor instance
+    hasAttention: boolean
+  slots:
+    toolbar?: ReactNode          # injected tldraw toolbar actions
+  actions:
+    createThread()               # opens a comment thread anchored to a selection
+  layout: |
+    ┌─────────────────────────────────┐
+    │ tldraw toolbar (when attended)  │
+    ├─────────────────────────────────┤
+    │                                 │
+    │   infinite canvas (tldraw)      │
+    │   shapes / freehand / text      │
+    │                                 │
+    │   [comment thread anchors]      │
+    │                                 │
+    └─────────────────────────────────┘
+```
+
+```mdl
+component SketchSettings
+  desc: Settings panel for the Sketch plugin — controls grid visibility and type.
+  props:
+    settings: Settings
+    onSettingsChange?: (updater: (s: Settings) => Settings) => void
+```
+
+## Operations
+
+```mdl
+op createSketch
+  desc: Creates a new Sketch with an associated Canvas and adds it to the target space or collection.
+  input:
+    name?: string
+    schema?: string              # tldraw schema version (default: tldraw.com/2)
+    content?: Map<string, any>   # optional initial tldraw store snapshot
+  output: Sketch
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Whiteboard Canvas
+
+  req F-1.1: Each Sketch owns exactly one Canvas; the Canvas holds the full tldraw store snapshot.
+  req F-1.2: Canvas content is stored as a plain record in ECHO — no binary blobs.
+  req F-1.3: All tldraw shape types (freehand, geometric, text, arrow, image) are supported.
+```
+
+```mdl
+feat F-2: ECHO Persistence
+
+  req F-2.1:
+    when: user makes any edit in the whiteboard
+    then: Canvas.content is updated in ECHO within the debounce window
+
+  req F-2.2:
+    when: Sketch is opened after a page reload
+    then: tldraw store is hydrated from Canvas.content; no drawing is lost
+
+  req F-2.3: Canvas is a separate ECHO object from Sketch so it can be replicated independently.
+```
+
+```mdl
+feat F-3: Real-time Collaboration
+
+  req F-3.1:
+    when: two or more peers open the same Sketch
+    then: edits by each peer appear on the other's canvas via ECHO replication
+
+  req F-3.2:
+    when: a peer is offline and makes edits
+    then: changes merge with remote state on reconnection using ECHO CRDT semantics
+```
+
+```mdl
+feat F-4: Roles and Presentation
+
+  req F-4.1:
+    when: role is article
+    then: full tldraw toolbar shown when the sketch has attention; hidden otherwise
+
+  req F-4.2:
+    when: role is slide
+    then: canvas is read-only; zoom capped at 1.5×
+
+  req F-4.3:
+    when: role is section
+    then: canvas auto-zooms to fit content; no toolbar shown
+```
+
+```mdl
+feat F-5: Comment Threads
+
+  req F-5.1:
+    when: user activates the thread tool in the toolbar
+    then: a new comment thread is created anchored to the current selection
+
+  req F-5.2: Thread anchor positions are stored alongside the drawing so they survive reloads.
+```
+
+```mdl
+feat F-6: Grid Settings
+
+  req F-6.1:
+    when: Settings.showGrid is true
+    then: a background grid rendered beneath drawing content
+
+  req F-6.2:
+    when: Settings.gridType is mesh
+    then: a square-mesh grid is shown
+
+  req F-6.3:
+    when: Settings.gridType is dotted
+    then: a dotted grid is shown
+```
+
+```mdl
+feat F-7: Create Sketch Operation
+
+  req F-7.1: Plugin contributes op:createSketch to the operation registry.
+  req F-7.2:
+    when: op:createSketch is invoked
+    then: a Sketch + Canvas pair is created and returned; the Sketch is added to the target collection
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create and open sketch
+  given: a Composer space is active
+  when: op:createSketch runs with name "My Diagram"
+  then:
+    - a Sketch object is created with name "My Diagram"
+    - Sketch.canvas references a new Canvas with empty content
+    - Sketch appears in the space object list
+```
+
+```mdl
+test T-2: Drawing persists across reload
+  given: a Sketch is open and the user draws a freehand stroke
+  when: the page is reloaded and the Sketch is reopened
+  then:
+    - the stroke is visible on the canvas
+    - Canvas.content is non-empty
+```
+
+```mdl
+test T-3: Collaborative edit
+  given: two peers have the same Sketch open
+  when: peer A draws a rectangle
+  then:
+    - peer B sees the rectangle appear within the ECHO sync window
+    - no data loss if both peers edit simultaneously
+```
+
+```mdl
+test T-4: Read-only slide role
+  given: a Sketch is rendered in role slide
+  then:
+    - tldraw toolbar is not shown
+    - all drawing tools are disabled
+    - zoom is capped at 1.5×
+```
+
+```mdl
+test T-5: Grid toggle
+  given: SketchSettings panel is open
+  when: user enables the grid and selects "dotted"
+  then:
+    - Settings.showGrid === true
+    - Settings.gridType === dotted
+    - dotted grid appears on the canvas immediately
+```
+
+```mdl
+test T-6: Attention-aware toolbar
+  given: a Sketch is open in article role alongside other articles
+  when: user clicks on the sketch to give it attention
+  then: tldraw toolbar becomes visible
+  when: user clicks away, removing attention
+  then: tldraw toolbar is hidden
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

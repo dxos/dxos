@@ -11,6 +11,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as PubSub from 'effect/PubSub';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -23,7 +25,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database, type DXN } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -39,13 +41,13 @@ import { TestDatabaseLayer } from './testing';
 //
 
 const Double = Operation.make({
-  meta: { key: 'org.dxos.test.double', name: 'Double' },
+  meta: { key: DXN.make('org.dxos.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
 
 const Failing = Operation.make({
-  meta: { key: 'org.dxos.test.failing', name: 'Failing' },
+  meta: { key: DXN.make('org.dxos.test.failing'), name: 'Failing' },
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -436,7 +438,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   // strict resolver below. If `Database.Service` resolves, the test layer
   // has correctly propagated the space context from the parent.
   const ChildOp = Operation.make({
-    meta: { key: 'org.dxos.test.invoker.child', name: 'Child' },
+    meta: { key: DXN.make('org.dxos.test.invoker.child'), name: 'Child' },
     input: Schema.Void,
     output: Schema.Struct({ spaceId: Schema.String }),
     services: [Database.Service],
@@ -445,7 +447,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   // Operation that, from its own handler, invokes `ChildOp` and surfaces the
   // resulting spaceId so the test can compare it against the expected one.
   const ParentOp = Operation.make({
-    meta: { key: 'org.dxos.test.invoker.parent', name: 'Parent' },
+    meta: { key: DXN.make('org.dxos.test.invoker.parent'), name: 'Parent' },
     input: Schema.Struct({
       override: Schema.optional(Schema.String),
     }),
@@ -587,7 +589,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const monitor = yield* Process.ProcessMonitorService;
       const manager = yield* ProcessManager.Service;
 
-      const conversation = 'dxn:queue:test-conversation' as DXN.String;
+      const conversation = 'dxn:queue:test-conversation' as DXN.DXN;
 
       const fiber = yield* invoker.invokeFiber(
         ParentOp,
@@ -607,5 +609,57 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const childHandle = yield* manager.attach(childInfo.pid);
       expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
     }, Effect.provide(InheritanceTestLayer)),
+  );
+});
+
+describe('ProcessOperationInvoker invocations', () => {
+  it.effect(
+    'publishes a success event with the output',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          // Subscribe before invoking so the event is not missed.
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const output = yield* invoker.invoke(Double, { value: 5 });
+          expect(output).toEqual(10);
+
+          const event = yield* Queue.take(events);
+          expect(event.operation.meta.key).toEqual(Double.meta.key);
+          expect(event.output).toEqual(10);
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'does not publish an event when the operation fails (error propagates)',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const exit = yield* invoker.invoke(Failing).pipe(Effect.exit);
+          expect(Exit.isFailure(exit)).toBe(true);
+
+          // No success event should be queued for a failed invocation.
+          expect(yield* Queue.size(events)).toBe(0);
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'forwards notify options onto the spawned process params',
+    Effect.fn(function* ({ expect }) {
+      // Notifications ride the process monitor: `notify` is forwarded onto the spawned process's params
+      // (and thereby surfaced on Process.Info for a notification tracker), not onto the invocation event.
+      const manager = yield* ProcessManager.Service;
+      const notify = { success: 'Done', error: 'Failed' };
+      const handle = yield* manager.spawn(makeSumAggregator(), { notify });
+      expect(handle.params.notify).toEqual(notify);
+    }, Effect.provide(TestLayer)),
   );
 });

@@ -20,6 +20,25 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
+        id: 'root',
+        match: NodeMatcher.whenRoot,
+        actions: () =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'resetData',
+              data: () =>
+                Effect.sync(() => {
+                  window.location.href = '/reset.html#continue';
+                }),
+              properties: {
+                label: ['reset-data.label', { ns: meta.id }],
+                icon: 'ph--warning--regular',
+              },
+            }),
+          ]),
+      }),
+
+      GraphBuilder.createExtension({
         id: 'devtools',
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),
         connector: (node, get) =>
@@ -44,7 +63,7 @@ export default Capability.makeModule(
                 },
                 nodes: [
                   Node.make({
-                    id: 'app-graph',
+                    id: 'appGraph',
                     type: `${meta.id}.app-graph`,
                     data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
                     properties: {
@@ -53,7 +72,7 @@ export default Capability.makeModule(
                     },
                   }),
                   Node.make({
-                    id: 'tools-explorer',
+                    id: 'toolsExplorer',
                     data: Devtools.ToolsExplorer,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -223,6 +242,15 @@ export default Capability.makeModule(
                         },
                       }),
                       Node.make({
+                        id: Devtools.Echo.Registry,
+                        data: Devtools.Echo.Registry,
+                        type: DEVTOOLS_TYPE,
+                        properties: {
+                          label: ['registry.label', { ns: meta.id }],
+                          icon: 'ph--books--regular',
+                        },
+                      }),
+                      Node.make({
                         id: Devtools.Echo.Automerge,
                         data: Devtools.Echo.Automerge,
                         type: DEVTOOLS_TYPE,
@@ -353,7 +381,7 @@ export default Capability.makeModule(
 
       // Debug object companion.
       GraphBuilder.createExtension({
-        id: 'debug-object',
+        id: 'debugObject',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -369,7 +397,7 @@ export default Capability.makeModule(
 
       // Devtools deck companion.
       GraphBuilder.createExtension({
-        id: 'devtools-overview',
+        id: 'devtoolsOverview',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -385,12 +413,12 @@ export default Capability.makeModule(
 
       // Object explorer.
       GraphBuilder.createExtension({
-        id: 'space-objects',
+        id: 'spaceObjects',
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: 'space-objects',
+              id: 'spaceObjects',
               label: ['space-objects.label', { ns: meta.id }],
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,

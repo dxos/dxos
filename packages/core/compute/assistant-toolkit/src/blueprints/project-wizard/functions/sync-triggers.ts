@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Trigger, Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { Agent } from '../../../types';
@@ -22,7 +22,7 @@ export default SyncTriggers.pipe(
 );
 
 /**
- * Foreign key {@link AGENT_TRIGGER_EXTENSION_KEY} => <agent id : ObjectId>.
+ * Foreign key {@link AGENT_TRIGGER_EXTENSION_KEY} => <agent id : EntityId>.
  */
 const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
 
@@ -33,11 +33,11 @@ const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarge
 
 /** Checks if an object's schema has the FeedAnnotation. */
 const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
-  const schema = Obj.getSchema(obj);
-  if (!schema) {
+  const type = Obj.getType(obj);
+  if (!type) {
     return false;
   }
-  const annotation = FeedAnnotation.get(schema);
+  const annotation = FeedAnnotation.get(Type.getSchema(type));
   return Option.isSome(annotation) && annotation.value === true;
 };
 
@@ -76,7 +76,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
       }
 
-      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueDxn(feedObj)) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueUri(feedObj)) {
         continue;
       }
 
@@ -88,7 +88,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           [Obj.Meta]: {
             keys: [
               { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.uri },
             ],
           },
           enabled: triggersEnabled,
@@ -105,7 +105,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
 
     if ((agent.filterEvents ?? true) && agent.feed) {
       const agentFeedOption = yield* Database.loadOption(agent.feed);
-      if (Option.isSome(agentFeedOption) && Feed.getQueueDxn(agentFeedOption.value)) {
+      if (Option.isSome(agentFeedOption) && Feed.getQueueUri(agentFeedOption.value)) {
         yield* Database.add(
           Trigger.make({
             [Obj.Parent]: agent,
@@ -114,7 +114,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
                 { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
                 {
                   source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                  id: Obj.getDXN(agent)?.toString() ?? '',
+                  id: Obj.getURI(agent) ?? '',
                 },
               ],
             },

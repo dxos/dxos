@@ -21,8 +21,9 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
-// Personal space + exemplar space seeded on every new identity.
-export const INITIAL_SPACE_COUNT = 2;
+// Only the personal space is seeded on every new identity. The exemplar space is skipped on
+// localhost (see WelcomePlugin `generateExemplarSpace`), which is where e2e tests run.
+export const INITIAL_SPACE_COUNT = 1;
 
 export class AppManager {
   page!: Page;
@@ -211,6 +212,39 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
+  /**
+   * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
+   * expanding the Settings section first if necessary.
+   */
+  async openSpaceSettings(): Promise<void> {
+    const generalHeading = this.currentWorkspace
+      .getByTestId('spacePlugin.general')
+      .first()
+      .getByTestId('treeItem.heading')
+      .first();
+    if (!(await generalHeading.isVisible())) {
+      await this.currentWorkspace
+        .getByTestId('spacePlugin.settings')
+        .first()
+        .getByTestId('treeItem.toggle')
+        .first()
+        .click();
+    }
+    await generalHeading.click();
+  }
+
+  /**
+   * Deletes the space at the given index (default: the first non-personal space) via its
+   * settings danger zone, including the confirmation step.
+   */
+  async deleteSpace(nth = 1): Promise<void> {
+    // Select the space so its Settings section is available in the navtree.
+    await this.getSpaceItems().nth(nth).click();
+    await this.openSpaceSettings();
+    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+    await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
+  }
+
   async toggleSpaceCollapsed(nth = 0, nextState?: boolean): Promise<void> {
     const toggle = this.page.getByTestId('spacePlugin.space').nth(nth);
 
@@ -260,7 +294,13 @@ export class AppManager {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
-      await object.getByTestId('spacePlugin.createObject').click();
+      await object
+        .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
+        .first()
+        .click();
+      await this.page.keyboard.press('ArrowDown');
+      await this.page.getByTestId('spacePlugin.createObject').last().focus();
+      await this.page.keyboard.press('Enter');
     } else {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }

@@ -27,7 +27,7 @@ export const create = Command.make(
     if (Option.isSome(note)) {
       body.note = note.value;
     }
-    const result = yield* hubApiRequest<AdminCreateInvitationCodesResponse>('POST', '/api/codes', { body }).pipe(
+    const result = yield* hubApiRequest<AdminCreateInvitationCodesResponse>('POST', '/api/code', { body }).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
     );
     yield* Console.log(`Created ${result.codes.length} invitation code(s):`);

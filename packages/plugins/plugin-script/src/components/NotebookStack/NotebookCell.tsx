@@ -143,7 +143,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
         <>
           <TemplateEditor
             id={cell.id}
-            template={cell.prompt.target.instructions}
+            source={cell.prompt.target.instructions}
             lineNumbers={false}
             classNames={editorStyles}
           />
@@ -186,7 +186,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
     return null;
   }
 
-  const value = promptResults?.[cell.prompt.dxn.toString()];
+  const value = promptResults?.[cell.prompt.uri];
   if (value == null) {
     return null;
   }

@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Query } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
-import { DXN } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export const ReferencedQuotes = Schema.Struct({
@@ -44,13 +43,13 @@ export const findQuotes = async (quotes: string[], db: Database.Database): Promi
 // TODO(dmaretskyi): Lookup and verifiy ids from provided context.
 export const insertReferences = (text: string, quotes: ReferencedQuotes) => {
   for (const quote of quotes.references) {
-    if (!ObjectId.isValid(quote.id)) {
+    if (!EntityId.isValid(quote.id)) {
       continue;
     }
 
     // Use a case-insensitive regular expression to replace the quote.
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}](${DXN.fromLocalObjectId(quote.id).toString()})`);
+    text = text.replace(regex, `[${quote.quote}](${EID.make({ entityId: quote.id })})`);
   }
 
   return text;

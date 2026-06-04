@@ -1,0 +1,339 @@
+---
+id: org.dxos.plugin.native-filesystem
+name: NativeFilesystemPlugin
+version: 0.1.0
+---
+
+A native filesystem plugin for `DXOS` Composer that lets users open local directories as workspaces on the desktop.
+Markdown files and images inside the directory are surfaced in the app graph alongside ECHO objects.
+Changes to files on disk are reflected in real time; edits made in Composer are persisted back to disk.
+Requires the Electron-based Composer desktop app — the plugin is not available in browser builds.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type FilesystemFile
+  desc: A single file tracked by the plugin. Markdown and image types are supported.
+  fields:
+    id: string
+    name: string
+    path: string
+    text?: string           # in-memory content for markdown files
+    modified?: boolean      # true when the file has unsaved edits
+    type: markdown | image
+```
+
+```mdl
+type FilesystemDirectory
+  desc: A directory node. Directories nest recursively via children.
+  fields:
+    id: string
+    name: string
+    path: string
+    children: FilesystemEntry[]
+```
+
+```mdl
+type FilesystemEntry
+  desc: Union of file and directory nodes.
+  literals: FilesystemFile | FilesystemDirectory
+```
+
+```mdl
+type FilesystemWorkspace
+  desc: |
+    A top-level directory opened by the user. Displayed as a root node in the
+    app navtree alongside ECHO spaces. Optional icon/hue allow per-workspace
+    branding; spaceId links the workspace to an ECHO space for ordering.
+  fields:
+    id: string
+    name: string
+    path: string
+    children: FilesystemEntry[]
+    icon?: string
+    hue?: string
+    spaceId?: string
+```
+
+```mdl
+type NativeFilesystemState
+  desc: Plugin-level reactive atom that tracks all open workspaces.
+  fields:
+    workspaces: FilesystemWorkspace[]
+    currentFile?: FilesystemFile
+```
+
+## Components
+
+```mdl
+component WorkspaceSettings
+  desc: |
+    Settings surface for a FilesystemWorkspace. Rendered as an Article node
+    accessible from the workspace's "General" settings entry in the navtree.
+    Lets users rename the workspace and remove it from the app.
+  props:
+    workspace: FilesystemWorkspace
+  actions:
+    rename(name: string) → void
+    closeWorkspace() → void
+  layout: |
+    ┌─────────────────────────────┐
+    │ Workspace name input        │
+    ├─────────────────────────────┤
+    │ [Close Workspace] button    │
+    └─────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op openDirectory
+  desc: |
+    Presents the OS directory-picker dialog, reads the selected directory tree,
+    and registers a new FilesystemWorkspace in the plugin state atom.
+    If the path was already open the existing workspace entry is refreshed.
+    On success, navigates the layout to the workspace root node.
+  input:
+    (none — triggered imperatively via the app graph action)
+  output: { id: string, subject: string[] } | void
+  effects: [fs, echo:write]
+  note: Operation key `org.dxos.plugin.nativeFilesystem.operation.open-directory`.
+```
+
+```mdl
+op closeDirectory
+  desc: Removes the workspace from the plugin state atom and persists the change.
+  input:
+    id: string
+  output: void
+  effects: [fs, echo:write]
+  note: Operation key `org.dxos.plugin.nativeFilesystem.operation.close-directory`.
+```
+
+```mdl
+op refreshDirectory
+  desc: |
+    Re-scans the directory at the workspace's stored path and updates the
+    children tree in the state atom. Useful after external file changes.
+  input:
+    id: string
+  output: void
+  effects: [fs]
+  note: Operation key `org.dxos.plugin.nativeFilesystem.operation.refresh-directory`.
+```
+
+## Features
+
+```mdl
+feat F-1: Open Workspace
+
+  req F-1.1: An "Open Folder" action is registered as a primary app graph action.
+  req F-1.2:
+    when: user activates the action
+    then: OS directory picker is presented
+  req F-1.3:
+    when: user selects a directory
+    then: directory tree is scanned (markdown + image files); workspace added to state
+  req F-1.4:
+    when: the directory path was already open
+    then: the existing workspace entry is replaced (idempotent)
+  req F-1.5:
+    when: op:openDirectory succeeds
+    then: layout navigates to the workspace root node
+```
+
+```mdl
+feat F-2: Close Workspace
+
+  req F-2.1:
+    when: user invokes Close Folder
+    then: workspace is removed from plugin state and from the navtree
+  req F-2.2: The underlying directory on disk is not modified.
+  req F-2.3: State is persisted after removal so the workspace does not reappear on reload.
+```
+
+```mdl
+feat F-3: Refresh Workspace
+
+  req F-3.1:
+    when: user invokes Refresh Folder on a workspace node
+    then: directory is re-scanned; children tree updated
+  req F-3.2: Files open in the editor are not force-closed during refresh.
+```
+
+```mdl
+feat F-4: App Graph Integration
+
+  req F-4.1: Each FilesystemWorkspace appears as a root navtree node.
+  req F-4.2: Each subdirectory appears as a branch node under its parent.
+  req F-4.3: Each markdown file appears as a Text-typed leaf node backed by an ECHO Text object.
+  req F-4.4:
+    when: a markdown file is modified via the Composer editor
+    then: the edit is written back to disk
+  req F-4.5: Image files are ignored in the current implementation.
+  req F-4.6: Workspace ordering is persisted via the ECHO personal-space shared order array.
+```
+
+```mdl
+feat F-5: Markdown Integration
+
+  req F-5.1: The plugin registers a Markdown extension so files opened from a workspace
+             use the same editor surface as ECHO Text objects.
+  req F-5.2:
+    when: a markdown file node is activated
+    then: the file content is loaded into an ECHO Text object and displayed in the editor
+  req F-5.3:
+    when: a markdown file is not yet bound to a Text object (pending state)
+    then: a placeholder node is shown with the file name and icon
+```
+
+```mdl
+feat F-6: Workspace Settings
+
+  req F-6.1: Each workspace exposes a "General" settings sub-node in the navtree.
+  req F-6.2: The settings article renders a WorkspaceSettings form.
+  req F-6.3:
+    when: user renames the workspace
+    then: the navtree label updates immediately
+```
+
+## Acceptance
+
+```mdl
+test T-1: Open a directory
+  given: the desktop app is running
+  when: user activates "Open Folder"
+  then:
+    - OS directory picker appears
+  when: user selects a directory containing "notes/intro.md"
+  then:
+    - workspace node appears in navtree
+    - "notes" directory node is a child of the workspace
+    - "intro.md" appears as a markdown leaf under "notes"
+```
+
+```mdl
+test T-2: Idempotent open
+  given: a workspace is already open for path /home/user/notes
+  when: op:openDirectory is invoked with the same path
+  then:
+    - workspace count is unchanged
+    - existing workspace entry is refreshed with latest directory contents
+```
+
+```mdl
+test T-3: Close workspace
+  given: a workspace is open
+  when: user closes the workspace
+  then:
+    - workspace node removed from navtree
+    - directory on disk is untouched
+    - reloading the app does not restore the workspace
+```
+
+```mdl
+test T-4: Refresh workspace
+  given: a workspace is open and a new file "new.md" has been added on disk
+  when: user triggers Refresh Folder
+  then: "new.md" appears as a leaf node in the navtree
+```
+
+```mdl
+test T-5: Markdown file editing
+  given: a markdown file is open in the editor
+  when: user types new content
+  then:
+    - the ECHO Text object reflects the new content
+    - the file on disk is updated with the new content
+```
+
+```mdl
+test T-6: Workspace ordering persisted
+  given: two workspaces are open
+  when: user rearranges their order in the navtree
+  then:
+    - order is stored in the personal-space shared ECHO object
+    - reloading the app restores the same order
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

@@ -17,17 +17,17 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
-import { functions } from '#testing';
+import { functions, registryFunctions } from '#testing';
 import { translations } from '#translations';
 
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Organization.Organization.typename, label: 'Organization' },
-  { value: Person.Person.typename, label: 'Person' },
+  { value: Type.getTypename(Organization.Organization), label: 'Organization' },
+  { value: Type.getTypename(Person.Person), label: 'Person' },
   { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
-  { value: Employer.Employer.typename, label: 'Employer' },
+  { value: Type.getTypename(Employer.Employer), label: 'Employer' },
 ];
 
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
@@ -89,7 +89,7 @@ const meta = {
           space.db.add(Tag.make({ label }));
         });
 
-        // Functions.
+        // Functions in the local space.
         functions.forEach((fn) => {
           const { key, version, ...data } = fn;
           space.db.add(
@@ -99,6 +99,16 @@ const meta = {
             }),
           );
         });
+
+        // Functions in the registry (simulate built-in / plugin-provided operations).
+        space.db.registry.add(
+          registryFunctions.map(({ key, version, ...data }) =>
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { key, version: version ?? '0.1.0' },
+              ...data,
+            }),
+          ),
+        );
 
         // Objects.
         Array.from({ length: 10 }).map(() => {
@@ -165,7 +175,8 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Feed — should show Feed field label (distinct from kind combobox value).
+    // Feed — should show the Feed selector field (a Ref(Feed) combobox). The combobox
+    // isn't associated with its label, so match the field's <label> element directly.
     await selectKind(combobox, 'f');
     await expect(combobox).not.toBeDisabled();
     await expect(await canvas.findByText('Feed', { selector: 'label' })).toBeInTheDocument();

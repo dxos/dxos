@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, type SchemaRegistry, type View } from '@dxos/echo';
-import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
+import { Filter, Obj, type Registry, Type, type View } from '@dxos/echo';
+import { Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ import { Form, type FormFieldMap, type FormRootProps, SelectField, SelectOptionF
 export type FieldEditorProps = {
   projection: ProjectionModel;
   field: View.FieldType;
-  registry?: SchemaRegistry.SchemaRegistry;
+  registry?: Registry.Registry;
   view?: Obj.Unknown;
   onSave: () => void;
   onCancel?: () => void;
@@ -38,24 +38,26 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
-  const [schemas, setSchemas] = useState<EchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<Type.Type[]>([]);
   useAsyncEffect(async () => {
     if (!registry) {
       return;
     }
 
-    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
+    const subscription = registry
+      .query(Filter.type(Type.Type))
+      .subscribe((query) => setSchemas(query.results), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
-    const schemas = await registry.query().run();
+    const schemas = await registry.query(Filter.type(Type.Type)).run();
     setSchemas(schemas);
 
     return () => subscription?.();
   }, [registry]);
 
-  const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();
+  const [referenceSchema, setReferenceSchema] = useState<Type.Type>();
   useEffect(() => {
-    setReferenceSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
+    setReferenceSchema(schemas.find((schema) => Type.getTypename(schema) === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
@@ -76,9 +78,12 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       ['referenceSchema' satisfies keyof PropertyType]: (props) => (
         <SelectField
           {...props}
-          options={schemas.map((schema) => ({
-            value: schema.typename,
-          }))}
+          options={schemas
+            .map((schema) => Type.getTypename(schema))
+            .filter((typename): typename is string => typename != null)
+            .map((typename) => ({
+              value: typename,
+            }))}
         />
       ),
       ['referencePath' satisfies keyof PropertyType]: (props) => (
@@ -86,7 +91,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
           {...props}
           options={
             referenceSchema
-              ? getFormProperties(referenceSchema.ast)
+              ? getFormProperties(Type.getSchema(referenceSchema).ast)
                   .sort((a, b) => a.name.toString().localeCompare(b.name.toString()))
                   .map((p) => ({ value: p.name.toString() }))
               : []
@@ -112,8 +117,8 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       });
 
       setReferenceSchema((prev) => {
-        if (_props.referenceSchema !== prev?.typename) {
-          const newSchema = schemas.find((schema) => schema.typename === _props.referenceSchema);
+        if (_props.referenceSchema !== (prev ? Type.getTypename(prev) : undefined)) {
+          const newSchema = schemas.find((schema) => Type.getTypename(schema) === _props.referenceSchema);
           if (newSchema) {
             return newSchema;
           }

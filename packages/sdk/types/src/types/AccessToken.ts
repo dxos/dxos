@@ -6,22 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
-import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
-
-/** @deprecated Use AccessToken instead. */
-export const LegacyAccessToken = Schema.Struct({
-  source: Schema.String,
-  token: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.access-token',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
+import { Format, LabelAnnotation, HiddenAnnotation } from '@dxos/echo/internal';
 
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({
@@ -44,21 +30,14 @@ export const AccessToken = Schema.Struct({
     })
     .pipe(Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.accessToken',
-    version: '0.1.0',
-  }),
+  LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
+  Annotation.IconAnnotation.set({ icon: 'ph--key--regular', hue: 'yellow' }),
+  HiddenAnnotation.set(true),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  LabelAnnotation.set(['account', 'source']), // Account first (e.g. email from /members/me); source as fallback.
-  Annotation.IconAnnotation.set({
-    icon: 'ph--key--regular',
-    hue: 'yellow',
-  }),
-  SystemTypeAnnotation.set(true),
+  Type.makeObject(DXN.make('org.dxos.type.accessToken', '0.1.0')),
 );
 
-export interface AccessToken extends Schema.Schema.Type<typeof AccessToken> {}
-
+export type AccessToken = Type.InstanceType<typeof AccessToken>;
 export const make = (props: Obj.MakeProps<typeof AccessToken>) => Obj.make(AccessToken, props);

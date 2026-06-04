@@ -18,7 +18,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/storybook-utils"
@@ -39,25 +39,13 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"

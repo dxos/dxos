@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Score } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Score.Score.typename]: {
+      [Type.getTypename(Score.Score)]: {
         'typename.label': 'Score',
         'typename.label_zero': 'Scores',
         'typename.label_one': 'Score',

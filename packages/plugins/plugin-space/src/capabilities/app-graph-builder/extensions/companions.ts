@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { AppNode } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // TODO(wittjosiah): This is currently necessary for type portability.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -58,15 +58,17 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
 
     // View selected objects companion.
     GraphBuilder.createExtension({
-      id: 'selected-objects',
+      id: 'selectedObjects',
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();
         }
 
-        const schema = Obj.getSchema(node.data);
-        const path = schema ? ViewAnnotation.get(schema).pipe(Option.getOrElse(() => [] as EchoViewRefPath)) : [];
-        const isEchoViewBacked = schema && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
+        const type = Obj.getType(node.data);
+        const path = type
+          ? ViewAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
+          : [];
+        const isEchoViewBacked = type && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
 
         if (!isEchoViewBacked) {
           return Option.none();

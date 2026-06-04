@@ -15,7 +15,7 @@ export const revoke = Command.make(
     code: Args.text({ name: 'code' }).pipe(Args.withDescription('Invitation code to revoke.')),
   },
   Effect.fn(function* ({ code }) {
-    yield* hubApiRequest<{ revoked: boolean }>('DELETE', `/api/codes/${code}`).pipe(
+    yield* hubApiRequest<{ revoked: boolean }>('DELETE', `/api/code/${code}`).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
     );
     yield* Console.log(`Revoked code ${code}.`);

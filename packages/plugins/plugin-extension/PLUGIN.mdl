@@ -1,0 +1,58 @@
+---
+id: org.dxos.plugin.extension
+name: ExtensionPlugin
+version: 0.1.0
+---
+
+Exposes user settings for the `@dxos/composer-crx` browser extension. Owns the
+user-facing settings surface for the extension's search render-proxy: fetching
+and JS-rendering pages in a real browser tab so plugins (e.g. product search)
+can scrape client-rendered or anti-bot sites a plain HTTP proxy cannot read.
+
+Settings are persisted via the app-framework settings store and exposed to
+other plugins through a plugin-scoped capability so they can decide whether to
+route a fetch through the extension or the edge proxy.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term   | URI                            |
+|--------|--------------------------------|
+| `type` | `org.dxos.mdl.type@1.0`        |
+| `feat` | `org.dxos.mdl.feat@1.0`        |
+| `test` | `org.dxos.mdl.test@1.0`        |
+
+## Types
+
+```mdl
+type Settings
+  desc: |
+    User preferences governing how Composer uses the composer-crx extension as
+    a search render-proxy. Persisted via the app-framework settings store. All
+    fields are optional; defaults are documented per field.
+  fields:
+    renderProxyEnabled?: boolean  # default: true. Master switch: when false,
+                                  # plugins use the edge HTTP proxy instead.
+    renderTimeout?: number        # default: 20000. Max ms to wait for a render.
+    renderActiveTab?: boolean     # default: false. Render in a focused tab.
+    developerMode?: boolean       # default: false. Verbose logging / previews.
+```
+
+## Features
+
+```mdl
+feat Settings
+  desc: Surface the extension settings in the standard Composer settings panel.
+  req:
+    - The plugin contributes a settings surface under the app settings panel.
+    - Settings persist across reloads via the app-framework settings store.
+    - The Settings atom is exposed under a plugin-scoped capability for readers.
+
+test Settings
+  desc: The settings schema round-trips and applies documented defaults.
+  steps:
+    - Reading settings with no stored value yields the documented defaults.
+    - Setting a field and re-reading returns the updated value merged over defaults.
+```

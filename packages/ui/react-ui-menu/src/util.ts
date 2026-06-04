@@ -32,7 +32,7 @@ export const getShortcut = (action: Node.ActionLike) => {
     : action.properties?.keyBinding?.[getHostPlatform()];
 };
 
-export const fallbackIcon = 'ph--placeholder--regular';
+export const fallbackIcon = 'ph--circle-dashed--regular';
 
 export const createMenuAction = <P extends {} = {}>(
   id: string,

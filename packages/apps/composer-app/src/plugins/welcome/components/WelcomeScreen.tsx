@@ -6,12 +6,11 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
-
-import { WelcomeOperation } from '../operations';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -19,6 +18,7 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 import { removeQueryParamByValue } from '../../../util';
 import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
 import { meta } from '../meta';
+import { WelcomeOperation } from '../operations';
 import { Welcome, WelcomeState } from './Welcome';
 
 export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
@@ -61,6 +61,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           result = await login({
             hubUrl,
             email,
+            identityDid: await createDidFromIdentityKey(newIdentity.identityKey),
             identityKey: newIdentity.identityKey.toHex(),
           });
         }
@@ -210,6 +211,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         const result = await redeemAccountInvitation({
           hubUrl,
           email,
+          identityDid: await createDidFromIdentityKey(resolvedIdentity.identityKey),
           identityKey: resolvedIdentity.identityKey.toHex(),
           code: code.replace(/-/g, '').toUpperCase(),
         });
@@ -273,7 +275,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         await joinWaitlist({
           hubUrl,
           email,
-          identityKey: identity?.identityKey.toHex(),
+          identityDid: identity ? await createDidFromIdentityKey(identity.identityKey) : undefined,
         });
         setState(WelcomeState.WAITLIST_SUBMITTED);
       } catch (err) {

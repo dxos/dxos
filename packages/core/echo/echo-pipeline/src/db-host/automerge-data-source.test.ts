@@ -6,7 +6,7 @@ import { getHeads } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -17,9 +17,9 @@ import { openAndClose } from '@dxos/test-utils';
 import { AutomergeHost } from '../automerge';
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 
-const TEST_TYPE = DXN.parse('dxn:type:com.example.type.test:0.1.0').toString();
-const OTHER_TYPE = DXN.parse('dxn:type:com.example.type.other:0.1.0').toString();
-const PERSON_TYPE = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
+const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
+const OTHER_TYPE = DXN.make('com.example.type.other', '0.1.0');
+const PERSON_TYPE = DXN.make('com.example.type.person', '0.1.0');
 
 /**
  * Set up a real AutomergeHost with LevelDB storage.
@@ -41,7 +41,7 @@ const setupAutomergeHost = async (level: LevelDB): Promise<AutomergeHost> => {
 const createDatabaseDirectory = async (
   host: AutomergeHost,
   spaceKey: string,
-  objects: Record<string, ObjectStructure>,
+  objects: Record<string, EntityStructure>,
 ): Promise<Awaited<ReturnType<typeof host.createDoc<DatabaseDirectory>>>> => {
   const handle = await host.createDoc<DatabaseDirectory>({
     version: SpaceDocVersion.CURRENT,
@@ -92,7 +92,7 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     const handle = await createDatabaseDirectory(host, spaceKey, {
-      'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Test Document' } }),
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Test Document' } }),
     });
     await host.flush(Context.default());
 
@@ -115,10 +115,10 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     const handle1 = await createDatabaseDirectory(host, spaceKey, {
-      'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 1' } }),
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Doc 1' } }),
     });
     const handle2 = await createDatabaseDirectory(host, spaceKey, {
-      'obj-2': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 2' } }),
+      'obj-2': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Doc 2' } }),
     });
     await host.flush(Context.default());
 
@@ -158,7 +158,7 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     const handle = await createDatabaseDirectory(host, spaceKey, {
-      'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Doc 1' } }),
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Doc 1' } }),
     });
     await host.flush(Context.default());
 
@@ -190,7 +190,7 @@ describe('AutomergeDataSource', () => {
     // Create 3 documents.
     for (let i = 1; i <= 3; i++) {
       await createDatabaseDirectory(host, spaceKey, {
-        [`obj-${i}`]: ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: `Doc ${i}` } }),
+        [`obj-${i}`]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: `Doc ${i}` } }),
       });
     }
     await host.flush(Context.default());
@@ -209,8 +209,8 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     await createDatabaseDirectory(host, spaceKey, {
-      'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Object 1' } }),
-      'obj-2': ObjectStructure.makeObject({ type: OTHER_TYPE as DXN.String, data: { title: 'Object 2' } }),
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Object 1' } }),
+      'obj-2': EntityStructure.makeObject({ type: OTHER_TYPE, data: { title: 'Object 2' } }),
     });
     await host.flush(Context.default());
 
@@ -237,7 +237,7 @@ describe('AutomergeDataSource', () => {
     });
     handle.change((doc) => {
       doc.objects = {
-        'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'Test' } }),
+        'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Test' } }),
       };
     });
     await host.flush(Context.default());
@@ -255,8 +255,8 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     await createDatabaseDirectory(host, spaceKey, {
-      'person-1': ObjectStructure.makeObject({
-        type: PERSON_TYPE as DXN.String,
+      'person-1': EntityStructure.makeObject({
+        type: PERSON_TYPE,
         data: { name: 'Alice', age: 30 },
       }),
     });
@@ -286,7 +286,7 @@ describe('AutomergeDataSource', () => {
     });
     handle.change((doc) => {
       doc.objects = {
-        'obj-1': ObjectStructure.makeObject({ type: TEST_TYPE as DXN.String, data: { title: 'No Space' } }),
+        'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'No Space' } }),
       };
     });
     await host.flush(Context.default());

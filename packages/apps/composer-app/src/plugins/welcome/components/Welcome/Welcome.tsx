@@ -8,7 +8,7 @@ import React, { type KeyboardEvent, type ReactNode, useCallback, useRef, useStat
 
 import { supportsNativePasskeys } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Button, DropdownMenu, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -52,6 +52,7 @@ export const Welcome = ({
   // Tab + sub-state. Live in component state since they're transient UI.
   const [tab, setTab] = useState<Tab>('login');
   const [loginPrimary, setLoginPrimary] = useState<LoginMethod>(defaultLoginPrimary);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [signupMode, setSignupMode] = useState<SignupMode>('code');
   const [signupStep, setSignupStep] = useState<SignupStep>('collect');
 
@@ -253,7 +254,12 @@ export const Welcome = ({
                 t={t}
                 identity={identity}
                 primary={loginPrimary}
-                setPrimary={setLoginPrimary}
+                setPrimary={(method) => {
+                  setLoginPrimary(method);
+                  setMoreOpen(false);
+                }}
+                moreOpen={moreOpen}
+                setMoreOpen={setMoreOpen}
                 emailValue={email}
                 setEmailValue={setEmail}
                 emailRef={emailRef}
@@ -465,6 +471,8 @@ type LoginTabProps = {
   identity?: ReturnType<typeof Object> | null;
   primary: LoginMethod;
   setPrimary: (method: LoginMethod) => void;
+  moreOpen: boolean;
+  setMoreOpen: (open: boolean) => void;
   emailValue: string;
   setEmailValue: (value: string) => void;
   emailRef: React.Ref<HTMLInputElement>;
@@ -482,7 +490,7 @@ type LoginTabProps = {
  * Login tab. The "primary" auth method (passkey or email) renders at the top;
  * other options live under "More ways to log in":
  *
- * - Picking the *other* primary method (passkey ↔ email) swaps it to primary.
+ * - Picking the *other* primary method (passkey ↔ email ↔ atmosphere) swaps it to primary.
  * - Picking `From another device` or `Recovery code` invokes their handler
  *   directly (those open dedicated dialogs and don't need a primary form).
  */
@@ -491,6 +499,8 @@ const LoginTab = ({
   identity,
   primary,
   setPrimary,
+  moreOpen,
+  setMoreOpen,
   emailValue,
   setEmailValue,
   emailRef,
@@ -533,8 +543,7 @@ const LoginTab = ({
       onClick: () => setPrimary('email'),
     });
   }
-  // Atmosphere: second in the list (after the other primary-swap option), swaps to primary like
-  // email/passkey do so only one form is shown at a time.
+  // Atmosphere: swaps to primary like email/passkey do so only one form is shown at a time.
   if (primary !== 'atproto' && onRecoverWithOAuth) {
     moreOptions.push({
       key: 'atproto',
@@ -581,13 +590,11 @@ const LoginTab = ({
         </Button>
       )}
       {primary === 'email' && (
-        <div className='flex flex-col gap-2'>
-          <p className='text-sm text-description'>{t('login-email.description')}</p>
-          <InlineForm
-            inputProps={{
-              autoFocus: true,
-              ref: emailRef,
-              placeholder: t('email-input.placeholder'),
+        <InlineForm
+          inputProps={{
+            autoFocus: true,
+            ref: emailRef,
+            placeholder: t('email-input.placeholder'),
             value: emailValue,
             onChange: (ev) => setEmailValue(ev.target.value.trim()),
             onKeyDown: onEmailKeyDown,
@@ -597,7 +604,6 @@ const LoginTab = ({
           onSubmit={onSendSignInLink}
           validation={emailError ? t('email-error.message') : null}
         />
-        </div>
       )}
       {primary === 'atproto' && onRecoverWithOAuth && (
         <div className='flex flex-col gap-2'>
@@ -622,32 +628,36 @@ const LoginTab = ({
       )}
 
       {moreOptions.length > 0 && (
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button
-              type='button'
-              className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4'
-            >
-              <span>{t('more-ways-to-sign-in.label')}</span>
-              <Icon icon='ph--caret-down--regular' size={4} />
-            </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content side='bottom' sideOffset={8} collisionPadding={16} classNames='!w-80'>
-              <DropdownMenu.Viewport>
-                {moreOptions.map((opt) => (
-                  <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                    <Icon icon={opt.icon} size={4} classNames='shrink-0' />
-                    <div className='flex flex-col gap-0.5'>
-                      <span>{opt.label}</span>
-                      <span className='text-xs text-description font-normal'>{opt.description}</span>
-                    </div>
-                  </DropdownMenu.Item>
-                ))}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+        <div className='flex flex-col gap-2'>
+          <button
+            type='button'
+            onClick={() => setMoreOpen(!moreOpen)}
+            className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4'
+          >
+            <span>{t('more-ways-to-sign-in.label')}</span>
+            <Icon icon={moreOpen ? 'ph--caret-up--regular' : 'ph--caret-down--regular'} size={4} />
+          </button>
+
+          {moreOpen && (
+            <div className='flex flex-col gap-1'>
+              {moreOptions.map((opt) => (
+                <button
+                  key={opt.key}
+                  type='button'
+                  onClick={opt.onClick}
+                  className='flex items-center gap-3 px-3 py-2 rounded-md border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/50 text-left'
+                >
+                  <Icon icon={opt.icon} size={5} />
+                  <div className='flex-1 flex flex-col'>
+                    <span className='text-sm'>{opt.label}</span>
+                    <span className='text-xs text-description'>{opt.description}</span>
+                  </div>
+                  <Icon icon='ph--caret-right--regular' size={4} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -700,22 +710,11 @@ const InlineForm = ({
   );
 };
 
-const CompoundRow = ({
-  icon,
-  onClick,
-  disabled,
-  children,
-}: {
-  icon: string;
-  onClick?: () => unknown;
-  disabled?: boolean;
-  children: ReactNode;
-}) => (
+const CompoundRow = ({ icon, onClick, children }: { icon: string; onClick?: () => unknown; children: ReactNode }) => (
   <button
     type='button'
     onClick={onClick}
-    disabled={disabled}
-    className='flex items-center gap-3 px-4 py-3 rounded-md border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/50 disabled:opacity-50 text-left w-full'
+    className='flex items-center gap-3 px-4 py-3 rounded-md border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/50 text-left w-full'
   >
     <Icon icon={icon} size={5} />
     <span className='flex-1'>{children}</span>

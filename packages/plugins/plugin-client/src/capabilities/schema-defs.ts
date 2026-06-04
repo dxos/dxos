@@ -25,15 +25,15 @@ export default Capability.makeModule(
         const seenSchemaDxns = new Set<string>();
         const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
         for (const schema of schemas.flat()) {
-          const dxn = Type.getDXN(schema);
-          if (!dxn) {
-            log.warn('skipping schema without dxn');
+          const uri = Type.getURI(schema);
+          if (!uri) {
+            log.warn('skipping schema without uri');
             continue;
           }
 
-          const key = dxn.toString();
+          const key = uri.toString();
           if (seenSchemaDxns.has(key)) {
-            log('skipping duplicate schema for echo registration', { dxn: key });
+            log('skipping duplicate schema for echo registration', { uri: key });
             continue;
           }
 

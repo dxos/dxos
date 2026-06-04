@@ -16,6 +16,7 @@ import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError, Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 import * as OperationInvoker from './OperationInvoker';
 
@@ -28,25 +29,31 @@ const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntim
 const Compute = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ value: Schema.Number }),
-  meta: { key: 'test.compute' },
+  meta: { key: DXN.make('org.example.test.compute') },
 });
 
 const ToString = Operation.make({
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Struct({ string: Schema.String }),
-  meta: { key: 'test.to-string' },
+  meta: { key: DXN.make('org.example.test.toString') },
 });
 
 const Add = Operation.make({
   input: Schema.Tuple(Schema.Number, Schema.Number),
   output: Schema.Number,
-  meta: { key: 'test.add' },
+  meta: { key: DXN.make('org.example.test.add') },
 });
 
 const SideEffect = Operation.make({
   input: Schema.Void,
   output: Schema.Void,
-  meta: { key: 'test.side-effect' },
+  meta: { key: DXN.make('org.example.test.sideEffect') },
+});
+
+const Fail = Operation.make({
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Void,
+  meta: { key: DXN.make('org.example.test.fail') },
 });
 
 //
@@ -65,6 +72,8 @@ const toStringHandler = Operation.withHandler(ToString, (data) => Effect.succeed
 const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] + data[1]));
 
 const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
+
+const failHandler = Operation.withHandler(Fail, () => Effect.fail(new Error('boom')));
 
 //
 // Test Utilities
@@ -215,22 +224,39 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('invocations pubsub receives events', () =>
+  it.effect('emits a success event with the output', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
       const collector = yield* createEventCollector(invoker);
 
-      // Small delay to ensure subscription is ready
+      // Small delay to ensure subscription is ready.
       yield* Effect.yieldNow();
 
-      yield* invoker.invoke(ToString, { value: 1 });
-      yield* invoker.invoke(ToString, { value: 2 });
+      yield* invoker.invoke(ToString, { value: 42 });
 
-      yield* collector.waitForEvents(2);
+      // Each successful invocation emits exactly one event.
+      yield* collector.waitForEvents(1);
+      expect(collector.events.length).toBe(1);
+      const [event] = collector.events;
+      expect(event.input).toEqual({ value: 42 });
+      expect(event.output).toEqual({ string: '42' });
 
-      expect(collector.events.length).toBe(2);
-      expect(collector.events[0].input).toEqual({ value: 1 });
-      expect(collector.events[1].input).toEqual({ value: 2 });
+      yield* collector.dispose;
+    }),
+  );
+
+  it.effect('does not emit an event when the operation fails (error propagates)', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([failHandler]), testRuntime);
+      const collector = yield* createEventCollector(invoker);
+      yield* Effect.yieldNow();
+
+      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.either);
+      expect(result._tag).toBe('Left');
+
+      // Give any (unexpected) event a chance to arrive, then assert none was published.
+      yield* Effect.yieldNow();
+      expect(collector.events.length).toBe(0);
 
       yield* collector.dispose;
     }),
@@ -270,7 +296,7 @@ describe('Operation.withHandler type safety', () => {
     const opWithDeclaredService = Operation.make({
       input: Schema.Void,
       output: Schema.Void,
-      meta: { key: 'test.declared-service' },
+      meta: { key: DXN.make('org.example.test.declaredService') },
       services: [DeclaredService],
     });
 

@@ -10,10 +10,9 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
-import type * as Schema from 'effect/Schema';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
-import { type Entity, type Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -567,6 +566,24 @@ export type CreateExtensionRawOptions = {
 };
 
 /**
+ * Validates that a graph extension or surface local ID follows NSID conventions:
+ * the final dot-separated segment must be camelCase (letters and digits only,
+ * starting with a letter — no hyphens or underscores). This mirrors the rule
+ * enforced when the id is appended to a plugin's NSID to form a full DXN path.
+ *
+ * @example Valid:   'about', 'devtools', 'integrationsSection'
+ * @example Invalid: 'integration-article', 'plugin-spec'
+ */
+const validateLocalId = (id: string): void => {
+  const finalSegment = id.split('.').pop()!;
+  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
+    throw new Error(
+      `Invalid extension id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
+    );
+  }
+};
+
+/**
  * Create a graph builder extension (low-level API that works directly with Atoms).
  */
 export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
@@ -579,6 +596,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
+  validateLocalId(id);
   const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
 
@@ -798,13 +816,10 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   id: string;
   type: T;
   actions?: (
-    object: Entity.Entity<Schema.Schema.Type<T>>,
+    object: Type.InstanceType<T>,
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
-  connector?: (
-    object: Entity.Entity<Schema.Schema.Type<T>>,
-    get: Atom.Context,
-  ) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
   relation?: Node.RelationInput;
   position?: Position;
 };
@@ -818,7 +833,7 @@ export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, connector, relation, position } = options;
-  return createExtension<Entity.Entity<Schema.Schema.Type<T>>, R>({
+  return createExtension<Type.InstanceType<T>, R>({
     id,
     match: NodeMatcher.whenEchoType(type),
     actions,

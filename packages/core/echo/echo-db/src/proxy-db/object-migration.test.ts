@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { getSchemaDXN } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
@@ -26,16 +25,16 @@ afterEach(async () => {
 const ContactV1 = Schema.Struct({
   firstName: Schema.String,
   lastName: Schema.String,
-}).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
 const ContactV2 = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
+}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.2.0')));
 
 const ContactV3 = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
-}).pipe(Type.object({ typename: 'com.example.type.person', version: '0.3.0' }));
+}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.3.0')));
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
@@ -57,7 +56,7 @@ const migrationV3 = defineObjectMigration({
 
 test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([ContactV1, ContactV2]);
+  graph.registry.add([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush();
@@ -66,17 +65,15 @@ test('migrate 1 object', async () => {
   const objects = await db.query(Filter.type(ContactV2)).run();
   expect(objects).to.have.length(1);
 
-  expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(
-    DXN.fromTypenameAndVersion('com.example.type.person', '0.2.0').toString(),
-  );
+  expect(Type.getURI(Obj.getType(objects[0])!)?.toString()).to.eq(DXN.make('com.example.type.person', '0.2.0'));
   expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
-  expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.2.0');
+  expect(Type.getVersion(Obj.getType(objects[0])!)).to.eq('0.2.0');
   expect(objects[0].name).to.eq('John Doe');
 });
 
 test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([ContactV1, ContactV2]);
+  graph.registry.add([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush();
@@ -114,11 +111,11 @@ test('migration moves data key/version into meta', async () => {
     key: Schema.String,
     name: Schema.String,
     version: Schema.String,
-  }).pipe(Type.object({ typename: 'com.example.type.registry-entry', version: '0.1.0' }));
+  }).pipe(Type.makeObject(DXN.make('com.example.type.registryEntry', '0.1.0')));
 
   const RegistryEntryV2 = Schema.Struct({
     name: Schema.String,
-  }).pipe(Type.object({ typename: 'com.example.type.registry-entry', version: '0.2.0' }));
+  }).pipe(Type.makeObject(DXN.make('com.example.type.registryEntry', '0.2.0')));
 
   const migration = defineObjectMigration({
     from: RegistryEntryV1,
@@ -130,7 +127,7 @@ test('migration moves data key/version into meta', async () => {
   });
 
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([RegistryEntryV1, RegistryEntryV2]);
+  graph.registry.add([RegistryEntryV1, RegistryEntryV2]);
 
   db.add(
     Obj.make(RegistryEntryV1, {
@@ -161,7 +158,7 @@ test('migration moves data key/version into meta', async () => {
 
 test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
-  await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
+  graph.registry.add([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush();
@@ -170,7 +167,7 @@ test('chained migrations', async () => {
   const objects = await db.query(Filter.type(ContactV3)).run();
   expect(objects).to.have.length(1);
   expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
-  expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.3.0');
+  expect(Type.getVersion(Obj.getType(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
 });
@@ -178,7 +175,8 @@ test('chained migrations', async () => {
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
 // test('view migration', async () => {
 //   const { db, graph } = await builder.createDatabase();
-//   graph.schemaRegistry.register([ViewTypeV1, ViewTypeV2]);
+//   db.add(ViewTypeV1);
+//   db.add(ViewTypeV2);
 
 //   db.add(
 //     Obj.make(ViewTypeV1, {

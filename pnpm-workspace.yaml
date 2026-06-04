@@ -24,12 +24,12 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
-  '@automerge/automerge': 3.2.6
-  '@automerge/automerge-repo': 2.6.0-subduction.20
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.20
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.20
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.20
-  '@automerge/automerge-subduction': 0.12.1
+  '@automerge/automerge': 3.3.0-fragments.1
+  '@automerge/automerge-repo': 2.6.0-subduction.23
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.23
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.23
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.23
+  '@automerge/automerge-subduction': 0.13.0
   '@babel/core': ^7.18.13
   '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
@@ -105,6 +105,7 @@ catalog:
   '@fontsource/poiret-one': ^5.0.20
   '@hazae41/symbol-dispose-polyfill': ^1.0.2
   '@huggingface/transformers': ^3.8.1
+  '@internationalized/date': ^3.12.1
   '@ipld/car': ^5.3.3
   '@jitl/quickjs-wasmfile-release-sync': ^0.31.0
   '@lezer/common': ^1.5.2
@@ -116,7 +117,7 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.2.3
+  '@moonrepo/cli': 2.3.0
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
@@ -509,6 +510,7 @@ catalog:
   next-tick: ^1.0.0
   node-datachannel: ^0.30.0
   node-fetch: ^2.6.0
+  node-html-parser: ^7.0.1
   node-notifier: ^10.0.1
   noise-protocol: 3.0.1
   nyc: ^15.1.0
@@ -547,6 +549,7 @@ catalog:
   randombytes: ^2.1.0
   re-resizable: ^6.9.17
   react: ~19.2.3
+  react-aria-components: ^1.17.0
   react-charts: beta
   react-day-picker: ^9.4.0
   react-dom: ~19.2.3
@@ -757,8 +760,8 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.20': patches/@automerge__automerge-repo@2.6.0-subduction.20.patch
-  '@automerge/automerge-subduction@0.12.1': patches/@automerge__automerge-subduction@0.12.1.patch
+  '@automerge/automerge-repo@2.6.0-subduction.23': patches/@automerge__automerge-repo@2.6.0-subduction.23.patch
+  '@automerge/automerge-subduction@0.13.0': patches/@automerge__automerge-subduction@0.13.0.patch
   '@vitest/browser@4.1.7': patches/@vitest__browser@4.1.7.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch

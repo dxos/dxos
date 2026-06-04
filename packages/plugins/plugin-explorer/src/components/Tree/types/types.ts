@@ -23,7 +23,7 @@ export type TreeNode<TData = unknown> = {
  */
 export const treeTypeToTreeNode = (
   tree: TreeType,
-  rootId: Key.ObjectId = tree.root,
+  rootId: Key.EntityId = tree.root,
   visited: Set<string> = new Set(),
 ): TreeNode | undefined => {
   const node = tree.nodes[rootId];

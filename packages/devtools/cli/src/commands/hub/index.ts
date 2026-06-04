@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { accounts } from './accounts';
-import { codes } from './codes';
+import { account } from './accounts';
+import { code } from './codes';
 import { status } from './status';
 import { user } from './user';
 
@@ -18,7 +18,7 @@ export const hub = Command.make('hub', {
   apiKey: Options.text('api-key').pipe(Options.withDescription('API key.'), Options.optional),
 }).pipe(
   Command.withDescription('Manage Hub.'),
-  Command.withSubcommands([status, user, accounts, codes]),
+  Command.withSubcommands([status, user, account, code]),
   Command.provide(
     Effect.fnUntraced(function* ({ apiKey }) {
       const parentProvider = yield* Effect.configProviderWith(Effect.succeed);

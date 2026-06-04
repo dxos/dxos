@@ -14,7 +14,7 @@ import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { type ActionProperties } from '#types';
 
-const fallbackIcon = 'ph--placeholder--regular';
+const fallbackIcon = 'ph--circle-dashed--regular';
 
 const mdActionButtonProps = {
   size: 4 as const,

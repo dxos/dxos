@@ -15,7 +15,7 @@ export const list = Command.make(
   'list',
   {},
   Effect.fn(function* () {
-    const result = yield* hubApiRequest<AdminListAccountsResponse>('GET', '/api/accounts').pipe(
+    const result = yield* hubApiRequest<AdminListAccountsResponse>('GET', '/api/account').pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
     );
 
@@ -33,7 +33,7 @@ export const list = Command.make(
       const verified = account.emailVerified ? 'verified' : 'unverified';
       const created = new Date(account.createdAt).toLocaleString();
       yield* Console.log(
-        `  ${account.identityKey}  ${account.email.padEnd(36)} ${verified.padEnd(11)} invites=${account.invitationsRemaining}  ${created}`,
+        `  ${account.identityDid}  ${account.email.padEnd(36)} ${verified.padEnd(11)} invites=${account.invitationsRemaining}  ${created}`,
       );
     }
   }),

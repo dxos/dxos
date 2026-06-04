@@ -368,7 +368,7 @@ export const Feed = Schema.Struct({
   /** Backing ECHO feed for posts. */
   feed: Ref.Ref(EchoFeed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.subscription.feed',
     version: '0.1.0',
   }),
@@ -410,7 +410,7 @@ export const Post = Schema.Struct({
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.subscription.post',
     version: '0.1.0',
   }),

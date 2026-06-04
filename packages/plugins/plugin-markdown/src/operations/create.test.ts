@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Collection, Database, DXN, Feed, Obj, Query } from '@dxos/echo';
+import { Collection, Database, EID, Feed, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 
@@ -23,7 +23,7 @@ import MarkdownBlueprint from '../blueprints/markdown-blueprint';
 import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -52,7 +52,7 @@ describe('create', () => {
           content,
         });
 
-        const doc = yield* Database.resolve(DXN.parse(result.id), Markdown.Document);
+        const doc = yield* Database.resolve(EID.parse(result.id), Markdown.Document);
         expect(doc.name).toBe(name);
         const text = yield* Database.load(doc.content);
         expect(text.content).toBe(content);

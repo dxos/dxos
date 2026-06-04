@@ -31,18 +31,19 @@ import {
   type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
+import * as Option from 'effect/Option';
 import * as S from 'effect/Schema';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
+import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Collection, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { Annotation, Collection, DXN, EID, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
 import { Map as MapView } from '@dxos/plugin-map';
@@ -103,13 +104,13 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object({ typename: 'example.type.roastLog', version: '0.1.0' }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
+  Type.makeObject(DXN.make('example.type.roastLog', '0.1.0')),
 );
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface RoastLog extends S.Schema.Type<typeof RoastLog> {}
+type RoastLog = Type.InstanceType<typeof RoastLog>;
 const makeRoastLog = (props: Obj.MakeProps<typeof RoastLog>): RoastLog => Obj.make(RoastLog, props);
 
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.
@@ -200,12 +201,11 @@ describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
 const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd: string }) => {
   // Initialize the root collection on space.properties (normally done by plugin-space's
   // identity-created capability — we replicate it here for the headless builder).
-  Obj.update(space.properties, (properties) => {
-    if (!properties[Collection.Collection.typename]) {
-      properties[Collection.Collection.typename] = Ref.make(Collection.make());
-    }
-  });
-  const rootCollection = space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined;
+  if (Option.isNone(Annotation.get(space.properties, RootCollectionAnnotation))) {
+    Annotation.set(space.properties, RootCollectionAnnotation, Ref.make(Collection.make()));
+  }
+  const rootCollectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+  const rootCollection = rootCollectionRef?.target;
   if (!rootCollection) {
     throw new Error('Failed to initialize root collection on space.properties');
   }
@@ -277,7 +277,7 @@ const makeCollection = (space: Space, name: string, objects: Ref.Ref<Obj.Unknown
   space.db.add(Obj.make(Collection.Collection, { name, objects }));
 
 const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[]) => {
-  const dxn = Feed.getQueueDxn(feed);
+  const dxn = Feed.getQueueUri(feed);
   if (!dxn) {
     throw new Error('Feed has no DXN — has the space been flushed?');
   }
@@ -483,7 +483,7 @@ const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Orga
 
 const addOrganizationViews = (space: Space): void => {
   const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
-  const query = Query.select(Filter.typename(Organization.Organization.typename));
+  const query = Query.select(Filter.typename(Type.getTypename(Organization.Organization)));
 
   // Each view object holds its own View.View so they can be customised independently
   // (e.g. Kanban's pivot field). We share the query/jsonSchema across them.
@@ -868,8 +868,8 @@ const makeNotes = (
   project: Project.Project,
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
-  // Use space-relative DXNs so links remain valid when the snapshot is imported into a new space.
-  const localDxn = (obj: Obj.Unknown) => DXN.fromLocalObjectId(obj.id).toString();
+  // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
+  const localDxn = (obj: Obj.Unknown) => EID.make({ entityId: obj.id });
   const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
   const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 
@@ -1100,7 +1100,7 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
  * then return the collection for wiring into the root.
  *
- * We register the schema via space.db.schemaRegistry.register() so that a PersistentType ECHO object
+ * We persist the schema via space.db.addType() so that a TypeSchema ECHO object
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
@@ -1110,18 +1110,12 @@ const addRoastLogCollection = async (
 ): Promise<Collection.Collection> => {
   const typename = 'example.type.roastLog';
 
-  // Register creates the PersistentType ECHO object in the space so the runtime can
-  // discover and render the schema without it being compiled into the app. Pass the
-  // explicit object form so `name` is stored on the PersistentType — passing a
-  // Type.AnyEntity directly does not auto-derive a display name.
-  await space.db.schemaRegistry.register([
-    {
-      typename,
-      version: '0.1.0',
-      jsonSchema: JsonSchema.toJsonSchema(RoastLog) as JsonSchema.JsonSchema,
-      name: 'Roast Log',
-    },
-  ]);
+  // db.addType creates the TypeSchema ECHO object in the space so the runtime can
+  // discover and render the schema without it being compiled into the app.
+  const roastLogType = await space.db.addType(RoastLog);
+  Type.update(roastLogType, (draft) => {
+    draft.name = 'Roast Log';
+  });
 
   const entries = makeRoastLogs(people);
   entries.forEach((entry) => space.db.add(entry));

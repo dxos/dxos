@@ -61,7 +61,7 @@ export default Update.pipe(
       }
 
       return {
-        function: Obj.getDXN(loaded).toString(),
+        function: Obj.getURI(loaded),
       };
     }),
   ),

@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -27,16 +30,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/observability"
     },
     {
       "path": "../../ui/react-ui"

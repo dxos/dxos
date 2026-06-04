@@ -12,7 +12,7 @@ import { TripBuilder } from '#testing';
 import { translations } from '#translations';
 
 import { type SegmentCardAction, type SegmentCardActionHandler, SegmentTile } from './SegmentCard';
-import { FlightEditCard } from './SegmentEditCard';
+import { FlightEditableCard } from './SegmentEditableCard';
 
 const buildSegments = () =>
   new TripBuilder()
@@ -77,7 +77,7 @@ export const FlightEditable: StoryObj = {
       console.log(action);
     }, []);
 
-    return <FlightEditCard segment={segment} onAction={handleAction} />;
+    return <FlightEditableCard segment={segment} onAction={handleAction} />;
   },
 };
 

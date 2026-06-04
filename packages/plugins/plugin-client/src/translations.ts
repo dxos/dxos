@@ -48,6 +48,9 @@ const pluginTranslations = [
         'verification-sent.message': 'Verification email sent.',
         'verification-cooldown.message': 'Please wait {{seconds}}s before resending.',
         'verification-failed.message': 'Could not send verification email.',
+        'delete-account.label': 'Delete account',
+        'delete-account.description':
+          'Permanently delete your account and all associated data. This will sign you out of this device.',
         'generate-invitation.label': 'Generate invitation',
         'generate-invitation.description_zero': 'You have no invitations left to generate.',
         'generate-invitation.description_one': 'You have {{count}} invitation left to generate.',

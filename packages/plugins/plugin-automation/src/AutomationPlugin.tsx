@@ -7,9 +7,19 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, LayerSpecs, OperationHandler, ReactSurface, TriggerRuntimeController } from '#capabilities';
+import {
+  AppGraphBuilder,
+  LayerSpecs,
+  OperationHandler,
+  ReactSurface,
+  RegistrySync,
+  TriggerRuntimeController,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -23,8 +33,15 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
     activate: LayerSpecs,
   }),
   Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: RegistrySync,
+  }),
+  Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
     activate: TriggerRuntimeController,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -588,7 +588,7 @@ export type InspectSpaceResponse = {
     objectCount: number;
     deletedObjectCount: number;
     indexedDocumentCount: number;
-    objectsByType: { typeDXN: string; count: number }[];
+    objectsByType: { typeURI: string; count: number }[];
     indexerStatus: {
       indexingInProgress: boolean;
       cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];
@@ -677,28 +677,18 @@ export type ValidateInvitationCodeResponse = { valid: boolean };
 /**
  * Body of `POST /account/login`. Existing-account email recovery only --
  * unlike `/account/signup`, this never creates new identities or waitlist rows.
- *
- * `identityKey` is optional and only meaningful for the test-email carve-out
- * (see {@link LoginResponseSchema}): the server uses it to bind a fresh test
- * Account after a `needsIdentity: true` probe.
  */
 export const LoginRequestSchema = Schema.Struct({
   email: Schema.String,
+  identityDid: Schema.optional(Schema.String),
   identityKey: Schema.optional(Schema.String),
 });
 export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
 
 /**
  * Response from `POST /account/login`. The shape is identical regardless of
- * whether the email is registered, so the endpoint is safe against
- * enumeration. The server inlines `token` for test emails; regular emails are
- * delivered out-of-band and the response is `{}`.
- *
- * Test-email carve-out: when a test address has no Account yet, the server
- * returns `{ needsIdentity: true }` on the probe. The caller creates a local
- * identity and retries with `identityKey`; the retry creates a fresh test
- * Account and returns `{ admitted: true }` (no token, since the caller
- * already has the identity locally and there's nothing to recover).
+ * whether the email is registered, so the endpoint is safe against enumeration.
+ * Regular emails are delivered out-of-band and the response is `{}`.
  */
 export const LoginResponseSchema = Schema.Struct({
   token: Schema.optional(Schema.String),
@@ -707,16 +697,11 @@ export const LoginResponseSchema = Schema.Struct({
 });
 export type LoginResponse = Schema.Schema.Type<typeof LoginResponseSchema>;
 
-// Two-step signup: invitation code + identity + email. The code is anonymous
-// at issue time so it can be freely shared; the redeemer registers with
-// whatever email they want.
-//
-// `code` and `identityKey` are optional at the schema level because the edge
-// worker overloads this endpoint with internal handling for special-case
-// emails (e.g. always-allow logins for development). External clients should
-// always send all three for the regular redemption path.
+// Two-step signup: invitation code + identity DID + email.
 export const RedeemInvitationCodeRequestSchema = Schema.Struct({
   code: Schema.optional(InvitationCodeSchema),
+  identityDid: Schema.optional(Schema.String),
+  /** Raw hex public key, stored alongside the DID for the magic-link recovery flow. */
   identityKey: Schema.optional(Schema.String),
   email: Schema.String,
 });
@@ -726,7 +711,7 @@ export type RedeemInvitationCodeResponse =
   | { needsIdentity: true };
 
 export const GetAccountResponseSchema = Schema.Struct({
-  identityKey: Schema.String,
+  identityDid: Schema.String,
   email: Schema.String,
   emailVerified: Schema.Boolean,
   /** ISO timestamp. */
@@ -739,7 +724,7 @@ export const AccountInvitationSchema = Schema.Struct({
   code: Schema.String,
   /** ISO timestamp. */
   createdAt: Schema.String,
-  redeemedByIdentityKey: Schema.optional(Schema.String),
+  redeemedByIdentityDid: Schema.optional(Schema.String),
   /** ISO timestamp. */
   redeemedAt: Schema.optional(Schema.String),
 });
@@ -763,22 +748,13 @@ export type ResendVerificationEmailResponse = {
  */
 export const RequestAccessRequestSchema = Schema.Struct({
   email: Schema.String,
-  /** Optional: identity key the user is currently signed in as. */
-  identityKey: Schema.optional(Schema.String),
+  /** Optional: identity DID the user is currently signed in as. */
+  identityDid: Schema.optional(Schema.String),
   /** Optional free-form message from the requester. */
   message: Schema.optional(Schema.String),
 });
 export type RequestAccessRequest = Schema.Schema.Type<typeof RequestAccessRequestSchema>;
 export type RequestAccessResponse = { received: boolean };
-
-/**
- * Test email pattern (e.g. `test@dxos.org`, `test+alice@dxos.org`).
- * Plus-addressed variants allow per-test sub-accounts without DNS / mailbox setup.
- * Test emails bypass the invitation-code requirement in the redeem endpoint.
- */
-export const TEST_EMAIL_PATTERN = /^test(\+\w+)?@dxos\.org$/;
-
-export const isTestEmail = (email: string): boolean => TEST_EMAIL_PATTERN.test(email.trim());
 
 //
 // Admin (X-API-KEY)
@@ -789,7 +765,7 @@ export type AdminListAccountsResponse = {
 };
 
 export const AdminGrantInvitationsRequestSchema = Schema.Struct({
-  identityKey: Schema.String,
+  identityDid: Schema.String,
   count: Schema.Number,
 });
 export type AdminGrantInvitationsRequest = Schema.Schema.Type<typeof AdminGrantInvitationsRequestSchema>;
@@ -807,8 +783,8 @@ export type AdminListInvitationCodesResponse = {
     /** ISO timestamp. */
     createdAt: string;
     note?: string;
-    issuedByIdentityKey?: string;
-    redeemedByIdentityKey?: string;
+    issuedByIdentityDid?: string;
+    redeemedByIdentityDid?: string;
     /** ISO timestamp. */
     redeemedAt?: string;
     /** ISO timestamp. Set when revoked. */

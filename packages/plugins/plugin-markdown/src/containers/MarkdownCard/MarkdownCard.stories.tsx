@@ -34,11 +34,11 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
   return (
     <CardContainer icon='ph--text-aa--regular'>
       <Card.Root border={false}>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
           <Card.Menu />
-        </Card.Toolbar>
+        </Card.Header>
         <MarkdownCard subject={subject} {...args} />
       </Card.Root>
     </CardContainer>

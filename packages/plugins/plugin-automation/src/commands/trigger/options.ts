@@ -3,9 +3,6 @@
 //
 
 import * as Options from '@effect/cli/Options';
-import * as Schema from 'effect/Schema';
-
-import { DXN } from '@dxos/keys';
 
 export const TriggerId = Options.text('id').pipe(Options.withDescription('The id of the trigger.'));
 
@@ -45,15 +42,6 @@ export const Cron = Options.text('cron').pipe(
 // Feed
 //
 
-// TODO(dmaretskyi): Extract
-const DXNSchema = Schema.String.pipe(
-  Schema.transform(Schema.instanceOf(DXN), {
-    decode: (value: string) => DXN.parse(value),
-    encode: (value: DXN) => value.toString(),
-  }),
-);
-
 export const Feed = Options.text('feed').pipe(
-  Options.withDescription('The DXN of the feed for the feed trigger.'),
-  Options.withSchema(DXNSchema),
+  Options.withDescription('The EID of the feed for the feed trigger (echo://<spaceId>/<objectId>).'),
 );

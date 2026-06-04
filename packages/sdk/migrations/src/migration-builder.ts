@@ -9,10 +9,11 @@ import type * as Schema from 'effect/Schema';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
-import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
-import { getSchemaDXN } from '@dxos/echo/internal';
+import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { getSchemaURI } from '@dxos/echo/internal';
+import * as Type from '@dxos/echo/Type';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
@@ -37,7 +38,7 @@ export class MigrationBuilder {
   private readonly _repo: RepoProxy;
   private readonly _rootDoc: Doc<DatabaseDirectory>;
 
-  // echoId -> automergeUrl
+  // echoUri -> automergeUrl
   private readonly _newLinks: Record<string, string> = {};
   private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];
@@ -52,7 +53,7 @@ export class MigrationBuilder {
       .doc() as Doc<DatabaseDirectory>;
   }
 
-  async findObject(id: string): Promise<ObjectStructure | undefined> {
+  async findObject(id: string): Promise<EntityStructure | undefined> {
     const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
@@ -66,14 +67,15 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
+    migrate: (objectStructure: EntityStructure) => MaybePromise<{ type: Type.AnyEntity; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
     }
 
-    const { schema, props } = await migrate(objectStructure);
+    const { type, props } = await migrate(objectStructure);
+    const schema = Type.getSchema(type);
 
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
@@ -86,7 +88,7 @@ export class MigrationBuilder {
       objects: {
         [id]: {
           system: {
-            type: EncodedReference.fromDXN(getSchemaDXN(schema)!),
+            type: EncodedReference.fromURI(getSchemaURI(schema)!),
           },
           data: props,
           meta: {
@@ -103,20 +105,22 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
-    const core = await this._createObject({ schema, props });
+  async addObject(type: Type.AnyEntity, props: any): Promise<string> {
+    const resolved = Type.getSchema(type);
+    const core = await this._createObject({ schema: resolved, props });
     return core.id;
   }
 
   createReference(id: string) {
-    return EncodedReference.fromDXN(DXN.fromLocalObjectId(id));
+    invariant(EntityId.isValid(id), 'Invalid EntityId.');
+    return EncodedReference.fromURI(EID.make({ entityId: id }));
   }
 
   deleteObject(id: string): void {
     this._deleteObjects.push(id);
   }
 
-  async changeProperties(changeFn: (properties: ObjectStructure) => void): Promise<void> {
+  async changeProperties(changeFn: (properties: EntityStructure) => void): Promise<void> {
     if (!this._newRoot) {
       await this._buildNewRoot();
     }
@@ -197,14 +201,14 @@ export class MigrationBuilder {
     }
 
     core.initNewObject(props);
-    core.setType(EncodedReference.fromDXN(getSchemaDXN(schema)!));
+    core.setType(EncodedReference.fromURI(getSchemaURI(schema)!));
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
       objects: {
-        [core.id]: core.getDoc() as ObjectStructure,
+        [core.id]: core.getDoc() as EntityStructure,
       },
     });
     await newHandle.whenReady();

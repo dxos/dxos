@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 
-import type { DXN, SpaceId } from '@dxos/keys';
+import type { SpaceId, URI } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from './errors';
 import * as Process from './Process';
@@ -65,9 +65,10 @@ export interface ResolutionContext {
   readonly space?: SpaceId;
 
   /**
-   * DXN of the conversation feed the process is running in.
+   * URI of the conversation feed the process is running in. Today always an EID;
+   * narrow with `EID.parse` at the point of use.
    */
-  readonly conversation?: DXN.String;
+  readonly conversation?: URI.URI;
 
   /**
    * Under which process the process is running.
@@ -158,7 +159,7 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
  * @example
  * ```ts
  * processManagerRuntime.runPromise(
- *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, QueueService))),
+ *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, Feed.FeedService))),
  * );
  * ```
  */

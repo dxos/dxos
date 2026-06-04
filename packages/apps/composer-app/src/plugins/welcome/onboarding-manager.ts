@@ -6,6 +6,7 @@ import { type Capabilities } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
@@ -27,7 +28,6 @@ export type OnboardingManagerProps = {
   firstRun?: Trigger;
   hubUrl?: string;
   token?: string;
-  tokenType?: 'login';
   recoverIdentity?: boolean;
   deviceInvitationCode?: string;
   spaceInvitationCode?: string;
@@ -49,7 +49,6 @@ export class OnboardingManager {
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
-  private readonly _tokenType?: 'login' | 'verify';
   private readonly _recoverIdentity?: boolean;
   private readonly _deviceInvitationCode?: string;
   private readonly _spaceInvitationCode?: string;
@@ -72,7 +71,6 @@ export class OnboardingManager {
     client,
     hubUrl,
     token,
-    tokenType,
     recoverIdentity,
     deviceInvitationCode,
     spaceInvitationCode,
@@ -86,7 +84,6 @@ export class OnboardingManager {
     this._hubUrl = hubUrl;
     this._skipAuth = !this._hubUrl;
     this._token = token;
-    this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
     this._deviceInvitationCode = deviceInvitationCode;
     this._spaceInvitationCode = spaceInvitationCode;
@@ -184,7 +181,7 @@ export class OnboardingManager {
         return;
       }
       await this._createAgent();
-    } else if (!this._identity && this._token && this._tokenType === 'login') {
+    } else if (!this._identity && this._token) {
       // Login flow: redeem the recovery token from `/account/login` to restore
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
       // any pre-existing IdentityRecovery credentials before `_setupRecovery`
@@ -242,7 +239,7 @@ export class OnboardingManager {
     invariant(this._token);
     await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
     this._token && removeQueryParamByValue(this._token);
-    this._tokenType && removeQueryParamByValue(this._tokenType);
+    removeQueryParamByValue('login');
   }
 
   /**
@@ -260,6 +257,7 @@ export class OnboardingManager {
 
     const result = await this._postRedeem({
       email: this._email,
+      identityDid: await createDidFromIdentityKey(this._identity.identityKey),
       identityKey: this._identity.identityKey.toHex(),
       code: this._accountInvitationCode,
     });
@@ -284,6 +282,7 @@ export class OnboardingManager {
     try {
       const result = await this._postRedeem({
         email: this._email,
+        identityDid: await createDidFromIdentityKey(this._identity.identityKey),
         identityKey: this._identity.identityKey.toHex(),
         code: this._accountInvitationCode,
       });
@@ -299,11 +298,12 @@ export class OnboardingManager {
   private async _postRedeem(body: {
     email: string;
     code?: string;
+    identityDid?: string;
     identityKey?: string;
   }): Promise<{ accountId: string; emailVerificationSent: boolean } | { needsIdentity: true }> {
     invariant(this._hubUrl);
     const url = new URL('/account/invitation-code/redeem', this._hubUrl);
-    log.info('redeeming account invitation', { url: url.href, hasCode: !!body.code, hasIdentity: !!body.identityKey });
+    log.info('redeeming account invitation', { url: url.href, hasCode: !!body.code, hasIdentity: !!body.identityDid });
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

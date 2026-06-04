@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
 import { Magazine, Subscription } from '../types';
+import { getSnippet } from '../util';
 import { curateMagazine } from './curate-magazine';
 
 /**
@@ -50,7 +51,7 @@ describe('curateMagazine', () => {
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDXN = Feed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueUri(echoFeed);
     invariant(feedDXN, 'Feed should have a queue DXN.');
     const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;
@@ -79,9 +80,8 @@ describe('curateMagazine', () => {
   });
 
   test('Posts stay in the queue and never enter space.db', async () => {
-    // Core invariant for Layer B: curating never copies Post objects into
-    // `space.db`. They remain immutable feed entries; magazine-side state
-    // (snippet, imageUrl, readAt, archived) lives on `magazine.postState`.
+    // Core invariant: curating never copies Post objects into `space.db`. They remain immutable feed
+    // entries appended (by ref) to `magazine.posts`; snippet/imageUrl are derived from the Post.
     const { db, magazine, queue, space } = await setup();
     await queue.append([
       makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' }),
@@ -94,12 +94,11 @@ describe('curateMagazine', () => {
     const dbPosts = db.query(Filter.type(Subscription.Post)).runSync();
     expect(dbPosts).toHaveLength(0);
 
-    // Curation metadata landed on the Magazine sidecar.
-    const items = (await queue.queryObjects()) ?? [];
+    // The posts were appended (by ref) to the magazine; snippet is derivable from each.
+    expect(magazine.posts.length).toBe(2);
+    const items = ((await queue.queryObjects()) ?? []) as Subscription.Post[];
     for (const item of items) {
-      const id = (item as any).id;
-      const state = magazine.postState?.[id];
-      expect(state?.snippet).toBeDefined();
+      expect(getSnippet(item)).toBeTruthy();
     }
   });
 
@@ -193,18 +192,18 @@ describe('curateMagazine', () => {
     // Queue DXN of the underlying queue item (not a synthesised ECHO DXN).
     // EchoHandler.createRef short-circuits on the Queue-kind SelfDXNId, so
     // Ref.make(queuePost) stores the canonical queue address — meaning the
-    // Post never enters `space.db` and `magazine.posts[0].dxn` equals
-    // `Obj.getDXN(queueItem)` byte-for-byte.
+    // Post never enters `space.db` and `magazine.posts[0].uri` equals
+    // `Obj.getURI(queueItem)` byte-for-byte.
     const { db, magazine, queue, space } = await setup();
     await queue.append([makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' })]);
 
     const first = await curateMagazine(space, magazine);
     expect(first.added).toBe(1);
 
-    const magDXN = magazine.posts[0].dxn.toString();
+    const magURI = magazine.posts[0].uri;
     const items = (await queue.queryObjects()) ?? [];
-    const queueDXN = Obj.getDXN(items[0] as any).toString();
-    expect(magDXN).toBe(queueDXN);
+    const queueURI = Obj.getURI(items[0] as any);
+    expect(magURI).toBe(queueURI);
 
     // Idempotent re-curate.
     await expect(curateMagazine(space, magazine)).resolves.toEqual({ added: 0 });

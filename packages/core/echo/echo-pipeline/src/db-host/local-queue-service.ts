@@ -17,6 +17,8 @@ import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import {
   type DeleteFromQueueRequest,
+  type GetSyncStateRequest,
+  type GetSyncStateResponse,
   type InsertIntoQueueRequest,
   type QueryQueueRequest,
   type QueueQueryResult,
@@ -32,15 +34,20 @@ export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
   #syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+  #getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
-    syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>,
+    options?: {
+      syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
+      getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+    },
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
-    this.#syncQueue = syncQueue;
+    this.#syncQueue = options?.syncQueue;
+    this.#getSyncState = options?.getSyncState;
   }
 
   queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
@@ -123,5 +130,45 @@ export class LocalQueueServiceImpl implements QueueService {
 
   async syncQueue(request: SyncQueueRequest, options?: RequestOptions): Promise<void> {
     await this.#syncQueue?.(options?.ctx ?? Context.default(), request);
+  }
+
+  getSyncState(request: GetSyncStateRequest, options?: RequestOptions): Promise<GetSyncStateResponse> {
+    const ctx = options?.ctx ?? Context.default();
+    if (this.#getSyncState) {
+      return this.#getSyncState(ctx, request);
+    }
+
+    const spaceId = request.spaceId as SpaceId;
+    const namespaces =
+      request.namespaces != null && request.namespaces.length > 0
+        ? request.namespaces
+        : Object.values(FeedProtocol.WellKnownNamespaces);
+
+    return RuntimeProvider.runPromise(this.#runtime)(
+      Effect.gen(this, function* () {
+        const namespaceStates = yield* Effect.forEach(
+          namespaces,
+          (feedNamespace) =>
+            Effect.gen(this, function* () {
+              const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
+                spaceId,
+                feedNamespace,
+              });
+              const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({
+                spaceId,
+                feedNamespace,
+              });
+              return {
+                namespace: feedNamespace,
+                blocksToPull: '0',
+                blocksToPush: String(blocksToPush),
+                totalBlocks: String(totalBlocks),
+              };
+            }),
+          { concurrency: 'unbounded' },
+        );
+        return { namespaces: namespaceStates };
+      }),
+    );
   }
 }

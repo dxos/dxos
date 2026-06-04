@@ -8,7 +8,7 @@ import { create } from './create';
 import { list } from './list';
 import { revoke } from './revoke';
 
-export const codes: Command.Command<any, any, any, any> = Command.make('codes').pipe(
+export const code: Command.Command<any, any, any, any> = Command.make('code').pipe(
   Command.withDescription('Manage invitation codes.'),
   Command.withSubcommands([list, create, revoke]),
 );

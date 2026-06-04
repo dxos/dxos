@@ -10,14 +10,14 @@ import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 import { Agent, Chat, Plan } from '../../../types';
 import PlanningBlueprint from '../blueprint';
 import { PlanningHandlers } from './index';
 import { UpdateTasks } from './update-tasks';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
@@ -42,7 +42,7 @@ describe('UpdateTasks', () => {
 
         yield* Operation.invoke(UpdateTasks, {
           tasks: [{ id: Plan.TaskId.make('task-1'), title: 'Hello', status: 'todo' }],
-        }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(chatFeed).toString() })));
+        }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })));
 
         const plan = yield* Database.load(agent.plan);
         expect(plan.tasks).toHaveLength(1);

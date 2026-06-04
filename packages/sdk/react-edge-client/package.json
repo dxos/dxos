@@ -27,12 +27,9 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/react-client": "workspace:*"
   },
   "devDependencies": {
     "react": "catalog:",

@@ -302,7 +302,7 @@ export const useObjects = <T extends Obj.Unknown>(refs: MaybeAccessor<readonly R
     const subscribeToTarget = (ref: Ref.Ref<T>) => {
       const target = ref.target;
       if (target) {
-        const key = ref.dxn.toString();
+        const key = ref.uri;
         if (!targetUnsubscribes.has(key)) {
           targetUnsubscribes.set(key, Obj.subscribe(target, triggerUpdate));
         }

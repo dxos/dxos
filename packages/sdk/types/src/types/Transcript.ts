@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { SystemTypeAnnotation } from '@dxos/echo/internal';
+import { DXN, Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { HiddenAnnotation } from '@dxos/echo/internal';
 
 /**
  * Root transcript object created when the user starts a transcription.
@@ -24,18 +24,12 @@ export const Transcript = Schema.Struct({
    */
   feed: Ref.Ref(Feed.Feed),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.transcript',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--subtitles--regular',
-    hue: 'sky',
-  }),
+  HiddenAnnotation.set(true),
+  Annotation.IconAnnotation.set({ icon: 'ph--subtitles--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.transcript', '0.1.0')),
 );
 
-export type Transcript = Schema.Schema.Type<typeof Transcript>;
+export type Transcript = Type.InstanceType<typeof Transcript>;
 
 // TODO(burdon): Do these need to be kept in sync with EDGE?
 

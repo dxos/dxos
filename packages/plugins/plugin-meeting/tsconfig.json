@@ -20,18 +20,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/display-name"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -53,9 +41,6 @@
       "path": "../../common/test-utils"
     },
     {
-      "path": "../../common/tracing"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -74,9 +59,6 @@
       "path": "../../core/echo/echo-atom"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -89,13 +71,7 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/react-edge-client"
     },
     {
       "path": "../../sdk/schema"
@@ -110,16 +86,10 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -128,13 +98,7 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-tabs"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-attention"
@@ -144,9 +108,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

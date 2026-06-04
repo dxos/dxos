@@ -4,10 +4,9 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { type DateRange } from 'react-day-picker';
 
 import { withLayout, withTheme } from '../../testing';
-import { Calendar } from './Calendar';
+import { Calendar, type DateRange } from './Calendar';
 
 const meta: Meta<typeof Calendar.Root> = {
   title: 'ui/react-ui-core/components/Calendar',
@@ -36,17 +35,9 @@ export const Range: Story = {
   },
 };
 
-export const Multiple: Story = {
-  render: () => {
-    const [dates, setDates] = useState<Date[] | undefined>([]);
-    return <Calendar.Root mode='multiple' selected={dates} onSelect={setDates} />;
-  },
-};
-
-export const WithDisabled: Story = {
+export const WithMinDate: Story = {
   render: () => {
     const [date, setDate] = useState<Date | undefined>();
-    const disabled = { before: new Date() };
-    return <Calendar.Root mode='single' selected={date} onSelect={setDate} disabled={disabled} />;
+    return <Calendar.Root mode='single' selected={date} onSelect={setDate} minValue={new Date()} />;
   },
 };

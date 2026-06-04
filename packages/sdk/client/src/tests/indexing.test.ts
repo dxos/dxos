@@ -7,8 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space, SpaceProperties } from '@dxos/client-protocol';
-import { type Entity, Obj, type QueryResult } from '@dxos/echo';
-import { Filter } from '@dxos/echo-db';
+import { type Entity, Filter, Obj, type QueryResult } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { type PublicKey } from '@dxos/keys';
@@ -75,7 +74,7 @@ describe('Index queries', () => {
   const addObjects = async <T extends {}>(space: Space, objects: Obj.OfShape<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
-      return space.db.add(object);
+      return space.db.add<Obj.Unknown>(object);
     });
 
     await space.db.flush();

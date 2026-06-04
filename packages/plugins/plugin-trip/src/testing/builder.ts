@@ -22,8 +22,10 @@ export const PLACES: Record<string, PlaceType> = {
   CDG: { name: 'Paris-Charles de Gaulle', code: 'CDG', city: 'Paris', country: 'FR', geo: [2.5479, 49.0097] },
   BHX: { name: 'Birmingham Airport', code: 'BHX', city: 'Birmingham', country: 'GB', geo: [-1.748, 52.4539] },
   SIN: { name: 'Singapore Changi', code: 'SIN', city: 'Singapore', country: 'SG', geo: [103.9915, 1.3644] },
-  LTV: { name: 'Luton Airport Parkway', code: 'LTV', city: 'Luton', country: 'GB', geo: [-0.4147, 51.8794] },
+  LTV: { name: 'Lichfield Trent Valley', code: 'LTV', city: 'Lichfield', country: 'GB', geo: [-1.8044, 52.6841] },
   EUS: { name: 'London Euston', code: 'EUS', city: 'London', country: 'GB', geo: [-0.1335, 51.5285] },
+  STP: { name: 'London St Pancras International', code: 'STP', city: 'London', country: 'GB', geo: [-0.1264, 51.532] },
+  PAR_NORD: { name: 'Paris Gare du Nord', code: 'PAR', city: 'Paris', country: 'FR', geo: [2.3553, 48.8809] },
 };
 
 type FlightOptions = {
@@ -34,7 +36,7 @@ type FlightOptions = {
   durationHours?: number;
   airline?: { name?: string; code?: string };
   flightNumber?: string;
-  cabin?: Segment.Cabin;
+  cabin?: Segment.ServiceClass;
   confirmed?: boolean;
 };
 
@@ -112,15 +114,16 @@ export class TripBuilder {
     }
     this.#segments.push(
       Segment.make({
-        kind: 'flight',
-        status: opts.confirmed ? 'confirmed' : 'tentative',
-        airline,
-        flightNumber,
-        cabin: opts.cabin ?? 'economy',
-        origin: opts.from,
-        destination: opts.to,
-        departAt: depart.toISOString(),
-        arriveAt: arrive.toISOString(),
+        details: {
+          _tag: 'flight',
+          provider: airline,
+          number: flightNumber,
+          serviceClass: opts.cabin ?? 'economy',
+          origin: opts.from,
+          destination: opts.to,
+          departAt: depart.toISOString(),
+          arriveAt: arrive.toISOString(),
+        },
       }),
     );
     return this;
@@ -134,14 +137,15 @@ export class TripBuilder {
     const arrive = addHours(depart, durationHours);
     this.#segments.push(
       Segment.make({
-        kind: 'train',
-        status: 'confirmed',
-        operator: opts.operator,
-        trainNumber: opts.trainNumber,
-        origin: opts.from,
-        destination: opts.to,
-        departAt: depart.toISOString(),
-        arriveAt: arrive.toISOString(),
+        details: {
+          _tag: 'train',
+          provider: opts.operator,
+          number: opts.trainNumber,
+          origin: opts.from,
+          destination: opts.to,
+          departAt: depart.toISOString(),
+          arriveAt: arrive.toISOString(),
+        },
       }),
     );
     return this;
@@ -168,16 +172,13 @@ export class TripBuilder {
     const checkOut = addDays(checkIn, nights);
     this.#segments.push(
       Segment.make({
-        kind: 'accommodation',
-        status: 'confirmed',
-        propertyName: opts.propertyName,
-        operator: opts.chain ? { name: opts.chain } : undefined,
-        origin: opts.place,
-        destination: opts.place,
-        checkIn: checkIn.toISOString(),
-        checkOut: checkOut.toISOString(),
-        departAt: checkIn.toISOString(),
-        arriveAt: checkOut.toISOString(),
+        details: {
+          _tag: 'accommodation',
+          propertyName: opts.propertyName,
+          location: opts.place,
+          checkIn: checkIn.toISOString(),
+          checkOut: checkOut.toISOString(),
+        },
       }),
     );
     return this;
@@ -201,11 +202,12 @@ export class TripBuilder {
     const start = addHours(startOfDay(addDays(this.#now, daysFromNow)), departHour);
     this.#segments.push(
       Segment.make({
-        kind: 'activity',
-        status: 'confirmed',
-        title: opts.title,
-        venue: opts.venue,
-        departAt: start.toISOString(),
+        details: {
+          _tag: 'activity',
+          title: opts.title,
+          venue: opts.venue,
+          departAt: start.toISOString(),
+        },
       }),
     );
     return this;

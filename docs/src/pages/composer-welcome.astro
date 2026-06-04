@@ -111,9 +111,6 @@ import IconX from '../components/svg/IconX.astro';
         const email = form.querySelector('[name="email"]').value;
         const block = form.closest('.w-form');
         try {
-          // Joins the Composer waitlist. Server forwards to Kit for email
-          // confirmation; the waitlist row is created when Kit notifies us
-          // back via the Make webhook.
           const res = await fetch('https://hub.dxos.network/account/request-access', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

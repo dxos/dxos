@@ -22,7 +22,7 @@ export default Capability.makeModule(
       actions: () =>
         Effect.succeed([
           {
-            id: 'open-user-account',
+            id: 'openUserAccount',
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
               label: ['open-user-account.label', { ns: meta.id }],

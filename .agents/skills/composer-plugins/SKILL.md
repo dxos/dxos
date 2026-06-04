@@ -2,12 +2,30 @@
 name: composer-plugins
 description: Use when working on files in packages/plugins/, adding new plugins,
   refactoring plugin components/containers, writing storybooks for plugins,
-  or wiring capabilities like react-surface or operation-resolver.
+  or wiring capabilities like react-surface or operation-resolver. For the UI/design-system
+  details of plugin components (layout, theming, forms, toolbars, lists, storybook), pair this
+  with the composer-ui skill.
 ---
 
 # Composer Plugins
 
 Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand every pattern below.
+
+**Companion skills.** For building plugin **UI** with the design system — container layout, theme tokens,
+forms, toolbars, lists/stacks, reactivity, storybook — use the **composer-ui** skill. For **authoring**
+new `@dxos/react-ui` composite primitives (`Foo.Root`/`Foo.Content`), use **composite-components**. This
+skill owns plugin _structure_ (capabilities, surfaces, schema, operations) and points at those two for UI.
+
+**Read `MEMORY.md` first** (sibling of this file) for session-logged design/implementation learnings and prior corrections.
+
+**REQUIRED — keep `MEMORY.md` current:** Whenever the user directs a correction (tells you to do something differently, rejects an approach, or specifies a pattern), record it in `MEMORY.md` as part of carrying out that correction — do not defer to session end. Also capture other non-obvious design/implementation details as you learn them.
+
+Update it _appropriately_:
+
+- Append to the current session's dated section, newest first: `## YYYY-MM-DD — <plugin(s)>`. Create it if absent; do not start a second section for the same session.
+- Keep it compact and agent-directed: terse imperative bullets, one rule per bullet, name the file/symbol/idiom. No prose, no hedging, no narration of what you did.
+- Update or merge an existing bullet instead of adding a near-duplicate; delete bullets proven wrong.
+- Record reusable rules, not task specifics. When a rule generalizes beyond one session, promote it into the body of this `SKILL.md` and drop it from `MEMORY.md`.
 
 ## Discovery
 
@@ -162,88 +180,17 @@ Create a basic storybook for each.
 
 **If a "component" needs `useCapability`/`useCapabilities`/`useAppGraph`/`useOperationInvoker`, it belongs in `containers/`.** Storybooks won't have a PluginManager — calling capability hooks under `components/` throws. Refactor: take the resolved value (URL, callback, Tile component) as a prop and move the hook one level up.
 
-### Reactivity: wrap subjects with `useObject`
+### UI: forms, theming, toolbars, cards, layout
 
-A surface receiving an ECHO subject via `AppSurface.ObjectArticleProps<T>` MUST call `useObject(subject)` and read from the returned snapshot. Without it, mutations to nested arrays/structs (e.g. `Obj.update(obj, m => m.images = [...])`) do not trigger re-render until you navigate away and back — the prop reference stays stable; the subscription lives in `useObject`.
-
-```tsx
-const [gallery] = useObject(subject);
-// reads (gallery.images) re-render reactively
-// writes still go through the original subject:
-const handleDelete = (i: number) =>
-  Obj.update(subject, (obj) => {
-    const m = obj as Obj.Mutable<Gallery.Gallery>;
-    m.images = (m.images ?? []).filter((_, idx) => idx !== i);
-  });
-```
-
-The snapshot type is narrow — cast as needed (`obj as Obj.Mutable<T>` inside `Obj.update`, or `as T` for read access of fields not surfaced on `Snapshot<T>`).
-
-### Toolbar wiring: `MenuBuilder` + `useMenuActions` + `attendableId`
-
-Always thread `attendableId` from `AppSurface.ObjectArticleProps` into `<Menu.Root>`. Don't underscore it as unused — without it, attention-driven contributions don't target the right surface.
-
-```tsx
-const actionsAtom = useMemo(
-  () =>
-    Atom.make(
-      (): ActionGraphProps =>
-        MenuBuilder.make()
-          .action(
-            'add',
-            { label: ['add.label', { ns: meta.id }], icon: 'ph--plus--regular', disposition: 'toolbar' },
-            handleAdd,
-          )
-          .build(),
-    ),
-  [handleAdd],
-);
-const menuActions = useMenuActions(actionsAtom);
-return (
-  <Panel.Toolbar>
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar />
-    </Menu.Root>
-  </Panel.Toolbar>
-);
-```
-
-See: `plugin-sample/src/containers/SampleArticle.tsx`.
-
-**Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
-
-- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for container (article, companion, etc.) layout structure.
-- `ScrollArea.Root` + `ScrollArea.Viewport` inside `Panel.Content asChild` for scrollable content.
-- `Input.Root` / `Input.Label` / `Input.TextInput` for form fields.
-- `Button` (with `variant`) for actions.
-- `Clipboard.IconButton` for copy-to-clipboard.
-- `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
-- `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
-- `List.Root` for navigable lists that track current (`dx-current`) and selected (`dx-selected`) item states.
-- use `react-tabster` for navigation.
-
-IMPORTANT: Any deviation from standard UI components should require permission from the user.
-
-The only acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g., `p-4 space-y-4`) or responsive `@container` queries. If you find yourself writing custom styles, you are probably missing an existing UI component.
-
-**Standard article container pattern:**
-
-```tsx
-<Panel.Root role={role}>
-  <Panel.Toolbar asChild>
-    <Toolbar.Root>{/* toolbar content */}</Toolbar.Root>
-  </Panel.Toolbar>
-  <Panel.Content asChild>
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport classNames='p-4 space-y-4'>{/* Input.Root, Button, etc. */}</ScrollArea.Viewport>
-    </ScrollArea.Root>
-  </Panel.Content>
-</Panel.Root>
-```
-
-All imports from `@dxos/react-ui`: `Panel`, `ScrollArea`, `Input`, `Button`, `Clipboard`, `Toolbar`, `Card`, `Icon`, `useTranslation`.
-
-See: `plugin-chess/src/containers/ChessArticle/`, `plugin-discord/src/containers/BotArticle/`
+The detailed rules for building plugin UI with the design system live in the **composer-ui** skill
+(`.agents/skills/composer-ui/SKILL.md`). Consult it whenever you write a container/component, reach for a
+Tailwind color class, build a toolbar, edit an object with a form, or add a story. It covers: the
+`@dxos/react-ui*` packages, verified theme tokens (never invent `bg-input`/`text-primary`), the standard
+`Panel` + `ScrollArea` container layout (no wrapper divs), `MenuBuilder` + `useMenuActions` + `Menu.Root`
+toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no native inputs), the `Card`
+3-slot subgrid, icons, attention/density, reactivity (`useObject` for ECHO objects passed into
+components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
+the **composite-components** skill.
 
 ### Capability (`src/capabilities/`)
 
@@ -320,7 +267,7 @@ Providing a service inline (`Effect.provideService(AiContext.Service, …)` or `
 
 ### Schema (`src/types/`)
 
-ECHO type definitions using Effect Schema with `Type.object()`, `LabelAnnotation`, and `Annotation.IconAnnotation`. Use namespace re-exports (e.g., `export * as Chess from './Chess'`). Include a `make()` factory function using `Obj.make()`.
+ECHO type definitions using Effect Schema with `Type.makeObject()`, `LabelAnnotation`, and `Annotation.IconAnnotation`. Use namespace re-exports (e.g., `export * as Chess from './Chess'`). Include a `make()` factory function using `Obj.make()`.
 
 See: `plugin-chess/src/types/Chess.ts`
 
@@ -394,6 +341,7 @@ See: `plugin-chess/moon.yml`
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
 - All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
+- Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See the **composer-ui** skill.
 
 ## Build & Test
 

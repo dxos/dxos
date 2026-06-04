@@ -5,14 +5,12 @@
 /**
  * POST `/account/invitation-code/redeem` on hub-service. Unauthenticated.
  * Two-step signup: the redeemer supplies the invitation code + their identity
- * key + the email they want to register with (codes are anonymous at issue
+ * DID + the email they want to register with (codes are anonymous at issue
  * time). Optional fields are accepted because the server overloads this
  * endpoint with internal handling for some addresses; standard callers should
  * always pass all three.
  */
-export type RedeemResult =
-  | { accountId: string; emailVerificationSent: boolean }
-  | { needsIdentity: true };
+export type RedeemResult = { accountId: string; emailVerificationSent: boolean } | { needsIdentity: true };
 
 /**
  * POST `/account/invitation-code/validate` on hub-service. Returns true if the code
@@ -40,36 +38,38 @@ export const validateInvitationCode = async ({ hubUrl, code }: { hubUrl: string;
 export const joinWaitlist = async ({
   hubUrl,
   email,
-  identityKey,
+  identityDid,
   message,
 }: {
   hubUrl: string;
   email: string;
-  identityKey?: string;
+  identityDid?: string;
   message?: string;
 }): Promise<void> => {
   await fetch(new URL('/account/request-access', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, identityKey, message }),
+    body: JSON.stringify({ email, identityDid, message }),
   });
 };
 
 export const redeemAccountInvitation = async ({
   hubUrl,
   email,
+  identityDid,
   identityKey,
   code,
 }: {
   hubUrl: string;
   email: string;
+  identityDid?: string;
   identityKey?: string;
   code?: string;
 }): Promise<RedeemResult> => {
   const response = await fetch(new URL('/account/invitation-code/redeem', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, identityKey, code }),
+    body: JSON.stringify({ email, identityDid, identityKey, code }),
   });
   let envelope: { success: boolean; message?: string; data?: any };
   try {
@@ -92,24 +92,26 @@ export const redeemAccountInvitation = async ({
  * shape is identical for unknown emails (enumeration-safe).
  *
  * Test-email carve-out: test accounts are never restored. The server always
- * returns `{ needsIdentity: true }` when no `identityKey` is supplied. The
- * caller creates a fresh local identity and retries with `identityKey`; the
+ * returns `{ needsIdentity: true }` when no `identityDid` is supplied. The
+ * caller creates a fresh local identity and retries with `identityDid`; the
  * retry replaces any prior test Account on that email and returns
  * `{ admitted: true }` (no token, since there's nothing to recover).
  */
 export const login = async ({
   hubUrl,
   email,
+  identityDid,
   identityKey,
 }: {
   hubUrl: string;
   email: string;
+  identityDid?: string;
   identityKey?: string;
 }): Promise<{ token?: string; needsIdentity?: boolean; admitted?: boolean }> => {
   const response = await fetch(new URL('/account/login', hubUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, identityKey }),
+    body: JSON.stringify({ email, identityDid, identityKey }),
   });
   if (!response.ok) {
     throw new Error('login failed', { cause: response.statusText });

@@ -8,9 +8,9 @@ import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-db';
 import { type EchoHost } from '@dxos/echo-pipeline';
-import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
-import { DXN, type IdentityDid, type SpaceId } from '@dxos/keys';
+import { DXN, type IdentityDid, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -142,13 +142,13 @@ const collectObjectsFromDoc = (doc: DatabaseDirectory, out: Obj.JSON[]): void =>
 };
 
 /**
- * Convert an internal {@link ObjectStructure} into an {@link Obj.JSON}.
+ * Convert an internal {@link EntityStructure} into an {@link Obj.JSON}.
  *
  * Unlike the equivalent helper used for indexing, this preserves the object's
  * `@meta` section so archives produced by this writer can be round-tripped
  * through {@link Obj.fromJSON}.
  */
-export const objectStructureToObjJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+export const objectStructureToObjJson = (objectId: string, structure: EntityStructure): Obj.JSON => {
   const result: Record<string, unknown> = {
     [ATTR_ID]: objectId,
     [ATTR_TYPE]: (structure.system?.type?.['/'] ?? '') as any,
@@ -158,6 +158,12 @@ export const objectStructureToObjJson = (objectId: string, structure: ObjectStru
     result[ATTR_META] = {
       keys: structure.meta.keys ?? [],
       ...(structure.meta.tags ? { tags: structure.meta.tags } : {}),
+      // Preserve the registry-provenance fields (typename / semver) so persisted
+      // `Type.Type` entities round-trip with their `meta.key` / `meta.version`
+      // intact — `Type.getTypename` / `Type.getVersion` read these. Without them
+      // a type loaded from an archive would fall back to its object id.
+      ...(structure.meta.key !== undefined ? { key: structure.meta.key } : {}),
+      ...(structure.meta.version !== undefined ? { version: structure.meta.version } : {}),
     };
   }
   if (structure.system?.deleted) {
@@ -186,16 +192,16 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
       continue;
     }
 
-    const typeDXN = DXN.tryParse(obj[ATTR_TYPE] as string);
-    if (typeDXN?.asTypeDXN()?.type !== FEED_TYPENAME) {
+    const typeDxn = obj[ATTR_TYPE];
+    const typeDxnNsid = DXN.isDXN(typeDxn) ? DXN.getName(typeDxn) : undefined;
+    if (typeDxnNsid !== FEED_TYPENAME) {
       continue;
     }
 
     const namespace = (obj as any).namespace === 'trace' ? 'trace' : 'data';
-    const queueDXN = new DXN(DXN.kind.QUEUE, [namespace, spaceId, obj.id]);
 
     try {
-      const messages = await collectQueueMessages(echoHost, queueDXN);
+      const messages = await collectQueueMessages(echoHost, spaceId, obj.id, namespace);
       if (messages.length > 0) {
         feeds.push({
           feedObjectId: obj.id,
@@ -211,21 +217,23 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
   return feeds;
 };
 
-const collectQueueMessages = async (echoHost: EchoHost, queueDXN: DXN): Promise<Obj.JSON[]> => {
-  const parts = queueDXN.asQueueDXN();
-  invariant(parts, 'Expected a queue DXN');
-
-  const namespace =
-    parts.subspaceTag === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
+const collectQueueMessages = async (
+  echoHost: EchoHost,
+  spaceId: SpaceId,
+  queueId: EntityId,
+  namespace: string,
+): Promise<Obj.JSON[]> => {
+  const queuesNamespace =
+    namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
 
   const messages: Obj.JSON[] = [];
   let cursor: string | undefined;
   while (true) {
     const result = await echoHost.queuesService.queryQueue({
       query: {
-        spaceId: parts.spaceId,
-        queueIds: [parts.queueId],
-        queuesNamespace: namespace,
+        spaceId,
+        queueIds: [queueId],
+        queuesNamespace,
         after: cursor,
       },
     });
