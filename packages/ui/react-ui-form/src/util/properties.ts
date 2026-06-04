@@ -6,7 +6,13 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
-import { type SchemaProperty, getProperties } from '@dxos/effect';
+import { type SchemaProperty, getProperties, isArrayType, isNestedType } from '@dxos/effect';
+
+/** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
+const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST =>
+  prop.isOptional && SchemaAST.isUnion(prop.type)
+    ? (prop.type.types.find((type) => type._tag !== 'UndefinedKeyword') ?? prop.type)
+    : prop.type;
 
 /**
  * Get the property types of an AST and filter out properties that are not form inputs.
@@ -20,19 +26,29 @@ import { type SchemaProperty, getProperties } from '@dxos/effect';
  * For optional fields, `prop.type` is the union `T | undefined` — the annotation
  * lives on the inner `T`. Unwrap before reading so that the conventional pattern
  * `Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional)` works.
+ *
+ * Container properties (nested structs, unions, arrays) keep their *raw* AST rather than
+ * the `encodedBoundAST` produced by `getProperties`. `encodedBoundAST` strips annotations
+ * from non-keyword inner types, so a `FormInputAnnotation` nested beneath an encoded container
+ * (e.g. `RouteLeg.geometry`, reached via `Segment → details → routes → Route → legs`) would
+ * otherwise be lost by the time recursion reaches it. Leaf/transformation fields stay encoded
+ * (e.g. a `DateTime` still renders as its encoded string input).
  */
 export const getFormProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
+  const signatures = SchemaAST.getPropertySignatures(ast);
+  const rawByName = new Map<PropertyKey, SchemaAST.AST>(signatures.map((prop) => [prop.name, unwrapOptional(prop)]));
   const hidden = new Set(
-    SchemaAST.getPropertySignatures(ast)
-      .filter((prop) => {
-        // Unwrap `T | undefined` for optional fields so the inner annotation is visible.
-        const type =
-          prop.isOptional && SchemaAST.isUnion(prop.type)
-            ? (prop.type.types.find((t) => t._tag !== 'UndefinedKeyword') ?? prop.type)
-            : prop.type;
-        return Annotation.FormInputAnnotation.getFromAst(type).pipe(Option.getOrElse(() => true)) === false;
-      })
+    signatures
+      .filter(
+        (prop) =>
+          Annotation.FormInputAnnotation.getFromAst(unwrapOptional(prop)).pipe(Option.getOrElse(() => true)) === false,
+      )
       .map((prop) => prop.name),
   );
-  return getProperties(ast).filter((prop) => !hidden.has(prop.name));
+  return getProperties(ast)
+    .filter((prop) => !hidden.has(prop.name))
+    .map((prop) => {
+      const raw = rawByName.get(prop.name);
+      return raw && (isNestedType(raw) || isArrayType(raw)) ? { ...prop, type: raw } : prop;
+    });
 };

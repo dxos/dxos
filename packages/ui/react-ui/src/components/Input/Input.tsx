@@ -16,6 +16,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
@@ -41,8 +42,11 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
+import { translationKey } from '#translations';
+
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import {
   SegmentedDate,
@@ -125,31 +129,26 @@ Root.displayName = 'Input.Root';
 // when no field in the surrounding `Input.Root` has registered an opener.
 //
 
-type TriggerIconProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'button'>, 'children' | 'onClick'> & {
-    icon?: string;
-  }
->;
+// `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Input.TriggerIcon />`).
+type TriggerIconProps = Omit<IconButtonProps, 'label'> & { label?: string };
 
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
-  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, ...props }, forwardedRef) => {
+  ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const ctx = useContext(InputTriggerContext);
-    const { tx } = useThemeContext();
     if (!ctx?.hasTrigger) {
       return null;
     }
 
     return (
-      <button
-        type='button'
-        ref={forwardedRef}
-        aria-label={ariaLabel ?? 'Open picker'}
-        {...props}
+      <IconButton
+        variant='ghost'
+        icon={icon}
+        iconOnly
+        label={label ?? t('trigger-button.label')}
         onClick={ctx.trigger}
-        className={tx('input.triggerIcon', {}, classNames) ?? undefined}
-      >
-        <Icon size={4} icon={icon} />
-      </button>
+        {...props}
+      />
     );
   },
 );

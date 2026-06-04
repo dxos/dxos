@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import { Routing } from '@dxos/plugin-trip';
 
 import { type OsrmResponse } from './osrm-mapping';
@@ -26,7 +27,9 @@ export const fetchRoute = async (
   const path = coordinates.map(([lon, lat]) => `${lon},${lat}`).join(';');
   const url = `${baseUrl}/route/v1/driving/${path}?overview=full&geometries=geojson&steps=true`;
 
+  log('osrm route request', { url, waypoints: coordinates.length });
   const response = await fetchFn(url);
+  log('osrm route response', { status: response.status, ok: response.ok });
   if (!response.ok) {
     throw new Routing.RouteError(`OSRM request failed: ${response.status}`);
   }

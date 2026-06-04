@@ -11,8 +11,16 @@ export const CITY_COORDS: Record<string, [number, number]> = {
   barcelona: [2.1734, 41.3851],
   oxford: [-1.2577, 51.752],
   bath: [-2.3597, 51.3781],
+  birmingham: [-1.8904, 52.4862],
+  manchester: [-2.2426, 53.4808],
   paris: [2.3522, 48.8566],
   lyon: [4.8357, 45.764],
+  marseille: [5.3698, 43.2965],
+  brussels: [4.3517, 50.8503],
+  amsterdam: [4.9041, 52.3676],
+  geneva: [6.1432, 46.2044],
+  milan: [9.19, 45.4642],
+  madrid: [-3.7038, 40.4168],
 };
 
 const normalize = (name: string): string => name.trim().toLowerCase();

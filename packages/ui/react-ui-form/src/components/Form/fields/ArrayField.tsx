@@ -16,12 +16,13 @@ import {
   isNestedType,
 } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import { getFormProperties } from '../../../util';
 import { useFormValues } from '../Form';
-import { FormField, type FormFieldProps } from '../FormField';
+import { FormField, Nesting, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 
 export type ArrayFieldProps = {
@@ -96,7 +97,7 @@ export const ArrayField = ({
             <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
           </div>
           {!readonly && layout !== 'static' && (
-            <IconBlock icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
+            <IconBlock inline icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
           )}
         </div>
       )}
@@ -128,12 +129,7 @@ export const ArrayField = ({
 
           return (
             <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
-              {renderItemAsObject ? (
-                <div className='p-1 border border-subdued-separator'>{fieldField}</div>
-              ) : (
-                fieldField
-              )}
-
+              {renderItemAsObject ? <Nesting>{fieldField}</Nesting> : fieldField}
               {!readonly && layout !== 'static' && (
                 <IconBlock icon='ph--x--regular' label={t('remove-item.button')} onClick={() => handleDelete(index)} />
               )}
@@ -147,9 +143,9 @@ export const ArrayField = ({
 
 ArrayField.displayName = 'Form.ArrayField';
 
-const IconBlock = (props: IconButtonProps) => {
+const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
   return (
-    <div className='flex items-center h-full px-1'>
+    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col')}>
       <IconButton variant='ghost' density='xs' square iconOnly {...props} />
     </div>
   );
