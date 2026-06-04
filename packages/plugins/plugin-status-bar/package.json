@@ -80,14 +80,10 @@
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "date-fns": "catalog:",
-    "effect": "catalog:",
-    "react-resize-detector": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

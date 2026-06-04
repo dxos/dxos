@@ -407,6 +407,13 @@ export const FormInputAnnotationId = Symbol.for('@dxos/schema/annotation/FormInp
 export const FormInputAnnotation = createAnnotationHelper<boolean>(FormInputAnnotationId);
 
 /**
+ * When set on a `Ref` property, the form renders the referenced object's own
+ * fields inline (a nested form bound to the target) instead of a picker.
+ */
+export const FormInlineAnnotationId = Symbol.for('@dxos/schema/annotation/FormInline');
+export const FormInlineAnnotation = createAnnotationHelper<boolean>(FormInlineAnnotationId);
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
@@ -431,12 +438,16 @@ interface MakeAnnoationsProps<T> {
   schema: Schema.Schema<T, any, never>;
 }
 
-// TODO(wittjosiah): Comment.
+// Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
+// dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
+// At least 3 segments are required (e.g. org.dxos.annotation.example).
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
   assertArgument(
-    /^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/.test(props.id),
+    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
+      props.id,
+    ),
     'id',
-    'Annotation id must be in the FQN format (org.dxos.annotation.example).',
+    'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection).',
   );
 
   const annotation: Annotation.Annotation<T> = {

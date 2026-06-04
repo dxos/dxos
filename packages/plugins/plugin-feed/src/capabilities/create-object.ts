@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import { Operation, Routine } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -20,6 +20,9 @@ const DEFAULT_MAGAZINE_FEED = {
   url: 'https://www.eff.org/rss/updates.xml',
   type: 'rss',
 } as Subscription.Subscription;
+
+/** Example curation instructions seeded into every new Magazine's Routine. */
+const DEFAULT_MAGAZINE_INSTRUCTIONS = 'Prefer stories relating to sovereign AI.';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -77,11 +80,32 @@ export default Capability.makeModule(
 
             const initialFeeds = Option.isSome(seededFeed) ? [Ref.make(seededFeed.value)] : [];
             const object = Magazine.make({ ...props, feeds: initialFeeds });
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
+            const result = yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
               targetNodeId: options.targetNodeId,
             });
+
+            // Seed a curation Routine owned by (parented to) the Magazine. Cascade-deleted with it.
+            // Best-effort: a seeding failure must not abort Magazine creation.
+            yield* Effect.gen(function* () {
+              const routine = Routine.make({
+                name: 'Curation',
+                instructions: DEFAULT_MAGAZINE_INSTRUCTIONS,
+              });
+              Obj.setParent(routine, object);
+              yield* Operation.invoke(SpaceOperation.AddObject, {
+                object: routine,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+              Obj.update(object, (object) => {
+                (object as Obj.Mutable<typeof object>).routine = Ref.make(routine);
+              });
+            }).pipe(Effect.option);
+
+            return result;
           }),
       }),
     ];

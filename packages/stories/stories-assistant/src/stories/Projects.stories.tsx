@@ -13,7 +13,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';
@@ -56,10 +56,13 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
     }
 
     // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
+    const registry = makeRegistry({ initial: blueprintsDefinitions.map((def) => def.make()) });
     const blueprintObjects = blueprints
       .map((key) => {
-        const blueprint = blueprintRegistry.getByKey(key);
+        const blueprint = registry
+          .query(Filter.type(Blueprint.Blueprint))
+          .runSync()
+          .find((b) => Obj.getMeta(b).key === key);
         if (blueprint) {
           return space.db.add(Obj.clone(blueprint));
         }

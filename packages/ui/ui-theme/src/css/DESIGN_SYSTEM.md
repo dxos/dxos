@@ -6,13 +6,13 @@ This document describes how color tokens are organized in `ui-theme`, the naming
 
 Three layers, each consuming the one below:
 
-| Tier        | File                                         | Purpose                                                                                                                                                                                       | Example                                                                 |
-| ----------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 1. Scale    | [`theme/palette.css`](./theme/palette.css)   | Raw color values. Extends Tailwind's neutral/blue scales with intermediate stops and aliases the `primary-*` ramp to `blue-*`.                                                                | `--color-neutral-150`, `--color-primary-500`                            |
-| 2. Hue role | [`theme/styles.css`](./theme/styles.css)     | Per-hue role tokens generated mechanically for every Tailwind hue plus `neutral`. Five roles each: `fill`, `surface`, `foreground`, `text`, `border`. Light/dark resolved via `light-dark()`. | `--color-red-surface`, `--color-neutral-border`                         |
-| 3. Semantic | [`theme/semantic.css`](./theme/semantic.css) | Named UI surfaces and states. May reference hue-role tokens (e.g. `error-surface` → `rose-surface`) or compose directly from the scale.                                                       | `--color-card-surface`, `--color-current-surface`, `--color-error-text` |
+| Tier        | File                                         | Purpose                                                                                                                                                                 | Example                                                                 |
+| ----------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1. Scale    | [`theme/palette.css`](./theme/palette.css)   | Raw color values. Extends Tailwind's neutral/blue scales with intermediate stops and aliases the `primary-*` ramp to `blue-*`.                                          | `--color-neutral-150`, `--color-primary-500`                            |
+| 2. Hue role | [`theme/styles.css`](./theme/styles.css)     | Per-hue role tokens for every Tailwind hue plus `neutral`. Six roles each: `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`. Light/dark resolved via `light-dark()`. | `--color-red-surface`, `--color-neutral-border`                         |
+| 3. Semantic | [`theme/semantic.css`](./theme/semantic.css) | Named UI surfaces and states. May reference hue-role tokens (e.g. `error-surface` → `rose-surface`) or compose directly from the scale.                                 | `--color-card-surface`, `--color-current-surface`, `--color-error-text` |
 
-A consumer should reach for the highest tier that fits. Use `bg-card-surface`, not `bg-neutral-75`. Use `text-error-text`, not `text-rose-700`.
+A consumer should reach for the highest tier that fits. Use `bg-card-surface`, not `bg-neutral-825`. Use `text-error-text`, not `text-rose-700`.
 
 ## Naming convention
 
@@ -21,9 +21,10 @@ Token names follow `--color-{name}-{part}[-{state}]`:
 - **`name`** identifies the role or surface (`card`, `current`, `accent`, `error`, `red`).
 - **`part`** is one of a fixed vocabulary:
   - `surface` — the background fill of a thing.
-  - `foreground` — the text/icon color that sits on the surface (paired with `surface`).
+  - `fg` — the text/icon color that sits on the surface (paired with `surface`).
+  - `bg` — solid attention-grabbing fill (buttons, badges, indicators); more saturated than `surface`.
+  - `bg-hover` — hover state for `bg`.
   - `border` — border color on the surface.
-  - `fill` — solid attention-grabbing fill (badges, dots, indicators); more saturated than `surface`.
   - `text` — text color used standalone, on the base canvas (no enclosing surface).
 - **`state`** is optional, appended last: `hover`, `active` (pressed). State always follows the part it modifies.
 
@@ -36,21 +37,52 @@ Token names follow `--color-{name}-{part}[-{state}]`:
 
 ## Surfaces
 
-Layered fills, ordered from recessive to prominent:
+Surfaces are governed by a strict elevation ladder: **lighter = higher = closer to the viewer** in dark
+mode; inverted toward white in light mode. Every named surface token is an alias of exactly one
+`--dx-elevation-N` level. Never set a surface to a raw scale value — pick the level that matches the
+role and point the token there.
 
-```
-base-surface          n-50  / n-950   the page canvas
-deck-surface          n-50  / n-950   deck panes
-toolbar-surface       n-75  / n-925   toolbars
-card-surface          n-75  / n-925   cards
-group-surface         n-100 / n-900   grouped containers
-modal-surface         n-100 / n-900   modals / dialogs
-sidebar-surface       n-100 / n-900   sidebars
-header-surface        n-100 / n-900   headers
-input-surface         n-200 / n-800   form controls
+| Level | Name     | Dark    | Light   | Named surfaces                                                                |
+| ----- | -------- | ------- | ------- | ----------------------------------------------------------------------------- |
+| 0     | `void`   | `n-950` | `n-200` | scrim base, window gaps                                                       |
+| 1     | `rail`   | `n-900` | `n-175` | `l0-surface` (icon rail)                                                      |
+| 2     | `chrome` | `n-875` | `n-150` | `sidebar-surface`, `header-surface`, `l1-surface`, `r0-surface`, `r1-surface` |
+| 3     | `canvas` | `n-850` | `n-125` | `base-surface`, `deck-surface`                                                |
+| 4     | `raised` | `n-825` | `n-100` | `card-surface`, `group-surface`, `input-surface`                              |
+| 5     | `bar`    | `n-800` | `n-75`  | `toolbar-surface` (sticky, drop-shadowed)                                     |
+| 6     | `modal`  | `n-775` | `n-50`  | `modal-surface` (dialogs)                                                     |
+| 7     | `float`  | `n-750` | `white` | `popover-surface` (menus, popovers, toasts, tooltips)                         |
+
+The primitive `--dx-elevation-0…7` is defined in `semantic.css` using `light-dark()`. Raw scale values
+(`n-*`) are in `palette.css` — the table above is for human reference only.
+
+### Visual hierarchy (dark)
+
+```text
+popover/float   n-750  ↑ highest / closest to viewer
+modal/dialog    n-775
+toolbar         n-800  (sticky bar; content passes beneath)
+card/raised     n-825
+canvas/deck     n-850
+chrome/sidebar  n-875
+rail/L0         n-900
+void            n-950  ↓ lowest
 ```
 
 Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / n-50`).
+
+## Elevation primitive
+
+The `--dx-elevation-0…7` custom properties in `semantic.css` are the single source of truth for the
+surface ladder. They are private (`--dx-*` prefix) — never use them directly in component CSS; use the
+named surface tokens (`bg-card-surface`, `dx-modal-surface`, etc.) instead.
+
+When adding a new surface:
+
+1. Decide which elevation level the new surface belongs to (see the table above).
+2. Add `--color-<name>-surface: var(--dx-elevation-N);` in the Surfaces block of `semantic.css`.
+3. Add a matching `--color-<name>-fg` if text/icons sit on it.
+4. If the surface needs a utility class (like `dx-modal-surface`), add it to `surface.css`.
 
 ## State tokens (rationalized)
 
@@ -69,10 +101,10 @@ The system has three orthogonal states. Pick by what the ARIA / markup is saying
 
 **Why these three.** `current` describes one-of-N navigation/selection state ("you are here"); `selected` describes a checked item in a set (multi-select-able); `hover` is transient pointer feedback. Driving the distinction off ARIA keeps markup and tokens in sync.
 
-### Visual hierarchy
+### Visual hierarchy (state, dark)
 
-```
-card-surface          n-75  / n-925    resting
+```text
+card-surface          n-825    resting
 current-surface       n-100 / n-900    "I am the active one"
 current-surface-hover n-200 / n-800    hovering the active one
 hover-surface         n-250 / n-750    transient pointer-over anywhere else
@@ -91,10 +123,6 @@ These are merged into the rationalized state vocabulary:
 | `highlight-surface-text`  | `current-fg`            | Rename to the new `-fg` suffix.                                                                                                                                                   |
 | `*-surface-text` (all)    | `*-fg`                  | Repository-wide rename for every hue, semantic, and named-surface token (e.g. `base-surface-text` → `base-fg`, `red-surface-text` → `red-fg`, `error-surface-text` → `error-fg`). |
 
-### Visual change to expect
-
-The 9 `bg-active-surface` call sites become one shade subtler (from `n-200/800` to `n-100/900`). This aligns them with the existing `selected.css` treatment of `aria-current=true` and produces the coherent layering shown above.
-
 ### Out-of-scope drift to fix separately
 
 Two sites use `bg-hover-surface` as a _resting_ fill (not a hover state):
@@ -102,7 +130,7 @@ Two sites use `bg-hover-surface` as a _resting_ fill (not a hover state):
 - [packages/plugins/plugin-navtree/src/experimental/Tree.tsx:196](../../../../plugins/plugin-navtree/src/experimental/Tree.tsx)
 - [packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx:171](../../../../plugins/plugin-script/src/components/TestPanel/TestPanel.tsx)
 
-These should probably move to `card-surface` or `current-surface` depending on intent. Tracked as a follow-up; not part of this rationalization.
+These should probably move to `card-surface` or `current-surface` depending on intent. Tracked as a follow-up.
 
 ## Accent (primary)
 
@@ -148,11 +176,11 @@ Status colors point at hue-role tokens:
 | `warning-*` | `amber-*`   |
 | `error-*`   | `rose-*`    |
 
-Each provides `fill`, `surface`, `foreground`, `text`, `border`.
+Each provides `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`.
 
 ## Adding a new token
 
-1. Does an existing semantic token already cover it? If yes, use it.
+1. Does an existing semantic token already cover it? For a new named surface, check the elevation ladder first — the new surface probably fits an existing level and should alias `--dx-elevation-N` rather than a raw scale value.
 2. Does it represent a new named surface, state, or status? Add it to `semantic.css` referencing scale or hue-role tokens — never raw hex.
 3. Follow the suffix order: `{name}-{part}[-{state}]`.
 4. If the new token will be used through a Tailwind utility that the source-scan can't see (e.g. CSS file, dynamic class), add it to `@source inline(...)` in [`main.css`](./main.css).

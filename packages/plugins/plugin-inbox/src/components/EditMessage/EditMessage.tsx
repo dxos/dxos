@@ -123,11 +123,10 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               )}
             </Form.Content>
           </Column.Center>
-
-          <Column.Center>
+          <Column.Center classNames='pt-form-gap'>
             <Editor.Root>
               <Editor.View
-                classNames='dx-expander border border-subdued-separator'
+                classNames='dx-expander border border-separator'
                 extensions={extension}
                 initialValue={message.blocks?.find((b) => b._tag === 'text')?.text}
                 onChange={(value) => {
@@ -136,8 +135,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               />
             </Editor.Root>
           </Column.Center>
-
-          <Column.Center classNames='pb-form-gap'>
+          <Column.Center classNames='pb-form-padding'>
             <Form.Submit icon='ph--paper-plane-right--regular' label={t('send-email-button.label')} />
           </Column.Center>
         </Form.Root>

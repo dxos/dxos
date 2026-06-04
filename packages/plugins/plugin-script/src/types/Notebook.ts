@@ -30,10 +30,7 @@ export const Notebook = Schema.Struct({
   cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--notebook--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.notebook', '0.1.0')),
 );
 

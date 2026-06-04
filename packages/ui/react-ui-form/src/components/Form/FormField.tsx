@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
-import React, { useMemo } from 'react';
+import React, { PropsWithChildren, useMemo } from 'react';
 
-import { Format } from '@dxos/echo';
+import { Annotation, Format } from '@dxos/echo';
 import {
   createJsonPath,
   findNode,
@@ -20,8 +20,9 @@ import {
   isLiteralUnion,
   isNestedType,
 } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -31,6 +32,7 @@ import {
   BooleanField,
   DateField,
   GeoPointField,
+  InlineRefField,
   MarkdownField,
   NumberField,
   RefField,
@@ -230,6 +232,12 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
+    // Inline a single referenced object's own fields (nested form) instead of a picker.
+    const inline = Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
+    if (inline && !refProps.isArray) {
+      return <InlineRefField {...fieldProps} {...refProps} db={db} useType={schemaHook} onCreate={onCreate} />;
+    }
+
     const isCreateTarget = !createTypename || refProps.typename === createTypename;
     return (
       <RefField
@@ -260,23 +268,25 @@ export const FormField = (props: FormFieldProps) => {
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
       return (
-        <FormFieldSet
-          schema={schema}
-          path={path}
-          readonly={readonly}
-          layout={layout}
-          label={label}
-          projection={projection}
-          fieldMap={fieldMap}
-          fieldProvider={fieldProvider}
-          createOptionLabel={createOptionLabel}
-          createOptionIcon={createOptionIcon}
-          createInitialValuePath={createInitialValuePath}
-          db={db}
-          useType={schemaHook}
-          getOptions={getOptions}
-          onCreate={onCreate}
-        />
+        <Nesting>
+          <FormFieldSet
+            schema={schema}
+            path={path}
+            readonly={readonly}
+            layout={layout}
+            label={label}
+            projection={projection}
+            fieldMap={fieldMap}
+            fieldProvider={fieldProvider}
+            createOptionLabel={createOptionLabel}
+            createOptionIcon={createOptionIcon}
+            createInitialValuePath={createInitialValuePath}
+            db={db}
+            useType={schemaHook}
+            getOptions={getOptions}
+            onCreate={onCreate}
+          />
+        </Nesting>
       );
     }
   }
@@ -285,6 +295,26 @@ export const FormField = (props: FormFieldProps) => {
 };
 
 FormField.displayName = 'Form.FormField';
+
+//
+// Layout components
+//
+
+// TODO(burdon): Options (nested or flat).
+// TODO(burdon): Support collapsible.
+export const Nesting = ({ children }: PropsWithChildren) => (
+  <div className='px-2 border border-subdued-separator rounded-sm mt-2'>
+    <div className='pb-2'>{children}</div>
+  </div>
+);
+
+export const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
+  return (
+    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col pt-2.5')}>
+      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
+    </div>
+  );
+};
 
 /**
  * Get property input component.

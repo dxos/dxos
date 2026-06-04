@@ -7,6 +7,7 @@
 export {
   DescriptionAnnotation,
   FormInputAnnotation,
+  FormInlineAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
   ReferenceAnnotation,
@@ -106,16 +107,16 @@ interface MakeProps<T> {
 export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;
 
 /**
- * Get the value of an annotation from an entity instance.
+ * Get the value of an annotation from an entity instance or snapshot.
  * For schema-level reads use the annotation instance method (e.g. `ColorAnnotation.get(schema)`).
  * For getting an annotation value from a dictionary, use `getDictionary`.
  */
 export const get: {
-  <T>(annotation: Annotation<T>): (target: Entity.Unknown) => Option.Option<T>;
-  <T>(target: Entity.Unknown, annotation: Annotation<T>): Option.Option<T>;
+  <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
+  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>): Option.Option<T>;
 } = Function.dual<
-  <T>(annotation: Annotation<T>) => (target: Entity.Unknown) => Option.Option<T>,
-  <T>(target: Entity.Unknown, annotation: Annotation<T>) => Option.Option<T>
+  <T>(annotation: Annotation<T>) => (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>,
+  <T>(target: Entity.Unknown | Entity.Snapshot, annotation: Annotation<T>) => Option.Option<T>
 >(2, (target, annotation) => {
   return internalAnnotations.get(target, annotation);
 });
@@ -126,11 +127,11 @@ export const get: {
  * For setting an annotation value on a dictionary, use `setDictionary`.
  */
 export const set: {
-  <T>(annotation: Annotation<T>, value: T): (target: Entity.Unknown) => void;
-  <T>(target: Entity.Unknown, annotation: Annotation<T>, value: T): void;
+  <T>(annotation: Annotation<T>, value: T): (target: Entity.Mutable<Entity.Unknown>) => void;
+  <T>(target: Entity.Mutable<Entity.Unknown>, annotation: Annotation<T>, value: T): void;
 } = Function.dual<
-  <T>(annotation: Annotation<T>, value: T) => (target: Entity.Unknown) => void,
-  <T>(target: Entity.Unknown, annotation: Annotation<T>, value: T) => void
+  <T>(annotation: Annotation<T>, value: T) => (target: Entity.Mutable<Entity.Unknown>) => void,
+  <T>(target: Entity.Mutable<Entity.Unknown>, annotation: Annotation<T>, value: T) => void
 >(3, (target, annotation, value) => {
   return internalAnnotations.set(target, annotation, value);
 });

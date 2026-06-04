@@ -49,9 +49,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
@@ -62,9 +59,6 @@
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/protocols"
@@ -112,9 +106,6 @@
       "path": "../../ui/react-ui-components"
     },
     {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -136,15 +127,6 @@
       "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -155,9 +137,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

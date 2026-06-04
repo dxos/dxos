@@ -43,6 +43,7 @@ jobs:
         env:
           NODE_ENV: production
           LOG_FILTER: error
+          DX_EDGE_BASE_URL: https://edge-main.dxos.workers.dev
 
       - name: Write deploy metadata
         run: |

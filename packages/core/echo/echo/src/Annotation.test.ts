@@ -425,5 +425,15 @@ describe('Annotation', () => {
       expect(Option.isSome(result)).toBe(true);
       expect(Option.getOrThrow(result)).toBe('curried');
     });
+
+    test('get reads annotation from a snapshot', ({ expect }) => {
+      const person = Obj.make(Person, { name: 'Frank' });
+      Obj.update(person, (person) => {
+        Annotation.set(person, ColorAnnotation, 'snapshot-color');
+      });
+
+      const snapshot = Obj.getSnapshot(person);
+      expect(Option.getOrThrow(Annotation.get(snapshot, ColorAnnotation))).toBe('snapshot-color');
+    });
   });
 });

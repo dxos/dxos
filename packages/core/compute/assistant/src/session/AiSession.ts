@@ -46,6 +46,7 @@ export type RunProps<R = never> = {
 export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
+  /** @effect-atom/atom-react Registry for reactive state. */
   registry?: Registry.Registry;
 };
 

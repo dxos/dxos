@@ -44,10 +44,7 @@ export const Feed = Schema.Struct({
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
   internal.HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--rows--regular',
-    hue: 'yellow',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
   Type.makeObject(DXN.make('org.dxos.type.feed', '0.1.0')),
 );
 

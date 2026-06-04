@@ -55,7 +55,7 @@ export const handler = Effect.fn(function* ({
     yield* Console.log(
       JSON.stringify(
         {
-          identityKey: identity.identityKey.toHex(),
+          identityDid: identity.identityDid,
           displayName: identity.profile?.displayName,
         },
         null,

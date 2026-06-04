@@ -158,17 +158,9 @@ const CounterPlugin = Plugin.define(
 )();
 
 const plugins = [CounterPlugin];
-const placeholder = () => (
-  <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>
-    Initializing Application...
-  </div>
-);
 
 const DefaultStory = () => {
-  const App = useApp({
-    plugins,
-    placeholder,
-  });
+  const App = useApp({ plugins });
 
   return <App />;
 };

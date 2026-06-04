@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
 import { resolve, type Resolver } from '@dxos/extractor';
+import { normalizeText } from '@dxos/markdown';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../../apis';
-import { normalizeText, parseFromHeader } from '../../util';
+import { parseFromHeader } from '../../util';
 
 const getPart = (message: GoogleMail.Message, part: string) =>
   message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;

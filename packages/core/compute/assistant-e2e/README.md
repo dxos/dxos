@@ -1,6 +1,6 @@
 # @dxos/assistant-e2e
 
-Agent end-to-end tests that verify assistant behavior by running prompts against the full agent stack.
+Agent end-to-end tests that verify assistant behavior by running prompts against the full agent stack, using real composer plugins.
 
 ## Writing Tests
 

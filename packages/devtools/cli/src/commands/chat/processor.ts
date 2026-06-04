@@ -15,7 +15,7 @@ import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
@@ -98,7 +98,8 @@ export class ChatProcessor {
           // continue;
         }
 
-        const blueprint = blueprintRegistry.getByKey(key);
+        const candidate = blueprintRegistry.list().find((e) => Entity.getMeta(e)?.key === key);
+        const blueprint = candidate != null && Obj.instanceOf(Blueprint.Blueprint, candidate) ? candidate : undefined;
         if (!blueprint) {
           log.warn('blueprint not found', { key });
           return;

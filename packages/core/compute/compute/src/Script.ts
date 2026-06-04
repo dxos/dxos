@@ -22,10 +22,7 @@ export const Script = Schema.Struct({
   source: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--code--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--code--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.script', '0.1.0')),
 );
 

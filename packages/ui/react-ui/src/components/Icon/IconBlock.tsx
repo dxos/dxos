@@ -20,10 +20,15 @@ export type IconBlockProps = ThemedClassName<ComponentPropsWithRef<'div'> & Prop
  * elsewhere in the row.
  */
 export const IconBlock = forwardRef<HTMLDivElement, IconBlockProps>(
-  ({ classNames, children, compact, ...props }, forwardedRef) => {
+  ({ classNames, children, compact, square, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div aria-hidden='true' {...props} className={tx('icon.block', { compact }, classNames)} ref={forwardedRef}>
+      <div
+        aria-hidden='true'
+        {...props}
+        className={tx('icon.block', { compact, square }, classNames)}
+        ref={forwardedRef}
+      >
         {children}
       </div>
     );

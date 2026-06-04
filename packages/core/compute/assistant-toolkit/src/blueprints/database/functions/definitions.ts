@@ -53,7 +53,7 @@ export const Query = Operation.make({
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "dxn:echo:@:YYYYYY"}, {"/" : "dxn:echo:@:XXXXXXX"}],
+          "in": [{"/" : "echo:/YYYYYY"}, {"/" : "echo:/XXXXXXX"}],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
@@ -115,7 +115,7 @@ export const Load = Operation.make({
       Can load multiple objects at at time.
       Use the to read the data when you have a DXN.
       Call this tool with an array of one or more DXNs or object IDs.
-      When use see a reference ({ '/': 'dxn:...' }), you can call this function to load the object.
+      When use see a reference ({ '/': 'echo:...' }), you can call this function to load the object.
       Note that returned data is only a snapshot in time, and might have changed since the object was last loaded.
     `,
   },
@@ -134,8 +134,8 @@ export const ObjectCreate = Operation.make({
     description: trim`
       Creates a new object and adds it to the current space.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
-      References are provided in the following format: { "/": "dxn:..." }.
-      Reference examples: { "/": "dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "dxn:queue:data:01KG7R1ZXWFMWQ4DA1Q6TN1DG4:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      References are provided in the following format: { "/": "echo:..." }.
+      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
@@ -153,8 +153,8 @@ export const ObjectUpdate = Operation.make({
     icon: 'ph--pencil--regular',
     description: trim`
       Updates the object properties.
-      References are provided in the following format: { "/": "dxn:..." }.
-      Reference examples: { "/": "dxn:echo:@:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "dxn:queue:data:01KG7R1ZXWFMWQ4DA1Q6TN1DG4:01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      References are provided in the following format: { "/": "echo:..." }.
+      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
@@ -306,7 +306,7 @@ export const TagAdd = Operation.make({
     `,
   },
   input: Schema.Struct({
-    tag: Ref.Ref(Obj.Unknown),
+    tag: Ref.Ref(Tag.Tag),
     obj: Ref.Ref(Obj.Unknown),
   }),
   output: Schema.Unknown,
@@ -324,7 +324,7 @@ export const TagRemove = Operation.make({
     `,
   },
   input: Schema.Struct({
-    tag: Ref.Ref(Obj.Unknown),
+    tag: Ref.Ref(Tag.Tag),
     obj: Ref.Ref(Obj.Unknown),
   }),
   output: Schema.Unknown,

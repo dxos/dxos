@@ -197,3 +197,5 @@ node_modules
 
 # @dxos/introspect symbol cache (regenerated as needed).
 .dxos-introspect/
+
+.superpowers/

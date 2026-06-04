@@ -534,6 +534,21 @@ export class SpaceProxy implements Space, CustomInspectable {
     );
   }
 
+  async delete(): Promise<void> {
+    await this._deleteInternal(this._ctx);
+  }
+
+  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  private async _deleteInternal(ctx: Context): Promise<void> {
+    if (this._databaseOpen) {
+      await this._db.flush();
+    }
+    await this._clientServices.services.SpacesService!.updateSpace(
+      { spaceKey: this.key, state: SpaceState.SPACE_DELETED },
+      { timeout: RPC_TIMEOUT, ctx },
+    );
+  }
+
   /**
    * Waits until the space is in the ready state, with database initialized.
    */

@@ -6,21 +6,23 @@ import { type ChromaticPalette } from '@dxos/ui-types';
 
 export type Hue = ChromaticPalette | 'neutral';
 
-// TODO(burdon): Reconcile with ui-theme/theme/roles.css
+/**
+ * See theme.css
+ */
 export type ColorStyles = {
   hue: Hue;
-  fill: string; // -bg
-  surface: string; // -surface
-  foreground: string; // -fg
-  text: string; // -text
-  border: string; // -border
+  bg: string;
+  surface: string;
+  fg: string;
+  text: string;
+  border: string;
 };
 
 const neutral: ColorStyles = {
   hue: 'neutral',
-  fill: 'bg-neutral-bg',
+  bg: 'bg-neutral-bg',
   surface: 'bg-neutral-surface',
-  foreground: 'text-neutral-fg',
+  fg: 'text-neutral-fg',
   text: 'text-neutral-text',
   border: 'border-neutral-border',
 };
@@ -30,137 +32,137 @@ const neutral: ColorStyles = {
 const styles: ColorStyles[] = [
   {
     hue: 'red',
-    fill: 'bg-red-bg',
+    bg: 'bg-red-bg',
     surface: 'bg-red-surface',
-    foreground: 'text-red-fg',
+    fg: 'text-red-fg',
     text: 'text-red-text',
     border: 'border-red-border',
   },
   {
     hue: 'orange',
-    fill: 'bg-orange-bg',
+    bg: 'bg-orange-bg',
     surface: 'bg-orange-surface',
-    foreground: 'text-orange-fg',
+    fg: 'text-orange-fg',
     text: 'text-orange-text',
     border: 'border-orange-border',
   },
   {
     hue: 'amber',
-    fill: 'bg-amber-bg',
+    bg: 'bg-amber-bg',
     surface: 'bg-amber-surface',
-    foreground: 'text-amber-fg',
+    fg: 'text-amber-fg',
     text: 'text-amber-text',
     border: 'border-amber-border',
   },
   {
     hue: 'yellow',
-    fill: 'bg-yellow-bg',
+    bg: 'bg-yellow-bg',
     surface: 'bg-yellow-surface',
-    foreground: 'text-yellow-fg',
+    fg: 'text-yellow-fg',
     text: 'text-yellow-text',
     border: 'border-yellow-border',
   },
   {
     hue: 'lime',
-    fill: 'bg-lime-bg',
+    bg: 'bg-lime-bg',
     surface: 'bg-lime-surface',
-    foreground: 'text-lime-fg',
+    fg: 'text-lime-fg',
     text: 'text-lime-text',
     border: 'border-lime-border',
   },
   {
     hue: 'green',
-    fill: 'bg-green-bg',
+    bg: 'bg-green-bg',
     surface: 'bg-green-surface',
-    foreground: 'text-green-fg',
+    fg: 'text-green-fg',
     text: 'text-green-text',
     border: 'border-green-border',
   },
   {
     hue: 'emerald',
-    fill: 'bg-emerald-bg',
+    bg: 'bg-emerald-bg',
     surface: 'bg-emerald-surface',
-    foreground: 'text-emerald-fg',
+    fg: 'text-emerald-fg',
     text: 'text-emerald-text',
     border: 'border-emerald-border',
   },
   {
     hue: 'teal',
-    fill: 'bg-teal-bg',
+    bg: 'bg-teal-bg',
     surface: 'bg-teal-surface',
-    foreground: 'text-teal-fg',
+    fg: 'text-teal-fg',
     text: 'text-teal-text',
     border: 'border-teal-border',
   },
   {
     hue: 'cyan',
-    fill: 'bg-cyan-bg',
+    bg: 'bg-cyan-bg',
     surface: 'bg-cyan-surface',
-    foreground: 'text-cyan-fg',
+    fg: 'text-cyan-fg',
     text: 'text-cyan-text',
     border: 'border-cyan-border',
   },
   {
     hue: 'sky',
-    fill: 'bg-sky-bg',
+    bg: 'bg-sky-bg',
     surface: 'bg-sky-surface',
-    foreground: 'text-sky-fg',
+    fg: 'text-sky-fg',
     text: 'text-sky-text',
     border: 'border-sky-border',
   },
   {
     hue: 'blue',
-    fill: 'bg-blue-bg',
+    bg: 'bg-blue-bg',
     surface: 'bg-blue-surface',
-    foreground: 'text-blue-fg',
+    fg: 'text-blue-fg',
     text: 'text-blue-text',
     border: 'border-blue-border',
   },
   {
     hue: 'indigo',
-    fill: 'bg-indigo-bg',
+    bg: 'bg-indigo-bg',
     surface: 'bg-indigo-surface',
-    foreground: 'text-indigo-fg',
+    fg: 'text-indigo-fg',
     text: 'text-indigo-text',
     border: 'border-indigo-border',
   },
   {
     hue: 'violet',
-    fill: 'bg-violet-bg',
+    bg: 'bg-violet-bg',
     surface: 'bg-violet-surface',
-    foreground: 'text-violet-fg',
+    fg: 'text-violet-fg',
     text: 'text-violet-text',
     border: 'border-violet-border',
   },
   {
     hue: 'purple',
-    fill: 'bg-purple-bg',
+    bg: 'bg-purple-bg',
     surface: 'bg-purple-surface',
-    foreground: 'text-purple-fg',
+    fg: 'text-purple-fg',
     text: 'text-purple-text',
     border: 'border-purple-border',
   },
   {
     hue: 'fuchsia',
-    fill: 'bg-fuchsia-bg',
+    bg: 'bg-fuchsia-bg',
     surface: 'bg-fuchsia-surface',
-    foreground: 'text-fuchsia-fg',
+    fg: 'text-fuchsia-fg',
     text: 'text-fuchsia-text',
     border: 'border-fuchsia-border',
   },
   {
     hue: 'pink',
-    fill: 'bg-pink-bg',
+    bg: 'bg-pink-bg',
     surface: 'bg-pink-surface',
-    foreground: 'text-pink-fg',
+    fg: 'text-pink-fg',
     text: 'text-pink-text',
     border: 'border-pink-border',
   },
   {
     hue: 'rose',
-    fill: 'bg-rose-bg',
+    bg: 'bg-rose-bg',
     surface: 'bg-rose-surface',
-    foreground: 'text-rose-fg',
+    fg: 'text-rose-fg',
     text: 'text-rose-text',
     border: 'border-rose-border',
   },

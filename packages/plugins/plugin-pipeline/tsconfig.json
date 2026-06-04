@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/keys"
     },
     {
@@ -34,9 +31,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/assistant-toolkit"
     },
     {
       "path": "../../core/compute/compute"
@@ -78,9 +72,6 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -103,9 +94,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

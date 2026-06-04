@@ -3,3 +3,4 @@
 //
 
 export * as MemoizedAiService from './MemoizedAiService';
+export * as MemoizedLanguageModel from './MemoizedLanguageModel';

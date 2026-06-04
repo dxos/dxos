@@ -25,9 +25,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -55,13 +52,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -76,16 +70,10 @@
       "path": "../../sdk/app-toolkit"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../../ui/react-primitives/react-error-boundary"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -137,9 +125,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

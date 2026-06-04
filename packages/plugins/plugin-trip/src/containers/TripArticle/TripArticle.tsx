@@ -9,6 +9,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -19,13 +20,16 @@ import { mx } from '@dxos/ui-theme';
 
 import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
-import { Segment, Trip } from '#types';
+import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
-export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
+export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
+  /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
+  defaultShowGlobe?: boolean;
+};
 
 const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
 
-export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
+export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: TripArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
 
@@ -109,7 +113,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const mapProviders = useCapabilities(MapCapabilities.MarkerProvider);
   const mapAvailable = useMemo(() => mapProviders.some((provider) => provider.match(subject)), [mapProviders, subject]);
 
-  const [showGlobe, setShowGlobe] = useState(false);
+  const [showGlobe, setShowGlobe] = useState(defaultShowGlobe ?? false);
 
   const handleNavigate = useCallback(
     (segmentId: string) => {
@@ -145,8 +149,37 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     [subject, calendarSelection],
   );
 
+  // Computes driving routes for the trip's road segments via the registered RoutingService,
+  // writing distance / duration / geometry back onto each segment.
+  const [planning, setPlanning] = useState(false);
+  const hasRoad = useMemo(() => segments.some((seg) => seg.details._tag === 'road'), [segments]);
+  const handlePlanRoute = useCallback(async () => {
+    setPlanning(true);
+    try {
+      const { error } = await invokePromise(RoutingOperation.PlanRoute, { trip: subject });
+      if (error) {
+        throw error;
+      }
+    } catch (err) {
+      // Log the technical error; surface a friendly, non-technical toast. Known routing errors
+      // (no provider / geocode miss / OSRM failure) already carry user-facing messages.
+      log.catch(err);
+      const friendly =
+        err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
+      await invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.id}/plan-route-error`,
+        title: ['route.error.label', { ns: meta.id }],
+        description: friendly ?? ['route.error.message', { ns: meta.id }],
+        icon: 'ph--warning--regular',
+      });
+    } finally {
+      setPlanning(false);
+    }
+  }, [subject, invokePromise]);
+
   // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
-  // kinds and a globe on/off toggle, composed as data rather than hand-wired Toolbar children.
+  // kinds, a "plan route" action, and a globe on/off toggle, composed as data rather than
+  // hand-wired Toolbar children.
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().group(
       'add',
@@ -166,9 +199,29 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       },
     );
 
+    // Push the route + map controls together to the trailing edge (single separator, so they sit
+    // adjacent rather than spread apart).
+    if (hasRoad || mapAvailable) {
+      builder.separator();
+    }
+
+    // Offer route planning once the trip has at least one road segment to route.
+    if (hasRoad) {
+      builder.action(
+        'plan-route',
+        {
+          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.id }],
+          icon: 'ph--path--regular',
+          iconOnly: true,
+          disabled: planning,
+        },
+        () => void handlePlanRoute(),
+      );
+    }
+
     // Only offer the map toggle when a map surface can render this trip.
     if (mapAvailable) {
-      builder.separator().action(
+      builder.action(
         'toggle-globe',
         {
           label: ['globe.toggle.label', { ns: meta.id }],
@@ -181,7 +234,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     }
 
     return builder.build();
-  }, [handleAddSegment, showGlobe, mapAvailable]);
+  }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>

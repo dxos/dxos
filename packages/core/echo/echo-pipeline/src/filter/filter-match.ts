@@ -6,12 +6,32 @@ import * as semver from 'semver';
 
 import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, type EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
   id: EntityId;
   spaceId: SpaceId;
   doc: EntityStructure;
+};
+
+/**
+ * Matches a tag filter against an object's stored tags. Tags may be stored as encoded references or
+ * (in legacy data) bare URI strings, and those URIs may be in legacy DXN form. Both sides are
+ * normalized to the canonical EID before comparing, so a query by the modern id matches objects
+ * tagged before the migration (and vice versa). Shared by the doc and JSON match paths.
+ */
+const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
+  // Canonicalize a tag URI for comparison. For EIDs, compare by entity id so the local
+  // (`echo:/<id>`) and fully-qualified (`echo://<space>/<id>`) forms of the same object match, and
+  // legacy DXN ids normalize to the same id. Non-EID ids fall back to the raw string.
+  const canonical = (uri: string): string => {
+    const eid = EID.tryParse(uri);
+    return (eid && EID.getEntityId(eid)) || uri;
+  };
+  const normalize = (tag: unknown): string =>
+    canonical(isEncodedReference(tag) ? EncodedReference.toURI(tag) : (tag as string));
+  const target = canonical(filterTag);
+  return tags.some((tag) => normalize(tag) === target);
 };
 
 /**
@@ -71,8 +91,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'tag': {
-      const tags = EntityStructure.getTags(obj.doc);
-      return tags.some((tag) => tag === filter.tag);
+      return matchesTag(EntityStructure.getTags(obj.doc), filter.tag);
     }
 
     case 'text-search': {
@@ -190,8 +209,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     }
 
     case 'tag': {
-      const tags = obj[ATTR_META]?.tags ?? [];
-      return tags.some((tag) => tag === filter.tag);
+      return matchesTag(obj[ATTR_META]?.tags ?? [], filter.tag);
     }
 
     // TODO: Implement text search.
