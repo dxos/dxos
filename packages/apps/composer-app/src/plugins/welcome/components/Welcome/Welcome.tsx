@@ -580,20 +580,23 @@ const LoginTab = ({
         </Button>
       )}
       {primary === 'email' && (
-        <InlineForm
-          inputProps={{
-            autoFocus: true,
-            ref: emailRef,
-            placeholder: t('email-input.placeholder'),
-            value: emailValue,
-            onChange: (ev) => setEmailValue(ev.target.value.trim()),
-            onKeyDown: onEmailKeyDown,
-          }}
-          submitLabel={t('send-link-button.label')}
-          submitDisabled={!validEmail(emailValue) || pending}
-          onSubmit={onSendSignInLink}
-          validation={emailError ? t('email-error.message') : null}
-        />
+        <div className='flex flex-col gap-2'>
+          <p className='text-sm text-description'>{t('login-email.description')}</p>
+          <InlineForm
+            inputProps={{
+              autoFocus: true,
+              ref: emailRef,
+              placeholder: t('email-input.placeholder'),
+              value: emailValue,
+              onChange: (ev) => setEmailValue(ev.target.value.trim()),
+              onKeyDown: onEmailKeyDown,
+            }}
+            submitLabel={t('send-link-button.label')}
+            submitDisabled={!validEmail(emailValue) || pending}
+            onSubmit={onSendSignInLink}
+            validation={emailError ? t('email-error.message') : null}
+          />
+        </div>
       )}
       {primary === 'atproto' && onRecoverWithOAuth && (
         <div className='flex flex-col gap-2'>
