@@ -120,7 +120,8 @@
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "cjs-module-lexer": "catalog:",
+    "idb-keyval": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
