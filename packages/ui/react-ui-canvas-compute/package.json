@@ -27,7 +27,6 @@
   "dependencies": {
     "@antv/graphlib": "catalog:",
     "@antv/layout": "catalog:",
-    "workerize-loader": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -62,7 +61,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "chess.js": "catalog:"
+    "chess.js": "catalog:",
+    "workerize-loader": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

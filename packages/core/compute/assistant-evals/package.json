@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/assistant-e2e",
+  "name": "@dxos/assistant-evals",
   "version": "0.8.3",
   "private": true,
-  "description": "Assistant e2e tests.",
+  "description": "Evalite-based evaluations for the DXOS assistant.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -27,11 +27,11 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -40,7 +40,13 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "autoevals": "^0.0.132",
+    "effect": "catalog:",
+    "evalite": "^0.19.0",
+    "vitest": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   },

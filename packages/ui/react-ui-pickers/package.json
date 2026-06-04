@@ -36,8 +36,8 @@
     "@dxos/util": "workspace:*",
     "@emoji-mart/data": "catalog:",
     "@emoji-mart/react": "catalog:",
-    "emoji-mart": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
+    "emoji-mart": "catalog:",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {

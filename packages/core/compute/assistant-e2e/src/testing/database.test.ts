@@ -4,26 +4,22 @@
 
 import { describe, it } from '@effect/vitest';
 
-import { Routine } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { agentTest, DEFAULT_TEST_TIMEOUT, getDefaultBlueprints } from '../harness';
+import { agentTest, agentTestTimeout } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
 describe('Database', () => {
   it.effect(
     'create and query',
-    agentTest(
-      Routine.make({
-        instructions: trim`
-          Create a new organization called "Cyberdyne Systems".
-          Query the database to confirm that the organization is created and the query tool is working.
-        `,
-        blueprints: getDefaultBlueprints(),
-      }),
-    ),
-    { timeout: DEFAULT_TEST_TIMEOUT },
+    agentTest({
+      instructions: trim`
+        Create a new organization called "Cyberdyne Systems".
+        Query the database to confirm that the organization is created and the query tool is working.
+      `,
+    }),
+    { timeout: agentTestTimeout() },
   );
 });
