@@ -88,8 +88,10 @@ const stripWhitespace = (str: string): string => {
       .replace(/^(?!---$)[^\p{L}\p{N}\n]*$/gmu, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
-      // Trim trailing whitespace from every line.
-      .replace(/[ \t\u00A0]+$/gm, '')
+      // Trim trailing whitespace \u2014 including the invisible/zero-width chars (soft hyphen, zero-width
+      // space/joiners, word joiner, ZWNBSP) that `.trim()` and the visible-whitespace set miss \u2014 from
+      // every line.
+      .replace(new RegExp(`[${INVISIBLE}]+$`, 'gm'), '')
       // Keep a quoted block contiguous: drop blank lines between consecutive quoted (`>`) lines.
       // Turndown prefixes every blockquote line with `> `, so paragraph breaks within a quote
       // surface as a bare `> ` line that the no-letter pass above blanks; this rejoins them (and

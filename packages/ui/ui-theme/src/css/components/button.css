@@ -12,6 +12,12 @@
   .dx-button {
     @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
     @apply font-medium transition-colors duration-100 ease-linear bg-input-bg;
+    /* The default variant inherits ambient valence colors when rendered inside a valence surface
+     * (e.g. Message.Root, which sets --dx-valence-*); otherwise it falls back to the base input styling. */
+    &[data-variant='default'] {
+      color: var(--dx-valence-text, inherit);
+      background: var(--dx-valence-bg, var(--color-input-bg));
+    }
     &[aria-pressed='true'],
     &[aria-checked='true'] {
       @apply text-accent-text bg-attention-surface;
@@ -57,6 +63,20 @@
         @apply bg-hover-surface;
       }
 
+      &[data-variant='default']:hover {
+        color: var(--dx-valence-text);
+        background-color: var(--dx-valence-bg-hover, var(--color-hover-surface));
+      }
+
+      /* 
+       * Inside a valence surface the (otherwise transparent) ghost hover adopts the valence background;
+       * elsewhere it falls back to the standard hover surface. 
+       */
+      &[data-variant='ghost']:hover {
+        color: var(--dx-valence-text);
+        background-color: var(--dx-valence-bg, var(--color-hover-surface));
+      }
+
       &[data-variant='primary'] {
         @apply text-accent-fg bg-accent-bg;
         &:hover,
@@ -87,6 +107,7 @@
       }
     }
   }
+
   /* Props */
   .dx-button:not([data-props~='grouped']) {
     @apply rounded-xs;

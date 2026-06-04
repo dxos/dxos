@@ -450,4 +450,5 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 SegmentedDateTime.displayName = 'Input.SegmentedDateTime';
 
 export { SegmentedDate, SegmentedTime, SegmentedDateTime };
+
 export type { SegmentedDateProps, SegmentedTimeProps, SegmentedDateTimeProps };
