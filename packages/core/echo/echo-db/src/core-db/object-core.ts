@@ -17,7 +17,7 @@ import {
 import { EntityKind, type EntityMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -97,8 +97,10 @@ export class ObjectCore {
     this.doc = A.from<EntityStructure>({
       data: this.encode(initialProps),
       meta: this.encode({
-        keys: [],
         ...opts?.meta,
+        keys: opts?.meta?.keys ?? [],
+        tags: opts?.meta?.tags ?? [],
+        annotations: opts?.meta?.annotations ?? {},
       }),
       system: {},
     });
@@ -361,7 +363,8 @@ export class ObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this._getRaw(path)) as DecodedAutomergePrimaryValue;
+    const decoded = this.decode(this._getRaw(path));
+    return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
@@ -445,7 +448,9 @@ export class ObjectCore {
   }
 
   getMeta(): EntityMeta {
-    return this.getDecoded([META_NAMESPACE]) as EntityMeta;
+    // Codec boundary: raw decoded automerge data is returned typed as the logical `EntityMeta`
+    // (tags are encoded references at rest; the handler materializes them into live refs on access).
+    return this.getDecoded([META_NAMESPACE]) as unknown as EntityMeta;
   }
 
   setMeta(meta: EntityMeta): void {
@@ -548,6 +553,52 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
     return true;
   }
   return false;
+};
+
+/**
+ * Lazily normalizes `meta` on read so the now-required `tags`/`annotations` fields are always present,
+ * and upgrades legacy string entries in `meta.tags` (bare DXN/EID URIs) to {@link EncodedReference}s so
+ * they materialize as `Ref<Tag>` like any other reference. Mirrors {@link convertLegacyProtoReference}:
+ * the transform happens on read and persists physically only on the next write. This keeps data written
+ * before these fields existed (or before tags became refs) readable without an eager migration.
+ * Scoped strictly to the `meta` namespace so unrelated values in `data` are untouched.
+ */
+const upgradeMeta = (path: KeyPath, value: unknown): unknown => {
+  if (path[0] !== META_NAMESPACE) {
+    return value;
+  }
+  // Whole `meta` object: backfill required fields and upgrade tag ids.
+  if (path.length === 1 && value != null && typeof value === 'object') {
+    const meta = value as Record<string, unknown>;
+    return {
+      ...meta,
+      tags: Array.isArray(meta.tags) ? meta.tags.map(upgradeTagRef) : [],
+      annotations: meta.annotations ?? {},
+    };
+  }
+  // `meta.tags`: default to an empty array when absent; upgrade string entries.
+  if (path.length === 2 && path[1] === 'tags') {
+    return Array.isArray(value) ? value.map(upgradeTagRef) : [];
+  }
+  // `meta.annotations`: default to an empty dictionary when absent.
+  if (path.length === 2 && path[1] === 'annotations') {
+    return value ?? {};
+  }
+  // A single `meta.tags[i]` element.
+  if (path.length === 3 && path[1] === 'tags') {
+    return upgradeTagRef(value);
+  }
+  return value;
+};
+
+const upgradeTagRef = (value: unknown): unknown => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  // Normalize legacy DXN object references (e.g. `dxn:echo:@:<id>`) to the canonical `echo:` EID;
+  // leave non-EID ids (e.g. `dxn:type:…`) untouched.
+  const uri = EID.tryParse(value) ?? value;
+  return EncodedReference.fromURI(URI.make(uri));
 };
 
 // TODO(burdon): Move to echo-protocol.

@@ -30,9 +30,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

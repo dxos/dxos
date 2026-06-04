@@ -13,9 +13,12 @@ tasks:
     command: bun
     args:
       - ./scripts/build.ts
+    deps:
+      - ^:compile
     options:
       timeout: 60
     inputs:
+      - src/**/*
       - scripts/build.ts
       - bunfig.toml
       - package.json

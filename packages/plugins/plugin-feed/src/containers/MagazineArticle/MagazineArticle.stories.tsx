@@ -33,6 +33,7 @@ const DefaultStory = () => {
   if (!magazine) {
     return <Loading />;
   }
+
   return <MagazineArticle role='article' subject={magazine} attendableId='story' />;
 };
 
@@ -137,6 +138,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     if (!feedDXN) {
       throw new Error('Backing ECHO feed has no queue DXN — story setup is broken.');
     }
+
     const queue = space.queues.get(feedDXN);
     const feedRef = Ref.make(subscriptionFeed);
     const posts = [

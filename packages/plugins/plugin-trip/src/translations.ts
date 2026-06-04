@@ -51,6 +51,7 @@ export const translations = [
         'route.plan.label': 'Plan route',
         'route.planning.label': 'Planning route…',
         'route.error.label': 'Could not plan route.',
+        'route.error.message': 'Something went wrong planning this route. Check the stops and try again.',
       },
     },
   },

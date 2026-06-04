@@ -33,7 +33,6 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",

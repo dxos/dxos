@@ -135,7 +135,7 @@ export default Capability.makeModule(
                       properties: {
                         label: name,
                         icon: 'ph--funnel--regular',
-                        iconHue: 'neutral',
+                        iconHue: 'blue',
                         filter,
                       },
                       nodes: [

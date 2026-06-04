@@ -61,7 +61,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "chess.js": "catalog:"
+    "chess.js": "catalog:",
+    "workerize-loader": "catalog:"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

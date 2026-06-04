@@ -42,12 +42,10 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:"

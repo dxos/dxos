@@ -30,8 +30,9 @@ const interpolate = (value: number, from: [number, number], to: [number, number]
   return to[0] + t * (to[1] - to[0]);
 };
 
-const mapMapToGlobeZoom = (zoom: number) => interpolate(zoom, ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
-const mapGlobeToMapZoom = (zoom: number) => interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map);
+// Clamp map zoom-out to 4.
+const mapToGlobeZoom = (zoom: number) => interpolate(Math.max(4, zoom), ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
+const globeToMapZoom = (zoom: number) => Math.floor(interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map));
 
 export type MapControlType = 'globe' | 'map';
 
@@ -81,11 +82,11 @@ const MapArticleInner = ({
   attendableId,
   provider,
   tileUrl,
-  onSelect,
   type: typeProp = 'map',
   center: centerProp,
   zoom: zoomProp,
   onChange,
+  onSelect,
   role: _role,
   ...props
 }: MapArticleInnerProps) => {
@@ -118,7 +119,6 @@ const MapArticleInner = ({
 
   const handleSelect = useCallback((id: string) => onSelect?.(contextId, mode, id), [onSelect, contextId, mode]);
 
-  // Store zoom in map units; convert when emitted by the globe.
   const handleMapChange = useCallback(
     (ev: { center: LatLngLiteral; zoom: number }) => {
       setViewport(ev);
@@ -126,9 +126,10 @@ const MapArticleInner = ({
     },
     [onChange],
   );
+
   const handleGlobeChange = useCallback(
     (ev: { center: LatLngLiteral; zoom: number }) => {
-      const mapped = { center: ev.center, zoom: mapGlobeToMapZoom(ev.zoom) };
+      const mapped = { center: ev.center, zoom: globeToMapZoom(ev.zoom) };
       setViewport(mapped);
       onChange?.(mapped);
     },
@@ -156,7 +157,7 @@ const MapArticleInner = ({
       selected={selected}
       onSelect={handleSelect}
       center={viewport.center}
-      zoom={mapMapToGlobeZoom(viewport.zoom)}
+      zoom={mapToGlobeZoom(viewport.zoom)}
       onChange={handleGlobeChange}
       onToggle={() => setType('map')}
     />

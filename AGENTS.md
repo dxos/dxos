@@ -78,11 +78,9 @@
 
 ## Workflow
 
-- Never work on `main`
-  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
-  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
-  - If there are unstaged changes, stash these and move them into the worktree.
+- Never work on `main`; always work within the session-generated worktree.
+  - If there are unstaged changes, stash these and move them into the worktree; tell the user.
+  - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
   - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
@@ -132,7 +130,7 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push all pending changes.
+  - Commit and push all pending changes (including any edits that the user may have made in the worktree).
   - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch

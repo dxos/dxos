@@ -27,10 +27,7 @@ const TableSchema = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--table--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--table--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.table', '0.1.0')),
 );
 

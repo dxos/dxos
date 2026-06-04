@@ -65,7 +65,7 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
               title,
               content: {
                 ...block,
-                result: safeParseJson(block.result),
+                result: typeof block.result === 'string' ? safeParseJson(block.result) : block.result,
               },
             };
           }

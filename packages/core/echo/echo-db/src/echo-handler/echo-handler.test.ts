@@ -17,7 +17,7 @@ import {
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
@@ -643,10 +643,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('can set meta on a non-ECHO object', async () => {
       const obj = Obj.make(TestSchema.Expando, { string: 'foo' });
-      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [] });
+      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [], tags: [], annotations: {} });
       const testKey = { source: 'test', id: 'hello' };
       Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push(testKey));
-      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey] });
+      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey], tags: [], annotations: {} });
       expect(() => Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push(1 as any))).to.throw();
     });
 
@@ -761,16 +761,17 @@ describe('Reactive Object with ECHO database', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
+      const importantUri = 'dxn:echo:@:TAGIMPORTANT';
       const org = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'DXOS',
-          [Obj.Meta]: { tags: ['important'] },
+          [Obj.Meta]: { tags: [Ref.fromURI(URI.make(importantUri))] },
         }),
       );
 
       log.info('', { acc: createDocAccessor(org, []).handle.doc() });
 
-      expect(Obj.getMeta(org).tags).toEqual(['important']);
+      expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toEqual([importantUri]);
     });
   });
 

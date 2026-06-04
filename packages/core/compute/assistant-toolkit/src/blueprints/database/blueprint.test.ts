@@ -10,7 +10,7 @@ import { Database, Entity, Feed, Filter, Obj, Query, Ref, Relation, Scope, Tag, 
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -263,9 +263,10 @@ describe('Database Blueprint', () => {
         const tag = yield* Database.add(Tag.make({ label: 'important' }));
         yield* agent.submitPrompt(`Add tag "important" to the organization "Tagged Corp".`);
         yield* agent.waitForCompletion();
-        const tags = Obj.getMeta(org).tags ?? [];
-        // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).toContain(Obj.getURI(tag));
+        // Compare by entity id: a same-space ref stores a local EID (`echo:/<id>`) while
+        // `Obj.getURI` returns the fully-qualified form (`echo://<space>/<id>`).
+        const taggedIds = Obj.getMeta(org).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
+        expect(taggedIds).toContain(tag.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -282,14 +283,13 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        const tagUri = Obj.getURI(tag);
-        Entity.update(org, (org) => Entity.addTag(org, tagUri));
-        expect(Obj.getMeta(org).tags ?? []).toContain(tagUri);
+        // Compare by entity id (local vs fully-qualified EID forms refer to the same object).
+        const taggedIds = () => Obj.getMeta(org).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
+        Entity.update(org, (org) => Entity.addTag(org, Ref.make(tag)));
+        expect(taggedIds()).toContain(tag.id);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
-        const tags = Obj.getMeta(org).tags ?? [];
-        // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).not.toContain(tagUri);
+        expect(taggedIds()).not.toContain(tag.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

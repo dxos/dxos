@@ -80,6 +80,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
       <Popover.Trigger asChild>
         <StatusBar.Item>
           <IconButton
+            variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
             label={t(`trigger-status-${triggerState}.label`)}

@@ -60,8 +60,6 @@
     "@dxos/cli-util": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

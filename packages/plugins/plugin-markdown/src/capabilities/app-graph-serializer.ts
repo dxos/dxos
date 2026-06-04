@@ -3,10 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Collection, Obj, Type } from '@dxos/echo';
+import { AppCapabilities, RootCollectionAnnotation } from '@dxos/app-toolkit';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { isSpace } from '@dxos/react-client/echo';
 
@@ -40,7 +41,7 @@ export default Capability.makeModule(
           const space = ancestors.find(isSpace);
           const target =
             ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
-            space?.properties[Type.getTypename(Collection.Collection)]?.target;
+            (space && Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target);
           if (!space || !target) {
             return;
           }

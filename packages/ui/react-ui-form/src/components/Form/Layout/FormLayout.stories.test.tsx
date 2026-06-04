@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { cleanup, screen, within } from '@testing-library/react';
+import { act, cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import * as stories from './FormLayout.stories';
@@ -11,7 +11,10 @@ import * as stories from './FormLayout.stories';
 const { NestedLabel, NestedLabelStatic } = composeStories(stories);
 
 describe('FormLayout — nested fields', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
   });
 

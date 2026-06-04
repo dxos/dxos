@@ -29,6 +29,7 @@ export const meta = Plugin.makeMeta({
     wired into keyboard shortcuts, command palettes, and AI assistants via the OperationHandlerSet.
   `,
   icon: 'ph--magnifying-glass--regular',
+  iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-search',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],

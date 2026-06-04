@@ -45,6 +45,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -97,9 +100,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

@@ -24,7 +24,7 @@ export const meta = Plugin.makeMeta({
     A Blueprint is also included so AI assistants can create and update maps on behalf of the user.
   `,
   icon: 'ph--compass--regular',
-  iconHue: 'green',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
