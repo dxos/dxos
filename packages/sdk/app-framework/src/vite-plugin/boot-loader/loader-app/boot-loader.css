@@ -259,6 +259,7 @@ body {
 
 #boot-loader-rss {
   background: var(--boot-loader-bg-light, #fafafa);
+  text-wrap: balance;
 }
 @media (prefers-color-scheme: dark) {
   #boot-loader-rss {

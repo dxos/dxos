@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
 
@@ -101,6 +101,9 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
 
   return (
     <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         {drafts.length === 0 ? (
           <div className='p-4 text-subdued'>{t('drafts.empty.message')}</div>
