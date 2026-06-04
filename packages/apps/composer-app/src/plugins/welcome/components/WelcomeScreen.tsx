@@ -14,11 +14,13 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
+import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
 import { removeQueryParamByValue } from '../../../util';
 import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
 import { meta } from '../meta';
 import { WelcomeOperation } from '../operations';
+import { translations } from '../translations';
 import { Welcome, WelcomeState } from './Welcome';
 
 export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
@@ -289,22 +291,26 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     [hubUrl, identity],
   );
 
+  // The welcome surface has a fixed dark gradient backdrop, so force dark mode regardless of the
+  // app/system theme (DXOS resolves theme via ThemeProvider's themeMode, not a `.dark` class).
   return (
-    <Welcome
-      state={state}
-      error={error}
-      identity={identity}
-      onEmailLogin={handleLogin}
-      onPasskey={!identity ? handlePasskey : undefined}
-      onJoinIdentity={!identity ? handleJoinIdentity : undefined}
-      onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
-      onRecoverWithOAuth={!identity ? handleRecoverWithOAuth : undefined}
-      onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
-      onCreateAccount={!identity ? handleCreateAccount : undefined}
-      onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
-      onJoinWaitlist={handleJoinWaitlist}
-      onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
-      onGoToLogin={handleGoToLogin}
-    />
+    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={translations}>
+      <Welcome
+        state={state}
+        error={error}
+        identity={identity}
+        onEmailLogin={handleLogin}
+        onPasskey={!identity ? handlePasskey : undefined}
+        onJoinIdentity={!identity ? handleJoinIdentity : undefined}
+        onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
+        onRecoverWithOAuth={!identity ? handleRecoverWithOAuth : undefined}
+        onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
+        onCreateAccount={!identity ? handleCreateAccount : undefined}
+        onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
+        onJoinWaitlist={handleJoinWaitlist}
+        onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
+        onGoToLogin={handleGoToLogin}
+      />
+    </ThemeProvider>
   );
 };
