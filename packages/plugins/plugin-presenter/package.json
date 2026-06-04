@@ -98,13 +98,13 @@
     "@effect-atom/atom-react": "catalog:",
     "hastscript": "catalog:",
     "highlight.js": "catalog:",
+    "marked": "catalog:",
     "react-markdown": "catalog:",
     "react-resize-detector": "catalog:",
     "rehype-add-classes": "catalog:",
     "rehype-highlight": "catalog:",
     "remark-frontmatter": "catalog:",
     "remark-parse-frontmatter": "catalog:",
-    "marked": "catalog:",
     "reveal.js": "catalog:"
   },
   "devDependencies": {
