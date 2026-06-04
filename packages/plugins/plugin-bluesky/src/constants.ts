@@ -8,6 +8,19 @@ export const BLUESKY_PROVIDER_ID = 'bluesky';
 /** `AccessToken.source` and `Obj.Meta.keys[i].source` for Bluesky. */
 export const BLUESKY_SOURCE = 'bsky.app';
 
+/**
+ * `IntegrationProvider.id` for the Atmosphere integration: the same atproto OAuth flow as Bluesky
+ * but without any sync targets. Its Integrations are also created by the OAuth account-recovery
+ * flow, which routes `providerId` here.
+ */
+export const ATMOSPHERE_PROVIDER_ID = 'atmosphere';
+
+/**
+ * `AccessToken.source` for the Atmosphere integration. atproto accounts are portable — the PDS and
+ * handle can change — so we don't pin to a hostname.
+ */
+export const ATMOSPHERE_SOURCE = 'atproto.local';
+
 /** Public read-only XRPC base — works for any public actor / public feed. */
 export const BSKY_PUBLIC_API = 'https://public.api.bsky.app/xrpc';
 

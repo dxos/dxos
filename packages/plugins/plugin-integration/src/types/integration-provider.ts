@@ -119,12 +119,6 @@ export type IntegrationProviderEntry = {
   source: string;
   /** User-facing label; defaults to `id` when omitted. */
   label?: string;
-  /**
-   * When true, the provider is omitted from the manual "add integration" picker. Use for
-   * credential-only providers whose Integrations are created by another flow (e.g. OAuth account
-   * recovery) rather than selected by the user. Lookups by `id` still resolve it.
-   */
-  hidden?: boolean;
   oauth?: IntegrationOAuthSpec;
   getSyncTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
   sync?: Operation.Definition<IntegrationSyncInput, IntegrationSyncOutput>;

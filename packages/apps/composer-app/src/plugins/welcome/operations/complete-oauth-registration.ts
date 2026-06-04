@@ -11,32 +11,13 @@ import { Context as DxContext } from '@dxos/context';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE } from '@dxos/plugin-bluesky';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATPROTO_PROVIDER_ID, ATPROTO_SOURCE, Integration } from '@dxos/plugin-integration';
-import { OAuthProvider } from '@dxos/protocols';
+import { Integration } from '@dxos/plugin-integration';
 import { AccessToken } from '@dxos/types';
 
 import { CompleteOAuthRegistration } from './definitions';
 import { createEdgeHttpClient } from './shared';
-
-/**
- * Maps OAuth provider to the value stored as `AccessToken.source`. atproto accounts are portable —
- * the PDS and handle can change over the account's lifetime — so we don't pin to a PDS hostname.
- * TODO(wittjosiah): This is currently required to be a hostname. Loosen requirements?
- */
-const SOURCE_BY_PROVIDER: Record<string, string> = {
-  [OAuthProvider.GOOGLE]: 'google.com',
-  [OAuthProvider.ATPROTO]: ATPROTO_SOURCE,
-};
-
-/**
- * Maps OAuth provider to the `Integration.providerId` for the wrapping Integration. atproto routes
- * to the default credential-only atproto provider (no sync). Providers without a default integration
- * provider leave `providerId` unset.
- */
-const PROVIDER_ID_BY_PROVIDER: Record<string, string> = {
-  [OAuthProvider.ATPROTO]: ATPROTO_PROVIDER_ID,
-};
 
 /**
  * Completes OAuth recovery registration for the local identity. Submits the registration token plus
@@ -75,10 +56,10 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
       // Materialize the AccessToken object keyed by the returned id so rotated tokens can be written
       // back onto it; without it the stored refresh token is treated as orphaned and dropped.
       yield* Effect.promise(() => personalSpace.waitUntilReady());
-      const source = SOURCE_BY_PROVIDER[result.provider] ?? result.provider;
+      // OAuth recovery is atproto-only; the token belongs to the Atmosphere integration.
       const tokenObject = Obj.make(AccessToken.AccessToken, {
         id: result.accessTokenId,
-        source,
+        source: ATMOSPHERE_SOURCE,
         account: result.identifier,
         token: result.accessToken,
         scopes: result.scopes,
@@ -104,7 +85,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
         personalSpace.db.add(
           Integration.make({
             name: result.email ?? result.identifier,
-            providerId: PROVIDER_ID_BY_PROVIDER[result.provider],
+            providerId: ATMOSPHERE_PROVIDER_ID,
             accessToken: Ref.make(tokenObject),
             targets: [],
           }),

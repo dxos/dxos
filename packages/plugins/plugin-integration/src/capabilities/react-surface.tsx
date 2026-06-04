@@ -72,10 +72,7 @@ export default Capability.makeModule(() =>
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
           const providers = useCapabilities(IntegrationProvider).flat();
           const options = useMemo(
-            () =>
-              providers
-                .filter((provider) => !provider.hidden)
-                .map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
+            () => providers.map((provider) => ({ value: provider.id, label: provider.label ?? provider.id })),
             [providers],
           );
           if (!fieldPropertyAst) {

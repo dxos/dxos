@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { type CredentialForm, IntegrationProvider as IntegrationProviderCapability } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
 import { BlueskyOperation } from '../operations';
 import { BlueskyTargetOptions } from '../types';
 
@@ -78,6 +78,22 @@ export default Capability.makeModule(
         optionsSchema: BlueskyTargetOptions,
         getSyncTargets: BlueskyOperation.GetBlueskyTargets,
         sync: BlueskyOperation.SyncBlueskyTargets,
+      },
+      {
+        // Atmosphere: the same atproto OAuth flow as Bluesky but credential-only — no sync targets.
+        // Used to connect an atproto account without syncing feeds, and as the provider the OAuth
+        // account-recovery flow routes its Integration to.
+        id: ATMOSPHERE_PROVIDER_ID,
+        source: ATMOSPHERE_SOURCE,
+        label: 'Atmosphere',
+        oauth: {
+          provider: OAuthProvider.ATPROTO,
+          scopes: [...BSKY_OAUTH_SCOPES],
+          // bsky.social nullifies window.opener, so popup + postMessage
+          // can't be used; rely on Edge redirecting to `/redirect/oauth`.
+          useRedirectFlow: true,
+        },
+        credentialForm,
       },
     ]);
   }),
