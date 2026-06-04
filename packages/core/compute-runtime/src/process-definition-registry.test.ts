@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import { describe, test } from 'vitest';
 
 import { Process } from '@dxos/compute';
 
 import { ProcessDefinitionRegistry } from './process-definition-registry';
 
 describe('ProcessDefinitionRegistry', () => {
-  it('registers and resolves definitions by key', ({ expect }) => {
+  test('registers and resolves definitions by key', ({ expect }) => {
     const definition = Process.make({ key: 'test.demo', input: Schema.Void, output: Schema.Void, services: [] }, () =>
       Effect.succeed({
         onSpawn: () => Effect.void,

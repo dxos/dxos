@@ -13,10 +13,12 @@ import type { Process } from '@dxos/compute';
 export class ProcessDefinitionRegistry {
   readonly #byKey = new Map<string, Process.Process<any, any, any>>();
 
+  /** Registers a process definition, replacing any previously registered entry with the same key. */
   register(definition: Process.Process<any, any, any>): void {
     this.#byKey.set(definition.key, definition);
   }
 
+  /** Returns the definition registered under the given key, or `undefined` if none exists. */
   get(key: string): Process.Process<any, any, any> | undefined {
     return this.#byKey.get(key);
   }

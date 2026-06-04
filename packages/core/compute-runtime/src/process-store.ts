@@ -87,6 +87,7 @@ export class ProcessStore {
     return lock;
   }
 
+  /** Returns the IDs of all persisted processes. */
   listProcessIds(): Effect.Effect<readonly Process.ID[]> {
     return Effect.gen(this, function* () {
       const raw = yield* this.#kv.get(INDEX_KEY).pipe(Effect.orDie);
@@ -97,6 +98,7 @@ export class ProcessStore {
     });
   }
 
+  /** Returns the persisted record for the given process ID, or `undefined` if not found. */
   getProcess(id: Process.ID): Effect.Effect<PersistedProcess | undefined> {
     return Effect.gen(this, function* () {
       const raw = yield* this.#kv.get(recordKey(id)).pipe(Effect.orDie);
@@ -107,6 +109,7 @@ export class ProcessStore {
     });
   }
 
+  /** Returns all persisted process records. */
   listProcesses(): Effect.Effect<readonly PersistedProcess[]> {
     return Effect.gen(this, function* () {
       const ids = yield* this.listProcessIds();
@@ -115,6 +118,7 @@ export class ProcessStore {
     });
   }
 
+  /** Persists a process record, adding it to the index if it is not already present. */
   putProcess(record: PersistedProcess): Effect.Effect<void> {
     return this.#lock(record.id).withPermits(1)(
       Effect.gen(this, function* () {
@@ -133,6 +137,7 @@ export class ProcessStore {
     );
   }
 
+  /** Removes the process record and its index entry, and frees in-memory seq/lock state. */
   deleteProcess(id: Process.ID): Effect.Effect<void> {
     return this.#lock(id).withPermits(1)(
       Effect.gen(this, function* () {
@@ -160,14 +165,17 @@ export class ProcessStore {
     );
   }
 
+  /** Updates the lifecycle state of the given process. */
   setState(id: Process.ID, state: Process.State): Effect.Effect<void> {
     return this.#modify(id, (record) => ({ ...record, state }));
   }
 
+  /** Updates the alarm due-time for the given process, or clears it when `null`. */
   setAlarm(id: Process.ID, alarmDueAt: number | null): Effect.Effect<void> {
     return this.#modify(id, (record) => ({ ...record, alarmDueAt }));
   }
 
+  /** Appends an event to the process event journal and returns the assigned sequence number. */
   appendEvent(id: Process.ID, event: PersistedEventInput): Effect.Effect<number> {
     return Effect.gen(this, function* () {
       const seq = (this.#seq.get(id) ?? 0) + 1;
@@ -181,6 +189,7 @@ export class ProcessStore {
     });
   }
 
+  /** Removes the event with the given sequence number from the process event journal. */
   removeEvent(id: Process.ID, seq: number): Effect.Effect<void> {
     return this.#modify(id, (record) => ({ ...record, events: record.events.filter((event) => event.seq !== seq) }));
   }
