@@ -225,11 +225,11 @@ Follow-up PRs:
 
 ## Defaults
 
-| Knob                     | Default                           | Notes                                         |
-| ------------------------ | --------------------------------- | --------------------------------------------- |
-| Model                    | `ai.claude.model.claude-haiku-4-5`     | Same as `update-chat-name` / `qualifier`.     |
-| Pass A window            | 8 transcript blocks               | Approximately 30 s at default Whisper config. |
-| Pass A concurrency       | Latest-wins (interrupt in-flight) | One fiber per article.                        |
-| Pass B silence threshold | 5 000 ms                          | Re-arms on next speech edge.                  |
-| Pass B min interval      | 60 000 ms                         | Lower bound on summary cadence.               |
-| Pass B concurrency       | Skip-if-busy                      | Avoids piling up cumulative calls.            |
+| Knob                     | Default                            | Notes                                         |
+| ------------------------ | ---------------------------------- | --------------------------------------------- |
+| Model                    | `ai.claude.model.claude-haiku-4-5` | Same as `update-chat-name` / `qualifier`.     |
+| Pass A window            | 8 transcript blocks                | Approximately 30 s at default Whisper config. |
+| Pass A concurrency       | Latest-wins (interrupt in-flight)  | One fiber per article.                        |
+| Pass B silence threshold | 5 000 ms                           | Re-arms on next speech edge.                  |
+| Pass B min interval      | 60 000 ms                          | Lower bound on summary cadence.               |
+| Pass B concurrency       | Skip-if-busy                       | Avoids piling up cumulative calls.            |

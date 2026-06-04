@@ -135,7 +135,8 @@ const runAgentPrompt = (harness: TestHarness, prompt: Routine.Routine, model: Mo
 
 export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Effect.Effect<void, any>) => {
   const model =
-    options.model ?? (options.inferenceProvider === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+    options.model ??
+    (options.inferenceProvider === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
 
   const prompt = Routine.make({
     name: options.name,
