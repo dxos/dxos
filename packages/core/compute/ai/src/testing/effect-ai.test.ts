@@ -324,7 +324,7 @@ describe('LanguageModel', () => {
   ); //
 });
 
-const TestLayer = Layer.mergeAll(testingLayer, CalculatorLayer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+const TestLayer = Layer.mergeAll(testingLayer, CalculatorLayer, AiService.model('ai.claude.model.claude-sonnet-4-0')).pipe(
   Layer.provideMerge(MemoizedAiService.layerTest()),
   Layer.provide(AiServiceTestingPreset('direct')),
 );

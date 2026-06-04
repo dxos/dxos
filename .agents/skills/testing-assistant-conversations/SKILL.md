@@ -13,7 +13,7 @@ Import from `@dxos/assistant/testing`.
 
 `AssistantTestLayer` composes:
 
-- **AI** — `TestAiService` (memoized by default; see below), default model `@anthropic/claude-opus-4-6`.
+- **AI** — `TestAiService` (memoized by default; see below), default model `ai.claude.model.claude-opus-4-6`.
 - **Tool execution** — `ToolExecutionServices` and `OpaqueToolkit.providerLayer`.
 - **Blueprint registry** — `Blueprint.RegistryService` seeded with optional `blueprints`.
 - **Operations** — `operationHandlers` passed to `OperationHandlerSet.provide(...)`; `ProcessManager` wires `Operation.Service` for tool execution (see `AssistantTestLayer` in `packages/core/assistant/src/testing/layer.ts`).
