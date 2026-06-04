@@ -124,7 +124,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             </Form.Content>
           </Column.Center>
 
-          <Column.Center>
+          <Column.Center classNames='pbs-form-gap'>
             <Editor.Root>
               <Editor.View
                 classNames='dx-expander border border-subdued-separator'

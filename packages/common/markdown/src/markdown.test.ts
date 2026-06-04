@@ -57,6 +57,22 @@ describe('markdown', () => {
     expect(normalizeText('aaa  \nbbb')).to.equal('aaa\nbbb');
   });
 
+  test('trims trailing invisible padding from a content line', ({ expect }) => {
+    // Newsletter padding tacked onto the end of a real content line must be stripped, leaving the
+    // text intact: combining grapheme joiner, ZWNJ, figure space, NBSP, soft hyphen.
+    const CGJ = '͏';
+    const ZWNJ = '‌';
+    const FIG = ' ';
+    const NBSP = ' ';
+    const SHY = '­';
+    const padding = `${CGJ}${FIG}${ZWNJ}${NBSP}${SHY}`.repeat(20);
+    expect(normalizeText(`Delivered: 3 more items${padding}`)).to.equal('Delivered: 3 more items');
+    // Each listed character, alone at end-of-line, is trimmed.
+    for (const ch of [CGJ, ZWNJ, FIG, NBSP, SHY]) {
+      expect(normalizeText(`text${ch}`)).to.equal('text');
+    }
+  });
+
   test('collapses multiple blank lines in plain text', ({ expect }) => {
     // Three or more blank lines between text → one blank line.
     expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');
