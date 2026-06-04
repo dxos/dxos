@@ -16,9 +16,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -29,9 +26,6 @@
     },
     {
       "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../client"

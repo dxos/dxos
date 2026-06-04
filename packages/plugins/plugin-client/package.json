@@ -126,12 +126,10 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "@tauri-apps/api": "catalog:",
     "effect": "catalog:",
     "react-qr-rounded": "catalog:",
     "yaml": "catalog:"
