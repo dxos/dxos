@@ -41,6 +41,8 @@ export const translations = [
         'login-device.description': 'Scan a QR code from a logged-in device.',
         'login-recovery.label': 'Recovery code',
         'login-recovery.description': 'Use a paper key to recover your identity.',
+        'login-atmosphere.label': 'Atmosphere account',
+        'login-atmosphere.description': 'Connect with your Atmosphere identity.',
         'sign-in-with-email.title': 'Log in with email',
         'sign-in-with-email.description': "We'll send you a login link.",
         'get-an-invite.label': 'New here? Get an invite',
@@ -52,6 +54,9 @@ export const translations = [
         'no-invitation-code-link.label': "Don't have a code? Join the waiting list",
         'have-invitation-code-link.label': 'Have an invitation code? Enter it here',
         'use-different-code-link.label': 'Use a different invitation code',
+        'or-divider.label': 'or',
+        'atmosphere-account-button.label': 'Or use your Atmosphere account.',
+        'atmosphere-handle-input.placeholder': 'you.bsky.social',
         'invitation-code-format-error.message': 'Codes are 8 characters of A–Z and 0–9 (e.g. XK4F-9P2A).',
         'invitation-code-invalid-error.message': "That code isn't valid. Check it for typos or request a new one.",
 

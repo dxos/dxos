@@ -17,11 +17,14 @@ import { type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode 
 
 const supportsPasskeys = (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
 
+/** OAuth provider backing the "Atmosphere account" option (atproto / Bluesky). */
+const ATMOSPHERE_PROVIDER = 'atproto';
+
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
 type Tab = 'login' | 'signup';
-type LoginMethod = 'passkey' | 'email';
+type LoginMethod = 'passkey' | 'email' | 'atproto';
 type SignupMode = 'code' | 'waitlist';
 type SignupStep = 'collect' | 'auth';
 
@@ -33,8 +36,10 @@ export const Welcome = ({
   onPasskey,
   onJoinIdentity,
   onRecoverIdentity,
+  onRecoverWithOAuth,
   onValidateInvitationCode,
   onCreateAccount,
+  onCreateAccountWithOAuth,
   onJoinWaitlist,
   onSpaceInvitation,
   onGoToLogin,
@@ -57,6 +62,8 @@ export const Welcome = ({
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [waitlistEmail, setWaitlistEmail] = useState('');
+  // atproto handle (e.g. `you.bsky.social`) forwarded to the OAuth flow as a login hint.
+  const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
 
@@ -135,6 +142,40 @@ export const Welcome = ({
       setPending(false);
     }
   }, [waitlistEmail, onJoinWaitlist]);
+
+  // Wrap the OAuth flows so `pending` is set for their full duration. The OAuth popup flow is async
+  // and `pending` drives `submitDisabled`, so this keeps the Continue button disabled while the
+  // popup is open — preventing a second click from opening a duplicate popup (which clobbers the
+  // first and trips "OAuth popup closed before completing").
+  const handleCreateAccountWithOAuth = useCallback(
+    async (args: { code: string; provider: string; loginHint?: string }) => {
+      if (pending) {
+        return;
+      }
+      setPending(true);
+      try {
+        await onCreateAccountWithOAuth?.(args);
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, onCreateAccountWithOAuth],
+  );
+
+  const handleRecoverWithOAuth = useCallback(
+    async (provider: string, loginHint?: string) => {
+      if (pending) {
+        return;
+      }
+      setPending(true);
+      try {
+        await onRecoverWithOAuth?.(provider, loginHint);
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, onRecoverWithOAuth],
+  );
 
   const handleCodeKeyDown = useCallback(
     (ev: KeyboardEvent<HTMLInputElement>) => {
@@ -229,6 +270,7 @@ export const Welcome = ({
                 onEmailKeyDown={handleEmailKeyDown}
                 onJoinIdentity={onJoinIdentity}
                 onRecoverIdentity={onRecoverIdentity}
+                onRecoverWithOAuth={onRecoverWithOAuth ? handleRecoverWithOAuth : undefined}
               />
             )}
 
@@ -299,6 +341,39 @@ export const Welcome = ({
                   onSubmit={handleCreateAccount}
                   validation={error ? t('email-error.message') : null}
                 />
+                {onCreateAccountWithOAuth && (
+                  <>
+                    <OrDivider>{t('or-divider.label')}</OrDivider>
+                    <div className='flex flex-col gap-2'>
+                      <p className='text-description'>{t('atmosphere-account-button.label')}</p>
+                      <InlineForm
+                        inputProps={{
+                          placeholder: t('atmosphere-handle-input.placeholder'),
+                          value: atmosphereHandle,
+                          onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+                          onKeyDown: (ev) => {
+                            if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                              void handleCreateAccountWithOAuth({
+                                code,
+                                provider: ATMOSPHERE_PROVIDER,
+                                loginHint: atmosphereHandle,
+                              });
+                            }
+                          },
+                        }}
+                        submitLabel={t('continue-button.label')}
+                        submitDisabled={!atmosphereHandle || pending}
+                        onSubmit={() =>
+                          handleCreateAccountWithOAuth({
+                            code,
+                            provider: ATMOSPHERE_PROVIDER,
+                            loginHint: atmosphereHandle,
+                          })
+                        }
+                      />
+                    </div>
+                  </>
+                )}
                 <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
               </div>
             )}
@@ -408,13 +483,14 @@ type LoginTabProps = {
   onEmailKeyDown: (ev: KeyboardEvent<HTMLInputElement>) => void;
   onJoinIdentity?: () => unknown;
   onRecoverIdentity?: () => unknown;
+  onRecoverWithOAuth?: (provider: string, loginHint?: string) => unknown;
 };
 
 /**
  * Login tab. The "primary" auth method (passkey or email) renders at the top;
  * other options live under "More ways to log in":
  *
- * - Picking the *other* primary method (passkey ↔ email) swaps it to primary.
+ * - Picking the *other* primary method (passkey ↔ email ↔ atmosphere) swaps it to primary.
  * - Picking `From another device` or `Recovery code` invokes their handler
  *   directly (those open dedicated dialogs and don't need a primary form).
  */
@@ -435,7 +511,10 @@ const LoginTab = ({
   onEmailKeyDown,
   onJoinIdentity,
   onRecoverIdentity,
+  onRecoverWithOAuth,
 }: LoginTabProps) => {
+  const [atmosphereHandle, setAtmosphereHandle] = useState('');
+
   type MoreOption = {
     key: string;
     icon: string;
@@ -464,8 +543,18 @@ const LoginTab = ({
       onClick: () => setPrimary('email'),
     });
   }
+  // Atmosphere: swaps to primary like email/passkey do so only one form is shown at a time.
+  if (primary !== 'atproto' && onRecoverWithOAuth) {
+    moreOptions.push({
+      key: 'atproto',
+      icon: 'ph--cloud--regular',
+      label: t('login-atmosphere.label'),
+      description: t('login-atmosphere.description'),
+      onClick: () => setPrimary('atproto'),
+    });
+  }
   // Device + recovery: always direct-invoke (open their own dialogs) rather than
-  // swapping to primary like passkey/email.
+  // swapping to primary like passkey/email/atmosphere.
   // TODO(wittjosiah): Integrate the device-invitation and recovery-code flows into
   //   this Welcome layout (so they render as primary forms here instead of opening
   //   separate dialogs). Their UI is some of the oldest in Composer and should be
@@ -515,6 +604,27 @@ const LoginTab = ({
           onSubmit={onSendSignInLink}
           validation={emailError ? t('email-error.message') : null}
         />
+      )}
+      {primary === 'atproto' && onRecoverWithOAuth && (
+        <div className='flex flex-col gap-2'>
+          <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
+          <InlineForm
+            inputProps={{
+              autoFocus: true,
+              placeholder: t('atmosphere-handle-input.placeholder'),
+              value: atmosphereHandle,
+              onChange: (ev) => setAtmosphereHandle(ev.target.value.trim()),
+              onKeyDown: (ev) => {
+                if (ev.key === 'Enter' && atmosphereHandle && !pending) {
+                  void onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle);
+                }
+              },
+            }}
+            submitLabel={t('continue-button.label')}
+            submitDisabled={!atmosphereHandle || pending}
+            onSubmit={() => onRecoverWithOAuth(ATMOSPHERE_PROVIDER, atmosphereHandle)}
+          />
+        </div>
       )}
 
       {moreOptions.length > 0 && (
@@ -610,6 +720,15 @@ const CompoundRow = ({ icon, onClick, children }: { icon: string; onClick?: () =
     <span className='flex-1'>{children}</span>
     <Icon icon='ph--caret-right--bold' size={4} />
   </button>
+);
+
+/** Horizontal "or" separator between alternative auth methods. */
+const OrDivider = ({ children }: { children: ReactNode }) => (
+  <div className='flex items-center gap-3 text-xs text-description'>
+    <div className='flex-1 border-t border-neutral-700' />
+    <span className='uppercase tracking-widest'>{children}</span>
+    <div className='flex-1 border-t border-neutral-700' />
+  </div>
 );
 
 export default Welcome;

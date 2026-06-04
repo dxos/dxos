@@ -139,9 +139,14 @@ export class EdgeIdentityRecoveryManager {
   }
 
   /**
-   * Recovery identity using an opaque token sent to the user's email.
+   * Recover an identity using an opaque one-time token. Accepts either an email magic-link
+   * `token` (validated by hub-service) or an OAuth `recoveryProof` (redeemed by kms-service).
+   * The two fields are routed to different backends by db-service and must not be conflated.
    */
-  public async recoverIdentityWithToken(ctx: Context, { token }: { token: string }): Promise<void> {
+  public async recoverIdentityWithToken(
+    ctx: Context,
+    fields: { token: string } | { recoveryProof: string },
+  ): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const deviceKey = await this._keyring.createKey();
@@ -149,7 +154,7 @@ export class EdgeIdentityRecoveryManager {
     const request: EdgeRecoverIdentityRequest = {
       deviceKey: deviceKey.toHex(),
       controlFeedKey: controlFeedKey.toHex(),
-      token,
+      ...fields,
     };
 
     const response = await this._edgeClient.recoverIdentity(ctx, request);
