@@ -990,6 +990,45 @@ describe('durability', () => {
   );
 
   it.effect(
+    'skips (without throwing) a process whose definition is not registered, leaving its record intact',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const mkManager = (definitions: ProcessManager.ProcessDefinitionRegistry) =>
+        new ProcessManager.ProcessManagerImpl({
+          registry,
+          kvStore: kv,
+          traceSink,
+          serviceResolver: resolver,
+          handlerSet,
+          definitions,
+          idGenerator: ProcessManager.UUIDProcessIdGenerator,
+        });
+
+      const definitionsA = new ProcessManager.ProcessDefinitionRegistry();
+      definitionsA.register(waiting);
+      const managerA = mkManager(definitionsA);
+      const handle = yield* managerA.spawn(waiting); // Hibernates on a 500ms alarm.
+      yield* managerA.shutdown();
+
+      // Fresh boot whose registry does NOT contain the definition (e.g. the owning plugin
+      // hasn't re-registered it). Restore must not throw and must preserve the record so a
+      // later boot that does register the definition can still rehydrate it.
+      const managerB = mkManager(new ProcessManager.ProcessDefinitionRegistry());
+      yield* managerB.restore();
+      expect(yield* managerB.list()).toHaveLength(0);
+
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(handle.pid)).toBeDefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
     'terminal processes are not restored',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;

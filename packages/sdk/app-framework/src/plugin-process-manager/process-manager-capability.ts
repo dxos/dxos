@@ -10,6 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { LayerStack, ProcessManager } from '@dxos/compute-runtime';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
@@ -97,6 +98,20 @@ export default Capability.makeModule(
       capabilityManager.atom(Capabilities.OperationHandler),
     );
 
+    // Registry of process definitions used to rehydrate persisted processes on restore. Definitions
+    // carry non-serializable runtime closures, so they must be re-supplied on every boot.
+    // Operation-backed processes are derived from the registered handler set; plugins contribute
+    // any other long-lived durable definitions (e.g. an agent process) via `Capabilities.ProcessDefinition`.
+    const processDefinitions = new ProcessManager.ProcessDefinitionRegistry();
+    for (const definition of yield* Capability.getAll(Capabilities.ProcessDefinition)) {
+      processDefinitions.register(definition);
+    }
+    const operationHandlers = yield* handlerSet.handlers;
+    const operationsByKey = new Map(operationHandlers.map((handler) => [handler.meta.key, handler]));
+    for (const operation of operationsByKey.values()) {
+      processDefinitions.register(Process.fromOperation(operation, handlerSet));
+    }
+
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));
     const mergedTraceSink = Trace.mergeSinks(traceSinks);
 
@@ -114,9 +129,10 @@ export default Capability.makeModule(
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
     );
 
-    const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
-      Layer.provide(baseLayer),
-    );
+    const processManagerLayer = ProcessManager.layer({
+      runtimeName: Trace.CommonRuntimeName.local,
+      definitions: processDefinitions,
+    }).pipe(Layer.provide(baseLayer));
     const operationInvokerLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer)),
     );
@@ -154,6 +170,14 @@ export default Capability.makeModule(
         never,
         never
       >,
+    );
+
+    // Rehydrate processes persisted by a previous session. Runs in the background so a slow
+    // rehydrated handler cannot delay startup; defects are logged rather than crashing boot.
+    managedRuntime.runFork(
+      processManagerHolder.restore().pipe(
+        Effect.catchAllCause((cause) => Effect.sync(() => log.warn('process restore failed', { cause }))),
+      ),
     );
 
     // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
