@@ -8,16 +8,25 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
+// Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
+// references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
+// otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
+import { EID as _EchoURIReference } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 import { TriggerTemplate } from './schema';
+export { _EchoURIReference };
 
-const AUTOMATION_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const CreateTriggerFromTemplate = Operation.make({
-  meta: { key: `${AUTOMATION_OPERATION}.create-trigger-from-template`, name: 'Create Trigger From Template' },
+  meta: {
+    key: makeKey('createTriggerFromTemplate'),
+    name: 'Create Trigger From Template',
+    icon: 'ph--lightning--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,

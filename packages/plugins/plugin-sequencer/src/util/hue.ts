@@ -6,7 +6,7 @@ import { getHashHue, hues } from '@dxos/ui-theme';
 
 // Tailwind v3 -500 shades for each ChromaticPalette value. The grid canvas
 // renders via `ctx.fillStyle` and so needs a hex; the design-system class
-// tokens (e.g. `bg-fuchsia-fill`) only work in CSS. -500 is the canonical
+// tokens (e.g. `bg-fuchsia-bg`) only work in CSS. -500 is the canonical
 // mid-tone for each hue and matches the visual weight of the original
 // hand-picked plugin palette.
 const HUE_HEX: Record<string, string> = {

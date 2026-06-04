@@ -10,6 +10,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Type } from '@dxos/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 
 import { SampleItem } from '#types';
@@ -25,7 +26,7 @@ export type SampleItemViewProps = {
 
 export const SampleItemView = ({ name, description, status, onValuesChanged }: SampleItemViewProps) => {
   // `omitId` strips the ECHO `id` field from the schema so it doesn't appear in the form.
-  const formSchema = useMemo(() => omitId(SampleItem.SampleItem), []);
+  const formSchema = useMemo(() => omitId(Type.getSchema(SampleItem.SampleItem)), []);
   const values = useMemo(() => ({ name, description, status }), [name, description, status]);
 
   const handleValuesChanged = useCallback(

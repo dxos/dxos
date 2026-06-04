@@ -2,23 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import React, { type FC, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-export type DefaultStoryProps<T extends Obj.Any> = {
-  Component: FC<AppSurface.ObjectCardProps<T>>;
+export type DefaultStoryProps<T extends Obj.Any, P extends {} = {}> = {
+  Component: FC<AppSurface.ObjectCardProps<T> & P>;
   createObject: () => T;
   image?: boolean;
+  componentProps?: P;
 };
 
-export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
+export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
+  Component,
+  createObject,
+  image,
+  componentProps,
+}: DefaultStoryProps<T, P>) => {
   const object = useMemo(() => createObject(), [createObject]);
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
@@ -30,12 +38,16 @@ export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image
             <span className='text-sm text-description'>{role}</span>
             <CardContainer role={role}>
               <Card.Root border={false}>
-                <Card.Toolbar>
+                <Card.Header>
                   <Card.DragHandle />
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>
                   <Card.Menu />
-                </Card.Toolbar>
-                <Component role={role ?? 'card--content'} subject={image ? object : omitImage(object)} />
+                </Card.Header>
+                <Component
+                  role={role ?? 'card--content'}
+                  subject={image ? object : omitImage(object)}
+                  {...(componentProps ?? ({} as P))}
+                />
               </Card.Root>
             </CardContainer>
           </div>
@@ -90,6 +102,46 @@ export const createTask = (): Task.Task => {
     status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
   });
 };
+
+/**
+ * Plain object cast as `Obj.Any` — has no schema, typename, or database, so cards
+ * like `FormCard` fall through to their empty/unsupported state. Use to story-pin
+ * fallback rendering.
+ */
+export const createUnknown = (): Obj.Any => ({}) as unknown as Obj.Any;
+
+/**
+ * Typed object with no user-facing values (only `id`). All Person fields are
+ * optional, so `Obj.make(Person, {})` is valid and triggers the FormCard
+ * "no values" branch in readonly mode.
+ */
+export const createPersonEmpty = (): Person.Person => Obj.make(Person.Person, {});
+
+/**
+ * Mock of the `Table` schema (org.dxos.type.table): an optional `name` plus
+ * `view` and `sizes` fields annotated with `FormInputAnnotation.set(false)`.
+ * When constructed without a `name`, no form-renderable field has a value so
+ * FormCard should fall through to its empty state — even though
+ * `Object.keys(subject)` includes `view`/`sizes`.
+ */
+const TableLike = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
+  view: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
+  sizes: Schema.Record({ key: Schema.String, value: Schema.Number }).pipe(
+    Schema.mutable,
+    Annotation.FormInputAnnotation.set(false),
+  ),
+}).pipe(Type.makeObject(DXN.make('org.dxos.test.tableLike', '0.1.0')));
+type TableLike = Type.InstanceType<typeof TableLike>;
+
+/**
+ * Table-like object with values only in form-hidden fields (`view`, `sizes`).
+ * `Object.keys` includes them, but a naive `hasValues` check would
+ * misclassify this as having data. FormCard must consult the schema's
+ * form-input annotations to correctly fall through to the empty state.
+ */
+export const createTableEmpty = (): TableLike =>
+  Obj.make(TableLike, { view: 'view-dxn:placeholder', sizes: {} } as Obj.MakeProps<typeof TableLike>);
 
 export const createExpando = (): Expando.Expando => {
   return Expando.make({

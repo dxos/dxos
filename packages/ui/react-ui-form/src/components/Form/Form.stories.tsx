@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -21,14 +21,9 @@ import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+export type Organization = Type.InstanceType<typeof Organization>;
 
 const Person = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -51,6 +46,9 @@ const Person = Schema.Struct({
   status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
+  birthday: Schema.optional(Format.DateOnly.annotations({ title: 'Birthday' })),
+  meetingAt: Schema.optional(Format.DateTime.annotations({ title: 'Next meeting' })),
+  reminderAt: Schema.optional(Format.TimeOnly.annotations({ title: 'Reminder time' })),
   tasks: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Tasks' })),
   locations: Schema.optional(Schema.Array(Format.GeoPoint).annotations({ title: 'Locations' })),
   identities: Schema.optional(
@@ -63,14 +61,9 @@ const Person = Schema.Struct({
       title: 'Identities',
     }),
   ),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.person', // TODO(burdon): Change all types to /schema
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0')));
 
-export interface Person extends Schema.Schema.Type<typeof Person> {}
+export type Person = Type.InstanceType<typeof Person>;
 
 type DefaultStoryProps<T extends AnyProperties> = {
   schema?: Schema.Schema<T>;
@@ -84,7 +77,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const spaces = useSpaces();
   const space = spaces[0];
-
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
     setValues(values);
@@ -110,7 +102,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           onCancel={handleCancel}
           {...props}
         >
-          <Form.Viewport>
+          <Form.Viewport scroll>
             <Form.Content>
               <Form.Section label='Section' description='This is a section' />
               <Form.FieldSet />
@@ -152,36 +144,41 @@ export default meta;
 
 type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
+const PersonSchema = Type.getSchema(Person);
+
 const values: Partial<Person> = {
   name: 'Alice',
   location: [40.7128, -74.006],
   tasks: ['task 1', 'task 2'],
+  birthday: '1990-05-12',
+  meetingAt: '2026-06-01T15:30:00.000Z',
+  reminderAt: '09:00:00',
 };
 
-export const Default: Story<ExcludeId<typeof Person>> = {
+export const Default: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(PersonSchema),
     values,
     autoSave: true,
   },
 };
 
-export const Readonly: Story<ExcludeId<typeof Person>> = {
+export const Readonly: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(PersonSchema),
     values,
     readonly: true,
   },
 };
 
-export const Static: Story<ExcludeId<typeof Person>> = {
+export const Static: Story<ExcludeId<typeof PersonSchema>> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(PersonSchema),
     values,
     layout: 'static',
   },
 };
 
-export const Empty: Story<ExcludeId<typeof Person>> = {
+export const Empty: Story<ExcludeId<typeof PersonSchema>> = {
   args: {},
 };

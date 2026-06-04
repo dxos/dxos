@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DatabaseDirectory, EncodedReference, ObjectStructure } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EncodedReference, EntityStructure } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 
 /**
  * Assumes properties are at root.
@@ -10,14 +11,15 @@ import { type DatabaseDirectory, EncodedReference, ObjectStructure } from '@dxos
 export const findInlineObjectOfType = (
   spaceDoc: DatabaseDirectory,
   typename: string,
-): [string, ObjectStructure] | undefined => {
+): [string, EntityStructure] | undefined => {
   for (const id in spaceDoc.objects ?? {}) {
     const obj = spaceDoc.objects![id];
-    const objType = ObjectStructure.getTypeReference(obj);
+    const objType = EntityStructure.getTypeReference(obj);
     if (objType) {
-      const typeDXN = EncodedReference.toDXN(objType);
-      const typeDXNInfo = typeDXN.asTypeDXN();
-      if (typeDXNInfo?.type === typename) {
+      const uri = EncodedReference.toURI(objType);
+      // Parse the DXN to extract the typename.
+      const parsed = DXN.tryMake(uri);
+      if (parsed !== undefined && DXN.getName(parsed) === typename) {
         return [id, obj];
       }
     }

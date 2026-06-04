@@ -6,26 +6,28 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Effectable from 'effect/Effectable';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import type * as Types from 'effect/Types';
 
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, type SpaceId } from '@dxos/keys';
+import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal/Annotation';
-import { type AnyProperties } from './internal/common/types';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
+// Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
+// Database → internal/Entity → entity → JsonSchema → Ref → Database.
+import { isInstanceOf } from './internal/Entity/type-uri';
 import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
-import type * as SchemaRegistry from './SchemaRegistry';
+import type * as Registry from './Registry';
 import type * as Type from './Type';
 
 /**
@@ -62,6 +64,16 @@ export type AddOptions = {
   placeIn?: ObjectPlacement;
 };
 
+/**
+ * Rejects Type entities from {@link Database.add} at compile time via their `[KindId]` brand. Used
+ * as `T & RejectTypeEntity<T>` to preserve inference of `T`. Bounding `add` on
+ * `Obj.Unknown | Relation.Unknown` instead would reject broadly-typed instance adds (e.g.
+ * `Entity.Any`, `Obj.OfShape<T>`), forcing casts repo-wide.
+ */
+export type RejectTypeEntity<T> = T extends { readonly [KindId]: EntityKind.Type }
+  ? { __error: 'Type entities must be persisted via db.addType(), not db.add().' }
+  : T;
+
 export type FlushOptions = {
   /**
    * Write any pending changes to disk.
@@ -96,10 +108,14 @@ export interface Database extends Queryable {
 
   get spaceId(): SpaceId;
 
-  // TODO(burdon): Can we move this into graph?
-  get schemaRegistry(): SchemaRegistry.SchemaRegistry;
-
   get graph(): Hypergraph.Hypergraph;
+
+  /**
+   * Registry for this database. Delegates type lookups to the shared hypergraph registry.
+   * To persist a schema so it replicates to other clients, add the type entity with
+   * {@link addType} (e.g. `await db.addType(Type.makeObjectFromJsonSchema(...))`).
+   */
+  readonly registry: Registry.Registry;
 
   toJSON(): object;
 
@@ -120,16 +136,28 @@ export interface Database extends Queryable {
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
-   * NOTE: Difference from `Ref.fromDXN`
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * NOTE: Difference from `Ref.fromURI`
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref<T>;
 
   /**
-   * Adds object to the database.
+   * Adds an object or relation to the database.
+   *
+   * Only Object and Relation entities are accepted. To persist a Type definition use
+   * {@link addType} — passing a Type entity is rejected at compile time (and at runtime).
    */
-  add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
+  add<T extends Entity.Unknown = Entity.Unknown>(obj: T & RejectTypeEntity<T>, opts?: AddOptions): T;
+
+  /**
+   * Persists a Type definition (clones/forks the entity) so it replicates to other peers.
+   *
+   * Runs a conflict query first: if a type with the same typename + version already exists in
+   * this space, the existing persisted entity is returned and no duplicate is created. This is
+   * the only supported way to add Type entities — {@link add} rejects them.
+   */
+  addType<T extends Type.AnyEntity>(type: T): Promise<T>;
 
   /**
    * Removes object from the database.
@@ -201,19 +229,19 @@ export const spaceId = Effect.gen(function* () {
  */
 export const resolve: {
   // No type check.
-  (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
+  (ref: URI.URI | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
   <S extends Type.AnyEntity>(
-    ref: DXN | Ref<any>,
+    ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
-  ref: DXN | Ref<any>,
+  ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
-    const dxn = ref instanceof DXN ? ref : ref.dxn;
+    const dxn = typeof ref === 'string' ? ref : ref.uri;
     const object = yield* promiseWithCauseCapture(() =>
       db.graph
         .createRefResolver({
@@ -225,20 +253,22 @@ export const resolve: {
     );
 
     if (!object) {
-      return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
+      return yield* Effect.fail(new Err.EntityNotFoundError(dxn));
     }
-    invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
+    // `isInstanceOf` uses a conditional generic that TS can't resolve through
+    // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
+    invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'))) as any;
 
 /**
  * Loads an object reference.
  */
-export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError, never> = Effect.fn('Database.load')(
+export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
+      return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
     }
     return object;
   },
@@ -251,17 +281,26 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError,
 export const loadOption: <T>(ref: Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(
   'Database.loadOption',
 )(function* (ref) {
-  const object = yield* load(ref).pipe(Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)));
+  const object = yield* load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
 
   return Option.fromNullable(object);
 });
 
 /**
- * Adds an object to the database.
+ * Adds an object or relation to the database.
  * @see {@link Database.add}
  */
-export const add = <T extends Entity.Unknown>(obj: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add(obj))).pipe(Effect.withSpan('Database.add'));
+export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'));
+
+/**
+ * Persists a Type definition to the database.
+ * @see {@link Database.addType}
+ */
+export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
+  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.addType(type)))).pipe(
+    Effect.withSpan('Database.addType'),
+  );
 
 /**
  * Removes an object from the database.
@@ -283,16 +322,18 @@ export const flush = (opts?: FlushOptions) =>
  * Creates a `QueryResult` object that can be subscribed to.
  */
 export const query: {
-  <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
-  <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
+  <Q extends Query.Any>(query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Service>;
+  <F extends Filter.Any>(filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Service>;
 } = (queryOrFilter: Query.Any | Filter.Any) =>
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
     Effect.withSpan('Database.query'),
+    makeQueryResultEffect,
   );
 
 /**
  * Executes the query once and returns the results.
+ * @deprecated Use `yield* query(...).run` instead.
  */
 export const runQuery: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
@@ -305,6 +346,7 @@ export const runQuery: {
 
 /**
  * Executes the query once and returns the first result as or None.
+ * @deprecated Use `yield* query(...).first` instead.
  */
 export const runQueryFirst: {
   <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
@@ -317,36 +359,19 @@ export const runQueryFirst: {
     Effect.withSpan('Database.runQueryFirst'),
   );
 
-/**
- * Persists schemas in the database so they replicate to other clients.
- * @see {@link SchemaRegistry.SchemaRegistry.register}
- */
-export const registerSchema = (
-  input: SchemaRegistry.RegisterSchemaInput[],
-): Effect.Effect<Type.RuntimeType[], never, Service> =>
-  Service.pipe(
-    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
-    Effect.withSpan('Database.registerSchema'),
-  );
+const makeQueryResultEffect = <T>(
+  eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
+): QueryResult.QueryResultEffect<T, never, Service> => {
+  return {
+    run: Effect.flatMap(eff, (result) => promiseWithCauseCapture(() => result.run())),
+    first: Effect.flatMap(eff, (result) =>
+      promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
+    ),
 
-/**
- * Creates a schema query result that can be subscribed to.
- */
-// TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.
-export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
-  schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, Service> =>
-  Service.pipe(
-    Effect.map(({ db }) => db.schemaRegistry.query(schemaQueryOptions)),
-    Effect.withSpan('Database.schemaQuery'),
-  );
-
-/**
- * Executes a schema query once and returns the results.
- */
-export const runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
-  schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
-  schemaQuery(schemaQueryOptions).pipe(
-    Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
-  );
+    // Effect internals
+    ...Effectable.CommitPrototype,
+    commit() {
+      return eff;
+    },
+  } as any;
+};

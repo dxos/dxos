@@ -617,7 +617,7 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         ],
       },
     ),
-    image(),
+    image({ skip: options.skip ? (node) => !!options.skip?.(node) : undefined }),
     table(),
     adjustChanges(),
     formattingStyles,

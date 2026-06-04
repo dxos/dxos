@@ -39,8 +39,8 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
           return;
         }
 
-        const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
-        const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
+        const jsonSchema = Type.getDatabase(schema) != null ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
+        const change = createEchoChangeCallback(view, Type.getDatabase(schema) != null ? schema : undefined);
 
         const projection = new ProjectionModel({ registry, view, baseSchema: jsonSchema, change });
         projection.normalizeView();

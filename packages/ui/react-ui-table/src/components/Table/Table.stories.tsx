@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
+import { DXN, Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
@@ -17,7 +17,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -52,10 +52,11 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object({ typename: `com.example.type.${PublicKey.random().truncate()}`, version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
+  // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
 );
-interface Example extends Schema.Schema.Type<typeof Example> {}
+interface Example extends Type.InstanceType<typeof Example> {}
 
 const StoryViewEditor = ({
   view,
@@ -64,15 +65,14 @@ const StoryViewEditor = ({
   handleDeleteColumn,
 }: {
   view?: View.View;
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Type.AnyEntity;
   db?: Database.Database;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
   const handleQueryChanged = useCallback(
     (newQuery: QueryAST.Query) => {
       invariant(schema);
-      invariant(Type.isMutable(schema));
-      schema.updateTypename(getTypenameFromQuery(newQuery));
+      invariant(Type.getDatabase(schema) != null);
       invariant(view);
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;
@@ -87,8 +87,8 @@ const StoryViewEditor = ({
 
   return (
     <ViewEditor
-      registry={db?.schemaRegistry}
-      schema={schema}
+      registry={db?.graph.registry}
+      type={schema}
       view={view}
       onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}
@@ -169,8 +169,11 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
+        const type = await space.db.addType(Example);
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(type),
+        });
         const table = Table.make({ view, jsonSchema });
         Obj.update(view, (view) => {
           view.projection.fields = [
@@ -183,7 +186,7 @@ const meta = {
 
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(schema, {
+            Obj.make(type, {
               name: random.lorem.sentence(),
               status: random.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: random.lorem.paragraph(),
@@ -218,7 +221,7 @@ export const StaticSchema: StoryObj = {
       onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: TestSchema.Person.typename,
+          typename: Type.getTypename(TestSchema.Person),
         });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
@@ -247,12 +250,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
       }),
     ),
   ),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.contactWithArrayOfEmails',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
@@ -264,7 +262,7 @@ export const ArrayOfObjects: StoryObj = {
       onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: ContactWithArrayOfEmails.typename,
+          typename: Type.getTypename(ContactWithArrayOfEmails),
         });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
@@ -294,7 +292,7 @@ export const Tags: Meta<DefaultStoryProps> = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'com.example.type.single-select';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },
@@ -305,7 +303,7 @@ export const Tags: Meta<DefaultStoryProps> = {
 
         const selectOptionIds = selectOptions.map((o) => o.id);
 
-        const schema = getSchemaFromPropertyDefinitions(typename, [
+        const type = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
             format: Format.TypeFormat.SingleSelect,
@@ -317,7 +315,7 @@ export const Tags: Meta<DefaultStoryProps> = {
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
+        const storedType = await space.db.addType(type);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
@@ -327,7 +325,7 @@ export const Tags: Meta<DefaultStoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(storedSchema, {
+            Obj.make(Type.assertObject(storedType), {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
             }),

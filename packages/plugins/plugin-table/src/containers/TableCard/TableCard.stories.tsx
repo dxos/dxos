@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, View } from '@dxos/echo';
+import { Obj, Type, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -58,7 +58,7 @@ const meta = {
         ];
 
         const selectOptionIds = selectOptions.map((o) => o.id);
-        const schema = getSchemaFromPropertyDefinitions(typename, [
+        const type = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
             format: Format.TypeFormat.SingleSelect,
@@ -70,7 +70,7 @@ const meta = {
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
+        const storedType = await space.db.addType(type);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });
@@ -80,7 +80,7 @@ const meta = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(storedSchema, {
+            Obj.make(Type.assertObject(storedType), {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
             }),

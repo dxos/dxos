@@ -11,11 +11,11 @@ export type MessageStyleProps = {
 };
 
 const root: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('grid grid-cols-[2rem_1fr_2rem] p-1 rounded-sm', messageValence(valence), etc);
+  return mx('p-1 rounded-sm', messageValence(valence), etc);
 };
 
 const header: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-span-full grid grid-cols-subgrid items-center', etc);
+  return mx('items-center', etc);
 };
 
 const title: ComponentFunction<MessageStyleProps> = (_, etc) => {
@@ -26,8 +26,12 @@ const icon: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx('col-start-1 grid place-items-center', etc);
 };
 
+const close: ComponentFunction<MessageStyleProps> = (_, etc) => {
+  return mx('col-start-3', etc);
+};
+
 const content: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 grid grid-cols-subgrid inline first:font-medium', etc);
+  return mx('col-start-2 flex flex-col first:font-medium pb-1.5', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {
@@ -35,5 +39,6 @@ export const messageTheme: Theme<MessageStyleProps> = {
   header,
   icon,
   title,
+  close,
   content,
 };

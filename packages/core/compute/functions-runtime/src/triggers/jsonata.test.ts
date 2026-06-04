@@ -6,8 +6,9 @@ import jsonata from 'jsonata';
 import { assert, describe, test } from 'vitest';
 
 import { Trigger, TriggerEvent } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { EID } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 describe('jsonata', () => {
@@ -51,9 +52,11 @@ describe('jsonata', () => {
   });
 
   describe('evaluates expression with trigger event', () => {
-    const queueDXN = 'dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6';
+    const feedRef: Ref.Ref<Feed.Feed> = Ref.fromURI(
+      EID.parse('echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6'),
+    );
     const event: TriggerEvent.TriggerEvent = {
-      queue: queueDXN,
+      feed: feedRef,
       item: {
         name: 'John',
       },
@@ -62,7 +65,7 @@ describe('jsonata', () => {
 
     const obj = Obj.make(TestSchema.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
     const trigger = Trigger.make({
-      spec: Trigger.specQueue(queueDXN),
+      spec: { kind: 'feed', feed: feedRef },
       input: {
         nested: {
           value: 'nested',
@@ -100,14 +103,13 @@ describe('jsonata', () => {
     test('input as expression', async ({ expect }) => {
       const input = trim`
       {
-        "queue": event.queue,
         "cursor": event.cursor,
         "nested": {
           "value": "nested",
           "name": event.item.name
         },
         "ref": {
-          "/": "${Obj.getDXN(obj).toString()}"
+          "/": "${Obj.getURI(obj)}"
         },
         "value": "Hello, " & event.item.name & "!"
       }
@@ -115,14 +117,13 @@ describe('jsonata', () => {
       const expression = jsonata(input);
       const result = await expression.evaluate({ trigger, event });
       expect(result).toMatchSnapshot({
-        queue: event.queue,
         cursor: event.cursor,
         nested: {
           value: 'nested',
           name: event.item.name,
         },
         ref: {
-          '/': Obj.getDXN(obj).toString(),
+          '/': Obj.getURI(obj),
         },
         value: 'Hello, John!',
       });
@@ -130,7 +131,6 @@ describe('jsonata', () => {
 
     test('input templating', async ({ expect }) => {
       const input = {
-        queue: '{{event.queue}}',
         cursor: '{{event.cursor}}',
         nested: {
           value: 'nested',
@@ -146,14 +146,13 @@ describe('jsonata', () => {
       const expression = jsonata(transformedInput);
       const result = await expression.evaluate({ trigger, event });
       expect(result).toMatchSnapshot({
-        queue: event.queue,
         cursor: event.cursor,
         nested: {
           value: 'nested',
           name: event.item.name,
         },
         ref: {
-          '/': Obj.getDXN(obj).toString(),
+          '/': Obj.getURI(obj),
         },
         value: 'Hello, John!',
       });

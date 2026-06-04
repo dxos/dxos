@@ -34,12 +34,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'native-redirect',
+        id: 'nativeRedirect',
         filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
         component: ({ data }) => <NativeRedirectDialog {...data.props} />,
       }),
       Surface.create({
-        id: ABOUT_DIALOG,
+        id: 'aboutDialog',
         filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
         component: () => <AboutDialog />,
       }),

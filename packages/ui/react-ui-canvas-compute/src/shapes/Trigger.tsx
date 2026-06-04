@@ -9,7 +9,7 @@ import { Trigger, TriggerEvent } from '@dxos/compute';
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
-import { DXN, SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -17,7 +17,7 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-export const TriggerShape = Schema.extend(
+const TriggerShapeSchema = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
@@ -25,7 +25,13 @@ export const TriggerShape = Schema.extend(
   }),
 );
 
-export interface TriggerShape extends Schema.Schema.Type<typeof TriggerShape> {}
+// TODO(wittjosiah): Try to clean up this type inference.
+export interface TriggerShape extends ComputeShape {
+  type: 'trigger';
+  functionTrigger?: Ref.Ref<Trigger.Trigger>;
+}
+
+export const TriggerShape: Schema.Schema<TriggerShape> = TriggerShapeSchema as any;
 
 export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTrigger'>> & {
   spaceId?: SpaceId;
@@ -121,9 +127,8 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
       return Trigger.specSubscription(Query.select(Filter.nothing()));
     case 'email':
       return Trigger.specEmail();
-    case 'queue': {
-      const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), Obj.ID.random()]).toString();
-      return Trigger.specQueue(dxn);
+    case 'feed': {
+      return { kind: 'feed' } satisfies Trigger.FeedSpec;
     }
   }
 };
@@ -134,7 +139,7 @@ const getOutputSchema = (kind: Trigger.Kind) => {
     ['subscription']: TriggerEvent.SubscriptionEvent,
     ['timer']: TriggerEvent.TimerEvent,
     ['webhook']: TriggerEvent.WebhookEvent,
-    ['queue']: TriggerEvent.QueueEvent,
+    ['feed']: TriggerEvent.FeedEvent,
   };
   return kindToSchema[kind];
 };

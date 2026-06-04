@@ -65,7 +65,7 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             Node.makeAction({
-              id: 'import-compute-operations',
+              id: 'importComputeOperations',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -102,7 +102,7 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
-              id: 'reset-blueprints',
+              id: 'resetBlueprints',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -128,22 +128,22 @@ export default Capability.makeModule(
 
       // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
-        id: 'companion-chat',
+        id: 'companionChat',
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
             const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
-            const objectDXN = Obj.getDXN(object).toString();
+            const objectUri = Obj.getURI(object);
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullable(state.currentChat[objectDXN]),
-              Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryParse(dxnStr))),
+              Option.fromNullable(state.currentChat[objectUri]),
+              Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryMake(dxnStr))),
               Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
               Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
-              Option.orElse(() => pipe(Option.fromNullable(cache[objectDXN]), Option.filter(Obj.isObject))),
+              Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,
             );
 

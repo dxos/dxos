@@ -4,14 +4,34 @@
 
 import * as semver from 'semver';
 
-import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import { EncodedReference, EntityStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, type EntityId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
-  id: ObjectId;
+  id: EntityId;
   spaceId: SpaceId;
-  doc: ObjectStructure;
+  doc: EntityStructure;
+};
+
+/**
+ * Matches a tag filter against an object's stored tags. Tags may be stored as encoded references or
+ * (in legacy data) bare URI strings, and those URIs may be in legacy DXN form. Both sides are
+ * normalized to the canonical EID before comparing, so a query by the modern id matches objects
+ * tagged before the migration (and vice versa). Shared by the doc and JSON match paths.
+ */
+const matchesTag = (tags: readonly unknown[], filterTag: string): boolean => {
+  // Canonicalize a tag URI for comparison. For EIDs, compare by entity id so the local
+  // (`echo:/<id>`) and fully-qualified (`echo://<space>/<id>`) forms of the same object match, and
+  // legacy DXN ids normalize to the same id. Non-EID ids fall back to the raw string.
+  const canonical = (uri: string): string => {
+    const eid = EID.tryParse(uri);
+    return (eid && EID.getEntityId(eid)) || uri;
+  };
+  const normalize = (tag: unknown): string =>
+    canonical(isEncodedReference(tag) ? EncodedReference.toURI(tag) : (tag as string));
+  const target = canonical(filterTag);
+  return tags.some((tag) => normalize(tag) === target);
 };
 
 /**
@@ -24,15 +44,13 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj.doc?.system?.type?.['/']) {
+        const actualDXNStr = obj.doc?.system?.type?.['/'];
+        if (!actualDXNStr) {
           // Objects with no type are deprecated.
           return false;
-        } else {
-          const actualDXN = DXN.parse(obj.doc.system.type['/']);
-          const expectedDXN = DXN.parse(filter.typename);
-          if (!compareTypename(expectedDXN, actualDXN)) {
-            return false;
-          }
+        }
+        if (!compareTypenameStrings(filter.typename, actualDXNStr)) {
+          return false;
         }
       }
 
@@ -73,8 +91,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'tag': {
-      const tags = ObjectStructure.getTags(obj.doc);
-      return tags.some((tag) => tag === filter.tag);
+      return matchesTag(EntityStructure.getTags(obj.doc), filter.tag);
     }
 
     case 'text-search': {
@@ -141,15 +158,13 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       // Check typename if specified
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj['@type']) {
+        const actualDXNStr = obj['@type'];
+        if (!actualDXNStr) {
           // Objects with no type are deprecated.
           return false;
-        } else {
-          const actualDXN = DXN.parse(obj['@type']);
-          const expectedDXN = DXN.parse(filter.typename);
-          if (!compareTypename(expectedDXN, actualDXN)) {
-            return false;
-          }
+        }
+        if (!compareTypenameStrings(filter.typename, actualDXNStr)) {
+          return false;
         }
       }
 
@@ -194,8 +209,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     }
 
     case 'tag': {
-      const tags = obj[ATTR_META]?.tags ?? [];
-      return tags.some((tag) => tag === filter.tag);
+      return matchesTag(obj[ATTR_META]?.tags ?? [], filter.tag);
     }
 
     // TODO: Implement text search.
@@ -274,7 +288,7 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
             if (!isEncodedReference(value)) {
               return false;
             }
-            return DXN.equals(EncodedReference.toDXN(value), EncodedReference.toDXN(compareValue));
+            return EncodedReference.toURI(value) === EncodedReference.toURI(compareValue);
           }
           return value === compareValue;
         case 'neq':
@@ -359,23 +373,30 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  *
  */
-const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
-  const expectedTypeDXN = expectedDXN.asTypeDXN();
-  if (expectedTypeDXN) {
-    const actualTypeDXN = actualDXN.asTypeDXN();
-    if (!actualTypeDXN) {
+/**
+ * Compare two DXN strings, allowing version-agnostic type DXN comparison:
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
+ * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
+ */
+const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  // Normalize via DXN.tryMake to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
+  const expectedDxn = DXN.tryMake(expectedStr);
+  const actualDxn = DXN.tryMake(actualStr);
+  if (expectedDxn !== undefined) {
+    if (actualDxn === undefined) {
       return false;
     }
-    if (
-      actualTypeDXN.type !== expectedTypeDXN.type ||
-      (expectedTypeDXN.version !== undefined &&
-        actualTypeDXN.version !== undefined &&
-        actualTypeDXN.version !== expectedTypeDXN.version)
-    ) {
+    if (DXN.getName(actualDxn) !== DXN.getName(expectedDxn)) {
+      return false;
+    }
+    const expectedVersion = DXN.getVersion(expectedDxn);
+    const actualVersion = DXN.getVersion(actualDxn);
+    if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
       return false;
     }
   } else {
-    if (!DXN.equals(actualDXN, expectedDXN)) {
+    // EID or other URI type — exact match.
+    if (actualStr !== expectedStr) {
       return false;
     }
   }

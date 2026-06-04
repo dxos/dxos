@@ -6,8 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Trace } from '@dxos/compute';
-import { type Database, Obj, Ref } from '@dxos/echo';
-import type { QueueFactory } from '@dxos/echo-db';
+import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { createTestServices } from '@dxos/functions-runtime/testing';
@@ -21,16 +20,15 @@ const ENABLE_LOGGING = true;
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   describe('common', () => {
-    let builder: EchoTestBuilder, services: ServiceContainer, db: Database.Database, queues: QueueFactory;
+    let builder: EchoTestBuilder, services: ServiceContainer, db: Database.Database;
     beforeEach(async (ctx) => {
       builder = await new EchoTestBuilder().open();
-      ({ db, queues } = await builder.createDatabase());
+      ({ db } = await builder.createDatabase());
       services = createTestServices({
         ai: {
           provider: 'edge',
         },
         db,
-        queues,
         logging: {
           enabled: ENABLE_LOGGING,
         },
@@ -66,19 +64,17 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       'gpt with history',
       Effect.fnUntraced(
         function* () {
-          const conversation = queues.create();
-          yield* Effect.promise(() =>
-            conversation.append([
-              Obj.make(Message.Message, {
-                created: new Date().toISOString(),
-                sender: { role: 'user' },
-                blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
-              }),
-            ]),
-          );
+          const conversation = db.add(Feed.make());
+          yield* Feed.append(conversation, [
+            Obj.make(Message.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
+            }),
+          ]).pipe(Effect.provide(services.createLayer()));
           const input: GptInput = {
             prompt: 'I have twice as many oranges as apples. How many oranges do I have?',
-            conversation: Ref.fromDXN(conversation.dxn),
+            conversation: Ref.make(conversation),
           };
 
           const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
@@ -90,8 +86,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(typeof output.text).toBe('string');
           expect(output.text.length).toBeGreaterThan(10);
 
-          const conversationMessages = yield* Effect.promise(() =>
-            queues.get<Message.Message>(conversation.dxn).queryObjects(),
+          const conversationMessages = yield* Feed.runQuery(conversation, Filter.type(Message.Message)).pipe(
+            Effect.provide(services.createLayer()),
           );
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');

@@ -27,6 +27,7 @@ import {
   formattingListener,
   processEditorPayload,
   editorClassNames,
+  scrollbarAutohide,
 } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
@@ -114,6 +115,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
+          scrollbarAutohide(),
           toolbarState && formattingListener(updateToolbarState),
           role !== 'section' &&
             onFileUpload &&

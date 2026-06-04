@@ -97,8 +97,8 @@ export const Welcome = ({
   return (
     <div
       className={mx(
-        'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
-        'rounded-xl shadow-md lg:translate-x-[-40%]',
+        'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[44rem] lg:translate-x-[-40%] overflow-hidden',
+        'border-2 border-sky-950 rounded-xl',
       )}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
@@ -113,12 +113,12 @@ export const Welcome = ({
           <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{identity ? t('existing-identity.title') : t('login.title')}</h1>
-              {!identity && <p className='text-subdued'>{t('beta.description')}</p>}
+              {!identity && <p className='opacity-70'>{t('beta.description')}</p>}
             </div>
             {Object.keys(actions).length > 0 && (
               <>
                 <div className='flex flex-col gap-2'>
-                  <BifurcatedAction actions={actions} classNames='bg-neutral-800' />
+                  <BifurcatedAction actions={actions} variant='primary' />
                 </div>
                 <div className='flex items-center w-full my-4'>
                   <div className='flex-grow h-px bg-subdued'></div>

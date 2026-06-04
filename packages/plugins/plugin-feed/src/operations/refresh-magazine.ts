@@ -9,7 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { FeedOperation, type Magazine, Subscription } from '../types';
-import { getSubscriptionPostState } from '../util';
+import { findSystemTagUri, hasTag } from '../util';
 
 export default FeedOperation.RefreshMagazine.pipe(
   Operation.withHandler(
@@ -38,7 +38,13 @@ export default FeedOperation.RefreshMagazine.pipe(
 
       let synced = 0;
       for (const feed of validFeeds) {
-        const result = yield* Effect.either(Operation.invoke(FeedOperation.SyncFeed, { feed }));
+        const result = yield* Effect.either(
+          Operation.invoke(
+            FeedOperation.SyncFeed,
+            { feed: Ref.make(feed) },
+            { spaceId: Obj.getDatabase(feed)?.spaceId },
+          ),
+        );
         if (result._tag === 'Right') {
           synced += 1;
         } else {
@@ -48,7 +54,9 @@ export default FeedOperation.RefreshMagazine.pipe(
 
       const { added } = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: magazineRef });
 
-      applyPerFeedKeep(magazine);
+      const db = Obj.getDatabase(magazine);
+      const starredUri = db ? yield* Effect.promise(() => findSystemTagUri(db, 'starred')) : undefined;
+      applyPerFeedKeep(magazine, starredUri);
 
       return { synced, added };
     }),
@@ -80,15 +88,14 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  * CurateMagazine operation) — chaining a second `mutable.posts = ...`
  * inside one change block trips ECHO's deep-mapper dedup invariant.
  */
-const applyPerFeedKeep = (magazine: Magazine.Magazine): void => {
-  const isStarred = (post: Subscription.Post) =>
-    Boolean(getSubscriptionPostState(post.source?.target, (post as { id: string }).id).starred);
+const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string | undefined): void => {
+  const isStarred = (post: Subscription.Post) => hasTag(post.source?.target, (post as { id: string }).id, starredUri);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {
     const feed = feedRef.target;
     if (feed) {
-      feedKeepById.set(dxnTailId(feedRef.dxn.toString()), feed.keep ?? Subscription.DEFAULT_KEEP);
+      feedKeepById.set(dxnTailId(feedRef.uri), feed.keep ?? Subscription.DEFAULT_KEEP);
     }
   }
 
@@ -105,8 +112,8 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine): void => {
 
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
-    const feedRefDXN = pair.post.source?.dxn.toString();
-    const feedId = feedRefDXN ? dxnTailId(feedRefDXN) : undefined;
+    const feedRefURI = pair.post.source?.uri;
+    const feedId = feedRefURI ? dxnTailId(feedRefURI) : undefined;
     const arr = byFeedId.get(feedId) ?? [];
     arr.push(pair);
     byFeedId.set(feedId, arr);

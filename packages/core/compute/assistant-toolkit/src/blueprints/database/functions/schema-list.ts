@@ -5,27 +5,32 @@
 import * as Effect from 'effect/Effect';
 
 import { Routine, Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
+import { Database, Feed, Filter, JsonSchema, Query, Scope, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
 
 // TODO(dmaretskyi): This is a balance between not filling the agent's context with too many types and not excluding important types.
-const EXCLUDED_TYPES = [Type.PersistentType, View.View, Routine.Routine, Blueprint.Blueprint, Feed.Feed];
+const EXCLUDED_TYPES = [Type.Type, View.View, Routine.Routine, Blueprint.Blueprint, Feed.Feed];
 const excludedTypenames = EXCLUDED_TYPES.map((type) => Type.getTypename(type));
 
 export default SchemaList.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
-      const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
-      return schema
+      const types = yield* Database.runQuery(
+        Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+      );
+      return [...types]
         .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
+        .sort((a, b) => {
+          const aKey = `${Type.getTypename(a)}:${Type.getVersion(a)}`;
+          const bKey = `${Type.getTypename(b)}:${Type.getVersion(b)}`;
+          return aKey.localeCompare(bKey);
+        })
         .map((schema) => {
-          const meta = Type.getMeta(schema);
           return {
             typename: Type.getTypename(schema),
             jsonSchema: JsonSchema.toJsonSchema(schema),
-            kind: meta?.sourceSchema ? 'relation' : 'record',
+            kind: Type.isRelation(schema) ? 'relation' : 'record',
           };
         });
     }),

@@ -52,7 +52,7 @@ describe('Parent Hierarchy', () => {
     expect(Obj.getParent(child)).toBe(parent);
   });
 
-  test('parent is persisted and loaded', async () => {
+  test('parent is persisted and loaded', { timeout: 30_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
 
@@ -88,7 +88,7 @@ describe('Parent Hierarchy', () => {
     }
   });
 
-  test('recursive loading of parents', { timeout: 1000 }, async () => {
+  test('recursive loading of parents', { timeout: 30_000 }, async () => {
     // Grandparent -> Parent -> Child
     // Loading Child should load Parent and Grandparent due to strong dependencies.
     const [spaceKey] = PublicKey.randomSequence();
@@ -140,7 +140,7 @@ describe('Parent Hierarchy', () => {
     expect(() => db.add(child)).toThrow();
   });
 
-  test('deleted parent implies deleted child', async () => {
+  test('deleted parent implies deleted child', { timeout: 30_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
 

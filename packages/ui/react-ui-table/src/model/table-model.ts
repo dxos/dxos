@@ -5,12 +5,12 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
-import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, type View } from '@dxos/echo';
+import { type Database, Format, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import { type JsonProp, type JsonSchemaType, type Mutable, toEffectSchema } from '@dxos/echo/internal';
 import { getSnapshot } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
@@ -299,7 +299,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return Obj.getDXN(this._object).toString();
+    return Obj.getURI(this._object);
   }
 
   public get view(): View.View {
@@ -523,7 +523,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     // NOTE(ZaymonFC): This is initialized with id because it's required in all schemata?
-    const draftData = { id: ObjectId.random() } as any as T;
+    const draftData = { id: EntityId.random() } as any as T;
     const validationErrors = this.validateDraftRowData(draftData);
 
     const draftRow: DraftRow<T> = {
@@ -694,8 +694,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const snapshot = { ...getSnapshot(currentRow) };
       setValue(snapshot, field.path, transformedValue);
 
-      const schema = Obj.getSchema(currentRow as unknown as Obj.Unknown);
-      invariant(schema);
+      const type = Obj.getType(currentRow as unknown as Obj.Unknown);
+      invariant(type);
+      const schema = Type.getSchema(type);
 
       const validationResult = validateSchema(schema, snapshot);
       if (validationResult && validationResult.length > 0) {

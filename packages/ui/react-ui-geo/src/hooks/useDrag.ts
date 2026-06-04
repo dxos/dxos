@@ -24,6 +24,19 @@ export type DragOptions = {
    * presentations where the inclination should not change.
    */
   lockTilt?: boolean;
+  /**
+   * Drag rotation mode:
+   * - `linear` (default): direct pixel-to-Euler mapping (Δx → lambda,
+   *   Δy → phi, gamma fixed at 0). Rotation is constrained to two axes;
+   *   no roll. The dragged point does not track the cursor exactly.
+   * - `versor`: quaternion-based rotation so that the dragged point
+   *   follows the cursor exactly. May induce roll (gamma).
+   */
+  mode?: 'linear' | 'versor';
+  /**
+   * Degrees of rotation per pixel of drag, in linear mode. Default 0.25.
+   */
+  sensitivity?: number;
   onUpdate?: (event: GlobeDragEvent) => void;
 };
 
@@ -37,7 +50,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       return;
     }
 
-    geoInertiaDrag(
+    const inertia = geoInertiaDrag(
       select(canvas),
       () => {
         controller.setRotation(controller.projection.rotate());
@@ -46,15 +59,23 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       controller.projection,
       {
         lockTilt: options.lockTilt,
+        mode: options.mode,
+        sensitivity: options.sensitivity,
+        // Zoom-driven gain: matches useWheel — degrees-per-pixel shrinks as the
+        // globe gets larger on screen so the drag feel is consistent across zoom.
+        getZoom: () => controller.zoom,
         time: 3_000,
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),
       },
     );
 
-    // TODO(burdon): Cancel drag timer.
     return () => {
       cancelDrag(select(canvas));
+      // Stop any in-flight inertia: otherwise its d3-timer keeps writing
+      // through the (stable) setRotation closure into the live React state,
+      // even after this effect has been replaced.
+      inertia?.timer?.stop();
     };
   }, [controller, JSON.stringify(options)]);
 };

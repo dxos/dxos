@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EID } from '@dxos/keys';
 
 import { EscapedPropPath } from '../utils';
 import type { Index, IndexerObject } from './interface';
@@ -15,16 +16,17 @@ import type { Index, IndexerObject } from './interface';
 /**
  * Extracts all outgoing references from an object's data.
  */
-const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDXN: string }[] => {
-  const refs: { path: string[]; targetDXN: string }[] = [];
+const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDXN: EID.EID }[] => {
+  const refs: { path: string[]; targetDXN: EID.EID }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const dxn = EncodedReference.toDXN(value);
-      const echoId = dxn.asEchoDXN()?.echoId;
-      if (!echoId) {
+      const uri = EncodedReference.toURI(value);
+      const parsedEchoUri = EID.tryParse(uri);
+      const echoUri = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
+      if (!echoUri || !parsedEchoUri) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDXN: dxn.toString() });
+      refs.push({ path, targetDXN: parsedEchoUri });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -41,7 +43,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
-  targetDXN: Schema.String,
+  targetDXN: EID.Schema,
   /**
    * Escaped property path within an object.
    *
@@ -56,7 +58,7 @@ export const ReverseRef = Schema.Struct({
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
 export interface ReverseRefQuery {
-  targetDXN: string;
+  targetDXN: EID.EID;
   // TODO: Add prop filter
 }
 

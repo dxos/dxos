@@ -6,13 +6,15 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { Surface } from '../ui';
 import { createTestApp } from './harness';
 import { render, renderSurface } from './react';
 
-const testMeta = { id: 'org.dxos.plugin.test.react-harness', name: 'ReactHarnessTest' };
+const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.reactHarness'), name: 'ReactHarnessTest' });
 
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({

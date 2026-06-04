@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Credential, Trace, Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract.
 const TimeRangeSchema = Schema.String.pipe(Schema.pattern(/\d+(s|m|h|d)/)).annotations({
@@ -36,8 +37,9 @@ export const TimeRange = Object.assign(TimeRangeSchema, {
 
 export const FetchMessages = Operation.make({
   meta: {
-    key: 'org.dxos.function.fetch-discord-messages',
+    key: DXN.make('org.dxos.function.discord.fetchDiscordMessages'),
     name: 'Sync Discord messages',
+    icon: 'ph--hash--regular',
   },
   input: Schema.Struct({
     serverId: Schema.String.annotations({

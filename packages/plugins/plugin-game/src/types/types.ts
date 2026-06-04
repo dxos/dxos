@@ -6,7 +6,7 @@ import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import type { ComponentType } from 'react';
 
-import type { Database, Obj } from '@dxos/echo';
+import type { Database, Obj, Type } from '@dxos/echo';
 
 import type { Game } from './Game';
 
@@ -21,9 +21,12 @@ export type GameVariant = {
   label: string;
   /** Optional Phosphor icon name (e.g. 'ph--shield-chevron--regular'). */
   icon?: string;
-  /** Schema of the variant state ECHO object referenced by `Game.variant`. */
-  variantSchema: Schema.Schema.AnyNoContext;
-  /** Optional input schema rendered as a form after the user picks the variant. */
+  /** ECHO Type entity of the variant state object referenced by `Game.variant`. */
+  variantType: Type.AnyObj;
+  /**
+   * Optional Effect Schema rendered as a form after the user picks the variant.
+   * To use a `Type.Type` entity, extract its schema first via `Type.getSchema(...)`.
+   */
   inputSchema?: Schema.Schema.AnyNoContext;
   /** Roles a player may take in this variant (e.g. ['white', 'black']). */
   roles: readonly string[];

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { Message } from '@dxos/types';
@@ -12,7 +13,7 @@ import { Calendar, Mailbox } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Mailbox.Mailbox.typename]: {
+      [Type.getTypename(Mailbox.Mailbox)]: {
         'typename.label': 'Mailbox',
         'typename.label_zero': 'Mailboxes',
         'typename.label_one': 'Mailbox',
@@ -23,7 +24,7 @@ export const translations = [
         'delete-object.label': 'Delete mailbox',
         'object-deleted.label': 'Mailbox deleted',
       },
-      [Message.Message.typename]: {
+      [Type.getTypename(Message.Message)]: {
         'typename.label': 'Message',
         'typename.label_zero': 'Messages',
         'typename.label_one': 'Message',
@@ -34,7 +35,7 @@ export const translations = [
         'delete-object.label': 'Delete message',
         'object-deleted.label': 'Message deleted',
       },
-      [Calendar.Calendar.typename]: {
+      [Type.getTypename(Calendar.Calendar)]: {
         'typename.label': 'Calendar',
         'typename.label_zero': 'Calendars',
         'typename.label_one': 'Calendar',
@@ -90,6 +91,11 @@ export const translations = [
         'disable-background-sync.label': 'Disable background sync',
         'view-trigger.label': 'View trigger',
 
+        'view-mode.menu': 'View mode',
+        'view-mode-enriched.menu': 'Enriched',
+        'view-mode-markdown.menu': 'Markdown',
+        'view-mode-plain.menu': 'Plain text',
+
         'event-untitled.label': 'Untitled',
         'event-toolbar.menu': 'Actions',
         'event-toolbar-create-note.menu': 'Create note',
@@ -99,6 +105,7 @@ export const translations = [
         'message-toolbar-reply.menu': 'Reply',
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
+        'message-toolbar-extract.menu': 'Extract',
 
         'message-body.placeholder': 'Enter message text...',
 

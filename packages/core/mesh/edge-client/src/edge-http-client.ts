@@ -113,6 +113,18 @@ export type GetCronTriggersResponse = {
   cronIds: string[];
 };
 
+/**
+ * Runtime state of the per-space TriggersDispatcher Durable Object on Edge.
+ */
+export type TriggersDispatcherStatus = {
+  isActive: boolean;
+  nextCronTaskRunTimestamp?: number;
+  registeredTriggers: string[];
+  stopAfterTimestamp?: number;
+  remainingMs?: number;
+  nextAlarmTimestamp?: number;
+};
+
 export type EdgeHttpClientOptions = {
   /**
    * Tag included in the {@link EDGE_CLIENT_TAG_HEADER} header on every request.
@@ -408,6 +420,21 @@ export class EdgeHttpClient {
     });
   }
 
+  /**
+   * Fetches TriggersDispatcher Durable Object runtime state for a space.
+   */
+  public async getTriggersDispatcherStatus(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<TriggersDispatcherStatus> {
+    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/triggers/${spaceId}/status`, this.baseUrl), {
+      ...args,
+      method: 'GET',
+      auth: true,
+    });
+  }
+
   public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
     return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
@@ -543,6 +570,61 @@ export class EdgeHttpClient {
     //   }
     //   return response;
     // }
+  }
+
+  //
+  // AI service.
+  //
+
+  /**
+   * Issue an authenticated request to the EDGE AI route (`/ai/generate/anthropic/*`), which
+   * proxies to the AI service. Used as the backend HTTP client for the Anthropic AI provider
+   * (see {@link EdgeAiHttpClient}).
+   *
+   * The configured EDGE base URL and the `/ai/generate/anthropic` prefix are authoritative — only
+   * the path and query of `request.url` are taken from the incoming request (the host and any
+   * sentinel apiUrl path are ignored). Returns the raw `Response` so streaming bodies are
+   * forwarded unchanged to `@effect/ai`.
+   *
+   * The verifiable-presentation auth header is cached and refreshed on a 401, mirroring
+   * {@link _call}. Requires an identity to have been set via {@link setIdentity}.
+   */
+  public async anthropicAiRequest(request: Request): Promise<Response> {
+    const incoming = new URL(request.url);
+    const base = this.baseUrl.replace(/\/$/, '');
+    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
+
+    // Buffer the body up front so it can be re-sent if the cached auth header is rejected.
+    const method = request.method;
+    const body = method === 'GET' || method === 'HEAD' ? undefined : await request.arrayBuffer();
+
+    let handledAuth = false;
+    while (true) {
+      // Pre-authenticate to avoid sending the (potentially large) body twice on the common path.
+      if (!this._authHeader) {
+        const authResponse = await fetch(new URL('/auth', this.baseUrl));
+        if (authResponse.status === 401) {
+          this._authHeader = await this._handleUnauthorized(authResponse);
+        }
+      }
+
+      const headers = new Headers(request.headers);
+      if (this._authHeader) {
+        headers.set('Authorization', this._authHeader);
+      }
+      if (this._clientTag) {
+        headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
+      }
+
+      const response = await fetch(target, { method, headers, body, signal: request.signal });
+      if (response.status === 401 && !handledAuth) {
+        this._authHeader = await this._handleUnauthorized(response);
+        handledAuth = true;
+        continue;
+      }
+
+      return response;
+    }
   }
 
   //

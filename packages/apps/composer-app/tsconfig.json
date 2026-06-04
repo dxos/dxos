@@ -23,7 +23,6 @@
   ],
   "include": [
     "demos",
-    "script-frame",
     "scripts",
     "src"
   ],
@@ -257,6 +256,9 @@
       "path": "../../plugins/plugin-code"
     },
     {
+      "path": "../../plugins/plugin-commerce"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
@@ -275,7 +277,13 @@
       "path": "../../plugins/plugin-doctor"
     },
     {
+      "path": "../../plugins/plugin-duffel"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
+    },
+    {
+      "path": "../../plugins/plugin-extension"
     },
     {
       "path": "../../plugins/plugin-feed"
@@ -342,6 +350,9 @@
     },
     {
       "path": "../../plugins/plugin-observability"
+    },
+    {
+      "path": "../../plugins/plugin-osrm"
     },
     {
       "path": "../../plugins/plugin-outliner"

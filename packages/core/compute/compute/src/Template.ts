@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Database, Ref } from '@dxos/echo';
-import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import { invariant } from '@dxos/invariant';
+import type { EntityNotFoundError } from '@dxos/echo/Err';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import Handlebars from '@dxos/vendor-kbn-handlebars';
@@ -63,8 +63,7 @@ export const Template = Schema.Struct({
   inputs: Schema.optional(Schema.Array(Input)),
 });
 
-export interface Template extends Schema.Schema.Type<typeof Template> {}
-
+export type Template = Schema.Schema.Type<typeof Template>;
 export type MakeProps = Partial<{ id: string; source: string; inputs: Input[] }>;
 
 export const make = ({ id, source, inputs = [] }: MakeProps = {}): Template => ({
@@ -76,7 +75,7 @@ export const make = ({ id, source, inputs = [] }: MakeProps = {}): Template => (
  * Process Handlebars template.
  */
 export const process = <Options extends {}>(source: string, variables: Partial<Options> = {}): string => {
-  invariant(typeof source === 'string');
+  assertArgument(typeof source === 'string', 'source');
   let section = 0;
   const handlebars = Handlebars.create();
   handlebars.registerHelper('section', () => String(++section));
@@ -87,7 +86,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template,
-): Effect.Effect<string, ObjectNotFoundError | FunctionNotFoundError, OperationRegistry.Service | Operation.Service> =>
+): Effect.Effect<string, EntityNotFoundError | FunctionNotFoundError, OperationRegistry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const entries = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {

@@ -10,9 +10,9 @@ import * as Option from 'effect/Option';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Database, type Key } from '@dxos/echo';
+import { Database, Feed, type Key } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isBun } from '@dxos/util';
@@ -39,7 +39,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
 export const spaceLayer = (
   spaceId$: Option.Option<Key.SpaceId>,
   fallbackToPersonalSpace = false,
-): Layer.Layer<Database.Service | QueueService, never, ClientService> => {
+): Layer.Layer<Database.Service | Feed.FeedService, never, ClientService> => {
   const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
 
@@ -93,31 +93,17 @@ export const spaceLayer = (
     ),
   );
 
-  const queue = Layer.effect(
-    QueueService,
+  const feed = Layer.unwrapEffect(
     Effect.gen(function* () {
       const space = yield* getSpace();
       if (!space) {
-        return {
-          queues: {
-            get: (_dxn) => {
-              throw new Error('Queues not available');
-            },
-            create: () => {
-              throw new Error('Queues not available');
-            },
-          },
-          queue: undefined,
-        };
+        return Feed.notAvailable;
       }
-      return {
-        queues: space.queues,
-        queue: undefined,
-      };
+      return createFeedServiceLayer(space.queues);
     }),
   );
 
-  return Layer.merge(db, queue);
+  return Layer.merge(db, feed);
 };
 
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.

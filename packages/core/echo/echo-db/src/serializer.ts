@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Filter, Obj, type Query } from '@dxos/echo';
+import { Filter, Obj, type Query, Type } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, EID, type URI } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';
@@ -89,18 +89,27 @@ export class Serializer {
     const obj = await Obj.fromJSON(data, {
       refResolver: database.graph.createRefResolver({ context: { space: database.spaceId } }),
     });
-    database.add(obj);
+    // Type entities must be persisted via `addType` (clones/forks + conflict check); `add` rejects them.
+    if (Type.isType(obj)) {
+      await database.addType(obj);
+    } else {
+      database.add(obj);
+    }
   }
 }
 
 const isEncodedReferenceJSON = (value: any): boolean =>
   typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
 
-export const decodeDXNFromJSON = (encoded?: EncodedReference | string): DXN | undefined => {
+export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
-    return EncodedRef.toDXN(encoded);
+    return EncodedRef.toURI(encoded);
   } else if (typeof encoded === 'string') {
-    return DXN.tryParse(encoded) ?? DXN.fromTypename(encoded);
+    if (DXN.isDXN(encoded) || EID.isEID(encoded)) {
+      return encoded;
+    }
+    // Treat plain strings as type names.
+    return DXN.make(encoded);
   }
 };
 
@@ -114,8 +123,7 @@ const decodeEncodedReferenceFromJSON = (value: any): EncodedReference | undefine
     return value as EncodedReference;
   } else if (typeof value === 'object' && value !== null && value['@type'] === LEGACY_REFERENCE_TYPE_TAG) {
     // Legacy format: convert to DXN and then to EncodedReference.
-    const dxn = DXN.fromTypename(value.objectId);
-    return EncodedRef.fromDXN(dxn);
+    return EncodedRef.fromURI(DXN.make(value.objectId));
   }
 };
 

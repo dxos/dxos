@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
@@ -374,7 +375,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
     if (localListName && !listId) {
       log.warn('trello push: listName has no matching remote list; card will not move', {
-        cardId: Obj.getDXN(target).toString(),
+        cardId: Obj.getURI(target),
         listName: localListName,
       });
     }
@@ -512,9 +513,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = kanbanRef
-        ? `${integrationId}.${kanbanRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        ? `${integrationId}.${EID.getEntityId(EID.tryParse(kanbanRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       // Wrap the body in `Effect.either` so we can emit a toast on either path
@@ -542,7 +543,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // discovery hands off to actual local writes.
           // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
           // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
-          const kanbanFilterId = kanbanRef?.dxn.asEchoDXN()?.echoId;
+          const kanbanFilterId = kanbanRef ? EID.getEntityId(EID.tryParse(kanbanRef.uri)!) : undefined;
           const targetEntries: Array<{
             entry: (typeof integrationObj.targets)[number];
             kanban: Kanban.Kanban;
@@ -580,7 +581,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
               });
             }
 
-            const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
+            const targetEchoId = EID.getEntityId(EID.tryParse(Ref.make(localObj).uri)!);
             if (kanbanFilterId && targetEchoId !== kanbanFilterId) {
               continue;
             }

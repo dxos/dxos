@@ -15,10 +15,9 @@ import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
-import { type ValueGenerator } from '@dxos/schema/testing';
-import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
+import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
+import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import { generate } from '../../testing';
 import { Graph } from '../../types';
 import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle';
 
@@ -26,9 +25,9 @@ const generator = random as any as ValueGenerator;
 
 random.seed(7);
 
-type StoryArgs = { variant: ExplorerArticleVariant };
+type DefaultStoryProps = { variant: ExplorerArticleVariant };
 
-const DefaultStory = ({ variant }: StoryArgs) => {
+const DefaultStory = ({ variant }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const [graph] = useQuery(space?.db, Filter.type(Graph.Graph));
   if (!space || !graph) {
@@ -38,7 +37,7 @@ const DefaultStory = ({ variant }: StoryArgs) => {
   return <ExplorerArticle role='article' subject={graph as any} attendableId={graph.id} variant={variant} />;
 };
 
-const meta: Meta<StoryArgs> = {
+const meta: Meta<DefaultStoryProps> = {
   title: 'plugins/plugin-explorer/containers/ExplorerArticle',
   render: DefaultStory,
   decorators: [
@@ -51,16 +50,37 @@ const meta: Meta<StoryArgs> = {
         ClientPlugin({
           types: [
             Graph.Graph,
-            View.View,
             HasRelationship.HasRelationship,
             Organization.Organization,
-            Pipeline.Pipeline,
             Person.Person,
+            Pipeline.Pipeline,
+            View.View,
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => generate(personalSpace, generator));
+              yield* Effect.promise(() =>
+                createObjectFactory(
+                  personalSpace.db,
+                  generator,
+                )([
+                  { type: Organization.Organization, count: 20 },
+                  { type: Person.Person, count: 30 },
+                  { type: Pipeline.Pipeline, count: 10 },
+                ]),
+              );
+              // Denser HasRelationship graph so the plexus variant shows multiple relation
+              // groups (organization ref + relationships) fanning out from a focused person.
+              yield* Effect.promise(() =>
+                createRelationFactory(
+                  personalSpace.db,
+                  generator,
+                )([
+                  { type: HasRelationship.HasRelationship, count: 40, data: { kind: 'friend' } },
+                  { type: HasConnection.HasConnection, count: 20, data: { kind: 'vendor' } },
+                ]),
+              );
+
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({
                   db: personalSpace.db,
@@ -93,44 +113,40 @@ const meta: Meta<StoryArgs> = {
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
+type Story = StoryObj<typeof meta>;
 
-/**
- * Default force-directed view (the production layout).
- */
 export const Force: Story = {
   args: {
     variant: 'force',
   },
 };
 
-/**
- * Radial cluster: every object on the perimeter, grouped by its schema, all under a single database root.
- * Inspired by https://observablehq.com/@d3/radial-cluster.
- */
 export const Cluster: Story = {
   args: {
     variant: 'cluster',
   },
 };
 
-/**
- * Hierarchical edge bundling: same hierarchy as `cluster`, with bundled curves
- * routed through the lowest common ancestor for every relation / ref in the space.
- * Inspired by https://observablehq.com/@d3/hierarchical-edge-bundling.
- */
 export const Bundle: Story = {
   args: {
     variant: 'bundle',
   },
 };
 
-/**
- * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
- * objects of the same type cluster together. Each cell is colored by its typename.
- */
+export const Plexus: Story = {
+  args: {
+    variant: 'plexus',
+  },
+};
+
 export const Lattice: Story = {
   args: {
     variant: 'lattice',
+  },
+};
+
+export const Swarm: Story = {
+  args: {
+    variant: 'swarm',
   },
 };

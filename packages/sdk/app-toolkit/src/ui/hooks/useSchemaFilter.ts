@@ -15,8 +15,9 @@ export const useSchemaFilter = (schema: Type.AnyEntity | undefined): Filter.Any 
       return Filter.nothing();
     }
 
-    if (schema instanceof Type.RuntimeType) {
-      return Filter.or(Filter.type(schema), Filter.typename(schema.typename));
+    if (Type.getDatabase(schema) != null) {
+      const typename = Type.getTypename(schema);
+      return typename != null ? Filter.or(Filter.type(schema), Filter.typename(typename)) : Filter.type(schema);
     }
 
     return Filter.type(schema);

@@ -43,6 +43,9 @@ enum SpaceState {
   /// Space is active. Swarming and replication will be done.
   SPACE_ACTIVE = 6;
 
+  /// Space is tombstoned (soft-deleted). Replicated to other devices; never auto-opened.
+  SPACE_DELETED = 9;
+
   ///
   /// Runtime states:
   ///
@@ -85,8 +88,12 @@ message Invitation {
   }
 
   enum Kind {
-    DEVICE = 0;
-    SPACE = 1;
+    /// Unset / unknown. Must not be used for new invitations.
+    INVALID = 0;
+
+    DEVICE = 1;
+
+    SPACE = 2;
   }
 
   enum AuthMethod {

@@ -25,11 +25,11 @@ What we don't do (per spec, "log and skip rather than guess"):
 
 ### Schemas
 
-Detection target: ECHO-registered types only — anything piped through `Type.object({ typename, version })` or `Type.Obj({ typename, version })`. Plain `Schema.Struct` calls without a typename are skipped on purpose: they're internal building blocks, not externally-referenced types, so there's no stable identity to key off.
+Detection target: ECHO-registered types only — anything piped through `Type.makeObject({ typename, version })` or `Type.Obj({ typename, version })`. Plain `Schema.Struct` calls without a typename are skipped on purpose: they're internal building blocks, not externally-referenced types, so there's no stable identity to key off.
 
 For each registration we walk back through the parent `.pipe(...)` chain to find the underlying `Schema.Struct({...})` and capture its top-level field names + the variable name (if any). Field type strings are kept verbatim (capped at ~200 chars) so callers see the actual `Schema.optional(Schema.String)` etc. without re-parsing.
 
-`findSchemaUsage` is a textual scan across the same set of candidate files used by the schema extractor. It excludes the _defining_ line (the `Type.object(...)` call) so callers don't get back the same answer as `getSchema`. Cross-package references are picked up only when the consuming file mentions the typename literally — typenames in DXOS are URL-style strings unique enough that false positives are rare.
+`findSchemaUsage` is a textual scan across the same set of candidate files used by the schema extractor. It excludes the _defining_ line (the `Type.makeObject(...)` call) so callers don't get back the same answer as `getSchema`. Cross-package references are picked up only when the consuming file mentions the typename literally — typenames in DXOS are URL-style strings unique enough that false positives are rare.
 
 ### "Intents" → "operations"
 

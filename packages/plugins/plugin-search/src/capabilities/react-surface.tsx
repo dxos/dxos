@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${SEARCH_DIALOG}.search-input`,
+        id: `${SEARCH_DIALOG}.searchInput`,
         role: 'search-input',
         component: () => {
           const space = useActiveSpace();

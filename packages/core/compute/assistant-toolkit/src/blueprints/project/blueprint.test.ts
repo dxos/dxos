@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
@@ -31,7 +31,7 @@ import { AgentWizardHandlers, SyncTriggers } from '../project-wizard';
 import AgentBlueprintDef from './blueprint';
 import { AgentWorker, AgentBlueprintHandlers } from './functions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
@@ -96,11 +96,11 @@ describe('Agent', () => {
         const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
-        const documentDXN = Obj.getDXN(document);
+        const documentUri = Obj.getURI(document);
         yield* session
           .createRequest({
             system: SYSTEM,
-            prompt: `Please add the document ${documentDXN} as an artifact named "My Test Document" to this agent.`,
+            prompt: `Please add the document ${documentUri} as an artifact named "My Test Document" to this agent.`,
           })
           .pipe(Effect.provide(session.makeToolExecutionServices()));
 
@@ -191,7 +191,7 @@ describe('Agent', () => {
         );
 
         const dispatcher = yield* TriggerDispatcher;
-        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
         expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));

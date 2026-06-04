@@ -4,17 +4,18 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Operation } from '@dxos/compute';
+import { Database, Feed, Obj, Ref, Registry, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { Agent } from '../../../types';
 
 export const AgentRules = Operation.make({
   meta: {
-    key: 'org.dxos.function.agent-wizard.agent-rules',
+    key: DXN.make('org.dxos.function.agentWizard.agentRules'),
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
+    icon: 'ph--book-open--regular',
   },
   input: Schema.Struct({}),
   output: Schema.String,
@@ -22,9 +23,10 @@ export const AgentRules = Operation.make({
 
 export const CreateAgent = Operation.make({
   meta: {
-    key: 'org.dxos.function.agent-wizard.create-agent',
+    key: DXN.make('org.dxos.function.agentWizard.createAgent'),
     name: 'Create agent',
     description: 'Creates a new agent.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     name: Schema.String.annotations({
@@ -42,16 +44,17 @@ export const CreateAgent = Operation.make({
       description: 'The objects to subscribe to for the agent. Can be references to mailboxes.',
     }),
   }),
-  output: Agent.Agent,
-  services: [Blueprint.RegistryService, Database.Service, QueueService, Feed.FeedService],
+  output: Type.getSchema(Agent.Agent),
+  services: [Registry.Service, Database.Service, Feed.FeedService],
 });
 
 export const SyncTriggers = Operation.make({
   meta: {
-    key: 'org.dxos.function.agent.sync-triggers',
+    key: DXN.make('org.dxos.function.agent.syncTriggers'),
     name: 'Sync triggers',
     description:
       'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotations({

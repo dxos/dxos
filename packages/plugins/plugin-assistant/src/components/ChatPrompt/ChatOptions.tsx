@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/compute';
-import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, type Registry, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -29,7 +27,7 @@ export type ChatOptionsProps = {
   chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContext.Binder;
-  blueprintRegistry?: Blueprint.Registry;
+  registry?: Registry.Registry;
   presets?: { id: string; label: string }[];
   preset?: string;
   onPresetChange?: (id: string) => void;
@@ -38,15 +36,7 @@ export type ChatOptionsProps = {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({
-  chat,
-  db,
-  context,
-  blueprintRegistry,
-  presets,
-  preset,
-  onPresetChange,
-}: ChatOptionsProps) => {
+export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -89,7 +79,7 @@ export const ChatOptions = ({
                     <ViewPanel chat={chat} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
-                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
+                    <BlueprintsPanel registry={registry} db={db} context={context} />
                   </Tabs.Panel>
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
                     <McpServersPanel db={db} />
@@ -122,16 +112,12 @@ export const ChatOptions = ({
   );
 };
 
-const BlueprintsPanel = ({
-  blueprintRegistry,
-  db,
-  context,
-}: Pick<ChatOptionsProps, 'blueprintRegistry' | 'db' | 'context'>) => {
+const BlueprintsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry, db });
+  const blueprints = useBlueprints({ registry, db });
   const activeBlueprints = useActiveBlueprints({ context });
-  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
+  const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, registry });
   const { results, handleSearch } = useSearchListResults({
     items: blueprints,
     extract: (blueprint) => blueprint.name,
@@ -392,13 +378,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Option.fromNullable(Obj.getSchema(object)).pipe(
-                Option.flatMap(Annotation.IconAnnotation.get),
-                Option.getOrElse(() => ({
-                  icon: 'ph--cube--regular',
-                  hue: undefined as string | undefined,
-                })),
-              );
+              const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
               const styles = hue ? getStyles(hue) : undefined;
               return (
                 <SearchList.Item
@@ -406,10 +386,10 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   key={object.id}
                   value={object.id}
                   icon={icon}
-                  iconClassNames={styles?.foreground}
+                  iconClassNames={styles?.text}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
+                  onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
                 />
               );
             })

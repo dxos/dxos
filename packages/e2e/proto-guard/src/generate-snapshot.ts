@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Client } from '@dxos/client';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -67,18 +67,14 @@ const seedData = async (client: Client) => {
     // Create dynamic schema.
     const TestType = Schema.Struct({
       testField: Schema.String,
-    }).pipe(
-      Type.object({
-        typename: 'com.example.type.test',
-        version: '0.1.0',
-      }),
-    );
-    const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const dynamicSchema = await space.db.addType(TestType);
 
     const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
 
-    dynamicSchema.addFields({ name: Schema.String, todo: Ref.Ref(Todo) });
-    Obj.update(object2, (object2) => {
+    Type.addFields(dynamicSchema, { name: Schema.String, todo: Ref.Ref(Todo) });
+    // `name`/`todo` are added dynamically above via `Type.addFields`, so they are not in the static type.
+    Obj.update(object2, (object2: any) => {
       object2.name = 'Test';
       object2.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
     });

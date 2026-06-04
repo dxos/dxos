@@ -5,12 +5,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const Fetch = Operation.make({
   meta: {
-    key: 'org.dxos.function.web-search.fetch',
+    key: DXN.make('org.dxos.function.web-search.fetch'),
     name: 'Fetch web page',
+    icon: 'ph--globe-simple--regular',
     description: trim`
       Fetches the content of a web page and returns the HTML. 
       Use this to get the content of a web page.

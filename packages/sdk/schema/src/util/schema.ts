@@ -4,10 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, type SchemaRegistry, Type } from '@dxos/echo';
+import { type Registry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
-  type EchoSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
@@ -16,9 +15,10 @@ import {
   type SelectOption,
   TypeEnum,
   formatToType,
+  toEffectSchema,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { type DXN, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
 
@@ -52,34 +52,29 @@ export const createDefaultSchema = () =>
     description: Schema.optional(Schema.String).annotations({
       title: 'Description',
     }),
-  }).pipe(
-    Type.object({
-      typename: `com.example.type.${PublicKey.random().truncate()}`,
-      version: '0.1.0',
-    }),
-  );
+    // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
 
-export const getSchema = async (
-  dxn: DXN,
-  registry?: SchemaRegistry.SchemaRegistry,
-): Promise<Type.AnyEntity | undefined> => {
-  const typeDXN = dxn.asTypeDXN();
-  if (!typeDXN) {
+export const getSchema = async (dxn: DXN.DXN, registry?: Registry.Registry): Promise<Type.AnyEntity | undefined> => {
+  if (!DXN.isDXN(dxn)) {
     return;
   }
 
-  const { type, version } = typeDXN;
-  const schema = await registry
-    ?.query({ typename: type, version, location: ['database', 'runtime'] })
-    .firstOrUndefined();
-  return schema;
+  const version = DXN.getVersion(dxn);
+  if (!version || !registry) {
+    return;
+  }
+  // `dxn` is already a canonical `dxn:<typename>:<version>` DXN; pass it through
+  // directly rather than rebuilding a legacy `dxn:type:` string.
+  const entity = registry.getByURI(dxn);
+  return entity != null && Type.isType(entity) ? entity : undefined;
 };
 
 // TODO(burdon): Factor out.
 export const getSchemaFromPropertyDefinitions = (
   typename: string,
   properties: SchemaPropertyDefinition[],
-): EchoSchema => {
+): Type.Type => {
   // TODO(burdon): Move to echo-schema.
   const typeToSchema: Record<TypeEnum, Schema.Any> = {
     [TypeEnum.String]: Schema.String.pipe(Schema.optional),
@@ -95,11 +90,14 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
-  const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
+  // `EchoObjectSchema(...)` yields a static `Type.Obj` entity; unwrap to its
+  // source schema (which carries the typename annotation) before handing it to
+  // `createEchoSchema`, which expects a raw Effect Schema.
+  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
+  const schema = createEchoSchema(Type.getSchema(typeSchema));
 
-  // Wrap schema modifications in Obj.update since the persistent schema is an ECHO object.
-  Obj.update(schema.persistentSchema as unknown as Obj.Unknown, () => {
+  // Wrap schema modifications in Type.update so they run inside the schema's change context.
+  Type.update(schema, () => {
     for (const prop of properties) {
       const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
       if (prop.config?.options) {
@@ -120,6 +118,22 @@ export const getSchemaFromPropertyDefinitions = (
   });
 
   return schema;
+};
+
+/**
+ * Build an in-memory, mutable `Type.Type` entity from a JSON schema. A typename is required to
+ * identify the entity; if the JSON schema does not carry one, `typename` (or a generated typename) is stamped.
+ */
+export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: string): Type.Type => {
+  const withTypename: JsonSchemaType = jsonSchema.typename
+    ? jsonSchema
+    : {
+        ...jsonSchema,
+        typename: typename ?? `com.example.type.${PublicKey.random().truncate()}`,
+        version: jsonSchema.version ?? '0.1.0',
+      };
+
+  return createEchoSchema(toEffectSchema(withTypename));
 };
 
 /**

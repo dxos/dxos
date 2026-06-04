@@ -138,9 +138,7 @@ const LightboxViewport = composable<HTMLDivElement, LightboxViewportProps>((prop
           items={items}
           // Use the ref DXN as the stable per-tile key — index-based keys would
           // shift after a deletion and force unrelated tiles to remount.
-          getId={(data?: { ref: Ref.Ref<File.File>; index: number }) =>
-            data?.ref.dxn.toString() ?? String(data?.index ?? '')
-          }
+          getId={(data?: { ref: Ref.Ref<File.File>; index: number }) => data?.ref.uri ?? String(data?.index ?? '')}
         />
       </Masonry.Content>
     </Masonry.Root>

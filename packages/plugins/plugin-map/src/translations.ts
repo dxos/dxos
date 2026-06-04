@@ -26,6 +26,7 @@ export const translations = [
       [meta.id]: {
         'plugin.name': 'Maps',
         'toggle-type.label': 'Toggle view',
+        'map.companion.label': 'Map',
       },
     },
   },

@@ -1,0 +1,326 @@
+---
+id: org.dxos.plugin.transformer
+name: TransformerPlugin
+version: 0.1.0
+---
+
+A browser-based machine learning plugin for DXOS Composer that runs Hugging Face Transformers.js
+models entirely in-browser via WebAssembly and WebGPU. It provides automatic speech recognition
+(Whisper) through a React hook and component layer, enabling real-time voice transcription without
+any server-side inference infrastructure.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type PipelineConfig
+  fields:
+    model: string              # Hugging Face model id, e.g. 'Xenova/whisper-base'
+    active?: boolean           # whether to load and run the pipeline
+    debug?: boolean            # enable verbose logging
+```
+
+```mdl
+type PipelineState
+  fields:
+    gpuInfo: string            # WebGPU adapter description, or fallback message
+    isLoaded: boolean          # true once the model is fully initialised
+    isLoading: boolean         # true while the model is being downloaded/compiled
+    error: string | null       # error message if loading failed
+```
+
+```mdl
+type AudioStreamConfig
+  fields:
+    active?: boolean           # start/stop microphone capture
+    debug?: boolean
+    onAudioData?(audioData: Float32Array): Promise<void>
+```
+
+```mdl
+type AudioStreamState
+  fields:
+    stream: MediaStream | null # live microphone stream, or null when inactive
+    error: string | null       # error from getUserMedia or audio processing
+    audioLevel: number         # 0-255 RMS level for visualisation
+```
+
+```mdl
+type TranscriptionOptions
+  fields:
+    sampling_rate: number      # audio sample rate in Hz (16000)
+    chunk_length_s: number     # seconds of audio per chunk
+    stride_length_s: number    # overlap between adjacent chunks
+    return_timestamps: boolean # include word-level timestamps in output
+    language: string           # target language hint, e.g. 'english'
+```
+
+```mdl
+type EmbeddingOutput
+  fields:
+    data: number[]             # embedding vector as a flat float array
+```
+
+## Components
+
+```mdl
+component Voice
+  desc: |
+    Composite component that wires usePipeline and useAudioStream together to provide
+    live Whisper transcription from the microphone.  Accumulates the running transcript
+    in local state and renders a DebugInfo panel showing model status, audio level, and
+    the current transcription text.
+  props:
+    active?: boolean           # start/stop the entire pipeline
+    debug?: boolean
+    model?: string             # defaults to 'Xenova/whisper-base'
+  state:
+    isTranscribing: boolean    # true while a transcription call is in-flight
+    transcription: string      # accumulated transcript text
+  layout: |
+    ┌──────────────────────────────────────┐
+    │  [DebugInfo panel]                   │
+    │   model: Xenova/whisper-base         │
+    │   gpu: GPU Available                 │
+    │   stream: active / inactive          │
+    │   level: ███░░░░ (audioLevel bar)    │
+    │   ──────────────────────────────     │
+    │   [transcription text]               │
+    └──────────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op LoadModel
+  desc: |
+    Loads a Transformers.js automatic-speech-recognition pipeline for the given model id.
+    Configures ONNX backend to use WebGPU if available, falling back to WASM/CPU.
+    Invoked automatically when the Voice component mounts with active = true.
+  input: void
+  output: void
+  effects: [http, fs]
+  note: Model weights are cached in ./.cache by the Transformers.js env settings.
+```
+
+```mdl
+op Transcribe
+  desc: |
+    Runs the loaded ASR pipeline against a Float32Array of 16 kHz mono audio.
+    Returns the transcribed text string from the pipeline result.
+  input: void
+  output: string
+  effects: [gpu]
+  note: Guarded by isTranscribing flag to prevent concurrent calls.
+```
+
+```mdl
+op CaptureAudio
+  desc: |
+    Requests microphone permission via getUserMedia and wires an AudioWorklet that
+    accumulates 2-second chunks (32000 samples at 16 kHz) before forwarding them to
+    the onAudioData callback.
+  input: void
+  output: void
+  effects: [audio]
+  note: Cleaned up automatically when the component unmounts or active becomes false.
+```
+
+## Features
+
+```mdl
+feat F-1: In-Browser ASR Pipeline
+
+  req F-1.1:
+    when: Voice component mounts with active = true
+    then: usePipeline loads the Whisper model via Transformers.js; isLoading is true until complete
+
+  req F-1.2:
+    when: WebGPU is available in the browser
+    then: the ONNX backend is configured for WebGPU execution and gpuInfo reflects the adapter
+
+  req F-1.3:
+    when: WebGPU is not available
+    then: the pipeline falls back to WASM/CPU and gpuInfo is set to a 'not supported' message
+
+  req F-1.4:
+    when: model loading fails
+    then: PipelineState.error contains a human-readable message; isLoading is false
+```
+
+```mdl
+feat F-2: Microphone Capture
+
+  req F-2.1:
+    when: useAudioStream is activated
+    then: getUserMedia is called with mono 16 kHz audio and echo/noise cancellation enabled
+
+  req F-2.2:
+    when: audio is captured
+    then: an AudioWorklet accumulates samples and emits 2-second chunks via the onAudioData callback
+
+  req F-2.3:
+    when: active is set to false or the component unmounts
+    then: all MediaStream tracks are stopped, AudioContext is closed, and AnimationFrame is cancelled
+
+  req F-2.4:
+    when: getUserMedia is denied
+    then: AudioStreamState.error is set with the underlying error message
+```
+
+```mdl
+feat F-3: Live Transcription
+
+  req F-3.1:
+    when: a 2-second audio chunk arrives and the model is loaded
+    then: usePipeline.transcribe is called with 16 kHz mono options and the result appended to the transcript
+
+  req F-3.2:
+    when: transcription is already in progress (isTranscribing = true)
+    then: the incoming audio chunk is dropped to avoid concurrent inference
+
+  req F-3.3:
+    when: transcription returns an empty or whitespace-only string
+    then: the transcript state is not updated
+```
+
+```mdl
+feat F-4: RAG Embedding Pipeline (Testing)
+
+  req F-4.1:
+    when: RagPipeline.generateCompletions is called with an input and a knowledge base
+    then: embeddings are generated for both the input and each knowledge-base entry
+
+  req F-4.2:
+    when: embeddings are available
+    then: cosine similarity is computed and the top-3 most similar contexts are selected
+```
+
+## Acceptance
+
+```mdl
+test T-1: Model loads and transitions isLoaded
+  given: Voice component mounts with active = true and model = 'Xenova/whisper-base'
+  when: model download and ONNX compilation complete
+  then:
+    - isLoading transitions from true to false
+    - isLoaded is true
+    - error is null
+```
+
+```mdl
+test T-2: Model load failure sets error state
+  given: the model download throws a network error
+  when: usePipeline attempts to load the model
+  then:
+    - isLoading is false
+    - error contains the error message string
+    - isLoaded is false
+```
+
+```mdl
+test T-3: Microphone capture populates stream state
+  given: getUserMedia is granted
+  when: useAudioStream activates
+  then:
+    - AudioStreamState.stream is a non-null MediaStream
+    - AudioStreamState.error is null
+```
+
+```mdl
+test T-4: Audio chunk triggers transcription
+  given: model is loaded and stream is active
+  when: AudioWorklet posts a 32000-sample chunk
+  then:
+    - isTranscribing becomes true during the pipeline call
+    - transcription string is updated with the returned text
+    - isTranscribing returns to false after completion
+```
+
+```mdl
+test T-5: Concurrent transcription calls are dropped
+  given: isTranscribing is true
+  when: a second audio chunk arrives
+  then: the chunk is discarded and no second pipeline call is made
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

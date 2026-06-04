@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Type, View } from '@dxos/echo';
+import { EID, Filter, Key, Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
@@ -31,16 +29,21 @@ export const createGenerator = <S extends Type.AnyObj>(
   client: Client,
   invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   schema: S,
-): ObjectGenerator<Schema.Schema.Type<S>> => {
-  return async (space: Space, n: number): Promise<Schema.Schema.Type<S>[]> => {
-    const typename = schema.typename;
+): ObjectGenerator<Type.InstanceType<S>> => {
+  return async (space: Space, n: number): Promise<Type.InstanceType<S>[]> => {
+    const typename = Type.getTypename(schema);
 
     // Find or create table and view.
     const views = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
-    const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
+    const staticSchema = client
+      ? client.graph.registry
+          .list()
+          .filter(Type.isType)
+          .find((s) => Type.getTypename(s) === typename)
+      : undefined;
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
+      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
     }
 
     // Create objects.
@@ -51,7 +54,7 @@ export const createGenerator = <S extends Type.AnyObj>(
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
-    Markdown.Document.typename,
+    Type.getTypename(Markdown.Document),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
@@ -67,7 +70,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    Sketch.Sketch.typename,
+    Type.getTypename(Sketch.Sketch),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         const obj = space.db.add(Sketch.make({ name: random.commerce.productName() }));
@@ -80,7 +83,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
   // TODO(burdon): Create unit tests.
   [
-    Sheet.Sheet.typename,
+    Type.getTypename(Sheet.Sheet),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         const cells: Record<string, Sheet.CellValue> = {};
@@ -117,7 +120,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    ComputeGraph.typename,
+    Type.getTypename(ComputeGraph),
     async (space, n, cb) => {
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();
@@ -127,7 +130,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           .createNode({
             id: 'gpt-QUEUE_ID',
             type: 'constant',
-            value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+            value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
           })
           .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })

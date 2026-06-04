@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { CollectionModel } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { CollectionModel } from '@dxos/schema';
 
 import { Markdown, MarkdownOperation } from '../types';
 
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = Markdown
       yield* CollectionModel.add({ object });
 
       return {
-        id: Obj.getDXN(object).toString(),
+        id: Obj.getURI(object),
       };
     }),
   ),

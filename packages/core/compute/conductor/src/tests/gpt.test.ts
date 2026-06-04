@@ -18,6 +18,7 @@ import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
+import { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -52,10 +53,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime();
-        runtime.registerGraph('dxn:compute:gpt1', gpt1());
+        runtime.registerGraph(URI.make('dxn:compute:gpt1'), gpt1());
 
         const computeResult = yield* runtime
-          .runGraph('dxn:compute:gpt1', ValueBag.make({ prompt: 'What is the meaning of life?' }))
+          .runGraph(URI.make('dxn:compute:gpt1'), ValueBag.make({ prompt: 'What is the meaning of life?' }))
           .pipe(Effect.withSpan('runGraph'));
 
         const text: string = yield* computeResult.values.text;
@@ -71,10 +72,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime();
-        runtime.registerGraph('dxn:compute:gpt2', gpt2());
+        runtime.registerGraph(URI.make('dxn:compute:gpt2'), gpt2());
 
         const output: ValueBag<GptOutput> = yield* runtime.runGraph(
-          'dxn:compute:gpt2',
+          URI.make('dxn:compute:gpt2'),
           ValueBag.make({
             prompt: 'What is the meaning of life?',
           }),
@@ -127,14 +128,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   // TODO(burdon): Update these tests to use TestLayer when re-enabling.
   // test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
   //   const runtime = new TestRuntime();
-  //   runtime.registerGraph('dxn:compute:gpt1', gpt1());
+  //   runtime.registerGraph(URI.make('dxn:compute:gpt1'), gpt1());
   //
   //   await runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const computeResult = yield* runtime
   //         .runGraph(
-  //           'dxn:compute:gpt1',
+  //           URI.make('dxn:compute:gpt1'),
   //           ValueBag.make({
   //             prompt: 'What is the meaning of life?',
   //           }),
@@ -152,14 +153,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   // test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
   //   const runtime = new TestRuntime();
-  //   runtime.registerGraph('dxn:compute:gpt2', gpt2());
+  //   runtime.registerGraph(URI.make('dxn:compute:gpt2'), gpt2());
   //
   //   await runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const outputs: ValueBag<GptOutput> = yield* runtime
   //         .runGraph(
-  //           'dxn:compute:gpt2',
+  //           URI.make('dxn:compute:gpt2'),
   //           ValueBag.make({
   //             prompt: 'What is the meaning of life?',
   //           }),

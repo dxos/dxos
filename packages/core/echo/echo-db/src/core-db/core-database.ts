@@ -23,14 +23,13 @@ import { type Database, Ref } from '@dxos/echo';
 import {
   type DatabaseDirectory,
   EncodedReference,
-  type ObjectMeta,
-  type ObjectStructure,
+  type EntityMeta,
+  type EntityStructure,
   type SpaceState,
 } from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { type ObjectId } from '@dxos/keys';
-import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -94,11 +93,11 @@ export class CoreDatabase {
   private readonly _objects = new Map<string, ObjectCore>();
 
   /**
-   * DXN string -> ObjectId.
+   * DXN string -> EntityId.
    * Stores the targets of strong dependencies to the objects that depend on them.
    * When we load an object that doesn't have it's strong deps resolved, we wait for the deps to be loaded first.
    */
-  private readonly _strongDepsIndex = new Map<string, ObjectId[]>();
+  private readonly _strongDepsIndex = new Map<string, EntityId[]>();
 
   /**
    * Object ids whose backing document was determined to be not on local disk
@@ -107,7 +106,7 @@ export class CoreDatabase {
    * network delivery — turning previously infinite stalls into a fast
    * `undefined` return.
    */
-  private readonly _unavailableObjects = new Set<ObjectId>();
+  private readonly _unavailableObjects = new Set<EntityId>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -575,7 +574,7 @@ export class CoreDatabase {
    * Intended way to change the type of the object (for schema migrations).
    * Any concurrent changes made by other peers will be overwritten.
    */
-  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectProps): Promise<void> {
+  async atomicReplaceObject(id: EntityId, params: AtomicReplaceObjectProps): Promise<void> {
     const { data, type, meta } = params;
 
     const core = await this.loadObjectCoreById(id);
@@ -583,7 +582,7 @@ export class CoreDatabase {
 
     const mappedData = deepMapValues(data, (value, recurse) => {
       if (Ref.isRef(value)) {
-        return { '/': value.dxn.toString() };
+        return { '/': value.uri };
       }
       if (value instanceof Uint8Array) {
         return value;
@@ -595,16 +594,16 @@ export class CoreDatabase {
     invariant(mappedData['@meta'] === undefined);
 
     // deepMapValues is used to clone the automerge doc to avoid "Cannot create a reference to an existing document object" error.
-    const existingStruct: ObjectStructure = deepMapValues(core.getDecoded([]), (value, recurse) =>
+    const existingStruct: EntityStructure = deepMapValues(core.getDecoded([]), (value, recurse) =>
       value instanceof Uint8Array ? value : recurse(value),
     );
-    const newStruct: ObjectStructure = {
+    const newStruct: EntityStructure = {
       ...existingStruct,
       data: mappedData,
     };
 
     if (type !== undefined) {
-      newStruct.system!.type = EncodedReference.fromDXN(type);
+      newStruct.system!.type = EncodedReference.fromURI(type);
     }
 
     if (meta !== undefined) {
@@ -921,8 +920,11 @@ export class CoreDatabase {
       // network. Callers that explicitly want network-backed dep loading
       // can issue per-dep requests themselves.
       for (const dep of core.getStrongDependencies()) {
-        if (dep.isLocalObjectId()) {
-          const id = dep.parts[1];
+        if (!EID.isLocal(dep)) {
+          continue;
+        }
+        const id = EID.getEntityId(dep);
+        if (id) {
           this._automergeDocLoader.loadObjectDocument(id, { diskOnly: true });
         }
       }
@@ -972,12 +974,12 @@ export class CoreDatabase {
     });
 
     const deps = core.getStrongDependencies();
-    for (const dxn of deps) {
-      if (!dxn.isLocalObjectId()) {
+    for (const dep of deps) {
+      if (!EID.isLocal(dep)) {
         continue;
       }
-      const depObjectId = dxn.parts[1];
-      if (this._objects.has(depObjectId)) {
+      const depObjectId = EID.getEntityId(dep);
+      if (!depObjectId || this._objects.has(depObjectId)) {
         continue;
       }
 
@@ -987,16 +989,19 @@ export class CoreDatabase {
     return core;
   }
 
-  private _areDepsSatisfied(core: ObjectCore, seen?: Set<ObjectId>): boolean {
-    seen ??= new Set<ObjectId>();
+  private _areDepsSatisfied(core: ObjectCore, seen?: Set<EntityId>): boolean {
+    seen ??= new Set<EntityId>();
     const deps = core.getStrongDependencies();
 
     seen.add(core.id);
     return deps.every((dep) => {
-      if (!dep.isLocalObjectId()) {
+      if (!EID.isLocal(dep)) {
         return true;
       }
-      const depObjectId = dep.parts[1];
+      const depObjectId = EID.getEntityId(dep);
+      if (!depObjectId) {
+        return true;
+      }
       const depCore = this._objects.get(depObjectId);
       if (!depCore) {
         return false;
@@ -1016,17 +1021,17 @@ export class CoreDatabase {
    * use `diskOnly: true`, so deps surface as unavailable promptly even for
    * non-`diskOnly` top-level callers.
    */
-  private _areDepsResolved(core: ObjectCore, seen?: Set<ObjectId>): boolean {
-    seen ??= new Set<ObjectId>();
+  private _areDepsResolved(core: ObjectCore, seen?: Set<EntityId>): boolean {
+    seen ??= new Set<EntityId>();
     const deps = core.getStrongDependencies();
 
     seen.add(core.id);
     return deps.every((dep) => {
-      if (!dep.isLocalObjectId()) {
+      if (!EID.isLocal(dep)) {
         return true;
       }
-      const depObjectId = dep.parts[1];
-      if (this._unavailableObjects.has(depObjectId)) {
+      const depObjectId = EID.getEntityId(dep);
+      if (!depObjectId || this._unavailableObjects.has(depObjectId)) {
         return true;
       }
       const depCore = this._objects.get(depObjectId);
@@ -1049,8 +1054,8 @@ export class CoreDatabase {
     // and A) so any `loadObjectCoreById` waiter higher up in the chain
     // re-evaluates `_areDepsResolved` and resolves with `undefined`
     // instead of hanging. Mirrors the BFS in `_onObjectDocumentLoaded`.
-    const toWake = new Set<ObjectId>([objectId]);
-    const queue: ObjectId[] = [objectId];
+    const toWake = new Set<EntityId>([objectId]);
+    const queue: EntityId[] = [objectId];
     while (queue.length > 0) {
       const id = queue.shift()!;
       for (const dep of this._strongDepsIndex.get(id) ?? []) {
@@ -1196,15 +1201,16 @@ export type AtomicReplaceObjectProps = {
   data: any;
 
   /**
-   * Update object type.
+   * Update object type — either a typename DXN or a stored-schema EID
+   * (see `getSchemaURI`).
    */
-  type?: DXN;
+  type?: URI.URI;
 
   /**
    * Optional partial meta patch — merged into the existing object meta.
    * Fields explicitly set to `undefined` overwrite the previous value with `undefined`.
    */
-  meta?: Partial<ObjectMeta>;
+  meta?: Partial<EntityMeta>;
 };
 
 const RPC_TIMEOUT = 20_000;

@@ -7,7 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -33,7 +33,7 @@ describe('Feed V2', () => {
   it.effect('should append and query blocks via RPC', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
@@ -78,7 +78,7 @@ describe('Feed V2', () => {
   it.effect('should persist feed namespace', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
       const feedNamespace = WellKnownNamespaces.data;
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
@@ -111,7 +111,7 @@ describe('Feed V2', () => {
   it.effect('should use subscriptions', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
@@ -156,7 +156,7 @@ describe('Feed V2', () => {
   it.effect('should allow position query with unpositionedOnly false', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
@@ -346,7 +346,7 @@ describe('Feed V2', () => {
   it.effect('append local', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
@@ -413,7 +413,7 @@ describe('Feed V2', () => {
       const nsTrace = WellKnownNamespaces.trace;
 
       // First append in each (spaceId, feedNamespace) pair starts at 0.
-      const feedAData = ObjectId.random();
+      const feedAData = EntityId.random();
       const firstAData = yield* feed.appendLocal([
         {
           spaceId: spaceA,
@@ -422,7 +422,7 @@ describe('Feed V2', () => {
           data: new Uint8Array([1]),
         },
       ]);
-      const feedATrace = ObjectId.random();
+      const feedATrace = EntityId.random();
       const firstATrace = yield* feed.appendLocal([
         {
           spaceId: spaceA,
@@ -431,7 +431,7 @@ describe('Feed V2', () => {
           data: new Uint8Array([2]),
         },
       ]);
-      const feedBData = ObjectId.random();
+      const feedBData = EntityId.random();
       const firstBData = yield* feed.appendLocal([
         {
           spaceId: spaceB,
@@ -440,7 +440,7 @@ describe('Feed V2', () => {
           data: new Uint8Array([3]),
         },
       ]);
-      const feedBTrace = ObjectId.random();
+      const feedBTrace = EntityId.random();
       const firstBHalo = yield* feed.appendLocal([
         {
           spaceId: spaceB,
@@ -451,7 +451,7 @@ describe('Feed V2', () => {
       ]);
 
       // A second append in one pair should only advance that specific pair.
-      const feedAData2 = ObjectId.random();
+      const feedAData2 = EntityId.random();
       const secondAData = yield* feed.appendLocal([
         {
           spaceId: spaceA,
@@ -473,7 +473,7 @@ describe('Feed V2', () => {
   it.effect('tailing a feed', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feed.migrate();
@@ -649,10 +649,69 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('append returns existing positions for duplicate blocks and never wastes positions', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const makeBlock = (sequence: number): Block =>
+        Block.make({
+          feedId,
+          actorId: ALICE,
+          sequence,
+          prevActorId: null,
+          prevSequence: null,
+          position: null,
+          timestamp: Date.now(),
+          data: new Uint8Array([sequence]),
+        });
+
+      const firstBlocks = [makeBlock(0), makeBlock(1), makeBlock(2)];
+      const firstAppend = yield* feed.append({
+        requestId: 'req-first',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: firstBlocks,
+      });
+      expect(firstAppend.positions).toEqual([0, 1, 2]);
+
+      // Re-appending the same blocks must return their existing positions and not advance the
+      // namespace position counter; otherwise the client would try to UPDATE blocks to wasted
+      // positions and hit the (feedPrivateId, position) UNIQUE constraint.
+      const secondAppend = yield* feed.append({
+        requestId: 'req-second',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: firstBlocks,
+      });
+      expect(secondAppend.positions).toEqual([0, 1, 2]);
+
+      // A subsequent append of new blocks should resume from position 3, not from a wasted slot.
+      const newAppend = yield* feed.append({
+        requestId: 'req-new',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [makeBlock(3)],
+      });
+      expect(newAppend.positions).toEqual([3]);
+
+      const all = yield* feed.query({
+        requestId: 'req-query',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        query: { feedIds: [feedId] },
+        position: -1,
+      });
+      expect(all.blocks.map((block) => block.position)).toEqual([0, 1, 2, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('append ignores duplicate Lamport timestamp and preserves original data', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = ObjectId.random();
+      const feedId = EntityId.random();
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
       yield* feed.migrate();
 

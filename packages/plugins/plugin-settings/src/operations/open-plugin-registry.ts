@@ -16,11 +16,11 @@ const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry
       Effect.gen(function* () {
         const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
         yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(SETTINGS_ID) });
-        yield* Effect.fork(
-          invoke(LayoutOperation.Open, {
-            subject: [`${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:plugins`],
-          }),
-        );
+        // Await (don't fork): SwitchWorkspace selects the workspace's first child, so a forked Open
+        // races/drops before its deck update applies. Awaiting guarantees the registry is selected.
+        yield* invoke(LayoutOperation.Open, {
+          subject: [`${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:plugins`],
+        });
       }),
     ),
   );

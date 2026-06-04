@@ -2,20 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Predicate from 'effect/Predicate';
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
-import { Panel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
+import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { type GeoMarker, type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
-import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
-import { getDeep } from '@dxos/util';
+import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
 import { type GeoControlProps, GlobeControl, MapControl } from '#components';
-import { type Map } from '#types';
+import { type MapCapabilities } from '#types';
 
 // Shared defaults so toggling between map and globe starts at the same position
 // when the user hasn't interacted yet.
@@ -34,85 +30,95 @@ const interpolate = (value: number, from: [number, number], to: [number, number]
   return to[0] + t * (to[1] - to[0]);
 };
 
-const mapMapToGlobeZoom = (zoom: number) => interpolate(zoom, ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
-const mapGlobeToMapZoom = (zoom: number) => interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map);
+// Clamp map zoom-out to 4.
+const mapToGlobeZoom = (zoom: number) => interpolate(Math.max(4, zoom), ZOOM_ANCHORS.map, ZOOM_ANCHORS.globe);
+const globeToMapZoom = (zoom: number) => Math.floor(interpolate(zoom, ZOOM_ANCHORS.globe, ZOOM_ANCHORS.map));
 
 export type MapControlType = 'globe' | 'map';
 
 export type MapArticleProps = AppSurface.ObjectArticleProps<
-  Map.Map,
-  GeoControlProps & Pick<MapRootProps, 'onChange'> & { type?: MapControlType }
+  Obj.Any,
+  GeoControlProps &
+    Pick<MapRootProps, 'onChange'> & {
+      type?: MapControlType;
+      /** Resolved marker provider for the subject (supplied by the surface). */
+      provider?: MapCapabilities.MarkerProvider;
+      /** Tile URL template (map variant); defaults to OpenStreetMap when omitted. */
+      tileUrl?: string;
+      /** Selection writer (supplied by the surface; dispatches `LayoutOperation.Select`). */
+      onSelect?: (contextId: string, mode: 'single' | 'multi', id: string) => void;
+    }
 >;
 
-export const MapArticle = ({
-  role,
-  subject: object,
-  attendableId: _attendableId,
+/**
+ * Generic map surface. Renders the markers resolved by a {@link MapCapabilities.MarkerProvider}
+ * (built-in for `Map.Map` views; contributed by other plugins, e.g. plugin-trip for `Trip`) as a
+ * Leaflet map or 3-D globe. The provider, tile URL and selection writer are resolved by the
+ * surface and passed in, keeping this container free of plugin-context hooks.
+ */
+export const MapArticle = ({ role, subject, provider, ...props }: MapArticleProps) => {
+  const Root = role === 'section' ? Container : Fragment;
+  return (
+    <Root>
+      <Panel.Root>
+        <Panel.Content>
+          {provider && (
+            <MapArticleInner key={provider.id} provider={provider} role={role} subject={subject} {...props} />
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    </Root>
+  );
+};
+
+type MapArticleInnerProps = MapArticleProps & { provider: MapCapabilities.MarkerProvider };
+
+/**
+ * Inner article mounted once a provider has been resolved (keyed by provider id so switching
+ * providers remounts), keeping `provider.useMarkers` an unconditional hook call.
+ */
+const MapArticleInner = ({
+  subject,
+  attendableId,
+  provider,
+  tileUrl,
   type: typeProp = 'map',
   center: centerProp,
   zoom: zoomProp,
   onChange,
+  onSelect,
+  role: _role,
   ...props
-}: MapArticleProps) => {
+}: MapArticleInnerProps) => {
   const [type, setType] = useControlledState(typeProp);
   const [viewport, setViewport] = useState<{ center: LatLngLiteral; zoom: number }>({
     center: centerProp ?? DEFAULT_CENTER,
     zoom: zoomProp ?? DEFAULT_ZOOM,
   });
 
-  // Sync internal viewport when caller-provided center/zoom change so that MapArticle
+  // Sync internal viewport when caller-provided center/zoom change so MapArticle
   // remains usable as a controlled component.
   useEffect(() => {
     if (centerProp === undefined && zoomProp === undefined) {
       return;
     }
-    setViewport((prev) => ({
-      center: centerProp ?? prev.center,
-      zoom: zoomProp ?? prev.zoom,
-    }));
+    setViewport((prev) => ({ center: centerProp ?? prev.center, zoom: zoomProp ?? prev.zoom }));
   }, [centerProp, zoomProp]);
 
-  const db = object && Obj.getDatabase(object);
-  const [view] = useObject(object?.view);
-  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(db, typename);
-  const baseFilter = useSchemaFilter(schema);
-  const query = useMemo(
-    () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
-    [baseFilter, tag],
+  const { markers, lines, selection } = provider.useMarkers(subject, { attendableId });
+
+  // Read the attention selection. The provider may override the context/mode (e.g. a view
+  // highlights multiple rows by typename); default to single-select against the article.
+  const contextId = selection?.contextId ?? attendableId ?? Obj.getURI(subject);
+  const mode = selection?.mode ?? 'single';
+  const selectedRaw = useSelected(contextId, mode);
+  const selected = useMemo(
+    () => (Array.isArray(selectedRaw) ? selectedRaw : selectedRaw ? [selectedRaw] : []),
+    [selectedRaw],
   );
-  const objects = useQuery(db, query);
 
-  const markers = objects
-    .map((row) => {
-      if (!view?.projection.pivotFieldId) {
-        return undefined;
-      }
+  const handleSelect = useCallback((id: string) => onSelect?.(contextId, mode, id), [onSelect, contextId, mode]);
 
-      const field = view.projection.fields?.find((f) => f.id === view.projection.pivotFieldId);
-      const geopoint = field?.path && getDeep(row, field.path.split('.'));
-      if (!geopoint) {
-        return undefined;
-      }
-
-      if (!Array.isArray(geopoint) || geopoint.length < 2) {
-        return undefined;
-      }
-
-      const [lng, lat] = geopoint;
-      if (typeof lng !== 'number' || typeof lat !== 'number') {
-        return undefined;
-      }
-
-      return { id: row.id, location: { lat, lng } } as GeoMarker;
-    })
-    .filter(Predicate.isNotNullable);
-
-  const selected = useSelected(typename, 'multi');
-  const Root = role === 'section' ? Container : Fragment;
-
-  // Store zoom in map units; convert when emitted by the globe.
   const handleMapChange = useCallback(
     (ev: { center: LatLngLiteral; zoom: number }) => {
       setViewport(ev);
@@ -120,44 +126,41 @@ export const MapArticle = ({
     },
     [onChange],
   );
+
   const handleGlobeChange = useCallback(
     (ev: { center: LatLngLiteral; zoom: number }) => {
-      const mapped = { center: ev.center, zoom: mapGlobeToMapZoom(ev.zoom) };
+      const mapped = { center: ev.center, zoom: globeToMapZoom(ev.zoom) };
       setViewport(mapped);
       onChange?.(mapped);
     },
     [onChange],
   );
 
-  return (
-    <Root>
-      <Panel.Root>
-        <Panel.Content>
-          {type === 'map' && (
-            <MapControl
-              {...props}
-              markers={markers}
-              selected={selected}
-              center={viewport.center}
-              zoom={viewport.zoom}
-              onChange={handleMapChange}
-              onToggle={() => setType('globe')}
-            />
-          )}
-          {type === 'globe' && (
-            <GlobeControl
-              {...props}
-              markers={markers}
-              selected={selected}
-              center={viewport.center}
-              zoom={mapMapToGlobeZoom(viewport.zoom)}
-              onChange={handleGlobeChange}
-              onToggle={() => setType('map')}
-            />
-          )}
-        </Panel.Content>
-      </Panel.Root>
-    </Root>
+  return type === 'map' ? (
+    <MapControl
+      {...props}
+      markers={markers}
+      lines={lines}
+      selected={selected}
+      onSelect={handleSelect}
+      tileUrl={tileUrl}
+      center={viewport.center}
+      zoom={viewport.zoom}
+      onChange={handleMapChange}
+      onToggle={() => setType('globe')}
+    />
+  ) : (
+    <GlobeControl
+      {...props}
+      markers={markers}
+      lines={lines}
+      selected={selected}
+      onSelect={handleSelect}
+      center={viewport.center}
+      zoom={mapToGlobeZoom(viewport.zoom)}
+      onChange={handleGlobeChange}
+      onToggle={() => setType('map')}
+    />
   );
 };
 

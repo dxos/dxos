@@ -34,8 +34,26 @@ const DISABLE_CLOSEST_MATCH_SEARCH = false;
 const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
+/**
+ * NEVER redact EntityIds, EIDs, or DXNs in this module. Memoized prompts
+ * must match the exact strings the LLM is asked to reason about — collapsing
+ * ids to a placeholder hides real mismatches and produces false hits. Test
+ * determinism comes from `EntityId.dangerouslyDisableRandomness()` (test PRNG
+ * with a fixed seed); when memos drift, fix the upstream id generation or
+ * regenerate with `ALLOW_LLM_GENERATION=1`, do not normalize here.
+ */
+
+const TIMESTAMP_PLACEHOLDER = '<memoized-timestamp>';
+
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
-  deepMapValues(prompt, (value, recurse) => {
+  deepMapValues(prompt, (value, recurse, key) => {
+    // Message metadata `timestamp` fields are stamped with the live clock as each turn completes and
+    // are fed back verbatim into the prompt of every subsequent turn. They carry no meaning for the
+    // model's reasoning, so collapse them — otherwise no multi-turn conversation can ever replay on a
+    // different run/day. (This is NOT id redaction; see the note above — ids are left intact.)
+    if (key === 'timestamp') {
+      return TIMESTAMP_PLACEHOLDER;
+    }
     if (typeof value === 'string') {
       return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER);
     }

@@ -3,14 +3,13 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, View } from '@dxos/echo';
-import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
+import { EID, Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type Registry, Type, View } from '@dxos/echo';
+import { type JsonProp } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -39,12 +38,12 @@ import {
 
 export type ViewEditorProps = ThemedClassName<
   {
-    schema: Schema.Schema.AnyNoContext;
+    type: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
-    registry?: SchemaRegistry.SchemaRegistry;
+    registry?: Registry.Registry;
     showHeading?: boolean;
-    onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
+    onQueryChanged?: (query: QueryAST.Query, target?: EID.EID) => void;
     onDelete?: (fieldId: string) => void;
   } & Pick<QueryFormProps, 'types' | 'tags'> &
     Pick<FormRootProps<any>, 'readonly' | 'db'>
@@ -57,7 +56,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   (
     {
       classNames,
-      schema,
+      type,
       view,
       mode = 'schema',
       registry,
@@ -72,16 +71,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     forwardedRef,
   ) => {
     const atomRegistry = useContext(RegistryContext);
-    const schemaReadonly = !isMutable(schema);
+    const schemaReadonly = Type.getDatabase(type) == null;
     const { t } = useTranslation(translationKey);
 
     const projectionModel = useMemo(() => {
-      // Use reactive and mutable version of json schema when schema is mutable.
-      const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+      const jsonSchema = type.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
-      // Pass schema only when mutable to allow schema mutations.
-      const change = createEchoChangeCallback(view, schema instanceof EchoSchema ? schema : undefined);
+      // Pass type only when mutable to allow schema mutations.
+      const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
 
       const model = new ProjectionModel({
         registry: atomRegistry,
@@ -91,7 +89,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       });
 
       return model;
-    }, [atomRegistry, schema, view]);
+    }, [atomRegistry, type, view]);
 
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
 
@@ -100,9 +98,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
-        return Option.fromNullable(from.scope.feeds).pipe(
-          Option.flatMap((feeds) => Array.head(feeds)),
-          Option.map(String),
+        const feedScope = from.scopes.find((s) => s._tag === 'feed');
+        return Option.fromNullable(feedScope).pipe(
+          Option.map((s) => s.feedUri),
           Option.getOrUndefined,
         );
       }),
@@ -115,8 +113,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (!queueTarget) {
         return undefined;
       }
-      const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
-      return feed ? Ref.fromDXN(Entity.getDXN(feed)) : undefined;
+      const feed = feeds.find((feed) => Feed.getQueueUri(feed)?.toString() === queueTarget);
+      return feed ? Ref.fromURI(Entity.getURI(feed)) : undefined;
     }, [queueTarget, feeds]);
 
     const viewSchema = useMemo(() => {
@@ -160,13 +158,13 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const handleUpdate = useCallback(
       (values: any) => {
         const targetValue = values.target;
-        let feedDXN: string | undefined;
+        let queueDxn: EID.EID | undefined;
 
         if (Ref.isRef(targetValue)) {
-          const targetDXN = targetValue.dxn.toString();
-          const feed = feeds.find((feed) => Obj.getDXN(feed).toString() === targetDXN);
+          const feedUri = targetValue.uri;
+          const feed = feeds.find((feed) => Obj.getURI(feed) === feedUri);
           if (feed) {
-            feedDXN = Feed.getQueueDxn(feed)?.toString();
+            queueDxn = Feed.getQueueUri(feed);
           }
         }
 
@@ -175,7 +173,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           mode === 'schema'
             ? Query.select(Filter.typename(values.query)).ast
             : JSON.parse(JSON.stringify(values.query));
-        onQueryChanged?.(query, feedDXN);
+        onQueryChanged?.(query, queueDxn);
       },
       [onQueryChanged, mode, feeds],
     );
@@ -203,7 +201,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
           <FormFieldLabel label={t('fields.label')} asChild />
           <FieldList
-            schema={schema}
+            type={type}
             view={view}
             registry={registry}
             readonly={readonly}
@@ -216,23 +214,22 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   },
 );
 
-type FieldListProps = Pick<ViewEditorProps, 'schema' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
+type FieldListProps = Pick<ViewEditorProps, 'type' | 'view' | 'registry' | 'readonly' | 'showHeading' | 'onDelete'>;
 
-const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
+const FieldList = ({ type, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
   const atomRegistry = useContext(RegistryContext);
-  const schemaReadonly = !isMutable(schema);
+  const schemaReadonly = Type.getDatabase(type) == null;
   const { t } = useTranslation(translationKey);
 
   // Subscribe to view changes for reactivity.
   const [viewSnapshot] = useObject(view);
 
   const projectionModel = useMemo(() => {
-    // Use reactive and mutable version of json schema when schema is mutable.
-    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
+    const jsonSchema = type.jsonSchema;
 
     // Always use createEchoChangeCallback since the view is ECHO-backed.
-    // Pass schema only when mutable to allow schema mutations.
-    const change = createEchoChangeCallback(view, schema instanceof EchoSchema ? schema : undefined);
+    // Pass type only when mutable to allow schema mutations.
+    const change = createEchoChangeCallback(view, Type.getDatabase(type) != null ? type : undefined);
 
     const model = new ProjectionModel({
       registry: atomRegistry,
@@ -242,7 +239,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     });
 
     return model;
-  }, [atomRegistry, schema, view]);
+  }, [atomRegistry, type, view]);
 
   const [expandedField, setExpandedField] = useState<View.FieldType['id']>();
 

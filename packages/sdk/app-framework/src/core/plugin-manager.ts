@@ -342,7 +342,7 @@ class ManagerImpl implements PluginManager {
     // Core plugins are derived from `meta.tags.includes('system')`; the set is
     // a snapshot of the initial `plugins` array (later `add()` calls do not
     // promote plugins to core).
-    const core = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
+    const core: string[] = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
@@ -1121,7 +1121,7 @@ class ManagerImpl implements PluginManager {
    */
   private _collectDependents(id: string, opts: { transitive: boolean; enabledOnly: boolean }): string[] {
     const direct = this._get(this._pluginsAtom)
-      .filter((plugin) => plugin.meta.dependsOn?.includes(id))
+      .filter((plugin) => plugin.meta.dependsOn?.some((dep) => dep === id))
       .map((plugin) => plugin.meta.id);
 
     if (!opts.transitive) {
@@ -1138,7 +1138,7 @@ class ManagerImpl implements PluginManager {
       }
       visited.add(currentId);
       const parents = this._get(this._pluginsAtom)
-        .filter((plugin) => plugin.meta.dependsOn?.includes(currentId))
+        .filter((plugin) => plugin.meta.dependsOn?.some((dep) => dep === currentId))
         .map((plugin) => plugin.meta.id);
       for (const parentId of parents) {
         visit(parentId);
@@ -1344,7 +1344,7 @@ class ManagerImpl implements PluginManager {
     return Effect.gen(this, function* () {
       yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
-      log('activating modules', { key, modules: activatingModuleIds });
+      log.info('activation wave', { event: key, modules: activatingModuleIds });
       performance.mark(`event:${key}:start`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
@@ -1582,9 +1582,14 @@ class ManagerImpl implements PluginManager {
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) => {
               const error = Cause.squash(cause);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              const missingCapability = errorMessage.match(/No capability found for ([^\s\[]+)/)?.[1];
               log.error('module failed to activate', {
                 module: module.id,
-                error: error instanceof Error ? error.message : String(error),
+                parentEvent,
+                missingCapability,
+                registeredCapabilities: this.capabilities.listRegisteredIdentifiers(),
+                error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });

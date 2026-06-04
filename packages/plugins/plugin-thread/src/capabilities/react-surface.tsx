@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'chat-companion',
+        id: 'chatCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
@@ -63,7 +63,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <CommentsCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

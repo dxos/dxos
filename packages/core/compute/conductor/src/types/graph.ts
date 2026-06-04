@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
@@ -79,7 +79,7 @@ export const ComputeEdge = Schema.extend(
   }),
 );
 
-export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
+export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
 
 /**
  * Persistent graph.
@@ -90,13 +90,8 @@ export const ComputeGraph = Schema.Struct({
   // Reference nodes.
   input: Schema.optional(ComputeNode),
   output: Schema.optional(ComputeNode),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.computeGraph',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
 
-export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
+export interface ComputeGraph extends Type.InstanceType<typeof ComputeGraph> {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

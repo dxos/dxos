@@ -8,11 +8,12 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
-import { type Database, type Obj } from '@dxos/echo';
+import { type Database, type Obj, Type } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
 import { Toolbar } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -32,7 +33,7 @@ import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;
-  feedDXN?: DXN;
+  feedDXN?: URI.URI;
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
@@ -119,10 +120,10 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       return invocationSpans.map((invocation) => {
         const status = invocation.outcome;
         // Handle both Ref objects and encoded references.
-        const targetDXN =
-          invocation.invocationTarget?.dxn ??
-          (invocation.invocationTarget && '/' in invocation.invocationTarget
-            ? DXN.parse((invocation.invocationTarget as any)['/'])
+        const targetDXN: URI.URI | undefined =
+          invocation.invocationTarget?.uri ??
+          (EncodedReference.isEncodedReference(invocation.invocationTarget)
+            ? EncodedReference.toURI(invocation.invocationTarget)
             : undefined);
 
         // TODO(burdon): Use InvocationTraceStartEvent.
@@ -134,9 +135,9 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           duration: formatDuration(invocation.duration),
           status,
           feed:
-            invocation.invocationTraceFeed?.dxn?.toString() ??
-            (invocation.invocationTraceFeed && '/' in invocation.invocationTraceFeed
-              ? (invocation.invocationTraceFeed as any)['/']
+            invocation.invocationTraceFeed?.uri ??
+            (EncodedReference.isEncodedReference(invocation.invocationTraceFeed)
+              ? EncodedReference.toURI(invocation.invocationTraceFeed)
               : 'unknown'),
           _original: invocation,
         };
@@ -206,7 +207,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
     Option.getOrUndefined,
     Match.value,
     Match.not(Match.defined, () => 'unknown'),
-    Match.when(Schema.is(TraceEvent), () => 'logs'),
+    Match.when(Schema.is(Type.getSchema(TraceEvent)), () => 'logs'),
     Match.orElse(() => 'execution-graph'),
   );
 

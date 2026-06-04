@@ -61,7 +61,7 @@ export const PlankHeading = memo(
     const { graph, onAdjust, onUpdateCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
     const breakpoint = useBreakpoints();
-    const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
+    const icon = node?.properties?.icon ?? 'ph--circle-dashed--regular';
     const label = pending
       ? t('pending.heading')
       : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.id }], t);

@@ -4,17 +4,17 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { safeStringify } from '@dxos/util';
 
 import * as Database from './Database';
 import * as Json from './Json';
 
 /** Mint a random ECHO object id usable as both a stub-db key and a DXN payload. */
-const newId = (): string => ObjectId.random();
+const newId = (): string => EntityId.random();
 
 /** Build a fake encoded ref for a local-space object id. */
-const encodeRef = (id: string): { '/': string } => ({ '/': DXN.fromLocalObjectId(id).toString() });
+const encodeRef = (id: string): { '/': string } => ({ '/': EID.make({ entityId: id }) });
 
 /** Minimal stub: `createRefReplacer` only touches `db.getObjectById`. */
 const makeStubDb = (objects: Record<string, unknown>): Database.Database => {
@@ -93,7 +93,7 @@ describe('createRefReplacer', () => {
 
   test('leaves non-echo dxns untouched (e.g. type DXN)', () => {
     // Type DXNs share the `dxn:` prefix but `asEchoDXN()` returns undefined.
-    const typeRef = { '/': DXN.fromTypename('com.example.Thing').toString() };
+    const typeRef = { '/': DXN.make('com.example.Thing') };
     const replacer = Json.createRefReplacer({ db: makeStubDb({}) });
     expect(stringifyWith(replacer, { ref: typeRef })).toEqual({ ref: typeRef });
   });

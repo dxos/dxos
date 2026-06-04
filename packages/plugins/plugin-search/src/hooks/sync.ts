@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Entity, Obj } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { type SearchResult } from '#types';
@@ -16,8 +15,12 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (schema: Schema.Schema.AnyNoContext | undefined): string | undefined => {
-  if (!(schema && SchemaAST.isTypeLiteral(schema.ast))) {
+const getIcon = (type: Type.AnyEntity | undefined): string | undefined => {
+  if (!type) {
+    return undefined;
+  }
+  const schema = Type.getSchema(type);
+  if (!SchemaAST.isTypeLiteral(schema.ast)) {
     return undefined;
   }
   const keys = schema.ast.propertySignatures.map((p) => p.name);
@@ -46,7 +49,7 @@ export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?
 
   return objects.reduce<SearchResult<T>[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof Text.Text) {
+    if (Obj.instanceOf(Text.Text, object)) {
       return results;
     }
 
@@ -57,7 +60,7 @@ export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?
 
       results.push({
         id: object.id,
-        type: getIcon(Entity.getSchema(object)),
+        type: getIcon(Entity.getType(object)),
         label,
         match,
         // TODO(burdon): Truncate.
@@ -107,7 +110,7 @@ const getKeys = <T extends Entity.Unknown>(object: T): string[] => {
 export const mapObjectToTextFields = <T extends Entity.Unknown>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = (object as any)[key];
-    if (typeof value === 'string' || value instanceof Text.Text) {
+    if (typeof value === 'string' || Obj.instanceOf(Text.Text, value)) {
       try {
         fields[key] = String(value);
       } catch {

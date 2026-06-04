@@ -10,6 +10,7 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
+      - vite-plugin-import-source:compile
       - ^:compile
     inputs:
       - '@group(sources)'

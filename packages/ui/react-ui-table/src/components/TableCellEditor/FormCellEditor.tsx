@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Entity, type Type } from '@dxos/echo';
+import { Entity, Type } from '@dxos/echo';
 import { Ref, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type Label, Popover } from '@dxos/react-ui';
@@ -63,7 +63,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
       return undefined;
     }
 
-    return narrowSchema(schema, [fieldProjection.field.path]);
+    return narrowSchema(Type.getSchema(schema), [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
   const originalRow = useMemo<TableRow | undefined>(() => {
@@ -151,7 +151,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
       results
         .map((obj) => {
           return {
-            id: Entity.getDXN(obj).toString(),
+            id: Entity.getURI(obj),
             label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
           };
         })

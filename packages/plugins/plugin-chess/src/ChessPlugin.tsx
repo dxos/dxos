@@ -10,6 +10,9 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { Chess } from '#types';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const ChessPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'game-variant',
@@ -18,6 +21,9 @@ export const ChessPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
+  }),
   AppPlugin.addSchemaModule({ schema: [Chess.State] }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

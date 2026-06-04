@@ -22,7 +22,7 @@ describe('build tests', () => {
         '@dxos/log',
       ],
       conditions: ['workerd', 'worker', 'browser'],
-      external: ['*.wasm', 'node:async_hook'],
+      external: ['*.wasm', 'node:*'],
       forbid: [
         // Place patterns that must not appear in the bundle here, e.g. packages known to not be compatible with workerd.
         // NOTE: Patterns are matched against .pnpm store: ../../../node_modules/.pnpm/parjs@1.3.9/node_modules/parjs/dist/internal/parsers/string-len.js

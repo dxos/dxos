@@ -8,11 +8,11 @@ import * as Layer from 'effect/Layer';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
+import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Scope, Tag, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxPlugin } from '@dxos/plugin-inbox/testing';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -73,7 +73,7 @@ const meta = {
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
-              const tagDXN = Obj.getDXN(tag).toString();
+              const tagUri = Obj.getURI(tag);
 
               // Create a view for Contacts.
               const personView = ViewModel.make({
@@ -83,13 +83,13 @@ const meta = {
 
               // Create a view for Organizations.
               const organizationView = ViewModel.make({
-                query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDXN)),
+                query: Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri)),
                 jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
               });
 
               // Create a view for Tasks.
               const taskView = ViewModel.make({
-                query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagDXN)),
+                query: Query.select(Filter.type(Task.Task)).select(Filter.tag(tagUri)),
                 jsonSchema: JsonSchema.toJsonSchema(Task.Task),
               });
 
@@ -110,11 +110,8 @@ const meta = {
               );
               yield* Feed.append(messageFeed, messages);
 
-              const messageQueueDXN = Feed.getQueueDxn(messageFeed)!.toString();
               const messageView = ViewModel.make({
-                query: Query.select(Filter.type(Message.Message)).from({
-                  feeds: [messageQueueDXN],
-                }),
+                query: Query.select(Filter.type(Message.Message)).from(Scope.feed(Obj.getURI(messageFeed))),
                 jsonSchema: JsonSchema.toJsonSchema(Message.Message),
               });
 
@@ -166,7 +163,7 @@ const meta = {
                 yield* Database.add(
                   Obj.make(Organization.Organization, {
                     [Obj.Meta]: {
-                      tags: random.datatype.boolean() ? [tagDXN] : [],
+                      tags: random.datatype.boolean() ? [tagUri] : [],
                     },
                     name: random.company.name(),
                     website: random.internet.url(),
@@ -181,7 +178,7 @@ const meta = {
                 yield* Database.add(
                   Obj.make(Task.Task, {
                     [Obj.Meta]: {
-                      tags: random.datatype.boolean() ? [tagDXN] : [],
+                      tags: random.datatype.boolean() ? [tagUri] : [],
                     },
                     title: random.lorem.sentence(),
                     status: random.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,

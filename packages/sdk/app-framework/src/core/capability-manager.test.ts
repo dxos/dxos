@@ -22,6 +22,7 @@ describe('CapabilityManager', () => {
     const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
     expect(() => capabilityManager.get(interfaceDef)).toThrow('No capability found');
+    expect(capabilityManager.listRegisteredIdentifiers()).toEqual([]);
   });
 
   it.effect('Capability.get should fail when no capability exists', () =>
@@ -46,6 +47,7 @@ describe('CapabilityManager', () => {
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
     expect(capabilityManager.getAll(interfaceDef)).toEqual([implementation]);
+    expect(capabilityManager.listRegisteredIdentifiers()).toEqual([interfaceDef.identifier]);
   });
 
   it('should be able to remove capabilities', () => {
@@ -57,6 +59,7 @@ describe('CapabilityManager', () => {
     expect(capabilityManager.getAll(interfaceDef)).toEqual([implementation]);
     capabilityManager.remove(interfaceDef, implementation);
     expect(capabilityManager.getAll(interfaceDef)).toEqual([]);
+    expect(capabilityManager.listRegisteredIdentifiers()).toEqual([]);
   });
 
   it('should be able to contribute and request multiple implementations', () => {

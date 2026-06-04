@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 
 import { type Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
@@ -87,7 +87,7 @@ export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
  * @returns The updated object.
  */
 export const updateText = <T extends Obj.Unknown>(obj: T, path: KeyPath, newText: string): T => {
-  invariant(isProxy(obj));
+  assertArgument(isProxy(obj), 'obj');
   invariant(path === undefined || isValidKeyPath(path));
   const accessor = createDocAccessor(obj, path);
   accessor.handle.change((doc) => {

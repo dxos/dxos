@@ -5,7 +5,6 @@
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
@@ -107,7 +106,7 @@ export class QueryPlanner {
 
   private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
     if (query.from._tag === 'scope') {
-      return this._generate(query.query, { ...context, scope: query.from.scope });
+      return this._generate(query.query, { ...context, scope: query.from.scopes });
     }
 
     // Subquery from: flatten by rewriting the outer query's leaf select into a filter on the subquery.
@@ -171,7 +170,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: [filter.typename as DXN.String],
+                typename: [filter.typename],
                 inverted: false,
               },
             },
@@ -418,7 +417,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: typenames as DXN.String[],
+                typename: typenames,
                 inverted: context.selectionInverted,
               },
             },
@@ -821,6 +820,13 @@ export class QueryPlanner {
         selectStepIndex = -1;
         orderStepIndex = -1;
       }
+      // A child-of FilterStep prunes results in-memory after the SelectStep, so pushing the
+      // limit into the SelectStep would slice candidates before the filter runs and starve
+      // the result set (e.g. wildcard select of 10 random objects, then child-of leaves 0).
+      if (step._tag === 'FilterStep' && _filterContainsChildOf(step.filter)) {
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
     }
 
     if (selectStepIndex === -1 && orderStepIndex === -1) {
@@ -867,7 +873,7 @@ type GenerationContext = {
   /**
    * The scope to select from (space IDs, queues, etc.).
    */
-  scope: QueryAST.Scope;
+  scope: readonly QueryAST.Scope[];
 
   /**
    * How to handle deleted objects.
@@ -882,7 +888,7 @@ type GenerationContext = {
 
 const DEFAULT_CONTEXT: GenerationContext = {
   originalQuery: null,
-  scope: {},
+  scope: [],
   deletedHandling: 'exclude',
   selectionInverted: false,
 };
@@ -901,6 +907,23 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
     direction,
   },
 });
+
+/**
+ * Returns true if the filter is `child-of` or composes one via `and` / `or` / `not`.
+ */
+const _filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'child-of':
+      return true;
+    case 'not':
+      return _filterContainsChildOf(filter.filter);
+    case 'and':
+    case 'or':
+      return filter.filters.some(_filterContainsChildOf);
+    default:
+      return false;
+  }
+};
 
 /**
  * Recursively flattens nested `and` filters into a single list.
@@ -933,18 +956,18 @@ const _timestampFilterToSelector = (filter: QueryAST.FilterTimestamp): QueryPlan
 
 const _mergeTimestampSelectors = (selectors: QueryPlan.TimestampSelector[]): QueryPlan.TimestampSelector => {
   const merged: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
-  for (const s of selectors) {
-    if (s.updatedAfter != null) {
-      merged.updatedAfter = Math.max(merged.updatedAfter ?? 0, s.updatedAfter);
+  for (const selector of selectors) {
+    if (selector.updatedAfter != null) {
+      merged.updatedAfter = Math.max(merged.updatedAfter ?? 0, selector.updatedAfter);
     }
-    if (s.updatedBefore != null) {
-      merged.updatedBefore = Math.min(merged.updatedBefore ?? Infinity, s.updatedBefore);
+    if (selector.updatedBefore != null) {
+      merged.updatedBefore = Math.min(merged.updatedBefore ?? Infinity, selector.updatedBefore);
     }
-    if (s.createdAfter != null) {
-      merged.createdAfter = Math.max(merged.createdAfter ?? 0, s.createdAfter);
+    if (selector.createdAfter != null) {
+      merged.createdAfter = Math.max(merged.createdAfter ?? 0, selector.createdAfter);
     }
-    if (s.createdBefore != null) {
-      merged.createdBefore = Math.min(merged.createdBefore ?? Infinity, s.createdBefore);
+    if (selector.createdBefore != null) {
+      merged.createdBefore = Math.min(merged.createdBefore ?? Infinity, selector.createdBefore);
     }
   }
   return merged;

@@ -103,9 +103,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {},
-  parameters: {
-    chromatic: { delay: 1600 },
-  },
 };
 
 export const VirtualTrigger = {

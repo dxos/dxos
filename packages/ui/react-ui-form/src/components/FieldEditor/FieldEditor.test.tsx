@@ -15,7 +15,10 @@ import { type FieldEditorDebugObjects } from './FieldEditor.stories';
 const { Default } = composeStories(stories);
 
 describe('FieldEditor', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush pending React scheduler work before teardown to prevent
+    // "window is not defined" errors from setImmediate callbacks firing after happy-dom cleanup.
+    await act(async () => {});
     cleanup();
   });
 

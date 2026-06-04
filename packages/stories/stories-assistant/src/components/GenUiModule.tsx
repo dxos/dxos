@@ -67,8 +67,8 @@ export const COMPONENT_REGISTRY = {
   IconButton,
 
   'Card.Root': Card.Root,
-  'Card.Toolbar': Card.Toolbar,
-  'Card.Content': Card.Content,
+  'Card.Header': Card.Header,
+  'Card.Body': Card.Body,
   'Card.Section': Card.Section,
   'Card.Text': Card.Text,
 
@@ -186,7 +186,7 @@ const buildGenUiSystemPrompt = (): string => {
 
     3) Card with an action button that opens settings:
     <Card.Root>
-      <Card.Toolbar>
+      <Card.Header>
         <Toolbar.Root>
           <Toolbar.Text>Quick Actions</Toolbar.Text>
           <Toolbar.IconButton
@@ -195,10 +195,10 @@ const buildGenUiSystemPrompt = (): string => {
             on:click='org.dxos.plugin.settings.operation.open({})'
           ></Toolbar.IconButton>
         </Toolbar.Root>
-      </Card.Toolbar>
-      <Card.Content>
+      </Card.Header>
+      <Card.Body>
         <Card.Text>Click the gear icon to open settings.</Card.Text>
-      </Card.Content>
+      </Card.Body>
     </Card.Root>
 
     4) Toolbar with save (toast) and delete (dialog) actions:
@@ -377,7 +377,10 @@ export const GenUiModule = ({ space }: ModuleProps) => {
   const [generating, setGenerating] = useState(false);
   const { invokePromise } = useOperationInvoker();
 
-  const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
+  const invokerFn: InvokerFn = useCallback(
+    (op, args) => void invokePromise(op, args, { spaceId: space.id }),
+    [invokePromise, space.id],
+  );
 
   const handleGenerate = useSpaceCallback(
     space.id,

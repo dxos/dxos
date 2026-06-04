@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
@@ -22,16 +22,14 @@ import {
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import {
-  type Blueprint,
   type Credential,
   Operation,
   type OperationRegistry,
   type ServiceNotAvailableError,
   Trace,
 } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref } from '@dxos/echo';
+import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -45,7 +43,6 @@ import { AssistantOperation } from '#types';
 export type AiChatServices =
   | Credential.CredentialsService
   | Database.Service
-  | QueueService
   | AiService.AiService
   | Trace.TraceService;
 
@@ -56,7 +53,6 @@ export type AiChatServices =
  */
 export type SpaceServices =
   | Database.Service
-  | QueueService
   | Feed.FeedService
   | Credential.CredentialsService
   | AiService.AiService
@@ -67,8 +63,8 @@ export type SpaceServices =
 export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
-  blueprintRegistry?: Blueprint.Registry;
-  observableRegistry?: Registry.Registry;
+  registry?: Registry.Registry;
+  observableRegistry?: AtomRegistry.Registry;
   /**
    * For tracing.
    */
@@ -99,7 +95,7 @@ export type ProcessorRequest = {
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
 export class AiChatProcessor {
-  readonly #registry: Registry.Registry;
+  readonly #registry: AtomRegistry.Registry;
 
   /** Pending messages (finalized, non-streaming). */
   readonly #pending = Atom.make<Message.Message[]>([]);
@@ -150,7 +146,7 @@ export class AiChatProcessor {
     private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    this.#registry = this._options.observableRegistry ?? Registry.make();
+    this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -165,8 +161,8 @@ export class AiChatProcessor {
     return this._conversation;
   }
 
-  get blueprintRegistry() {
-    return this._options.blueprintRegistry;
+  get registry() {
+    return this._options.registry;
   }
 
   get system(): string {
@@ -209,7 +205,7 @@ export class AiChatProcessor {
 
       const effect = Effect.gen(this, function* () {
         // NOTE: Gets or creates a session for the feed.
-        log.info('init agent session', { feed: Obj.getDXN(this._feed).toString(), model: this._options.model });
+        log.info('init agent session', { feed: Obj.getURI(this._feed), model: this._options.model });
         const session = yield* AgentService.getSession(this._feed, { model: this._options.model });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
@@ -298,9 +294,15 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return;
+    }
     unwrapExit(
       await this._runtime.runPromiseExit(
-        Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(this._spaceLayer)),
+        Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
+          Effect.provide(this._spaceLayer),
+        ),
       ),
     );
   }
@@ -387,8 +389,12 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    // TODO(dmaretskyi): Operation.schedule didn't work.
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return Effect.void;
+    }
+
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(AssistantOperation.UpdateChatName, { chat });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat }, { spaceId });
   }
 }

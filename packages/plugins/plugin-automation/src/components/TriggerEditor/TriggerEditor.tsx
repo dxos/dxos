@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
 import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { type Database, DXN, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { Annotation, type Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { DXN, EID } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -22,6 +25,7 @@ import {
 
 import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
+import { getOperationUri } from './util';
 
 type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
 
@@ -78,7 +82,11 @@ type UseCustomInputsProps = {
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
-  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
+  const functions = useQuery(
+    db,
+    Query.select(Filter.type(Operation.PersistentOperation)).from(Scope.space(), Scope.registry()),
+  );
+
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
   const feeds = useQuery(db, Filter.type(Feed.Feed));
@@ -90,17 +98,17 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
         const getValue = useCallback(() => {
           const formValue = props.getValue();
           if (Ref.isRef(formValue)) {
-            return formValue.dxn.toString() as string;
+            return formValue.uri;
           }
           return undefined;
         }, [props]);
 
         const handleOnValueChange = useCallback(
-          (_type: any, dxnString: string) => {
-            const dxn = DXN.parse(dxnString);
-            if (dxn) {
-              const ref = Ref.fromDXN(dxn);
-              props.onValueChange(props.type, ref);
+          (_type: any, uriString: string) => {
+            // Function references are either an EID (space-resident) or a key DXN (registry).
+            const uri = EID.tryParse(uriString) ?? (DXN.isDXN(uriString) ? uriString : undefined);
+            if (uri) {
+              props.onValueChange(props.type, Ref.fromURI(uri));
             }
           },
           [props.type, props.onValueChange],
@@ -119,8 +127,35 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       // Spec selector.
       'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
-      // Queue feed selector with parent labels.
-      'spec.queue': (props) => <SelectField {...props} options={getFeedQueueOptions(feeds)} />,
+      // Feed selector with parent labels.
+      'spec.feed': (props) => {
+        const getValue = useCallback(() => {
+          const formValue = props.getValue();
+          if (Ref.isRef(formValue)) {
+            return formValue.uri.toString() as string;
+          }
+          return undefined;
+        }, [props]);
+
+        const handleOnValueChange = useCallback(
+          (_type: any, dxnString: string) => {
+            const uri = EID.tryParse(dxnString);
+            if (uri) {
+              props.onValueChange(props.type, Ref.fromURI(uri));
+            }
+          },
+          [props.type, props.onValueChange],
+        );
+
+        return (
+          <SelectField
+            {...props}
+            getValue={getValue as any}
+            onValueChange={handleOnValueChange}
+            options={getFeedOptions(feeds)}
+          />
+        );
+      },
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
@@ -145,24 +180,71 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
   );
 };
 
+const getObjectIconProps = (object: Entity.Unknown): { icon?: string; iconHue?: string } => {
+  const type = Entity.getType(object);
+  const schema = type ? Type.getSchema(type) : undefined;
+  const annotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+  return annotation ? { icon: annotation.icon, iconHue: annotation.hue } : {};
+};
+
 const getWorkflowOptions = (graphs: ComputeGraph[]) => {
-  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
+  return graphs.map((graph) => ({
+    label: `compute-${graph.id}`,
+    value: Obj.getURI(graph),
+    ...getObjectIconProps(graph),
+  }));
 };
 
 const getFunctionOptions = (scripts: Script.Script[], functions: Operation.PersistentOperation[]) => {
   const getLabel = (fn: Operation.PersistentOperation) =>
     scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
-  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
+  return functions.map((fn) => {
+    const { icon: schemaIcon, iconHue } = getObjectIconProps(fn);
+    return {
+      label: getLabel(fn),
+      value: getOperationUri(fn),
+      icon: fn.icon ?? schemaIcon,
+      iconHue,
+    };
+  });
 };
 
-const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
-  return feeds.flatMap((feed) => {
-    const queueDXN = Feed.getQueueDxn(feed);
-    if (!queueDXN) {
-      return [];
+const getFeedDisplayName = (feed: Feed.Feed): string =>
+  Entity.getLabel(feed) ?? feed.name ?? Entity.getTypename(feed) ?? 'Feed';
+
+const computeRefRole = (entity: Feed.Feed): string | undefined => {
+  const parent = Obj.getParent(entity);
+  if (!parent) {
+    return undefined;
+  }
+  for (const key of Record.keys(parent)) {
+    if (Ref.isRef(parent[key]) && parent[key].target?.id === entity.id) {
+      return `$.${key}`;
     }
+  }
+  return undefined;
+};
+
+const getFeedOptions = (feeds: Feed.Feed[]) => {
+  return feeds.map((feed) => {
     const parent = Obj.getParent(feed);
-    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
-    return [{ label: label ?? feed.id, value: queueDXN.toString() }];
+    const displayObject = parent ?? feed;
+    const role = computeRefRole(feed);
+
+    if (parent) {
+      return {
+        label: Entity.getLabel(parent) ?? Entity.getTypename(parent) ?? 'Parent',
+        secondaryLabel: role ?? getFeedDisplayName(feed),
+        value: Obj.getURI(feed),
+        ...getObjectIconProps(displayObject),
+      };
+    }
+
+    return {
+      label: getFeedDisplayName(feed),
+      secondaryLabel: role,
+      value: Obj.getURI(feed),
+      ...getObjectIconProps(displayObject),
+    };
   });
 };

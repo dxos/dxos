@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import * as Score from './Score';
@@ -20,8 +20,9 @@ import * as Score from './Score';
  */
 export const Read = Operation.make({
   meta: {
-    key: 'org.dxos.function.sequencer.read',
+    key: DXN.make('org.dxos.function.sequencer.read'),
     name: 'Read score',
+    icon: 'ph--music-notes--regular',
     description: trim`
       Reads a Score and returns its lead-sheet text. The lead-sheet format lists
       every track as a [index:name] section followed by events of the form
@@ -50,8 +51,9 @@ export const Read = Operation.make({
  */
 export const Write = Operation.make({
   meta: {
-    key: 'org.dxos.function.sequencer.write',
+    key: DXN.make('org.dxos.function.sequencer.write'),
     name: 'Write score',
+    icon: 'ph--music-notes--regular',
     description: trim`
       Replaces a Score's tracks and sequences from a lead-sheet text payload.
       The Score's tempo, time signature, name, and loop range are preserved.

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, DXN } from '@dxos/echo';
 
 import { type ModelType, MODEL_TYPES } from '../models';
 import * as Voxel from './Voxel';
@@ -27,9 +27,10 @@ const Position = Schema.Struct({
 
 export const QueryWorld = Operation.make({
   meta: {
-    key: 'dxos.org/function/voxel/query-world',
+    key: DXN.make('org.dxos.function.voxel.queryWorld'),
     name: 'Query world',
     description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
+    icon: 'ph--cube--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({
@@ -55,9 +56,10 @@ export const QueryWorld = Operation.make({
 
 export const AddVoxels = Operation.make({
   meta: {
-    key: 'dxos.org/function/voxel/add-voxels',
+    key: DXN.make('org.dxos.function.voxel.addVoxels'),
     name: 'Add voxels',
     description: 'Adds one or more voxels to the world at specified coordinates with a given hue.',
+    icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({
@@ -75,9 +77,10 @@ export const AddVoxels = Operation.make({
 
 export const RemoveVoxels = Operation.make({
   meta: {
-    key: 'dxos.org/function/voxel/remove-voxels',
+    key: DXN.make('org.dxos.function.voxel.removeVoxels'),
     name: 'Remove voxels',
     description: 'Removes voxels at specified coordinates from the world.',
+    icon: 'ph--minus--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({
@@ -95,9 +98,10 @@ export const RemoveVoxels = Operation.make({
 
 export const GenerateShape = Operation.make({
   meta: {
-    key: 'dxos.org/function/voxel/generate-shape',
+    key: DXN.make('org.dxos.function.voxel.generateShape'),
     name: 'Generate shape',
     description: `Generates a 3D shape made of voxels at the given origin. Available shapes: ${MODEL_TYPES.join(', ')}.`,
+    icon: 'ph--cube--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({

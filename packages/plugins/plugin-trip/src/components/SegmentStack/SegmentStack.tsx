@@ -9,7 +9,7 @@ import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
-import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
+import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard';
 
 export type SegmentStackProps = ThemedClassName<{
   id: string;
@@ -24,17 +24,9 @@ const ROW_ESTIMATE = 120;
 export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
   ({ segments = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    // Sort by primary (start) date ascending; segments without a date go last, stable by original order.
-    const sortedSegments = useMemo(() => {
-      const withIndex = segments.map((segment, index) => ({
-        segment,
-        index,
-        time: Segment.getPrimaryDate(segment)?.getTime() ?? Number.POSITIVE_INFINITY,
-      }));
-      withIndex.sort((a, b) => a.time - b.time || a.index - b.index);
-      return withIndex.map(({ segment }) => segment);
-    }, [segments]);
-    const items = useMemo(() => sortedSegments.map((segment) => ({ segment, onAction })), [sortedSegments, onAction]);
+    // Render in the caller-supplied order (the canonical `Trip.getSegments` sort) so the displayed
+    // order matches the keyboard-navigation order.
+    const items = useMemo(() => segments.map((segment) => ({ segment, onAction })), [segments, onAction]);
 
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
@@ -70,7 +62,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered>
+          <ScrollArea.Root orientation='vertical' padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SegmentTile}
@@ -79,6 +71,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
                 getId={(item) => item.segment.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => ROW_ESTIMATE}
+                gap={4}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>

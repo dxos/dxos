@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -12,6 +12,7 @@ import { TripBuilder } from '#testing';
 import { translations } from '#translations';
 
 import { type SegmentCardAction, type SegmentCardActionHandler, SegmentTile } from './SegmentCard';
+import { FlightEditableCard } from './SegmentEditableCard';
 
 const buildSegments = () =>
   new TripBuilder()
@@ -39,30 +40,68 @@ const DefaultStory = ({ segmentIndex, current }: StoryArgs) => {
     console.log('SegmentCard action', action);
   };
   return (
-    <div className='w-[28rem] border border-subdued-separator'>
-      <Mosaic.Root>
-        <Focus.Group asChild>
-          <Mosaic.Container withFocus currentId={current ? segment.id : undefined}>
-            <SegmentTile data={{ segment, onAction: handleAction }} location='story' current={current} />
-          </Mosaic.Container>
-        </Focus.Group>
-      </Mosaic.Root>
-    </div>
+    <Mosaic.Root>
+      <Focus.Group asChild>
+        <Mosaic.Container withFocus currentId={current ? segment.id : undefined}>
+          <SegmentTile data={{ segment, onAction: handleAction }} location='story' current={current} />
+        </Mosaic.Container>
+      </Focus.Group>
+    </Mosaic.Root>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-trip/components/SegmentCard',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
-  parameters: { translations },
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(min-card-width)' })],
+  parameters: {
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Flight: Story = { args: { segmentIndex: 0 } };
-export const Accommodation: Story = { args: { segmentIndex: 1 } };
-export const Activity: Story = { args: { segmentIndex: 2 } };
-export const Tentative: Story = { args: { segmentIndex: 3 } };
-export const Current: Story = { args: { segmentIndex: 0, current: true } };
+export const Flight: Story = {
+  args: {
+    segmentIndex: 0,
+  },
+};
+
+export const FlightEditable: StoryObj = {
+  render: () => {
+    const segments = useMemo(() => buildSegments(), []);
+    const segment = segments[3];
+    const handleAction: SegmentCardActionHandler = useCallback((action: SegmentCardAction) => {
+      // eslint-disable-next-line no-console
+      console.log(action);
+    }, []);
+
+    return <FlightEditableCard segment={segment} onAction={handleAction} />;
+  },
+};
+
+export const Accommodation: Story = {
+  args: {
+    segmentIndex: 1,
+  },
+};
+
+export const Activity: Story = {
+  args: {
+    segmentIndex: 2,
+  },
+};
+
+export const Tentative: Story = {
+  args: {
+    segmentIndex: 3,
+  },
+};
+
+export const Current: Story = {
+  args: {
+    segmentIndex: 0,
+    current: true,
+  },
+};

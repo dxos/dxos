@@ -13,16 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import {
-  DynamicTypeCard,
-  ExpandoCard,
-  FormCard,
-  JsonCard,
-  OrganizationCard,
-  PersonCard,
-  ProjectCard,
-  TaskCard,
-} from '../cards';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -33,7 +24,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create<{ subject: Person.Person }>({
-        id: 'schema-popover--contact',
+        id: 'schemaPopoverContact',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Person.Person),
         component: ({ data, role }) => {
@@ -46,7 +37,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--organization',
+        id: 'schemaPopoverOrganization',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Organization.Organization),
         component: ({ data, role }) => {
@@ -59,7 +50,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--project',
+        id: 'schemaPopoverProject',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
         component: ({ data, role }) => {
@@ -67,7 +58,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'schema-popover--task',
+        id: 'schemaPopoverTask',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Task.Task),
         component: ({ data, role }) => {
@@ -75,7 +66,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
-        id: 'schema-popover--expando',
+        id: 'schemaPopoverExpando',
         filter: AppSurface.object(AppSurface.Card, Expando.Expando),
         component: ({ data, role }) => {
           return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
@@ -83,27 +74,36 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'schema-popover--dynamic-type',
+        id: 'schemaPopoverDynamicType',
         role: 'card--content',
         filter: (data): data is { subject: Obj.Unknown } => {
           if (!Obj.isObject(data.subject)) {
             return false;
           }
-          const schema = Obj.getSchema(data.subject);
-          if (schema) {
-            return Type.isMutable(schema);
+          const type = Obj.getType(data.subject);
+          if (type) {
+            return Type.getDatabase(type) != null;
           }
-          // Obj.getSchema fails for database-registered schemas (DXN mismatch); fall back to typename query.
+          // Obj.getType fails for database-registered schemas (DXN mismatch); fall back to typename query.
           try {
             const db = Obj.getDatabase(data.subject);
             const typename = Obj.getTypename(data.subject);
-            return !!db && !!typename && db.schemaRegistry.query({ typename }).runSync().length > 0;
+            return (
+              !!db &&
+              !!typename &&
+              db.graph.registry
+                .list()
+                .filter(Type.isType)
+                .some((t) => Type.getTypename(t) === typename)
+            );
           } catch {
             return false;
           }
         },
         component: ({ data, role }) => {
-          return <DynamicTypeCard role={role} subject={data.subject} />;
+          // Dynamic/mutable schemas render an editable, full-layout form;
+          // FormCard handles both static and runtime schema resolution internally.
+          return <FormCard role={role} subject={data.subject} readonly={false} layout='full' />;
         },
       }),
 
@@ -112,7 +112,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create({
-        id: 'fallback-popover',
+        id: 'fallbackPopover',
         role: 'card--content',
         position: 'last',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
@@ -122,7 +122,7 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: 'fallback-json',
+        id: 'fallbackJson',
         role: 'card--content',
         position: 'last',
         filter: (data): data is Record<string, unknown> => true,

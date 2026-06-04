@@ -6,11 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { ObjectId } from '@dxos/keys';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, EntityId, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -94,7 +93,7 @@ describe('CoreDatabase', () => {
     test('new inline objects are loaded', async () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
       const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
-      const newObject = addObjectToDoc(newRootDocHandle, { id: ObjectId.random(), title: 'title ' });
+      const newObject = addObjectToDoc(newRootDocHandle, { id: EntityId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url!);
       const retrievedObject = db.getObjectById(newObject.id);
       expect((retrievedObject as any).title).to.eq(newObject.title);
@@ -195,8 +194,8 @@ describe('CoreDatabase', () => {
       const obj = Obj.make(TestSchema.Expando, {});
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
-      const id1 = ObjectId.random();
-      const id2 = ObjectId.random();
+      const id1 = EntityId.random();
+      const id2 = EntityId.random();
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: id1, title: 'test' });
       expect((await db.query(Query.type(TestSchema.Expando, { id: beforeUpdate.id })).first()).title).to.eq(
         beforeUpdate.title,
@@ -350,15 +349,15 @@ describe('CoreDatabase', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Person]);
+      graph.registry.add([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
       await db.coreDatabase.atomicReplaceObject(contact.id, {
-        type: DXN.parse('dxn:type:com.example.type.task:0.1.0'),
+        type: DXN.make('com.example.type.task', '0.1.0'),
         data: { name: 'Bar' },
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:com.example.type.task:0.1.0');
+      expect(Obj.getTypeURI(contact)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
     });
   });
 });
@@ -403,8 +402,8 @@ interface DocumentHandles {
 const addObjectToDoc = <T extends { id: string }>(
   docHandle: DocHandleProxy<DatabaseDirectory>,
   object: T,
-  typename: string = TestSchema.Expando.typename,
-  version: string = TestSchema.Expando.version,
+  typename: string = Type.getTypename(TestSchema.Expando),
+  version: string = Type.getVersion(TestSchema.Expando),
 ): T => {
   const data: any = { ...object };
   delete data.id;
@@ -413,7 +412,7 @@ const addObjectToDoc = <T extends { id: string }>(
     newDoc.objects[object.id] = {
       data,
       system: {
-        type: { '/': DXN.fromTypenameAndVersion(typename, version).toString() },
+        type: { '/': DXN.make(typename, version) },
       },
     };
   });

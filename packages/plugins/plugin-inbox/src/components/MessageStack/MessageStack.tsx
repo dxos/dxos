@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, {
+  type ComponentProps,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
@@ -11,10 +20,9 @@ import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/r
 import { type Message } from '@dxos/types';
 import { getHashStyles } from '@dxos/ui-theme';
 
-import { type Mailbox as MailboxType } from '#types';
-
 import { GoogleMail } from '../../apis';
 import { getMessageProps } from '../../util';
+import { Header } from '../Header';
 
 export type MessageStackAction =
   | { type: 'current'; messageId: string }
@@ -29,10 +37,23 @@ export type MessageStackActionHandler = (action: MessageStackAction) => void;
 // MessageStack
 //
 
+/**
+ * One entry per tag applied to a message. The shape mirrors the value side of
+ * `Mailbox.tags` (label + hue) plus a stable `id` so the UI can dedupe / key chips.
+ */
+export type MessageStackTag = { id: string; label: string; hue?: string };
+
+/**
+ * Inverted index `messageId → tags`. Built by `Mailbox.buildMessageTagsIndex` in the parent
+ * (MailboxArticle) so each tile can look up its tags by message id with no extra query.
+ */
+export type MessageTagsIndex = Record<string, MessageStackTag[]>;
+
 export type MessageStackProps = {
   id: string;
   messages?: Message.Message[];
-  labels?: MailboxType.Labels;
+  /** Per-message tag list, indexed by message id. */
+  tags?: MessageTagsIndex;
   currentId?: string;
   /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
   selectedIds?: ReadonlySet<string>;
@@ -48,7 +69,7 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
+  ({ messages, tags, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const threadGroups = useMemo(() => {
@@ -80,13 +101,13 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         return Array.from(threadGroups.entries(), ([threadId, threadMessages]) => ({
           threadId,
           messages: threadMessages,
-          labels,
+          tags,
           onAction,
         }));
       }
 
-      return messages?.map((message) => ({ message, labels, onAction }));
-    }, [threadGroups, messages, labels, onAction]);
+      return messages?.map((message) => ({ message, tags: tags?.[message.id], onAction }));
+    }, [threadGroups, messages, tags, onAction]);
 
     // In threaded view, the incoming `currentId` is a message ID (set when a
     // specific message becomes selected), but the tiles are keyed by thread ID.
@@ -142,7 +163,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root>
+          <ScrollArea.Root padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={threads ? (ThreadTile as any) : MessageTile}
@@ -151,6 +172,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 getId={(item: any) => item.threadId ?? item.message?.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
+                gap={4}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -166,16 +188,65 @@ MessageStack.displayName = 'MessageStack';
 // MessageTile
 //
 
+const TILE_CLASSNAMES = 'dx-hover dx-current dx-selected p-1 rounded-md border border-subdued-separator';
+
+type MessageStackTileProps = Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
+  id: string;
+  hue?: ComponentProps<typeof DxAvatar>['hue'];
+  fallback?: ComponentProps<typeof DxAvatar>['fallback'];
+  /** Header title content (rendered in a flex row). */
+  title: ReactNode;
+  onCurrentChange: () => void;
+  onAvatarClick?: (event: MouseEvent) => void;
+  onClick?: (event: MouseEvent) => void;
+  children?: ReactNode;
+};
+
+/**
+ * Shared shell for message/thread tiles: `Mosaic.Tile` → `Focus.Item` → `Card.Root` with an avatar
+ * header (icon · title · menu). Callers supply the title and the `Card.Body` content as children.
+ */
+const MessageStackTile = forwardRef<HTMLDivElement, MessageStackTileProps>(
+  (
+    { id, data, location, current, hue, fallback, title, onCurrentChange, onAvatarClick, onClick, children },
+    forwardedRef,
+  ) => (
+    <Mosaic.Tile asChild classNames={TILE_CLASSNAMES} id={id} data={data} location={location}>
+      <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
+        <Card.Root fullWidth border={false} onClick={onClick} ref={forwardedRef}>
+          <Card.Header>
+            <Card.IconBlock>
+              <DxAvatar
+                hue={hue}
+                hueVariant='surface'
+                variant='square'
+                size={6}
+                fallback={fallback}
+                onClick={onAvatarClick}
+              />
+            </Card.IconBlock>
+            <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
+            <Card.Menu />
+          </Card.Header>
+          <Card.Body>{children}</Card.Body>
+        </Card.Root>
+      </Focus.Item>
+    </Mosaic.Tile>
+  ),
+);
+
+MessageStackTile.displayName = 'MessageStackTile';
+
 type MessageTileData = {
   message: Message.Message;
-  labels?: MailboxType.Labels;
+  tags?: MessageStackTag[];
   onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const { message, labels, onAction } = data;
+  const { message, tags, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
   const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
 
@@ -195,87 +266,46 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     [message.id, onAction],
   );
 
-  const handleTagClick = useCallback(
-    (event: MouseEvent, label: string) => {
-      event.stopPropagation();
-      onAction?.({ type: 'select-tag', label });
-    },
-    [onAction],
+  const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
+
+  const messageLabels = useMemo(
+    () =>
+      (tags ?? [])
+        .filter((tag) => !GoogleMail.isSystemLabel(tag.id) && tag.label)
+        .map((tag) => ({ id: tag.id, hue: tag.hue ?? getHashStyles(tag.id).hue, label: tag.label })),
+    [tags],
   );
 
-  const messageLabels = useMemo(() => {
-    if (!labels || !Array.isArray(message.properties?.labels)) {
-      return [];
-    }
-
-    return message.properties.labels
-      .filter((labelId: string) => !GoogleMail.isSystemLabel(labelId))
-      .map((labelId: string) => ({
-        id: labelId,
-        hue: getHashStyles(labelId).hue,
-        label: labels[labelId],
-      }))
-      .filter((item) => item.label);
-  }, [labels, message.properties?.labels]);
-
   return (
-    <Mosaic.Tile
-      asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+    <MessageStackTile
+      ref={forwardedRef}
       id={message.id}
       data={data}
       location={location}
+      current={current}
+      hue={hue}
+      fallback={from}
+      onCurrentChange={handleCurrentChange}
+      onAvatarClick={handleAvatarClick}
+      title={
+        <>
+          <span className='grow truncate font-medium'>{subject}</span>
+          <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+        </>
+      }
     >
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Toolbar>
-            <Card.IconBlock>
-              <DxAvatar
-                hue={hue}
-                hueVariant='surface'
-                variant='square'
-                size={6}
-                fallback={from}
-                onClick={handleAvatarClick}
-              />
-            </Card.IconBlock>
-            <Card.Title classNames='flex items-center gap-3'>
-              <span className='grow truncate font-medium'>{subject}</span>
-              <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
-            </Card.Title>
-            <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
-            <Card.Row icon='ph--user--regular'>
-              <Card.Text>{from}</Card.Text>
-            </Card.Row>
-            {snippet && (
-              <Card.Row>
-                <Card.Text variant='description'>{snippet}</Card.Text>
-              </Card.Row>
-            )}
-            {messageLabels.length > 0 && (
-              <Card.Row>
-                <div className='flex flex-wrap gap-1 py-1'>
-                  {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
-                    <button
-                      key={labelId}
-                      type='button'
-                      className='dx-tag dx-focus-ring'
-                      data-hue={labelHue}
-                      data-label={label}
-                      onClick={(event) => handleTagClick(event, label)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </Card.Row>
-            )}
-          </Card.Content>
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+      <Card.Row icon='ph--user--regular'>
+        <Card.Text>{from}</Card.Text>
+      </Card.Row>
+
+      {snippet && (
+        <Card.Row>
+          <Card.Text variant='description'>{snippet}</Card.Text>
+        </Card.Row>
+      )}
+
+      <Header.TagsRow tags={messageLabels} onTagClick={handleTagClick} />
+    </MessageStackTile>
   );
 });
 
@@ -288,7 +318,7 @@ MessageTile.displayName = 'MessageTile';
 type ThreadTileData = {
   threadId: string;
   messages: Message.Message[];
-  labels?: MailboxType.Labels;
+  tags?: MessageTagsIndex;
   onAction?: MessageStackActionHandler;
 };
 
@@ -327,57 +357,39 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   );
 
   return (
-    <Mosaic.Tile
-      asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+    <MessageStackTile
+      ref={forwardedRef}
       id={threadId}
       data={data}
       location={location}
+      current={current}
+      hue={hue}
+      fallback={from}
+      onCurrentChange={handleCurrentChange}
+      onClick={handleThreadClick}
+      title={<span className='grow truncate font-medium'>{subject}</span>}
     >
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
-          <Card.Toolbar>
-            <Card.IconBlock>
-              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
-            </Card.IconBlock>
-            <Card.Title classNames='flex items-center'>
-              <span className='grow truncate font-medium'>{subject}</span>
-            </Card.Title>
-            <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
-            {/* TODO(burdon): Currently limits to last n messages. */}
-            {messages.slice(0, 4).map((message) => {
-              const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
-              return (
-                <Card.Row key={message.id} icon='ph--user--regular'>
-                  <div className='flex flex-col py-1'>
-                    <button
-                      type='button'
-                      className='flex items-center justify-between w-full gap-2 text-start text-sm dx-hover dx-focus-ring'
-                      onClick={(event) => handleMessageClick(event, message.id)}
-                    >
-                      {from && <span className='truncate'>{from}</span>}
-                      <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
-                    </button>
+      {/* TODO(burdon): Currently limits to last n messages. */}
+      {messages.slice(0, 4).map((message) => {
+        const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
+        return (
+          <Card.Row key={message.id} icon='ph--user--duotone'>
+            <div className='flex flex-col' onClick={(event) => handleMessageClick(event, message.id)}>
+              <button type='button' className='flex items-center justify-between w-full h-8 text-start text-sm'>
+                {from && <span className='truncate'>{from}</span>}
+                <span className='text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+              </button>
 
-                    {snippet && (
-                      <button
-                        type='button'
-                        className='text-start text-description line-clamp-2'
-                        onClick={(event) => handleMessageClick(event, message.id)}
-                      >
-                        {snippet}
-                      </button>
-                    )}
-                  </div>
-                </Card.Row>
-              );
-            })}
-          </Card.Content>
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+              {snippet && (
+                <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
+                  {snippet}
+                </button>
+              )}
+            </div>
+          </Card.Row>
+        );
+      })}
+    </MessageStackTile>
   );
 });
 

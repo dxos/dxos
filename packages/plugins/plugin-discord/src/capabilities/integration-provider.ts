@@ -4,6 +4,7 @@
 
 import { DiscordREST } from 'dfx';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -14,20 +15,27 @@ import {
   IntegrationProvider as IntegrationProviderCapability,
   type OnTokenCreated,
 } from '@dxos/plugin-integration';
+import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
-import { DISCORD_PROVIDER_ID, DISCORD_SOURCE } from '../constants';
+import {
+  DISCORD_BOT_LABEL,
+  DISCORD_PROVIDER_ID,
+  DISCORD_SOURCE,
+  DISCORD_USER_LABEL,
+  DISCORD_USER_PROVIDER_ID,
+} from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
-import { makeDiscordLayerFromToken } from '../services';
+import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
 import { DiscordOperation, DiscordTargetOptions } from '../types';
 
 /**
- * Manual-credential form. Discord doesn't have an `OAuthProvider` enum entry
- * yet (Edge has no Discord support), so we collect the bot token directly.
- * The user follows Discord's developer portal flow to create an application,
- * grab the bot token, and invite the bot to a guild — that side of the flow
- * stays outside this plugin; `generateInviteUrl` in `constants.ts` is the
- * helper the rest of the codebase can use to surface the invite link.
+ * Manual-credential form for the Discord Bot provider.
+ *
+ * Collects a bot token directly because bot auth is outside the normal OAuth
+ * flow — the user creates an application in the Discord developer portal,
+ * grabs the bot token, and invites the bot to their guild. `generateInviteUrl`
+ * in `constants.ts` surfaces the invite link.
  */
 const DiscordTokenForm = Schema.Struct({
   token: Schema.String.annotations({
@@ -84,7 +92,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
         token,
       });
       const integration = Obj.make(Integration.Integration, {
-        name: provider.label ?? 'Discord',
+        name: provider.label ?? DISCORD_BOT_LABEL,
         providerId: provider.id,
         accessToken: Ref.make(accessToken),
         targets: [],
@@ -94,32 +102,41 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
 };
 
 /**
- * Service-specific token-created hook for Discord.
+ * Factory for the token-created hook.
  *
- * Calls `GET /users/@me` to populate `accessToken.account` with the bot's
- * display name (preferring `global_name`, falling back to `username`).
- * Failures are elevated with {@link Effect.orDie}; plugin-integration logs
- * defects from the runner and continues so a failed `/users/@me` cannot
- * block the Integration already created.
+ * Both the bot and user providers call `GET /users/@me` to populate
+ * `accessToken.account`; the only difference is which layer they use.
+ * Failures are swallowed so a failed call cannot block an otherwise-valid
+ * Integration.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
-  Effect.gen(function* () {
-    if (accessToken.account) {
-      return;
-    }
-    const self = yield* Effect.gen(function* () {
-      const rest = yield* DiscordREST;
-      return yield* rest.getMyUser();
-    }).pipe(Effect.provide(makeDiscordLayerFromToken(accessToken.token)));
-    Obj.update(accessToken, (accessToken) => {
-      const display = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
-      accessToken.account = display;
-    });
-  }).pipe(Effect.orDie);
+const makeOnTokenCreated =
+  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
+  ({ accessToken }) =>
+    Effect.gen(function* () {
+      if (accessToken.account) {
+        return;
+      }
+      const self = yield* Effect.gen(function* () {
+        const rest = yield* DiscordREST;
+        return yield* rest.getMyUser();
+      }).pipe(Effect.provide(makeLayer(accessToken.token)));
+      Obj.update(accessToken, (accessToken) => {
+        accessToken.account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
+      });
+    }).pipe(Effect.orDie);
+
+const onTokenCreated = makeOnTokenCreated(makeDiscordLayerFromToken);
+const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
 
 /**
- * Contributes a single `IntegrationProvider` entry that wires Discord's two
- * operations and the token-created hook to the `'discord.com'` source.
+ * Contributes two `IntegrationProvider` entries for Discord:
+ * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
+ * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
+ *
+ * Both providers share the same `GetDiscordChannels` discovery and
+ * `SyncDiscordChannel` sync operations. The auth difference is handled
+ * transparently at the layer level: `makeDiscordUserLayerFromToken` rewrites
+ * dfx's `Bot <token>` header to `Bearer <token>` inside the proxy fetch layer.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -127,12 +144,25 @@ export default Capability.makeModule(
       {
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,
-        label: 'Discord',
+        label: DISCORD_BOT_LABEL,
         credentialForm,
         optionsSchema: DiscordTargetOptions,
         getSyncTargets: DiscordOperation.GetDiscordChannels,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated,
+      },
+      {
+        id: DISCORD_USER_PROVIDER_ID,
+        source: DISCORD_SOURCE,
+        label: DISCORD_USER_LABEL,
+        oauth: {
+          provider: OAuthProvider.DISCORD,
+          scopes: ['identify', 'guilds'],
+        },
+        optionsSchema: DiscordTargetOptions,
+        getSyncTargets: DiscordOperation.GetDiscordChannels,
+        sync: DiscordOperation.SyncDiscordChannel,
+        onTokenCreated: userOnTokenCreated,
       },
     ]);
   }),

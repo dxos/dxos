@@ -4,6 +4,7 @@
 
 import {
   type GeoProjection,
+  selection as d3Selection,
   easeLinear,
   easeSinOut,
   geoMercator,
@@ -18,6 +19,7 @@ import React, {
   type PropsWithChildren,
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -38,10 +40,13 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { GlobeContext, type GlobeContextType, type Point, type Vector, useGlobeContext } from '../../hooks';
+import { type LatLngLiteral } from '../../types';
 import {
   type Features,
   type StyleSet,
   createLayers,
+  createRotationTween,
+  flyDuration,
   geoToPosition,
   positionToRotation,
   renderLayers,
@@ -103,9 +108,40 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
   },
 };
 
+/**
+ * Imperative options accepted by GlobeController.flyTo.
+ */
+export type FlyToOptions = {
+  /** Base duration in ms (scales with great-circle distance). */
+  duration?: number;
+  /** Optional pitch offset applied along the latitude axis of the target. */
+  tilt?: number;
+  /**
+   * Optional per-frame callback fired before the rotation tween advances.
+   * Useful for layered animations (e.g. cursor / arc trails in tours).
+   * `t` runs 0→1 across the eased duration.
+   */
+  onTick?: (t: number) => void;
+};
+
+export type FlyToTarget = LatLngLiteral & {
+  /** Optional zoom factor; interpolated alongside rotation when set. */
+  zoom?: number;
+};
+
 export type GlobeController = {
   canvas: HTMLCanvasElement;
   projection: GeoProjection;
+  /**
+   * Animates the globe to the given lat/lng (and optional zoom) along a
+   * great-circle arc. Returns a Promise that resolves on completion and
+   * rejects if interrupted (e.g. by another flyTo on the same globe).
+   */
+  flyTo: (target: FlyToTarget, options?: FlyToOptions) => Promise<void>;
+  /**
+   * Interrupts any in-flight `flyTo` (used by tours when stopped mid-segment).
+   */
+  cancelFlyTo: () => void;
 } & Pick<GlobeContextType, 'zoom' | 'translation' | 'rotation' | 'setZoom' | 'setTranslation' | 'setRotation'>;
 
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
@@ -205,7 +241,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
 
     // Layers.
-    // TODO(burdon): Generate on the fly based on what is visible.
+    // TODO(burdon): Generate on-the-fly based on what is visible.
     const layers = useMemo(() => {
       return timer(() => createLayers(topology as Topology, features, styles));
     }, [topology, features, styles]);
@@ -222,6 +258,19 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         setRotation(positionToRotation(geoToPosition(center)));
       }
     }, [center]);
+
+    // Per-instance flyTo plumbing. d3 named transitions are scoped per DOM
+    // element and `d3Selection()` returns the documentElement root, so a
+    // shared name would let one globe's flyTo interrupt another's. The
+    // useId-scoped name keeps each Globe.Canvas's transition isolated.
+    const flyToSelection = useMemo(() => d3Selection(), []);
+    const flyToTransitionName = `globe-fly-to-${useId()}`;
+    useEffect(
+      () => () => {
+        flyToSelection.interrupt(flyToTransitionName);
+      },
+      [flyToSelection, flyToTransitionName],
+    );
 
     // External controller.
     const zooming = useRef(false);
@@ -253,8 +302,37 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         },
         setTranslation,
         setRotation,
+        flyTo: (target, options = {}) => {
+          const { duration = 1_200, tilt = 0, onTick } = options;
+          const p2 = geoToPosition(target);
+          const r1 = projection.rotate() as Vector;
+          const r2 = positionToRotation(p2, tilt);
+          // Approximate current centre from the inverse of the rotation.
+          const p1: [number, number] = [-r1[0], -r1[1]];
+          const rotationTween = createRotationTween(projection, setRotation, r1, r2);
+
+          const iz = target.zoom !== undefined ? interpolateNumber(zoomRef.current, target.zoom) : undefined;
+
+          flyToSelection.interrupt(flyToTransitionName);
+          const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, 1_500));
+          if (onTick) {
+            tx.tween('flyToOnTick', () => onTick);
+          }
+          tx.tween('flyToRotation', () => rotationTween);
+          if (iz) {
+            tx.tween('flyToZoom', () => (t: number) => setZoom(iz(t)));
+          }
+          return tx.end();
+        },
+        cancelFlyTo: () => {
+          flyToSelection.interrupt(flyToTransitionName);
+        },
       };
-    }, [canvas]);
+      // `projection` must be in deps: switching between stories that pass
+      // different projection types creates a new instance via useMemo, and
+      // any consumer reading controller.projection (e.g. useDrag) would
+      // otherwise mutate a dead instance while the canvas renders the new one.
+    }, [canvas, projection, flyToSelection, flyToTransitionName]);
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
@@ -273,10 +351,18 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
             .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
             .rotate(rotation ?? [0, 0, 0]);
 
-          renderLayers(generator, layers, zoom, styles);
+          // Provide a view-center for per-frame culling — only meaningful for
+          // projections that present a single visible hemisphere (e.g.
+          // orthographic). For Mercator/transverse-mercator the whole sphere
+          // is always visible, so we skip culling.
+          const isOrthographic = !projectionProp || projectionProp === 'orthographic';
+          const [lambda, phi] = (rotation ?? [0, 0, 0]) as Vector;
+          const viewCenter: [number, number] | undefined = isOrthographic ? [-lambda, -phi] : undefined;
+
+          renderLayers(generator, layers, zoom, styles, viewCenter);
         });
       }
-    }, [generator, size, zoom, translation, rotation, layers]);
+    }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
 
     if (!size.width || !size.height) {
       return null;

@@ -153,6 +153,7 @@ export type GraphForceProjectorOptions = GraphProjectorOptions & {
 /**
  * D3 force directed graph layout using d3 simulation..
  */
+// TODO(burdon): Rename ForceGraphProjector.
 export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData, GraphForceProjectorOptions> {
   // https://github.com/d3/d3-force
   private _simulation = forceSimulation<GraphLayoutNode, GraphLayoutEdge>();

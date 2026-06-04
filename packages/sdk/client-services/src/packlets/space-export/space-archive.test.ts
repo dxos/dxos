@@ -6,7 +6,7 @@ import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { type SerializedSpace } from '@dxos/echo-db';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId, URI } from '@dxos/keys';
 import {
   FEED_ARCHIVE_BLOCKS_PER_CHUNK,
   type FeedArchiveBlock,
@@ -361,11 +361,11 @@ describe('SpaceArchive', () => {
     });
 
     test('buildDatabaseDirectoryFromObjects round-trips data and type info', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const objects = [
         {
           id,
-          '@type': 'dxn:type:example.Thing',
+          '@type': 'dxn:example.Thing',
           '@meta': { keys: [] },
           title: 'hello',
         },
@@ -375,24 +375,24 @@ describe('SpaceArchive', () => {
       const structure = directory.objects![id];
       expect(structure).toBeDefined();
       expect(structure.data).toEqual({ title: 'hello' });
-      expect(structure.system?.type).toEqual({ '/': 'dxn:type:example.Thing' });
+      expect(structure.system?.type).toEqual({ '/': 'dxn:example.Thing' });
       expect(structure.system?.kind).toBe('object');
     });
 
     test('objectStructureToObjJson emits fields in canonical order', () => {
-      const id = ObjectId.random();
-      const sourceId = ObjectId.random();
-      const targetId = ObjectId.random();
-      const parentId = ObjectId.random();
+      const id = EntityId.random();
+      const sourceId = EntityId.random();
+      const targetId = EntityId.random();
+      const parentId = EntityId.random();
       const obj = objectStructureToObjJson(id, {
         data: { title: 'hello', count: 42 },
         meta: { keys: [] },
         system: {
-          type: { '/': 'dxn:type:example.Link' },
+          type: { '/': URI.make('dxn:example.Link') },
           kind: 'relation',
-          source: { '/': sourceId },
-          target: { '/': targetId },
-          parent: { '/': parentId },
+          source: { '/': URI.make(sourceId) },
+          target: { '/': URI.make(targetId) },
+          parent: { '/': URI.make(parentId) },
           deleted: true,
         },
       });
@@ -411,13 +411,13 @@ describe('SpaceArchive', () => {
     });
 
     test('orderObjJsonFields reorders feed queue messages with id/@type/@meta first', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const message = {
         payload: { value: 'x' },
         timestamp: 1000,
         id,
         '@meta': { keys: [] },
-        '@type': 'dxn:type:example.Message',
+        '@type': 'dxn:example.Message',
       } as any;
 
       const ordered = orderObjJsonFields(message);
@@ -426,11 +426,11 @@ describe('SpaceArchive', () => {
     });
 
     test('orderObjJsonFields preserves unknown @-prefixed fields between system and data', () => {
-      const id = ObjectId.random();
+      const id = EntityId.random();
       const obj = {
         data: 1,
         '@custom': 'extension',
-        '@type': 'dxn:type:example.Thing',
+        '@type': 'dxn:example.Thing',
         id,
       } as any;
 
@@ -439,13 +439,13 @@ describe('SpaceArchive', () => {
     });
 
     test('buildDatabaseDirectoryFromObjects flags relations', () => {
-      const id = ObjectId.random();
-      const sourceId = ObjectId.random();
-      const targetId = ObjectId.random();
+      const id = EntityId.random();
+      const sourceId = EntityId.random();
+      const targetId = EntityId.random();
       const objects = [
         {
           id,
-          '@type': 'dxn:type:example.Link',
+          '@type': 'dxn:example.Link',
           '@meta': { keys: [] },
           '@relationSource': sourceId,
           '@relationTarget': targetId,
@@ -456,6 +456,27 @@ describe('SpaceArchive', () => {
       expect(structure.system?.kind).toBe('relation');
       expect(structure.system?.source).toEqual({ '/': sourceId });
       expect(structure.system?.target).toEqual({ '/': targetId });
+    });
+
+    test('buildDatabaseDirectoryFromObjects flags persisted Type.Type entities as kind=type', () => {
+      const id = EntityId.random();
+      const objects = [
+        {
+          id,
+          '@type': 'dxn:org.dxos.type.schema:0.1.0',
+          '@meta': { keys: [] },
+          name: 'Custom Type',
+          typename: 'example.type.custom',
+          version: '0.1.0',
+          jsonSchema: { $id: `echo:/${id}`, type: 'object', properties: {} },
+        },
+      ];
+      const directory = buildDatabaseDirectoryFromObjects(objects as any);
+      const structure = directory.objects![id];
+      expect(structure.system?.kind).toBe('type');
+      // Type entities aren't relations — source/target stay unset.
+      expect(structure.system?.source).toBeUndefined();
+      expect(structure.system?.target).toBeUndefined();
     });
   });
 });

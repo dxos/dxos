@@ -20,14 +20,14 @@ const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => 
 };
 
 const triggerButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx('w-full grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
+  mx('grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
 
 const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
 
 const item: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
     'flex items-center min-h-[2rem] px-2.5 py-1 gap-2',
-    'text-base-foreground leading-none select-none outline-hidden',
+    'text-base-fg leading-none select-none outline-hidden',
     '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
     'dx-highlighted',
     ...etc,

@@ -14,11 +14,15 @@ import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
+import type {
+  GetSyncStateRequest,
+  GetSyncStateResponse,
+  SyncQueueRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
@@ -69,6 +73,11 @@ export type EchoHostProps = {
   syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 
   /**
+   * Callback to read queue sync backlog per namespace.
+   */
+  getSyncState?: (ctx: Context, request: GetSyncStateRequest) => Promise<GetSyncStateResponse>;
+
+  /**
    * Enable Subduction sedimentree transport for Automerge document replication.
    * @default false
    */
@@ -107,6 +116,7 @@ export class EchoHost extends Resource {
     runtime,
     assignQueuePositions = false,
     syncQueue,
+    getSyncState,
     useSubduction,
   }: EchoHostProps) {
     super();
@@ -129,7 +139,7 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
     });
-    this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue);
+    this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, { syncQueue, getSyncState });
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
@@ -508,10 +518,10 @@ type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
   spaces: Set<SpaceId>;
-  queues: Set<ObjectId>;
+  queues: Set<EntityId>;
   documents: Set<string>;
   types: Set<string>;
-  objects: Set<ObjectId>;
+  objects: Set<EntityId>;
 };
 
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({

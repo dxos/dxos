@@ -11,6 +11,11 @@ import { type StyleSet } from './render';
  * GlobeControl; lifted here so other plugins (plugin-trip, etc.) get the same
  * baseline without copying the palette.
  */
+// Point colour; lines pick up the same colour at reduced alpha so the route
+// reads as belonging to the same node set without competing with the nodes.
+const POINT_COLOR = 'rgb(220, 38, 38)';
+const LINE_COLOR = 'rgba(220, 38, 38, 0.5)';
+
 export const globeStyles = (themeMode: ThemeMode): StyleSet =>
   themeMode === 'dark'
     ? {
@@ -30,11 +35,11 @@ export const globeStyles = (themeMode: ThemeMode): StyleSet =>
         line: {
           lineWidth: 1.5,
           lineDash: [4, 16],
-          strokeStyle: '#333',
+          strokeStyle: LINE_COLOR,
         },
         point: {
           radius: 0.2,
-          fillStyle: 'red',
+          fillStyle: POINT_COLOR,
         },
       }
     : {
@@ -51,10 +56,10 @@ export const globeStyles = (themeMode: ThemeMode): StyleSet =>
         line: {
           lineWidth: 1.5,
           lineDash: [4, 16],
-          strokeStyle: '#333',
+          strokeStyle: LINE_COLOR,
         },
         point: {
           radius: 0.2,
-          fillStyle: 'red',
+          fillStyle: POINT_COLOR,
         },
       };

@@ -1,0 +1,376 @@
+---
+id: org.dxos.plugin.navtree
+name: NavTreePlugin
+version: 0.1.0
+---
+
+Hierarchical navigation sidebar for `DXOS` Composer — renders the application graph as a collapsible tree, manages workspace tabs, exposes keyboard-driven command search, and handles drag-and-drop rearrangement of spaces, folders, and objects.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type NavTreeItemState
+  fields:
+    open: boolean          # whether the tree node is expanded
+    current: boolean       # whether the node is in the active layout
+```
+
+```mdl
+type KeyBinding
+  fields:
+    macos?: string
+    windows?: string
+    linux?: string
+    ios?: string
+    unknown?: string
+```
+
+```mdl
+type NodeProperties
+  fields:
+    label: Label
+    icon?: string
+    iconHue?: string
+    role?: string
+    error?: string
+    modified?: boolean
+    palette?: string
+    disabled?: boolean
+    testId?: string
+    position?: Position
+    className?: string
+    keyBinding?: string | KeyBinding
+    persistenceClass?: string
+    persistenceKey?: string
+```
+
+## Components
+
+```mdl
+component NavTree
+  desc: Root navigation tree that renders workspace tabs at the top level and a collapsible subtree for the active workspace.
+  props:
+    id: string             # root node id (Node.RootId)
+    root: Node             # root of the application graph
+    tab: string            # currently active workspace tab id
+    open: boolean          # whether the navigation sidebar is open
+  state:
+    model: NavTreeModel    # live tree model built from graph connections
+  slots:
+    itemEnd?: ReactNode    # per-item trailing content (e.g. action badges)
+  actions:
+    openChange(item: Node, path: string[], open: boolean)
+    tabChange(node: Node)
+    select(item: Node, path: string[], option: boolean)
+    back()
+    itemHover(item: Node)
+  layout: |
+    ┌─────────────────────────┐
+    │ workspace tabs          │
+    │  [tab] [tab] [tab]      │
+    ├─────────────────────────┤
+    │ collapsible tree        │
+    │  ▾ Space                │
+    │    ▾ Folder             │
+    │      • Object           │
+    │      • Object           │
+    │    • Object             │
+    └─────────────────────────┘
+```
+
+```mdl
+component NavTreeContainer
+  desc: Smart container that wires the NavTree to the app graph, layout state, and drag-and-drop monitor.
+  props:
+    tab: string
+    popoverAnchorId?: string
+  state:
+    layout: LayoutState    # active items, sidebar open/closed, mode
+    model: NavTreeModel
+  actions:
+    handleSelect(item: Node, path: string[], option: boolean)
+    handleOpenChange(item: Node, path: string[], open: boolean)
+    handleTabChange(node: Node)
+    handleBack()
+    handleDrop(source: TreeData, target: TreeData, instruction: Instruction)
+  emits:
+    onNavigate(subject: string | string[])
+  layout: |
+    ┌──────────────────────────┐
+    │ NavTreeContext.Provider  │
+    │  └─ NavTree              │
+    └──────────────────────────┘
+```
+
+```mdl
+component CommandsDialogContent
+  desc: Full-screen command palette dialog — surfaces all graph actions, searchable by label.
+  props:
+    onClose?: () => void
+  state:
+    query: string
+    results: Node[]
+  actions:
+    search(query: string) → Node[]
+    execute(node: Node)
+  layout: |
+    ┌──────────────────────────┐
+    │ [search input]           │
+    ├──────────────────────────┤
+    │ result list              │
+    │  icon  label  shortcut   │
+    │  icon  label             │
+    │  …                       │
+    └──────────────────────────┘
+```
+
+```mdl
+component CommandsTrigger
+  desc: Search-input surface slot component — opens the commands dialog on click or ⌘K / Ctrl+K.
+  slots:
+    (none)
+  actions:
+    openCommandsDialog()
+```
+
+## Operations
+
+```mdl
+op expose
+  desc: Expands tree nodes along the path to a subject and marks each as open so the item becomes visible in the NavTree.
+  input:
+    subject: string        # attendable DXN or node id
+  output: void
+  effects: [echo:read]
+  note: |
+    Resolves the full ancestor path via expandAttendableId, calls Graph.expand per node,
+    then sets each path segment open in NavTreeCapabilities.State.
+```
+
+## Features
+
+```mdl
+feat F-1: Sidebar Navigation
+
+  req F-1.1: NavTree renders all root-level graph connections as workspace tabs.
+  req F-1.2:
+    when: user selects a workspace tab
+    then: LayoutOperation.SwitchWorkspace is invoked; subtree for that workspace is expanded
+  req F-1.3:
+    when: sidebar is closed and user selects a workspace tab
+    then: sidebar opens (state transitions to expanded)
+  req F-1.4:
+    when: same active tab is clicked while sidebar is expanded
+    then: sidebar collapses (state transitions to collapsed or closed on mobile)
+```
+
+```mdl
+feat F-2: Tree Expand / Collapse
+
+  req F-2.1: Tree items with children show an expand/collapse toggle.
+  req F-2.2:
+    when: user expands a node
+    then: open state persisted to localStorage keyed by path; Graph.expand called for the node
+  req F-2.3:
+    when: plugin initialises after layout is ready
+    then: all paths previously marked open are re-expanded from localStorage
+  req F-2.4:
+    when: op:expose is called
+    then: all ancestors of the subject are expanded and marked open
+```
+
+```mdl
+feat F-3: Item Selection
+
+  req F-3.1:
+    when: user selects a non-current item
+    then: LayoutOperation.Open (single mode) or LayoutOperation.Set (multi mode) is invoked
+  req F-3.2:
+    when: user option-clicks a currently active item
+    then: LayoutOperation.Close is invoked for that item
+  req F-3.3:
+    when: user clicks a currently active item without option key
+    then: LayoutOperation.ScrollIntoView is invoked
+  req F-3.4:
+    when: item has a default disposition action
+    then: that action is run after navigation
+  req F-3.5:
+    when: navigation succeeds on mobile
+    then: sidebar is closed automatically
+```
+
+```mdl
+feat F-4: Drag and Drop
+
+  req F-4.1: NavTree items can be dragged to rearrange within the same parent.
+  req F-4.2: NavTree items can be dragged to copy or transfer to a different parent.
+  req F-4.3:
+    when: drop instruction is rearrange
+    then: onRearrange callback on the parent node is called with the new order
+  req F-4.4:
+    when: drop instruction is copy
+    then: onCopy callback on the target node is called
+  req F-4.5:
+    when: drop instruction is transfer
+    then: onTransferStart and onTransferEnd callbacks are called on source and target parents
+  req F-4.6:
+    when: target node reports blockInstruction for an instruction type
+    then: that instruction is blocked and the drop is not applied
+```
+
+```mdl
+feat F-5: Keyboard Shortcuts
+
+  req F-5.1: NavTree plugin registers keyboard shortcuts for all graph actions that declare a keyBinding property.
+  req F-5.2: Graph is traversed on change (debounced 500 ms) to bind newly added shortcuts.
+  req F-5.3: The commands dialog is opened via ⌘K (macOS) / Ctrl+K (Windows/Linux).
+  req F-5.4:
+    when: plugin deactivates
+    then: Keyboard.singleton is destroyed and all shortcuts are unregistered
+```
+
+```mdl
+feat F-6: State Persistence
+
+  req F-6.1: Per-path open/current state is stored in an atom family keyed by path string.
+  req F-6.2: Open state (not current) is persisted to localStorage on every change.
+  req F-6.3: Current state reflects active layout items and is never persisted.
+  req F-6.4:
+    when: layout.active changes
+    then: removed items are marked not-current; newly active items are marked current
+```
+
+## Acceptance
+
+```mdl
+test T-1: Workspace tab switch
+  given: two workspace tabs exist in the graph
+  when: user clicks the second workspace tab
+  then:
+    - LayoutOperation.SwitchWorkspace is invoked with the tab's node id
+    - sidebar transitions to expanded
+    - subtree for the selected workspace is expanded
+```
+
+```mdl
+test T-2: Tree node expand persists
+  given: NavTree is rendered with a collapsed folder node
+  when: user expands the folder
+  then:
+    - folder node state.open === true
+    - localStorage entry updated for the folder's path
+    - Graph.expand called for the folder node id
+```
+
+```mdl
+test T-3: Expose navigates to nested item
+  given: a deeply nested object id is active in the layout
+  when: op:expose is called with that object id
+  then:
+    - all ancestor paths are marked open
+    - Graph.expand is called for each ancestor
+```
+
+```mdl
+test T-4: Select item in single mode
+  given: layout.mode === single, item not currently active
+  when: user selects a tree item
+  then: LayoutOperation.Open is invoked with the item id
+```
+
+```mdl
+test T-5: Command palette opens on keyboard shortcut
+  given: NavTree is active
+  when: user presses ⌘K (macOS) or Ctrl+K (Windows)
+  then:
+    - CommandsDialogContent is shown in the layout dialog slot
+    - search input is focused
+```
+
+```mdl
+test T-6: Drag-and-drop rearrange
+  given: two sibling items in the same folder
+  when: user drags the first item below the second
+  then:
+    - onRearrange callback is called with the reordered array
+    - tree re-renders with the new order
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

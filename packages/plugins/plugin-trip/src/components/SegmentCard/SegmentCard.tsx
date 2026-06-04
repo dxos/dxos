@@ -5,11 +5,31 @@
 import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Card, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { getStyles } from '@dxos/ui-theme';
+import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
+
+/**
+ * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile
+ * via `Form.Layout` with `layout='static' readonly`, so each cell collapses to a
+ * truncated plain-text value rather than an input.
+ */
+const FLIGHT_LAYOUT = trim`
+  <grid cols="2">
+    <field name="number"/>
+    <field name="serviceClass"/>
+    <field name="departAt"/>
+    <field name="arriveAt"/>
+    <field name="origin"/>
+    <field name="destination"/>
+  </grid>
+`;
 
 export type SegmentCardAction = { segmentId: string } & (
   | { type: 'current' }
@@ -30,8 +50,8 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 /**
  * Mosaic tile for a Segment. Follows the Card primitives:
  *   Card.Root
- *     Card.Toolbar  → kind icon + title + delete (Card.CloseIconButton)
- *     Card.Content  → optional Route and Date rows
+ *     Card.Header  → kind icon + title + delete (Card.ActionIconButton action='delete')
+ *     Card.Body  → optional Route and Date rows
  *
  * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
  * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
@@ -59,37 +79,64 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
   const date = Segment.getPrimaryDate(segment);
-  const icon = Segment.kindIcon(segment.kind);
-  const isCancelled = segment.status === 'cancelled';
+  const kind = Segment.getKind(segment);
+  const icon = Segment.kindIcon(kind);
+  // Tint the kind glyph with the object's type-level hue (Segment.IconAnnotation).
+  const hue = Obj.getIcon(segment)?.hue;
+  const iconStyles = hue ? getStyles(hue) : undefined;
+  const flightDetails = segment.details._tag === 'flight' ? segment.details : undefined;
 
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-subdued-separator'
       id={segment.id}
       data={data}
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
-          <Card.Toolbar>
-            <Card.Icon icon={icon} />
-            <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
+        <Card.Root fullWidth border={false} ref={forwardedRef}>
+          <Card.Header>
+            <Card.Icon icon={icon} classNames={iconStyles?.text} />
+            <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
-          </Card.Toolbar>
-          {(route || date) && (
-            <Card.Content>
-              {route && (
-                <Card.Row icon='ph--arrow-right--regular'>
-                  <Card.Text variant='description'>{route}</Card.Text>
-                </Card.Row>
-              )}
-              {date && (
-                <Card.Row icon='ph--calendar--regular'>
-                  <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
-                </Card.Row>
-              )}
-            </Card.Content>
+          </Card.Header>
+          {flightDetails ? (
+            <Card.Body>
+              <Form.Root
+                schema={Segment.FlightDetails}
+                defaultValues={flightDetails}
+                layout='static'
+                readonly
+                tooltips={false}
+              >
+                {/*
+                 * No `Form.Viewport`: it would nest its own full-bleed Column +
+                 * gutter, so the fields wouldn't line up with the header. Rendering
+                 * `Form.Content` directly lets `withColumn.center()` place the body
+                 * in the Card's content column — aligned under the title, matching
+                 * the `Card.Row` route/date branch.
+                 */}
+                <Form.Content>
+                  <Form.Layout template={FLIGHT_LAYOUT} />
+                </Form.Content>
+              </Form.Root>
+            </Card.Body>
+          ) : (
+            (route || date) && (
+              <Card.Body>
+                {route && (
+                  <Card.Row>
+                    <Card.Text variant='description'>{route}</Card.Text>
+                  </Card.Row>
+                )}
+                {date && (
+                  <Card.Row icon='ph--calendar--regular'>
+                    <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                  </Card.Row>
+                )}
+              </Card.Body>
+            )
           )}
         </Card.Root>
       </Focus.Item>

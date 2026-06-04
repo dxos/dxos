@@ -20,22 +20,27 @@ export default Capability.makeModule(() =>
 
         const handleDismissToast = useCallback(
           (id: string) => {
-            const index = state.toasts.findIndex((toast) => toast.id === id);
-            if (index !== -1) {
-              // Allow time for the toast to animate out.
-              // TODO(burdon): Factor out and unregister timeout.
-              setTimeout(() => {
-                updateEphemeral((s) => {
-                  const toastToRemove = s.toasts[index];
-                  const newCurrentUndoId = toastToRemove?.id === s.currentUndoId ? undefined : s.currentUndoId;
-                  return {
-                    ...s,
-                    currentUndoId: newCurrentUndoId,
-                    toasts: s.toasts.filter((_, i) => i !== index),
-                  };
-                });
-              }, 1_000);
+            if (!state.toasts.some((toast) => toast.id === id)) {
+              return;
             }
+            // Allow time for the toast exit animation (animate-toast-hide, 100ms) before unmounting.
+            // TODO(burdon): Factor out and unregister timeout.
+            setTimeout(() => {
+              // Re-resolve the toast by id inside the update: the toast list may have changed during
+              // the delay, so a captured index would point at the wrong (or a missing) entry.
+              updateEphemeral((s) => {
+                const toastToRemove = s.toasts.find((toast) => toast.id === id);
+                if (!toastToRemove) {
+                  return s;
+                }
+                const newCurrentUndoId = toastToRemove.id === s.currentUndoId ? undefined : s.currentUndoId;
+                return {
+                  ...s,
+                  currentUndoId: newCurrentUndoId,
+                  toasts: s.toasts.filter((toast) => toast.id !== id),
+                };
+              });
+            }, 150);
           },
           [state.toasts, updateEphemeral],
         );

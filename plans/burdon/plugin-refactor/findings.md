@@ -23,7 +23,7 @@ Only `KanbanColumn.tsx` had issues.
 
 ### react-ui-mosaic changes (`Board/Column.tsx`)
 
-- Added `Board.Column.Grid` — encapsulates the `group/column grid bs-full overflow-hidden` wrapper div; callers pass grid-rows via `classNames`.
+- Added `Board.Column.Grid` — encapsulates the `group/column grid h-full overflow-hidden` wrapper div; callers pass grid-rows via `classNames`.
 - Baked `border-be border-separator` into `Board.Column.Header` (all callers passed it).
 - Baked `border-bs border-separator` + `rounded-b-sm` into `Board.Column.Footer`.
 - Added `onAdd` prop to `Board.Column.Footer` — falls back to `model.onItemCreate` when not provided.

@@ -8,10 +8,10 @@ import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 
 import type { Obj } from '@dxos/echo';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import type { EntityId, SpaceId } from '@dxos/keys';
 
+import type { EntityMeta } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
-import type { ObjectMeta } from './object-meta-index';
 
 // SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
 // Use 500 as a safe chunk size for IN (...) clauses.
@@ -39,13 +39,13 @@ export interface FtsQuery {
   /**
    * Queue IDs to search within.
    */
-  queueIds: readonly ObjectId[] | null;
+  queueIds: readonly EntityId[] | null;
 }
 
 /**
  * Result of FTS query including the indexed snapshot data.
  */
-export interface FtsResult extends ObjectMeta {
+export interface FtsResult extends EntityMeta {
   /**
    * The indexed snapshot data (JSON string).
    * Used to load queue objects without going through document loading.
@@ -56,7 +56,7 @@ export interface FtsResult extends ObjectMeta {
 /**
  * Result of FTS query with rank.
  */
-export interface FtsQueryResult extends ObjectMeta {
+export interface FtsQueryResult extends EntityMeta {
   /**
    * Relevance rank from FTS5.
    * Higher values indicate better matches.
@@ -161,7 +161,7 @@ export class FtsIndex implements Index {
         // BM25 returns negative values, negate to get higher = better match.
         // Order by rank descending so best matches come first.
         // Note: bm25() requires the actual table name, not an alias.
-        const rows = yield* sql<ObjectMeta & { rank: number }>`
+        const rows = yield* sql<EntityMeta & { rank: number }>`
           SELECT m.*, -bm25(ftsIndex) AS rank 
           FROM ftsIndex AS f 
           JOIN objectMeta AS m ON f.rowid = m.recordId 
@@ -171,7 +171,7 @@ export class FtsIndex implements Index {
         return rows;
       } else {
         // LIKE fallback - no ranking available, default to 1.
-        const rows = yield* sql<ObjectMeta>`
+        const rows = yield* sql<EntityMeta>`
           SELECT m.* 
           FROM ftsIndex AS f 
           JOIN objectMeta AS m ON f.rowid = m.recordId 

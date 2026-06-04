@@ -7,11 +7,10 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, View } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
-import { QueueService } from '@dxos/functions';
-import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { EID, EntityId } from '@dxos/keys';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
@@ -131,16 +130,15 @@ export const registry: Record<NodeType, Executable> = {
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
   }),
 
-  // Creates a new queue.
+  // Creates a new feed.
   'make-queue': defineComputeNode({
     input: Schema.Struct({}),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Ref.Ref(Feed.Feed) }),
     exec: synchronizedComputeFunction(
       Effect.fnUntraced(function* () {
-        const { queues } = yield* QueueService;
-        const queue = queues.create();
+        const feed = yield* Database.add(Feed.make());
         return {
-          [DEFAULT_OUTPUT]: Ref.fromDXN(queue.dxn),
+          [DEFAULT_OUTPUT]: Ref.make(feed),
         };
       }),
     ),
@@ -195,8 +193,8 @@ export const registry: Record<NodeType, Executable> = {
   thread: defineComputeNode({
     input: VoidInput,
     output: Schema.Struct({
-      id: ObjectId,
-      messages: Schema.Array(Message.Message),
+      id: EntityId,
+      messages: Schema.Array(Type.getSchema(Message.Message)),
     }),
   }),
 
@@ -205,8 +203,8 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const { queues } = yield* QueueService;
-        const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
+        const feed = yield* Database.resolve(EID.parse(id), Feed.Feed).pipe(Effect.orDie);
+        const messages = yield* Feed.runQuery(feed, Filter.everything());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -221,51 +219,44 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        const dxn = DXN.parse(id);
-        switch (dxn.kind) {
-          case DXN.kind.QUEUE: {
-            const mappedItems = items.map((item: any) => ({
-              ...item,
-              id: item.id ?? ObjectId.random(),
-            }));
-            const { queues } = yield* QueueService;
-            yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
-            return {};
+        // Legacy `dxn:queue:` URIs identify a feed/queue; everything else is an ECHO container.
+        if (typeof id === 'string' && id.startsWith('dxn:queue:')) {
+          const mappedItems = items.map((item: any) => ({
+            ...item,
+            id: item.id ?? EntityId.random(),
+          }));
+          const feed = yield* Database.resolve(EID.parse(id), Feed.Feed).pipe(Effect.orDie);
+          yield* Feed.append(feed, mappedItems);
+          return {};
+        } else {
+          const echoUri = EID.parse(id);
+          const echoId = EID.getEntityId(echoUri);
+          const spaceId = EID.getSpaceId(echoUri);
+          invariant(echoId, 'Object ID missing from EID');
+          const { db } = yield* Database.Service;
+          if (spaceId != null) {
+            invariant(db.spaceId === spaceId, 'Space mismatch');
           }
 
-          case DXN.kind.ECHO: {
-            const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
-            const { db } = yield* Database.Service;
-            if (spaceId != null) {
-              invariant(db.spaceId === spaceId, 'Space mismatch');
+          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
+          if (isInstanceOf(View.View, container)) {
+            const schemaTypename = getTypenameFromQuery(container.query.ast);
+            const types = yield* Database.runQuery(Filter.type(Type.Type));
+            const type = types.find((t) => Type.getTypename(t) === schemaTypename);
+            invariant(type, `Schema not found: ${schemaTypename}`);
+            invariant(Type.isObject(type), `Schema is not an object schema: ${schemaTypename}`);
+
+            for (const item of items) {
+              const { id: _id, '@type': _type, ...rest } = item as any;
+              // TODO(dmaretskyi): Forbid type on create.
+              db.add(Obj.make(type, rest));
             }
-
-            const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
-            if (isInstanceOf(View.View, container)) {
-              const schema = yield* Effect.promise(async () =>
-                db.schemaRegistry
-                  .query({
-                    typename: getTypenameFromQuery(container.query.ast),
-                  })
-                  .first(),
-              );
-
-              for (const item of items) {
-                const { id: _id, '@type': _type, ...rest } = item as any;
-                // TODO(dmaretskyi): Forbid type on create.
-                db.add(Obj.make(schema, rest));
-              }
-              yield* Effect.promise(() => db.flush());
-            } else {
-              throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
-            }
-
-            return {};
+            yield* Effect.promise(() => db.flush());
+          } else {
+            throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
           }
 
-          default: {
-            throw new Error(`Unsupported DXN: ${dxn.toString()}`);
-          }
+          return {};
         }
       }),
     ),

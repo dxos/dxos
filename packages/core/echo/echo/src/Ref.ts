@@ -8,10 +8,15 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { type URI } from '@dxos/keys';
+
 import type * as Entity from './Entity';
+import type * as internal from './internal';
 import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as TypeNs from './Type';
 
 /**
  * Instance type for a reference.
@@ -42,10 +47,21 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * ```ts
  * const Task = Schema.Struct({
  *   assignee: Ref.Ref(Person),  // Creates a Ref schema
- * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.task', '0.1.0')));
  * ```
  */
-export const Ref: <S extends Schema.Schema.Any>(schema: S) => RefSchema<Schema.Schema.Type<S>> = refInternal.Ref;
+export const Ref: {
+  <S extends TypeNs.AnyObj | TypeNs.AnyRelation>(type: S): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
+
+  // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
+  // trigger that points to a stored function/workflow definition.
+  <T extends TypeNs.Type<any>>(type: T): RefSchema<TypeNs.InstanceType<T>>;
+
+  // Schema-side overload for the well-known "any object" / "any relation" schemas.
+  // Other raw `Schema.Schema` values are intentionally rejected — callers should
+  // pass a `Type.Type` entity instead.
+  <S extends internal.UnknownTypeSchema<any, any>>(schema: S): RefSchema<Schema.Schema.Type<S> & Obj.Unknown>;
+} = refInternal.Ref as any;
 
 export const Array = refInternal.RefArray;
 
@@ -82,10 +98,10 @@ export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef
 
 export const make = refInternal.Ref.make;
 
-// TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = refInternal.Ref.fromDXN;
+// TODO(dmaretskyi): Consider just allowing `make` to accept URI.
+export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
 
-export const hasObjectId = refInternal.Ref.hasObjectId;
+export const hasEntityId = refInternal.Ref.hasEntityId;
 
 // TODO(wittjosiah): Factor out?
 export const isRefType = (ast: SchemaAST.AST): boolean => {

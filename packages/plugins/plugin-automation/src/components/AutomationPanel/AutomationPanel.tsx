@@ -14,8 +14,8 @@ import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { type ComputeEnvironment } from '@dxos/client-protocol';
 import { Operation, Script, ServiceResolver, Trigger, TriggerEvent } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Query, Tag } from '@dxos/echo';
-import { KEY_QUEUE_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
+import { Filter, Obj, Query, Tag, Type } from '@dxos/echo';
+import { KEY_FEED_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
@@ -29,7 +29,9 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
+import { type EdgeTriggersDispatcherStatusState, useEdgeTriggersDispatcherStatus } from '../../hooks';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
+import { TriggerDispatcherSummary, TriggerEdgeMetadata } from './TriggerEdgeMetadata';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
 
@@ -47,6 +49,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   const processManagerRuntime = useProcessManagerRuntime();
   const [properties] = useObject(space.properties);
   const computeEnvironment = properties.computeEnvironment ?? 'local';
+  const edgeDispatcherStatus = useEdgeTriggersDispatcherStatus(space.id, computeEnvironment === 'edge');
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
   const functions = useQuery(space.db, Filter.type(Operation.PersistentOperation));
   const triggers = useQuery(
@@ -134,7 +137,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
     Obj.update(trigger, (trigger) => {
-      Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+      Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
@@ -158,10 +161,19 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   return (
     <Settings.Panel>
       <Clipboard.Provider>
+        {computeEnvironment === 'edge' && (
+          <TriggerDispatcherSummary
+            status={edgeDispatcherStatus.status}
+            error={edgeDispatcherStatus.error}
+            loading={edgeDispatcherStatus.loading}
+            timerTriggers={filteredTriggers.filter((trigger) => trigger.spec?.kind === 'timer')}
+          />
+        )}
+
         {filteredTriggers.length > 0 && (
           <List.Root<Trigger.Trigger>
             items={filteredTriggers}
-            isItem={Schema.is(Trigger.Trigger)}
+            isItem={Schema.is(Type.getSchema(Trigger.Trigger))}
             getId={(field) => field.id}
           >
             {({ items: filteredTriggers }) => (
@@ -172,6 +184,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
                     trigger={trigger}
                     functions={functions}
                     computeEnvironment={computeEnvironment}
+                    edgeDispatcherStatus={edgeDispatcherStatus}
                     onSelect={handleSelect}
                     onDelete={handleDelete}
                     onResetCursor={handleResetCursor}
@@ -194,6 +207,7 @@ const TriggerListItem = ({
   trigger,
   functions,
   computeEnvironment,
+  edgeDispatcherStatus,
   onSelect,
   onDelete,
   onResetCursor,
@@ -202,6 +216,7 @@ const TriggerListItem = ({
   trigger: Trigger.Trigger;
   functions: Operation.PersistentOperation[];
   computeEnvironment: ComputeEnvironment;
+  edgeDispatcherStatus?: EdgeTriggersDispatcherStatusState;
   onSelect?: (trigger: Trigger.Trigger) => void;
   onDelete?: (trigger: Trigger.Trigger) => void;
   onResetCursor?: (trigger: Trigger.Trigger) => void;
@@ -210,7 +225,7 @@ const TriggerListItem = ({
   const client = useClient();
   const copyAction = getCopyAction(client, trigger);
   const { t } = useTranslation(meta.id);
-  const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+  const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
   const [snapshot, updateTrigger] = useObject(trigger);
 
   const enabled = snapshot.enabled ?? false;
@@ -246,7 +261,7 @@ const TriggerListItem = ({
       };
     }
 
-    if (trigger.spec?.kind === 'queue' && onResetCursor) {
+    if (trigger.spec?.kind === 'feed' && onResetCursor) {
       return {
         disabled: !cursor,
         icon: 'ph--arrow-clockwise--regular',
@@ -266,14 +281,20 @@ const TriggerListItem = ({
         <Input.Switch checked={enabled} onCheckedChange={onEnabledChange} />
       </Input.Root>
 
-      <div className={'flex'}>
-        <List.ItemTitle classNames='px-1 cursor-pointer w-0 shrink truncate' onClick={handleSelect}>
-          {getFunctionName(functions, trigger) ?? '∅'}
-          {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
-        </List.ItemTitle>
+      <div className='flex flex-col min-w-0'>
+        <div className='flex'>
+          <List.ItemTitle classNames='px-1 cursor-pointer w-0 shrink truncate' onClick={handleSelect}>
+            {getFunctionName(functions, trigger) ?? '∅'}
+          </List.ItemTitle>
 
-        {copyAction && (
-          <Clipboard.IconButton label={t(copyAction.translationKey)} value={copyAction.contentProvider()} />
+          {copyAction && (
+            <Clipboard.IconButton label={t(copyAction.translationKey)} value={copyAction.contentProvider()} />
+          )}
+        </div>
+
+        {cursor && <div className='text-xs text-description truncate ml-4'>Position: {cursor}</div>}
+        {computeEnvironment === 'edge' && edgeDispatcherStatus && (
+          <TriggerEdgeMetadata trigger={trigger} edgeStatus={edgeDispatcherStatus} />
         )}
       </div>
 
@@ -313,7 +334,7 @@ const getWebhookUrl = (client: Client, trigger: Trigger.Trigger) => {
 const getFunctionName = (functions: Operation.PersistentOperation[], trigger: Trigger.Trigger) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
-  const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
+  const shortId = trigger.function && `${trigger.function.uri.slice(0, 16)}…`;
   const functionObject = functions.find((fn) => fn === trigger.function?.target);
   return functionObject?.name ?? shortId;
 };

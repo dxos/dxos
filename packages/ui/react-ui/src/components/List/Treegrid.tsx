@@ -40,7 +40,7 @@ export const TREEGRID_PATH_SEPARATOR = '~';
 export const TREEGRID_PARENT_OF_SEPARATOR = ' ';
 
 type TreegridRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  gridTemplateColumns: CSSProperties['gridTemplateColumns'];
+  gridTemplateColumns?: CSSProperties['gridTemplateColumns'];
   asChild?: boolean;
 };
 

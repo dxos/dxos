@@ -8,24 +8,27 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, subscribe, toJsonSchema } from '../internal';
+import { TypeSchema, getSchemaTypename, getStaticTypeSchema, makeObject, subscribe, toJsonSchema } from '../internal';
+import type * as Type from '../Type';
 
 /**
- * Create a reactive mutable schema that updates when the JSON schema is updated.
+ * Create an in-memory `Type.Type` entity (a `TypeSchema` object) for tests.
+ * Accepts a raw Effect Schema. Pass `Type.getSchema(entity)` to convert a
+ * `Type.Type` entity to its underlying source schema first.
  */
 // TODO(dmaretskyi): Should be replaced by registration of typed object.
-export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): EchoSchema => {
+export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): Type.Type => {
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
-  const echoSchema = new EchoSchema(makeObject(PersistentSchema, { typename, version, jsonSchema }));
-
-  // TODO(burdon): Unsubscribe is never called.
-  subscribe(echoSchema.persistentSchema, () => {
-    echoSchema._invalidate();
-  });
-
-  return echoSchema;
+  // typename/version are routed via EntityMeta (the canonical registry-provenance
+  // pair); they're no longer data fields on `TypeSchema`.
+  return makeObject(
+    getStaticTypeSchema(TypeSchema) as any,
+    { jsonSchema },
+    { keys: [], key: typename, version },
+    TypeSchema,
+  ) as unknown as Type.Type;
 };
 
 /**

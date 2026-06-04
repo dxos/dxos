@@ -4,7 +4,6 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export * from './FramePanel';
 export * from './NotebookStack';
 export * from './QueryEditor';
 export * from './ScriptToolbar';

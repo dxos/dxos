@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
@@ -64,12 +64,12 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'agent-properties',
+        id: 'agentProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
         component: ({ data }) => <AgentProperties subject={data.subject} />,
       }),
       Surface.create({
-        id: 'companion-chat',
+        id: 'companionChat',
         role: 'article',
         filter: (data): data is { subject: Chat.Chat | null; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
@@ -86,7 +86,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'companion-invocations',
+        id: 'companionInvocations',
         role: 'article',
         filter: (data): data is { companionTo: Sequence.Sequence } =>
           (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
@@ -94,7 +94,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
+          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Routine.Routine, data.companionTo) ? undefined : data.companionTo;
 
@@ -143,15 +143,14 @@ export default Capability.makeModule(() =>
           }, [space?.id]);
 
           if (!space) {
-            // TODO(dmaretskyi): Not really part of UX, but so we know what the error is.
-            return <span>No active space</span>;
+            return null;
           }
 
           return <TracePanel space={space} />;
         },
       }),
       Surface.create({
-        id: 'status',
+        id: 'triggerStatus',
         role: 'status-indicator',
         component: () => {
           const space = useActiveSpace();

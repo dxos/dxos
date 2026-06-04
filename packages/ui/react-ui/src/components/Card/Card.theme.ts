@@ -18,22 +18,21 @@ export type CardStyleProps = {
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
-    border &&
-      'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
+    'bg-card-surface',
+    border && 'border border-subdued-separator rounded-sm dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
   );
 
-const toolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
-    'dx-card__toolbar dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
+    'dx-card__header dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! shadow-none [contain:none]',
     ...etc,
   );
 
 const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
-const content: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__content contents pb-1 last:pb-0', ...etc);
+const body: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__body contents pb-1 last:pb-0', ...etc);
 
 const text: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
@@ -67,23 +66,19 @@ const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
   mx('dx-card__row', fullWidth ? 'col-span-full' : 'col-span-3 grid grid-cols-subgrid', ...etc);
 
-const section: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__section contents', ...etc);
+// NOTE: Direct children that lack an explicit `col-*` utility default to the
+// Column.Root center track (via `--dx-col`); see `ui-theme`'s `css/components/card.css`.
+const section: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+  mx('dx-card__section col-span-full grid grid-cols-subgrid', ...etc);
 
 const sectionTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__section-title col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);
-
-const iconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
-  mx(
-    'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
-    padding && '[&>*]:p-1',
-    ...etc,
-  );
+  mx('dx-card__section-title col-start-2 col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);
 
 export const cardTheme: Theme<CardStyleProps> = {
   root,
-  toolbar,
+  header,
   title,
-  content,
+  body,
   row,
   section,
   'section-title': sectionTitle,
@@ -95,5 +90,4 @@ export const cardTheme: Theme<CardStyleProps> = {
   'action-label': actionLabel,
   link,
   'link-label': linkLabel,
-  'icon-block': iconBlock,
 };

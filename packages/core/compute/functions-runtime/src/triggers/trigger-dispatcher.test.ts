@@ -10,12 +10,20 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger } from '@dxos/compute';
+import {
+  Operation,
+  OperationHandlerSet,
+  ServiceNotAvailableError,
+  ServiceResolver,
+  Trace,
+  Trigger,
+} from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -57,6 +65,18 @@ const TestTriggerDispatcherLayer = makeTestTriggerDispatcherLayer({
   startingTime: new Date('2025-09-05T15:01:00.000Z'),
 });
 
+/**
+ * Store an operation definition in the database registry rather than persisting it to the
+ * database. The dispatcher resolves the trigger's function ref transparently from the registry.
+ */
+const registerOperation = (operation: Operation.Definition.Any) =>
+  Effect.gen(function* () {
+    const record = Operation.serialize(operation);
+    const { db } = yield* Database.Service;
+    db.registry.add([record]);
+    return record;
+  });
+
 describe('TriggerDispatcher', () => {
   describe('Time Control', () => {
     it.effect(
@@ -81,10 +101,33 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should manually invoke trigger',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * *'),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { tick: 0 },
+        });
+
+        expect(result).toEqual(Exit.succeed({ tick: 0 }));
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should invoke trigger referencing a registry operation by key DXN',
+      Effect.fnUntraced(function* ({ expect }) {
+        // Register the operation descriptor in the in-process registry (not the space db); the
+        // executable handler is provided by ExampleHandlers. The trigger references it by key DXN
+        // and resolves through the generic registry ref resolver.
+        const { db } = yield* Database.Service;
+        db.registry.add([Operation.serialize(Reply)]);
+        const trigger = Trigger.make({
+          function: Ref.fromURI(Reply.meta.key),
           enabled: true,
           spec: Trigger.specTimer('*/5 * * * *'),
         });
@@ -104,8 +147,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke scheduled timer triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -130,8 +172,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle disabled triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         const enabledTrigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -165,8 +206,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'cron triggers are invoked periodically on schedule',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // cron every 5 minutes
         const trigger = Trigger.make({
@@ -211,7 +251,8 @@ describe('TriggerDispatcher', () => {
           // Use a Person object as the function ref so trigger invocation fails the
           // `Obj.instanceOf(Operation.PersistentOperation, ...)` invariant.
           const badFn = Obj.make(Person.Person, { fullName: 'not-an-operation' });
-          yield* Database.add(badFn);
+          const { db } = yield* Database.Service;
+          db.registry.add([badFn]);
 
           const trigger = Trigger.make({
             function: Ref.make(badFn) as any,
@@ -261,8 +302,7 @@ describe('TriggerDispatcher', () => {
         // Initially no triggers in database
 
         // Add a trigger dynamically
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -281,8 +321,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should support Effect cron expressions',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         const validPatterns = [
           '* * * * *', // Every minute
@@ -312,8 +351,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle invalid cron expressions gracefully',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Test with an invalid pattern
         const trigger = Trigger.make({
@@ -347,14 +385,13 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Queue Triggers', () => {
+  describe('Feed Triggers', () => {
     it.effect(
-      'should invoke scheduled queue triggers',
+      'should invoke scheduled feed triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -368,7 +405,7 @@ describe('TriggerDispatcher', () => {
         ]);
 
         const dispatcher = yield* TriggerDispatcher;
-        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
@@ -380,8 +417,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -400,21 +436,21 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),
@@ -425,8 +461,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -444,7 +479,7 @@ describe('TriggerDispatcher', () => {
         yield* Feed.append(feed, [person]);
 
         const dispatcher = yield* TriggerDispatcher;
-        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         const exit = results[0].result;
@@ -465,8 +500,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
@@ -483,20 +517,20 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(2);
           expect(results.every((r) => Exit.isSuccess(r.result))).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),
@@ -507,8 +541,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke triggers on object creation',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a subscription trigger that watches for Person objects
         const trigger = Trigger.make({
@@ -540,8 +573,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke triggers on object updates',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a person object first
         const person = Obj.make(Person.Person, {
@@ -581,8 +613,7 @@ describe('TriggerDispatcher', () => {
     it.effect.skip(
       'should not invoke triggers for unchanged objects',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a subscription trigger first
         const trigger = Trigger.make({
@@ -628,8 +659,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle multiple object types with filters',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         // Create a subscription trigger that only watches for Task objects
         const trigger = Trigger.make({
@@ -667,8 +697,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should pass correct event data to function',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = Operation.serialize(Reply);
-        yield* Database.add(functionObj);
+        const functionObj = yield* registerOperation(Reply);
 
         const person = Obj.make(Person.Person, {
           fullName: 'Eva Martinez',
@@ -700,6 +729,121 @@ describe('TriggerDispatcher', () => {
           triggerId: trigger.id,
         });
       }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+  });
+
+  // Regression coverage for an issue where `invokeTrigger` spawned operations
+  // without an `environment`, so the `ServiceResolver` ran with an empty
+  // `LayerSpec.LayerContext` and could not satisfy space-affinity service
+  // requirements such as `Database.Service`. The dispatcher must thread its
+  // own space context into `ProcessManager.spawn` so dispatched operations
+  // can resolve the same space-scoped services their handler declares.
+  describe('Service Resolution', () => {
+    /**
+     * Operation whose handler depends on {@link Database.Service}. Resolved via the
+     * operation handler set registered with {@link OperationHandlerSet.provide} below.
+     */
+    const ProbeOp = Operation.make({
+      meta: { key: DXN.make('test.trigger-dispatcher.probeDatabase'), name: 'Probe Database' },
+      input: Schema.Any,
+      output: Schema.Struct({ spaceId: Schema.String }),
+      services: [Database.Service],
+    });
+
+    const ProbeHandler = ProbeOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* () {
+          const { db } = yield* Database.Service;
+          return { spaceId: db.spaceId };
+        }),
+      ),
+    );
+
+    /**
+     * Strict resolver that mimics the production {@link LayerStack}: refuses
+     * to materialise space-affinity services unless the caller supplies a
+     * matching `space` in the {@link ServiceResolver.ResolutionContext}.
+     *
+     * Built lazily once `Database.Service` is available so the resolver can
+     * tie itself to the live test database's `spaceId`.
+     */
+    const SpaceAwareResolverLayer = Layer.effect(
+      ServiceResolver.ServiceResolver,
+      Effect.gen(function* () {
+        const dbService = yield* Database.Service;
+        return ServiceResolver.make((tag, context) =>
+          Effect.gen(function* () {
+            if (tag.key !== Database.Service.key) {
+              return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
+            }
+            if (context.space !== dbService.db.spaceId) {
+              return yield* Effect.fail(
+                new ServiceNotAvailableError(
+                  `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
+                ),
+              );
+            }
+            return dbService as any;
+          }),
+        );
+      }),
+    );
+
+    /**
+     * Mirror of {@link TestLayer} but with the strict {@link SpaceAwareResolverLayer}
+     * standing in for the production {@link LayerStack}. Asserts that the
+     * dispatcher derives its space from the captured `Database.Service` and
+     * threads it into `ProcessManager.spawn` so the operation's declared
+     * services resolve correctly.
+     */
+    const SpaceAwareTriggerDispatcherLayer = TriggerDispatcher.layer({
+      timeControl: 'manual',
+      startingTime: new Date('2025-09-05T15:01:00.000Z'),
+    }).pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          TriggerStateStore.layerMemory,
+          AiService.notAvailable,
+          credentialsLayerConfig([]),
+          FetchHttpClient.layer,
+        ),
+      ),
+      Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+      Layer.provideMerge(SpaceAwareResolverLayer),
+      Layer.provideMerge(
+        TestDatabaseLayer({
+          types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
+        }),
+      ),
+      Layer.provideMerge(KeyValueStore.layerMemory),
+      Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.make(ProbeHandler))),
+      Layer.provideMerge(Registry.layer),
+      Layer.provideMerge(Trace.layerNoop),
+    );
+
+    it.effect(
+      'invokeTrigger spawns operations with the dispatcher environment so space-affinity services resolve',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(ProbeOp);
+
+        const trigger = Trigger.make({
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('* * * * *'),
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
+
+        invariant(
+          Exit.isSuccess(result),
+          `trigger invocation failed: ${Exit.isFailure(result) ? String(result.cause) : ''}`,
+        );
+
+        const { db } = yield* Database.Service;
+        expect(result.value).toEqual({ spaceId: db.spaceId });
+      }, Effect.provide(SpaceAwareTriggerDispatcherLayer)),
     );
   });
 });

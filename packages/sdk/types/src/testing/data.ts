@@ -527,15 +527,11 @@ export const createTestData = () => {
 
 export const seedTestData = async (space: Space) => {
   const schemas = [Person.Person, Organization.Organization, TestSchema.DocumentType];
-  for (const schema of schemas) {
-    if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
-      await space.db.graph.schemaRegistry.register([schema]);
-    }
-  }
+  space.db.graph.registry.add(schemas);
 
   // for (const document of TestData.documents) {
   //   const obj = space.db.add(Obj.make(Document, document));
-  //   const dxn = Ref.make(obj).dxn.toString();
+  //   const dxn = Ref.make(obj).uri;
   //   document.dxn = dxn;
   // }
 

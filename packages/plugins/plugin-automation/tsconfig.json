@@ -75,10 +75,10 @@
       "path": "../../core/echo/echo-atom"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/echo/echo-react"
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../devtools/cli-util"

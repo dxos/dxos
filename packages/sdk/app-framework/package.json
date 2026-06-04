@@ -95,6 +95,8 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
@@ -106,6 +108,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -119,7 +122,10 @@
     "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "cjs-module-lexer": "catalog:"
+    "babel-preset-solid": "catalog:",
+    "cjs-module-lexer": "catalog:",
+    "esbuild": "catalog:",
+    "solid-js": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
@@ -136,7 +142,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "typedoc": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "peerDependencies": {
     "@effect-atom/atom-react": "catalog:",

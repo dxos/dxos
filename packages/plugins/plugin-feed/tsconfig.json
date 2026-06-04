@@ -24,7 +24,13 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/markdown"
     },
     {
       "path": "../../common/random"
@@ -37,6 +43,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"

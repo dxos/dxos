@@ -22,6 +22,9 @@ export const SPACE_TYPE = 'org.dxos.type.space';
 /** Type for the per-space virtual "Settings" section that groups settings panels. */
 export const SETTINGS_SECTION_TYPE = `${meta.id}.settings`;
 
+/** Node id (local segment) for the per-space virtual "Settings" section. */
+export const SETTINGS_SECTION_ID = 'settings';
+
 /** Key for the Expando that stores cross-space ordering (must stay stable for persisted data). */
 export const SHARED = 'shared-spaces';
 

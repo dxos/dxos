@@ -5,99 +5,121 @@
 import * as Effect from 'effect/Effect';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Feed as EchoFeed, Filter, Obj, Ref, StateMap, Tag, TagIndex } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { type Magazine, Subscription } from '../types';
+import { extractImageUrls, makeSnippet, stripHtml } from './extract';
 
 /**
- * Read/write helpers for the sidecar state maps that replace mutable fields on
- * {@link Subscription.Post}. Posts live in their Subscription's queue and are
- * immutable; their state lives on:
+ * Per-Post state helpers. Posts live immutably in a Subscription's `feed` queue; their mutable state
+ * is hosted off the Post id:
  *
- * - {@link Subscription.Subscription.postState} — per-Post user state shared
- *   across every magazine that references the Post (imageUrl, readAt,
- *   archived, starred, starredAt). Fetched bodies live in the parallel
- *   `Subscription.contentFeed` queue, not in this side map.
- * - {@link Magazine.Magazine.postState} — per-Post curation cache (snippet,
- *   rank), magazine-scoped.
+ * - Shared (across magazines), on the {@link Subscription}: `readAt` (a {@link StateMap}) and the
+ *   star/archive flags (a {@link TagIndex} over system {@link Tag} objects).
+ * - Magazine-scoped, on the {@link Magazine}: `rank` (a {@link StateMap}).
+ * - Derived from the Post (not stored): `snippet`/`imageUrl` — from `post.description`, or the
+ *   refined values on the Subscription's `contentFeed` entries when the full article was fetched.
  */
 
-export type SubscriptionPostState = NonNullable<Subscription.Subscription['postState']>[string];
-export type MagazinePostState = NonNullable<Magazine.Magazine['postState']>[string];
+const SYSTEM_TAG = {
+  starred: { key: Subscription.STARRED_TAG, label: 'Starred', hue: 'amber' },
+  archived: { key: Subscription.ARCHIVED_TAG, label: 'Archived', hue: 'neutral' },
+} as const;
 
-/**
- * Returns the user-state entry for the given Post id on the given Subscription.
- * Returns an empty object when no entry exists yet — callers can read fields
- * uniformly without an `?` chain.
- */
-export const getSubscriptionPostState = (
+/** A system per-Post flag modelled as a tag. */
+export type SystemTag = keyof typeof SYSTEM_TAG;
+
+//
+// Subscription-scoped shared state (readAt + star/archive tags).
+//
+
+/** ISO timestamp the Post was first opened, or undefined. */
+export const getReadAt = (subscription: Subscription.Subscription | undefined, postId: string): string | undefined =>
+  subscription ? StateMap.bind<Subscription.PostState>(subscription, 'postState').get(postId).readAt : undefined;
+
+/** Sets/clears the Post's read marker. */
+export const setReadAt = (subscription: Subscription.Subscription, postId: string, value: string | undefined): void =>
+  StateMap.bind<Subscription.PostState>(subscription, 'postState').patch(postId, { readAt: value });
+
+/** Resolves the uri of an existing system Tag without creating one; `undefined` when absent. Async. */
+export const findSystemTagUri = async (
+  db: Pick<Database.Database, 'query'>,
+  which: SystemTag,
+): Promise<string | undefined> => {
+  const [tag] = await db.query(Filter.foreignKeys(Tag.Tag, [SYSTEM_TAG[which].key])).run();
+  return tag ? Obj.getURI(tag).toString() : undefined;
+};
+
+/** Whether a Post carries the given (resolved) tag uri on its Subscription. Pure. */
+export const hasTag = (
   subscription: Subscription.Subscription | undefined,
   postId: string,
-): SubscriptionPostState => subscription?.postState?.[postId] ?? {};
+  tagUri: string | undefined,
+): boolean => (subscription && tagUri ? TagIndex.bind(subscription, 'tags').objects(tagUri).includes(postId) : false);
 
-/** Returns the curation-cache entry for the given Post id on the given Magazine. */
-export const getMagazinePostState = (magazine: Magazine.Magazine | undefined, postId: string): MagazinePostState =>
-  magazine?.postState?.[postId] ?? {};
-
-/**
- * Patches the user-state entry for the given Post id on the given Subscription.
- * Merges into any existing entry; nulls/undefineds in `patch` overwrite.
- */
-export const updateSubscriptionPostState = (
+/** Sets/clears a system tag (`starred`/`archived`) on a Post (find-or-creates the Tag object). Async. */
+export const setTag = async (
   subscription: Subscription.Subscription,
   postId: string,
-  patch: Partial<SubscriptionPostState>,
-): void => {
-  Obj.update(subscription, (subscription) => {
-    const mutable = subscription as Obj.Mutable<typeof subscription>;
-    const next = { ...(mutable.postState ?? {}) };
-    next[postId] = { ...next[postId], ...patch };
-    mutable.postState = next;
-  });
+  db: Pick<Database.Database, 'query' | 'add'>,
+  which: SystemTag,
+  value: boolean,
+): Promise<void> => {
+  const tag = await Tag.findOrCreate(db, SYSTEM_TAG[which]);
+  const uri = Obj.getURI(tag).toString();
+  const tags = TagIndex.bind(subscription, 'tags');
+  if (value) {
+    tags.setTag(uri, postId);
+  } else {
+    tags.unsetTag(uri, postId);
+  }
 };
 
-/** Patches the curation-cache entry for the given Post id on the given Magazine. */
-export const updateMagazinePostState = (
-  magazine: Magazine.Magazine,
-  postId: string,
-  patch: Partial<MagazinePostState>,
-): void => {
-  Obj.update(magazine, (magazine) => {
-    const mutable = magazine as Obj.Mutable<typeof magazine>;
-    const next = { ...(mutable.postState ?? {}) };
-    next[postId] = { ...next[postId], ...patch };
-    mutable.postState = next;
-  });
-};
+//
+// Magazine-scoped curation state (rank).
+//
+
+/** Agent-assigned relevance of a Post within a Magazine, or undefined. */
+export const getRank = (magazine: Magazine.Magazine | undefined, postId: string): number | undefined =>
+  magazine ? StateMap.bind<Magazine.PostState>(magazine, 'postState').get(postId).rank : undefined;
+
+/** Sets the magazine-scoped rank for a Post. */
+export const setRank = (magazine: Magazine.Magazine, postId: string, rank: number): void =>
+  StateMap.bind<Magazine.PostState>(magazine, 'postState').patch(postId, { rank });
+
+//
+// Derived (post-intrinsic) snippet + hero image; prefer refined contentFeed values when present.
+//
+
+/** Plain-text snippet: the refined contentFeed value if loaded, else derived from `post.description`. */
+export const getSnippet = (post: { description?: string }, content?: Subscription.PostContent): string =>
+  content?.snippet ?? makeSnippet(stripHtml(post.description ?? ''));
+
+/** Hero image url: the refined contentFeed value if loaded, else derived from `post.description`. */
+export const getImageUrl = (post: { description?: string }, content?: Subscription.PostContent): string | undefined =>
+  content?.imageUrl ?? extractImageUrls(post.description ?? '')[0];
+
+//
+// Content feed (fetched article bodies; carries refined snippet/imageUrl).
+//
 
 /**
- * Resolves a Post's source Subscription synchronously if its `source` ref is
- * loaded, otherwise returns undefined. Callers that need to mutate per-Post
- * state should ensure the source is loaded first (or kick off a load and let
- * React re-render when it resolves).
+ * Resolves a Post's source Subscription synchronously if its `source` ref is loaded, else undefined.
  */
-export const getPostSubscription = (post: Subscription.Post): Subscription.Subscription | undefined => {
-  return post.source?.target;
-};
+export const getPostSubscription = (post: Subscription.Post): Subscription.Subscription | undefined =>
+  post.source?.target;
 
 /**
- * Loads every {@link Subscription.PostContent} entry from a Subscription's
- * `contentFeed` queue. Returns a map keyed by Post id; the queue is iterated
- * in append order so the last writer wins (refresh after refresh overrides
- * the earlier extraction).
- *
- * Returns an empty map when no contentFeed exists yet — legacy Subscriptions
- * created before `contentFeed` was added to the schema still work; callers
- * just see "no fetched content" until the next write triggers lazy upgrade
- * via {@link appendPostContent}.
+ * Loads every {@link Subscription.PostContent} entry from a Subscription's `contentFeed`. Returns a
+ * map keyed by Post id (last writer wins). Empty when no contentFeed exists yet.
  */
 export const loadContentEntries = async (
   space: Space,
   subscription: Subscription.Subscription,
 ): Promise<Map<string, Subscription.PostContent>> => {
   const echoFeed = subscription.contentFeed?.target;
-  if (!echoFeed || !EchoFeed.getQueueDxn(echoFeed)) {
+  if (!echoFeed || !EchoFeed.getQueueUri(echoFeed)) {
     return new Map();
   }
   const items = await EchoFeed.runQuery(echoFeed, Filter.type(Subscription.PostContent)).pipe(
@@ -111,11 +133,7 @@ export const loadContentEntries = async (
   return map;
 };
 
-/**
- * Looks up a single {@link Subscription.PostContent} entry by Post id, picking
- * the newest entry (last appended) when multiple exist for the same id.
- * Returns undefined when no entry has been appended yet.
- */
+/** Looks up a single {@link Subscription.PostContent} by Post id (newest wins); undefined if absent. */
 export const findPostContent = async (
   space: Space,
   subscription: Subscription.Subscription,
@@ -125,12 +143,7 @@ export const findPostContent = async (
   return map.get(postId);
 };
 
-/**
- * Returns the Subscription's `contentFeed`, lazily creating and attaching one
- * when missing. Subscriptions created before `contentFeed` was added to the
- * schema (or constructed without `makeSubscription`) don't have one yet — the
- * first write upgrades them in place.
- */
+/** Returns the Subscription's `contentFeed`, lazily creating and attaching one when missing. */
 const ensureContentFeed = (subscription: Subscription.Subscription): EchoFeed.Feed => {
   const existing = subscription.contentFeed?.target;
   if (existing) {
@@ -146,20 +159,20 @@ const ensureContentFeed = (subscription: Subscription.Subscription): EchoFeed.Fe
 };
 
 /**
- * Appends a new {@link Subscription.PostContent} entry to a Subscription's
- * `contentFeed`, lazily creating the feed on first use. Caller is responsible
- * for idempotency — call {@link findPostContent} first if you only want to
- * write once per Post.
+ * Appends a {@link Subscription.PostContent} entry (body + refined snippet/imageUrl) to a
+ * Subscription's `contentFeed`, lazily creating the feed on first use.
  */
 export const appendPostContent = async (
   space: Space,
   subscription: Subscription.Subscription,
-  entry: { postId: string; text: string; fetchedAt?: string },
+  entry: { postId: string; text: string; snippet?: string; imageUrl?: string; fetchedAt?: string },
 ): Promise<void> => {
   const echoFeed = ensureContentFeed(subscription);
   const content = Obj.make(Subscription.PostContent, {
     postId: entry.postId,
     text: entry.text,
+    ...(entry.snippet ? { snippet: entry.snippet } : {}),
+    ...(entry.imageUrl ? { imageUrl: entry.imageUrl } : {}),
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
   await EchoFeed.append(echoFeed, [content]).pipe(

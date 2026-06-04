@@ -37,6 +37,7 @@ const makeRecordingFeedLayer = () => {
         run: async () => [],
       }) as any,
     sync: async () => {},
+    getSyncState: async () => ({ blocksToPull: 0, blocksToPush: 0, totalBlocks: 0 }),
   };
 
   return {

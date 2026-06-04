@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
+import { EchoObject, Filter, EntityId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
   FetchHttpClient,
@@ -74,7 +74,7 @@ export default defineFunction({
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(mailbox.queue.dxn),
+        try: () => space.queues.queryQueue(mailbox.queue.uri),
         catch: (e: any) => e,
       });
       const newMessages = yield* Ref.make([]);
@@ -105,7 +105,7 @@ export default defineFunction({
           }
           const subject = messageDetails.payload.headers.find((h: any) => h.name === 'Subject')?.value;
           const object = create(MessageType, {
-            id: ObjectId.random(),
+            id: EntityId.random(),
             created,
             sender,
             blocks: [
@@ -132,7 +132,7 @@ export default defineFunction({
           Stream.grouped(10),
           Stream.flatMap((batch: any) =>
             Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(mailbox.queue.dxn, Chunk.toReadonlyArray(batch)),
+              try: () => space.queues.insertIntoQueue(mailbox.queue.uri, Chunk.toReadonlyArray(batch)),
               catch: (e: any) => e,
             }),
           ),
@@ -197,7 +197,7 @@ const Text = S.TaggedStruct('text', {
 interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
-  id: ObjectId,
+  id: EntityId,
   created: S.String.annotations({
     description: 'ISO date string when the message was sent.',
   }),

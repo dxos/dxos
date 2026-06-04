@@ -14,7 +14,7 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
-import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
+import { CustomTokenDialog, IntegrationArticle, SyncTargetsDialog } from '#containers';
 import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
@@ -23,14 +23,14 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'integration-article',
+        id: 'integrationArticle',
         filter: AppSurface.object(AppSurface.Article, Integration.Integration),
         component: ({ data, role }) => (
           <IntegrationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
-        id: 'integration-auth',
+        id: 'integrationAuth',
         role: 'integration--auth',
         filter: (
           data,
@@ -49,20 +49,17 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'sync-targets-dialog',
-        filter: AppSurface.component<ComponentProps<typeof SyncTargetsChecklist>>(
-          AppSurface.Dialog,
-          SYNC_TARGETS_DIALOG,
-        ),
-        component: ({ data }) => <SyncTargetsChecklist {...data.props} />,
+        id: 'syncTargetsDialog',
+        filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
+        component: ({ data }) => <SyncTargetsDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'custom-token-dialog',
+        id: 'customTokenDialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
       Surface.create({
-        id: 'integration-provider-selector',
+        id: 'integrationProviderSelector',
         role: 'form-input',
         filter: (data): data is { schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
           const fieldAst = (data as any)?.fieldPropertyAst as SchemaAST.AST | undefined;

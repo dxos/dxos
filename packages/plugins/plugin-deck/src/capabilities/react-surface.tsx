@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'not-found',
+        id: 'notFound',
         role: 'article',
         filter: (data): data is { attendableId: string } => data.attendableId === NOT_FOUND_PATH,
         component: () => <NotFoundArticle />,

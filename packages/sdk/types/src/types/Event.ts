@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
@@ -48,19 +48,12 @@ export const Event = Schema.Struct({
    */
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.event',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--calendar-dot--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
+  Type.makeObject(DXN.make('org.dxos.type.event', '0.1.0')),
 );
 
-export interface Event extends Schema.Schema.Type<typeof Event> {}
-
+export type Event = Type.InstanceType<typeof Event>;
 export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>): Event =>
   Obj.make(Event, { attendees, ...props });

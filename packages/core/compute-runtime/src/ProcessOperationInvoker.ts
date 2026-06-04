@@ -18,7 +18,6 @@ import * as Stream from 'effect/Stream';
 
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
@@ -115,7 +114,7 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'> & {
+    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment' | 'notify'> & {
       /**
        * If true, do NOT link the spawned process to the current process as a
        * child. Used by {@link schedule} so that fire-and-forget operations
@@ -190,21 +189,20 @@ export const make = (opts: {
     return Effect.gen(function* () {
       const fiber = yield* invokeFiber(op, input, {
         traceMeta,
+        // Notifications ride the process monitor: forward `notify` onto the spawned process's params.
+        notify: options?.notify,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-          ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       });
-      // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`,
-      // so flattening unwraps it into `Effect<O, …>` with the original cause.
+      // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`, so flattening unwraps it
+      // into `Effect<O, …>` with the original cause (failures propagate without a published event).
       const output = yield* fiber.await.pipe(Effect.flatten);
 
-      yield* PubSub.publish(pubsub, {
-        operation: op,
-        input,
-        output,
-        timestamp: Date.now(),
-      });
+      // Publish a success event. In-progress/failure lifecycle is observed via the process monitor;
+      // undoability is derived by downstream consumers (the history tracker).
+      yield* PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() });
 
       return output;
     }).pipe(
@@ -224,8 +222,10 @@ export const make = (opts: {
     ...args: any[]
   ): Effect.Effect<void> => {
     const input = args[0] as I;
+    const options = args[1] as Operation.InvokeOptions | undefined;
+    const traceMeta = options?.tracing as Trace.Meta | undefined;
     return Effect.gen(function* () {
-      log('scheduling operation', { opKey: op.meta.key });
+      log('scheduling operation', { opKey: op.meta.key, ...options });
       yield* Ref.update(pendingCount, (count) => count + 1);
       // Scheduled operations are explicitly detached from the current process
       // — that's the whole point of `schedule` over `invoke`. Spawning without
@@ -233,7 +233,15 @@ export const make = (opts: {
       // spawning process's child set, doesn't deliver `requestChildEvent`
       // notifications, and the parent's terminal state isn't perturbed by
       // late child exits.
-      const fiber = yield* invokeFiber(op, input, { detached: true }).pipe(
+      const fiber = yield* invokeFiber(op, input, {
+        detached: true,
+        traceMeta,
+        notify: options?.notify,
+        environment: {
+          ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
+        },
+      }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.tapErrorCause((cause) =>
           Effect.sync(() => {

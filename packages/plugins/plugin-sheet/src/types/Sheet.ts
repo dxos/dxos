@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
@@ -63,17 +63,11 @@ export const Sheet = Schema.Struct({
   // Cell formatting referenced by indexed range.
   ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.sheet',
-    version: '0.1.0',
-  }),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--grid-nine--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
+  Type.makeObject(DXN.make('org.dxos.type.sheet', '0.1.0')),
 );
 
-export interface Sheet extends Schema.Schema.Type<typeof Sheet> {}
+export type Sheet = Type.InstanceType<typeof Sheet>;
 
 export type SheetProps = {
   name?: string;

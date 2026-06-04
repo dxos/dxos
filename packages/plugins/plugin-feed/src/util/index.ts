@@ -12,3 +12,4 @@ export * from './fetch-rss';
 export * from './format-date';
 export * from './post-state';
 export * from './use-post-content';
+export * from './use-system-tags';

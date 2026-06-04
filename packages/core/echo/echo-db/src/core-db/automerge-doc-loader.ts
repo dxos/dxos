@@ -10,7 +10,7 @@ import { type Context, cancelWithContext } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
-import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
@@ -50,7 +50,7 @@ export interface AutomergeDocumentLoader {
    */
   getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[];
 
-  objectPresent(id: ObjectId): boolean;
+  objectPresent(id: EntityId): boolean;
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string | string[], opts?: LoadObjectDocumentOptions): void;
   getObjectDocumentId(objectId: string): string | undefined;
@@ -153,7 +153,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._spaceRootDocHandle = existingDocHandle;
   }
 
-  objectPresent(id: ObjectId): boolean {
+  objectPresent(id: EntityId): boolean {
     assertState(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     return (
       DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), id) != null ||
@@ -428,6 +428,6 @@ export interface DocumentChanges {
   updatedObjectIds: string[];
   objectsToRebind: string[];
   linkedDocuments: {
-    [echoId: string]: AutomergeUrl;
+    [echoUri: string]: AutomergeUrl;
   };
 }

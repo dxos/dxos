@@ -5,14 +5,14 @@
 import { Event } from '@dxos/async';
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
 export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
-  queueId?: string;
-  dxn?: DXN;
+  queueId?: EntityId;
+  uri?: EID.EID;
   objects?: T[];
 };
 
@@ -21,14 +21,14 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
  * @deprecated Use the actual queue with a mock service.
  */
 export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
-  static make<T extends Entity.Unknown>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
-    if (!dxn) {
-      dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
+  static make<T extends Entity.Unknown>({ spaceId, queueId, uri, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
+    if (!uri) {
+      uri = EID.make({ spaceId: spaceId ?? SpaceId.random(), entityId: queueId ?? EntityId.random() });
     } else {
       invariant(spaceId == null && queueId == null);
     }
 
-    const queue = new MemoryQueue<T>(dxn);
+    const queue = new MemoryQueue<T>(uri);
     if (objects?.length) {
       void queue.append(objects);
     }
@@ -40,17 +40,17 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
 
   private _objects: T[] = [];
 
-  constructor(private readonly _dxn: DXN) {}
+  constructor(private readonly _uri: EID.EID) {}
 
   toJSON() {
     return {
-      dxn: this._dxn.toString(),
+      uri: this._uri,
       objects: this._objects.length,
     };
   }
 
-  get dxn() {
-    return this._dxn;
+  get uri(): EID.EID {
+    return this._uri;
   }
 
   subscribe(callback: () => void): () => void {
@@ -89,11 +89,11 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return this._objects;
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
+  async getObjectsById(ids: EntityId[]): Promise<(T | undefined)[]> {
     return ids.map((id) => this._objects.find((object) => object.id === id));
   }
 
-  async delete(ids: ObjectId[]): Promise<void> {
+  async delete(ids: EntityId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
     this._objects = this._objects.filter((object) => !ids.includes(object.id));
     this.updated.emit();

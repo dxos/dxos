@@ -17,7 +17,7 @@ const item: ComponentFunction<ListStyleProps> = ({ collapsible }, ...etc) => mx(
 
 const itemEndcap: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
   mx(
-    density === 'lg' ? getSize(10) : density === 'sm' ? getSize(7) : getSize(8),
+    density === 'lg' ? getSize(10) : density === 'sm' ? getSize(7) : density === 'xs' ? getSize(6) : getSize(8),
     'shrink-0 flex items-center justify-center',
     ...etc,
   );

@@ -15,6 +15,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -61,6 +64,9 @@
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../client-protocol"
     },
     {
       "path": "../react-client"

@@ -40,7 +40,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id]);
 
   useEffect(() => {
-    if (objects.findIndex((object) => Obj.getDXN(object).toString() === id) > -1) {
+    if (objects.findIndex((object) => Obj.getURI(object) === id) > -1) {
       setFound(true);
       if (layout.active.includes(id)) {
         setOpen(false);
@@ -58,37 +58,36 @@ export const AwaitingObject = ({ id }: { id: string }) => {
     void handleClose();
   }, [id, handleClose, invokePromise]);
 
+  // TODO(burdon): Why are we not using LayoutOperation.AddToast?
   return (
     <Toast.Root open={open} duration={TOAST_TIMEOUT} onOpenChange={setOpen}>
-      <Toast.Body>
-        <Toast.Title classNames='flex items-center gap-2'>
-          {found ? (
-            <>
-              <Icon icon='ph--check-circle--regular' />
-              <span>{t('found-object.label')}</span>
-            </>
-          ) : waiting ? (
-            <>
-              <Icon icon='ph--circle-notch--regular' classNames='animate-spin' />
-              <span>{t('waiting-for-object.label')}</span>
-            </>
-          ) : (
-            <>
-              <Icon icon='ph--circle-dashed--regular' />
-              <span>{t('object-not-found.label')}</span>
-            </>
-          )}
-        </Toast.Title>
-        <Toast.Description>
-          {t(
-            found
-              ? 'found-object.description'
-              : waiting
-                ? 'waiting-for-object.description'
-                : 'object-not-found.description',
-          )}
-        </Toast.Description>
-      </Toast.Body>
+      <Toast.Title classNames='flex items-center gap-2'>
+        {found ? (
+          <>
+            <Icon icon='ph--check-circle--regular' />
+            <span>{t('found-object.label')}</span>
+          </>
+        ) : waiting ? (
+          <>
+            <Icon icon='ph--circle-notch--regular' classNames='animate-spin' />
+            <span>{t('waiting-for-object.label')}</span>
+          </>
+        ) : (
+          <>
+            <Icon icon='ph--placeholder--regular' />
+            <span>{t('object-not-found.label')}</span>
+          </>
+        )}
+      </Toast.Title>
+      <Toast.Description>
+        {t(
+          found
+            ? 'found-object.description'
+            : waiting
+              ? 'waiting-for-object.description'
+              : 'object-not-found.description',
+        )}
+      </Toast.Description>
       <Toast.Actions>
         {found ? (
           <>
