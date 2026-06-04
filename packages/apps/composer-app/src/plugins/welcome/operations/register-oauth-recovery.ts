@@ -15,7 +15,6 @@ import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 import { RegisterOAuthRecovery } from './definitions';
 import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
 
-
 /**
  * Begins OAuth recovery registration (redirect flow).
  *
@@ -60,16 +59,23 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
           JSON.stringify({ purpose: 'register', code: data.code, hubUrl: data.hubUrl }),
         ),
       ).pipe(
-        Effect.catchAll((error) => Effect.sync(() => log.warn('failed to persist OAuth recovery registration snapshot', { error }))),
+        // Persisting the snapshot is required for the finalizer to complete registration after the
+        // redirect reload; if it fails, log and abort before opening the auth tab rather than
+        // stranding the user mid-flow.
+        Effect.tapError((error) =>
+          Effect.sync(() => log.warn('failed to persist OAuth recovery registration snapshot', { error })),
+        ),
       );
 
       log.info('registering OAuth recovery (redirect flow)', { provider, accessTokenId });
 
       // Open the auth URL in a new tab. After auth, kms-service redirects the tab to
-      // `/redirect/oauth-recovery`, where the recovery finalizer takes over.
-      yield* Effect.sync(() => {
-        window.open(initiateResponse.authUrl, '_blank');
-      });
+      // `/redirect/oauth-recovery`, where the recovery finalizer takes over. A null return means the
+      // popup was blocked — fail rather than silently continue (the flow can never complete).
+      const authWindow = yield* Effect.sync(() => window.open(initiateResponse.authUrl, '_blank'));
+      if (!authWindow) {
+        return yield* Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).'));
+      }
     }),
   ),
 );

@@ -15,7 +15,6 @@ import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 import { RedeemOAuthRecovery } from './definitions';
 import { ATPROTO_OAUTH_SCOPES, createEdgeHttpClient } from './shared';
 
-
 /**
  * Recover an existing identity by completing an OAuth flow with a registered recovery provider
  * (e.g. atproto / Atmosphere), using the redirect flow.
@@ -59,10 +58,13 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
       log.info('redeeming OAuth recovery (redirect flow)', { provider, accessTokenId });
 
       // Open the auth URL in a new tab. After auth, kms-service redirects the tab to
-      // `/redirect/oauth-recovery`, where the recovery finalizer redeems the proof.
-      yield* Effect.sync(() => {
-        window.open(initiateResponse.authUrl, '_blank');
-      });
+      // `/redirect/oauth-recovery`, where the recovery finalizer redeems the proof. A null return
+      // means the popup was blocked — fail rather than silently continue (the flow can never
+      // complete).
+      const authWindow = yield* Effect.sync(() => window.open(initiateResponse.authUrl, '_blank'));
+      if (!authWindow) {
+        return yield* Effect.fail(new Error('Unable to open OAuth recovery window (popup blocked?).'));
+      }
     }),
   ),
 );
