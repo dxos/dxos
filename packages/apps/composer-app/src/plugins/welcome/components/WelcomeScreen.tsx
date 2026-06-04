@@ -291,8 +291,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     [hubUrl, identity],
   );
 
-  // The welcome surface has a fixed dark gradient backdrop, so force dark mode regardless of the
-  // app/system theme (DXOS resolves theme via ThemeProvider's themeMode, not a `.dark` class).
   return (
     <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={translations}>
       <Welcome
