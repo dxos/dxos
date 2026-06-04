@@ -20133,6 +20133,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

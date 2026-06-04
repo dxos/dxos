@@ -36,6 +36,7 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
