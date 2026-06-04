@@ -11,9 +11,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as AiService from './AiService';
-import { AiServiceTestingPreset } from './testing';
-import { processMessages } from './testing';
+import * as AiService from '../AiService';
+import { AiServiceTestingPreset } from './index';
+import { processMessages } from './index';
 
 describe('effect AI tool calls', () => {
   it.effect(

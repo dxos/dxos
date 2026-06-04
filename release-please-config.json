@@ -525,11 +525,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/script-toolbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-assistant/package.json",
           "jsonpath": "$.version"
         },

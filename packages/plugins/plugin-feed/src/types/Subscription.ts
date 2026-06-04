@@ -96,10 +96,7 @@ export const Subscription = Schema.Struct({
   tags: TagIndex.field(),
 }).pipe(
   LabelAnnotation.set(['name', 'url']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--rss--regular',
-    hue: 'orange',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'orange' }),
   FeedAnnotation.set(true),
   FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
   Type.makeObject(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
@@ -179,10 +176,7 @@ export const Post = Schema.Struct({
   guid: Schema.String.pipe(Schema.optional),
 }).pipe(
   LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--article--regular',
-    hue: 'orange',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'orange' }),
   Type.makeObject(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
 );
 

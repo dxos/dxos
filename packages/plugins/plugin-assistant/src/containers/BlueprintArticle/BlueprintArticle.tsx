@@ -22,7 +22,7 @@ export const BlueprintArticle = ({ role, attendableId, subject }: BlueprintArtic
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <TemplateEditor id={subject.id} template={subject.instructions} />
+        <TemplateEditor id={subject.id} source={subject.instructions.source} />
       </Panel.Content>
     </Panel.Root>
   );

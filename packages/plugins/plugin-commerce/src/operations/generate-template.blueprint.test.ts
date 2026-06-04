@@ -83,6 +83,6 @@ describe('provider blueprint: generate a parser from a real page', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: 240_000 },
+    { timeout: 240_000, tags: ['llm'] },
   );
 });

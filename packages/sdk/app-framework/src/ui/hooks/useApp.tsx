@@ -59,11 +59,6 @@ export type StartupProgress = {
   humanizedName?: string;
 };
 
-export type PlaceholderProps = {
-  stage?: number;
-  progress?: StartupProgress;
-};
-
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
@@ -81,7 +76,6 @@ export type UseAppOptions = {
   debounce?: number;
   timeout?: number;
   fallback?: FC<FallbackProps>;
-  placeholder?: FC<PlaceholderProps>;
 };
 
 /**
@@ -105,7 +99,6 @@ export type UseAppOptions = {
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
  * @param params.fallback Fallback component to render if an error occurs during startup.
- * @param params.placeholder Placeholder component to render during startup.
  */
 export const useApp = ({
   pluginManager,
@@ -115,7 +108,6 @@ export const useApp = ({
   plugins: pluginsProp,
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
-  placeholder,
   fallback = ErrorFallback,
   cacheEnabled = false,
   safeMode = false,
@@ -211,7 +203,7 @@ export const useApp = ({
               // the `!module` guard the listener would mark the app ready on
               // the *first* such module rather than waiting for the event-level
               // completion — leaving downstream capabilities (operation-invoker,
-              // app-graph, …) un-registered when the placeholder dismisses.
+              // app-graph, …) un-registered when the boot loader dismisses.
               if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
                 clearTimeout(timeoutId);
                 setReady(true);
@@ -229,7 +221,7 @@ export const useApp = ({
               }
               // `activating` is the start-of-load signal. Surface the raw
               // `module` (or `event`) plus a pre-humanized label so the
-              // host placeholder can decide what to render — show
+              // boot loader can decide how to render each transition — show
               // everything, suppress noisy sub-modules, group by plugin,
               // or apply its own formatting. We intentionally do NOT touch
               // these fields on `activated`: pairing the two would cause
@@ -331,19 +323,13 @@ export const useApp = ({
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
-              <App
-                placeholder={placeholder}
-                ready={ready}
-                error={error}
-                debounce={debounce}
-                progress={progressRef.current}
-              />
+              <App ready={ready} error={error} debounce={debounce} progress={progressRef.current} />
             </RegistryContext.Provider>
           </ContextProtocolProvider>
         </PluginManagerProvider>
       </ErrorBoundary>
     ),
-    [fallback, manager, placeholder, ready, error],
+    [fallback, manager, ready, error],
   );
 };
 

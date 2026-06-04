@@ -76,10 +76,7 @@ const ViewSchema = Schema.Struct({
   projection: Projection,
 }).pipe(
   internal.HiddenAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--funnel--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--funnel--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 

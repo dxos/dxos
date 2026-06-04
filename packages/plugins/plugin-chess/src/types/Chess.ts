@@ -24,10 +24,7 @@ export const State = Schema.Struct({
     description: 'Forsyth-Edwards Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--shield-chevron--regular',
-    hue: 'amber',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--shield-chevron--regular', hue: 'amber' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   // Implementation detail of the unified `Game` schema. The user-facing object is `Game`;
   // this state is only ever referenced via `Game.variant`. HiddenAnnotation keeps it out of the

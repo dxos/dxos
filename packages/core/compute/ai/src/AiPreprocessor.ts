@@ -9,6 +9,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import { flow } from 'effect/Function';
+import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
@@ -68,15 +69,7 @@ export const preprocessPrompt: (
               ];
 
             case 'tool':
-              return [
-                Prompt.makeMessage('tool', {
-                  content: yield* Function.pipe(
-                    msg.blocks,
-                    Effect.forEach(convertToolMessagePart),
-                    Effect.map(Array.filter(Predicate.isNotUndefined)),
-                  ),
-                }),
-              ];
+              return yield* convertToolMessage(msg);
 
             default:
               return [];
@@ -262,6 +255,91 @@ const parseToolJson = (
   });
 
 /**
+ * Decode file payload from a data URL, standard base64, or base64url string.
+ * Returns standard base64 suitable for Anthropic `source.data`.
+ */
+const unwrapFileBase64Data = (url: string): Effect.Effect<string, PromptPreprocesorError, never> =>
+  Effect.try({
+    try: () => {
+      if (/^https?:\/\//i.test(url)) {
+        throw new Error('HTTP(S) file URLs are not supported for tool result documents');
+      }
+
+      if (url.startsWith('data:')) {
+        const commaIndex = url.indexOf(',');
+        if (commaIndex === -1) {
+          throw new Error('Invalid data URL');
+        }
+        const meta = url.slice(5, commaIndex);
+        const payload = url.slice(commaIndex + 1);
+        if (!meta.includes('base64')) {
+          throw new Error('Data URL must use base64 encoding');
+        }
+        return payload;
+      }
+
+      // Node accepts both base64 and base64url alphabets; normalize to standard base64.
+      return Buffer.from(url, 'base64url').toString('base64');
+    },
+    catch: (cause) =>
+      new PromptPreprocesorError({
+        message: `File url must be base64 or base64url encoded data: ${(cause as Error)?.message ?? cause}`,
+        cause,
+      }),
+  });
+
+const contentBlockToUserMessagePart = (
+  block: ContentBlock.Text | ContentBlock.Image | ContentBlock.File,
+): Effect.Effect<Prompt.UserMessagePart, PromptPreprocesorError, never> =>
+  Match.value(block).pipe(
+    Match.tags({
+      text: (textBlock) => Effect.succeed(Prompt.makePart('text', { text: textBlock.text })),
+      image: (imageBlock) =>
+        Effect.gen(function* () {
+          switch (imageBlock.source?.type) {
+            case 'base64':
+              return Prompt.makePart('file', {
+                mediaType: imageBlock.source.mediaType,
+                data: bufferToArray(Buffer.from(imageBlock.source.data, 'base64')),
+              });
+            case 'http':
+              return Prompt.makePart('file', {
+                data: new URL(imageBlock.source.url),
+                mediaType: 'application/octet-stream',
+              });
+            default:
+              return yield* Effect.fail(
+                new PromptPreprocesorError({ message: 'Invalid image source for tool result content' }),
+              );
+          }
+        }),
+      file: (fileBlock) =>
+        Effect.gen(function* () {
+          const data = yield* unwrapFileBase64Data(fileBlock.url);
+          return Prompt.makePart('file', {
+            mediaType: fileBlock.mediaType ?? 'application/octet-stream',
+            data: bufferToArray(Buffer.from(data, 'base64')),
+            fileName: fileBlock.name,
+          });
+        }),
+    }),
+    Match.exhaustive,
+  );
+
+const makeToolResultPart = (
+  block: Extract<ContentBlock.Any, { _tag: 'toolResult' }>,
+  result: unknown,
+  isFailure: boolean,
+): Prompt.ToolMessagePart =>
+  Prompt.makePart('tool-result', {
+    id: block.toolCallId,
+    name: block.name,
+    result,
+    isFailure,
+    providerExecuted: false,
+  });
+
+/**
  * Build a `tool-result` prompt part from a `toolResult` content block, validating the JSON
  * payload and preserving the `isFailure` flag when the block carries an error.
  */
@@ -273,29 +351,72 @@ const buildToolResultPart = (
     const result = hasError
       ? block.error
       : block.result != null
-        ? yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
+        ? ContentBlock.isContentBlockResult(block.result)
+          ? block.result
+          : yield* parseToolJson(block.result, { field: 'result', toolCallId: block.toolCallId })
         : {};
-    return Prompt.makePart('tool-result', {
-      id: block.toolCallId,
-      name: block.name,
-      result,
-      isFailure: hasError,
-      providerExecuted: false,
-    });
+    return makeToolResultPart(block, result, hasError);
   });
 
-export const convertToolMessagePart: (
-  block: ContentBlock.Any,
-) => Effect.Effect<Prompt.ToolMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
-  function* (block) {
-    switch (block._tag) {
-      case 'toolResult':
-        return yield* buildToolResultPart(block);
-      default:
-        return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid tool content block: ${block._tag}` }));
+const toolResultSeeBelowMessage = (toolCallId: string): string => `See result for ${toolCallId} below`;
+
+const toolResultHeaderMessage = (toolCallId: string): string => `Result from ${toolCallId}:`;
+
+/**
+ * Tool messages with {@link ContentBlock.ContentBlockResult} are expanded for Anthropic:
+ * stub `tool-result` parts first, then a `user` message with headers and file/text parts.
+ * @see https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls#handling-results-from-client-tools
+ */
+const convertToolMessage = (message: Message.Message): Effect.Effect<Prompt.Message[], PromptPreprocesorError, never> =>
+  Effect.gen(function* () {
+    const toolResults = message.blocks.filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+
+    if (toolResults.length === 0) {
+      return [];
     }
-  },
-);
+
+    const contentBlockResults = toolResults.filter(
+      (block) => block.error == null && ContentBlock.isContentBlockResult(block.result),
+    );
+
+    if (contentBlockResults.length === 0) {
+      const content = yield* Effect.forEach(toolResults, buildToolResultPart);
+      return [Prompt.makeMessage('tool', { content })];
+    }
+
+    const toolParts: Prompt.ToolMessagePart[] = [];
+    const userParts: Prompt.UserMessagePart[] = [];
+
+    for (const block of toolResults) {
+      if (block.error != null) {
+        toolParts.push(makeToolResultPart(block, block.error, true));
+        continue;
+      }
+
+      if (ContentBlock.isContentBlockResult(block.result)) {
+        toolParts.push(makeToolResultPart(block, toolResultSeeBelowMessage(block.toolCallId), false));
+      } else {
+        toolParts.push(yield* buildToolResultPart(block));
+      }
+    }
+
+    for (const block of toolResults) {
+      if (block.error != null || !ContentBlock.isContentBlockResult(block.result)) {
+        continue;
+      }
+
+      userParts.push(Prompt.makePart('text', { text: toolResultHeaderMessage(block.toolCallId) }));
+      for (const contentBlock of block.result.content) {
+        userParts.push(yield* contentBlockToUserMessagePart(contentBlock));
+      }
+    }
+
+    const messages: Prompt.Message[] = [Prompt.makeMessage('tool', { content: toolParts })];
+    if (userParts.length > 0) {
+      messages.push(Prompt.makeMessage('user', { content: userParts }));
+    }
+    return messages;
+  });
 
 const convertAssistantMessagePart: (
   block: ContentBlock.Any,

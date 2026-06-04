@@ -13,8 +13,6 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
-    inputs:
-      - script-frame/index.html
   compile:
     deps:
       - prebuild
