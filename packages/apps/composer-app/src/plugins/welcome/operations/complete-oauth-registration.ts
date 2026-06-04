@@ -8,10 +8,11 @@ import { Capability } from '@dxos/app-framework';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { Integration } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
@@ -79,6 +80,27 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
         provider: result.provider,
         account: result.identifier,
       });
+
+      // Wrap the AccessToken in an Integration so the connected account surfaces as a first-class
+      // object in the personal space. De-dup against prior logins/recovery: the AccessToken id is
+      // stable across re-registration, so only create the Integration if one doesn't already
+      // reference this token.
+      const integrations = yield* Effect.promise(() =>
+        personalSpace.db.query(Filter.type(Integration.Integration)).run(),
+      );
+      const alreadyWrapped = integrations.some(
+        (integration) => integration.accessToken.target?.id === result.accessTokenId,
+      );
+      if (!alreadyWrapped) {
+        personalSpace.db.add(
+          Integration.make({
+            name: result.email ?? result.identifier,
+            accessToken: Ref.make(tokenObject),
+            targets: [],
+          }),
+        );
+        log.info('Integration ECHO object created', { accessTokenId: result.accessTokenId, provider: result.provider });
+      }
 
       return { email: result.email };
     }),
