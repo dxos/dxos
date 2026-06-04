@@ -42,7 +42,12 @@
   --color-toolbar-surface: var(--dx-elevation-5);
   --color-card-surface: var(--dx-elevation-4);
   --color-group-surface: var(--dx-elevation-4);
-  --color-group-alt-surface: var(--dx-elevation-4);
+  /* Subtle alternate of group-surface for zebra striping (e.g. calendar months) — offset off
+   * elevation-4 via relative oklch so it tracks the ramp: darker in light mode, lighter in dark. */
+  --color-group-alt-surface: light-dark(
+    oklch(from var(--dx-elevation-4) calc(l - 0.03) c h),
+    oklch(from var(--dx-elevation-4) calc(l + 0.03) c h)
+  );
   --color-input-surface: var(--dx-elevation-4);
   --color-modal-surface: var(--dx-elevation-6);
   --color-popover-surface: var(--dx-elevation-7);
