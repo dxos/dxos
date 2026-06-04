@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 
 const WELCOME_OPERATION = 'org.dxos.plugin.welcome.operation';
 
@@ -17,7 +18,11 @@ const WELCOME_OPERATION = 'org.dxos.plugin.welcome.operation';
  * one-time recovery proof via IdentityService.recoverIdentity, and admits this device into HALO.
  */
 export const RedeemOAuthRecovery = Operation.make({
-  meta: { key: `${WELCOME_OPERATION}.redeem-oauth-recovery`, name: 'Redeem OAuth Recovery', icon: 'ph--cloud--regular' },
+  meta: {
+    key: DXN.make(`${WELCOME_OPERATION}.redeem-oauth-recovery`),
+    name: 'Redeem OAuth Recovery',
+    icon: 'ph--cloud--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     provider: Schema.String,
@@ -39,7 +44,7 @@ export const RedeemOAuthRecovery = Operation.make({
  */
 export const RegisterOAuthRecovery = Operation.make({
   meta: {
-    key: `${WELCOME_OPERATION}.register-oauth-recovery`,
+    key: DXN.make(`${WELCOME_OPERATION}.register-oauth-recovery`),
     name: 'Register OAuth Recovery',
     icon: 'ph--cloud--regular',
   },
@@ -63,7 +68,7 @@ export const RegisterOAuthRecovery = Operation.make({
  */
 export const CompleteOAuthRegistration = Operation.make({
   meta: {
-    key: `${WELCOME_OPERATION}.complete-oauth-registration`,
+    key: DXN.make(`${WELCOME_OPERATION}.complete-oauth-registration`),
     name: 'Complete OAuth Registration',
     icon: 'ph--cloud--regular',
   },

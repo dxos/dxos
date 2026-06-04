@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
@@ -33,8 +33,8 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
       const provider = data.provider as OAuthProvider;
       const edgeClient = createEdgeHttpClient(client);
       // The recovery finalizer creates an AccessToken ECHO object in the personal space under this
-      // id, so it must be a valid ObjectId.
-      const accessTokenId = ObjectId.random();
+      // id, so it must be a valid object id.
+      const accessTokenId = EntityId.random();
 
       const initiateRequest: InitiateOAuthFlowRequest = {
         provider,

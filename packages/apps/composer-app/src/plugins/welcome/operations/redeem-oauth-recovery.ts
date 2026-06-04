@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof RedeemOAuthRecovery> = RedeemOAuthRe
       const edgeClient = createEdgeHttpClient(client);
       // The recovery flow does not consume these — the user's space/token are resolved server-side
       // from the recovery binding. Random values satisfy InitiateOAuthFlowRequest validation.
-      const accessTokenId = ObjectId.random();
+      const accessTokenId = EntityId.random();
 
       const initiateRequest: InitiateOAuthFlowRequest = {
         provider,
