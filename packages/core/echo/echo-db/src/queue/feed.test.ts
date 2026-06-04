@@ -7,10 +7,10 @@ import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { EID } from '@dxos/keys';
+import { EID, PublicKey } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from '../testing';
@@ -261,6 +261,51 @@ describe('Feed', () => {
       const resolved = yield* Effect.promise(() => ref.load());
       expect((resolved as any).name).toBe('alice');
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('ref.load resolves queue item when feed queue is not in knownQueues', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({
+      types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
+    });
+    await using db1 = await peer.createDatabase(spaceKey);
+    const queues1 = peer.client.constructQueueFactory(db1.spaceId);
+    const testLayer1 = Layer.merge(Database.layer(db1), createFeedServiceLayer(queues1));
+
+    let postRefUri = '';
+    let containerId = '';
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'posts' }));
+      const post = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [post]);
+
+      const container = yield* Database.add(Obj.make(TestSchema.Container, {}));
+      Obj.update(container, (container) => {
+        const mutable = container as Obj.Mutable<typeof container>;
+        mutable.objects = [Ref.make(post)];
+      });
+      postRefUri = container.objects![0]!.uri;
+      containerId = container.id;
+      yield* Database.flush({ indexes: true });
+    }).pipe(Effect.provide(testLayer1), runAndForwardErrors);
+
+    // Fresh client: empty knownQueues cache (magazine-style ref resolution path).
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
+    const queues2 = client2.constructQueueFactory(db2.spaceId);
+    expect([...queues2.knownQueues()]).toHaveLength(0);
+
+    const [container] = await db2.query(Filter.id(containerId)).run();
+    const postRef = container.objects![0]!;
+    expect(postRef.uri).toBe(postRefUri);
+
+    const resolved = await postRef.load();
+    expect((resolved as TestSchema.Person).name).toBe('alice');
+
+    const postId = EID.getEntityId(postRef.uri)!;
+    const indexed = await db2.query(Query.select(Filter.id(postId)).from(db2, { includeFeeds: true })).run();
+    expect(indexed).toHaveLength(1);
+    expect((indexed[0] as TestSchema.Person).name).toBe('alice');
   });
 
   describe('feed namespaces', () => {

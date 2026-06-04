@@ -626,6 +626,18 @@ export class QueryExecutor extends Resource {
       case 'IdSelector': {
         const beginLoad = performance.now();
 
+        if (allQueuesFromSpaces && spaces.length > 0) {
+          const objectIds = step.selector.objectIds.filter((id) => EntityId.isValid(id));
+          if (objectIds.length > 0) {
+            const metas = await this._runInRuntime(this._indexEngine.queryObjectIds({ spaceIds: spaces, objectIds }));
+            const results = await this._loadDocumentsAfterSqlQuery(metas);
+            trace.documentLoadTime += performance.now() - beginLoad;
+            workingSet.push(...results.filter(isNonNullable));
+            trace.objectCount = workingSet.length;
+            break;
+          }
+        }
+
         const items = await Promise.all(
           step.selector.objectIds.map((id) => {
             if (!EntityId.isValid(id)) {

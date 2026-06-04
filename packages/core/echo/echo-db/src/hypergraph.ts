@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { DXN, EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -367,21 +367,53 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Search the queues already known to this space (i.e. previously created or accessed)
-   * for an object with the given id. Does not enumerate the on-disk feed catalog — only
-   * queues that have been instantiated.
+   * Search feed-backed queues in this space for an object with the given id.
+   * Queue items use ECHO URIs (`echo://spaceId/itemId`) without feed routing, so refs
+   * (e.g. magazine curated posts) must resolve without `context.feed`.
    */
   private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
     }
+
     for (const queue of queueFactory.knownQueues()) {
       const [obj] = await queue.getObjectsById([objectId]);
       if (obj) {
         return obj;
       }
     }
+
+    return this._resolveObjectInSpaceFeeds(spaceId, objectId, queueFactory);
+  }
+
+  /**
+   * Fallback: scan persisted {@link Feed.Feed} queues when the SQL index has no entry yet.
+   */
+  private async _resolveObjectInSpaceFeeds(
+    spaceId: SpaceId,
+    objectId: EntityId,
+    queueFactory: QueueFactory,
+  ): Promise<Entity.Unknown | undefined> {
+    const db = this._databases.get(spaceId);
+    if (!db) {
+      return undefined;
+    }
+
+    const feeds = await db.query(Filter.type(Feed.Feed)).run();
+    for (const feed of feeds) {
+      const feedDXN = Feed.getQueueUri(feed);
+      if (!feedDXN) {
+        continue;
+      }
+
+      const queue = queueFactory.get(feedDXN);
+      const [obj] = await queue.getObjectsById([objectId]);
+      if (obj) {
+        return obj;
+      }
+    }
+
     return undefined;
   }
 
@@ -390,7 +422,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!db) {
       return undefined;
     }
-    const [obj] = await db.query(Filter.id(objectId)).run();
+    const [obj] = await db.query(Query.select(Filter.id(objectId)).from(db, { includeFeeds: true })).run();
     return obj;
   }
 
