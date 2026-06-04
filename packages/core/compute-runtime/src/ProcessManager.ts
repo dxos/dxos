@@ -446,6 +446,7 @@ export class ProcessManagerImpl implements Manager {
         removeEvent: (seq) => this.#store.removeEvent(id, seq),
         appendEvent: (event) => this.#store.appendEvent(id, event),
         deleteRecord: () => this.#store.deleteProcess(id),
+        setEventRunning: (seq) => this.#store.setEventRunning(id, seq),
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
@@ -475,6 +476,8 @@ export class ProcessManagerImpl implements Manager {
         persistence,
         false,
         encodeInput,
+        undefined,
+        definition.idempotent,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
@@ -627,6 +630,7 @@ export class ProcessManagerImpl implements Manager {
         removeEvent: (seq) => this.#store.removeEvent(id, seq),
         appendEvent: (event) => this.#store.appendEvent(id, event),
         deleteRecord: () => this.#store.deleteProcess(id),
+        setEventRunning: (seq) => this.#store.setEventRunning(id, seq),
       };
 
       // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
@@ -653,6 +657,7 @@ export class ProcessManagerImpl implements Manager {
         true, // restoring — suppresses onSpawn
         encodeInput,
         record.state, // restore the persisted state instead of defaulting to RUNNING
+        definition.idempotent,
       );
       handleRef = handle;
       this.#handles.set(id, handle);

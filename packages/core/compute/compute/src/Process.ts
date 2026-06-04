@@ -176,6 +176,12 @@ export interface Process<I, O, R> extends Process.Variance<I, O, R> {
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
+   * When true, the runtime may safely retry an input handler that was interrupted mid-execution.
+   * When false (default), an interrupted handler causes the process to fail on restart.
+   */
+  readonly idempotent?: boolean;
+
+  /**
    * Create a new instance of the process.
    */
   create(ctx: ProcessContext<I, O>): Effect.Effect<Callbacks<I, O, R>, never, R | BaseServices | Scope.Scope>;
@@ -205,6 +211,12 @@ export interface MakeProcessOpts {
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
+
+  /**
+   * When true, the runtime may safely retry an input handler that was interrupted mid-execution.
+   * When false (default), an interrupted handler causes the process to fail on restart.
+   */
+  readonly idempotent?: boolean;
 }
 
 export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
@@ -231,6 +243,7 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   return {
     [ProcessTypeId]: {} as any,
     ...opts,
+    idempotent: opts.idempotent ?? false,
     create: (ctx) =>
       create(ctx).pipe(
         Effect.map((partial) => ({
@@ -254,6 +267,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
       input: op.input,
       output: op.output,
       services: op.services,
+      idempotent: Operation.isIdempotent(op),
     },
     (ctx) =>
       Effect.gen(function* () {
