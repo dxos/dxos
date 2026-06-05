@@ -3,6 +3,5 @@
 //
 
 export * from './blueprints';
-export * from './components/TemplateEditor';
 export * from './meta';
 export * from './types';
