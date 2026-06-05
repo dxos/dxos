@@ -18,6 +18,7 @@ import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
 import { removeQueryParamByValue } from '../../../util';
 import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
+import { useForceDarkTheme } from '../hooks';
 import { meta } from '../meta';
 import { WelcomeOperation } from '../operations';
 import { translations } from '../translations';
@@ -37,6 +38,9 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
+
+  // The welcome screen always renders dark, regardless of the system theme.
+  useForceDarkTheme();
 
   const handleLogin = useCallback(
     async (email: string) => {
