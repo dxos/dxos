@@ -6,6 +6,8 @@ import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
+import { runAndForwardErrors } from '@dxos/effect';
+
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
@@ -45,7 +47,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return;
     }
     registry.set(busyAtom, true);
-    void Effect.runPromise(
+    void runAndForwardErrors(
       invoker
         .invoke(
           FeedOperation.CurateMagazine,
@@ -61,7 +63,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return;
     }
     registry.set(busyAtom, true);
-    void Effect.runPromise(
+    void runAndForwardErrors(
       invoker
         .invoke(
           FeedOperation.ClearMagazine,
