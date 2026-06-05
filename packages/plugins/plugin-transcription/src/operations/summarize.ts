@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = Tra
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-sonnet-4-0'),
+          AiService.model('ai.claude.model.claude-sonnet-4-0'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

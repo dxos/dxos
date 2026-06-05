@@ -57,7 +57,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   },
   Effect.provide(
     Layer.mergeAll(
-      AiService.model('@anthropic/claude-3-5-haiku-latest'),
+      AiService.model('ai.claude.model.claude-haiku-4-5'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
       Trace.writerLayerNoop,

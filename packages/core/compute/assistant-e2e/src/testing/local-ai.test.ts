@@ -16,7 +16,7 @@ describe('Local AI', () => {
   it.effect(
     'create and query database objects',
     agentTest({
-      model: 'gpt-oss:20b',
+      model: 'ai.ollama.model.gpt-oss:20b',
       inferenceProvider: 'ollama',
       disableLlmMemoization: true,
       instructions: trim`
