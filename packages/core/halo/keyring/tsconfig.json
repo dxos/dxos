@@ -18,6 +18,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -28,6 +31,9 @@
     },
     {
       "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
     },
     {
       "path": "../../../common/util"

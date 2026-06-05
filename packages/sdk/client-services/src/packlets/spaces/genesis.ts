@@ -5,14 +5,14 @@
 import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
 
 export const spaceGenesis = async (
-  keyring: Keyring,
+  keyring: KeyringApi,
   signingContext: SigningContext,
   space: Space,
   automergeRoot?: string,

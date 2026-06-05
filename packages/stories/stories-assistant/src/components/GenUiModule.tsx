@@ -389,7 +389,7 @@ export const GenUiModule = ({ space }: ModuleProps) => {
       Effect.gen(function* () {
         setGenerating(true);
         const nextMarkup = yield* generateMarkup(input).pipe(
-          Effect.provide(AiService.model('@anthropic/claude-haiku-4-5')),
+          Effect.provide(AiService.model('ai.claude.model.claude-haiku-4-5')),
         );
         setMarkup(nextMarkup);
         setGenerating(false);
