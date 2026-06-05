@@ -164,6 +164,21 @@ Not built this iteration. Sketched to confirm the §A contract generalizes:
 Exercises: foreign-schema config ref, non-ECHO reactive read, async authed send,
 foreign sender.
 
+## Roadmap (follow-up phases, out of scope for this spec)
+
+This spec covers Phase 1 only. Subsequent phases get their own spec → plan →
+implementation cycle:
+
+- **Phase 2 — Bluesky backend.** `plugin-bluesky` contributes an `atproto`
+  `ChannelBackend` (Appendix G), wired end-to-end with foreign-sender handling.
+- **Phase 3 — UI component rewrite.** Rewrite the channel/thread UI components,
+  including `@dxos/react-ui-thread` (the `Message`/`Thread` primitives), against
+  the agnostic message contract established here.
+- **Phase 4 — Extract CommentsCompanion.** Factor the `CommentsCompanion`
+  container (currently in `plugin-thread`) out into its own plugin.
+- **Phase 5 — freeq backend.** Additive third `ChannelBackend` provider
+  (https://github.com/chad/freeq), also using Bluesky auth.
+
 ## H. Open items / risks
 
 1. **Reactive primitive** for `subscribe` (DXOS live signal vs. subscribe-callback)
