@@ -6,8 +6,8 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { meta } from '#meta';
 import { MarkdownExtension } from '#capabilities';
+import { meta } from '#meta';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';

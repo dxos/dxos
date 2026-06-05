@@ -40,4 +40,6 @@ const variant: GameVariant = {
   article: ChessArticle,
 };
 
-export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)));
+export default Capability.makeModule(() =>
+  Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)),
+);

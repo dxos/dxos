@@ -12,16 +12,16 @@
 
 ## Proposed renames
 
-| Plugin | Old name | New name | Reason |
-|---|---|---|---|
-| `plugin-calls` | `CallsCapabilities.Extension` | `CallsCapabilities.EventHandler` | rename to reflect callback/event semantics |
-| `plugin-game` | `GameCapabilities.Variant` | `GameCapabilities.VariantProvider` | missing Provider suffix |
-| `plugin-markdown` | `MarkdownCapabilities.Extensions` | `MarkdownCapabilities.ExtensionProvider` | plural → singular Provider suffix |
-| `plugin-transcription` | `TranscriptionCapabilities.Transcriber` | `TranscriptionCapabilities.TranscriberProvider` | missing Provider suffix |
-| `plugin-transcription` | `TranscriptionCapabilities.TranscriptionManager` | `TranscriptionCapabilities.TranscriptionManagerProvider` | missing Provider suffix |
-| `plugin-map` | `MapCapabilities.MarkerProvider` | (no change) | — |
-| `plugin-trip` | `TripCapabilities.BookingService` | (no change) | — |
-| `plugin-trip` | `TripCapabilities.RoutingService` | (no change) | — |
+| Plugin                 | Old name                                         | New name                                                 | Reason                                     |
+| ---------------------- | ------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------ |
+| `plugin-calls`         | `CallsCapabilities.Extension`                    | `CallsCapabilities.EventHandler`                         | rename to reflect callback/event semantics |
+| `plugin-game`          | `GameCapabilities.Variant`                       | `GameCapabilities.VariantProvider`                       | missing Provider suffix                    |
+| `plugin-markdown`      | `MarkdownCapabilities.Extensions`                | `MarkdownCapabilities.ExtensionProvider`                 | plural → singular Provider suffix          |
+| `plugin-transcription` | `TranscriptionCapabilities.Transcriber`          | `TranscriptionCapabilities.TranscriberProvider`          | missing Provider suffix                    |
+| `plugin-transcription` | `TranscriptionCapabilities.TranscriptionManager` | `TranscriptionCapabilities.TranscriptionManagerProvider` | missing Provider suffix                    |
+| `plugin-map`           | `MapCapabilities.MarkerProvider`                 | (no change)                                              | —                                          |
+| `plugin-trip`          | `TripCapabilities.BookingService`                | (no change)                                              | —                                          |
+| `plugin-trip`          | `TripCapabilities.RoutingService`                | (no change)                                              | —                                          |
 
 ---
 
@@ -30,12 +30,14 @@
 Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.json` is just missing the subpath entry.
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-trip/package.json`
 - Modify: `packages/plugins/plugin-calls/package.json`
 
 - [ ] **Step 1: Add `./types` export to plugin-trip/package.json**
 
   In the `"exports"` object, after the `"."` entry, add:
+
   ```json
   "./types": {
     "source": "./src/types/index.ts",
@@ -47,6 +49,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
 - [ ] **Step 2: Add `./types` export to plugin-calls/package.json**
 
   Same pattern:
+
   ```json
   "./types": {
     "source": "./src/types/index.ts",
@@ -60,6 +63,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
   ```bash
   moon run plugin-trip:build plugin-calls:build
   ```
+
   Expected: both build cleanly.
 
 - [ ] **Step 4: Commit**
@@ -74,6 +78,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
 ## Task 2: Rename `GameCapabilities.Variant` → `GameCapabilities.VariantProvider`
 
 **Files to change:**
+
 - Modify: `packages/plugins/plugin-game/src/types/GameCapabilities.ts`
 - Modify: `packages/plugins/plugin-game/src/capabilities/create-object.ts`
 - Modify: `packages/plugins/plugin-game/src/components/CreateGamePanel.tsx`
@@ -87,6 +92,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
 - [ ] **Step 1: Rename the capability key**
 
   In `plugin-game/src/types/GameCapabilities.ts`, change the export and JSDoc:
+
   ```ts
   /**
    * A game variant registered by a variant plugin (e.g. plugin-chess).
@@ -96,6 +102,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
    */
   export const VariantProvider = Capability.make<GameVariant>(`${meta.id}.capability.variant`);
   ```
+
   Note: the capability ID string (`capability.variant`) is intentionally NOT changed — it would break persisted capability registrations.
 
 - [ ] **Step 2: Find and update all internal usages in plugin-game**
@@ -103,6 +110,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
   ```bash
   grep -rn "GameCapabilities\.Variant\b" packages/plugins/plugin-game/src/
   ```
+
   Replace every occurrence with `GameCapabilities.VariantProvider`.
 
   Key locations:
@@ -117,20 +125,27 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
   ```bash
   grep -n "GameCapabilities\.Variant\b" packages/plugins/plugin-game/PLUGIN.mdl
   ```
+
   Replace all occurrences with `GameCapabilities.VariantProvider`.
 
 - [ ] **Step 4: Update plugin-chess contributor**
 
   In `plugin-chess/src/capabilities/game-variant.ts` line 43:
+
   ```ts
-  export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)));
+  export default Capability.makeModule(() =>
+    Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)),
+  );
   ```
 
 - [ ] **Step 5: Update plugin-tictactoe contributor**
 
   In `plugin-tictactoe/src/capabilities/game-variant.ts` line 61:
+
   ```ts
-  export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)));
+  export default Capability.makeModule(() =>
+    Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)),
+  );
   ```
 
 - [ ] **Step 6: Build and lint**
@@ -139,6 +154,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
   moon run plugin-game:build plugin-chess:build plugin-tictactoe:build
   moon run plugin-game:lint plugin-chess:lint plugin-tictactoe:lint -- --fix
   ```
+
   Expected: no errors.
 
 - [ ] **Step 7: Commit**
@@ -155,6 +171,7 @@ Both already compile `src/types/index.ts` (confirmed in `moon.yml`); `package.js
 Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeModule` file.
 
 **Files to change:**
+
 - Modify: `packages/plugins/plugin-markdown/src/types/MarkdownCapabilities.ts`
 - Modify: `packages/plugins/plugin-markdown/src/capabilities/react-surface.tsx`
 - Modify: `packages/plugins/plugin-markdown/src/containers/MarkdownArticle/MarkdownArticle.tsx`
@@ -172,9 +189,11 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 - [ ] **Step 1: Rename the capability key in plugin-markdown**
 
   In `plugin-markdown/src/types/MarkdownCapabilities.ts` line 51:
+
   ```ts
   export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}.capability.extensions`);
   ```
+
   Note: capability ID string kept as-is.
 
 - [ ] **Step 2: Update all usages in plugin-markdown**
@@ -182,6 +201,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
   ```bash
   grep -rn "MarkdownCapabilities\.Extensions\b" packages/plugins/plugin-markdown/src/
   ```
+
   Replace all with `MarkdownCapabilities.ExtensionProvider`.
   Key locations:
   - `src/capabilities/react-surface.tsx:104`
@@ -193,6 +213,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
   ```bash
   grep -rn "MarkdownCapabilities\.Extensions\b" packages/plugins/
   ```
+
   Update every `Capability.contributes(MarkdownCapabilities.ExtensionProvider, ...)` call in:
   - `plugin-sheet/src/capabilities/markdown.ts`
   - `plugin-assistant/src/capabilities/markdown.ts`
@@ -207,11 +228,13 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
   ```bash
   grep -rn "MarkdownCapabilities\.Extensions\b" packages/plugins/plugin-mermaid/PLUGIN.mdl packages/plugins/plugin-sheet/PLUGIN.mdl
   ```
+
   Replace all with `MarkdownCapabilities.ExtensionProvider`.
 
 - [ ] **Step 5: Extract plugin-mermaid's inline contribution to `src/capabilities/markdown-extension.ts`**
 
   Create `packages/plugins/plugin-mermaid/src/capabilities/markdown-extension.ts`:
+
   ```ts
   //
   // Copyright 2023 DXOS.org
@@ -230,6 +253,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
   ```
 
   Create `packages/plugins/plugin-mermaid/src/capabilities/index.ts`:
+
   ```ts
   //
   // Copyright 2023 DXOS.org
@@ -247,6 +271,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 - [ ] **Step 6: Update MermaidPlugin.tsx to use the lazy capability**
 
   Replace the inline `Plugin.addModule` block:
+
   ```ts
   import { MarkdownExtension } from '#capabilities';
   import { MarkdownEvents } from '@dxos/plugin-markdown/types';
@@ -262,11 +287,13 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 - [ ] **Step 7: Add `#capabilities` alias and entrypoint to plugin-mermaid**
 
   In `package.json` `imports`:
+
   ```json
   "#capabilities": "./src/capabilities/index.ts"
   ```
 
   In `moon.yml` `compile.args`, add:
+
   ```yaml
   - '--entryPoint=src/capabilities/index.ts'
   ```
@@ -290,6 +317,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 ## Task 3b: Rename `CallsCapabilities.Extension` → `CallsCapabilities.EventHandler`
 
 **Files to change:**
+
 - Modify: `packages/plugins/plugin-calls/src/types/CallsCapabilities.ts`
 - Modify: `packages/plugins/plugin-calls/PLUGIN.mdl`
 - Modify: `packages/plugins/plugin-meeting/src/capabilities/call-extension.ts`
@@ -300,9 +328,11 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 - [ ] **Step 1: Rename the key**
 
   In `plugin-calls/src/types/CallsCapabilities.ts` line 24:
+
   ```ts
   export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
   ```
+
   Capability ID string kept as-is.
 
 - [ ] **Step 2: Find and update all references**
@@ -310,6 +340,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
   ```bash
   grep -rn "CallsCapabilities\.Extension\b" packages/plugins/
   ```
+
   Replace every occurrence with `CallsCapabilities.EventHandler`.
 
 - [ ] **Step 3: Update PLUGIN.mdl**
@@ -317,6 +348,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
   ```bash
   grep -rn "CallsCapabilities\.Extension\b\|Extension\.on" packages/plugins/plugin-calls/PLUGIN.mdl
   ```
+
   Replace `CallsCapabilities.Extension` with `CallsCapabilities.EventHandler` throughout.
   Also update prose references from `Extension.onJoin`/`Extension.onLeave` etc. to `EventHandler.onJoin` etc.
 
@@ -339,6 +371,7 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 ## Task 4: Rename `TranscriptionCapabilities` keys and factory types
 
 **Files to change:**
+
 - Modify: `packages/plugins/plugin-transcription/src/types/TranscriptionCapabilities.ts`
 - Modify: `packages/plugins/plugin-transcription/src/capabilities/transcriber.ts`
 - Modify: `packages/plugins/plugin-transcription/src/hooks/useTranscriber.ts`
@@ -347,13 +380,13 @@ Also: extract plugin-mermaid's inline contribution to a proper `Capability.makeM
 
 Full rename map:
 
-| Old | New |
-|---|---|
-| `GetTranscriberProps` | `TranscriberProviderProps` |
-| `GetTranscriber` | `TranscriberProvider` (type) |
-| `Transcriber` (const key) | `TranscriberProvider` (const key) |
-| `GetTranscriptionManagerProps` | `TranscriptionManagerProviderProps` |
-| `GetTranscriptionManager` | `TranscriptionManagerProvider` (type) |
+| Old                                | New                                        |
+| ---------------------------------- | ------------------------------------------ |
+| `GetTranscriberProps`              | `TranscriberProviderProps`                 |
+| `GetTranscriber`                   | `TranscriberProvider` (type)               |
+| `Transcriber` (const key)          | `TranscriberProvider` (const key)          |
+| `GetTranscriptionManagerProps`     | `TranscriptionManagerProviderProps`        |
+| `GetTranscriptionManager`          | `TranscriptionManagerProvider` (type)      |
 | `TranscriptionManager` (const key) | `TranscriptionManagerProvider` (const key) |
 
 Note: TypeScript allows a `type` and a `const` to share the same name (different declaration spaces), so `TranscriberProvider` as both the function type and the capability key is valid.
@@ -383,11 +416,13 @@ Note: TypeScript allows a `type` and a `const` to share the same name (different
     `${meta.id}.capability.transcription-manager`,
   );
   ```
+
   Capability ID strings are kept as-is.
 
 - [ ] **Step 2: Update `transcriber.ts` — type annotations and capability keys**
 
   Rename local variables to match the new type names and update `Capability.contributes` calls:
+
   ```ts
   const transcriberProvider: TranscriptionCapabilities.TranscriberProvider = ({
     audioStreamTrack, recorderConfig, transcriberConfig, onSegments, transcribe,
@@ -421,7 +456,9 @@ Note: TypeScript allows a `type` and a `const` to share the same name (different
 - [ ] **Step 5: Update `plugin-meeting/src/capabilities/call-extension.ts`**
 
   ```ts
-  const transcriptionManagerProvider = await capabilities.get(TranscriptionCapabilities.TranscriptionManagerProvider)({}).open();
+  const transcriptionManagerProvider = await capabilities
+    .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
+    .open();
   ```
 
 - [ ] **Step 6: Verify no remaining old names**
@@ -429,6 +466,7 @@ Note: TypeScript allows a `type` and a `const` to share the same name (different
   ```bash
   grep -rn "GetTranscriber\|GetTranscriptionManager\|TranscriptionCapabilities\.Transcriber\b\|TranscriptionCapabilities\.TranscriptionManager\b" packages/plugins/
   ```
+
   Expected: zero results.
 
 - [ ] **Step 7: Build and lint**
@@ -465,10 +503,13 @@ Note: TypeScript allows a `type` and a `const` to share the same name (different
 - [ ] **Step 2: Update capabilities/index.ts**
 
   Change:
+
   ```ts
   export const Osrm: Capability.LazyCapability<...> = Capability.lazy('Osrm', () => import('./osrm'));
   ```
+
   To:
+
   ```ts
   export const RoutingService: Capability.LazyCapability<...> = Capability.lazy('RoutingService', () => import('./routing-service'));
   ```
@@ -501,9 +542,11 @@ For each of `plugin-sheet`, `plugin-assistant`, `plugin-thread`, `plugin-file`, 
   - the import path to `./markdown-extension`
 
   Example (plugin-sheet):
+
   ```ts
   export const Markdown = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
   ```
+
   (Keep the exported const name `Markdown` if it is referenced by name elsewhere in the plugin, or rename consistently.)
 
 - [ ] **Step 3: Build and lint all five**
@@ -528,24 +571,26 @@ Importing from a plugin's root entrypoint pulls in its full barrel (hooks, meta,
 
 **Files to update:**
 
-| Plugin | Current import | New import |
-|---|---|---|
-| `plugin-chess` (capability key only) | `from '@dxos/plugin-game'` | `from '@dxos/plugin-game/types'` |
-| `plugin-tictactoe` (capability key only) | `from '@dxos/plugin-game'` | `from '@dxos/plugin-game/types'` |
-| `plugin-duffel` (capability key + types only) | `from '@dxos/plugin-trip'` | `from '@dxos/plugin-trip/types'` |
-| `plugin-osrm` (capability key + types only) | `from '@dxos/plugin-trip'` | `from '@dxos/plugin-trip/types'` |
-| `plugin-meeting` (capability key only) | `from '@dxos/plugin-calls'` | `from '@dxos/plugin-calls/types'` |
-| `plugin-meeting` (capability key only) | `from '@dxos/plugin-transcription'` | `from '@dxos/plugin-transcription/types'` |
-| `plugin-sheet`, `plugin-mermaid`, etc. (capability key only) | `from '@dxos/plugin-markdown'` | `from '@dxos/plugin-markdown/types'` |
+| Plugin                                                       | Current import                      | New import                                |
+| ------------------------------------------------------------ | ----------------------------------- | ----------------------------------------- |
+| `plugin-chess` (capability key only)                         | `from '@dxos/plugin-game'`          | `from '@dxos/plugin-game/types'`          |
+| `plugin-tictactoe` (capability key only)                     | `from '@dxos/plugin-game'`          | `from '@dxos/plugin-game/types'`          |
+| `plugin-duffel` (capability key + types only)                | `from '@dxos/plugin-trip'`          | `from '@dxos/plugin-trip/types'`          |
+| `plugin-osrm` (capability key + types only)                  | `from '@dxos/plugin-trip'`          | `from '@dxos/plugin-trip/types'`          |
+| `plugin-meeting` (capability key only)                       | `from '@dxos/plugin-calls'`         | `from '@dxos/plugin-calls/types'`         |
+| `plugin-meeting` (capability key only)                       | `from '@dxos/plugin-transcription'` | `from '@dxos/plugin-transcription/types'` |
+| `plugin-sheet`, `plugin-mermaid`, etc. (capability key only) | `from '@dxos/plugin-markdown'`      | `from '@dxos/plugin-markdown/types'`      |
 
 - [ ] **Step 1: Update plugin-chess and plugin-tictactoe**
 
   In each, split the import — capability-key imports use `/types`, everything else (meta, loadGame, GameVariantSurfaceProps, GameRef) uses root unless already available via `/types`:
+
   ```ts
   // Before: import { GameCapabilities, type GameVariant } from '@dxos/plugin-game';
   // After:
   import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
   ```
+
   Check `plugin-game/src/types/index.ts` to confirm `GameVariant`, `GameRef`, `loadGame`, `make` are all re-exported there.
 
 - [ ] **Step 2: Update plugin-duffel and plugin-osrm**
@@ -555,6 +600,7 @@ Importing from a plugin's root entrypoint pulls in its full barrel (hooks, meta,
   // After:
   import { type BookingSearch, TripCapabilities } from '@dxos/plugin-trip/types';
   ```
+
   Check all files under `src/capabilities/` and `src/services/`.
 
 - [ ] **Step 3: Update plugin-meeting**
@@ -564,6 +610,7 @@ Importing from a plugin's root entrypoint pulls in its full barrel (hooks, meta,
 - [ ] **Step 4: Update markdown extension contributors**
 
   In each of the capability files (now `markdown-extension.ts`) that imports `MarkdownCapabilities`:
+
   ```ts
   import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
   ```
@@ -596,16 +643,16 @@ Importing from a plugin's root entrypoint pulls in its full barrel (hooks, meta,
   Apply the renamed capability keys and add plugin-mermaid (which was missing):
 
   ```markdown
-  | Plugin                   | Namespace                   | Capability                     |
-  | ------------------------ | --------------------------- | ------------------------------ |
-  | `plugin-calls`           | `CallsCapabilities`         | `EventHandler`                 |
-  | `plugin-game`            | `GameCapabilities`          | `VariantProvider`              |
-  | `plugin-map`             | `MapCapabilities`           | `MarkerProvider`               |
-  | `plugin-markdown`        | `MarkdownCapabilities`      | `ExtensionProvider`            |
-  | `plugin-transcription`   | `TranscriptionCapabilities` | `TranscriberProvider`          |
-  | `plugin-transcription`   | `TranscriptionCapabilities` | `TranscriptionManagerProvider` |
-  | `plugin-trip`            | `TripCapabilities`          | `BookingService`               |
-  | `plugin-trip`            | `TripCapabilities`          | `RoutingService`               |
+  | Plugin                 | Namespace                   | Capability                     |
+  | ---------------------- | --------------------------- | ------------------------------ |
+  | `plugin-calls`         | `CallsCapabilities`         | `EventHandler`                 |
+  | `plugin-game`          | `GameCapabilities`          | `VariantProvider`              |
+  | `plugin-map`           | `MapCapabilities`           | `MarkerProvider`               |
+  | `plugin-markdown`      | `MarkdownCapabilities`      | `ExtensionProvider`            |
+  | `plugin-transcription` | `TranscriptionCapabilities` | `TranscriberProvider`          |
+  | `plugin-transcription` | `TranscriptionCapabilities` | `TranscriptionManagerProvider` |
+  | `plugin-trip`          | `TripCapabilities`          | `BookingService`               |
+  | `plugin-trip`          | `TripCapabilities`          | `RoutingService`               |
   ```
 
   Note: plugin-mermaid was previously missing from the `MarkdownCapabilities.ExtensionProvider` contributor list; it's now properly included via the extracted capability file from Task 3.
@@ -627,7 +674,7 @@ Add a **Cross-plugin capabilities** section to `.agents/skills/composer-plugins/
 
   Add the following content after line `See: plugin-chess/src/capabilities/`:
 
-  ```markdown
+  ````markdown
   #### Cross-plugin capabilities (`src/types/XCapabilities.ts`)
 
   Some plugins expose capability keys for other plugins to implement — a decoupled provider/extension
@@ -635,11 +682,11 @@ Add a **Cross-plugin capabilities** section to `.agents/skills/composer-plugins/
 
   **Naming convention** — use one of three suffixes depending on the role:
 
-  | Suffix | Use when | Example |
-  |---|---|---|
-  | `Provider` | The contributor supplies data, a factory, or an array of extensions | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
-  | `Service` | The contributor performs active async work (search, routing, …) | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService` |
-  | `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events | `CallsCapabilities.EventHandler` |
+  | Suffix         | Use when                                                             | Example                                                                                                        |
+  | -------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+  | `Provider`     | The contributor supplies data, a factory, or an array of extensions  | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
+  | `Service`      | The contributor performs active async work (search, routing, …)      | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService`                                           |
+  | `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events | `CallsCapabilities.EventHandler`                                                                               |
 
   **Where to define** — add the `Capability.make<T>()` call in the defining plugin's
   `src/types/XCapabilities.ts`, namespace-exported from `src/types/index.ts`:
@@ -648,6 +695,7 @@ Add a **Cross-plugin capabilities** section to `.agents/skills/composer-plugins/
   // packages/plugins/plugin-foo/src/types/FooCapabilities.ts
   export const BarProvider = Capability.make<BarProvider>(`${meta.id}.capability.bar-provider`);
   ```
+  ````
 
   Expose it via a `./types` subpath in `package.json` (see plugin-game as a reference). Add the
   matching `--entryPoint=src/types/index.ts` in `moon.yml` if not already present.
@@ -670,6 +718,9 @@ Add a **Cross-plugin capabilities** section to `.agents/skills/composer-plugins/
   - Provider pattern: `plugin-osrm/src/capabilities/routing-service.ts` (implements `TripCapabilities.RoutingService`)
   - Enumeration pattern: `plugin-chess/src/capabilities/game-variant.ts` (implements `GameCapabilities.VariantProvider`)
   - EventHandler pattern: `plugin-meeting/src/capabilities/call-extension.ts` (implements `CallsCapabilities.EventHandler`)
+
+  ```
+
   ```
 
 - [ ] **Step 2: Build lint check (skill is Markdown, just verify file is well-formed)**

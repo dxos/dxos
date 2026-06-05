@@ -205,11 +205,11 @@ contract. See `packages/plugins/AUDIT.md` for the current registry.
 
 **Naming convention** — use one of three suffixes depending on the role:
 
-| Suffix | Use when | Example |
-|---|---|---|
-| `Provider` | The contributor supplies data, a factory, or an array of extensions | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
-| `Service` | The contributor performs active async work (search, routing, …) | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService` |
-| `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events | `CallsCapabilities.EventHandler` |
+| Suffix         | Use when                                                             | Example                                                                                                        |
+| -------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Provider`     | The contributor supplies data, a factory, or an array of extensions  | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
+| `Service`      | The contributor performs active async work (search, routing, …)      | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService`                                           |
+| `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events | `CallsCapabilities.EventHandler`                                                                               |
 
 **Where to define** — add the `Capability.make<T>()` call in the defining plugin's
 `src/types/XCapabilities.ts`, namespace-exported from `src/types/index.ts`:
@@ -236,6 +236,7 @@ import { FooCapabilities } from '@dxos/plugin-foo';
 ```
 
 **Reference implementations:**
+
 - Provider: `plugin-osrm/src/capabilities/routing-service.ts` → `TripCapabilities.RoutingService`
 - Enumeration Provider: `plugin-chess/src/capabilities/game-variant.ts` → `GameCapabilities.VariantProvider`
 - EventHandler: `plugin-meeting/src/capabilities/call-extension.ts` → `CallsCapabilities.EventHandler`
