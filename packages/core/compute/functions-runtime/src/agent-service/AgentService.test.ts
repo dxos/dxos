@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
-import { Context } from 'effect';
+import { Context, Fiber, Layer } from 'effect';
 import { Deferred } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
@@ -13,7 +13,7 @@ import { expect } from 'vitest';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock } from '@dxos/assistant';
-import { Blueprint, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
+import { Blueprint, Operation, OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { Feed, Filter } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -79,46 +79,53 @@ class ResearchService extends Context.Tag('@dxos/functions-runtime/ResearchServi
   ResearchService,
   {
     research: (website: string) => Effect.Effect<string>;
+    waitForTaskToAppear: () => Effect.Effect<void>;
     completeOneTask: () => Effect.Effect<void>;
     completeAllTasks: () => Effect.Effect<void>;
   }
->() {
-  static make = () => {
-    const tasks: ResearchTask[] = [];
-    const complete = (task: ResearchTask) =>
+>() { }
+
+const makeResearchService = () => {
+  const tasks: ResearchTask[] = [];
+  const complete = (task: ResearchTask) =>
+    Effect.gen(function* () {
+      const result = TEST_DATA.research[task.website];
+      if (!result) {
+        yield* Effect.die(new Error(`No research found for ${task.website}`));
+        return;
+      }
+      yield* Deferred.succeed(task.deferred, result);
+    });
+
+  return ResearchService.of({
+    research: (website: string) =>
       Effect.gen(function* () {
-        const result = TEST_DATA.research[task.website];
-        if (!result) {
-          yield* Effect.die(new Error(`No research found for ${task.website}`));
+        const task = yield* Deferred.make<string>();
+        tasks.push({ website, deferred: task });
+        return yield* Deferred.await(task);
+      }),
+    waitForTaskToAppear: () =>
+      Effect.gen(function* () {
+        while (tasks.length === 0) {
+          yield* Effect.sleep(100);
+        }
+      }),
+    completeOneTask: () =>
+      Effect.gen(function* () {
+        const task = tasks.shift();
+        if (!task) {
           return;
         }
-        yield* Deferred.succeed(task.deferred, result);
-      });
-
-    return this.of({
-      research: (website: string) =>
-        Effect.gen(function* () {
-          const task = yield* Deferred.make<string>();
-          tasks.push({ website, deferred: task });
-          return yield* Deferred.await(task);
-        }),
-      completeOneTask: () =>
-        Effect.gen(function* () {
-          const task = tasks.shift();
-          if (!task) {
-            return;
-          }
+        yield* complete(task);
+      }),
+    completeAllTasks: () =>
+      Effect.gen(function* () {
+        for (const task of tasks) {
           yield* complete(task);
-        }),
-      completeAllTasks: () =>
-        Effect.gen(function* () {
-          for (const task of tasks) {
-            yield* complete(task);
-          }
-        }),
-    });
-  };
-}
+        }
+      }),
+  });
+};
 
 const Research = Operation.make({
   meta: {
@@ -160,7 +167,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
   enableToolBackgrounding: true,
-  extraServices: Context.make(ResearchService, ResearchService.make()),
+  extraServices: Context.make(ResearchService, makeResearchService()),
 });
 
 describe('Agent Service', () => {
@@ -175,6 +182,27 @@ describe('Agent Service', () => {
         const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  it.scoped.only(
+    'tool call',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint],
+        });
+        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+        const completionFiber = yield* agent.waitForCompletion().pipe(Effect.fork);
+
+        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        yield* researchService.waitForTaskToAppear();
+        yield* researchService.completeOneTask();
+        yield* Fiber.join(completionFiber);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
