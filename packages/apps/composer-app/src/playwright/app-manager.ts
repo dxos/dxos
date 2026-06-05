@@ -53,6 +53,12 @@ export class AppManager {
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
     await this.isAuthenticated({ timeout: 15_000 });
+    // Wait for the boot loader overlay to be fully removed before letting tests
+    // interact with the page. Without this, the fading-out loader (pointer-events
+    // fixed separately in boot-loader.css) can still affect click dispatch timing
+    // while it is present in the DOM. The fallback timer in the loader is 800ms
+    // after ready().
+    await this.page.waitForSelector('#boot-loader', { state: 'detached', timeout: 5_000 }).catch(() => {});
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
