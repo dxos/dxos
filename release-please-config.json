@@ -575,6 +575,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-comments/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-commerce/package.json",
           "jsonpath": "$.version"
         },

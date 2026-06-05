@@ -331,6 +331,9 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-comments/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {

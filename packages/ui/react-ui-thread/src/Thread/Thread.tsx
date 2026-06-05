@@ -129,7 +129,14 @@ ThreadHeader.displayName = 'Thread.Header';
 // Messages
 //
 
-const MessageTileAdapter = ({ id, data, location, draggable, current, selected }: MosaicTileProps<MessageType.Message>) => (
+const MessageTileAdapter = ({
+  id,
+  data,
+  location,
+  draggable,
+  current,
+  selected,
+}: MosaicTileProps<MessageType.Message>) => (
   <Mosaic.Tile id={id} data={data} location={location} draggable={draggable} current={current} selected={selected}>
     <Message.Tile message={data} />
   </Mosaic.Tile>
@@ -149,13 +156,23 @@ export type ThreadMessagesProps = ThemedClassName<{
 }>;
 
 /** Linear stack of message tiles, rendered via a Mosaic (virtual) stack. */
-const ThreadMessages = ({ messages, estimateSize = 80, virtual = true, currentId, classNames }: ThreadMessagesProps) => {
+const ThreadMessages = ({
+  messages,
+  estimateSize = 80,
+  virtual = true,
+  currentId,
+  classNames,
+}: ThreadMessagesProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useMemo(() => messages.filter(Boolean), [messages]);
 
   if (!virtual) {
     return (
-      <Mosaic.Container orientation='vertical' currentId={currentId} eventHandler={{ id: 'thread', canDrop: () => false }}>
+      <Mosaic.Container
+        orientation='vertical'
+        currentId={currentId}
+        eventHandler={{ id: 'thread', canDrop: () => false }}
+      >
         <Mosaic.Stack
           classNames={classNames}
           items={items}

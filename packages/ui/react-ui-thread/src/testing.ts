@@ -26,9 +26,9 @@ export const createMessages = (count = 8): Message.Message[] => {
   const objectGenerator = createGenerator(generator, Message.Message);
   return objectGenerator.createObjects(count).map((message, index) => {
     const author = authors[index % authors.length];
-    Obj.update(message, (m) => {
-      m.sender = { role: 'user', identityDid: author.did, name: author.name };
-      m.blocks = [{ _tag: 'text', text: random.lorem.paragraph() }];
+    Obj.update(message, (message) => {
+      message.sender = { role: 'user', identityDid: author.did, name: author.name };
+      message.blocks = [{ _tag: 'text', text: random.lorem.paragraph() }];
     });
     return message;
   });

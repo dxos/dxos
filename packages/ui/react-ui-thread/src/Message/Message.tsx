@@ -10,13 +10,19 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Avatar, IconButton, type ThemedClassName, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  IconButton,
+  type ThemedClassName,
+  useOnTransition,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
@@ -321,8 +327,8 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
   const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [onAcceptProposal, message.id]);
   const handleSave = useCallback(
     (text: string) => {
-      Obj.update(message, (m) => {
-        const block = m.blocks.find((block) => block._tag === 'text');
+      Obj.update(message, (message) => {
+        const block = message.blocks.find((block) => block._tag === 'text');
         if (block && block._tag === 'text') {
           block.text = text;
         }

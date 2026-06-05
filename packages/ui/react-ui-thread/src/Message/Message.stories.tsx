@@ -10,9 +10,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Message } from './Message';
 import { createMessages, getStoryMetadata } from '../testing';
 import { Thread } from '../Thread';
+import { Message } from './Message';
 
 const DefaultStory = () => {
   const messages = useMemo(() => createMessages(3), []);

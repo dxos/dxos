@@ -8,10 +8,10 @@ import React, { useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
-import { Thread } from './Thread';
 import { translations } from '#translations';
 
 import { createMessages, getStoryMetadata } from '../testing';
+import { Thread } from './Thread';
 
 const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
 
@@ -34,7 +34,12 @@ const DefaultStory = () => {
           onMessageDelete={() => {}}
         >
           <Thread.Messages classNames='grow min-h-0' messages={messages} />
-          <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
+          <Thread.Textbox
+            id='composer'
+            authorId={IDENTITY.identityDid}
+            authorName={IDENTITY.name}
+            onSend={handleSend}
+          />
           <Thread.Status />
         </Thread.Root>
       </div>
