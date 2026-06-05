@@ -5,7 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { TripCapabilities } from '@dxos/plugin-trip';
 
-export const Osrm: Capability.LazyCapability<
+export const RoutingService: Capability.LazyCapability<
   void,
   Capability.Capability<typeof TripCapabilities.RoutingService>
-> = Capability.lazy('Osrm', () => import('./osrm'));
+> = Capability.lazy('RoutingService', () => import('./routing-service'));

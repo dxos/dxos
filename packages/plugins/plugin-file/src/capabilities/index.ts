@@ -11,7 +11,7 @@ export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => 
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const FileUploader = Capability.lazy('FileUploader', () => import('./file-uploader'));
 export const InlineBackend = Capability.lazy('InlineBackend', () => import('./inline-backend'));
-export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
+export const Markdown = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
