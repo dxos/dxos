@@ -2,15 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -20,10 +18,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { findSystemTagUri, getReadAt, hasTag, setReadAt, setTag, useVisibleMagazinePosts } from '../../state';
-import { dxnToEntityId } from '../../util/dxn';
+import { getReadAt, type MagazineView, setReadAt, setTag, useVisibleMagazinePosts } from '../../state';
 import { MagazineTile } from './MagazineTile';
-import { type CurateState, MagazineToolbar, type MagazineView } from './MagazineToolbar';
+import { MagazineToolbar } from './MagazineToolbar';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
@@ -31,36 +28,41 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [magazine] = useObject(subject);
+  const registry = useContext(RegistryContext);
 
   const showItem = useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelected(id, 'single');
-  const [view, setView] = useState<MagazineView>('default');
+  // View filter and curate-busy flag are atoms so the toolbar's action graph subscribes to them
+  // directly (via `get`) and rebuilds reactively, rather than being driven by React deps. The list
+  // still needs the view value, so we read it here; `busy` is write-only here (read only by the toolbar).
+  const viewAtom = useMemo(() => Atom.make<MagazineView>('default'), []);
+  const busyAtom = useMemo(() => Atom.make(false), []);
+  const view = useAtomValue(viewAtom);
   const db = Obj.getDatabase(magazine);
   // Atom families are keyed by the live `subject` (snapshots are fresh objects each change and would
   // break memoization). The list atom fires only on membership changes (add/remove, or a post
   // crossing the view filter); per-post state changes are isolated to their own tiles.
   const posts = useVisibleMagazinePosts(subject, view);
 
-  const [state, setState] = useState<CurateState>('idle');
-  const [error, setError] = useState<string>();
   const handleCurate = useCallback(async () => {
-    if (state !== 'idle') {
+    if (registry.get(busyAtom)) {
       return;
     }
-    setError(undefined);
-    setState('busy');
+    registry.set(busyAtom, true);
     try {
       // Thread the spaceId so the handler's spawn environment has `space` — required for the
       // process-affinity services (Database.Service, and AgentPrompt when AI curation is restored).
-      await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }, { spaceId: db?.spaceId });
-    } catch (err) {
-      log.catch(err);
-      setError(t('curate-error.message'));
+      // Failures surface as a toast via `notify` (invokePromise resolves with `{ error }`, never throws).
+      await invokePromise(
+        FeedOperation.CurateMagazine,
+        { magazine: Ref.make(subject) },
+        { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.id }] } },
+      );
     } finally {
-      setState('idle');
+      registry.set(busyAtom, false);
     }
-  }, [state, subject, invokePromise, t, db]);
+  }, [registry, busyAtom, subject, invokePromise, db]);
 
   const handleToggleStar = useCallback(
     async (post: Subscription.Post, starred: boolean) => {
@@ -72,69 +74,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     [db],
   );
 
-  const handleClear = useCallback(
-    () =>
-      runAndForwardErrors(
-        Effect.gen(function* () {
-          if (!db || magazine.posts.length === 0) {
-            return;
-          }
-          const starredUri = yield* Effect.promise(() => findSystemTagUri(db, 'starred'));
-
-          // Clear keeps only starred posts. With no `starred` tag in the space nothing can be
-          // starred, so empty the whole list without resolving any posts/subscriptions; otherwise
-          // resolve posts + their distinct subscriptions and keep the starred ones.
-          const next = yield* Option.fromNullable(starredUri).pipe(
-            Option.match({
-              onNone: () => Effect.succeed<Ref.Ref<Subscription.Post>[]>([]),
-              onSome: (uri) =>
-                Effect.gen(function* () {
-                  // Resolve posts concurrently — `Effect.all` defaults to sequential, which
-                  // serialized one round-trip per post.
-                  const loaded = yield* Effect.all(
-                    magazine.posts.map((ref) => Effect.promise(() => ref.load())),
-                    { concurrency: 'unbounded' },
-                  );
-                  // A post's starred flag lives on its Subscription's TagIndex; many posts share one
-                  // Subscription (a feed has many posts), so resolve each distinct source once.
-                  const sourceById = new Map<string, Ref.Ref<Subscription.Subscription>>();
-                  for (const post of loaded) {
-                    if (post.source) {
-                      sourceById.set(String(dxnToEntityId(post.source.uri)), post.source);
-                    }
-                  }
-                  const subscriptionEntries = yield* Effect.all(
-                    [...sourceById].map(([entityId, source]) =>
-                      Effect.promise(() => source.load()).pipe(
-                        Effect.map((subscription) => [entityId, subscription] as const),
-                      ),
-                    ),
-                    { concurrency: 'unbounded' },
-                  );
-                  const subscriptionById = new Map(subscriptionEntries);
-                  return loaded
-                    .filter((post) =>
-                      hasTag(
-                        post.source ? subscriptionById.get(String(dxnToEntityId(post.source.uri))) : undefined,
-                        post.id,
-                        uri,
-                      ),
-                    )
-                    .map((post) => Ref.make(post));
-                }),
-            }),
-          );
-
-          if (next.length === magazine.posts.length) {
-            return;
-          }
-          Obj.update(subject, (subject) => {
-            subject.posts = next;
-          });
-        }),
-      ),
-    [subject, magazine.posts, db],
-  );
+  const handleClear = useCallback(() => {
+    // Failures surface as a toast via `notify`; invokePromise resolves with `{ error }`, never throws.
+    void invokePromise(
+      FeedOperation.ClearMagazine,
+      { magazine: Ref.make(subject) },
+      { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.id }] } },
+    );
+  }, [invokePromise, subject, db]);
 
   const handleOpen = useCallback(
     async (post: Subscription.Post) => {
@@ -187,16 +134,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <MagazineToolbar
-          hasFeeds={magazine.feeds.length > 0}
-          state={state}
-          view={view}
-          onViewChange={setView}
-          onClear={handleClear}
-          onCurate={handleCurate}
-        />
-      </Panel.Toolbar>
+      <MagazineToolbar
+        magazine={subject}
+        viewAtom={viewAtom}
+        busyAtom={busyAtom}
+        attendableId={attendableId}
+        onClear={handleClear}
+        onCurate={handleCurate}
+      />
       <Panel.Content>
         {noPosts ? (
           <div className='flex items-center justify-center h-full text-subdued text-sm'>
@@ -210,11 +155,6 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Masonry.Root>
         )}
       </Panel.Content>
-      {error && (
-        <Panel.Statusbar>
-          <p className='flex p-1 items-center text-error-text'>{error}</p>
-        </Panel.Statusbar>
-      )}
     </Panel.Root>
   );
 };

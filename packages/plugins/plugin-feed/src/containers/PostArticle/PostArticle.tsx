@@ -2,41 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
+import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 
 import { PostContent } from '#components';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-import { makeSnippet, stripHtml } from '../../extraction';
-import { browserCorsProxy, fetchArticle } from '../../sources';
-import { appendPostContent, setReadAt, setTag, usePostContentAtom, useReadState, useTagState } from '../../state';
+import { setReadAt, setTag, usePostContentAtom } from '../../state';
+import { PostToolbar } from './PostToolbar';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
-export const PostArticle = ({ role, subject }: PostArticleProps) => {
-  const { t } = useTranslation(meta.id);
+export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) => {
+  // When shown as a companion the `attendableId` is a linked segment, but attention lives on the
+  // parent plank — resolve to the parent so the toolbar reads as attended (active).
+  const toolbarAttendableId =
+    attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const { invokePromise } = useOperationInvoker();
-  // Subscribe to the post so the toolbar icons (star, archive, mark-unread) re-render
-  // when their underlying state changes via Obj.update.
+  const registry = useContext(RegistryContext);
   const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
   const subscription = post.source?.target;
   const { id } = post;
-  // Per-Post read/tag slices: re-render the toolbar only when THIS post's state changes (not when a
-  // sibling post sharing the same Subscription mutates).
-  const { readAt } = useReadState(subject);
-  const { starred, archived } = useTagState(subject);
-  const read = readAt !== undefined;
   const postContent = usePostContentAtom(subject);
 
   // Lazily fetch full article content the first time this Post is shown — covers
@@ -82,95 +79,60 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     }
   }, [subscription, id]);
 
-  const handleToggleArchive = useCallback(() => {
-    if (db && subscription) {
-      void setTag(subscription, id, db, 'archived', !archived);
-    }
-  }, [db, subscription, id, archived]);
-
-  const handleToggleStar = useCallback(() => {
-    if (db && subscription) {
-      void setTag(subscription, id, db, 'starred', !starred);
-    }
-  }, [db, subscription, id, starred]);
-
-  // Re-fetch the article body from the source. Same path MagazineArticle uses on
-  // first open, but unconditional — appends a fresh content entry to the
-  // subscription's contentFeed so the user can recover from a stale extraction.
-  // Older entries remain in the queue (feeds are append-only); the reverse-ref
-  // lookup in `usePostContent` picks the most recent match for this Post.
-  const [refreshing, setRefreshing] = useState(false);
-  const handleRefresh = useCallback(async () => {
-    if (!post.link || refreshing || !subscription) {
-      return;
-    }
-    const space = getSpace(subscription);
-    if (!space) {
-      return;
-    }
-
-    setRefreshing(true);
-    try {
-      const { text, imageUrls } = await fetchArticle(post.link, { corsProxy: browserCorsProxy() });
-      if (text) {
-        await appendPostContent(space, subscription, {
-          post,
-          text,
-          snippet: makeSnippet(stripHtml(text)),
-          imageUrl: imageUrls[0],
-        });
+  // Value-setters (not toggles): the toolbar reads the current star/archive state reactively via
+  // `get` and passes the desired next value, so these don't need to subscribe to the current state.
+  const handleSetArchived = useCallback(
+    (value: boolean) => {
+      if (db && subscription) {
+        void setTag(subscription, id, db, 'archived', value);
       }
-    } catch (err) {
-      log.catch(err, { postLink: post.link });
-    } finally {
-      setRefreshing(false);
+    },
+    [db, subscription, id],
+  );
+
+  const handleSetStarred = useCallback(
+    (value: boolean) => {
+      if (db && subscription) {
+        void setTag(subscription, id, db, 'starred', value);
+      }
+    },
+    [db, subscription, id],
+  );
+
+  // Re-fetch the article body from the source via the LoadPostContent operation with `force`, so the
+  // fetch/extraction/storage logic lives in one place (the operation) rather than inline here. Appends
+  // a fresh content entry to the subscription's contentFeed; the reverse-ref lookup picks the newest.
+  // `refreshing` is an atom so the toolbar subscribes to it via `get` rather than via React deps.
+  const refreshingAtom = useMemo(() => Atom.make(false), []);
+  const handleRefresh = useCallback(async () => {
+    if (!post.link || registry.get(refreshingAtom)) {
+      return;
     }
-  }, [subscription, post, post.link, refreshing]);
+    registry.set(refreshingAtom, true);
+    try {
+      // Failures surface as a toast via `notify`; invokePromise resolves with `{ error }`, never throws.
+      await invokePromise(
+        FeedOperation.LoadPostContent,
+        { post: Ref.make(subject), force: true },
+        { notify: { error: ['refresh-content-error.message', { ns: meta.id }] } },
+      );
+    } finally {
+      registry.set(refreshingAtom, false);
+    }
+  }, [registry, refreshingAtom, subject, post.link, invokePromise]);
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.IconButton
-            label={t(starred ? 'unstar-post.label' : 'star-post.label')}
-            icon={starred ? 'ph--star--fill' : 'ph--star--regular'}
-            iconOnly
-            onClick={handleToggleStar}
-          />
-          <Toolbar.IconButton
-            label={t(archived ? 'unarchive-post.label' : 'archive-post.label')}
-            icon={archived ? 'ph--archive--fill' : 'ph--archive--regular'}
-            iconOnly
-            onClick={handleToggleArchive}
-          />
-          {read && (
-            <Toolbar.IconButton
-              label={t('mark-unread.label')}
-              icon='ph--envelope--regular'
-              iconOnly
-              onClick={handleMarkUnread}
-            />
-          )}
-          <Toolbar.Separator />
-          {post.link && (
-            <Toolbar.IconButton
-              label={t(refreshing ? 'refresh-content-pending.label' : 'refresh-content.label')}
-              icon='ph--arrows-clockwise--regular'
-              iconOnly
-              disabled={refreshing}
-              onClick={() => void handleRefresh()}
-            />
-          )}
-          {post.link && (
-            <Toolbar.IconButton
-              label={t('open-original.label')}
-              icon='ph--arrow-square-out--regular'
-              iconOnly
-              onClick={handleOpenOriginal}
-            />
-          )}
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <PostToolbar
+        post={subject}
+        refreshingAtom={refreshingAtom}
+        attendableId={toolbarAttendableId}
+        onSetStarred={handleSetStarred}
+        onSetArchived={handleSetArchived}
+        onMarkUnread={handleMarkUnread}
+        onRefresh={() => void handleRefresh()}
+        onOpenOriginal={handleOpenOriginal}
+      />
       <Panel.Content asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
       </Panel.Content>

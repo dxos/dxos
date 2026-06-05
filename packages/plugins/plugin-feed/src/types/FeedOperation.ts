@@ -115,6 +115,11 @@ export const LoadPostContent = Operation.make({
     post: Ref.Ref(Subscription.Post).annotations({
       description: 'The Post to load content for.',
     }),
+    force: Schema.optional(
+      Schema.Boolean.annotations({
+        description: 'Re-fetch and append fresh content even if an entry already exists (refresh).',
+      }),
+    ),
   }),
   output: Schema.Void,
 });
@@ -171,4 +176,24 @@ export const CurateMagazine = Operation.make({
     synced: Schema.Number.annotations({ description: 'Number of feeds successfully synced.' }),
   }),
   services: [Capability.Service],
+});
+
+/**
+ * Clears a Magazine's curated posts, preserving any that are starred. Drives the MagazineArticle
+ * Clear button.
+ */
+export const ClearMagazine = Operation.make({
+  meta: {
+    key: makeKey('clearMagazine'),
+    name: 'Clear Magazine',
+    description: "Removes a Magazine's posts, keeping any that are starred.",
+    icon: 'ph--trash--regular',
+  },
+  input: Schema.Struct({
+    magazine: Ref.Ref(Magazine.Magazine).annotations({
+      description: 'The Magazine to clear.',
+    }),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
 });

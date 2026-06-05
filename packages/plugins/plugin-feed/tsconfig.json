@@ -78,9 +78,6 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -94,6 +91,9 @@
     },
     {
       "path": "../../ui/react-ui-masonry"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"

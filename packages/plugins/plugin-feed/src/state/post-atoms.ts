@@ -63,7 +63,7 @@ const tagUrisAtom = Atom.family((db: Database.Database) =>
  * Subscription but re-emits ONLY when this Post's `readAt` changes — sibling Posts' mutations are
  * recomputed and discarded without propagating.
  */
-const postReadAtom = Atom.family((post: Subscription.Post) =>
+export const postReadAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<ReadSlice>((get) => {
     const ref = post.source;
     if (!ref) {
@@ -91,7 +91,7 @@ const postReadAtom = Atom.family((post: Subscription.Post) =>
  * This Post's `{ starred, archived }`, sliced off its source Subscription's `tags`. Re-emits ONLY
  * when this Post's tag membership flips.
  */
-const postTagsAtom = Atom.family((post: Subscription.Post) =>
+export const postTagsAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<TagSlice>((get) => {
     const ref = post.source;
     if (!ref) {

@@ -15,7 +15,7 @@ import { appendPostContent, findPostContent } from '../state';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ post: postRef }) {
+    Effect.fn(function* ({ post: postRef, force }) {
       // The Post is a queue item (its source Subscription lives in space.db).
       // Resolve the source Subscription first; everything that needs a
       // Database / Space binding comes from there. The Post's own
@@ -30,9 +30,12 @@ export default FeedOperation.LoadPostContent.pipe(
       }
       const space = getSpace(subscription);
       invariant(space, 'Subscription is not in a space.');
-      const existing = yield* Effect.tryPromise(() => findPostContent(subscription, post));
-      if (existing) {
-        return;
+      // Idempotent by default (first-open auto-load); `force` re-fetches for the reader's refresh.
+      if (!force) {
+        const existing = yield* Effect.tryPromise(() => findPostContent(subscription, post));
+        if (existing) {
+          return;
+        }
       }
 
       yield* Effect.tryPromise({
