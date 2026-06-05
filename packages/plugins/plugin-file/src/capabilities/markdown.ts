@@ -33,6 +33,6 @@ export default Capability.makeModule(
       return undefined;
     };
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [provider]);
+    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [provider]);
   }),
 );

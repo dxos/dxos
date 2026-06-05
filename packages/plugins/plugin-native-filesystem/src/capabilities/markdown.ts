@@ -106,6 +106,6 @@ export default Capability.makeModule(
         },
       });
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [extensionProvider]);
+    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [extensionProvider]);
   }),
 );
