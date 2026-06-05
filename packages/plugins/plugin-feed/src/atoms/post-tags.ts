@@ -36,7 +36,8 @@ const tagUrisAtom = Atom.family((db: Database.Database) =>
 
 /**
  * This Post's `{ starred, archived }`, sliced off its source Subscription's `tags`. Re-emits ONLY
- * when this Post's tag membership flips.
+ * when this Post's tag membership flips — sibling Posts' tag mutations are discarded without
+ * propagating. Re-initialises its subscription when tag uris change (first star ever in the space).
  */
 export const postTagsAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<TagSlice>((get) => {

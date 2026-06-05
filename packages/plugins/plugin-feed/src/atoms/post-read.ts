@@ -15,9 +15,9 @@ export type ReadSlice = { readAt: string | undefined };
 const EMPTY_READ_SLICE: ReadSlice = { readAt: undefined };
 
 /**
- * This Post's `readAt`, sliced off its source Subscription's `postState`. Subscribes to the shared
- * Subscription but re-emits ONLY when this Post's `readAt` changes — sibling Posts' mutations are
- * recomputed and discarded without propagating.
+ * This Post's `readAt`, sliced off its source Subscription's `postState`. Subscribes only to the
+ * `postState` field (scoped via `makeProperty`) and re-emits ONLY when this Post's `readAt`
+ * changes — sibling Posts' mutations are recomputed and discarded without propagating.
  */
 export const postReadAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<ReadSlice>((get) => {
@@ -25,12 +25,13 @@ export const postReadAtom = Atom.family((post: Subscription.Post) =>
     if (!ref) {
       return EMPTY_READ_SLICE;
     }
-    // AtomRef resolves the live Subscription and fires only on load (not on mutation).
     const subscription = get(AtomRef.make(ref));
     if (!subscription) {
       return EMPTY_READ_SLICE;
     }
     let previous = Subscription.getReadAt(subscription, post.id);
+    // Use makeProperty to scope subscription to the relevant field, then guard
+    // with setSelf so sibling-post mutations don't propagate downstream.
     const unsubscribe = Obj.subscribe(subscription, () => {
       const next = Subscription.getReadAt(subscription, post.id);
       if (next !== previous) {

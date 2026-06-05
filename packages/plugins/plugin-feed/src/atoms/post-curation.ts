@@ -14,9 +14,9 @@ export type CurationSlice = { snippet: string | undefined; imageUrl: string | un
 
 /**
  * This Post's magazine-scoped curation slice (snippet/imageUrl), sliced off the Magazine's
- * `postState`. Subscribes to the shared Magazine but re-emits ONLY when this Post's slice changes —
- * sibling Posts' curation mutations are recomputed and discarded without propagating. Keyed by a
- * value-equal `Data.tuple([post, magazine])`.
+ * `postState`. Re-emits ONLY when this Post's slice changes — sibling Posts' curation mutations
+ * are recomputed and discarded without propagating. Keyed by a value-equal
+ * `Data.tuple([post, magazine])`.
  */
 export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
   Atom.make<CurationSlice>((get) => {
