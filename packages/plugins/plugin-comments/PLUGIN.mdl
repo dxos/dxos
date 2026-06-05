@@ -136,8 +136,8 @@ op ToggleResolved
 
 op Select
   key: org.dxos.plugin.comments.operation.select
-  desc: Set the currently-selected thread (CommentsState.current).
-  input: { current: String }
+  desc: Set the currently-selected thread (CommentsState.current); omit `current` to clear it.
+  input: { current?: String }
 
 op RespondToThread
   key: org.dxos.plugin.comments.operation.respond-to-thread
@@ -151,7 +151,10 @@ op SetAgentConfig
 
 op CreateProposals
   key: org.dxos.plugin.comments.operation.create-proposals
-  desc: Materialise assistant-proposed document edits as proposal-block messages on the thread.
+  desc: |
+    Materialise assistant-proposed document edits as NEW proposal-block comment
+    threads, one per diff, each anchored to the document at the diff's cursor
+    range (no pre-existing target thread is required).
   input: { doc: Ref<Markdown.Document>, diffs: String[] }
 ```
 

@@ -49,7 +49,8 @@ export const Select = Operation.make({
   meta: { key: makeKey('select'), name: 'Select Thread', icon: 'ph--check--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
-    current: Schema.String,
+    // Optional so callers can clear the active thread (e.g. after delete/close).
+    current: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
