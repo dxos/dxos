@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -21,6 +21,7 @@ import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
 import { findSystemTagUri, getReadAt, hasTag, setReadAt, setTag, useVisibleMagazinePosts } from '../../state';
+import { dxnToEntityId } from '../../util/dxn';
 import { MagazineTile } from './MagazineTile';
 import { type CurateState, MagazineToolbar, type MagazineView } from './MagazineToolbar';
 
@@ -79,16 +80,51 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             return;
           }
           const starredUri = yield* Effect.promise(() => findSystemTagUri(db, 'starred'));
-          const loaded = yield* Effect.all(magazine.posts.map((ref) => Effect.promise(() => ref.load())));
-          const subscriptions = yield* Effect.all(
-            loaded.map((post) => {
-              const source = post.source;
-              return source ? Effect.promise(() => source.load()) : Effect.succeed(undefined);
+
+          // Clear keeps only starred posts. With no `starred` tag in the space nothing can be
+          // starred, so empty the whole list without resolving any posts/subscriptions; otherwise
+          // resolve posts + their distinct subscriptions and keep the starred ones.
+          const next = yield* Option.fromNullable(starredUri).pipe(
+            Option.match({
+              onNone: () => Effect.succeed<Ref.Ref<Subscription.Post>[]>([]),
+              onSome: (uri) =>
+                Effect.gen(function* () {
+                  // Resolve posts concurrently — `Effect.all` defaults to sequential, which
+                  // serialized one round-trip per post.
+                  const loaded = yield* Effect.all(
+                    magazine.posts.map((ref) => Effect.promise(() => ref.load())),
+                    { concurrency: 'unbounded' },
+                  );
+                  // A post's starred flag lives on its Subscription's TagIndex; many posts share one
+                  // Subscription (a feed has many posts), so resolve each distinct source once.
+                  const sourceById = new Map<string, Ref.Ref<Subscription.Subscription>>();
+                  for (const post of loaded) {
+                    if (post.source) {
+                      sourceById.set(String(dxnToEntityId(post.source.uri)), post.source);
+                    }
+                  }
+                  const subscriptionEntries = yield* Effect.all(
+                    [...sourceById].map(([entityId, source]) =>
+                      Effect.promise(() => source.load()).pipe(
+                        Effect.map((subscription) => [entityId, subscription] as const),
+                      ),
+                    ),
+                    { concurrency: 'unbounded' },
+                  );
+                  const subscriptionById = new Map(subscriptionEntries);
+                  return loaded
+                    .filter((post) =>
+                      hasTag(
+                        post.source ? subscriptionById.get(String(dxnToEntityId(post.source.uri))) : undefined,
+                        post.id,
+                        uri,
+                      ),
+                    )
+                    .map((post) => Ref.make(post));
+                }),
             }),
           );
-          const next = Array.zipWith(loaded, subscriptions, (post, subscription) => ({ post, subscription }))
-            .filter(({ post, subscription }) => hasTag(subscription, post.id, starredUri))
-            .map(({ post }) => Ref.make(post));
+
           if (next.length === magazine.posts.length) {
             return;
           }
