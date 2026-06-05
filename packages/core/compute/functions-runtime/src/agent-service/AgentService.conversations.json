@@ -2,7 +2,7 @@
   "conversations": [
     {
       "parameters": {
-        "model": "@anthropic/claude-sonnet-4-5",
+        "model": "ai.claude.model.claude-sonnet-4-5",
         "stream": true,
         "tools": [
           {
@@ -135,7 +135,7 @@
     },
     {
       "parameters": {
-        "model": "@anthropic/claude-sonnet-4-5",
+        "model": "ai.claude.model.claude-sonnet-4-5",
         "stream": true,
         "tools": [
           {
@@ -285,7 +285,7 @@
     },
     {
       "parameters": {
-        "model": "@anthropic/claude-sonnet-4-5",
+        "model": "ai.claude.model.claude-sonnet-4-5",
         "stream": true,
         "tools": [
           {

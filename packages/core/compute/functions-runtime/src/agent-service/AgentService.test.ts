@@ -186,7 +186,7 @@ const AlarmTestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed],
   systemPrompt: ALARM_SYSTEM_PROMPT,
   aiServicePreset: 'direct',
-  model: '@anthropic/claude-sonnet-4-5',
+  model: 'ai.claude.model.claude-sonnet-4-5',
 });
 
 /**
