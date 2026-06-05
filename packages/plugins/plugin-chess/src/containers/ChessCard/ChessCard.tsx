@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type GameVariantSurfaceProps } from '@dxos/plugin-game';
+import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
 
 import { Chessboard } from '#components';
 import { Chess } from '#types';

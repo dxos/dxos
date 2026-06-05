@@ -27,7 +27,7 @@ const useTestGenerate = () => {
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
-      AiService.model('@anthropic/claude-haiku-4-5').pipe(
+      AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
         Layer.provide(AiServiceTestingPreset('edge-remote')),
         Layer.orDie,
       ),

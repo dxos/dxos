@@ -10,7 +10,7 @@ export const AgentRunner = Capability.lazy('AgentRunner', () => import('./agent-
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
+export const Markdown = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

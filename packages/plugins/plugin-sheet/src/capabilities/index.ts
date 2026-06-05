@@ -11,7 +11,7 @@ export const AnchorSort = Capability.lazy('AnchorSort', () => import('./anchor-s
 export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
 export const ComputeGraphRegistry = Capability.lazy('ComputeGraphRegistry', () => import('./compute-graph-registry'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
+export const Markdown = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { FileCapabilities } from '#types';
@@ -33,6 +33,6 @@ export default Capability.makeModule(
       return undefined;
     };
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [provider]);
+    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [provider]);
   }),
 );

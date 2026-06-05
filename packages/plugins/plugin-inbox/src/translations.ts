@@ -106,6 +106,7 @@ export const translations = [
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
         'message-toolbar-extract.menu': 'Extract',
+        'message-toolbar-load-images.menu': 'Load remote images',
 
         'message-body.placeholder': 'Enter message text...',
 

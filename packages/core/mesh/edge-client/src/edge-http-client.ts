@@ -14,6 +14,8 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
+  type CompleteOAuthRegistrationRequest,
+  type CompleteOAuthRegistrationResponse,
   type CreateAgentRequestBody,
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
@@ -178,6 +180,14 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<InitiateOAuthFlowResponse> {
     return this._call(ctx, new URL('/oauth/initiate', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  public async completeOAuthRegistration(
+    ctx: Context,
+    body: CompleteOAuthRegistrationRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<CompleteOAuthRegistrationResponse> {
+    return this._call(ctx, new URL('/oauth/registration/complete', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //

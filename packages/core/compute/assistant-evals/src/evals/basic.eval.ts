@@ -26,15 +26,15 @@ const task = createEvalRunner({
 evalite.each<VariantConfig>([
   {
     name: 'claude-haiku-4-5',
-    input: { model: '@anthropic/claude-haiku-4-5' },
+    input: { model: 'ai.claude.model.claude-haiku-4-5' },
   },
   {
     name: 'claude-sonnet-4-5',
-    input: { model: '@anthropic/claude-sonnet-4-5' },
+    input: { model: 'ai.claude.model.claude-sonnet-4-5' },
   },
   {
     name: 'claude-opus-4-6',
-    input: { model: '@anthropic/claude-opus-4-6' },
+    input: { model: 'ai.claude.model.claude-opus-4-6' },
   },
 ])('Question answering', {
   data: [

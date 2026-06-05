@@ -3,7 +3,7 @@
 //
 
 import { log } from '@dxos/log';
-import { Routing } from '@dxos/plugin-trip';
+import { Routing } from '@dxos/plugin-trip/types';
 
 import { type OsrmResponse } from './osrm-mapping';
 

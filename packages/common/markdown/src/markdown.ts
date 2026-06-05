@@ -70,8 +70,8 @@ const stripWhitespace = (str: string): string => {
   // Invisible/whitespace characters that newsletters use to pad preview text:
   // soft hyphen (U+00AD), combining grapheme joiner (U+034F), zero-width
   // space/non-joiner/joiner (U+200B-U+200D), word joiner (U+2060), and BOM/
-  // ZWNBSP (U+FEFF), plus regular space, tab, and NBSP.
-  const INVISIBLE = ' \\t\\u00A0\\u00AD\\u034F\\u200B-\\u200D\\u2060\\uFEFF';
+  // ZWNBSP (U+FEFF), plus regular space, tab, NBSP (U+00A0), and figure space (U+2007).
+  const INVISIBLE = ' \\t\\u00A0\\u00AD\\u034F\\u200B-\\u200D\\u2007\\u2060\\uFEFF';
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return (
     str
@@ -88,9 +88,8 @@ const stripWhitespace = (str: string): string => {
       .replace(/^(?!---$)[^\p{L}\p{N}\n]*$/gmu, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
-      // Trim trailing whitespace \u2014 including the invisible/zero-width chars (soft hyphen, zero-width
-      // space/joiners, word joiner, ZWNBSP) that `.trim()` and the visible-whitespace set miss \u2014 from
-      // every line.
+      // Trim trailing whitespace from every line; includes the full invisible set (CGJ, ZWNJ,
+      // soft hyphen, figure space, etc.) so newsletter padding tacked onto a content line is removed.
       .replace(new RegExp(`[${INVISIBLE}]+$`, 'gm'), '')
       // Keep a quoted block contiguous: drop blank lines between consecutive quoted (`>`) lines.
       // Turndown prefixes every blockquote line with `> `, so paragraph breaks within a quote

@@ -81,7 +81,7 @@ describe('AssistantPlugin', () => {
         expect(text.toLocaleLowerCase()).toContain('paris');
       }).pipe(
         Effect.provide(
-          AiService.model('@anthropic/claude-haiku-4-5').pipe(
+          AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
             Layer.provideMerge(ServiceResolver.provide({}, AiService.AiService)),
           ),
         ),
@@ -129,7 +129,7 @@ describe('AssistantPlugin', () => {
             input: {
               country: 'France',
             },
-            model: '@anthropic/claude-haiku-4-5',
+            model: 'ai.claude.model.claude-haiku-4-5',
           },
           { spaceId: personalSpace.id },
         );

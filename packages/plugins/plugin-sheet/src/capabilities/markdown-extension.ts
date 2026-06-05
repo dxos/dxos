@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
 import { SheetCapabilities } from '#types';
 
@@ -17,7 +17,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [
+    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc }) => {
         const computeGraphRegistry = capabilities.get(SheetCapabilities.ComputeGraphRegistry);
         const space = getSpace(doc);

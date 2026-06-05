@@ -8,7 +8,7 @@ import { type Collection, type Database, Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { Column, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -112,8 +112,12 @@ export const CreateObjectPanel = ({
   }
 
   if (metadata.inputSchema) {
+    // The host (Dialog.Body) already owns the gutter Column. Use Column.Center to place the form in
+    // the same center column as the dialog title — NOT a subgrid wrapper or Form.Viewport's own
+    // Column.Root. Subgrid can't propagate through Form.Root's `display: contents` wrapper (the form
+    // would fall back to a stray track and inset), and a nested Column.Root would double-gutter it.
     return (
-      <div className='[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid'>
+      <Column.Center>
         <Form.Root
           autoFocus
           schema={inputSchema}
@@ -123,14 +127,12 @@ export const CreateObjectPanel = ({
           onSave={handleCreateObject}
           testId='create-object-form'
         >
-          <Form.Viewport>
-            <Form.Content>
-              <Form.FieldSet />
-              <Form.Submit />
-            </Form.Content>
-          </Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
         </Form.Root>
-      </div>
+      </Column.Center>
     );
   }
 
