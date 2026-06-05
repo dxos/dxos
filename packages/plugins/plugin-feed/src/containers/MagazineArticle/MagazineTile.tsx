@@ -10,8 +10,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Subscription } from '#types';
 
-import { formatDate } from '../../util/format-date';
 import { useMagazinePostData } from '../../state';
+import { formatDate } from '../../util/format-date';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
@@ -46,7 +46,12 @@ export const MagazineTile = ({ post, current, onToggleStar, onOpen }: MagazineTi
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster
+            alt={snapshot.title ?? 'Article'}
+            image={imageUrl}
+            fit='cover'
+            classNames='rounded-t-xs'
+          />
         )}
         <Card.Header>
           <Card.IconBlock>

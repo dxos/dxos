@@ -16,7 +16,7 @@ import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Column } from '../Column';
 import { Icon, IconBlock, type IconBlockProps, type IconProps } from '../Icon';
-import { Image } from '../Image';
+import { Image, type ImageProps } from '../Image';
 import {
   Toolbar,
   type ToolbarActionIconButtonProps,
@@ -367,37 +367,28 @@ type CardPosterProps = ThemedClassName<
   {
     alt: string;
     aspect?: 'video' | 'auto';
-    /**
-     * How the image fills the poster box. `'contain'` (default) preserves
-     * aspect ratio and may letterbox; `'cover'` fills the box edge-to-edge,
-     * cropping as needed. Forwarded to the underlying `Image`'s
-     * `object-fit`.
-     */
-    fit?: 'contain' | 'cover';
-  } & Partial<{ image: string; icon: string }>
+  } & Partial<{ image: string; icon: string }> &
+    // The image-rendering props (`fit`, `crossOrigin`, color-extraction options) are forwarded to
+    // the underlying `Image`. `src`/`alt`/`classNames` are owned by the poster.
+    Omit<ImageProps, 'src' | 'alt' | 'classNames'>
 >;
 
-function CardPoster(props: CardPosterProps) {
+function CardPoster({ classNames, alt, aspect: aspectProp, image, icon, ...imageProps }: CardPosterProps) {
   const { tx } = useThemeContext();
-  const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
+  const aspect = aspectProp === 'auto' ? 'aspect-auto' : 'aspect-video';
 
-  if (props.image) {
+  if (image) {
     return (
       <div className='col-span-full'>
-        <Image
-          classNames={[tx('card.poster', {}), aspect, props.classNames]}
-          src={props.image}
-          alt={props.alt}
-          fit={props.fit}
-        />
+        <Image classNames={[tx('card.poster', {}), aspect, classNames]} src={image} alt={alt} {...imageProps} />
       </div>
     );
   }
 
-  if (props.icon) {
+  if (icon) {
     return (
-      <div role='image' className={tx('card.poster-icon', {}, [aspect, props.classNames])} aria-label={props.alt}>
-        <Icon icon={props.icon} size={10} />
+      <div role='image' className={tx('card.poster-icon', {}, [aspect, classNames])} aria-label={alt}>
+        <Icon icon={icon} size={10} />
       </div>
     );
   }
