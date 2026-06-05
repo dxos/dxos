@@ -21,7 +21,7 @@ export type ThreadContainerProps = ThemedClassName<
     space: Space;
     thread: Thread.Thread;
     context?: Obj.Unknown;
-    autoFocusTextbox?: boolean;
+    autoFocus?: boolean;
   } & Pick<ThreadContentProps, 'current'>
 >;
 
@@ -30,7 +30,7 @@ export type ThreadContainerProps = ThemedClassName<
  * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
  */
 export const ThreadContainer = composable<HTMLDivElement, ThreadContainerProps>(
-  ({ space, thread, context, autoFocusTextbox, current, ...props }, forwardedRef) => {
+  ({ space, thread, context, autoFocus, current, ...props }, forwardedRef) => {
     const id = Obj.getURI(thread);
     const identity = useIdentity()!;
     const members = useMembers(space?.id);
@@ -66,7 +66,7 @@ export const ThreadContainer = composable<HTMLDivElement, ThreadContainerProps>(
         messages={messages}
         activity={activity}
         onSend={handleSend}
-        autoFocusTextbox={autoFocusTextbox}
+        autoFocus={autoFocus}
         current={current}
         ref={forwardedRef}
       />

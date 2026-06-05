@@ -37,7 +37,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-thread/containers/ChannelChat',
-  component: ChannelChat,
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -83,7 +82,7 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof ChannelChat>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
