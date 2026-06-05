@@ -25,9 +25,11 @@ const DefaultStory = () => {
 
   return (
     <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable onMessageDelete={() => {}}>
-      <Thread.Messages messages={messages} />
-      <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
-      <Thread.Status />
+      <Thread.Content classNames='grow min-h-0'>
+        <Thread.Messages messages={messages} />
+        <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
+        <Thread.Status />
+      </Thread.Content>
     </Thread.Root>
   );
 };

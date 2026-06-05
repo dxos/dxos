@@ -128,25 +128,27 @@ export const CommentThread = ({
 
   return (
     <Thread.Root
-      id={threadUri}
-      classNames='pt-2 border-b border-subdued-separator last:border-none'
-      current={current}
       getMetadata={getMetadata}
       components={components}
       identityDid={identity?.did}
       editable
       onMessageDelete={onMessageDelete ? handleMessageDelete : undefined}
       onAcceptProposal={onAcceptProposal ? handleAcceptProposal : undefined}
-      onClickCapture={handleAttend}
-      onFocusCapture={handleAttend}
     >
-      <div
-        className={mx(
-          'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
-          hoverableControls,
-          hoverableFocusedWithinControls,
-        )}
+      <Thread.Content
+        id={threadUri}
+        classNames='pt-2 border-b border-subdued-separator last:border-none'
+        current={current}
+        onClickCapture={handleAttend}
+        onFocusCapture={handleAttend}
       >
+        <div
+          className={mx(
+            'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
+            hoverableControls,
+            hoverableFocusedWithinControls,
+          )}
+        >
         {detached ? (
           <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
             <Thread.Header detached>{thread.name}</Thread.Header>
@@ -196,6 +198,7 @@ export const CommentThread = ({
       />
 
       <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
+      </Thread.Content>
     </Thread.Root>
   );
 };

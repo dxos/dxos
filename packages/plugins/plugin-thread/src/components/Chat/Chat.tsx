@@ -100,27 +100,25 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
 
     return (
       <Thread.Root
-        id={id}
-        current={current}
         getMetadata={getMetadata}
         components={components}
         identityDid={identity?.did}
         editable={false}
-        classNames='dx-container'
-        ref={forwardedRef}
       >
-        <Thread.Messages messages={messages} />
-        {!readOnly && (
-          <>
-            <Thread.Textbox
-              {...textboxMetadata}
-              autoFocus={autoFocusTextbox}
-              placeholder={t('message.placeholder')}
-              onSend={onSend}
-            />
-            <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
-          </>
-        )}
+        <Thread.Content id={id} current={current} classNames='dx-container' ref={forwardedRef}>
+          <Thread.Messages messages={messages} />
+          {!readOnly && (
+            <>
+              <Thread.Textbox
+                {...textboxMetadata}
+                autoFocus={autoFocusTextbox}
+                placeholder={t('message.placeholder')}
+                onSend={onSend}
+              />
+              <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
+            </>
+          )}
+        </Thread.Content>
       </Thread.Root>
     );
   },

@@ -30,69 +30,78 @@ const getMessageId = (message: MessageType.Message) => Obj.getURI(message);
 // Root
 //
 
-export type ThreadRootProps = ThemedClassName<
-  PropsWithChildren<
-    Omit<ThreadContextValue, 'components'> &
-      Partial<Pick<ThreadContextValue, 'components'>> & {
-        id?: string;
-        current?: boolean | string;
-      } & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>
-  >
+export type ThreadRootProps = PropsWithChildren<
+  Omit<ThreadContextValue, 'components'> & Partial<Pick<ThreadContextValue, 'components'>>
 >;
 
 /**
- * Root of a thread. Provides message-tile context and the Mosaic root that
- * `Thread.Messages` renders its (virtual) stack within.
+ * Headless root of a thread. Provides message-tile context (metadata resolver,
+ * injected renderers, callbacks) and the Mosaic root that `Thread.Messages`
+ * renders its virtual stack within. Renders no DOM of its own — wrap the visible
+ * thread chrome in `Thread.Content`.
  */
-const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
-  (
+const ThreadRoot = ({
+  children,
+  getMetadata,
+  components,
+  identityDid,
+  editable,
+  onMessageDelete,
+  onAcceptProposal,
+}: ThreadRootProps) => {
+  return (
+    <ThreadContextProvider
+      getMetadata={getMetadata}
+      components={components ?? {}}
+      identityDid={identityDid}
+      editable={editable}
+      onMessageDelete={onMessageDelete}
+      onAcceptProposal={onAcceptProposal}
+    >
+      <Mosaic.Root>{children}</Mosaic.Root>
+    </ThreadContextProvider>
+  );
+};
+
+ThreadRoot.displayName = 'Thread.Root';
+
+//
+// Content
+//
+
+export type ThreadContentProps = ThemedClassName<
+  PropsWithChildren<
     {
-      children,
-      classNames,
-      current,
-      id,
-      getMetadata,
-      components,
-      identityDid,
-      editable,
-      onMessageDelete,
-      onAcceptProposal,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+      id?: string;
+      current?: boolean | string;
+    } & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>
+  >
+>;
+
+/** Visible thread container (the attention surface that hosts header / messages / composer). */
+const ThreadContent = forwardRef<HTMLDivElement, ThreadContentProps>(
+  ({ children, classNames, current, id, ...props }, forwardedRef) => {
     return (
-      <ThreadContextProvider
-        getMetadata={getMetadata}
-        components={components ?? {}}
-        identityDid={identityDid}
-        editable={editable}
-        onMessageDelete={onMessageDelete}
-        onAcceptProposal={onAcceptProposal}
+      <div
+        role='group'
+        data-testid='thread'
+        id={id}
+        aria-current={current ? 'location' : undefined}
+        {...props}
+        className={mx(
+          'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
+          hoverableFocusedWithinControls,
+          classNames,
+        )}
+        ref={forwardedRef}
       >
-        <Mosaic.Root>
-          <div
-            role='group'
-            data-testid='thread'
-            id={id}
-            aria-current={current ? 'location' : undefined}
-            {...props}
-            className={mx(
-              'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
-              hoverableFocusedWithinControls,
-              classNames,
-            )}
-            ref={forwardedRef}
-          >
-            {children}
-          </div>
-        </Mosaic.Root>
-      </ThreadContextProvider>
+        {children}
+      </div>
     );
   },
 );
 
-ThreadRoot.displayName = 'Thread.Root';
+ThreadContent.displayName = 'Thread.Content';
 
 //
 // Header
@@ -281,6 +290,7 @@ ThreadStatus.displayName = 'Thread.Status';
 
 export const Thread = {
   Root: ThreadRoot,
+  Content: ThreadContent,
   Header: ThreadHeader,
   Messages: ThreadMessages,
   Textbox: ThreadTextbox,

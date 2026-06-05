@@ -9,7 +9,7 @@ import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ThreadRootProps } from '@dxos/react-ui-thread';
+import { type ThreadContentProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
@@ -22,7 +22,7 @@ export type ThreadContainerProps = ThemedClassName<
     thread: Thread.Thread;
     context?: Obj.Unknown;
     autoFocusTextbox?: boolean;
-  } & Pick<ThreadRootProps, 'current'>
+  } & Pick<ThreadContentProps, 'current'>
 >;
 
 /**
