@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { Atom } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
@@ -40,6 +42,41 @@ export interface Accessor<S extends object> {
  */
 export const field = <S, I>(value: Schema.Schema<S, I>) =>
   Schema.Record({ key: Obj.ID, value }).pipe(FormInputAnnotation.set(false), Schema.optional);
+
+const shallowEqual = (a: Record<string, unknown>, b: Record<string, unknown>): boolean => {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+  return keysA.every((k) => a[k] === b[k]);
+};
+
+type SliceKey = readonly [Obj.Any, string, EntityId];
+
+const sliceFamily = Atom.family((key: SliceKey) =>
+  Atom.make<Record<string, unknown>>((get) => {
+    const [host, field, id] = key;
+    const read = () => bind(host, field).get(id) as Record<string, unknown>;
+    let previous = read();
+    const unsubscribe = Obj.subscribe(host, () => {
+      const next = read();
+      if (!shallowEqual(previous, next)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }),
+);
+
+/**
+ * Reactive per-key slice of a StateMap field. Fires only when the value at `id` changes — sibling
+ * keys' mutations are discarded without propagating. Memoized via `Atom.family`.
+ */
+export const atom = <S extends object>(host: Obj.Any, field: string, id: EntityId): Atom.Atom<Partial<S>> =>
+  sliceFamily(Data.tuple(host, field, id)) as Atom.Atom<Partial<S>>;
 
 /** Binds an {@link Accessor} over `host[key]`; all mutations go through `Obj.update`. */
 export const bind = <S extends object = Record<string, unknown>>(host: Obj.Any, key: string): Accessor<S> => {

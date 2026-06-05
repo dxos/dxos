@@ -4,7 +4,7 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { Obj } from '@dxos/echo';
+import { StateMap } from '@dxos/app-toolkit';
 import { AtomRef } from '@dxos/echo-atom';
 
 import { Subscription } from '../types';
@@ -15,9 +15,8 @@ export type ReadSlice = { readAt: string | undefined };
 const EMPTY_READ_SLICE: ReadSlice = { readAt: undefined };
 
 /**
- * This Post's `readAt`, sliced off its source Subscription's `postState`. Subscribes only to the
- * `postState` field (scoped via `makeProperty`) and re-emits ONLY when this Post's `readAt`
- * changes — sibling Posts' mutations are recomputed and discarded without propagating.
+ * This Post's `readAt`, sliced off its source Subscription's `postState`. Fires only when this
+ * Post's `readAt` changes — sibling Posts' mutations are discarded without propagating.
  */
 export const postReadAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<ReadSlice>((get) => {
@@ -29,18 +28,8 @@ export const postReadAtom = Atom.family((post: Subscription.Post) =>
     if (!subscription) {
       return EMPTY_READ_SLICE;
     }
-    let previous = Subscription.getReadAt(subscription, post.id);
-    // Use makeProperty to scope subscription to the relevant field, then guard
-    // with setSelf so sibling-post mutations don't propagate downstream.
-    const unsubscribe = Obj.subscribe(subscription, () => {
-      const next = Subscription.getReadAt(subscription, post.id);
-      if (next !== previous) {
-        previous = next;
-        get.setSelf({ readAt: next });
-      }
-    });
-    get.addFinalizer(() => unsubscribe());
-    return { readAt: previous };
+    const state = get(StateMap.atom<Subscription.PostState>(subscription, 'postState', post.id));
+    return { readAt: state.readAt };
   }).pipe(Atom.keepAlive),
 );
 

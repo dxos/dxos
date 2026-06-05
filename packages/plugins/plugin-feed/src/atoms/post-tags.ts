@@ -4,6 +4,7 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
+import { TagIndex } from '@dxos/app-toolkit';
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 
@@ -35,9 +36,9 @@ const tagUrisAtom = Atom.family((db: Database.Database) =>
 );
 
 /**
- * This Post's `{ starred, archived }`, sliced off its source Subscription's `tags`. Re-emits ONLY
+ * This Post's `{ starred, archived }`, sliced off its source Subscription's `tags`. Fires only
  * when this Post's tag membership flips — sibling Posts' tag mutations are discarded without
- * propagating. Re-initialises its subscription when tag uris change (first star ever in the space).
+ * propagating. Re-initialises its tag subscription when tag uris change (first star ever in the space).
  */
 export const postTagsAtom = Atom.family((post: Subscription.Post) =>
   Atom.make<TagSlice>((get) => {
@@ -51,20 +52,10 @@ export const postTagsAtom = Atom.family((post: Subscription.Post) =>
     }
     const db = Obj.getDatabase(subscription);
     const { starredUri, archivedUri } = db ? get(tagUrisAtom(db)) : EMPTY_TAG_URIS;
-    const compute = (): TagSlice => ({
-      starred: Subscription.hasTag(subscription, post.id, starredUri),
-      archived: Subscription.hasTag(subscription, post.id, archivedUri),
-    });
-    let previous = compute();
-    const unsubscribe = Obj.subscribe(subscription, () => {
-      const next = compute();
-      if (next.starred !== previous.starred || next.archived !== previous.archived) {
-        previous = next;
-        get.setSelf(next);
-      }
-    });
-    get.addFinalizer(() => unsubscribe());
-    return previous;
+    return {
+      starred: get(TagIndex.atom(subscription, 'tags', post.id, starredUri)),
+      archived: get(TagIndex.atom(subscription, 'tags', post.id, archivedUri)),
+    };
   }).pipe(Atom.keepAlive),
 );
 

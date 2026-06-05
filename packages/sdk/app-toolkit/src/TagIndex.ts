@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import { Atom } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
@@ -47,6 +49,41 @@ export const field = () =>
     FormInputAnnotation.set(false),
     Schema.optional,
   );
+
+type TagKey = readonly [Obj.Any, string, EntityId, string | undefined];
+
+const tagFamily = Atom.family((key: TagKey) =>
+  Atom.make<boolean>((get) => {
+    const [host, field, objectId, tagUri] = key;
+    const read = (): boolean => {
+      if (!tagUri) {
+        return false;
+      }
+      return bind(host, field).objects(tagUri).includes(objectId);
+    };
+    let previous = read();
+    const unsubscribe = Obj.subscribe(host, () => {
+      const next = read();
+      if (next !== previous) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }),
+);
+
+/**
+ * Reactive boolean for whether `objectId` carries `tagUri` in a TagIndex field. Fires only when
+ * membership for this specific object+tag changes. Memoized via `Atom.family`.
+ */
+export const atom = (
+  host: Obj.Any,
+  field: string,
+  objectId: EntityId,
+  tagUri: string | undefined,
+): Atom.Atom<boolean> => tagFamily(Data.tuple(host, field, objectId, tagUri));
 
 /** Binds an {@link Accessor} over `host[key]`; all mutations go through `Obj.update`. */
 export const bind = (host: Obj.Any, key: string): Accessor => {
