@@ -12,7 +12,7 @@ import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } fro
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint, Credential, Operation } from '@dxos/compute';
+import type { Blueprint, Operation } from '@dxos/compute';
 import type { Database, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
@@ -167,15 +167,10 @@ export namespace AppCapabilities {
 
   /**
    * Plugins can contribute them to provide model resolvers.
-   *
-   * The optional {@link Credential.CredentialsService} requirement lets resolvers wrap their HTTP
-   * client with `byokHeaderLayer(...)`; the LayerSpec that aggregates resolvers into
-   * `AiService.AiService` declares the same requirement and the LayerSpec graph supplies
-   * `CredentialsService` from the active space.
    */
-  export const AiModelResolver = Capability$.make<
-    Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
-  >('org.dxos.app-framework.capability.ai-model-resolver');
+  export const AiModelResolver = Capability$.make<Layer$.Layer<AiModelResolver$.AiModelResolver>>(
+    'org.dxos.app-framework.capability.ai-model-resolver',
+  );
 
   export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
