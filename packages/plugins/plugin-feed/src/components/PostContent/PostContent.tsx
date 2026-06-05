@@ -11,8 +11,8 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Subscription } from '#types';
 
 import { formatDate } from '../../util/format-date';
+import { usePostContentAtom } from '../../util/post-atoms';
 import { getImageUrl } from '../../util/post-state';
-import { usePostContent } from '../../util/use-post-content';
 
 export type PostContentProps = {
   /** Post to render. */
@@ -72,9 +72,7 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {
     const meta = [post.author, ...metadata, formatDate(post.published)].filter(Boolean).join(' · ');
     const title = post.title;
-    const subscription = post.source?.target;
-    const postId = (post as { id: string }).id;
-    const postContent = usePostContent(subscription, postId);
+    const postContent = usePostContentAtom(post);
     const imageUrl = getImageUrl(post, postContent);
     const fetchedText = postContent?.text;
 

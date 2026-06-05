@@ -61,6 +61,7 @@ export default FeedOperation.CurateMagazine.pipe(
       const db = Obj.getDatabase(magazine);
       const starredUri = db ? yield* Effect.promise(() => findSystemTagUri(db, 'starred')) : undefined;
       applyPerFeedKeep(magazine, starredUri);
+      dedupeMagazinePosts(magazine);
 
       return { synced };
     }),
@@ -86,7 +87,8 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  * posts and unresolved refs are preserved unconditionally.
  */
 export const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string | undefined): void => {
-  const isStarred = (post: Subscription.Post) => hasTag(post.source?.target, (post as { id: string }).id, starredUri);
+  const isStarred = (post: Subscription.Post) =>
+    hasTag(post.source?.target, Obj.getURI(post), starredUri);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {
@@ -131,6 +133,50 @@ export const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string
     nextRefs.push(...starredPairs.map(({ ref }) => ref), ...keptCandidates.map(({ ref }) => ref));
   }
   nextRefs.push(...unresolvedRefs);
+
+  if (nextRefs.length !== magazine.posts.length) {
+    Obj.update(magazine, (magazine) => {
+      magazine.posts = nextRefs;
+    });
+  }
+};
+
+/**
+ * Remove duplicate curated posts from `magazine.posts`. Dedup by ref URI, then by
+ * `link`, then by `guid`. Two feeds can publish the same article as distinct Post
+ * objects; the first occurrence in insertion order is kept.
+ */
+export const dedupeMagazinePosts = (magazine: Magazine.Magazine): void => {
+  const seenDxn = new Set<string>();
+  const seenLink = new Set<string>();
+  const seenGuid = new Set<string>();
+  const nextRefs: Ref.Ref<Subscription.Post>[] = [];
+
+  for (const ref of magazine.posts) {
+    const post = ref.target;
+    if (!post) {
+      nextRefs.push(ref);
+      continue;
+    }
+
+    const uri = ref.uri;
+    if (
+      seenDxn.has(uri) ||
+      (post.link && seenLink.has(post.link)) ||
+      (post.guid && seenGuid.has(post.guid))
+    ) {
+      continue;
+    }
+
+    seenDxn.add(uri);
+    if (post.link) {
+      seenLink.add(post.link);
+    }
+    if (post.guid) {
+      seenGuid.add(post.guid);
+    }
+    nextRefs.push(ref);
+  }
 
   if (nextRefs.length !== magazine.posts.length) {
     Obj.update(magazine, (magazine) => {

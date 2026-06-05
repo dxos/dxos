@@ -124,31 +124,6 @@ export const makeSubscription = (
 };
 
 /**
- * An entry in a Subscription's {@link Subscription.contentFeed} queue: the
- * fetched body of a Post, keyed (via `postId`) back to the queue Post in the
- * parallel `feed` queue.
- *
- * Lives in a queue (not on `Subscription.postState`) because fetched bodies
- * can be many KB; storing them inline would inflate the Subscription document
- * unboundedly and force every reader to download every body. The queue is
- * lazily replicated and append-only — a natural fit for immutable content.
- */
-export const PostContent = Schema.Struct({
-  /** Id of the source Post (in the Subscription's `feed` queue). */
-  postId: Schema.String,
-  /** Extracted article body, in Markdown. */
-  text: Schema.String,
-  /** Refined snippet derived from the full article (preferred over the description-derived one). */
-  snippet: Schema.optional(Schema.String),
-  /** Refined hero image derived from the full article (preferred over the description-derived one). */
-  imageUrl: Schema.optional(Schema.String),
-  /** ISO 8601 timestamp when the content was fetched. */
-  fetchedAt: Schema.String,
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
-
-export type PostContent = Type.InstanceType<typeof PostContent>;
-
-/**
  * A single post/entry within a subscription feed.
  *
  * Immutable feed-entry: every field below is set at sync time by the protocol
@@ -184,6 +159,31 @@ export type Post = Type.InstanceType<typeof Post>;
 
 /** Creates a Subscription.Post object. */
 export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.make(Post, props);
+
+/**
+ * An entry in a Subscription's {@link Subscription.contentFeed} queue: the
+ * fetched body of a Post, linked back to the queue Post in the parallel `feed`
+ * queue via {@link post}.
+ *
+ * Lives in a queue (not on `Subscription.postState`) because fetched bodies
+ * can be many KB; storing them inline would inflate the Subscription document
+ * unboundedly and force every reader to download every body. The queue is
+ * lazily replicated and append-only — a natural fit for immutable content.
+ */
+export const PostContent = Schema.Struct({
+  /** Source Post (in the Subscription's `feed` queue). */
+  post: Ref.Ref(Post).pipe(FormInputAnnotation.set(false)),
+  /** Extracted article body, in Markdown. */
+  text: Schema.String,
+  /** Refined snippet derived from the full article (preferred over the description-derived one). */
+  snippet: Schema.optional(Schema.String),
+  /** Refined hero image derived from the full article (preferred over the description-derived one). */
+  imageUrl: Schema.optional(Schema.String),
+  /** ISO 8601 timestamp when the content was fetched. */
+  fetchedAt: Schema.String,
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
+
+export type PostContent = Type.InstanceType<typeof PostContent>;
 
 /** Schema for the create-feed dialog form. */
 export const CreateSubscriptionSchema = Schema.Struct({

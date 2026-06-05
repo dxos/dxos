@@ -28,11 +28,7 @@ export default FeedOperation.LoadPostContent.pipe(
       }
       const space = getSpace(subscription);
       invariant(space, 'Subscription is not in a space.');
-      const postId = (post as { id: string }).id;
-
-      // Idempotency: skip if a content entry for this Post id already exists
-      // in the Subscription's contentFeed.
-      const existing = yield* Effect.tryPromise(() => findPostContent(space, subscription, postId));
+      const existing = yield* Effect.tryPromise(() => findPostContent(subscription, post));
       if (existing) {
         return;
       }
@@ -47,7 +43,7 @@ export default FeedOperation.LoadPostContent.pipe(
             // Store the body plus refined snippet/imageUrl derived from the full article — preferred
             // over the description-derived defaults wherever the Post is rendered.
             await appendPostContent(space, subscription, {
-              postId,
+              post,
               text,
               snippet: makeSnippet(stripHtml(text)),
               imageUrl: imageUrls[0],

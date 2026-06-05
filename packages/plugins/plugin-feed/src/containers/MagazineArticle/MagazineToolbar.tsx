@@ -9,8 +9,6 @@ import { composable, composableProps } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-export type MagazineSort = 'date' | 'rank';
-
 /**
  * Tile filter mode. Mutually exclusive — `default` shows everything except archived,
  * `starred` filters to starred posts, `archived` shows only archived posts.
@@ -22,8 +20,6 @@ export type CurateState = 'idle' | 'busy';
 export type MagazineToolbarProps = {
   hasFeeds: boolean;
   state: CurateState;
-  sort: MagazineSort;
-  onSortChange: (sort: MagazineSort) => void;
   view: MagazineView;
   onViewChange: (view: MagazineView) => void;
   onClear: () => void;
@@ -32,28 +28,12 @@ export type MagazineToolbarProps = {
 
 export const MagazineToolbar = composable<HTMLDivElement, MagazineToolbarProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
-  const { hasFeeds, state, sort, onSortChange, view, onViewChange, onClear, onCurate, ...rest } = props;
+  const { hasFeeds, state, view, onViewChange, onClear, onCurate, ...rest } = props;
   const curateDisabled = state !== 'idle' || !hasFeeds;
   const curateTooltip = !hasFeeds ? t('no-feeds.label') : state === 'busy' ? t('refreshing-magazine.label') : undefined;
 
   return (
     <Toolbar.Root {...composableProps(rest)} ref={forwardedRef}>
-      <Toolbar.ToggleGroup
-        type='single'
-        value={sort}
-        onValueChange={(value) => {
-          if (value === 'date' || value === 'rank') {
-            onSortChange(value);
-          }
-        }}
-      >
-        <Toolbar.ToggleGroupItem value='date' aria-label={t('sort-by-date.label')} title={t('sort-by-date.label')}>
-          <Icon icon='ph--calendar--regular' size={4} />
-        </Toolbar.ToggleGroupItem>
-        <Toolbar.ToggleGroupItem value='rank' aria-label={t('sort-by-rank.label')} title={t('sort-by-rank.label')}>
-          <Icon icon='ph--list-numbers--regular' size={4} />
-        </Toolbar.ToggleGroupItem>
-      </Toolbar.ToggleGroup>
       <Toolbar.ToggleGroup
         type='single'
         value={view}

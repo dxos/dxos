@@ -20,14 +20,13 @@ import { Subscription } from '#types';
 import {
   appendPostContent,
   fetchArticle,
-  getReadAt,
-  hasTag,
   makeSnippet,
   setReadAt,
   setTag,
   stripHtml,
-  usePostContent,
-  useSystemTags,
+  usePostContentAtom,
+  useReadState,
+  useTagState,
 } from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
@@ -39,13 +38,14 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // when their underlying state changes via Obj.update.
   const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
-  // Subscribe to the source Subscription — its `postState`/`tags` carry the mutable per-Post state
-  // (readAt, star/archive) shared across magazines.
   const subscription = post.source?.target;
-  useObject(subscription);
-  const postId = (post as { id: string }).id;
-  const { starredUri, archivedUri } = useSystemTags(db);
-  const postContent = usePostContent(subscription, postId);
+  const postId = Obj.getURI(post);
+  // Per-Post read/tag slices: re-render the toolbar only when THIS post's state changes (not when a
+  // sibling post sharing the same Subscription mutates).
+  const { readAt } = useReadState(subject);
+  const { starred, archived } = useTagState(subject);
+  const read = readAt !== undefined;
+  const postContent = usePostContentAtom(subject);
 
   // Lazily fetch full article content the first time this Post is shown — covers
   // entry points that bypass MagazineArticle's `handleOpen` (deep-link, agent surface,
@@ -79,10 +79,6 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     return allFeeds.find((feed) => Obj.getURI(feed) === dxn)?.name;
   }, [post.source, allFeeds]);
 
-  const archived = hasTag(subscription, postId, archivedUri);
-  const starred = hasTag(subscription, postId, starredUri);
-  const read = subscription ? getReadAt(subscription, postId) !== undefined : false;
-
   const handleOpenOriginal = useCallback(() => {
     if (post.link) {
       window.open(post.link, '_blank', 'noopener,noreferrer');
@@ -97,21 +93,21 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
 
   const handleToggleArchive = useCallback(() => {
     if (db && subscription) {
-      void setTag(subscription, postId, db, 'archived', !hasTag(subscription, postId, archivedUri));
+      void setTag(subscription, postId, db, 'archived', !archived);
     }
-  }, [db, subscription, postId, archivedUri]);
+  }, [db, subscription, postId, archived]);
 
   const handleToggleStar = useCallback(() => {
     if (db && subscription) {
-      void setTag(subscription, postId, db, 'starred', !hasTag(subscription, postId, starredUri));
+      void setTag(subscription, postId, db, 'starred', !starred);
     }
-  }, [db, subscription, postId, starredUri]);
+  }, [db, subscription, postId, starred]);
 
   // Re-fetch the article body from the source. Same path MagazineArticle uses on
   // first open, but unconditional — appends a fresh content entry to the
   // subscription's contentFeed so the user can recover from a stale extraction.
-  // Older entries remain in the queue (feeds are append-only); the lookup in
-  // `usePostContent` picks the most recent match by Post id.
+  // Older entries remain in the queue (feeds are append-only); the reverse-ref
+  // lookup in `usePostContent` picks the most recent match for this Post.
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
     if (!post.link || refreshing || !subscription) {
@@ -128,7 +124,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
       const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
       if (text) {
         await appendPostContent(space, subscription, {
-          postId,
+          post,
           text,
           snippet: makeSnippet(stripHtml(text)),
           imageUrl: imageUrls[0],
@@ -139,7 +135,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     } finally {
       setRefreshing(false);
     }
-  }, [subscription, postId, post.link, refreshing]);
+  }, [subscription, post, post.link, refreshing]);
 
   return (
     <Panel.Root role={role}>

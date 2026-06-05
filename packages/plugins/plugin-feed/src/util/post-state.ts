@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { type Database, Feed as EchoFeed, Filter, Obj, Ref, StateMap, Tag, TagIndex } from '@dxos/echo';
+import { type Database, Feed as EchoFeed, Filter, Obj, Query, Ref, Scope, StateMap, Tag, TagIndex, URI } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { type Magazine, Subscription } from '../types';
@@ -37,13 +37,14 @@ export type SystemTag = keyof typeof SYSTEM_TAG;
 /** ISO timestamp the Post was first opened, or undefined. */
 export const getReadAt = (
   subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription> | undefined,
-  postId: string,
+  postId: URI.URI,
 ): string | undefined => {
   if (!subscription) {
     return undefined;
   }
   // Snapshot<T> omits OfKind but preserves all data fields; StateMap.bind works at runtime.
-  return StateMap.bind<Subscription.PostState>(subscription as Subscription.Subscription, 'postState').get(postId).readAt;
+  return StateMap.bind<Subscription.PostState>(subscription as Subscription.Subscription, 'postState').get(postId)
+    .readAt;
 };
 
 /** Sets/clears the Post's read marker. */
@@ -66,7 +67,11 @@ export const hasTag = (
   tagUri: string | undefined,
 ): boolean =>
   // Snapshot<T> omits OfKind but preserves all data fields; TagIndex.bind works at runtime.
-  subscription && tagUri ? TagIndex.bind(subscription as Subscription.Subscription, 'tags').objects(tagUri).includes(postId) : false;
+  subscription && tagUri
+    ? TagIndex.bind(subscription as Subscription.Subscription, 'tags')
+        .objects(tagUri)
+        .includes(postId)
+    : false;
 
 /** Sets/clears a system tag (`starred`/`archived`) on a Post (find-or-creates the Tag object). Async. */
 export const setTag = async (
@@ -120,37 +125,48 @@ export const getImageUrl = (post: { description?: string }, content?: Subscripti
 export const getPostSubscription = (post: Subscription.Post): Subscription.Subscription | undefined =>
   post.source?.target;
 
-/**
- * Loads every {@link Subscription.PostContent} entry from a Subscription's `contentFeed`. Returns a
- * map keyed by Post id (last writer wins). Empty when no contentFeed exists yet.
- */
-export const loadContentEntries = async (
-  space: Space,
-  subscription: Subscription.Subscription,
-): Promise<Map<string, Subscription.PostContent>> => {
-  const echoFeed = subscription.contentFeed?.target;
-  if (!echoFeed || !EchoFeed.getQueueUri(echoFeed)) {
-    return new Map();
+/** Pick the newest PostContent when multiple entries reference the same Post. */
+export const pickLatestPostContent = (
+  entries: readonly Subscription.PostContent[],
+): Subscription.PostContent | undefined => {
+  if (entries.length === 0) {
+    return undefined;
   }
-  const items = await EchoFeed.runQuery(echoFeed, Filter.type(Subscription.PostContent)).pipe(
-    Effect.provide(createFeedServiceLayer(space.queues)),
-    runAndForwardErrors,
-  );
-  const map = new Map<string, Subscription.PostContent>();
-  for (const item of items) {
-    map.set(item.postId, item);
-  }
-  return map;
+  return [...entries].sort((entryA, entryB) => entryB.fetchedAt.localeCompare(entryA.fetchedAt))[0];
 };
 
-/** Looks up a single {@link Subscription.PostContent} by Post id (newest wins); undefined if absent. */
+/**
+ * Query for {@link Subscription.PostContent} entries referencing a Post via the reverse-ref index.
+ * Scoped to the Subscription's post and content feeds.
+ */
+export const queryPostContentForPost = (
+  subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription>,
+  post: Subscription.Post | Obj.Snapshot<Subscription.Post>,
+): Query.Any | undefined => {
+  const postFeed = subscription.feed?.target;
+  const contentFeed = subscription.contentFeed?.target;
+  if (!postFeed || !contentFeed) {
+    return undefined;
+  }
+  const postFeedUri = Obj.getURI(postFeed);
+  const contentFeedUri = Obj.getURI(contentFeed);
+  return Query.select(Filter.id(post.id))
+    .referencedBy(Subscription.PostContent, 'post')
+    .from(Scope.feed(postFeedUri), Scope.feed(contentFeedUri));
+};
+
+/** Looks up PostContent for a Post (newest wins); undefined if absent. */
 export const findPostContent = async (
-  space: Space,
-  subscription: Subscription.Subscription,
-  postId: string,
+  subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription>,
+  post: Subscription.Post | Obj.Snapshot<Subscription.Post>,
 ): Promise<Subscription.PostContent | undefined> => {
-  const map = await loadContentEntries(space, subscription);
-  return map.get(postId);
+  const db = Obj.getDatabase(subscription);
+  const query = queryPostContentForPost(subscription, post);
+  if (!db || !query) {
+    return undefined;
+  }
+  const entries = await db.query(query).run();
+  return pickLatestPostContent(entries);
 };
 
 /** Returns the Subscription's `contentFeed`, lazily creating and attaching one when missing. */
@@ -175,11 +191,17 @@ const ensureContentFeed = (subscription: Subscription.Subscription): EchoFeed.Fe
 export const appendPostContent = async (
   space: Space,
   subscription: Subscription.Subscription,
-  entry: { postId: string; text: string; snippet?: string; imageUrl?: string; fetchedAt?: string },
+  entry: {
+    post: Subscription.Post | Obj.Snapshot<Subscription.Post>;
+    text: string;
+    snippet?: string;
+    imageUrl?: string;
+    fetchedAt?: string;
+  },
 ): Promise<void> => {
   const echoFeed = ensureContentFeed(subscription);
   const content = Obj.make(Subscription.PostContent, {
-    postId: entry.postId,
+    post: Ref.fromURI(Obj.getURI(entry.post)),
     text: entry.text,
     ...(entry.snippet ? { snippet: entry.snippet } : {}),
     ...(entry.imageUrl ? { imageUrl: entry.imageUrl } : {}),

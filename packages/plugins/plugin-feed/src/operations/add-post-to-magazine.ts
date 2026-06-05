@@ -18,14 +18,13 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
       const post = yield* Database.load(postRef);
 
       const postUri = Obj.getURI(post);
-      const postId = (post as { id: string }).id;
       const subscription = post.source?.target;
 
       // Agent-provided snippet/imageUrl are refined per-Post values: store them on the Subscription's
       // contentFeed (shared across magazines, preferred over the description-derived defaults).
       const space = getSpace(magazine);
       if (subscription && space && (snippet || imageUrl)) {
-        yield* Effect.promise(() => appendPostContent(space, subscription, { postId, text: '', snippet, imageUrl }));
+        yield* Effect.promise(() => appendPostContent(space, subscription, { post, text: '', snippet, imageUrl }));
       }
 
       Obj.update(magazine, (magazine) => {
