@@ -376,14 +376,21 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   return scopes;
 };
 
-/** True when any select step scopes the owning space with {@link QueryAST.SpaceScope.includeAllFeeds}. */
+/** True when any select step (including those nested in UnionStep/SetDifferenceStep subplans) scopes the owning space with {@link QueryAST.SpaceScope.includeAllFeeds}. */
 const extractIncludeAllFeeds = (plan: QueryPlan.Plan): boolean => {
   for (const step of plan.steps) {
-    if (step._tag !== 'SelectStep') {
-      continue;
-    }
-    for (const scope of step.scope) {
-      if (scope._tag === 'space' && scope.includeAllFeeds === true) {
+    if (step._tag === 'SelectStep') {
+      for (const scope of step.scope) {
+        if (scope._tag === 'space' && scope.includeAllFeeds === true) {
+          return true;
+        }
+      }
+    } else if (step._tag === 'UnionStep') {
+      if (step.plans.some((subplan) => extractIncludeAllFeeds(subplan))) {
+        return true;
+      }
+    } else if (step._tag === 'SetDifferenceStep') {
+      if (extractIncludeAllFeeds(step.source) || extractIncludeAllFeeds(step.exclude)) {
         return true;
       }
     }
