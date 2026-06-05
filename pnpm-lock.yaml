@@ -8191,9 +8191,15 @@ importers:
       '@dxos/plugin-integration':
         specifier: workspace:*
         version: link:../plugin-integration
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8204,6 +8210,27 @@ importers:
         specifier: 3.21.2
         version: 3.21.2
     devDependencies:
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
@@ -14865,6 +14892,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
