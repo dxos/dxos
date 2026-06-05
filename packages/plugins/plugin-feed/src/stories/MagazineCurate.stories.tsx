@@ -10,7 +10,6 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Routine } from '@dxos/compute';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -19,6 +18,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { MagazineBlueprint } from '#blueprints';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
@@ -76,9 +76,11 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
       Subscription.makeSubscription({ name: 'The Register — AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
     );
 
-    const { magazine, routine } = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)] });
+    const magazine = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)] });
     space.db.add(magazine);
-    space.db.add(routine);
+    // Curation resolves the base methodology blueprint from the registry; register it here since the
+    // automation plugin (which normally syncs BlueprintDefinition capabilities) isn't in this story.
+    client.graph.registry.add([MagazineBlueprint.make()]);
     yield* Effect.promise(() => space.db.flush());
   });
 
@@ -96,7 +98,6 @@ const meta: Meta<typeof DefaultStory> = {
             Subscription.Subscription,
             Subscription.Post,
             Magazine.Magazine,
-            Routine.Routine,
             Text.Text,
           ],
           onClientInitialized: seedRegisterMagazine,

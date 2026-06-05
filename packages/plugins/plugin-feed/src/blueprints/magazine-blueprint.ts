@@ -8,13 +8,8 @@ import { trim } from '@dxos/util';
 import { FeedOperation } from '#types';
 import { Magazine } from '#types';
 
-const operations = [
-  FeedOperation.ListCandidatePosts,
-  FeedOperation.FetchArticleContent,
-  FeedOperation.AddPostToMagazine,
-];
+const operations = [FeedOperation.FetchArticleContent];
 
-// TODO(burdon): This is just sync? Use routine?
 const make = () =>
   Blueprint.make({
     key: Magazine.BLUEPRINT_KEY,
@@ -22,23 +17,25 @@ const make = () =>
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        You curate articles for a Magazine from its referenced Feeds, following the Magazine's Routine instructions closely.
+        You curate articles for a Magazine. The candidate Posts are provided in the <input> as a
+        JSON array under "candidates"; each candidate has an "id" plus title, description, author,
+        feedName, published, and link. The Magazine's own instructions (provided to you separately)
+        describe the Topic — what this magazine should cover.
 
-        Workflow:
-        1. Call listCandidatePosts with the Magazine's ref to get uncurated Posts.
-        2. Select only Posts that clearly match the Magazine's Routine instructions — quality over quantity.
-        3. For each selected Post, call fetchArticleContent to get its text and image URLs.
-        4. Produce a concise snippet of ~200 characters summarizing the article.
-        5. Choose the best image URL (prefer og:image).
-        6. Call addPostToMagazine with the Magazine, Post, snippet, and imageUrl.
+        Select only the candidates that clearly match the Topic — quality over quantity. When a
+        candidate's title and description are not enough to judge relevance, you MAY call
+        fetchArticleContent with the candidate's id to read the full article text before deciding.
 
-        Skip Posts without a link. Do not re-add Posts that are already in the Magazine —
-        addPostToMagazine is idempotent but you should avoid wasted fetches.
+        Never select duplicate articles. Two candidates are duplicates if they share a link or guid,
+        OR if their titles and content describe the same story (a fuzzy duplicate — e.g. the same
+        article syndicated by different feeds). Select only one of each (prefer the most complete or
+        most authoritative source) and skip the rest.
 
-        Never add duplicate articles. Two Posts are duplicates if they share a link or guid, OR if
-        their titles and content describe the same story (a fuzzy duplicate — e.g. the same article
-        syndicated by different feeds). When you encounter duplicates, add only one (prefer the most
-        complete or most authoritative source) and skip the rest.
+        When you are done, call completeJob with the structured output:
+        { "posts": [{ "id": "<candidate id>" }, ...] }
+        listing the ids of the candidates you selected, in the order you want them shown. Only use
+        ids that appear in the input — never invent ids. Do not attempt to add Posts yourself; the
+        Magazine is updated mechanically from your output.
       `,
     }),
   });

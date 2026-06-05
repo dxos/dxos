@@ -7,10 +7,11 @@ import { beforeEach, afterEach, describe, expect, test } from 'vitest';
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { Text } from '@dxos/schema';
-import { Magazine, Subscription } from '../types';
-import { applyPerFeedKeep } from './curate-magazine';
 
-describe('applyPerFeedKeep', () => {
+import { Magazine, Subscription } from '../types';
+import { applyKeep, resolveSelected } from './curate-magazine';
+
+describe('applyKeep', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -23,82 +24,54 @@ describe('applyPerFeedKeep', () => {
 
   const setup = async () => {
     const { db } = await builder.createDatabase({
-      types: [
-        Feed.Feed,
-        Subscription.Subscription,
-        Subscription.Post,
-        Magazine.Magazine,
-        Tag.Tag,
-        Text.Text,
-      ],
+      types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
     });
-
-    const feed = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
-    const { magazine } = Magazine.make({ feeds: [Ref.make(feed)] });
-    db.add(magazine);
-    await db.flush();
-    return { db, feed, magazine };
+    return { db };
   };
 
-  const makePost = (published: string, feedRef?: Ref.Ref<Subscription.Subscription>): Subscription.Post =>
-    Obj.make(Subscription.Post, {
-      title: `Post ${published}`,
-      description: 'body',
-      published,
-      source: feedRef,
-    });
+  const makePost = (published: string): Subscription.Post =>
+    Obj.make(Subscription.Post, { title: `Post ${published}`, description: 'body', published });
 
-  test('respects per-feed keep bound', async () => {
-    const { db, feed, magazine } = await setup();
-    Obj.update(feed, (feed) => { feed.keep = 2; });
-
-    const posts = ['2026-01-01', '2026-01-02', '2026-01-03'].map((d) =>
-      db.add(makePost(`${d}T00:00:00Z`, Ref.make(feed))),
+  test('keeps the newest posts up to the bound', async () => {
+    const { db } = await setup();
+    const posts = ['2026-01-01', '2026-01-02', '2026-01-03'].map((date) =>
+      Ref.make(db.add(makePost(`${date}T00:00:00Z`))),
     );
-    Obj.update(magazine, (magazine) => {
-      magazine.posts = posts.map((p) => Ref.make(p));
-    });
 
-    await applyPerFeedKeep(magazine, undefined);
-
-    // Only the 2 newest should survive.
-    expect(magazine.posts.length).toBe(2);
-    const kept = magazine.posts.map((r) => (r.target as Subscription.Post | undefined)?.published);
-    expect(kept).toContain('2026-01-03T00:00:00Z');
-    expect(kept).toContain('2026-01-02T00:00:00Z');
-    expect(kept).not.toContain('2026-01-01T00:00:00Z');
+    const kept = applyKeep(posts, 2, undefined);
+    const keptDates = kept.map((ref) => ref.target?.published);
+    expect(kept).toHaveLength(2);
+    expect(keptDates).toContain('2026-01-03T00:00:00Z');
+    expect(keptDates).toContain('2026-01-02T00:00:00Z');
+    expect(keptDates).not.toContain('2026-01-01T00:00:00Z');
   });
 
-  test('no-ops when within keep bound', async () => {
-    const { db, feed, magazine } = await setup();
-    Obj.update(feed, (feed) => { feed.keep = 10; });
+  test('no-ops when within the bound', async () => {
+    const { db } = await setup();
+    const posts = ['2026-01-01', '2026-01-02'].map((date) => Ref.make(db.add(makePost(`${date}T00:00:00Z`))));
+    expect(applyKeep(posts, 10, undefined)).toHaveLength(2);
+  });
+});
 
-    const posts = ['2026-01-01', '2026-01-02'].map((d) =>
-      db.add(makePost(`${d}T00:00:00Z`, Ref.make(feed))),
-    );
-    Obj.update(magazine, (magazine) => {
-      magazine.posts = posts.map((p) => Ref.make(p));
-    });
+describe('resolveSelected', () => {
+  let builder: EchoTestBuilder;
 
-    await applyPerFeedKeep(magazine, undefined);
-
-    expect(magazine.posts.length).toBe(2);
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
   });
 
-  test('preserves unresolved refs', async () => {
-    const { db, feed, magazine } = await setup();
-    Obj.update(feed, (feed) => { feed.keep = 1; });
+  afterEach(async () => {
+    await builder.close();
+  });
 
-    // One resolved post, one dangling ref.
-    const resolved = Obj.make(Subscription.Post, { title: 'R', description: 'd', published: '2026-01-01T00:00:00Z', source: Ref.make(feed) });
-    const dangling = Ref.make(Obj.make(Subscription.Post, { title: 'D', description: 'd' }));
-    Obj.update(magazine, (magazine) => {
-      magazine.posts = [Ref.make(resolved), dangling];
-    });
+  test('maps ids to posts in order, dropping unknown and duplicate ids', async () => {
+    const { db } = await builder.createDatabase({ types: [Subscription.Post] });
+    const posts = ['a', 'b', 'c'].map((title) => db.add(Obj.make(Subscription.Post, { title })));
+    await db.flush();
+    const candidates = posts.map((post) => ({ post }));
 
-    await applyPerFeedKeep(magazine, undefined);
+    const selected = resolveSelected(candidates, [posts[2].id, 'missing-id', posts[0].id, posts[2].id]);
 
-    // keep=1 prunes down to 1 resolved, but dangling refs are always kept.
-    expect(magazine.posts.length).toBe(2);
+    expect(selected.map((post) => post.id)).toEqual([posts[2].id, posts[0].id]);
   });
 });

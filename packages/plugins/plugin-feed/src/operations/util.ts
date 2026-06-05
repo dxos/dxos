@@ -5,17 +5,22 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
 import { type Magazine, Subscription } from '../types';
 import { publishedTimestamp } from '../util/date';
 
+/** Normalize a ref/object uri to its entity id, so dedup matches regardless of uri scope (local vs space). */
+const entityKey = (uri: string): string => EID.getEntityId(EID.parse(uri)) ?? uri;
+
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing
- * ECHO queue, filtering out Posts whose refs already appear in `magazine.posts`.
+ * ECHO queue, filtering out Posts already curated into `magazine.posts` (and cross-feed duplicates).
+ * Dedup is by entity id — the canonical curated-post identity — so it's robust to uri-scope differences.
  */
 export const collectCandidates = (magazine: Magazine.Magazine) =>
   Effect.gen(function* () {
-    const seenPostIds = new Set(magazine.posts.map((ref) => ref.uri));
+    const seen = new Set(magazine.posts.map((ref) => entityKey(ref.uri)));
     const candidates: Array<{ post: Subscription.Post; feed: Subscription.Subscription }> = [];
     for (const feedRef of magazine.feeds) {
       const feed = yield* Database.load(feedRef);
@@ -25,11 +30,11 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       }
       const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
       for (const post of posts) {
-        const postUri = Obj.getURI(post);
-        if (seenPostIds.has(postUri)) {
+        const key = entityKey(Obj.getURI(post));
+        if (seen.has(key)) {
           continue;
         }
-        seenPostIds.add(postUri);
+        seen.add(key);
         candidates.push({ post, feed });
       }
     }
