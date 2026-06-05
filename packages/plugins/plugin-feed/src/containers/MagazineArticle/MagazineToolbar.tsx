@@ -82,7 +82,7 @@ export const MagazineToolbar = ({
             'clear',
             {
               label: ['clear-magazine.label', { ns: meta.id }],
-              icon: 'ph--trash--regular',
+              icon: 'ph--broom--regular',
               iconOnly: true,
               disabled: busy,
             },
