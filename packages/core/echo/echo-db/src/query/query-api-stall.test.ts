@@ -7,7 +7,6 @@ import { describe, expect, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder, createTmpPath } from '../testing';
@@ -25,7 +24,7 @@ describe('Query API stalls under paused document synchronizer', () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const tmpPath = createTmpPath();
-    const peer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+    const peer = await testBuilder.createPeer({ storagePath: tmpPath });
 
     // 1. Add an object normally so it ends up persisted on disk and
     //    discoverable via space root links.

@@ -3,4 +3,5 @@
 //
 
 export * from './keyring';
+export * from './sqlite-keyring';
 export * from './testing';

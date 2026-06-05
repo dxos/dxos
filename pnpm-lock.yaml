@@ -4219,6 +4219,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
       '@dxos/wa-sqlite':
         specifier: 'catalog:'
         version: 0.2.1
@@ -6083,6 +6086,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -6098,9 +6104,18 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
+      effect:
+        specifier: 3.21.2
+        version: 3.21.2
 
   packages/core/mesh/edge-client:
     dependencies:
@@ -6467,6 +6482,9 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -6485,12 +6503,21 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../teleport
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.2))(effect@3.21.2)
+      effect:
+        specifier: 3.21.2
+        version: 3.21.2
 
   packages/core/mesh/teleport-extension-replicator:
     dependencies:

@@ -13,7 +13,7 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type DatabaseRoot,
   type EchoHost,
-  type MetadataStore,
+  type IMetadataStore,
   type Space,
   createMappedFeedWriter,
 } from '@dxos/echo-pipeline';
@@ -21,7 +21,7 @@ import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
@@ -74,10 +74,10 @@ export type DataSpaceCallbacks = {
 export type DataSpaceProps = {
   initialState: SpaceState;
   inner: Space;
-  metadataStore: MetadataStore;
+  metadataStore: IMetadataStore;
   gossip: Gossip;
   presence: Presence;
-  keyring: Keyring;
+  keyring: KeyringApi;
   feedStore: FeedStore<FeedMessage>;
   echoHost: EchoHost;
   signingContext: SigningContext;
@@ -104,9 +104,9 @@ export class DataSpace {
 
   private readonly _gossip: Gossip;
   private readonly _presence: Presence;
-  private readonly _keyring: Keyring;
+  private readonly _keyring: KeyringApi;
   private readonly _feedStore: FeedStore<FeedMessage>;
-  private readonly _metadataStore: MetadataStore;
+  private readonly _metadataStore: IMetadataStore;
   private readonly _signingContext: SigningContext;
   private readonly _notarizationPlugin: NotarizationPlugin;
   private readonly _callbacks: DataSpaceCallbacks;

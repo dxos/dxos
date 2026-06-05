@@ -18,13 +18,10 @@ import { Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import type { LevelDB } from '@dxos/kv-store';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
-import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { TestReplicationNetwork } from '../testing';
+import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing';
 import { AutomergeHost } from './automerge-host';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
 
@@ -33,8 +30,9 @@ import { MeshEchoReplicator } from './mesh-echo-replicator';
 // is stable in CI.
 describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
-    const level = await createLevel();
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost({ runtime });
     const handle = await host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -44,8 +42,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   });
 
   test('changes are preserved in storage', async ({ expect }) => {
-    const level = await createLevel();
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost({ runtime });
     const handle = await host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -55,7 +54,7 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     await host.flush(Context.default());
     await host.close();
 
-    const host2 = await setupAutomergeHost({ level });
+    const host2 = await setupAutomergeHost({ runtime });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
     await handle2.whenReady();
@@ -64,8 +63,9 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   });
 
   test('load resolves when document is created from binary', async ({ expect }) => {
-    const level = await createLevel();
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createRuntime();
+    onTestFinished(() => dispose());
+    const host = await setupAutomergeHost({ runtime });
 
     const document = Automerge.from({ text: 'Hello world' });
     const binary = Automerge.save(document);
@@ -83,18 +83,20 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   test('query single document heads', async ({ expect }) => {
     const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
-    const level = await createLevel(tmpPath);
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createRuntime(tmpPath);
+    const host = await setupAutomergeHost({ runtime });
     const handle = await host.createDoc({ text: 'Hello world' });
     const expectedHeads = getHeads(handle.doc()!);
     await host.flush(Context.default());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     await host.close();
-    await level.close();
+    await dispose();
 
     {
-      const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
+      const { runtime: runtime2, dispose: dispose2 } = createRuntime(tmpPath);
+      onTestFinished(() => dispose2());
+      const host = await setupAutomergeHost({ runtime: runtime2 });
       expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     }
   });
@@ -102,8 +104,8 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   test('query multiple document heads', async ({ expect }) => {
     const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
-    const level = await createLevel(tmpPath);
-    const host = await setupAutomergeHost({ level });
+    const { runtime, dispose } = createRuntime(tmpPath);
+    const host = await setupAutomergeHost({ runtime });
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
     await host.flush(Context.default());
@@ -114,23 +116,24 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
 
     expect(await host.getHeads(ids)).toEqual(expectedHeads);
     await host.close();
-    await level.close();
+    await dispose();
 
     {
-      const level = await createLevel(tmpPath);
-      const host = await setupAutomergeHost({ level });
+      const { runtime: runtime2, dispose: dispose2 } = createRuntime(tmpPath);
+      onTestFinished(() => dispose2());
+      const host = await setupAutomergeHost({ runtime: runtime2 });
       expect(await host.getHeads(ids)).toEqual(expectedHeads);
-      await host.close();
-      await level.close();
     }
   });
 
   test('loads remote document over replication network', { timeout: 5_000 }, async ({ expect }) => {
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost({ runtime: runtime1 });
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const handle = await host2.createDoc({ text: 'Hello from Subduction' });
     await host2.flush(Context.default());
     await waitForSubductionSave();
@@ -155,11 +158,13 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // `loads remote document over replication network` test and is included as a
   // baseline for the concurrent-close case below.
   test('sequential close after sync does not hang', { timeout: 5_000 }, async ({ expect }) => {
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost({ runtime: runtime1 });
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const handle = await host2.createDoc({ text: 'Hello from Subduction' });
     await host2.flush(Context.default());
     await waitForSubductionSave();
@@ -185,11 +190,13 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   // and gets stuck draining subduction state that depends on the now-dead
   // peer.
   test('concurrent close after sync does not hang', { timeout: 30_000 }, async ({ expect }) => {
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost({ runtime: runtime1 });
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const handle = await host2.createDoc({ text: 'Hello from Subduction' });
     await host2.flush(Context.default());
     await waitForSubductionSave();
@@ -209,11 +216,13 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   test('collection synchronization', { timeout: 5_000 }, async ({ expect }) => {
     const NUM_DOCUMENTS = 10;
 
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost({ runtime: runtime1 });
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost({ runtime: runtime2 });
     const documentIds: DocumentId[] = [];
     for (const i of range(NUM_DOCUMENTS)) {
       const handle = await host2.createDoc({ docIndex: i });
@@ -260,8 +269,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // explicitly exercises `_subductionPolicy.authorizeFetch` via the per-connection
     // `shouldAdvertise` predicate.
     test('authorized holder allows fetcher', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ level: await createLevel() });
-      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const handle = await host2.createDoc({ text: 'authorized' });
       await host2.flush(Context.default());
       await waitForSubductionSave();
@@ -285,8 +298,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // on the holder rejects the fetcher's request → fetcher's query never reaches
     // `'ready'` and the local doc stays empty.
     test('unauthorized holder blocks fetcher (authorizeFetch denial)', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ level: await createLevel() });
-      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const handle = await host2.createDoc({ text: 'should-not-fetch' });
       await host2.flush(Context.default());
       await waitForSubductionSave();
@@ -317,8 +334,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       'shareConfigChanged() recovers after authorizeFetch denial flips to allow',
       { timeout: 5_000 },
       async ({ expect }) => {
-        const host1 = await setupAutomergeHost({ level: await createLevel() });
-        const host2 = await setupAutomergeHost({ level: await createLevel() });
+        const rt1 = createRuntime();
+        onTestFinished(() => rt1.dispose());
+        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+        const rt2 = createRuntime();
+        onTestFinished(() => rt2.dispose());
+        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
         const handle = await host2.createDoc({ text: 'recover-me' });
         await host2.flush(Context.default());
         await waitForSubductionSave();
@@ -358,8 +379,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     // the binding fields rather than count of events: the responder's binding must
     // carry the connector's repo PeerId and a distinct subduction PeerId.
     test('subduction-peer-bound event surfaces verified peer ids', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ level: await createLevel() });
-      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       // The Subduction handshake only triggers when there is data to sync. Create a
       // doc on host2 before connecting so the adapter-connect flow runs end-to-end.
       await host2.createDoc({ text: 'binding-fixture' });
@@ -466,8 +491,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       // 3s deny window + up to 10s convergence poll + teardown — give CI headroom.
       { timeout: 25_000 },
       async ({ expect }) => {
-        const host1 = await setupAutomergeHost({ level: await createLevel() });
-        const host2 = await setupAutomergeHost({ level: await createLevel() });
+        const rt1 = createRuntime();
+        onTestFinished(() => rt1.dispose());
+        const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+        const rt2 = createRuntime();
+        onTestFinished(() => rt2.dispose());
+        const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
         const documentIds = await createDivergentDocs(host1, host2);
 
         const network = await new TestReplicationNetwork().open();
@@ -493,8 +522,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     );
 
     test('control: docs converge when policy never denies', { timeout: 15_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ level: await createLevel() });
-      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupAutomergeHost({ runtime: rt1.runtime });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupAutomergeHost({ runtime: rt2.runtime });
       const documentIds = await createDivergentDocs(host1, host2);
 
       const network = await new TestReplicationNetwork().open();
@@ -515,16 +548,18 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     const host1DocumentIds: DocumentId[] = [];
     const host2DocumentIds: DocumentId[] = [];
 
-    const level1 = await createLevel();
-    const host1 = await setupAutomergeHost({ level: level1 });
+    const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+    onTestFinished(() => dispose1());
+    const host1 = await setupAutomergeHost({ runtime: runtime1 });
     for (const i of range(3)) {
       const handle = await host1.createDoc({ host: 1, docIndex: i });
       host1DocumentIds.push(handle.documentId);
     }
     await host1.flush(Context.default());
 
-    const level2 = await createLevel();
-    const host2 = await setupAutomergeHost({ level: level2 });
+    const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+    onTestFinished(() => dispose2());
+    const host2 = await setupAutomergeHost({ runtime: runtime2 });
     for (const i of range(3)) {
       const handle = await host2.createDoc({ host: 2, docIndex: i });
       host2DocumentIds.push(handle.documentId);
@@ -574,8 +609,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const host1 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
-      const host2 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
 
       const handle = await host2.host.createDoc({ text: 'mesh-authorized' });
       await host2.host.flush(Context.default());
@@ -603,8 +642,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const host1 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
-      const host2 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
 
       const handle = await host2.host.createDoc({ text: 'mesh-denied' });
       await host2.host.flush(Context.default());
@@ -628,8 +671,12 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const teleportBuilder = new TeleportBuilder();
       onTestFinished(() => teleportBuilder.destroy());
 
-      const host1 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
-      const host2 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
+      const host1 = await setupMeshAutomergeHost({ runtime: rt1.runtime, spaceKey, teleportBuilder });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
+      const host2 = await setupMeshAutomergeHost({ runtime: rt2.runtime, spaceKey, teleportBuilder });
 
       const handle = await host2.host.createDoc({ text: 'mesh-recover' });
       await host2.host.flush(Context.default());
@@ -683,13 +730,17 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
       const spaceLookup = (documentId: string): PublicKey | undefined =>
         documentId === spaceADocId ? spaceA : documentId === spaceBDocId ? spaceB : undefined;
 
+      const rt1 = createRuntime();
+      onTestFinished(() => rt1.dispose());
       const host1 = await setupMeshAutomergeHost({
-        level: await createLevel(),
+        runtime: rt1.runtime,
         spaceLookup,
         teleportBuilder,
       });
+      const rt2 = createRuntime();
+      onTestFinished(() => rt2.dispose());
       const host2 = await setupMeshAutomergeHost({
-        level: await createLevel(),
+        runtime: rt2.runtime,
         spaceLookup,
         teleportBuilder,
       });
@@ -733,10 +784,11 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
   });
 });
 
-const createLevel = async (tmpPath?: string) => {
-  const level = createTestLevel(tmpPath);
-  await openAndClose(level);
-  return level;
+type RuntimeHandle = ReturnType<typeof createTestSqliteRuntime>;
+type RuntimeArg = RuntimeHandle['runtime'];
+
+const createRuntime = (tmpPath?: string): RuntimeHandle => {
+  return createTestSqliteRuntime(tmpPath ? tmpPath + '.db' : ':memory:');
 };
 
 const waitForSubductionSave = async () => {
@@ -750,9 +802,9 @@ const waitForSubductionSave = async () => {
  */
 const POLICY_NEGATIVE_DELAY_MS = 500;
 
-const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
+const setupAutomergeHost = async ({ runtime }: { runtime: RuntimeArg }) => {
   const host = new AutomergeHost({
-    db: level,
+    runtime,
     useSubduction: true,
   });
   await host.open();
@@ -778,12 +830,12 @@ type MeshTestPeer = {
  * resolves the space lookup without depending on actual `DatabaseDirectory` docs.
  */
 const setupMeshAutomergeHost = async ({
-  level,
+  runtime,
   spaceKey,
   spaceLookup,
   teleportBuilder,
 }: {
-  level: LevelDB;
+  runtime: RuntimeArg;
   /** Single-space mode: every doc reports this space. */
   spaceKey?: PublicKey;
   /** Multi-space mode: per-doc lookup; takes precedence over `spaceKey`. */
@@ -792,7 +844,7 @@ const setupMeshAutomergeHost = async ({
 }): Promise<MeshTestPeer> => {
   invariant(spaceKey || spaceLookup, 'either spaceKey or spaceLookup is required');
   const host = new AutomergeHost({
-    db: level,
+    runtime,
     useSubduction: true,
     // Bypass DatabaseDirectory lookup: route every doc through a synthetic
     // `documentId → spaceKey` map so `MeshReplicatorConnection.shouldAdvertise`

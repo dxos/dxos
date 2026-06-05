@@ -22,7 +22,6 @@ import {
   type PeerDisconnectedPayload,
   type PeerId,
   Repo,
-  type StorageAdapterInterface,
   type StorageKey,
   type SubductionPeerBinding,
   type SubductionPeerId,
@@ -31,19 +30,26 @@ import {
   initSubduction,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
+import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
 import bs58check from 'bs58check';
+import * as Effect from 'effect/Effect';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
-import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
+import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
+
+// SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
+type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
 import {
   type CollectionState,
@@ -55,8 +61,8 @@ import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { getHandleState } from './handle-state';
-import { HeadsStore } from './heads-store';
-import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { SqliteHeadsStore } from './sqlite-heads-store';
+import { SqliteStorageAdapter } from './sqlite-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -65,7 +71,7 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 const SUBDUCTION_SERVICE_NAME = 'dxos-subduction';
 
 export type AutomergeHostProps = {
-  db: LevelDB;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   dataMonitor?: EchoDataMonitor;
 
   /**
@@ -150,7 +156,7 @@ const CLOSE_TIMEOUT = 2_000;
  */
 @trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
-  private readonly _db: LevelDB;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
 
   private readonly _collectionSynchronizer = new CollectionSynchronizer({
@@ -160,8 +166,8 @@ export class AutomergeHost extends Resource {
   });
 
   private _repo!: Repo;
-  private _storage!: StorageAdapterInterface & Lifecycle;
-  private readonly _headsStore: HeadsStore;
+  private _storage!: SqliteStorageAdapter;
+  private readonly _headsStore: SqliteHeadsStore;
 
   private _syncTask: DeferredTask | undefined = undefined;
   /**
@@ -216,19 +222,18 @@ export class AutomergeHost extends Resource {
   private readonly _subductionPeerIdHexToRepoPeerId = new Map<string, PeerId>();
 
   constructor({
-    db,
+    runtime,
     dataMonitor,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     useSubduction = false,
   }: AutomergeHostProps) {
     super();
-    this._db = db;
+    this._runtime = runtime;
     this._useSubduction = useSubduction;
-    this._storage = new LevelDBStorageAdapter({
-      db: db.sublevel('automerge'),
+    this._storage = new SqliteStorageAdapter({
+      runtime,
       callbacks: {
-        beforeSave: async (params) => this._beforeSave(params),
         afterSave: async (key) => this._afterSave(key),
       },
       monitor: dataMonitor,
@@ -246,7 +251,7 @@ export class AutomergeHost extends Resource {
       // Recovery hatch for both classical sharePolicy and subduction `authorizeFetch` denials.
       this._sharePolicyChangedTask!.schedule();
     });
-    this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
+    this._headsStore = new SqliteHeadsStore({ runtime });
     this._peerIdProvider = peerIdProvider;
     this._getSpaceKeyByRootDocumentId = getSpaceKeyByRootDocumentId;
   }
@@ -261,6 +266,9 @@ export class AutomergeHost extends Resource {
     });
 
     await this._storage.open?.();
+
+    // Tables must exist before the Repo constructor calls loadRange() on the storage adapter.
+    await RuntimeProvider.runPromise(this._runtime)(this.migrate);
 
     // `Repo` unconditionally constructs a Subduction `SubductionSource` (with a fresh
     // `MemorySigner` when none is injected) regardless of whether we register any
@@ -401,6 +409,14 @@ export class AutomergeHost extends Resource {
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
     this._sharePolicyChangedTask = undefined;
+  }
+
+  /**
+   * Creates automerge_chunks and automerge_heads tables if they do not exist.
+   * Must be called (via RuntimeProvider.runPromise) before opening the host.
+   */
+  get migrate(): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> {
+    return this._storage.migrate.pipe(Effect.andThen(this._headsStore.migrate));
   }
 
   get peerId(): PeerId {
@@ -618,9 +634,7 @@ export class AutomergeHost extends Resource {
       if (!heads) {
         continue;
       }
-      const batch = this._db.batch();
-      this._headsStore.setHeads(documentId, heads, batch);
-      await batch.write();
+      await RuntimeProvider.runPromise(this._runtime)(this._headsStore.setHeads(documentId, heads));
     }
     log('done re-indexing heads');
   }
@@ -725,20 +739,6 @@ export class AutomergeHost extends Resource {
     return this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
   }
 
-  private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
-    const handle = this._repo.handles[path[0] as DocumentId];
-    if (!handle || getHandleState(this._repo, handle.documentId) !== 'ready') {
-      return;
-    }
-    const doc = handle.doc();
-    if (!doc) {
-      return;
-    }
-
-    const heads = getHeads(doc);
-    this._headsStore.setHeads(handle.documentId, heads, batch);
-  }
-
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
     // Under Subduction the Repo's `peerMetadataByPeerId` is not populated for peers that only
     // speak Subduction (no classical peer message). Query the adapter directly — it maps
@@ -747,7 +747,8 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Called by AutomergeStorageAdapter after levelDB batch commit.
+   * Called by SqliteStorageAdapter after a chunk is committed to SQLite.
+   * Updates heads store and schedules collection sync notification.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
     if (!this.isOpen) {
@@ -765,6 +766,11 @@ export class AutomergeHost extends Resource {
     }
 
     const heads = getHeads(document);
+
+    // Persist heads to SQLite. Non-atomic with the chunk save but recoverable:
+    // heads can be reconstructed from chunks via reIndexHeads on restart.
+    await RuntimeProvider.runPromise(this._runtime)(this._headsStore.setHeads(documentId, heads));
+
     this._headsUpdates.set(documentId, heads);
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
     this._onHeadsChangedTask.schedule();
