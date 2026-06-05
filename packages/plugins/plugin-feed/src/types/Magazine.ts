@@ -6,11 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Template } from '@dxos/compute';
 import { BlueprintsAnnotation, StateMap } from '@dxos/app-toolkit';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { type EntityId } from '@dxos/keys';
-import { Text } from '@dxos/schema';
 
 import * as Subscription from './Subscription';
 
@@ -20,6 +20,10 @@ export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 export const PostState = Schema.Struct({
   /** Agent-assigned relevance within this magazine (lower = more relevant). */
   rank: Schema.optional(Schema.Number),
+  /** Agent-written concise snippet summarising the article in the context of this magazine's topic. */
+  snippet: Schema.optional(Schema.String),
+  /** Agent-selected hero image URL for this post in this magazine. */
+  imageUrl: Schema.optional(Schema.String),
 });
 export type PostState = Schema.Schema.Type<typeof PostState>;
 
@@ -37,17 +41,12 @@ export const Magazine = Schema.Struct({
   feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+  /** Topic instructions — what content this magazine should cover. Edited via the properties companion. */
+  instructions: Template.Template.pipe(FormInputAnnotation.set(false)),
   /**
-   * The user's topic instructions — what content this Magazine should cover. The base curation
-   * methodology (how to select and dedup, the output contract) lives in the Magazine blueprint and
-   * is applied automatically at curation time; this field holds only the magazine-specific topic.
-   * Edited via the properties companion.
-   */
-  instructions: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Per-Post magazine-scoped curation state (just `rank`), keyed by Post id. Shared per-Post state
-   * (readAt, star/archive tags) lives on `Subscription`; snippet/imageUrl are derived from the Post
-   * (or refined onto the Subscription's contentFeed entries).
+   * Per-Post magazine-scoped curation state, keyed by Post id. Shared per-Post state (readAt,
+   * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
+   * curation time and take precedence over the RSS-derived defaults in display.
    */
   postState: StateMap.field(PostState),
   /**
@@ -87,15 +86,16 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts' |
  * in-memory routine at curation time, so no Routine object is persisted here.
  */
 export const make = (props: MakeProps = {}): Magazine => {
-  const instructions = Text.make({ content: props.instructions ?? '' });
+  const instructions = Template.make({ source: props.instructions ?? '' });
   const magazine = Obj.make(Magazine, {
     name: props.name,
     feeds: props.feeds ?? [],
     posts: props.posts ?? [],
     keep: props.keep,
-    instructions: Ref.make(instructions),
+    instructions,
   });
-  Obj.setParent(instructions, magazine);
+  // Cascade-delete the backing Text with the magazine.
+  Obj.setParent(instructions.source.target!, magazine);
   return magazine;
 };
 
@@ -118,13 +118,21 @@ export const CreateMagazineSchema = Schema.Struct({
 });
 
 //
-// Per-Post magazine-scoped curation state (rank), keyed by Post id.
+// Per-Post magazine-scoped curation state, keyed by Post id.
 //
 
 /** Agent-assigned relevance of a Post within a Magazine, or undefined. */
 export const getRank = (magazine: Magazine | undefined, postId: EntityId): number | undefined =>
   magazine ? StateMap.bind<PostState>(magazine, 'postState').get(postId).rank : undefined;
 
+/** Returns the full magazine-scoped {@link PostState} for a Post, or an empty record. */
+export const getPostState = (magazine: Magazine | undefined, postId: EntityId): Partial<PostState> =>
+  magazine ? StateMap.bind<PostState>(magazine, 'postState').get(postId) : {};
+
+/** Merges partial state into a Post's magazine-scoped {@link PostState}. */
+export const patchPostState = (magazine: Magazine, postId: EntityId, state: Partial<PostState>): void =>
+  StateMap.bind<PostState>(magazine, 'postState').patch(postId, state);
+
 /** Sets the magazine-scoped rank for a Post. */
 export const setRank = (magazine: Magazine, postId: EntityId, rank: number): void =>
-  StateMap.bind<PostState>(magazine, 'postState').patch(postId, { rank });
+  patchPostState(magazine, postId, { rank });

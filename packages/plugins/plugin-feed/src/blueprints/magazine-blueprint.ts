@@ -31,11 +31,20 @@ const make = () =>
         article syndicated by different feeds). Select only one of each (prefer the most complete or
         most authoritative source) and skip the rest.
 
+        For each candidate you select, also produce:
+        - "snippet": a concise 1-2 sentence summary that captures why this article is relevant to
+          the Topic. Write it in plain text (no markdown). If you call fetchArticleContent, use the
+          full article body to write a richer snippet; otherwise derive it from the title and
+          description.
+        - "imageUrl": the URL of the best hero image for the article. Look for it in the
+          description HTML (an <img> src), or in the article body fetched via fetchArticleContent.
+          Omit the field entirely if no image URL is available.
+
         When you are done, call completeJob with the structured output:
-        { "posts": [{ "id": "<candidate id>" }, ...] }
-        listing the ids of the candidates you selected, in the order you want them shown. Only use
-        ids that appear in the input — never invent ids. Do not attempt to add Posts yourself; the
-        Magazine is updated mechanically from your output.
+        { "posts": [{ "id": "<candidate id>", "snippet": "...", "imageUrl": "..." }, ...] }
+        listing the selected candidates in the order you want them shown. Only use ids that appear
+        in the input — never invent ids. Do not attempt to add Posts yourself; the Magazine is
+        updated mechanically from your output.
       `,
     }),
   });

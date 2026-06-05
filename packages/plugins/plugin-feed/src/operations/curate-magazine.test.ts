@@ -70,8 +70,13 @@ describe('resolveSelected', () => {
     await db.flush();
     const candidates = posts.map((post) => ({ post }));
 
-    const selected = resolveSelected(candidates, [posts[2].id, 'missing-id', posts[0].id, posts[2].id]);
+    const selected = resolveSelected(candidates, [
+      { id: posts[2].id },
+      { id: 'missing-id' },
+      { id: posts[0].id },
+      { id: posts[2].id },
+    ]);
 
-    expect(selected.map((post) => post.id)).toEqual([posts[2].id, posts[0].id]);
+    expect(selected.map(({ post }) => post.id)).toEqual([posts[2].id, posts[0].id]);
   });
 });

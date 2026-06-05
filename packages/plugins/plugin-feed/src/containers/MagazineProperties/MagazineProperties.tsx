@@ -14,7 +14,7 @@ import { Magazine } from '#types';
 export const MagazineProperties = ({ subject }: AppSurface.ObjectPropertiesProps<Magazine.Magazine>) => {
   const { t } = useTranslation(meta.id);
   // Resolve the topic-instructions Ref<Text> → Snapshot<Text> + update callback.
-  const [text, updateText] = useObject(subject.instructions);
+  const [text, updateText] = useObject(subject.instructions.source);
 
   const setContent = useCallback(
     (value: string) =>

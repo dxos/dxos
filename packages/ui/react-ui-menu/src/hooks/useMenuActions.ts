@@ -51,13 +51,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
  * it through `useMenuActions`. Saves the `useMemo(() => Atom.make(...), deps)` boilerplate when
  * the action graph is composed from local state (e.g. a toolbar driven by component state).
  *
- * IMPORTANT — make the toolbar reactive via `get`, not via `deps`. Read every piece of state that
- * the actions depend on (echo objects, atoms, derived values) through the `get` argument *inside*
- * the builder: `(get) => { const value = get(someAtom); ... }`. The action graph then subscribes to
- * those atoms and rebuilds itself the instant they change. Do NOT flatten reactive state into static
- * props/values and list them in `deps` to force a rebuild — that reintroduces React-render-driven
- * updates and defeats the point of the idiom. `deps` should hold only stable references (the atoms
- * themselves, callbacks, config), never the live values. See `EditorToolbar` for the canonical usage.
+ * Read reactive state via `get` inside the builder; `deps` should hold only stable references.
  */
 export const useMenuBuilder = (build: (get: Atom.Context) => ActionGraphProps, deps: DependencyList): MenuActions => {
   // eslint-disable-next-line react-hooks/exhaustive-deps

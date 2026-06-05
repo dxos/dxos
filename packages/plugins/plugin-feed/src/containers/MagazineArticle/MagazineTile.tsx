@@ -9,21 +9,22 @@ import { Card, Focus, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
-import { type Subscription } from '#types';
+import { type Magazine, type Subscription } from '#types';
 
 import { formatDate } from '../../util/date';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
+  magazine: Magazine.Magazine;
   current?: boolean;
   onOpen?: (post: Subscription.Post) => void;
   onToggleStar?: (post: Subscription.Post, starred: boolean) => void;
 };
 
-export const MagazineTile = ({ post, current, onToggleStar, onOpen }: MagazineTileProps) => {
+export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: MagazineTileProps) => {
   // All per-Post derivation (snapshot, read, starred, snippet, image, feed name) happens in
   // atom-land; this tile re-renders only when THIS post's slice changes, not when a sibling does.
-  const { post: snapshot, feedName, read, starred, snippet, imageUrl } = useMagazinePostData(post);
+  const { post: snapshot, feedName, read, starred, snippet, imageUrl } = useMagazinePostData(post, magazine);
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
   const handleCurrentChange = useCallback(() => {

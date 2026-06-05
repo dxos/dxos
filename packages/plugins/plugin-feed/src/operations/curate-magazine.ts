@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
+import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedOperation, Magazine, Subscription } from '../types';
@@ -31,9 +31,17 @@ const CurationInput = Schema.Struct({
   candidates: Schema.Array(Candidate),
 });
 
-/** Output schema of the curation routine: the selected Post ids, in display order. */
+/** Output schema of the curation routine: the selected Posts with agent-generated display values. */
 const CurationOutput = Schema.Struct({
-  posts: Schema.Array(Schema.Struct({ id: Obj.ID })),
+  posts: Schema.Array(
+    Schema.Struct({
+      id: Obj.ID,
+      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
+      snippet: Schema.optional(Schema.String),
+      /** Best image URL found for this article (from the post or fetched content). */
+      imageUrl: Schema.optional(Schema.String),
+    }),
+  ),
 });
 
 /** Bound on concurrent feed syncs. */
@@ -50,15 +58,16 @@ export default FeedOperation.CurateMagazine.pipe(
       // Select matching Posts via the agent (single-shot structured output), then add them mechanically.
       const candidates = yield* collectCandidates(magazine);
       const spaceId = Obj.getDatabase(magazine)?.spaceId;
-      const selectedIds = candidates.length > 0 && spaceId ? yield* selectPostIds(magazine, candidates, spaceId) : [];
-      const selected = resolveSelected(candidates, selectedIds);
+      const selectedEntries =
+        candidates.length > 0 && spaceId ? yield* selectPostIds(magazine, candidates, spaceId) : [];
+      const selected = resolveSelected(candidates, selectedEntries);
 
       // Build the next posts list as a pure function of (existing curated + newly selected), bounded
       // by the magazine's `keep`, then commit it in one update. collectCandidates already excludes
       // posts already curated, so the additions are simply appended (resolveSelected deduped them).
       const db = Obj.getDatabase(magazine);
       const starredUri = db ? yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred')) : undefined;
-      const merged = [...magazine.posts, ...selected.map((post) => Ref.make(post))];
+      const merged = [...magazine.posts, ...selected.map(({ post }) => Ref.make(post))];
       const nextPosts = applyKeep(merged, magazine.keep ?? Subscription.DEFAULT_KEEP, starredUri);
       const curated = selected.length;
 
@@ -69,6 +78,13 @@ export default FeedOperation.CurateMagazine.pipe(
         Obj.update(magazine, (magazine) => {
           magazine.posts = nextPosts;
         });
+      }
+
+      // Write agent-generated snippet/imageUrl into per-post magazine state.
+      for (const { post, snippet, imageUrl } of selected) {
+        if (snippet || imageUrl) {
+          Magazine.patchPostState(magazine, post.id as EntityId, { snippet, imageUrl });
+        }
       }
 
       return { synced, curated };
@@ -130,7 +146,7 @@ const selectPostIds = (
         link: post.link,
       })),
     };
-    const topic = (yield* Effect.promise(() => magazine.instructions.load())).content ?? '';
+    const topic = (yield* Effect.promise(() => magazine.instructions.source.load())).content ?? '';
     // Resolve the base methodology blueprint from the registry by its key and hold it by value. A
     // bare `Ref.fromURI(registryURI(key))` is unhydrated — AgentPrompt's `Database.loadOption` can't
     // resolve it ("Resolver is not set") — so we resolve to the object and let `Ref.make` carry it.
@@ -144,29 +160,35 @@ const selectPostIds = (
 
     return yield* Operation.invoke(AgentPrompt, { prompt: Ref.make(routine), input }, { spaceId }).pipe(
       Effect.flatMap(Schema.decodeUnknown(CurationOutput)),
-      Effect.map((output) => output.posts.map((post) => post.id)),
+      Effect.map((output) => output.posts),
       Effect.catchAll((error) =>
         Effect.sync(() => {
           log.warn('curation selection failed', { error });
-          return [] as readonly string[];
+          return [] as readonly (typeof CurationOutput.Type.posts)[number][];
         }),
       ),
     );
   });
 
-/** Resolves the agent's selected ids back to candidate Posts, preserving order and dropping unknown/duplicate ids. */
+type SelectedEntry = {
+  post: Subscription.Post;
+  snippet: string | undefined;
+  imageUrl: string | undefined;
+};
+
+/** Resolves the agent's selected entries back to candidate Posts, preserving order and dropping unknown/duplicate ids. */
 export const resolveSelected = (
   candidates: ReadonlyArray<{ post: Subscription.Post }>,
-  selectedIds: readonly string[],
-): Subscription.Post[] => {
+  entries: readonly { id: string; snippet?: string; imageUrl?: string }[],
+): SelectedEntry[] => {
   const byId = new Map(candidates.map(({ post }) => [post.id, post]));
   const seen = new Set<string>();
-  const selected: Subscription.Post[] = [];
-  for (const id of selectedIds) {
+  const selected: SelectedEntry[] = [];
+  for (const { id, snippet, imageUrl } of entries) {
     const post = byId.get(id);
     if (post && !seen.has(id)) {
       seen.add(id);
-      selected.push(post);
+      selected.push({ post, snippet, imageUrl });
     }
   }
   return selected;

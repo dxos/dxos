@@ -76,7 +76,7 @@ export const translations = [
         'only-starred.label': 'Show starred only',
         'close.label': 'Close',
         'topic-instructions.label': 'Topic',
-        'topic-instructions.placeholder': 'Describe what this magazine should cover…',
+        'topic-instructions.placeholder': 'Topic to curate around…',
       },
     },
   },

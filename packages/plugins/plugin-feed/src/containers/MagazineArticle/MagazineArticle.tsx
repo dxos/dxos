@@ -125,6 +125,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       posts.map((post) => ({
         id: post.id,
         post,
+        magazine: subject,
         current: currentId === post.id,
         onToggleStar: handleToggleStar,
         onOpen: handleOpen,
@@ -162,6 +163,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 type TileData = {
   id: string;
   post: Subscription.Post;
+  magazine: Magazine.Magazine;
   current: boolean;
   onToggleStar?: (post: Subscription.Post, starred: boolean) => void;
   onOpen?: (post: Subscription.Post) => void;
@@ -172,5 +174,13 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <MagazineTile post={data.post} current={data.current} onOpen={data.onOpen} onToggleStar={data.onToggleStar} />;
+  return (
+    <MagazineTile
+      post={data.post}
+      magazine={data.magazine}
+      current={data.current}
+      onOpen={data.onOpen}
+      onToggleStar={data.onToggleStar}
+    />
+  );
 };
