@@ -3,6 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 
 import { type Obj } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -25,7 +26,7 @@ export type MagazinePostData = {
 
 /**
  * Aggregate display data for one tile within a magazine. Fires only on this Post's
- * read/star/feed-name/postState changes.
+ * read/star/feed-name/curation changes. Keyed by a value-equal `Data.tuple([post, magazine])`.
  *
  * Snippet and imageUrl precedence: agent-written postState > RSS-derived description fallback.
  */
@@ -42,7 +43,7 @@ export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Ma
     const { readAt } = get(postReadAtom(post));
     const { starred } = get(postTagsAtom(post));
     // Agent-written snippet/imageUrl (granular per-Post slice); fall back to description derivation.
-    const curation = get(postCurationAtom([post, magazine]));
+    const curation = get(postCurationAtom(Data.tuple(post, magazine)));
     return {
       post: snapshot,
       feedName,
@@ -56,4 +57,4 @@ export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Ma
 
 /** Aggregate per-Post display data for a magazine tile. */
 export const useMagazinePostData = (post: Subscription.Post, magazine: Magazine.Magazine): MagazinePostData =>
-  useAtomValue(postDisplayAtom([post, magazine]));
+  useAtomValue(postDisplayAtom(Data.tuple(post, magazine)));

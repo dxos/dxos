@@ -3,6 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 
 import { Obj } from '@dxos/echo';
 
@@ -14,7 +15,8 @@ export type CurationSlice = { snippet: string | undefined; imageUrl: string | un
 /**
  * This Post's magazine-scoped curation slice (snippet/imageUrl), sliced off the Magazine's
  * `postState`. Subscribes to the shared Magazine but re-emits ONLY when this Post's slice changes —
- * sibling Posts' curation mutations are recomputed and discarded without propagating.
+ * sibling Posts' curation mutations are recomputed and discarded without propagating. Keyed by a
+ * value-equal `Data.tuple([post, magazine])`.
  */
 export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, Magazine.Magazine]) =>
   Atom.make<CurationSlice>((get) => {
@@ -38,4 +40,4 @@ export const postCurationAtom = Atom.family((key: readonly [Subscription.Post, M
 
 /** This Post's magazine-scoped curation slice. */
 export const usePostCuration = (post: Subscription.Post, magazine: Magazine.Magazine): CurationSlice =>
-  useAtomValue(postCurationAtom([post, magazine]));
+  useAtomValue(postCurationAtom(Data.tuple(post, magazine)));
