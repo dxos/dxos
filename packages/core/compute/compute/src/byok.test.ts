@@ -14,27 +14,6 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { byokHeaderLayer } from './byok';
 import * as Credential from './Credential';
 
-const captureHeaderClient = (sink: { lastHeader?: string }) =>
-  Layer.succeed(
-    HttpClient.HttpClient,
-    HttpClient.make((request) => {
-      sink.lastHeader = request.headers['x-byok'];
-      return Effect.succeed(HttpClientResponse.fromWeb(request, new Response('ok')));
-    }),
-  );
-
-const credentialsLayer = (credentials: Credential.ServiceCredential[]) =>
-  Layer.succeed(Credential.CredentialsService, {
-    queryCredentials: async ({ service }) => credentials.filter((credential) => credential.service === service),
-    getCredential: async ({ service }) => {
-      const credential = credentials.find((entry) => entry.service === service);
-      if (!credential) {
-        throw new Error(`Credential not found for service: ${service}`);
-      }
-      return credential;
-    },
-  });
-
 describe('byokHeaderLayer', () => {
   test('attaches X-BYOK header when a credential is found for the provider host', async ({ expect }) => {
     const sink: { lastHeader?: string } = {};
@@ -114,3 +93,24 @@ describe('byokHeaderLayer', () => {
     expect(sink.lastHeader).toBeUndefined();
   });
 });
+
+const captureHeaderClient = (sink: { lastHeader?: string }) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) => {
+      sink.lastHeader = request.headers['x-byok'];
+      return Effect.succeed(HttpClientResponse.fromWeb(request, new Response('ok')));
+    }),
+  );
+
+const credentialsLayer = (credentials: Credential.ServiceCredential[]) =>
+  Layer.succeed(Credential.CredentialsService, {
+    queryCredentials: async ({ service }) => credentials.filter((credential) => credential.service === service),
+    getCredential: async ({ service }) => {
+      const credential = credentials.find((entry) => entry.service === service);
+      if (!credential) {
+        throw new Error(`Credential not found for service: ${service}`);
+      }
+      return credential;
+    },
+  });
