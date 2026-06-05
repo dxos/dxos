@@ -35,7 +35,7 @@ export type OutputItem<O> = Option.Option<O>;
  * Durable persistence hooks supplied by the manager. All are no-ops for
  * ephemeral (non-durable) managers.
  */
-export interface Persistence {
+interface Persistence {
   /** Persist the absolute alarm due-time (epoch ms), or null to clear it. */
   setAlarm(dueAt: number | null): Effect.Effect<void>;
   /** Persist the latest computed lifecycle state. */
@@ -273,10 +273,21 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     });
   }
 
+  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<ProcessManager.Handle<I, O>> {
+    if (definition.key !== this.key) {
+      return Effect.die(
+        new Error(
+          `Process definition key mismatch for ${this.pid}: expected "${this.key}", got "${definition.key}"`,
+        ),
+      );
+    }
+    return Effect.succeed(this);
+  }
+
   /**
    * Stop in-memory scheduling (alarm timer, scope) without terminating the process
    * or clearing its storage. The persisted record (state, alarmDueAt, events) is left
-   * intact so the process can be restored by a future manager. Used on app shutdown.
+   * intact so the process can be hydrated by a future manager. Used on app shutdown.
    */
   suspend(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
@@ -298,7 +309,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   }
 
   /**
-   * Re-arm the in-memory alarm timer for a persisted due-time (used by restore).
+   * Re-arm the in-memory alarm timer for a persisted due-time (used by hydrate).
    * Does NOT persist the alarm — it is already in the persisted record.
    */
   rearmAlarm(dueAt: number): void {
@@ -314,7 +325,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
 
   /**
    * Re-deliver a persisted event that never settled before shutdown.
-   * Called by the manager during restore, in seq order.
+   * Called by the manager during hydrate, in seq order.
    */
   redeliver(event: PersistedEvent, definition: Process.Process<I, O, any>): Effect.Effect<void> {
     switch (event._tag) {

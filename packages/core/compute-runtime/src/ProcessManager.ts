@@ -23,10 +23,9 @@ import * as StorageService from '@dxos/compute/StorageService';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { ProcessDefinitionRegistry } from './process-definition-registry';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessManagerService } from './process-manager-service';
-import { ProcessStore } from './process-store';
+import { ProcessStore, type PersistedProcess } from './process-store';
 import { createProcessTraceService } from './process-trace';
 import * as ProcessHandle from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
@@ -39,8 +38,6 @@ export {
   SequentialProcessIdGenerator as SequentialIdGenerator,
 } from './process-id';
 
-export { ProcessDefinitionRegistry } from './process-definition-registry';
-export { ProcessStore } from './process-store';
 export { ProcessOperationInvoker };
 
 export interface Status {
@@ -102,6 +99,12 @@ export interface Handle<I, O> {
    * or {@link Process.State.TERMINATED}.
    */
   runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O>;
+
+  /**
+   * Hydrates a dormant persisted process using the supplied definition.
+   * No-op when the handle is already live (returns self).
+   */
+  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>>;
 }
 
 export namespace Handle {
@@ -170,6 +173,30 @@ export interface ListOptions {
   readonly target?: URI.URI;
 }
 
+const matchesListOptions = (
+  fields: {
+    readonly key: string;
+    readonly parentId: Process.ID | null;
+    readonly state: Process.State;
+    readonly target: URI.URI | null;
+  },
+  options?: ListOptions,
+): boolean => {
+  if (options?.key !== undefined && fields.key !== options.key) {
+    return false;
+  }
+  if (options?.parentProcessId !== undefined && fields.parentId !== options.parentProcessId) {
+    return false;
+  }
+  if (options?.state !== undefined && fields.state !== options.state) {
+    return false;
+  }
+  if (options?.target !== undefined && fields.target !== options.target) {
+    return false;
+  }
+  return true;
+};
+
 /**
  * API for managing processes.
  */
@@ -185,7 +212,9 @@ export interface Manager {
   attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>>;
 
   /**
-   * List all spawned processes.
+   * Lists live processes and, when no live match exists, non-terminal processes
+   * persisted in durable storage. Dormant entries expose {@link Handle.pid} and
+   * metadata but require {@link Handle.hydrate} before inputs can be submitted.
    */
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]>;
 
@@ -195,12 +224,6 @@ export interface Manager {
    * Terminates all spawned processes (e.g. when tearing down the manager layer).
    */
   shutdown(): Effect.Effect<void>;
-
-  /**
-   * Restores non-terminal processes from durable storage after a restart.
-   * Should be called once after construction, before handling new events.
-   */
-  restore(): Effect.Effect<void>;
 
   /**
    * Operation handlers supplied at construction (same set used for nested {@link Operation.Service} in processes).
@@ -218,7 +241,6 @@ export interface ProcessManagerImplOpts {
   serviceResolver?: ServiceResolver.ServiceResolver;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
   idGenerator?: ProcessIdGenerator;
-  definitions?: ProcessDefinitionRegistry;
 
   /**
    * Runtime name to stamp on trace messages emitted by processes spawned by this manager.
@@ -238,7 +260,6 @@ export class ProcessManagerImpl implements Manager {
   readonly #traceSink: Trace.Sink;
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
-  readonly #definitions: ProcessDefinitionRegistry;
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
@@ -252,7 +273,6 @@ export class ProcessManagerImpl implements Manager {
     this.#traceSink = opts.traceSink;
     this.#runtimeName = opts.runtimeName;
     this.#store = new ProcessStore(opts.kvStore);
-    this.#definitions = opts.definitions ?? new ProcessDefinitionRegistry();
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
@@ -291,7 +311,7 @@ export class ProcessManagerImpl implements Manager {
 
   /**
    * Suspends every spawned process handle (preserving durable state) and clears the handle map.
-   * Suspended processes can be restored on the next boot via {@link restore}.
+   * Suspended processes can be hydrated on the next boot via {@link Handle.hydrate}.
    */
   shutdown(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
@@ -312,9 +332,6 @@ export class ProcessManagerImpl implements Manager {
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
-      // Auto-register the definition so it can be looked up during restore.
-      this.#definitions.register(definition);
-
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -440,11 +457,11 @@ export class ProcessManagerImpl implements Manager {
         });
 
       // Persistence adapter bound to this process id.
-      const persistence: ProcessHandle.Persistence = {
-        setAlarm: (dueAt) => this.#store.setAlarm(id, dueAt),
-        setState: (state) => this.#store.setState(id, state),
-        removeEvent: (seq) => this.#store.removeEvent(id, seq),
-        appendEvent: (event) => this.#store.appendEvent(id, event),
+      const persistence = {
+        setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
+        setState: (state: Process.State) => this.#store.setState(id, state),
+        removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
+        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
         deleteRecord: () => this.#store.deleteProcess(id),
       };
 
@@ -506,9 +523,9 @@ export class ProcessManagerImpl implements Manager {
    * Re-hydrates a persisted process record into a live handle without running onSpawn.
    */
   #rehydrate(
-    record: import('./process-store').PersistedProcess,
+    record: PersistedProcess,
     definition: Process.Process<any, any, any>,
-  ): Effect.Effect<void> {
+  ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen(this, function* () {
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
@@ -622,11 +639,11 @@ export class ProcessManagerImpl implements Manager {
           }
         });
 
-      const persistence: ProcessHandle.Persistence = {
-        setAlarm: (dueAt) => this.#store.setAlarm(id, dueAt),
-        setState: (state) => this.#store.setState(id, state),
-        removeEvent: (seq) => this.#store.removeEvent(id, seq),
-        appendEvent: (event) => this.#store.appendEvent(id, event),
+      const persistence = {
+        setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
+        setState: (state: Process.State) => this.#store.setState(id, state),
+        removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
+        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
         deleteRecord: () => this.#store.deleteProcess(id),
       };
 
@@ -653,7 +670,7 @@ export class ProcessManagerImpl implements Manager {
         persistence,
         true, // restoring — suppresses onSpawn
         encodeInput,
-        record.state, // restore the persisted state instead of defaulting to RUNNING
+        record.state, // hydrate the persisted state instead of defaulting to RUNNING
       );
       handleRef = handle;
       this.#handles.set(id, handle);
@@ -669,30 +686,45 @@ export class ProcessManagerImpl implements Manager {
       for (const event of pendingEvents) {
         yield* handle.redeliver(event, definition);
       }
+
+      return handle;
     });
   }
 
-  restore(): Effect.Effect<void> {
+  #hydrateFromDefinition<I, O>(
+    id: Process.ID,
+    definition: Process.Process<I, O, any>,
+  ): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
-      const records = yield* this.#store.listProcesses();
-      log('lifecycle: restore', { count: records.length });
-      for (const record of records) {
-        if (
-          record.state === Process.State.SUCCEEDED ||
-          record.state === Process.State.FAILED ||
-          record.state === Process.State.TERMINATED
-        ) {
-          // Stale terminal record; clean it up.
-          yield* this.#store.deleteProcess(record.id);
-          continue;
-        }
-        const definition = this.#definitions.get(record.key);
-        if (!definition) {
-          log.warn('lifecycle: restore skipped (definition not registered)', { pid: record.id, key: record.key });
-          continue;
-        }
-        yield* this.#rehydrate(record, definition);
+      const existing = this.#handles.get(id);
+      if (existing) {
+        log('lifecycle: hydrate skipped (already live)', { pid: id });
+        return existing as unknown as Handle<I, O>;
       }
+
+      const record = yield* this.#store.getProcess(id);
+      if (record === undefined) {
+        return yield* Effect.die(new Error(`No persisted process record: ${id}`));
+      }
+
+      if (record.key !== definition.key) {
+        return yield* Effect.die(
+          new Error(`Process definition key mismatch for ${id}: expected "${record.key}", got "${definition.key}"`),
+        );
+      }
+
+      if (
+        record.state === Process.State.SUCCEEDED ||
+        record.state === Process.State.FAILED ||
+        record.state === Process.State.TERMINATED
+      ) {
+        yield* this.#store.deleteProcess(id);
+        return yield* Effect.die(new Error(`Cannot hydrate terminal process: ${id}`));
+      }
+
+      log('lifecycle: hydrate', { pid: id, key: record.key });
+      const handle = yield* this.#rehydrate(record, definition);
+      return handle as unknown as Handle<I, O>;
     });
   }
 
@@ -709,21 +741,59 @@ export class ProcessManagerImpl implements Manager {
   }
 
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
-    return Effect.sync(() => {
-      let impls: ProcessHandle.ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
-      if (options?.key !== undefined) {
-        impls = impls.filter((handle) => handle.key === options.key);
+    return Effect.gen(this, function* () {
+      const results: Handle.Any[] = [];
+      const seenIds = new Set<Process.ID>();
+
+      for (const handle of this.#handles.values()) {
+        if (
+          !matchesListOptions(
+            {
+              key: handle.key,
+              parentId: handle.parentId,
+              state: handle.snapshotStatus().state,
+              target: handle.params.target,
+            },
+            options,
+          )
+        ) {
+          continue;
+        }
+        results.push(handle);
+        seenIds.add(handle.pid);
       }
-      if (options?.parentProcessId !== undefined) {
-        impls = impls.filter((handle) => handle.parentId === options.parentProcessId);
+
+      const persisted = yield* this.#store.listProcesses();
+      for (const record of persisted) {
+        if (seenIds.has(record.id)) {
+          continue;
+        }
+        if (
+          record.state === Process.State.SUCCEEDED ||
+          record.state === Process.State.FAILED ||
+          record.state === Process.State.TERMINATED
+        ) {
+          continue;
+        }
+        if (
+          !matchesListOptions(
+            {
+              key: record.key,
+              parentId: record.parentId,
+              state: record.state,
+              target: record.params.target as URI.URI | null,
+            },
+            options,
+          )
+        ) {
+          continue;
+        }
+        results.push(
+          new DormantHandle(record, (definition) => this.#hydrateFromDefinition(record.id, definition)),
+        );
       }
-      if (options?.state !== undefined) {
-        impls = impls.filter((handle) => handle.snapshotStatus().state === options.state);
-      }
-      if (options?.target !== undefined) {
-        impls = impls.filter((handle) => handle.params.target === options.target);
-      }
-      return impls;
+
+      return results;
     });
   }
 
@@ -740,9 +810,64 @@ export class ProcessManagerImpl implements Manager {
 }
 
 /**
+ * Read-only handle view of a persisted process that is not currently live.
+ * Returned by {@link ProcessManagerImpl.list} until {@link Handle.hydrate} is called.
+ */
+class DormantHandle<I, O> implements Handle<I, O> {
+  readonly pid: Process.ID;
+  readonly parentId: Process.ID | null;
+  readonly key: string;
+  readonly params: Process.Params;
+  readonly environment: Environment;
+  readonly status: Status;
+  readonly statusAtom: Atom.Atom<Status>;
+  readonly #rehydrate: (definition: Process.Process<I, O, any>) => Effect.Effect<Handle<I, O>>;
+
+  constructor(
+    record: PersistedProcess,
+    rehydrate: (definition: Process.Process<I, O, any>) => Effect.Effect<Handle<I, O>>,
+  ) {
+    this.#rehydrate = rehydrate;
+    this.pid = record.id;
+    this.parentId = record.parentId;
+    this.key = record.key;
+    this.params = {
+      name: record.params.name,
+      target: record.params.target as URI.URI | null,
+      ...(record.params.notify != null ? { notify: record.params.notify as Process.Params['notify'] } : {}),
+    };
+    this.environment = {
+      space: record.environment.space as SpaceId | undefined,
+      conversation: record.environment.conversation as URI.URI | undefined,
+    };
+    this.status = {
+      state: record.state,
+      exit: Option.none(),
+      startedAt: new Date(0),
+      completedAt: Option.none(),
+    };
+    this.statusAtom = Atom.make(this.status);
+  }
+
+  hydrate = (definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> => this.#rehydrate(definition);
+
+  submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  subscribeOutputs = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
+
+  subscribeEphemeral = (): Stream.Stream<Trace.Message> => Stream.die(new Error('Process not hydrated'));
+
+  terminate = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  runAndExit = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
+}
+
+/**
  * Scoped layer that provides ProcessManager and ProcessMonitorService.
  * On scope close, the manager's `shutdown()` runs (layer finalizer), suspending
- * process state so it can be restored on the next boot.
+ * process state so it can be hydrated on the next boot.
  *
  * Requires KeyValueStore, ServiceResolver, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.
@@ -754,10 +879,6 @@ export const layer = (opts?: {
    * See {@link Trace.CommonRuntimeName} for well-known values.
    */
   runtimeName?: Trace.RuntimeName;
-  /**
-   * Registry of process definitions used during restore.
-   */
-  definitions?: ProcessDefinitionRegistry;
 }): Layer.Layer<
   ProcessManagerService | Process.ProcessMonitorService,
   never,
@@ -784,7 +905,6 @@ export const layer = (opts?: {
         handlerSet,
         idGenerator: opts?.idGenerator,
         runtimeName: opts?.runtimeName,
-        definitions: opts?.definitions,
       });
 
       yield* Effect.addFinalizer(() => manager.shutdown());

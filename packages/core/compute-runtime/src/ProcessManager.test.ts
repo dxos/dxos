@@ -675,6 +675,22 @@ const DurabilityTestLayer = Layer.mergeAll(
 );
 
 describe('durability', () => {
+  const mkManager = (deps: {
+    kv: KeyValueStore.KeyValueStore;
+    registry: Registry.Registry;
+    resolver: ServiceResolver.ServiceResolver;
+    handlerSet: OperationHandlerSet.OperationHandlerSet;
+    traceSink: Trace.Sink;
+  }) =>
+    new ProcessManager.ProcessManagerImpl({
+      registry: deps.registry,
+      kvStore: deps.kv,
+      traceSink: deps.traceSink,
+      serviceResolver: deps.resolver,
+      handlerSet: deps.handlerSet,
+      idGenerator: ProcessManager.UUIDProcessIdGenerator,
+    });
+
   it.effect(
     'persists a spawned process record and clears it on terminate',
     Effect.fn(function* ({ expect }) {
@@ -684,19 +700,8 @@ describe('durability', () => {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const traceSink = yield* Trace.TraceSink;
 
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
       const waiting = makeWaitingExecutable();
-      definitions.register(waiting);
-
-      const manager = new ProcessManager.ProcessManagerImpl({
-        registry,
-        kvStore: kv,
-        traceSink,
-        serviceResolver: resolver,
-        handlerSet,
-        definitions,
-        idGenerator: ProcessManager.UUIDProcessIdGenerator,
-      });
+      const manager = mkManager({ kv, registry, resolver, handlerSet, traceSink });
 
       const store = new ProcessStore(kv);
 
@@ -714,7 +719,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'restores a hibernating process and fires its alarm after restart',
+    'hydrates a hibernating process and fires its alarm after restart',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -722,22 +727,8 @@ describe('durability', () => {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const traceSink = yield* Trace.TraceSink;
 
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
       const waiting = makeWaitingExecutable();
-      definitions.register(waiting);
-
-      const mkManager = () =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const managerA = mkManager();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(waiting);
       const pid = handle.pid;
       expect(handle.status.state).toEqual(Process.State.HYBERNATING);
@@ -745,11 +736,10 @@ describe('durability', () => {
       // Simulate app close BEFORE the alarm fires.
       yield* managerA.shutdown();
 
-      // New manager over the same KV + definitions = app reopen.
-      const managerB = mkManager();
-      yield* managerB.restore();
-
-      const restored = yield* managerB.attach(pid);
+      // New manager over the same KV, explicit definition supplied at hydrate.
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormant = yield* managerB.list({ key: 'test.waiting' });
+      const restored = yield* dormant[0].hydrate(waiting);
       expect(restored.status.state).toEqual(Process.State.HYBERNATING);
 
       // Alarm re-armed; wait past the original due-time and assert it fired.
@@ -786,26 +776,13 @@ describe('durability', () => {
             onChildEvent: () => Effect.void,
           }),
       );
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
-      definitions.register(counting);
-      const mkManager = () =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const managerA = mkManager();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(counting);
       expect(spawnCount).toEqual(1); // onSpawn ran, settled, spawn event removed.
       yield* managerA.shutdown();
 
-      const managerB = mkManager();
-      yield* managerB.restore();
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      yield* (yield* managerB.list({ key: 'test.counting-spawn' }))[0].hydrate(counting);
       // onSpawn NOT re-run because its event already settled; alarm re-armed instead.
       expect(spawnCount).toEqual(1);
       yield* (yield* managerB.attach(handle.pid)).terminate();
@@ -822,7 +799,7 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       let handled = 0;
-      let gate = true; // first manager: block; after restore: allow.
+      let gate = true; // first manager: block; after hydrate: allow.
       const blocking = Process.make(
         { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [] },
         () =>
@@ -839,20 +816,7 @@ describe('durability', () => {
             onChildEvent: () => Effect.void,
           }),
       );
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
-      definitions.register(blocking);
-      const mkManager = () =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const managerA = mkManager();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(blocking);
       // Submit input and fork it (it will block forever in manager A).
       yield* Effect.fork(handle.submitInput('hello'));
@@ -860,15 +824,15 @@ describe('durability', () => {
       yield* managerA.shutdown();
 
       gate = false; // allow handling after restart.
-      const managerB = mkManager();
-      yield* managerB.restore();
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      yield* (yield* managerB.list({ key: 'test.blocking-input' }))[0].hydrate(blocking);
       yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
       yield* (yield* managerB.attach(handle.pid)).terminate();
     }, Effect.provide(DurabilityTestLayer)),
   );
 
   it.effect(
-    'fails a non-idempotent operation whose handler was interrupted on restore',
+    'fails a non-idempotent operation whose handler was interrupted before hydrate',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -895,20 +859,7 @@ describe('durability', () => {
         ),
       );
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
-      definitions.register(opProcess);
-      const mkManager = () =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const managerA = mkManager();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       // Submit input and let the handler enter the blocked section before shutdown.
       yield* Effect.fork(handle.submitInput({ value: 1 }));
@@ -917,8 +868,8 @@ describe('durability', () => {
 
       // Restore: the operation observes its durable "started" marker → fails instead of retrying.
       gate = false;
-      const managerB = mkManager();
-      yield* managerB.restore();
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
       const restoredHandle = yield* managerB.attach(handle.pid);
       expect(restoredHandle.status.state).toEqual(Process.State.FAILED);
@@ -926,7 +877,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'retries an idempotent operation whose handler was interrupted on restore',
+    'retries an idempotent operation whose handler was interrupted before hydrate',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -960,20 +911,7 @@ describe('durability', () => {
         ),
       );
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
-      definitions.register(opProcess);
-      const mkManager = () =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const managerA = mkManager();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       yield* Effect.fork(handle.submitInput({ value: 1 }));
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
@@ -981,8 +919,8 @@ describe('durability', () => {
 
       // Restore: idempotent operations skip the marker and are simply re-run to completion.
       gate = false;
-      const managerB = mkManager();
-      yield* managerB.restore();
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
       yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
       const restoredHandle = yield* managerB.attach(handle.pid);
       expect(restoredHandle.status.state).toEqual(Process.State.SUCCEEDED);
@@ -990,7 +928,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'skips (without throwing) a process whose definition is not registered, leaving its record intact',
+    'hydrate fails when the definition key does not match the persisted record',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -999,29 +937,26 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       const waiting = makeWaitingExecutable();
-      const mkManager = (definitions: ProcessManager.ProcessDefinitionRegistry) =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const definitionsA = new ProcessManager.ProcessDefinitionRegistry();
-      definitionsA.register(waiting);
-      const managerA = mkManager(definitionsA);
-      const handle = yield* managerA.spawn(waiting); // Hibernates on a 500ms alarm.
+      const other = Process.make(
+        { key: 'test.other', input: Schema.Void, output: Schema.Void, services: [] },
+        () =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () => Effect.void,
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+      );
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const handle = yield* managerA.spawn(waiting);
       yield* managerA.shutdown();
 
-      // Fresh boot whose registry does NOT contain the definition (e.g. the owning plugin
-      // hasn't re-registered it). Restore must not throw and must preserve the record so a
-      // later boot that does register the definition can still rehydrate it.
-      const managerB = mkManager(new ProcessManager.ProcessDefinitionRegistry());
-      yield* managerB.restore();
-      expect(yield* managerB.list()).toHaveLength(0);
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormant = yield* managerB.list({ key: 'test.waiting' });
+      expect(dormant).toHaveLength(1);
+      expect(dormant[0].pid).toEqual(handle.pid);
+      const exit = yield* dormant[0].hydrate(other).pipe(Effect.exit);
+      expect(Exit.isFailure(exit)).toBe(true);
 
       const store = new ProcessStore(kv);
       expect(yield* store.getProcess(handle.pid)).toBeDefined();
@@ -1029,7 +964,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'terminal processes are not restored',
+    'terminal processes are not hydrated',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -1037,33 +972,16 @@ describe('durability', () => {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const traceSink = yield* Trace.TraceSink;
 
-      const definitions = new ProcessManager.ProcessDefinitionRegistry();
       const opProcess = Process.fromOperation(Double, handlers);
-      definitions.register(opProcess);
-
-      const mkManager = () =>
-        new ProcessManager.ProcessManagerImpl({
-          registry,
-          kvStore: kv,
-          traceSink,
-          serviceResolver: resolver,
-          handlerSet,
-          definitions,
-          idGenerator: ProcessManager.UUIDProcessIdGenerator,
-        });
-
-      const managerA = mkManager();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 5 }] }).pipe(Stream.runCollect);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
       yield* managerA.shutdown();
 
-      const managerB = mkManager();
-      yield* managerB.restore();
-      // No non-terminal processes should be in manager B.
-      const remaining = yield* managerB.list();
-      expect(remaining).toHaveLength(0);
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      expect(yield* managerB.list()).toHaveLength(0);
 
       const store = new ProcessStore(kv);
       expect(yield* store.listProcessIds()).toEqual([]);

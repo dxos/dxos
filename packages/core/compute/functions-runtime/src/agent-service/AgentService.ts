@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -16,14 +17,21 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { EID } from '@dxos/keys';
+import { log } from '@dxos/log';
 
-import { AgentProcess } from './agent-process';
+import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 
 export interface Service {
   /**
    * Gets or creates a session for a feed.
    */
   getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
+
+  /**
+   * Hydrates agent processes persisted by a previous session.
+   * Each record is rehydrated with a fresh {@link AgentProcess} built from the layer options.
+   */
+  hydrate: () => Effect.Effect<void>;
 }
 
 export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
@@ -68,6 +76,8 @@ export interface Session {
  * Gets or creates a session for a feed.
  */
 export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
+
+export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
 
 export interface GetSessionOptions {
   readonly model?: ModelName;
@@ -130,7 +140,28 @@ export const layer = (opts?: {
       const processManager = yield* ProcessManager.Service;
       const sessionCache = new Map<string, Session>();
 
-      return {
+      const makeExecutable = (model?: ModelName) =>
+        AgentProcess({
+          systemPrompt: opts?.systemPrompt,
+          model: model ?? opts?.model,
+          getMcpServers: opts?.getMcpServers,
+          enableToolBackgrounding: opts?.enableToolBackgrounding,
+        });
+
+      const hydrateAgents = Effect.fnUntraced(function* () {
+        const executable = makeExecutable();
+        const agents = yield* processManager.list({ key: AGENT_PROCESS_KEY });
+        log('agent hydrate', { count: agents.length });
+        for (const agent of agents) {
+          yield* agent.hydrate(executable).pipe(
+            Effect.catchAllCause((cause) =>
+              Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
+            ),
+          );
+        }
+      });
+
+      const service: Service = {
         getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
           Effect.gen(function* () {
             const cached = sessionCache.get(feed.id);
@@ -141,17 +172,12 @@ export const layer = (opts?: {
             const target = Obj.getURI(feed);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-            const executable = AgentProcess({
-              systemPrompt: opts?.systemPrompt,
-              model: options?.model ?? opts?.model,
-              getMcpServers: opts?.getMcpServers,
-              enableToolBackgrounding: opts?.enableToolBackgrounding,
-            });
+            const executable = makeExecutable(options?.model);
             const processes = yield* processManager.list({ target, key: executable.key });
 
             let handle: ProcessManager.Handle<string, void>;
             if (processes.length > 0) {
-              handle = processes[0];
+              handle = yield* processes[0].hydrate(executable);
             } else {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',
@@ -170,7 +196,16 @@ export const layer = (opts?: {
             sessionCache.set(feed.id, session);
             return session;
           }),
+        hydrate: hydrateAgents,
       };
+
+      yield* Effect.forkDaemon(
+        service.hydrate().pipe(
+          Effect.catchAllCause((cause) => Effect.sync(() => log.warn('agent hydrate failed', { cause: Cause.pretty(cause) }))),
+        ),
+      );
+
+      return service;
     }),
   );
 

@@ -101,25 +101,6 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app
 export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layer-spec');
 
 /**
- * Process definition contributed by plugins for durable restore.
- *
- * Process definitions carry non-serializable runtime closures (e.g. an agent's MCP server
- * provider), so the {@link ProcessManager} cannot rehydrate persisted processes from storage
- * alone — the live definition must be re-supplied on every boot. Plugins that spawn durable
- * long-lived processes contribute the matching {@link Process$.Process} here; the process-manager
- * module registers them into the {@link ProcessManager$.ProcessDefinitionRegistry} before calling
- * `restore()`.
- *
- * Operation-backed processes (`Process.fromOperation`) do not need to be contributed — they are
- * derived automatically from the registered {@link OperationHandler} sets.
- *
- * @category Capability
- */
-export const ProcessDefinition = Capability$.make<Process$.Process<any, any, any>>(
-  'org.dxos.app-framework.capability.process-definition',
-);
-
-/**
  * Context passed to {@link TraceSinkFactory} implementations when the
  * process-manager capability materialises contributed sinks.
  */
