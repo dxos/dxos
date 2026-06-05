@@ -21,10 +21,10 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { BlueskyPlugin } from './BlueskyPlugin';
-import { ATPROTO_BACKEND_KIND } from './constants';
-import { translations } from './translations';
-import { BlueskyChannel, makeBlueskyChannel } from './types';
+import { BlueskyPlugin } from '../BlueskyPlugin';
+import { ATPROTO_BACKEND_KIND } from '../constants';
+import { translations } from '../translations';
+import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
 /** Public Bluesky handle whose author feed is displayed by the demo channel. */
 const DEMO_HANDLE = 'bsky.app';
@@ -56,8 +56,14 @@ const meta = {
           config: new Config({
             runtime: {
               services: {
-                edge: { url: 'https://edge.dxos.workers.dev/' },
-                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+                edge: {
+                  url: 'https://edge.dxos.workers.dev/',
+                },
+                iceProviders: [
+                  {
+                    urls: 'https://edge.dxos.workers.dev/ice',
+                  },
+                ],
               },
             },
           }),
@@ -68,7 +74,10 @@ const meta = {
               personalSpace.db.add(
                 Channel.make({
                   name: `@${DEMO_HANDLE}`,
-                  backend: { kind: ATPROTO_BACKEND_KIND, config: makeBlueskyChannel(DEMO_HANDLE) },
+                  backend: {
+                    kind: ATPROTO_BACKEND_KIND,
+                    config: makeBlueskyChannel(DEMO_HANDLE),
+                  },
                 }),
               );
             }),
