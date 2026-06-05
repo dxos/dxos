@@ -4,7 +4,7 @@
 
 import '@fontsource/poiret-one';
 
-import React, { type KeyboardEvent, type ReactNode, useCallback, useRef, useState } from 'react';
+import React, { type KeyboardEvent, type ReactNode, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { supportsNativePasskeys } from '@dxos/app-toolkit';
 import { DXOSHorizontalType } from '@dxos/brand';
@@ -64,6 +64,7 @@ export const Welcome = ({
   const [signupStep, setSignupStep] = useState<SignupStep>('collect');
 
   // Inputs.
+  const rootRef = useRef<HTMLDivElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
@@ -73,6 +74,17 @@ export const Welcome = ({
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const [pending, setPending] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
+
+  // The react-ui-tabs `Tabs` focuses its active region on mount (master-detail behavior), which
+  // paints a focus ring around the whole card on load. Drop that initial focus grab on the tab
+  // chrome so the screen opens unfocused; keyboard navigation still focuses elements on interaction.
+  useLayoutEffect(() => {
+    const active = document.activeElement;
+    const role = active?.getAttribute('role');
+    if (active instanceof HTMLElement && rootRef.current?.contains(active) && (role === 'tabpanel' || role === 'tab')) {
+      active.blur();
+    }
+  }, []);
 
   //
   // Login handlers
@@ -217,6 +229,7 @@ export const Welcome = ({
 
   return (
     <div
+      ref={rootRef}
       className={mx(
         'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
