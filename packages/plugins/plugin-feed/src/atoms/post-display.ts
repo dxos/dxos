@@ -9,6 +9,7 @@ import { AtomObj, AtomRef } from '@dxos/echo-atom';
 
 import { type Magazine, type Subscription } from '../types';
 import { getImageUrl, getSnippet } from '../util/post-content';
+import { postCurationAtom } from './post-curation';
 import { postReadAtom } from './post-read';
 import { postTagsAtom } from './post-tags';
 
@@ -40,18 +41,15 @@ export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Ma
       : undefined;
     const { readAt } = get(postReadAtom(post));
     const { starred } = get(postTagsAtom(post));
-    // Magazine postState carries agent-written snippet/imageUrl; fall back to description derivation.
-    const magazineSnapshot = get(AtomObj.make(magazine));
-    const postState = (magazineSnapshot.postState as Record<string, Partial<Magazine.PostState>> | undefined)?.[
-      post.id
-    ];
+    // Agent-written snippet/imageUrl (granular per-Post slice); fall back to description derivation.
+    const curation = get(postCurationAtom([post, magazine]));
     return {
       post: snapshot,
       feedName,
       read: readAt !== undefined,
       starred,
-      snippet: postState?.snippet ?? getSnippet(snapshot),
-      imageUrl: postState?.imageUrl ?? getImageUrl(snapshot),
+      snippet: curation.snippet ?? getSnippet(snapshot),
+      imageUrl: curation.imageUrl ?? getImageUrl(snapshot),
     };
   }).pipe(Atom.keepAlive),
 );
