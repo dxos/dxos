@@ -40,7 +40,7 @@ describe('shouldTriggerAgent', () => {
     expect(shouldTriggerAgent(thread, makeMessage('assistant', 'hi'), 'echo')).toBe(false);
   });
 
-  test('treats messages with no role as user messages (current CommentsCompanion pattern)', ({ expect }) => {
+  test('treats messages with no role as user messages', ({ expect }) => {
     const thread = makeThread({ agent: { enabled: true, mode: 'auto' } });
     expect(shouldTriggerAgent(thread, makeMessage(undefined, 'hi'), 'echo')).toBe(true);
   });

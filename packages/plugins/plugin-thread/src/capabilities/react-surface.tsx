@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
-import { ChannelArticle, CommentsCompanion, ThreadContainer } from '#containers';
+import { ChannelArticle, ThreadArticle } from '#containers';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
@@ -43,17 +43,8 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ThreadContainer space={space} thread={subject} />;
+          return <ThreadArticle space={space} thread={subject} />;
         },
-      }),
-      Surface.create({
-        id: 'comments',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'comments'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        // TODO(wittjosiah): This isn't scrolling properly in a plank.
-        component: ({ data }) => <CommentsCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
         id: 'pluginSettings',

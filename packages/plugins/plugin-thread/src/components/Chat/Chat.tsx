@@ -68,7 +68,7 @@ export type ChatOrientation = 'top' | 'bottom';
  * Pure chat UI: scrollable message list + composer textbox + activity indicator.
  * Owns its own UI state (textbox content, scroll position, editor extensions) but
  * does not load data or invoke operations — the caller passes messages and an
- * `onSend` callback. Used by both `ThreadContainer` (AutoMerge `Thread`) and
+ * `onSend` callback. Used by both `ThreadArticle` (AutoMerge `Thread`) and
  * `ChannelArticle`'s feed-backed channel chat.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
