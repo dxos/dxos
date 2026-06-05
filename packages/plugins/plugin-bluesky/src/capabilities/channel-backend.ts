@@ -12,7 +12,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Message } from '@dxos/types';
 
 import { ATPROTO_BACKEND_KIND, ATPROTO_POLL_INTERVAL } from '../constants';
-import * as BlueskyApi from '../services/BlueskyApi';
+import { BlueskyApi } from '../services';
 import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
 /** Maps an ATProto feed-view post to a transient (non-persisted) chat message. */
@@ -33,7 +33,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
   label: 'Bluesky',
   icon: 'ph--butterfly--regular',
   createFields: Schema.Struct({
-    handle: Schema.String.annotations({ title: 'Handle', description: 'Public Bluesky handle, e.g. bsky.app.' }),
+    handle: Schema.String.annotations({ title: 'Handle', description: 'Public Bluesky handle (e.g., bsky.app.)' }),
   }),
   makeConfig: (options) => makeBlueskyChannel(String(options.handle ?? '')),
   subscribe: (channel, onMessages) => {
