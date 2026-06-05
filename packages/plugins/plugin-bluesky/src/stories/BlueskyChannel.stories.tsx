@@ -38,7 +38,7 @@ const DefaultStory = () => {
     return <Loading data={{ channel }} />;
   }
 
-  return <Surface.Surface role='article' data={{ subject: channel, attendableId: 'story' }} />;
+  return <Surface.Surface role='article' data={{ subject: channel, attendableId: 'story' }} limit={1} />;
 };
 
 const meta = {

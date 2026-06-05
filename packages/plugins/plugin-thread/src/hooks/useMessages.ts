@@ -12,14 +12,17 @@ import { ThreadCapabilities, resolveProvider } from '../types';
 const EMPTY: readonly Message.Message[] = [];
 
 /** Reactive message list for a channel, resolved through its backend provider. */
-export const useMessages = (channel: Channel.Channel): readonly Message.Message[] => {
+export const useMessages = (channel: Channel.Channel | undefined): readonly Message.Message[] => {
   const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const provider = useMemo(() => resolveProvider(providers, channel.backend.kind), [providers, channel.backend.kind]);
+  const provider = useMemo(
+    () => (channel ? resolveProvider(providers, channel.backend.kind) : undefined),
+    [providers, channel],
+  );
 
   const ref = useRef<readonly Message.Message[]>(EMPTY);
   const subscribe = useCallback(
     (onChange: () => void) => {
-      if (!provider) {
+      if (!provider || !channel) {
         return () => {};
       }
       return provider.subscribe(channel, (messages) => {
