@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import * as Filter from './Filter';
@@ -20,8 +19,9 @@ export const Tag = Schema.Struct({
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
   internal.LabelAnnotation.set(['label']),
-  internal.SystemTypeAnnotation.set(true),
-  Type.makeObject(DXN.make('org.dxos.type.tag', '0.1.0')),
+  internal.HiddenAnnotation.set(true),
+  // Shared DXN so `meta.tags` (the `Ref<Tag>` schema) and this type stay in sync.
+  Type.makeObject(internal.TagTypeDXN),
 );
 
 export type Tag = Type.InstanceType<typeof Tag>;

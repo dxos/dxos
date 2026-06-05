@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
+import { meta as tripMeta } from '@dxos/plugin-trip';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.duffel',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.duffel'),
   name: 'Duffel',
   author: 'DXOS',
   description: trim`
@@ -21,6 +23,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--airplane-tilt--regular',
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-duffel',
-  version: '0.8.3',
+  dependsOn: [tripMeta.id],
   tags: ['labs'],
-};
+});

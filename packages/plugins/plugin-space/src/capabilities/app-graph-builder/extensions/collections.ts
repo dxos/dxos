@@ -10,13 +10,14 @@ import {
   AppCapabilities,
   AppNodeMatcher,
   LayoutOperation,
+  RootCollectionAnnotation,
   Segments,
   getObjectPathFromObject,
   toUrlPath,
 } from '@dxos/app-toolkit';
 import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -52,7 +53,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   return yield* Effect.all([
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
-      id: 'collections-section',
+      id: 'collectionsSection',
       match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -60,8 +61,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           return Effect.succeed([]);
         }
 
-        const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
+        get(AtomObj.make(space.properties));
+        const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
         if (collectionRef) {
           get(AtomObj.make(collectionRef));
         }
@@ -103,8 +104,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const ephemeralState = get(ephemeralAtom);
 
-        const propertiesSnapshot = get(AtomObj.make(space.properties));
-        const collectionRef = propertiesSnapshot[Type.getTypename(Collection.Collection)] as any;
+        get(AtomObj.make(space.properties));
+        const collectionRef = Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
         const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
         if (!collection) {
           return Effect.succeed([]);
@@ -174,7 +175,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
     // Object actions.
     GraphBuilder.createExtension({
-      id: 'object-actions',
+      id: 'objectActions',
       match: (node) => {
         return node.data != null &&
           Obj.getDatabase(node.data) &&
@@ -268,7 +269,7 @@ const constructObjectActions = ({
     ...(parentCollection && !Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: 'remove-from-collection',
+            id: 'removeFromCollection',
             data: () =>
               Effect.gen(function* () {
                 const index = parentCollection.objects.findIndex((ref: any) => ref.target === object);
@@ -314,7 +315,7 @@ const constructObjectActions = ({
     ...(navigable || !Obj.instanceOf(Collection.Collection, object)
       ? [
           Node.makeAction({
-            id: 'copy-link',
+            id: 'copyLink',
             data: () =>
               Effect.promise(async () => {
                 const url = new URL(toUrlPath(nodeId), shareableLinkOrigin);

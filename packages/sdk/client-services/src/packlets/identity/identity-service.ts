@@ -85,6 +85,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       await this._recoveryManager.recoverIdentityWithExternalSignature(ctx, request.external);
     } else if (request.token) {
       await this._recoveryManager.recoverIdentityWithToken(ctx, { token: request.token });
+    } else if (request.recoveryProof) {
+      await this._recoveryManager.recoverIdentityWithToken(ctx, { recoveryProof: request.recoveryProof });
     } else {
       throw new Error('Invalid request.');
     }

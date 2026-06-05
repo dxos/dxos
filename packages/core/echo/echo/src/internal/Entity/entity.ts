@@ -9,7 +9,8 @@ import type * as Types from 'effect/Types';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import { defineHiddenProperty } from '../common/proxy/define-hidden-property';
 import { makeObject } from '../common/proxy/make-object';
 import { getProxyTarget } from '../common/proxy/proxy-utils';
@@ -18,11 +19,11 @@ import {
   EntityKind,
   InstancePhantomId,
   KindId,
-  type EntityMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
-import { JsonSchemaType } from '../JsonSchema';
+import { type EntityMeta } from '../common/types/meta';
+import { JsonSchemaType } from '../JsonSchema/json-schema-type';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -227,7 +228,7 @@ export const makeEchoTypeSchema = <
   // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
   // canonical registry-provenance pair — not data fields. `keys` is empty for
   // in-memory declarations until persisted.
-  const meta: EntityMeta = { keys: [], key: typename, version };
+  const meta: Partial<EntityMeta> = { keys: [], key: typename, version };
 
   // Default to a deterministic id derived from `(typename, version)` so that
   // constructing a `Type.Type` entity never reaches `crypto.getRandomValues()`.
@@ -272,3 +273,5 @@ export const makeEchoTypeSchema = <
 
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };
+
+export { isEntity } from './guard';

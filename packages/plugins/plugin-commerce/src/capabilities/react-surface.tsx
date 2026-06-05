@@ -16,26 +16,26 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'result-card',
+        id: 'resultCard',
         position: 'first',
         filter: AppSurface.object(AppSurface.Card, Result.Result),
         component: ({ data }) => <ResultCard subject={data.subject} />,
       }),
       Surface.create({
-        id: 'search-article',
+        id: 'searchArticle',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
         component: ({ data, role }) => (
           <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />
         ),
       }),
       Surface.create({
-        id: 'search-object-properties',
+        id: 'searchObjectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
         component: ({ data }) => <SearchProperties search={data.subject} />,
       }),
       Surface.create({
-        id: 'provider-article',
+        id: 'providerArticle',
         filter: AppSurface.object(AppSurface.Article, Provider.Provider),
         component: ({ data, role }) => (
           <ProviderArticle subject={data.subject} attendableId={data.attendableId} role={role} />

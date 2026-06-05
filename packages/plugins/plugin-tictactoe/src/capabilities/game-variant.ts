@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { GameCapabilities, type GameVariant } from '@dxos/plugin-game';
+import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
 
 import { TicTacToeArticle, TicTacToeCard } from '#containers';
 import { TicTacToe } from '#types';
@@ -58,4 +58,6 @@ const variant: GameVariant = {
   article: TicTacToeArticle,
 };
 
-export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.Variant, variant)));
+export default Capability.makeModule(() =>
+  Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)),
+);

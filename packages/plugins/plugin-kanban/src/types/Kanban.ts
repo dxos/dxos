@@ -74,10 +74,7 @@ export const Kanban = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['spec', 'view']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--kanban--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
 );
 

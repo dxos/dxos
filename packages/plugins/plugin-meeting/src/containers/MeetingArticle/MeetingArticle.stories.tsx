@@ -10,6 +10,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { Feed, Obj, Query, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
@@ -24,11 +25,16 @@ import { Meeting } from '#types';
 
 import { MeetingArticle } from './MeetingArticle';
 
-const MarkdownExtensionsPlugin = Plugin.define({ id: 'story-markdown-extensions', name: 'Story Extensions' }).pipe(
+const MarkdownExtensionsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.meeting.story.markdownExtensions'),
+    name: 'Story Extensions',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'extensions',
     activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.Extensions, [])),
+    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
   }),
   Plugin.make,
 );

@@ -44,10 +44,15 @@ export default Capability.makeModule(
     // Map companion: offered on any object a MarkerProvider can plot (excluding Map.Map itself,
     // whose primary article is already a map). Gating lives here (capability-aware) rather than in
     // the surface filter; refining it to require non-empty markers is a follow-up.
+    // Any ECHO object that is not a Map.Map itself (whose primary article is already a map surface).
+    const whenPlottable = NodeMatcher.whenAll(
+      NodeMatcher.whenEchoObject,
+      NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Map.Map)),
+    );
+
     const companion = yield* GraphBuilder.createExtension({
-      id: 'map-companion',
-      match: (node) =>
-        Obj.isObject(node.data) && !Obj.instanceOf(Map.Map, node.data) ? Option.some(node.data) : Option.none(),
+      id: 'mapCompanion',
+      match: whenPlottable,
       connector: (object) =>
         Effect.gen(function* () {
           const providers = yield* Capability.getAll(MapCapabilities.MarkerProvider);

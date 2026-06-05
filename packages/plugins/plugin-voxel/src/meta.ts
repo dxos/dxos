@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.voxel',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.voxel'),
   name: 'Voxel',
   author: 'DXOS',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-voxel',
@@ -33,5 +34,6 @@ export const meta: Plugin.Meta = {
     go through ECHO, so changes are immediately visible to every collaborator.
   `,
   icon: 'ph--cube--regular',
+  iconHue: 'yellow',
   tags: ['labs'],
-};
+});

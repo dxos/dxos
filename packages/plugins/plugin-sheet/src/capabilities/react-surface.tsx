@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'object-properties',
+        id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Sheet.Sheet),
         component: ({ data }) => <RangeList sheet={data.subject} />,
       }),

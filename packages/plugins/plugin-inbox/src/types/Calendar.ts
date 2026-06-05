@@ -17,10 +17,7 @@ export const Calendar = Schema.Struct({
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   FeedAnnotation.set(true),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--calendar--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.calendar', '0.1.0')),
 );

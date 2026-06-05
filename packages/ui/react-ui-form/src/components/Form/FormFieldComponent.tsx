@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import { type Database, Format } from '@dxos/echo';
-import { Icon, Input, Tooltip } from '@dxos/react-ui';
+import { Icon, Input, ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -78,26 +78,47 @@ export type FormFieldProvider = (props: {
 // FormFieldLabel
 //
 
-export type FormFieldLabelProps = {
-  asChild?: boolean;
-  error?: string;
-  /**
-   * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
-   * Surfaced as a hover tooltip on the label when the enclosing `Form.Root`
-   * has `tooltips` enabled (the default) -- useful for spotting which field
-   * maps to which path when authoring schemas or filing bugs against a form.
-   * Callers can supply the path unconditionally; the label suppresses the
-   * tooltip when `Form.Root tooltips={false}`.
-   */
-  path?: string;
-} & Pick<FormFieldComponentProps, 'label' | 'readonly'>;
+export type FormFieldLabelProps = ThemedClassName<
+  {
+    asChild?: boolean;
+    error?: string;
+    /**
+     * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
+     * Surfaced as a hover tooltip on the label when the enclosing `Form.Root`
+     * has `tooltips` enabled (the default) -- useful for spotting which field
+     * maps to which path when authoring schemas or filing bugs against a form.
+     * Callers can supply the path unconditionally; the label suppresses the
+     * tooltip when `Form.Root tooltips={false}`.
+     */
+    path?: string;
+    /**
+     * Trailing button rendered at the end of the label row (third grid column).
+     * Used by nested-object field sets to surface a collapse toggle.
+     */
+    button?: ReactNode;
+    onClick?: () => void;
+  } & Pick<FormFieldComponentProps, 'label' | 'readonly'>
+>;
 
-export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFieldLabelProps) => {
+export const FormFieldLabel = ({
+  classNames,
+  label,
+  error,
+  readonly,
+  asChild,
+  path,
+  button,
+  onClick,
+}: FormFieldLabelProps) => {
   const tooltips = useFormTooltips();
   const Label = readonly || asChild ? 'span' : Input.Label;
   const labelNode = <Label className={mx(inputTextLabel, 'text-sm')}>{label}</Label>;
+
   return (
-    <div className='flex items-center justify-between'>
+    <div
+      className={mx('grid grid-cols-[1fr_auto_auto] items-center select-none', onClick && 'cursor-pointer', classNames)}
+      onClick={onClick}
+    >
       {tooltips && path ? (
         <Tooltip.Trigger asChild content={path} side='bottom'>
           {labelNode}
@@ -105,11 +126,14 @@ export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFi
       ) : (
         labelNode
       )}
-      {error && (
+      {error ? (
         <Tooltip.Trigger asChild content={error} side='bottom'>
           <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
         </Tooltip.Trigger>
+      ) : (
+        <span />
       )}
+      {button}
     </div>
   );
 };
@@ -213,8 +237,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
-          <span className='bg-rose-fill text-base-foreground px-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-bg font-mono text-sm'>
+          <span className='bg-rose-bg text-base-fg px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

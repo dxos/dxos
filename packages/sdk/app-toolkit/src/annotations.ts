@@ -4,7 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation } from '@dxos/echo';
+import { Annotation, Collection, Ref } from '@dxos/echo';
+
+/** Root navigation collection for a space. */
+export const RootCollectionAnnotation = Annotation.make({
+  id: 'org.dxos.space.rootCollection',
+  schema: Ref.Ref(Collection.Collection),
+});
 
 /** Blueprint keys associated with a schema type. Used by AI companion to auto-load blueprints. */
 export const BlueprintsAnnotation = Annotation.make<string[]>({

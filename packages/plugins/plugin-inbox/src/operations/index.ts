@@ -5,6 +5,7 @@
 import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './extractor';
+export * from './util';
 
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
@@ -22,7 +23,5 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./google/gmail/send'),
   () => import('./google/gmail/sync'),
   () => import('./read-email'),
-  () => import('./sync-calendar'),
   () => import('./sync-contacts'),
-  () => import('./sync-mailbox'),
 );

@@ -108,8 +108,7 @@ const renderBanner = ({
 }) => {
   const loader = document.getElementById('boot-loader');
   if (!loader) {
-    // Loader was already dismissed (fast cold boot or HMR) — nothing to
-    // attach to.
+    // Loader was already dismissed (fast cold boot or HMR) — nothing to attach to.
     return;
   }
 
@@ -124,7 +123,6 @@ const renderBanner = ({
     padding: '12px 16px',
     border: '1px solid #888888',
     borderRadius: '8px',
-    opacity: '0.7',
     textAlign: 'center',
     pointerEvents: 'auto',
   } satisfies Partial<CSSStyleDeclaration>);

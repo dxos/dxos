@@ -32,7 +32,7 @@ type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
 export const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
-    <div {...composableProps({ classNames: 'dx-container bg-modal-surface rounded-md' })} ref={forwardedRef}>
+    <div {...composableProps({ classNames: 'dx-container bg-card-surface rounded-md' })} ref={forwardedRef}>
       {children}
     </div>
   );

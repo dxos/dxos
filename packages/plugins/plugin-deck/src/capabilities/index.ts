@@ -7,6 +7,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const CheckAppScheme = Capability.lazy('CheckAppScheme', () => import('./check-app-scheme'));
+export const NotificationTracker = Capability.lazy('NotificationTracker', () => import('./notification-tracker'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

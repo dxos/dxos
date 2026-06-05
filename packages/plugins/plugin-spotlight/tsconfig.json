@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -27,6 +30,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-navtree"
     },
     {
       "path": "../plugin-testing"

@@ -16,10 +16,7 @@ export const Profile = Schema.Struct({
   researchEnabled: Schema.optional(Schema.Boolean),
   lastUpdated: Schema.optional(Schema.String),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--user-circle--regular',
-    hue: 'cyan',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--user-circle--regular', hue: 'cyan' }),
   Type.makeObject(DXN.make('org.dxos.type.sidekick.profile', '0.1.0')),
 );
 

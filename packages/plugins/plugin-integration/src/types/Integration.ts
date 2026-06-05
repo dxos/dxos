@@ -57,10 +57,7 @@ export const Integration = Schema.Struct({
   ),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--plugs-connected--regular',
-    hue: 'cyan',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'cyan' }),
   Type.makeObject(DXN.make('org.dxos.type.integration', '0.1.0')),
 );
 

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.sandbox',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.sandbox'),
   name: 'Sandbox',
   author: 'DXOS',
   spec: 'PLUGIN.mdl',
@@ -20,4 +21,4 @@ export const meta: Plugin.Meta = {
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sandbox',
   tags: ['labs'],
-};
+});

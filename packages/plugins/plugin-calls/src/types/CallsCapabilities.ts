@@ -21,4 +21,4 @@ export type CallProperties = {
   onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
 };
 
-export const Extension = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
+export const EventHandler = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);

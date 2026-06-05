@@ -7,14 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Ref, DXN } from '@dxos/echo';
 
 import * as CodeProject from './CodeProject';
 import * as Spec from './Spec';
 
 export const VerifySpec = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.verify-spec',
+    key: DXN.make('org.dxos.function.code.verifySpec'),
     name: 'Verify Spec',
     description: 'Lints and structurally validates a DEUS spec.',
     icon: 'ph--check-circle--regular',
@@ -31,7 +31,7 @@ export const VerifySpec = Operation.make({
 
 export const RunBuildAgent = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.run-build-agent',
+    key: DXN.make('org.dxos.function.code.runBuildAgent'),
     name: 'Run Build Agent',
     description: 'Dispatches a build of a CodeProject via the EDGE build service.',
     icon: 'ph--hammer--regular',
@@ -54,7 +54,7 @@ const FileEntry = Schema.Struct({
 
 export const ListFiles = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.list-files',
+    key: DXN.make('org.dxos.function.code.listFiles'),
     name: 'List Files',
     description: 'List the source files in a CodeProject.',
     icon: 'ph--list--regular',
@@ -72,7 +72,7 @@ export const ListFiles = Operation.make({
 
 export const ReadFile = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.read-file',
+    key: DXN.make('org.dxos.function.code.readFile'),
     name: 'Read File',
     description: 'Read the content of a single source file in a CodeProject.',
     icon: 'ph--file-text--regular',
@@ -94,7 +94,7 @@ export const ReadFile = Operation.make({
 
 export const WriteFile = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.write-file',
+    key: DXN.make('org.dxos.function.code.writeFile'),
     name: 'Write File',
     description:
       'Create or overwrite a source file in a CodeProject. Whole-file write; use for new files or full rewrites.',
@@ -120,7 +120,7 @@ export const WriteFile = Operation.make({
 
 export const DeleteFile = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.delete-file',
+    key: DXN.make('org.dxos.function.code.deleteFile'),
     name: 'Delete File',
     description: 'Remove a source file from a CodeProject.',
     icon: 'ph--trash--regular',
@@ -142,7 +142,7 @@ export const DeleteFile = Operation.make({
 
 export const ScaffoldProject = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.scaffold',
+    key: DXN.make('org.dxos.function.code.scaffold'),
     name: 'Scaffold Project',
     description: 'Seed a CodeProject with a minimal Composer plugin scaffold (package.json, src/plugin.ts, README.md).',
     icon: 'ph--folder-plus--regular',
@@ -165,7 +165,7 @@ export const ScaffoldProject = Operation.make({
 
 export const HelloWorld = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.hello-world',
+    key: DXN.make('org.dxos.function.code.helloWorld'),
     name: 'Hello World',
     description:
       'Sanity-check operation: writes (or overwrites) a single `src/hello.ts` file containing a Hello World program. ' +
@@ -186,7 +186,7 @@ export const HelloWorld = Operation.make({
 
 export const ResetProject = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.reset',
+    key: DXN.make('org.dxos.function.code.reset'),
     name: 'Reset Project',
     description: 'Delete every source file in a CodeProject. Destructive; intended for testing.',
     icon: 'ph--arrow-counter-clockwise--regular',
@@ -218,7 +218,7 @@ const BuildEntry = Schema.Struct({
 
 export const BuildProject = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.build-project',
+    key: DXN.make('org.dxos.function.code.buildProject'),
     name: 'Build Project',
     description:
       "Compile the project's TypeScript sources in-browser. Returns language-service diagnostics plus the " +
@@ -240,7 +240,7 @@ export const BuildProject = Operation.make({
 
 export const RunBuild = Operation.make({
   meta: {
-    key: 'org.dxos.function.code.run-build',
+    key: DXN.make('org.dxos.function.code.runBuild'),
     name: 'Run Build',
     description:
       'Build the project and, on a clean build, execute the emitted entry script inside a console-capturing ' +

@@ -3,11 +3,12 @@
 //
 
 import { Blueprint, Template } from '@dxos/compute';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { EnableBlueprints, QueryBlueprints, UpdateBlueprints } from './functions';
+import { EnableBlueprints, QueryBlueprints } from './functions';
 
-const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprint-manager';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprintManager';
 
 const make = () =>
   Blueprint.make({
@@ -18,7 +19,6 @@ const make = () =>
       source: trim`
         You can query available blueprints and enable them in the current conversation.
         Use [query-blueprints] to refresh the list of available blueprints.
-        Use [refresh-blueprints] to update blueprint objects stored in the database from the built-in registry when they have drifted.
         Use [enable-blueprints] to enable blueprints by their keys. Always call [query-blueprints] first.
         Only blueprints with agentCanEnable=true can be enabled by the agent.
 
@@ -34,11 +34,11 @@ const make = () =>
         {
           name: 'blueprints',
           kind: 'operation',
-          operation: QueryBlueprints.meta.key,
+          operation: DXN.getName(QueryBlueprints.meta.key),
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({ operations: [QueryBlueprints, EnableBlueprints, UpdateBlueprints] }),
+    tools: Blueprint.toolDefinitions({ operations: [QueryBlueprints, EnableBlueprints] }),
   });
 
 const blueprint: Blueprint.Definition = {

@@ -26,7 +26,7 @@ import {
 } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, EID, PublicKey, URI } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -38,12 +38,14 @@ import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 random.seed(1);
 
-const tags = ['red', 'green', 'blue'];
+// Tag ids are the URIs of Tag objects; meta stores them as refs.
+const tags = ['dxn:echo:@:TAGRED', 'dxn:echo:@:TAGGREEN', 'dxn:echo:@:TAGBLUE'];
+const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
 
 type ObjectProps = {
-  [Obj.Meta]?: { tags?: string[]; key?: string; version?: string };
+  [Obj.Meta]?: { tags?: Ref.Ref<any>[]; key?: string; version?: string };
   value?: number;
 };
 
@@ -68,7 +70,7 @@ const createTestObjects = () => {
       range(2).map((i) =>
         createTestObject({
           value: 200,
-          [Obj.Meta]: { tags: tags.slice(i) },
+          [Obj.Meta]: { tags: tagRefs.slice(i) },
         }),
       ),
     )
@@ -76,7 +78,7 @@ const createTestObjects = () => {
       range(4).map((i) =>
         createTestObject({
           value: 300,
-          [Obj.Meta]: { tags: tags.slice(i + 1) },
+          [Obj.Meta]: { tags: tagRefs.slice(i + 1) },
         }),
       ),
     );
@@ -1310,22 +1312,61 @@ describe('Query', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
+      const important = 'dxn:echo:@:TAGIMPORTANT';
+      const investor = 'dxn:echo:@:TAGINVESTOR';
+      const importantRef = Ref.fromURI(URI.make(important));
+      const investorRef = Ref.fromURI(URI.make(investor));
+
       db.add(Obj.make(TestSchema.Expando, { name: 'a' }));
       const b = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'b',
-          [Obj.Meta]: { tags: ['important'] },
+          [Obj.Meta]: { tags: [importantRef] },
         }),
       );
       const c = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'c',
-          [Obj.Meta]: { tags: ['important', 'investor'] },
+          [Obj.Meta]: { tags: [importantRef, investorRef] },
         }),
       );
 
-      const objects = await db.query(Query.select(Filter.tag('important'))).run();
+      const objects = await db.query(Query.select(Filter.tag(important))).run();
       expect(objects).toEqual([b, c]);
+    });
+
+    test('legacy string tags are upgraded to refs and normalized to EIDs on read', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(Obj.make(TestSchema.Expando, { name: 'legacy' }));
+      await db.flush();
+
+      // Simulate data written before the tags-as-refs migration: a legacy DXN string in `meta.tags`.
+      const legacyDxn = 'dxn:echo:@:01J00000000000000000000000';
+      const canonicalEid = EID.parse(legacyDxn); // → `echo:/01J0...`
+      getObjectCore(obj).setDecoded(['meta', 'tags'], [legacyDxn]);
+
+      // Read back: the string is materialized as a `Ref` with the DXN normalized to a canonical EID.
+      const tags = Obj.getMeta(obj).tags;
+      expect(tags).toHaveLength(1);
+      expect(Ref.isRef(tags[0])).toBe(true);
+      expect(tags[0].uri).toBe(canonicalEid);
+
+      // And it remains queryable by the canonical tag URI.
+      const objects = await db.query(Query.select(Filter.tag(canonicalEid))).run();
+      expect(objects).toEqual([obj]);
+    });
+
+    test('absent tags/annotations are backfilled to defaults on read', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(Obj.make(TestSchema.Expando, { name: 'legacy' }));
+      await db.flush();
+
+      // Simulate data written before `tags`/`annotations` existed: meta has only `keys`.
+      getObjectCore(obj).setDecoded(['meta'], { keys: [] });
+
+      const meta = Obj.getMeta(obj);
+      expect([...meta.tags]).toEqual([]);
+      expect(meta.annotations).toEqual({});
     });
   });
 
@@ -2410,6 +2451,41 @@ describe('Query', () => {
       expect(updates.at(0)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       // All objects deleted.
       expect(updates.at(-1)).toEqual([]);
+    });
+
+    // Regression for DX-966. The Composer navtree lists objects per type via
+    // `Filter.typename(...)`, which produces a version-less typename scope, while stored
+    // objects carry a versioned `@type`. The reactive index query must still be invalidated
+    // on delete so the navtree drops the node. Mirrors the bulk-delete test above but with a
+    // version-less typename filter instead of `Filter.type(StaticSchema)`.
+    test('deleting an item removes it from a version-less typename query (reactive)', async ({
+      expect,
+      onTestFinished,
+    }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      const charlie = db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
+      expect([alice, bob, charlie].filter(Boolean)).to.have.length(3);
+      await db.flush({ indexes: true, updates: true });
+
+      const updates: string[][] = [];
+      const unsub = db.query(Query.select(Filter.typename('com.example.type.person'))).subscribe(
+        (query) => {
+          updates.push([...query.results.map((obj) => obj.name!)].sort());
+        },
+        { fire: true },
+      );
+      onTestFinished(unsub);
+      await db.flush({ indexes: true, updates: true });
+
+      db.remove(bob);
+      await db.flush({ indexes: true, updates: true });
+
+      // Initial subscription sees all three; after the delete the reactive query drops Bob.
+      expect(updates.at(0)).toEqual(['Alice', 'Bob', 'Charlie']);
+      expect(updates.at(-1)).toEqual(['Alice', 'Charlie']);
     });
   });
 

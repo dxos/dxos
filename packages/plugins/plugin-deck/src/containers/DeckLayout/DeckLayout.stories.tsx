@@ -166,13 +166,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
-            id: 'story-navigation',
+            id: 'storyNavigation',
             role: 'navigation',
             filter: (data): data is { current: string } => typeof (data as any).current === 'string',
             component: ({ data, ref }) => <NavContainer current={data.current} ref={ref} />,
           }),
           Surface.create({
-            id: 'story-article',
+            id: 'storyArticle',
             role: 'article',
             filter: (data): data is Record<string, unknown> =>
               typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo == null,
@@ -201,7 +201,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             },
           }),
           Surface.create({
-            id: 'story-article-companion',
+            id: 'storyArticleCompanion',
             role: 'article',
             filter: (data): data is AppSurface.ArticleData<unknown, {}, unknown> =>
               typeof data === 'object' && data !== null && (data as { companionTo?: unknown }).companionTo != null,
@@ -234,12 +234,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     activate: Effect.fnUntraced(function* () {
       const extensions = yield* Effect.all([
         GraphBuilder.createExtension({
-          id: 'story-items',
+          id: 'storyItems',
           match: NodeMatcher.whenRoot,
           connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
         }),
         GraphBuilder.createExtension({
-          id: 'story-item-companions',
+          id: 'storyItemCompanions',
           match: NodeMatcher.whenNodeType('story-item'),
           connector: (node) =>
             Effect.succeed([

@@ -63,7 +63,7 @@ export const CompoundButton = ({
             {...slots.description}
             className={mx(
               'text-xs mb-1 font-normal',
-              variant === 'primary' ? 'text-sm font-normal text-base-foreground' : 'text-description',
+              variant === 'primary' ? 'text-sm font-normal text-base-fg' : 'text-description',
               slots.description?.className,
             )}
           >

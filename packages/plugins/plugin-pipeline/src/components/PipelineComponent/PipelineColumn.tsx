@@ -128,7 +128,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
                 <Card.Icon icon={icon} />
                 <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.IconBlock padding>
+                <Card.IconBlock>
                   <Menu.Trigger asChild>
                     <Toolbar.IconButton
                       iconOnly

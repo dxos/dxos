@@ -19,8 +19,8 @@ import {
   getEntityKind,
   getSchemaTypename,
   getTypeIdentifierAnnotation,
-  makeTypeJsonSchemaAnnotation,
-} from '../Annotation';
+} from '../Annotation/annotations';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,

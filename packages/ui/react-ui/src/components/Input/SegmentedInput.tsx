@@ -69,7 +69,7 @@ const segmentClass =
   'data-[type=month]:min-w-[2ch] data-[type=day]:min-w-[2ch] ' +
   'data-[type=hour]:min-w-[2ch] data-[type=minute]:min-w-[2ch] ' +
   'data-[placeholder]:text-subdued data-[type=literal]:text-subdued ' +
-  'data-[focused]:bg-accent-surface data-[focused]:text-accent-foreground ' +
+  'data-[focused]:bg-accent-bg data-[focused]:text-accent-fg ' +
   'data-[invalid]:text-rose-500 ' +
   'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
 
@@ -450,4 +450,5 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 SegmentedDateTime.displayName = 'Input.SegmentedDateTime';
 
 export { SegmentedDate, SegmentedTime, SegmentedDateTime };
+
 export type { SegmentedDateProps, SegmentedTimeProps, SegmentedDateTimeProps };

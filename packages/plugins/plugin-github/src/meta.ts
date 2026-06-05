@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.github',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.github'),
   name: 'GitHub',
   author: 'DXOS',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-github',
@@ -33,6 +34,6 @@ export const meta: Plugin.Meta = {
     without requiring each member to hold their own GitHub token.
   `,
   icon: 'ph--github-logo--regular',
-  iconHue: 'neutral',
+  iconHue: 'purple',
   tags: ['labs', 'integration'],
-};
+});

@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.plugin-settings',
+        id: 'surface.pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
@@ -101,7 +101,7 @@ const Container = forwardRef<
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
   const editorState = useCapability(MarkdownCapabilities.EditorState);
-  const extensions = useCapabilities(MarkdownCapabilities.Extensions);
+  const extensions = useCapabilities(MarkdownCapabilities.ExtensionProvider);
   const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
   const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';

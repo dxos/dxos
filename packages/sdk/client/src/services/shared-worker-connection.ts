@@ -33,7 +33,7 @@ export class SharedWorkerConnection {
   private _release = new Trigger();
   private _config!: Config;
   private _transportService!: BridgeService;
-  private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
+  private _systemRpc: ProtoRpcPeer<WorkerServiceBundle> | undefined;
 
   constructor({ config, systemPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
@@ -96,12 +96,14 @@ export class SharedWorkerConnection {
   async close(): Promise<void> {
     log('shared-worker-connection: closing', { id: this._id });
     this._release.wake();
-    try {
-      await this._systemRpc.rpc.WorkerService.stop();
-    } catch {
-      // If this fails, the worker is probably already gone.
+    if (this._systemRpc) {
+      try {
+        await this._systemRpc.rpc.WorkerService.stop();
+      } catch {
+        // If this fails, the worker is probably already gone.
+      }
+      await this._systemRpc.close();
     }
-    await this._systemRpc.close();
     log('shared-worker-connection: closed');
   }
 

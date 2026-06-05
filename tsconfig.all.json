@@ -88,6 +88,9 @@
       "path": "packages/common/log-store-idb/tsconfig.json"
     },
     {
+      "path": "packages/common/markdown/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -152,6 +155,9 @@
     },
     {
       "path": "packages/core/compute/assistant-e2e/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/assistant-evals/tsconfig.json"
     },
     {
       "path": "packages/core/compute/assistant-toolkit/tsconfig.json"
@@ -298,9 +304,6 @@
       "path": "packages/experimental/env-tests/tsconfig.json"
     },
     {
-      "path": "packages/experimental/script-toolbox/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -425,6 +428,9 @@
     },
     {
       "path": "packages/plugins/plugin-observability/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-osrm/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-outliner/tsconfig.json"

@@ -14,7 +14,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'beacon-status',
+        id: 'beaconStatus',
         role: 'status-indicator',
         component: () => <BeaconStatusIndicator />,
       }),

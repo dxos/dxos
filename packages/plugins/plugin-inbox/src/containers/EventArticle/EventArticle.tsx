@@ -54,7 +54,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
         <Panel.Content asChild>
           <Event.Viewport>
             <Event.Header db={db} onContactCreate={handleContactCreate} />
-            <Event.Content />
+            <Event.Body />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
             {notes && (
               <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />

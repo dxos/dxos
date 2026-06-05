@@ -30,7 +30,6 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/operation": "workspace:*",
     "@dxos/web-context-solid": "workspace:*"
   },
   "devDependencies": {

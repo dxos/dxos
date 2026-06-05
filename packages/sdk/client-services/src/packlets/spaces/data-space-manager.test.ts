@@ -9,6 +9,7 @@ import { Context } from '@dxos/context';
 import { createAdmissionCredentials } from '@dxos/credentials';
 import { AuthStatus } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
@@ -271,6 +272,94 @@ describe('DataSpaceManager', () => {
       await reloadDataSpaces(peer);
 
       expect(getFirstSpace(peer).state).to.eq(SpaceState.SPACE_INACTIVE);
+    });
+  });
+
+  describe('deletion', () => {
+    test('markSpaceDeleted unloads the space and records a tombstone', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), spaceKey);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+      expect(space.state).to.equal(SpaceState.SPACE_DELETED);
+    });
+
+    test('markSpaceDeleted is idempotent', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), space.key);
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), space.key);
+
+      expect(peer.dataSpaceManager.isSpaceDeleted(space.key)).to.be.true;
+    });
+
+    test('deleted space is not reloaded after restart', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), spaceKey);
+      await reloadDataSpaces(peer);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+    });
+
+    test('handleRemoteSpaceDeleted tombstones a loaded space', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      await peer.dataSpaceManager.handleRemoteSpaceDeleted(new Context(), spaceKey);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+    });
+
+    test('acceptSpace refuses a tombstoned space (out-of-order guard)', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      // Tombstone arrives before the SpaceMember credential would trigger acceptSpace.
+      const spaceKey = PublicKey.random();
+      await peer.dataSpaceManager.handleRemoteSpaceDeleted(new Context(), spaceKey);
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+
+      await expect(
+        peer.dataSpaceManager.acceptSpace(new Context(), { spaceKey, genesisFeedKey: PublicKey.random() }),
+      ).rejects.toThrow();
     });
   });
 

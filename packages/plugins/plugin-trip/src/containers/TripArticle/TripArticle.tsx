@@ -9,6 +9,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -19,13 +20,16 @@ import { mx } from '@dxos/ui-theme';
 
 import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
-import { Segment, Trip } from '#types';
+import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
-export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
+export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
+  /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
+  defaultShowGlobe?: boolean;
+};
 
 const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
 
-export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
+export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: TripArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
 
@@ -98,10 +102,20 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           break;
         case 'delete':
           Trip.removeSegment(subject, action.segmentId);
+          // The companion is resolved from the current selection (app-graph-builder), which only
+          // re-runs on selection change — not on `segments` mutation. So when the active segment is
+          // deleted, clear the selection to re-resolve the companion to empty rather than leaving the
+          // now-orphaned segment shown.
+          if (action.segmentId === currentId) {
+            void invokePromise(LayoutOperation.Select, {
+              contextId: id,
+              subject: { mode: 'single', id: undefined },
+            });
+          }
           break;
       }
     },
-    [id, showItem, subject],
+    [id, currentId, showItem, subject, invokePromise],
   );
 
   // The inline map is rendered by plugin-map's `map` surface; only offer the toggle when a marker
@@ -109,7 +123,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const mapProviders = useCapabilities(MapCapabilities.MarkerProvider);
   const mapAvailable = useMemo(() => mapProviders.some((provider) => provider.match(subject)), [mapProviders, subject]);
 
-  const [showGlobe, setShowGlobe] = useState(false);
+  const [showGlobe, setShowGlobe] = useState(defaultShowGlobe ?? false);
 
   const handleNavigate = useCallback(
     (segmentId: string) => {
@@ -132,6 +146,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       if (!space) {
         return;
       }
+      // The chronologically-last leg, used to chain the new segment's origin from where it ended.
+      const previous = segments.at(-1);
       const segment = space.db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
       // Pre-fill the start (and end, for a range) from the current calendar selection.
@@ -141,12 +157,48 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       if (calendarSelection?.to) {
         Segment.setArriveAt(segment, calendarSelection.to.toISOString());
       }
+      // Default the origin to where the previous leg ended so a multi-leg trip chains naturally.
+      const previousDestination = previous && Segment.getDestination(previous);
+      if (previousDestination) {
+        Segment.setOrigin(segment, previousDestination);
+      }
+      // Make the new segment the current item and open its (fresh) companion form.
+      handleNavigate(segment.id);
     },
-    [subject, calendarSelection],
+    [subject, segments, calendarSelection, handleNavigate],
   );
 
+  // Computes driving routes for the trip's road segments via the registered RoutingService,
+  // writing distance / duration / geometry back onto each segment.
+  const [planning, setPlanning] = useState(false);
+  const hasRoad = useMemo(() => segments.some((seg) => seg.details._tag === 'road'), [segments]);
+  const handlePlanRoute = useCallback(async () => {
+    setPlanning(true);
+    try {
+      const { error } = await invokePromise(RoutingOperation.PlanRoute, { trip: subject });
+      if (error) {
+        throw error;
+      }
+    } catch (err) {
+      // Log the technical error; surface a friendly, non-technical toast. Known routing errors
+      // (no provider / geocode miss / OSRM failure) already carry user-facing messages.
+      log.catch(err);
+      const friendly =
+        err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
+      await invokePromise(LayoutOperation.AddToast, {
+        id: `${meta.id}/plan-route-error`,
+        title: ['route.error.label', { ns: meta.id }],
+        description: friendly ?? ['route.error.message', { ns: meta.id }],
+        icon: 'ph--warning--regular',
+      });
+    } finally {
+      setPlanning(false);
+    }
+  }, [subject, invokePromise]);
+
   // Reactive toolbar (idiom: org.dxos.react-ui-menu.toolbarMenu) — an "add segment" dropdown of
-  // kinds and a globe on/off toggle, composed as data rather than hand-wired Toolbar children.
+  // kinds, a "plan route" action, and a globe on/off toggle, composed as data rather than
+  // hand-wired Toolbar children.
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().group(
       'add',
@@ -166,9 +218,29 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       },
     );
 
+    // Push the route + map controls together to the trailing edge (single separator, so they sit
+    // adjacent rather than spread apart).
+    if (hasRoad || mapAvailable) {
+      builder.separator();
+    }
+
+    // Offer route planning once the trip has at least one road segment to route.
+    if (hasRoad) {
+      builder.action(
+        'plan-route',
+        {
+          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.id }],
+          icon: 'ph--path--regular',
+          iconOnly: true,
+          disabled: planning,
+        },
+        () => void handlePlanRoute(),
+      );
+    }
+
     // Only offer the map toggle when a map surface can render this trip.
     if (mapAvailable) {
-      builder.separator().action(
+      builder.action(
         'toggle-globe',
         {
           label: ['globe.toggle.label', { ns: meta.id }],
@@ -181,7 +253,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     }
 
     return builder.build();
-  }, [handleAddSegment, showGlobe, mapAvailable]);
+  }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
@@ -193,8 +265,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
       >
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-bs-0 overflow-hidden'>
-          <Panel.Root className='hidden @3xl:block border-r border-separator'>
-            <NaturalCalendar.Root>
+          <NaturalCalendar.Root>
+            <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
               </Panel.Toolbar>
@@ -205,8 +277,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
                   onSelectRange={handleDateRangeSelect}
                 />
               </Panel.Content>
-            </NaturalCalendar.Root>
-          </Panel.Root>
+            </Panel.Root>
+          </NaturalCalendar.Root>
 
           <Panel.Root>
             <Panel.Toolbar>
@@ -223,7 +295,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         {/* Row 2: generic map surface (plugin-map), toggled via the toolbar. It resolves the trip's
             markers via the contributed MarkerProvider and reads the current selection via useSelected. */}
         {showGlobe && mapAvailable && (
-          <Panel.Root className='border-t border-separator'>
+          <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
               <Surface.Surface role='map' data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>

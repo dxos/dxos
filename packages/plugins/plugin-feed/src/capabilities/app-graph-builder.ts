@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -37,7 +37,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Show Subscription.Subscription objects as nodes under each space.
       GraphBuilder.createExtension({
-        id: 'subscription-feeds',
+        id: 'subscriptionFeeds',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Subscription)));
@@ -67,7 +67,7 @@ export default Capability.makeModule(
 
       // Companion panel: resolve the selected feed from the SubscriptionsArticle.
       GraphBuilder.createExtension({
-        id: 'subscription-feeds-companion',
+        id: 'subscriptionFeedsCompanion',
         match: NodeMatcher.whenNodeType('feeds'),
         connector: (matched, get) => {
           const space = getActiveSpace(capabilities.get(ClientCapabilities.Client), capabilities);
@@ -95,7 +95,7 @@ export default Capability.makeModule(
 
       // Companion panel: resolve the selected Post under a Magazine node.
       GraphBuilder.createExtension({
-        id: 'magazine-post',
+        id: 'magazinePost',
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })
@@ -126,14 +126,19 @@ export default Capability.makeModule(
 
       // Actions on each Subscription.Subscription node.
       GraphBuilder.createExtension({
-        id: 'feed-actions',
+        id: 'feedActions',
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),
         actions: (feed) =>
           Effect.succeed([
             {
               id: 'sync',
-              data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
+              data: () =>
+                Operation.invoke(
+                  FeedOperation.SyncFeed,
+                  { feed: Ref.make(feed) },
+                  { spaceId: Obj.getDatabase(feed)?.spaceId },
+                ),
               properties: {
                 label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

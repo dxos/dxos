@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
@@ -38,6 +38,42 @@ type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
 type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence };
 
 const MESSAGE_NAME = 'Message';
+
+// CSS custom properties for valence color inheritance — consumed by Button variant='valence'.
+// Extending CSSProperties so entries satisfy the style prop type without a cast at the use site.
+type ValenceCSSVars = CSSProperties & {
+  '--dx-valence-bg': string;
+  '--dx-valence-bg-hover': string;
+  '--dx-valence-text': string;
+};
+
+const valenceVars: Record<MessageValence, ValenceCSSVars> = {
+  success: {
+    '--dx-valence-bg': 'var(--color-success-bg)',
+    '--dx-valence-bg-hover': 'var(--color-success-bg-hover)',
+    '--dx-valence-text': 'var(--color-success-text)',
+  },
+  info: {
+    '--dx-valence-bg': 'var(--color-info-bg)',
+    '--dx-valence-bg-hover': 'var(--color-info-bg-hover)',
+    '--dx-valence-text': 'var(--color-info-text)',
+  },
+  warning: {
+    '--dx-valence-bg': 'var(--color-warning-bg)',
+    '--dx-valence-bg-hover': 'var(--color-warning-bg-hover)',
+    '--dx-valence-text': 'var(--color-warning-text)',
+  },
+  error: {
+    '--dx-valence-bg': 'var(--color-error-bg)',
+    '--dx-valence-bg-hover': 'var(--color-error-bg-hover)',
+    '--dx-valence-text': 'var(--color-error-text)',
+  },
+  neutral: {
+    '--dx-valence-bg': 'var(--color-neutral-bg)',
+    '--dx-valence-bg-hover': 'var(--color-neutral-bg-hover)',
+    '--dx-valence-text': 'var(--color-neutral-text)',
+  },
+};
 
 const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
 
@@ -72,6 +108,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           {...props}
+          style={{ ...valenceVars[valence], ...(props.style || {}) }}
           classNames={tx('message.root', { valence, elevation }, classNames)}
           ref={forwardedRef}
         >
@@ -105,21 +142,23 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
       <Column.Row classNames={tx('message.header', {}, classNames)} ref={forwardedRef}>
         {icon && (
           <div className={tx('message.icon', { valence })}>
-            <Icon icon={icon} />
+            <Icon icon={icon} size={5} />
           </div>
         )}
         <h2 className={tx('message.title', {}, classNames)} id={titleId}>
           {children}
         </h2>
         {onClose && (
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('toolbar-close.label')}
-            classNames={tx('message.close', {})}
-            onClick={onClose}
-          />
+          <div className={tx('message.close', {})}>
+            <IconButton
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              density='sm'
+              label={t('toolbar-close.label')}
+              onClick={onClose}
+            />
+          </div>
         )}
       </Column.Row>
     );

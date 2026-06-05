@@ -9,5 +9,4 @@ export * from './definitions';
 export const BlueprintManagerHandlers = OperationHandlerSet.lazy(
   () => import('./query-blueprints'),
   () => import('./enable-blueprints'),
-  () => import('./update-blueprints'),
 );

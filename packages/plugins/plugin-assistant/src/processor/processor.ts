@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
@@ -22,14 +22,13 @@ import {
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import {
-  type Blueprint,
   type Credential,
   Operation,
   type OperationRegistry,
   type ServiceNotAvailableError,
   Trace,
 } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref } from '@dxos/echo';
+import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -64,8 +63,8 @@ export type SpaceServices =
 export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
-  blueprintRegistry?: Blueprint.Registry;
-  observableRegistry?: Registry.Registry;
+  registry?: Registry.Registry;
+  observableRegistry?: AtomRegistry.Registry;
   /**
    * For tracing.
    */
@@ -96,7 +95,7 @@ export type ProcessorRequest = {
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
 export class AiChatProcessor {
-  readonly #registry: Registry.Registry;
+  readonly #registry: AtomRegistry.Registry;
 
   /** Pending messages (finalized, non-streaming). */
   readonly #pending = Atom.make<Message.Message[]>([]);
@@ -147,7 +146,7 @@ export class AiChatProcessor {
     private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    this.#registry = this._options.observableRegistry ?? Registry.make();
+    this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -162,8 +161,8 @@ export class AiChatProcessor {
     return this._conversation;
   }
 
-  get blueprintRegistry() {
-    return this._options.blueprintRegistry;
+  get registry() {
+    return this._options.registry;
   }
 
   get system(): string {

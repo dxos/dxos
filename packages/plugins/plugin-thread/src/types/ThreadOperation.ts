@@ -9,16 +9,16 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Key, Obj, Ref, Type } from '@dxos/echo';
+import { Collection, Database, Key, Obj, Ref, Type, DXN } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-const THREAD_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.on-create-space`, name: 'On Create Space', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
@@ -29,7 +29,7 @@ export const OnCreateSpace = Operation.make({
 });
 
 export const CreateChannel = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.create-channel`, name: 'Create Channel', icon: 'ph--hash--regular' },
+  meta: { key: makeKey('createChannel'), name: 'Create Channel', icon: 'ph--hash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     spaceId: Key.SpaceId,
@@ -42,7 +42,7 @@ export const CreateChannel = Operation.make({
 
 export const AppendChannelMessage = Operation.make({
   meta: {
-    key: `${THREAD_OPERATION}.append-channel-message`,
+    key: makeKey('appendChannelMessage'),
     name: 'Append Channel Message',
     icon: 'ph--chat-text--regular',
   },
@@ -58,7 +58,7 @@ export const AppendChannelMessage = Operation.make({
 });
 
 export const Create = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.create`, name: 'Create Thread', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('create'), name: 'Create Thread', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -76,7 +76,7 @@ export const DeleteOutput = Schema.Struct({
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
 export const Delete = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.delete`, name: 'Delete Thread', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('delete'), name: 'Delete Thread', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -87,7 +87,7 @@ export const Delete = Operation.make({
 });
 
 export const Select = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.select`, name: 'Select Thread', icon: 'ph--check--regular' },
+  meta: { key: makeKey('select'), name: 'Select Thread', icon: 'ph--check--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     current: Schema.String,
@@ -96,7 +96,11 @@ export const Select = Operation.make({
 });
 
 export const ToggleResolved = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.toggle-resolved`, name: 'Toggle Resolved', icon: 'ph--check-circle--regular' },
+  meta: {
+    key: makeKey('toggleResolved'),
+    name: 'Toggle Resolved',
+    icon: 'ph--check-circle--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     thread: Type.getSchema(Thread.Thread),
@@ -105,7 +109,7 @@ export const ToggleResolved = Operation.make({
 });
 
 export const AddMessage = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.add-message`, name: 'Add Message', icon: 'ph--chat-text--regular' },
+  meta: { key: makeKey('addMessage'), name: 'Add Message', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
@@ -126,7 +130,7 @@ export const DeleteMessageOutput = Schema.partial(
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
 export const DeleteMessage = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.delete-message`, name: 'Delete Message', icon: 'ph--trash--regular' },
+  meta: { key: makeKey('deleteMessage'), name: 'Delete Message', icon: 'ph--trash--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
@@ -140,7 +144,11 @@ export const DeleteMessage = Operation.make({
  * Restore a deleted thread (inverse of Delete).
  */
 export const Restore = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.restore`, name: 'Restore Thread', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: {
+    key: makeKey('restore'),
+    name: 'Restore Thread',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     thread: Type.getSchema(Thread.Thread).annotations({ description: 'The thread to restore.' }),
@@ -154,7 +162,7 @@ export const Restore = Operation.make({
  */
 export const RestoreMessage = Operation.make({
   meta: {
-    key: `${THREAD_OPERATION}.restore-message`,
+    key: makeKey('restoreMessage'),
     name: 'Restore Message',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -169,7 +177,7 @@ export const RestoreMessage = Operation.make({
 
 export const RespondToThread = Operation.make({
   meta: {
-    key: `${THREAD_OPERATION}.respond-to-thread`,
+    key: makeKey('respondToThread'),
     name: 'Respond to Thread',
     description: 'Runs one comment-thread agent turn against the given thread + subject.',
   },
@@ -183,7 +191,7 @@ export const RespondToThread = Operation.make({
 
 export const SetAgentConfig = Operation.make({
   meta: {
-    key: `${THREAD_OPERATION}.set-agent-config`,
+    key: makeKey('setAgentConfig'),
     name: 'Set Agent Config',
     description: 'Updates thread.agent. Undefined config disables the agent.',
   },
@@ -199,7 +207,7 @@ export const SetAgentConfig = Operation.make({
 
 export const CreateProposals = Operation.make({
   meta: {
-    key: 'org.dxos.function.thread.create-proposals',
+    key: DXN.make('org.dxos.function.thread.createProposals'),
     name: 'Create Proposals',
     description: 'Proposes a set of changes to a document.',
     icon: 'ph--sparkle--regular',

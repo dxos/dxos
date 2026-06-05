@@ -27,9 +27,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -61,9 +58,6 @@
     },
     {
       "path": "../client"
-    },
-    {
-      "path": "../client-protocol"
     },
     {
       "path": "../client-services"

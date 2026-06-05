@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Collection, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -65,7 +66,7 @@ export default Capability.makeModule(
           const space = ancestors.find(isSpace);
           const collection =
             ancestors.findLast((ancestor) => Obj.instanceOf(Collection.Collection, ancestor)) ??
-            space?.properties[COLLECTION_TYPE]?.target;
+            (space && Annotation.get(space.properties, RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target);
           if (!space || !collection) {
             return;
           }

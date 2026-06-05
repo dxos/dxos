@@ -71,6 +71,7 @@ export const translations = [
         'feeds.label': 'Feeds',
         'objects.label': 'Objects',
         'schema.label': 'Schema',
+        'registry.label': 'Registry',
         'automerge.label': 'Automerge',
         'queues.label': 'Queues',
         'members.label': 'Members',

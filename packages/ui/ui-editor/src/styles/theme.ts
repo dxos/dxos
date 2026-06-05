@@ -268,11 +268,11 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
     background: 'var(--color-current-surface)',
-    color: 'var(--color-base-foreground)',
+    color: 'var(--color-base-fg)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
-    color: 'var(--color-base-foreground)',
+    color: 'var(--color-base-fg)',
   },
 
   /**
@@ -292,7 +292,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--color-base-foreground)',
+    color: 'var(--color-base-fg)',
     textDecoration: 'none !important',
   },
 
@@ -345,11 +345,11 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-panel button': {
     '&:hover': {
-      // TODO(burdon): Replace with layer and @apply bg-accent-surface-hover
-      backgroundColor: 'var(--color-accent-surface-hover) !important',
+      // TODO(burdon): Replace with layer and @apply bg-accent-bg-hover
+      backgroundColor: 'var(--color-accent-bg-hover) !important',
     },
     '&:active': {
-      backgroundColor: 'var(--color-accent-surface-hover)',
+      backgroundColor: 'var(--color-accent-bg-hover)',
     },
   },
   '.cm-panel.cm-search': {

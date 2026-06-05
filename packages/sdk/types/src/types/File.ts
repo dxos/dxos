@@ -58,10 +58,7 @@ export const File = Schema.Struct({
   data: FileDataSchema.pipe(FormInputAnnotation.set(false)),
   timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--file--regular',
-    hue: 'teal',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--file--regular', hue: 'teal' }),
   Type.makeObject(DXN.make('org.dxos.type.file', '0.1.0')),
 );
 

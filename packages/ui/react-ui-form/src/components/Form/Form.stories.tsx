@@ -102,7 +102,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
           onCancel={handleCancel}
           {...props}
         >
-          <Form.Viewport>
+          <Form.Viewport scroll>
             <Form.Content>
               <Form.Section label='Section' description='This is a section' />
               <Form.FieldSet />

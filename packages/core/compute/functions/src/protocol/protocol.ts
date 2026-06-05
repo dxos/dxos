@@ -12,7 +12,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
-  Blueprint,
   FunctionError,
   InvalidOperationInputError,
   InvalidOperationOutputError,
@@ -21,8 +20,14 @@ import {
   Trace,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
-import { createFeedServiceLayer, EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import {
+  createFeedServiceLayer,
+  EchoClient,
+  type EchoDatabaseImpl,
+  makeRegistry,
+  type QueueFactory,
+} from '@dxos/echo-db';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -44,12 +49,6 @@ export interface FunctionWrappingOptions {
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
-
-  /**
-   * Blueprint registry to expose as `Blueprint.RegistryService` inside handler Effects.
-   * Required for operations that declare `Blueprint.RegistryService` in their `services` list.
-   */
-  blueprintRegistry?: Blueprint.Registry;
 }
 
 /**
@@ -234,9 +233,9 @@ class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
-    const blueprintRegistryLayer = this.opts.blueprintRegistry
-      ? Layer.succeed(Blueprint.RegistryService, this.opts.blueprintRegistry)
-      : Blueprint.RegistryService.notAvailable;
+    const registryLayer = this.db
+      ? Layer.succeed(Registry.Service, this.db.graph.registry)
+      : Layer.succeed(Registry.Service, makeRegistry());
 
     return Layer.mergeAll(
       dbLayer,
@@ -247,7 +246,7 @@ class FunctionContext extends Resource {
       aiLayer,
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
-      blueprintRegistryLayer,
+      registryLayer,
 
       // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
       // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)

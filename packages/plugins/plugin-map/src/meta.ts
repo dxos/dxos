@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.map',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.map'),
   name: 'Maps',
   author: 'DXOS',
   description: trim`
@@ -23,9 +24,9 @@ export const meta: Plugin.Meta = {
     A Blueprint is also included so AI assistants can create and update maps on behalf of the user.
   `,
   icon: 'ph--compass--regular',
-  iconHue: 'green',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-map-dark.png'],
-};
+});

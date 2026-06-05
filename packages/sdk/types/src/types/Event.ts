@@ -50,10 +50,7 @@ export const Event = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--calendar-dot--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--calendar-dot--regular', hue: 'rose' }),
   Type.makeObject(DXN.make('org.dxos.type.event', '0.1.0')),
 );
 

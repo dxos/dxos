@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.masonry',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.masonry'),
   name: 'Masonry',
   author: 'DXOS',
   description: trim`
@@ -23,8 +24,8 @@ export const meta: Plugin.Meta = {
     making it easy to explore large collections without leaving the view.
   `,
   icon: 'ph--wall--regular',
-  iconHue: 'green',
+  iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-masonry',
   spec: 'PLUGIN.mdl',
   screenshots: [],
-};
+});

@@ -4,12 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ForeignKey } from '@dxos/echo-protocol';
+import { type EncodedReference, ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
 import type * as Entity from '../../../Entity';
+import type * as Tag from '../../../Tag';
+import { Dictionary } from '../../Annotation/dictionary';
+// `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
+// Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
+import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
 import { type AnyProperties } from './base';
+import { TagTypeDXN } from './well-known-types';
 
 /**
  * Property name for meta when object is serialized to JSON.
@@ -25,18 +32,30 @@ export const MetaId: Entity.Meta = Symbol.for('@dxos/echo/Meta') as any;
 // EntityMeta
 //
 
+/**
+ * Schema for references to {@link Tag} objects stored in {@link EntityMetaSchema.tags}.
+ *
+ * Built from the shared {@link createEchoReferenceSchema} (the same builder `Ref.Ref` uses) via
+ * `Schema.suspend`, so it reuses the canonical ref codec rather than duplicating it. The Tag type
+ * identity comes from the shared {@link TagTypeDXN} constant; `suspend` defers construction until
+ * first use, and `Tag` is referenced type-only, so no `Tag` value import is needed.
+ */
+const TagRefSchema = Schema.suspend(
+  (): Schema.Schema<Ref<Tag.Tag>, EncodedReference> =>
+    // The factory yields a loosely-typed `Ref<any>` schema; narrow it to the Tag-typed ref.
+    createEchoReferenceSchema(undefined, DXN.getName(TagTypeDXN), DXN.getVersion(TagTypeDXN)) as Schema.Schema<
+      Ref<Tag.Tag>,
+      EncodedReference
+    >,
+);
+
 export const EntityMetaSchema = Schema.Struct({
   keys: Schema.Array(ForeignKey),
 
   /**
-   * A set of tags.
-   * Tags are arbitrary application-defined strings.
-   * ECHO makes no assumptions about the tag structure.
+   * Tags applied to this entity, as references to {@link Tag} objects.
    */
-  // TODO(dmaretskyi): Has to be optional for compatibility with old data.
-  // Defaulting to an empty array is possible but requires a bit more work.
-  // TODO(dmaretskyi): In automerge this should be a map of { [tag]: boolean } for uniqueness and conflict resolution.
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.Array(TagRefSchema),
 
   /**
    * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
@@ -49,6 +68,11 @@ export const EntityMetaSchema = Schema.Struct({
    * Must be a valid semver string (e.g. `1.2.3`).
    */
   version: Schema.optional(Schema.String),
+
+  /**
+   * Dictionary of annotations to this entity.
+   */
+  annotations: Dictionary,
 });
 
 export type EntityMeta = Schema.Schema.Type<typeof EntityMetaSchema>;

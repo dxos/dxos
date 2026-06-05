@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.mapSolid',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.mapSolid'),
   name: 'Maps (Solid)',
   author: 'DXOS',
   description: trim`
@@ -24,9 +25,9 @@ export const meta: Plugin.Meta = {
     This plugin is designed to complement plugin-map, which owns the Map ECHO schema and object-creation flow.
   `,
   icon: 'ph--compass--regular',
-  iconHue: 'green',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map-solid',
   spec: 'PLUGIN.mdl',
   tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-map-dark.png'],
-};
+});

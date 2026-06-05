@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'world-card',
+        id: 'worldCard',
         filter: AppSurface.object(AppSurface.Card, Voxel.World),
         component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,
       }),
