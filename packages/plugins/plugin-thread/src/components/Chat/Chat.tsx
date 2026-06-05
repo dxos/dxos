@@ -79,11 +79,11 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
       members,
       messages,
       activity,
-      onSend,
       autoFocusTextbox,
       current,
       orientation = 'top',
       readOnly,
+      onSend,
       ...props
     },
     forwardedRef,
@@ -116,6 +116,7 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
     useLayoutEffect(() => {
       scrollToEnd('instant');
     }, []);
+
     // NOTE: Auto-scroll on new messages is intentionally not implemented here. Smooth-scroll
     // animations were causing ResizeObserver feedback loops with CodeMirror/ScrollArea. The
     // proper fix is "scroll only if user is already at the bottom" — deferred to a follow-up.

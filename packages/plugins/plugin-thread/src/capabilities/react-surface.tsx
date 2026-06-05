@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
-import { ChannelChat, ChannelArticle, CommentsCompanion, ThreadContainer } from '#containers';
+import { ChannelArticle, CommentsCompanion, ThreadContainer } from '#containers';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
@@ -32,14 +32,7 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
         ),
-        component: ({ data: { companionTo: channel } }) => {
-          const space = getSpace(channel);
-          if (!space) {
-            return null;
-          }
-
-          return <ChannelChat space={space} channel={channel} />;
-        },
+        component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} />,
       }),
       Surface.create({
         id: 'thread',
