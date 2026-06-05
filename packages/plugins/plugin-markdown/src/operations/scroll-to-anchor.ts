@@ -23,9 +23,11 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
       if (range) {
         const selection = entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
         const effects: any[] = [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
-        if (selection) {
+        if (ref || selection) {
           // Mark the referenced comment (thread) as current so the editor highlights
-          // it; fall back to the document id when no ref is supplied.
+          // it; fall back to the document id when no ref is supplied. Always update
+          // when a `ref` is given so the highlight follows the selected thread even
+          // if the caret is already at the anchor start (or two threads share it).
           effects.push(setSelection.of({ current: ref ?? entry.documentId }));
         }
         entry.view.dispatch({
