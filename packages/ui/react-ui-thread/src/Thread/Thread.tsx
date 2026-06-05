@@ -134,6 +134,8 @@ export type ThreadHeaderProps = Omit<
     /** Snippet text rendered inside a `<p>` (a string, not a DOM element). */
     title?: string;
     detached?: boolean;
+    /** Whether this is the current/selected thread; accents the title. */
+    current?: boolean;
     /** Trailing controls rendered in the right column (aligns with message-tile controls). */
     controls?: ReactNode;
     /** Invoked when the caret affordance is activated to select/focus this thread. */
@@ -148,7 +150,7 @@ export type ThreadHeaderProps = Omit<
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
 const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
-  ({ title, detached, controls, onSelect, ...props }, forwardedRef) => {
+  ({ title, detached, current, controls, onSelect, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
@@ -182,7 +184,11 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
           <p
             role='heading'
             data-testid='thread.heading'
-            className={mx('me-2 text-description font-medium truncate italic', detached && 'line-through decoration-1')}
+            className={mx(
+              'me-2 font-medium truncate italic',
+              current ? 'text-accent-text' : 'text-description',
+              detached && 'line-through decoration-1',
+            )}
           >
             {title}
           </p>

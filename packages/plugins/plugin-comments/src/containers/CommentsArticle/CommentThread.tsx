@@ -157,10 +157,10 @@ export const CommentThread = ({
 
   const header = detached ? (
     <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
-      <Thread.Header detached title={thread.name} onSelect={handleAttend} controls={headerControls} />
+      <Thread.Header detached current={current} title={thread.name} onSelect={handleAttend} controls={headerControls} />
     </Tooltip.Trigger>
   ) : (
-    <Thread.Header title={thread.name} onSelect={handleAttend} controls={headerControls} />
+    <Thread.Header current={current} title={thread.name} onSelect={handleAttend} controls={headerControls} />
   );
 
   return (
