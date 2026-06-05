@@ -937,15 +937,13 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       const waiting = makeWaitingExecutable();
-      const other = Process.make(
-        { key: 'test.other', input: Schema.Void, output: Schema.Void, services: [] },
-        () =>
-          Effect.succeed({
-            onSpawn: () => Effect.void,
-            onInput: () => Effect.void,
-            onAlarm: () => Effect.void,
-            onChildEvent: () => Effect.void,
-          }),
+      const other = Process.make({ key: 'test.other', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+        Effect.succeed({
+          onSpawn: () => Effect.void,
+          onInput: () => Effect.void,
+          onAlarm: () => Effect.void,
+          onChildEvent: () => Effect.void,
+        }),
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(waiting);

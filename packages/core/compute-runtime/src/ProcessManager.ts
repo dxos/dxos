@@ -691,10 +691,7 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-  #hydrateFromDefinition<I, O>(
-    id: Process.ID,
-    definition: Process.Process<I, O, any>,
-  ): Effect.Effect<Handle<I, O>> {
+  #hydrateFromDefinition<I, O>(id: Process.ID, definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
@@ -788,9 +785,7 @@ export class ProcessManagerImpl implements Manager {
         ) {
           continue;
         }
-        results.push(
-          new DormantHandle(record, (definition) => this.#hydrateFromDefinition(record.id, definition)),
-        );
+        results.push(new DormantHandle(record, (definition) => this.#hydrateFromDefinition(record.id, definition)));
       }
 
       return results;

@@ -4,20 +4,23 @@
 
 import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
+import { Context } from 'effect';
+import { Deferred } from 'effect';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
 
+import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
-import { Feed } from '@dxos/echo';
+import { Feed, Filter } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Organization } from '@dxos/types';
+import { Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as AgentService from './AgentService';
@@ -67,6 +70,56 @@ const TEST_DATA = {
   } as Record<string, string>,
 };
 
+interface ResearchTask {
+  website: string;
+  deferred: Deferred.Deferred<string>;
+}
+
+class ResearchService extends Context.Tag('@dxos/functions-runtime/ResearchService')<
+  ResearchService,
+  {
+    research: (website: string) => Effect.Effect<string>;
+    completeOneTask: () => Effect.Effect<void>;
+    completeAllTasks: () => Effect.Effect<void>;
+  }
+>() {
+  static make = () => {
+    const tasks: ResearchTask[] = [];
+    const complete = (task: ResearchTask) =>
+      Effect.gen(function* () {
+        const result = TEST_DATA.research[task.website];
+        if (!result) {
+          yield* Effect.die(new Error(`No research found for ${task.website}`));
+          return;
+        }
+        yield* Deferred.succeed(task.deferred, result);
+      });
+
+    return this.of({
+      research: (website: string) =>
+        Effect.gen(function* () {
+          const task = yield* Deferred.make<string>();
+          tasks.push({ website, deferred: task });
+          return yield* Deferred.await(task);
+        }),
+      completeOneTask: () =>
+        Effect.gen(function* () {
+          const task = tasks.shift();
+          if (!task) {
+            return;
+          }
+          yield* complete(task);
+        }),
+      completeAllTasks: () =>
+        Effect.gen(function* () {
+          for (const task of tasks) {
+            yield* complete(task);
+          }
+        }),
+    });
+  };
+}
+
 const Research = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.research'),
@@ -77,6 +130,7 @@ const Research = Operation.make({
     website: Schema.String.annotations({ description: 'The website of the organization to research' }),
   }),
   output: Schema.String,
+  services: [ResearchService],
 });
 
 const handlers = OperationHandlerSet.make(
@@ -84,11 +138,10 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ website }) {
         log.info('begin research', { website });
-        yield* Effect.sleep(
-          15_000 * (TEST_DATA.organizations.findIndex((organization) => organization.website === website) + 1),
-        );
+        const research = yield* ResearchService;
+        const result = yield* research.research(website);
         log.info('end research', { website });
-        return TEST_DATA.research[website];
+        return result;
       }),
     ),
   ),
@@ -100,30 +153,35 @@ const ResearchBlueprint = Blueprint.make({
   tools: Blueprint.toolDefinitions({ operations: [Research] }),
 });
 
-//
-// Test layer: AI services + toolkit.
-//
-
-const SYSTEM_PROMPT = trim`
-  You are reacting to a continuous stream of organizations.
-  Research each organization.
-  Research takes a while to complete.
-  Do not block on the research since there might be more organizations to research, and we want research to happen in parallel.
-  Do not wait longer then 3 seconds to keep the conversation open for new events or user queries.
-  Do internal reasoning, but only show the answers to the user.
-`;
-
 const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
   tracing: 'console',
   aiServicePreset: 'edge-remote',
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
-  systemPrompt: SYSTEM_PROMPT,
   enableToolBackgrounding: true,
+  extraServices: Context.make(ResearchService, ResearchService.make()),
 });
 
-describe('Agent Executable', () => {
+describe('Agent Service', () => {
+  it.effect(
+    'can answer a question',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* AgentService.createSession();
+        yield* agent.submitPrompt('What is the capital of France?');
+        yield* agent.waitForCompletion();
+
+        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const text = messages.map(Message.extractText).join('\n');
+        expect(text.toLocaleLowerCase()).toContain('paris');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
   // TODO(dmaretskyi): Figure out how to make it not sleep for 45 seconds.
   it.scoped.skip(
     'runs AI agent with background tools via process manager',

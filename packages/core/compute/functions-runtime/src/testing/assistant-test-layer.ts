@@ -68,6 +68,12 @@ interface TestLayerOptions {
    * @default false
    */
   enableToolBackgrounding?: boolean;
+
+  /**
+   * Extra services to make available in the service resolver.
+   * Operations can depend on those services.
+   */
+  extraServices?: Context.Context<any>;
 }
 
 export type AssistantTestServices =
@@ -103,6 +109,7 @@ export const AssistantTestLayer = ({
   blueprints = [],
   systemPrompt,
   enableToolBackgrounding = false,
+  extraServices,
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const resolvedModel: ModelName =
     model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
@@ -169,6 +176,7 @@ export const AssistantTestLayer = ({
               OperationRegistry.Service,
               Blueprint.RegistryService,
             ),
+            ServiceResolver.fromContext(extraServices ?? (Context.empty() as Context.Context<any>)),
           );
         }),
       ),

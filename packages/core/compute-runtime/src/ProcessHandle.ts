@@ -276,9 +276,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   hydrate(definition: Process.Process<I, O, any>): Effect.Effect<ProcessManager.Handle<I, O>> {
     if (definition.key !== this.key) {
       return Effect.die(
-        new Error(
-          `Process definition key mismatch for ${this.pid}: expected "${this.key}", got "${definition.key}"`,
-        ),
+        new Error(`Process definition key mismatch for ${this.pid}: expected "${this.key}", got "${definition.key}"`),
       );
     }
     return Effect.succeed(this);

@@ -13,7 +13,12 @@ import { ClientService } from '@dxos/client';
 import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
-import { FeedTraceSink, RemoteFunctionExecutionService, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import {
+  FeedTraceSink,
+  RemoteFunctionExecutionService,
+  TriggerDispatcher,
+  TriggerStateStore,
+} from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 
 //

@@ -81,12 +81,14 @@ export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => s
 
 export interface GetSessionOptions {
   readonly model?: ModelName;
+  readonly systemPrompt?: string;
 }
 
 export interface CreateSessionOptions {
   readonly blueprints?: Blueprint.Blueprint[];
   readonly context?: Ref.Ref<Obj.Unknown>[];
   readonly model?: ModelName;
+  readonly systemPrompt?: string;
 }
 
 export const createSession: (
@@ -153,11 +155,13 @@ export const layer = (opts?: {
         const agents = yield* processManager.list({ key: AGENT_PROCESS_KEY });
         log('agent hydrate', { count: agents.length });
         for (const agent of agents) {
-          yield* agent.hydrate(executable).pipe(
-            Effect.catchAllCause((cause) =>
-              Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
-            ),
-          );
+          yield* agent
+            .hydrate(executable)
+            .pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
+              ),
+            );
         }
       });
 
