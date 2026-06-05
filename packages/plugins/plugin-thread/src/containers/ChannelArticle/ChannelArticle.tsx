@@ -23,8 +23,6 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
  * Renders the channel chat. The "Start video call" action and the in-call surface
  * are contributed by plugin-calls — this container is call-agnostic.
  */
-// TODO(burdon): Create Radix style layout.
-// TODO(burdon): Restore graph-driven toolbar so plugin-calls can contribute a "Start video call" action (F-1.1).
 export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
   const space = getSpace(channel);
 
@@ -32,7 +30,7 @@ export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
     return (
       <Panel.Root classNames='dx-document'>
         <Panel.Content asChild>
-          <ChannelChat classNames='border' space={space} channel={channel} />
+          <ChannelChat space={space} channel={channel} />
         </Panel.Content>
       </Panel.Root>
     );

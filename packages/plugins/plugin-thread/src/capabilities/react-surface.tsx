@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
-import { ChannelChat, ChannelArticle, ThreadContainer } from '#containers';
+import { ChannelChat, ChannelArticle, ThreadArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ThreadContainer space={space} thread={subject} />;
+          return <ThreadArticle space={space} thread={subject} />;
         },
       }),
     ]),

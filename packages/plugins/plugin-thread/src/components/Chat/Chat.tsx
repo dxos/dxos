@@ -51,7 +51,7 @@ export type ChatProps = ThemedClassName<{
  * Pure chat UI: message list + composer textbox + activity indicator, built on
  * the `@dxos/react-ui-thread` primitives. Does not load data or invoke
  * operations — the caller passes messages and an `onSend` callback. Used by
- * `ChannelChat`, `ChannelArticle`, and `ThreadContainer`.
+ * `ChannelChat`, `ChannelArticle`, and `ThreadArticle`.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly }, forwardedRef) => {

@@ -16,7 +16,7 @@ import { isNonNullable } from '@dxos/util';
 import { Chat } from '#components';
 import { useStatus } from '#hooks';
 
-export type ThreadContainerProps = ThemedClassName<
+export type ThreadArticleProps = ThemedClassName<
   {
     space: Space;
     thread: Thread.Thread;
@@ -29,7 +29,7 @@ export type ThreadContainerProps = ThemedClassName<
  * Renders an AutoMerge {@link Thread} as a chat: appends new messages by pushing
  * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
  */
-export const ThreadContainer = composable<HTMLDivElement, ThreadContainerProps>(
+export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
   ({ space, thread, context, autoFocus, current, ...props }, forwardedRef) => {
     const id = Obj.getURI(thread);
     const identity = useIdentity()!;
