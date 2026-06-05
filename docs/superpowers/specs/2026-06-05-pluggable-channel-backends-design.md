@@ -110,8 +110,8 @@ export const Channel = Schema.Struct({
 react-ui-form) and a `customPanel` escape hatch.
 
 At module activation, assemble the Channel `CreateObjectEntry.inputSchema` from
-the registered providers: `{ name?, type: <enum of provider kinds>, …selected
-provider config fields }`. react-ui-form renders the type selector and the
+the registered providers: `{ name?, kind: <enum of provider kinds>, …selected
+provider config fields }`. react-ui-form renders the `kind` selector and the
 selected provider's fields (e.g. the ATProto channel id appears only when ATProto
 is chosen). On submit, `CreateChannel` receives `{ name, kind, …options }`, finds
 the provider, calls `makeConfig`, and creates the Channel referencing the config

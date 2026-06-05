@@ -15,9 +15,11 @@
 ## File structure
 
 **`@dxos/types` (packages/sdk/types)**
+
 - Modify: `src/types/Channel.ts` — replace `feed` with `backend`; bump `0.1.0 → 0.2.0`; add `FeedBackendKind` constant, `getFeed` helper; drop `FeedAnnotation`.
 
 **`@dxos/plugin-thread` (packages/plugins/plugin-thread)**
+
 - Modify: `src/types/ThreadCapabilities.ts` — add `ChannelBackend` capability + `ChannelBackendProvider` interface.
 - Create: `src/types/channel-backend.ts` — pure `buildChannelFormSchema(providers)` + `resolveProvider(providers, kind)` helpers (+ test).
 - Create: `src/capabilities/channel-backend-feed.ts` — Feed provider module.
@@ -34,6 +36,7 @@
 - Create: `src/capabilities/channel-backend-feed.test.ts` — Feed provider send/subscribe.
 
 **`@dxos/plugin-slack`, `@dxos/plugin-discord`**
+
 - Modify: `src/operations/sync.ts` — load feed config from `channel.backend.config` with an `Obj.instanceOf` narrow.
 
 ---
@@ -52,6 +55,7 @@
 ## Task 1: Channel schema — replace `feed` with `backend`
 
 **Files:**
+
 - Modify: `packages/sdk/types/src/types/Channel.ts`
 - Test: `packages/sdk/types/src/types/Channel.test.ts` (create)
 
@@ -187,6 +191,7 @@ git commit -m "feat(types): replace Channel.feed with pluggable backend descript
 ## Task 2: `ChannelBackend` capability + provider interface
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-thread/src/types/ThreadCapabilities.ts`
 
 - [ ] **Step 1: Add the capability + interface**
@@ -247,6 +252,7 @@ git commit -m "feat(plugin-thread): add ChannelBackend capability and provider i
 ## Task 3: `buildChannelFormSchema` + `resolveProvider` helpers (pure)
 
 **Files:**
+
 - Create: `packages/plugins/plugin-thread/src/types/channel-backend.ts`
 - Test: `packages/plugins/plugin-thread/src/types/channel-backend.test.ts`
 
@@ -356,6 +362,7 @@ git commit -m "feat(plugin-thread): channel backend form-schema + resolution hel
 ## Task 4: Feed backend provider
 
 **Files:**
+
 - Create: `packages/plugins/plugin-thread/src/capabilities/channel-backend-feed.ts`
 - Test: `packages/plugins/plugin-thread/src/capabilities/channel-backend-feed.test.ts`
 
@@ -479,6 +486,7 @@ git commit -m "feat(plugin-thread): feed channel backend provider"
 ## Task 5: `useMessages` hook
 
 **Files:**
+
 - Create: `packages/plugins/plugin-thread/src/hooks/useMessages.ts`
 - Modify: `packages/plugins/plugin-thread/src/hooks/index.ts`
 
@@ -525,13 +533,16 @@ NOTE: `useSyncExternalStore` requires a stable `getSnapshot`. The closure-over-`
 
 ```ts
 const ref = useRef<readonly Message.Message[]>(EMPTY);
-const subscribe = useCallback((onChange: () => void) => {
-  if (!provider) return () => {};
-  return provider.subscribe(channel, (messages) => {
-    ref.current = messages;
-    onChange();
-  });
-}, [provider, channel]);
+const subscribe = useCallback(
+  (onChange: () => void) => {
+    if (!provider) return () => {};
+    return provider.subscribe(channel, (messages) => {
+      ref.current = messages;
+      onChange();
+    });
+  },
+  [provider, channel],
+);
 return useSyncExternalStore(subscribe, () => ref.current);
 ```
 
@@ -558,6 +569,7 @@ git commit -m "feat(plugin-thread): useMessages hook over channel backend provid
 ## Task 6: `ChannelChat` — use `useMessages` + provider-driven readOnly
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-thread/src/containers/ChannelChat/ChannelChat.tsx`
 
 - [ ] **Step 1: Replace the feed query + readOnly**
@@ -595,6 +607,7 @@ git commit -m "feat(plugin-thread): ChannelChat reads via useMessages + backend 
 ## Task 7: `AppendChannelMessage` — delegate to provider
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-thread/src/operations/append-channel-message.ts`
 
 - [ ] **Step 1: Rewrite the handler to resolve the provider**
@@ -648,6 +661,7 @@ git commit -m "feat(plugin-thread): AppendChannelMessage delegates to backend pr
 ## Task 8: Provider-driven create flow
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-thread/src/types/ThreadOperation.ts`
 - Modify: `packages/plugins/plugin-thread/src/operations/create-channel.ts`
 - Create: `packages/plugins/plugin-thread/src/containers/ChannelChat/ChannelCreatePanel.tsx`
@@ -772,7 +786,10 @@ export default Capability.makeModule(
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Channel.Channel),
       customPanel: ChannelCreatePanel,
-      createObject: ({ name, kind, options }: { name?: string; kind?: string; options?: Record<string, unknown> }, opts) =>
+      createObject: (
+        { name, kind, options }: { name?: string; kind?: string; options?: Record<string, unknown> },
+        opts,
+      ) =>
         Effect.gen(function* () {
           const { object } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
             spaceId: (opts.target as any).spaceId ?? undefined, // confirm spaceId source from CreateOptions target
@@ -830,6 +847,7 @@ git commit -m "feat(plugin-thread): provider-driven create-channel form"
 ## Task 9: Register the Feed provider module in the plugin
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-thread/src/capabilities/index.ts`
 - Modify: `packages/plugins/plugin-thread/src/ThreadPlugin.tsx`
 - Modify: `packages/plugins/plugin-thread/src/ThreadPlugin.node.ts`
@@ -875,6 +893,7 @@ git commit -m "feat(plugin-thread): register feed channel backend provider"
 ## Task 10: Update `ChannelArticle` story + stragglers in plugin-thread
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.stories.tsx`
 
 - [ ] **Step 1: Replace `channel.feed.load()`**
@@ -882,7 +901,7 @@ git commit -m "feat(plugin-thread): register feed channel backend provider"
 Line ~72 uses `yield* Effect.promise(() => channel.feed.load())`. Replace with the new shape:
 
 ```ts
-const feed = yield* Effect.promise(() => channel.backend.config.load());
+const feed = yield * Effect.promise(() => channel.backend.config.load());
 ```
 
 If the story appends seed messages, ensure `feed` is the Feed config (it is, for a default channel). Adjust any other `channel.feed` references in the file.
@@ -908,15 +927,16 @@ git commit -m "refactor(plugin-thread): update channel stories for backend confi
 ## Task 11: Migrate slack + discord feed access
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-slack/src/operations/sync.ts`
 - Modify: `packages/plugins/plugin-discord/src/operations/sync.ts`
 
 - [ ] **Step 1: Replace `Database.load(targetChannel.feed)` in slack (line ~354)**
 
 ```ts
-const feed = yield* Database.load(targetChannel.backend.config);
+const feed = yield * Database.load(targetChannel.backend.config);
 invariant(Obj.instanceOf(Feed.Feed, feed), 'Channel is not feed-backed');
-yield* Feed.append(feed, mapped);
+yield * Feed.append(feed, mapped);
 ```
 
 Ensure `Feed`, `Obj` from `@dxos/echo` and `invariant` from `@dxos/invariant` are imported (Feed/Obj likely already are). `Channel.make({ [Obj.Meta]: …, name })` at line ~149 is unchanged (defaults to feed backend).
@@ -924,9 +944,9 @@ Ensure `Feed`, `Obj` from `@dxos/echo` and `invariant` from `@dxos/invariant` ar
 - [ ] **Step 2: Same change in discord (line ~389)**
 
 ```ts
-const feed = yield* Database.load(targetChannel.backend.config);
+const feed = yield * Database.load(targetChannel.backend.config);
 invariant(Obj.instanceOf(Feed.Feed, feed), 'Channel is not feed-backed');
-yield* Feed.append(feed, mapped);
+yield * Feed.append(feed, mapped);
 ```
 
 - [ ] **Step 3: Build + test both**
@@ -961,10 +981,12 @@ Expected: clean.
 - [ ] **Step 3: Build the affected graph + run targeted tests**
 
 Run:
+
 ```bash
 moon run types:build && moon run plugin-thread:build && moon run plugin-slack:build && moon run plugin-discord:build
 moon run types:test && moon run plugin-thread:test
 ```
+
 Expected: all clean/green.
 
 - [ ] **Step 4: Lint the touched packages**

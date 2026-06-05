@@ -21,7 +21,9 @@ export const resolveProvider = (
  * it becomes `{ name?, backend: Union(<{ kind: Literal(p.kind) } & p.createFields>) }`,
  * which react-ui-form renders as a `kind` Select plus the selected branch's fields.
  */
-export const buildChannelFormSchema = (providers: readonly ThreadCapabilities.ChannelBackendProvider[]): Schema.Schema.AnyNoContext => {
+export const buildChannelFormSchema = (
+  providers: readonly ThreadCapabilities.ChannelBackendProvider[],
+): Schema.Schema.AnyNoContext => {
   const needsSelector = providers.length > 1 || providers.some((provider) => fieldCount(provider.createFields) > 0);
   if (!needsSelector) {
     return Schema.Struct({ name: Schema.optional(Schema.String) });
