@@ -24,8 +24,9 @@ type ThreadRootProps = ThemedClassName<
   >
 >;
 
+// TODO(burdon): Make composable.
 const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
-  ({ current, children, classNames, ...props }, forwardedRef) => {
+  ({ classNames, children, current, ...props }, forwardedRef) => {
     return (
       <div
         role='group'

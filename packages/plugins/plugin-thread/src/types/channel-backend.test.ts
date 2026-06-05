@@ -9,9 +9,9 @@ import { describe, test } from 'vitest';
 import { Feed } from '@dxos/echo';
 
 import { buildChannelFormSchema, resolveProvider } from './channel-backend';
-import { type ChannelBackendProvider } from './ThreadCapabilities';
+import * as ThreadCapabilities from './ThreadCapabilities';
 
-const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ChannelBackendProvider => ({
+const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ThreadCapabilities.ChannelBackendProvider => ({
   kind,
   label: kind,
   createFields: fields,
@@ -39,9 +39,9 @@ describe('channel-backend helpers', () => {
       fakeProvider('feed', Schema.Struct({})),
       fakeProvider('atproto', Schema.Struct({ channelId: Schema.String })),
     ]);
-    const feedValue = Schema.decodeUnknownSync(schema)({ name: 'x', backend: { kind: 'feed' } }) as any;
+    const feedValue = Schema.decodeUnknownSync(schema)({ name: 'x', backend: { kind: 'feed' } });
     expect(feedValue.backend.kind).to.eq('feed');
-    const atValue = Schema.decodeUnknownSync(schema)({ name: 'y', backend: { kind: 'atproto', channelId: 'c' } }) as any;
+    const atValue = Schema.decodeUnknownSync(schema)({ name: 'y', backend: { kind: 'atproto', channelId: 'c' } });
     expect(atValue.backend.kind).to.eq('atproto');
     expect(atValue.backend.channelId).to.eq('c');
   });
