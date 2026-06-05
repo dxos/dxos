@@ -257,6 +257,21 @@ export const SqlitePanel = () => {
     return pageSize * freelistCount;
   }, [databaseInfo]);
 
+  const configStaleInfo = useMemo(() => {
+    if (databaseInfo?.configuredSqliteMode == null) {
+      return null;
+    }
+    const label = formatSqliteMode(databaseInfo.configuredSqliteMode);
+    if (!label) {
+      return null;
+    }
+    const isStale =
+      (label.startsWith('OPFS') && !databaseInfo.backing?.startsWith('OPFS')) ||
+      (label === 'Memory' && databaseInfo.backing !== 'Memory') ||
+      (label.startsWith('File') && !databaseInfo.backing?.startsWith('File'));
+    return isStale ? `${label} (stale)` : null;
+  }, [databaseInfo]);
+
   return (
     <PanelContainer
       classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'
@@ -286,17 +301,7 @@ export const SqlitePanel = () => {
               <InfoItem label='Backing' value={databaseInfo.backing} />
               <InfoItem label='File' value={databaseInfo.databaseFile} />
               <InfoItem label='Services' value={formatServicesMode(databaseInfo.servicesMode)} />
-              {(() => {
-                const configuredModeLabel =
-                  databaseInfo.configuredSqliteMode != null
-                    ? formatSqliteMode(databaseInfo.configuredSqliteMode)
-                    : null;
-                const configIsStale =
-                  configuredModeLabel != null &&
-                  ((configuredModeLabel.startsWith('OPFS') && !databaseInfo.backing?.startsWith('OPFS')) ||
-                    (configuredModeLabel === 'Memory' && databaseInfo.backing !== 'Memory'));
-                return configIsStale ? <InfoItem label='Config' value={`${configuredModeLabel} (stale)`} /> : null;
-              })()}
+              {configStaleInfo && <InfoItem label='Config' value={configStaleInfo} />}
               <InfoItem label='Journal' value={databaseInfo.journalMode} />
               <InfoItem label='Size' value={databaseSize != null ? bytes.format(databaseSize) : undefined} />
               <InfoItem label='Free' value={freeSpace != null ? bytes.format(freeSpace) : undefined} />
