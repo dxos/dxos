@@ -15,38 +15,6 @@ import { log } from '@dxos/log';
 import { FeedOperation, Magazine, Subscription } from '../types';
 import { collectCandidates, partitionByKeepBound } from './util';
 
-/** Lightweight summary of a candidate Post handed to the curation agent. */
-const Candidate = Schema.Struct({
-  id: Obj.ID,
-  feedName: Schema.optional(Schema.String),
-  title: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  author: Schema.optional(Schema.String),
-  published: Schema.optional(Schema.String),
-  link: Schema.optional(Schema.String),
-});
-
-/** Input schema of the curation routine: the candidate Posts to choose from. */
-const CurationInput = Schema.Struct({
-  candidates: Schema.Array(Candidate),
-});
-
-/** Output schema of the curation routine: the selected Posts with agent-generated display values. */
-const CurationOutput = Schema.Struct({
-  posts: Schema.Array(
-    Schema.Struct({
-      id: Obj.ID,
-      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
-      snippet: Schema.optional(Schema.String),
-      /** Best image URL found for this article (from the post or fetched content). */
-      imageUrl: Schema.optional(Schema.String),
-    }),
-  ),
-});
-
-/** Bound on concurrent feed syncs. */
-const SYNC_CONCURRENCY = 8;
-
 export default FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
@@ -93,6 +61,42 @@ export default FeedOperation.CurateMagazine.pipe(
   Operation.opaqueHandler,
 );
 
+// -- Schemas --
+
+/** Lightweight summary of a candidate Post handed to the curation agent. */
+const Candidate = Schema.Struct({
+  id: Obj.ID,
+  feedName: Schema.optional(Schema.String),
+  title: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  author: Schema.optional(Schema.String),
+  published: Schema.optional(Schema.String),
+  link: Schema.optional(Schema.String),
+});
+
+/** Input schema of the curation routine: the candidate Posts to choose from. */
+const CurationInput = Schema.Struct({
+  candidates: Schema.Array(Candidate),
+});
+
+/** Output schema of the curation routine: the selected Posts with agent-generated display values. */
+const CurationOutput = Schema.Struct({
+  posts: Schema.Array(
+    Schema.Struct({
+      id: Obj.ID,
+      /** Concise 1-2 sentence snippet summarising why this article is relevant to the magazine topic. */
+      snippet: Schema.optional(Schema.String),
+      /** Best image URL found for this article (from the post or fetched content). */
+      imageUrl: Schema.optional(Schema.String),
+    }),
+  ),
+});
+
+// -- Helpers --
+
+/** Bound on concurrent feed syncs. */
+const SYNC_CONCURRENCY = 8;
+
 /** Loads each referenced feed (and its backing ECHO feed), tolerating individual failures, keeping only syncable feeds. */
 const loadValidFeeds = (magazine: Magazine.Magazine) =>
   Effect.forEach(magazine.feeds, (ref) =>
@@ -125,7 +129,7 @@ const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
   ).pipe(Effect.map((results) => results.filter(Boolean).length));
 
 /**
- * Runs the curation agent over the candidate summaries and resolves to the selected Post ids.
+ * Runs the curation agent over the candidate summaries and resolves to the selected Post entries.
  * The base methodology blueprint is referenced by its registry DXN (no clone into the space); the
  * Magazine's instructions Text carries only the topic. Tolerates agent/parse failures (logs → no selection).
  */
