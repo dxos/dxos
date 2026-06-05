@@ -7,6 +7,8 @@ import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { BYOK_HEADER } from '@dxos/protocols';
+
 import * as Credential from './Credential';
 
 /**
@@ -37,7 +39,7 @@ export const byokHeaderLayer = (
           if (!apiKey) {
             return request;
           }
-          return HttpClientRequest.setHeader(request, 'X-BYOK', apiKey);
+          return HttpClientRequest.setHeader(request, BYOK_HEADER, apiKey);
         }),
       ) as HttpClient.HttpClient;
     }),
