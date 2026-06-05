@@ -186,17 +186,15 @@ Ask the user what happened and whether to reopen.
 
 Webhooks do **not** fire when a PR is automatically dequeued from the merge queue (e.g., due to a conflict or a failed queue CI run). You must poll for this yourself.
 
-After auto-merge is enabled, attempt to schedule a recurring self check-in using `send_later`:
+After auto-merge is enabled, arm a 15-minute wakeup alarm using a background Bash sleep:
 
-```text
-mcp__claude-code-remote__send_later({ delay_minutes: 15, message: "merge-queue-poll" })
+```
+Bash("sleep 900", { run_in_background: true })
 ```
 
-If `send_later` is **not available** in this session, notify the user:
+This completes silently after 15 minutes and fires a task-completion notification that wakes this session. It requires no external service.
 
-> ⚠️ `send_later` is unavailable — automated auto-dequeue recovery cannot be scheduled. The session will continue in webhook-only mode. If the PR is silently dequeued, you will need to manually re-run `/land` or re-enable auto-merge.
-
-On each `send_later` wake-up:
+On each wakeup (task-completion notification for the sleep):
 
 1. Call `mcp__github__pull_request_read` to get the current PR state.
 2. **If merged**: print success, unsubscribe, stop.
@@ -214,10 +212,10 @@ On each `send_later` wake-up:
    mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
    ```
    d. Log: "PR was dequeued — re-synced with main and re-enabled auto-merge."
-   e. Schedule the next check-in in 15 minutes (call `send_later` again as in step 1).
-5. **If open and auto_merge is set** (still in queue): schedule the next check-in in 15 minutes silently (call `send_later` again).
+   e. Re-arm the alarm: `Bash("sleep 900", { run_in_background: true })`.
+5. **If open and auto_merge is set** (still in queue): re-arm silently: `Bash("sleep 900", { run_in_background: true })`.
 
-Stop scheduling check-ins once the PR is merged or closed, or the user says to stop.
+Stop re-arming once the PR is merged or closed, or the user says to stop.
 
 ---
 
