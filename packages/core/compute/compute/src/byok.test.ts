@@ -86,4 +86,31 @@ describe('byokHeaderLayer', () => {
 
     expect(sink.lastHeader).toBeUndefined();
   });
+
+  test('forwards the request unchanged when queryCredentials throws', async ({ expect }) => {
+    const sink: { lastHeader?: string; called?: boolean } = {};
+    const failingCredentials = Layer.succeed(Credential.CredentialsService, {
+      queryCredentials: async () => {
+        throw new Error('database unreachable');
+      },
+      getCredential: async () => {
+        throw new Error('database unreachable');
+      },
+    });
+
+    const program = Effect.gen(function* () {
+      const client = yield* HttpClient.HttpClient;
+      sink.called = true;
+      yield* client.execute(HttpClientRequest.get('http://internal/provider/anthropic/messages'));
+    });
+
+    const runnable = program.pipe(
+      Effect.provide(failingCredentials),
+      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
+    );
+    await runAndForwardErrors(runnable as Effect.Effect<void>);
+
+    expect(sink.called).toBe(true);
+    expect(sink.lastHeader).toBeUndefined();
+  });
 });

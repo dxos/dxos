@@ -32,11 +32,6 @@ export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions'
  * The `apiUrl` host is a sentinel; only the request path is forwarded (see `anthropicAiRequest`).
  *
  * Modeled on `FunctionsAiHttpClient` in `@dxos/functions`.
- *
- * For BYOK (space `AccessToken` → `X-BYOK`), use {@link EdgeAiHttpClient.layerWithByok} with
- * `byokHeaderLayer(providerHost)` from `@dxos/compute` (see `plugin-assistant` edge-model-resolver).
- * The request fiber must provide `Credential.CredentialsService` (space-affinity layer from
- * `plugin-client`).
  */
 export class EdgeAiHttpClient {
   static make = (getClient: GetEdgeHttpClient) =>
@@ -85,16 +80,4 @@ export class EdgeAiHttpClient {
 
   static layer = (getClient: GetEdgeHttpClient) =>
     Layer.succeed(HttpClient.HttpClient, EdgeAiHttpClient.make(getClient));
-
-  /**
-   * {@link HttpClient.HttpClient} layer: a BYOK header injector (typically
-   * `byokHeaderLayer(providerHost)` from `@dxos/compute`) over {@link EdgeAiHttpClient.layer}.
-   *
-   * @param byokLayer Outermost wrapper; must forward to the inner client supplied by
-   *   {@link EdgeAiHttpClient.layer}.
-   */
-  static layerWithByok = <R>(
-    getClient: GetEdgeHttpClient,
-    byokLayer: Layer.Layer<HttpClient.HttpClient, never, HttpClient.HttpClient | R>,
-  ) => byokLayer.pipe(Layer.provide(EdgeAiHttpClient.layer(getClient)));
 }

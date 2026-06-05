@@ -34,7 +34,12 @@ export const byokHeaderLayer = (
       return HttpClient.mapRequestEffect(client, (request) =>
         Effect.gen(function* () {
           const credentials = yield* Credential.CredentialsService;
-          const matches = yield* Effect.promise(() => credentials.queryCredentials({ service: providerHost }));
+          // Best-effort: a failed credentials lookup (DB error, missing space context) must not
+          // break the outbound request — fall through to the unmodified request so the AI service
+          // can use its server-side default key.
+          const matches = yield* Effect.tryPromise(() =>
+            credentials.queryCredentials({ service: providerHost }),
+          ).pipe(Effect.orElseSucceed((): Credential.ServiceCredential[] => []));
           const apiKey = matches.find((credential) => credential.apiKey)?.apiKey;
           if (!apiKey) {
             return request;
