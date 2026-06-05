@@ -14,6 +14,7 @@ export const translations = [
         'thread-title.placeholder': 'New thread',
         'thread-title.label': 'Title',
         'delete-thread.label': 'Delete',
+        'select-thread.label': 'Select comment',
         'create-thread.label': 'Create thread',
         'message.placeholder': 'Enter message...',
         'comment.placeholder': 'Enter comment...',

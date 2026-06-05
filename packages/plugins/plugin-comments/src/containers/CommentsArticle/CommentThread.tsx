@@ -152,10 +152,12 @@ export const CommentThread = ({
         >
           {detached ? (
             <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
-              <Thread.Header detached>{thread.name}</Thread.Header>
+              <Thread.Header detached onSelect={handleAttend}>
+                {thread.name}
+              </Thread.Header>
             </Tooltip.Trigger>
           ) : (
-            <Thread.Header>{thread.name}</Thread.Header>
+            <Thread.Header onSelect={handleAttend}>{thread.name}</Thread.Header>
           )}
           <div className={buttonGroupClassNames}>
             {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}

@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
@@ -107,16 +107,29 @@ ThreadContent.displayName = 'Thread.Content';
 // Header
 //
 
-export type ThreadHeaderProps = PropsWithChildren<{ detached?: boolean }>;
+export type ThreadHeaderProps = PropsWithChildren<{
+  detached?: boolean;
+  /** Invoked when the caret affordance is activated to select/focus this thread. */
+  onSelect?: () => void;
+}>;
 
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
-  ({ children, detached, ...props }, forwardedRef) => {
+  ({ children, detached, onSelect, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     // Renders two cells (caret + snippet) that flow into the parent header grid,
-    // so callers can place trailing controls in a third column.
+    // so callers can place trailing controls in a third column. The caret is an
+    // affordance for selecting/focusing the thread (sets it current).
     return (
       <>
-        <div className='flex items-center justify-center text-description'>
-          <Icon icon='ph--caret-double-right--regular' />
+        <div className='flex items-center justify-center'>
+          <IconButton
+            iconOnly
+            variant='ghost'
+            icon='ph--caret-double-right--regular'
+            label={t('select-thread.label')}
+            classNames='text-description'
+            onClick={onSelect}
+          />
         </div>
         <div className='flex items-center overflow-hidden'>
           <p
