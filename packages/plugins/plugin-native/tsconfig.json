@@ -33,9 +33,6 @@
       "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/compute/operation"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -49,9 +46,6 @@
     },
     {
       "path": "../plugin-assistant"
-    },
-    {
-      "path": "../plugin-navtree"
     },
     {
       "path": "../plugin-testing"

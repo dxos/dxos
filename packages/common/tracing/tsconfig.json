@@ -17,9 +17,6 @@
       "path": "../async"
     },
     {
-      "path": "../codec-protobuf"
-    },
-    {
       "path": "../context"
     },
     {

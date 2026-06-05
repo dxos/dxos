@@ -8,7 +8,7 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Format } from '@dxos/echo';
-import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -147,12 +147,12 @@ export const QuickEntryDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Form.Viewport>
+          <Column.Center>
             <Form.Content>
               <Form.FieldSet />
               <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
             </Form.Content>
-          </Form.Viewport>
+          </Column.Center>
         </Form.Root>
       </Dialog.Body>
     </Dialog.Content>

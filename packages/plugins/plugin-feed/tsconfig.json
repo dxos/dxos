@@ -102,9 +102,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-deck"
-    },
-    {
       "path": "../plugin-graph"
     },
     {

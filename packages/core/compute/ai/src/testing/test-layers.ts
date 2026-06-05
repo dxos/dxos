@@ -108,10 +108,19 @@ export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer 
 export const TestAiService = ({
   disableMemoization = false,
   preset = 'direct',
-}: { disableMemoization?: boolean; preset?: AiServicePreset } = {}) => {
+  dynamicValuePatterns,
+}: {
+  disableMemoization?: boolean;
+  preset?: AiServicePreset;
+  /**
+   * Patterns matching run-specific identifiers (e.g. `MemoizedLanguageModel.SPACE_ID_PATTERN`) to
+   * canonicalize for memoized-conversation matching and substitute back on a cache hit. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
+} = {}) => {
   if (disableMemoization) {
     return AiServiceTestingPreset(preset);
   } else {
-    return MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset(preset)));
+    return MemoizedAiService.layerTest({ dynamicValuePatterns }).pipe(Layer.provide(AiServiceTestingPreset(preset)));
   }
 };

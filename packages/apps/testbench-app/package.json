@@ -19,9 +19,6 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-generator": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
@@ -40,14 +37,10 @@
     "@effect/platform-browser": "catalog:",
     "@ngneat/falso": "catalog:",
     "@opentelemetry/api": "catalog:",
-    "@opentelemetry/auto-instrumentations-node": "catalog:",
-    "@trpc/server": "catalog:",
     "effect": "catalog:",
-    "partysocket": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-router-dom": "catalog:",
-    "webrtc-adapter": "catalog:"
+    "react-router-dom": "catalog:"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

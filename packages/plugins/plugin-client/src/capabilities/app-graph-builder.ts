@@ -68,6 +68,15 @@ export default Capability.makeModule(
                 },
               }),
               Node.make({
+                id: Account.Account,
+                data: Account.Account,
+                type: meta.id,
+                properties: {
+                  label: ['account-panel.label', { ns: meta.id }],
+                  icon: 'ph--identification-card--regular',
+                },
+              }),
+              Node.make({
                 id: Account.Devices,
                 data: Account.Devices,
                 type: meta.id,
@@ -84,6 +93,15 @@ export default Capability.makeModule(
                 properties: {
                   label: ['security.label', { ns: meta.id }],
                   icon: 'ph--key--regular',
+                },
+              }),
+              Node.make({
+                id: Account.Invitations,
+                data: Account.Invitations,
+                type: meta.id,
+                properties: {
+                  label: ['invitations-panel.label', { ns: meta.id }],
+                  icon: 'ph--ticket--regular',
                 },
               }),
             ],

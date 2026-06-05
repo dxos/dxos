@@ -3,3 +3,4 @@
 //
 
 export * from './email-extension';
+export * from './hide-images-extension';

@@ -93,3 +93,20 @@ export class MissingApiKeyError extends Error {
     this.name = 'MissingApiKeyError';
   }
 }
+
+/**
+ * Thrown by a `BookingService` when the provider rejects an otherwise well-formed
+ * request (e.g. a Duffel 422 for a past departure date). The `message` carries the
+ * provider's human-readable explanation so the UI can surface it directly rather
+ * than a generic fallback. Matched by `name` since class identity does not survive
+ * the operation/process boundary.
+ */
+export class BookingProviderError extends Error {
+  constructor(
+    public readonly serviceId: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'BookingProviderError';
+  }
+}
