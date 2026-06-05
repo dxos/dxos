@@ -22,7 +22,7 @@ export const CompanionChatProvisioner = Capability.lazy(
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const EdgeModelResolver = Capability.lazy('EdgeModelResolver', () => import('./edge-model-resolver'));
 export const LocalModelResolver = Capability.lazy('LocalModelResolver', () => import('./local-model-resolver'));
-export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown'));
+export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const Migrations = Capability.lazy('AssistantMigrations', () => import('./migrations'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

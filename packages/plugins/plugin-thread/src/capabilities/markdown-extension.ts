@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
@@ -20,7 +20,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [
+    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);

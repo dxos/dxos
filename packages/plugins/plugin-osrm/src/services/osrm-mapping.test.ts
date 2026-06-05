@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Routing } from '@dxos/plugin-trip';
+import { Routing } from '@dxos/plugin-trip/types';
 
 import { type NominatimResult, type OsrmResponse, parsePlace, parseRoutes } from './osrm-mapping';
 

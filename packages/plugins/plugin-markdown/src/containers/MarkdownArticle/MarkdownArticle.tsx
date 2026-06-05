@@ -48,7 +48,7 @@ export const MarkdownArticle = forwardRef<HTMLDivElement, MarkdownArticleProps>(
     const initialValue = docContent ?? textContent;
 
     // Extensions from other plugins.
-    const otherExtensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
+    const otherExtensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
     const extensions = useMemo<Extension[]>(() => {
       if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
         return [];

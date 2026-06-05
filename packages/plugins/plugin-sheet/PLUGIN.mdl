@@ -216,7 +216,7 @@ feat F-5: Collaborative Editing
 ```mdl
 feat F-6: Markdown Integration
 
-  req F-6.1: SheetPlugin contributes a CodeMirror extension to plugin-markdown via MarkdownCapabilities.Extensions.
+  req F-6.1: SheetPlugin contributes a CodeMirror extension to plugin-markdown via MarkdownCapabilities.ExtensionProvider.
   req F-6.2:
     when: the extension is active in a document that belongs to a space
     then: formula references inside Markdown fenced code blocks resolve against the space's ComputeGraph
