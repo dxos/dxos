@@ -24,33 +24,24 @@ const DefaultStory = () => {
   };
 
   return (
-    <div className='flex justify-center p-4'>
-      <div className='flex flex-col w-[32rem] h-[40rem] border border-separator rounded-sm overflow-hidden'>
-        <Thread.Root
-          classNames='grow min-h-0'
-          getMetadata={getStoryMetadata}
-          identityDid={IDENTITY.identityDid}
-          editable
-          onMessageDelete={() => {}}
-        >
-          <Thread.Messages classNames='grow min-h-0' messages={messages} />
-          <Thread.Textbox
-            id='composer'
-            authorId={IDENTITY.identityDid}
-            authorName={IDENTITY.name}
-            onSend={handleSend}
-          />
-          <Thread.Status />
-        </Thread.Root>
-      </div>
-    </div>
+    <Thread.Root
+      classNames='grow min-h-0'
+      getMetadata={getStoryMetadata}
+      identityDid={IDENTITY.identityDid}
+      editable
+      onMessageDelete={() => {}}
+    >
+      <Thread.Messages classNames='grow min-h-0' messages={messages} />
+      <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
+      <Thread.Status />
+    </Thread.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-thread/Thread',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
