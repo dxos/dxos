@@ -11,7 +11,7 @@ real-time call. It carries no persistent schema of its own — calls are attache
 to existing objects (typically `Channel`, but pluggable) via a `roomId` derived
 from the object's DXN. Persistent meeting records, transcripts and summaries
 live in `plugin-meeting`, which composes on top of this plugin's
-`CallsCapabilities.Manager` and `Extension`.
+`CallsCapabilities.Manager` and `EventHandler`.
 
 This plugin is the result of extracting all video-call functionality out of
 `plugin-thread`. After the split `plugin-thread` is concerned with chat,
@@ -321,7 +321,7 @@ service SpeakingMonitor
 op startCall
   desc: |
     Joins the call for `roomId`, invoking `EventHandler.onJoin` for every
-    registered extension after the local session is established.
+    registered EventHandler after the local session is established.
   input:
     roomId: RoomId
     channel?: Channel             # passed through to extensions
@@ -337,7 +337,7 @@ op startCall
 op leaveCall
   desc: |
     Tears down the local session, turns off audio/video/screenshare,
-    and invokes `EventHandler.onLeave` for every registered extension.
+    and invokes `EventHandler.onLeave` for every registered EventHandler.
   input:
     roomId?: RoomId
   effects: [device, network]
