@@ -1,7 +1,6 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { type ComponentType, lazy } from 'react';
-
-export const CommentsSettings: ComponentType<any> = lazy(() => import('./CommentsSettings'));
+// Presentational components (none yet — comment threads render via @dxos/react-ui-thread).
+export {};

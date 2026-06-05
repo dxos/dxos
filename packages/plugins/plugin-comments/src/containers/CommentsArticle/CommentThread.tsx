@@ -191,10 +191,10 @@ export const CommentThread = ({
         ))}
 
         {/*
-        Autofocus only newly-created (draft) threads. Once the first message is
-        posted the thread transitions from 'staged' → 'active' and stops stealing
-        focus, so multiple active threads no longer fight for focus.
-      */}
+          Autofocus only newly-created (draft) threads. Once the first message is
+          posted the thread transitions from 'staged' → 'active' and stops stealing
+          focus, so multiple active threads no longer fight for focus.
+        */}
         <Thread.Textbox
           {...textboxMetadata}
           placeholder={t('message.placeholder')}
