@@ -50,7 +50,7 @@ export default Capability.makeModule(
         // }
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        const transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
+        const transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManagerProvider)({}).open();
         store.updateState((current) => ({ ...current, transcriptionManager }));
       },
       onLeave: async () => {
