@@ -186,11 +186,15 @@ Ask the user what happened and whether to reopen.
 
 Webhooks do **not** fire when a PR is automatically dequeued from the merge queue (e.g., due to a conflict or a failed queue CI run). You must poll for this yourself.
 
-After auto-merge is enabled, schedule a recurring self check-in using `send_later` (if available):
+After auto-merge is enabled, attempt to schedule a recurring self check-in using `send_later`:
 
-```
+```text
 mcp__claude-code-remote__send_later({ delay_minutes: 15, message: "merge-queue-poll" })
 ```
+
+If `send_later` is **not available** in this session, notify the user:
+
+> ⚠️ `send_later` is unavailable — automated auto-dequeue recovery cannot be scheduled. The session will continue in webhook-only mode. If the PR is silently dequeued, you will need to manually re-run `/land` or re-enable auto-merge.
 
 On each `send_later` wake-up:
 
@@ -206,7 +210,7 @@ On each `send_later` wake-up:
    ```
    b. Resolve any conflicts that arise, commit, push.
    c. Re-enable auto-merge:
-   ```
+   ```text
    mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
    ```
    d. Log: "PR was dequeued — re-synced with main and re-enabled auto-merge."
