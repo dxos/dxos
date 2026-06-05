@@ -719,10 +719,6 @@ Add a **Cross-plugin capabilities** section to `.agents/skills/composer-plugins/
   - Enumeration pattern: `plugin-chess/src/capabilities/game-variant.ts` (implements `GameCapabilities.VariantProvider`)
   - EventHandler pattern: `plugin-meeting/src/capabilities/call-extension.ts` (implements `CallsCapabilities.EventHandler`)
 
-  ```
-
-  ```
-
 - [ ] **Step 2: Build lint check (skill is Markdown, just verify file is well-formed)**
 
   ```bash
