@@ -50,14 +50,16 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     setError(undefined);
     setState('busy');
     try {
-      await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) });
+      // Thread the spaceId so the handler's spawn environment has `space` — required for the
+      // process-affinity services (Database.Service, and AgentPrompt when AI curation is restored).
+      await invokePromise(FeedOperation.CurateMagazine, { magazine: Ref.make(subject) }, { spaceId: db?.spaceId });
     } catch (err) {
       log.catch(err);
       setError(t('curate-error.message'));
     } finally {
       setState('idle');
     }
-  }, [state, subject, invokePromise, t]);
+  }, [state, subject, invokePromise, t, db]);
 
   const handleToggleStar = useCallback(
     async (post: Subscription.Post, starred: boolean) => {

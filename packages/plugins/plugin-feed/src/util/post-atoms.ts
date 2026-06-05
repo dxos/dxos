@@ -4,7 +4,7 @@
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
-import { type Database, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
+import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 
 import { Magazine, Subscription } from '../types';
@@ -164,24 +164,35 @@ const postDisplayAtom = Atom.family((post: Subscription.Post) =>
   }).pipe(Atom.keepAlive),
 );
 
-/** Ordered Posts referenced by the Magazine. Fires only on posts-array membership/order changes. */
-const magazinePostsAtom = Atom.family((magazine: Magazine.Magazine) => {
-  const db = Obj.getDatabase(magazine);
-  if (!db) {
-    return Atom.make<Subscription.Post[]>(() => []);
+/** Sortable timestamp from a Post's `published`; missing/unparseable sorts last. */
+const publishedTimestamp = (post: Subscription.Post): number => {
+  if (!post.published) {
+    return Number.NEGATIVE_INFINITY;
   }
-  return AtomQuery.make<Subscription.Post>(
-    db,
-    Query.select(Filter.type(Magazine.Magazine, { id: magazine.id }))
-      .reference('posts')
-      .orderBy(Order.property('published', 'desc'))
-      .from(Scope.space({ includeAllFeeds: true })),
-  );
-});
+  const ms = Date.parse(post.published);
+  return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
+};
+
+/**
+ * Ordered Posts referenced by the Magazine, derived directly from the `magazine.posts` refs — no
+ * query. Fires when the refs array changes (membership/order) or when a ref resolves. Resolving each
+ * ref here, rather than a `reference('posts').from(Scope.space({ includeAllFeeds }))` query, avoids
+ * the cross-feed fan-out that returned each curated Post once per feed scope (the 3× duplication).
+ */
+const magazinePostsAtom = Atom.family((magazine: Magazine.Magazine) =>
+  Atom.make<Subscription.Post[]>((get) => {
+    const refs = get(AtomObj.makeProperty(magazine, 'posts')) ?? [];
+    const posts = refs
+      .map((ref) => get(AtomRef.make(ref)))
+      .filter((post): post is Subscription.Post => Boolean(post));
+    return [...posts].sort((postA, postB) => publishedTimestamp(postB) - publishedTimestamp(postA));
+  }),
+);
 
 /**
  * Ordered, view-filtered Posts for a Magazine. Re-runs on membership change OR a Post crossing the
- * view's filter boundary (star/archive); never on read-state changes.
+ * view's filter boundary (star/archive); never on read-state changes. The list is not de-duplicated
+ * here — sync keeps feed queues free of duplicates and LLM curation avoids adding duplicate posts.
  */
 const visibleMagazinePostsAtom = Atom.family((magazine: Magazine.Magazine) =>
   Atom.family((view: MagazineView) =>

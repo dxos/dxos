@@ -34,6 +34,11 @@ const make = () =>
 
         Skip Posts without a link. Do not re-add Posts that are already in the Magazine —
         addPostToMagazine is idempotent but you should avoid wasted fetches.
+
+        Never add duplicate articles. Two Posts are duplicates if they share a link or guid, OR if
+        their titles and content describe the same story (a fuzzy duplicate — e.g. the same article
+        syndicated by different feeds). When you encounter duplicates, add only one (prefer the most
+        complete or most authoritative source) and skip the rest.
       `,
     }),
   });

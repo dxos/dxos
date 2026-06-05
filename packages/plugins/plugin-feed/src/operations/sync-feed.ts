@@ -53,6 +53,12 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       // omit it. Falling back to `link` keeps such items dedup-able. Items
       // with neither field cannot be deduplicated and will sync as new every
       // time — that's an upstream data quality issue with no clean recovery.
+      //
+      // Pull the backing queue before reading existing posts: this handler runs in a
+      // freshly-spawned process whose local queue replica may not have the blocks yet. Without
+      // this, `runQuery` returns an empty set, `seenKeys` is empty, and every fetched item
+      // re-appends — duplicating the whole feed on a cold sync.
+      yield* Feed.sync(echoFeed, { shouldPush: false });
       const existing = yield* Feed.runQuery(echoFeed, Filter.type(Subscription.Post));
       const seenKeys = new Set<string>();
       for (const post of existing) {
