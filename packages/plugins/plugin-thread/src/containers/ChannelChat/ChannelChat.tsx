@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
@@ -45,17 +45,19 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
 
     const readOnly = Obj.getMeta(channel).keys.length > 0;
 
-    const handleSend = (text: string) => {
+    const handleSend = useCallback((text: string) => {
       if (readOnly) {
         return false;
       }
+
       void invokePromise(ThreadOperation.AppendChannelMessage, {
         channel,
         sender: { identityDid: identity.did },
         text,
       });
+
       return true;
-    };
+    }, []);
 
     return (
       <Chat

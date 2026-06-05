@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ChannelChat channel={channel} space={space} />;
+          return <ChannelChat space={space} channel={channel} />;
         },
       }),
       Surface.create({
@@ -50,7 +50,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ThreadContainer thread={subject} space={space} />;
+          return <ThreadContainer space={space} thread={subject} />;
         },
       }),
       Surface.create({

@@ -27,16 +27,15 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
 // TODO(burdon): Restore graph-driven toolbar so plugin-calls can contribute a "Start video call" action (F-1.1).
 export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
   const space = getSpace(channel);
-
-  if (channel && space) {
-    return (
-      <Panel.Root classNames='dx-document'>
-        <Panel.Content asChild>
-          <ChannelChat classNames='border' space={space} channel={channel} />
-        </Panel.Content>
-      </Panel.Root>
-    );
+  if (!space || !channel) {
+    return null;
   }
 
-  return null;
+  return (
+    <Panel.Root classNames='dx-document'>
+      <Panel.Content asChild>
+        <ChannelChat space={space} channel={channel} />
+      </Panel.Content>
+    </Panel.Root>
+  );
 };
