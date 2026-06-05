@@ -306,6 +306,12 @@ describe('Feed', () => {
     const indexed = await db2.query(Query.select(Filter.id(postId)).from(db2, { includeFeeds: true })).run();
     expect(indexed).toHaveLength(1);
     expect((indexed[0] as TestSchema.Person).name).toBe('alice');
+
+    const traversed = await db2
+      .query(Query.select(Filter.id(containerId)).reference('objects').from(db2, { includeFeeds: true }))
+      .run();
+    expect(traversed).toHaveLength(1);
+    expect((traversed[0] as TestSchema.Person).name).toBe('alice');
   });
 
   describe('feed namespaces', () => {

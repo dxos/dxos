@@ -376,6 +376,21 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   return scopes;
 };
 
+/** True when any select step scopes the owning space with {@link QueryAST.SpaceScope.includeAllFeeds}. */
+const extractIncludeAllFeeds = (plan: QueryPlan.Plan): boolean => {
+  for (const step of plan.steps) {
+    if (step._tag !== 'SelectStep') {
+      continue;
+    }
+    for (const scope of step.scope) {
+      if (scope._tag === 'space' && scope.includeAllFeeds === true) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
   const [smaller, larger]: [ReadonlySet<T>, ReadonlySet<T>] = a.size <= b.size ? [a, b] : [b, a];
   for (const item of smaller) {
@@ -414,6 +429,7 @@ export class QueryExecutor extends Resource {
 
   private _plan: QueryPlan.Plan;
   #scopes: QueryScopes;
+  readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
 
@@ -432,6 +448,7 @@ export class QueryExecutor extends Resource {
     const queryPlanner = new QueryPlanner();
     this._plan = queryPlanner.createPlan(this._query);
     this.#scopes = extractScopes(this._plan);
+    this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }
 
   get queryId(): string {
@@ -1055,7 +1072,7 @@ export class QueryExecutor extends Resource {
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, spaceId }) => this._loadReferencedTarget(ref, { sourceSpaceId: spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
 
@@ -1395,11 +1412,19 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  private static _anchorTargetDxn(item: QueryItem): EID.EID {
+    // Queue items are indexed with fully-qualified DXNs; local `echo:/<id>` anchors miss them.
+    if (item.queueId != null) {
+      return EID.make({ spaceId: item.spaceId, entityId: item.objectId });
+    }
+    return EID.make({ entityId: item.objectId });
+  }
+
   private async _queryIncomingReferencesFromSqlIndex(
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly EntityMeta[]> {
-    const anchorDxns = workingSet.map((item) => EID.make({ entityId: item.objectId }));
+    const anchorDxns = workingSet.map((item) => QueryExecutor._anchorTargetDxn(item));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
@@ -1562,6 +1587,38 @@ export class QueryExecutor extends Resource {
       data: null,
       rank: 1,
     };
+  }
+
+  /**
+   * Loads the target of an outgoing reference traversal.
+   * Space-db objects load from Automerge; with `includeAllFeeds` scope, queue items resolve via the SQL index.
+   */
+  private async _loadReferencedTarget(
+    dxn: URI.URI,
+    { sourceSpaceId }: { sourceSpaceId: SpaceId },
+  ): Promise<QueryItem | null> {
+    const fromSpace = await this._loadFromDXN(dxn, { sourceSpaceId });
+    if (fromSpace) {
+      return fromSpace;
+    }
+    if (!this.#includeAllFeeds) {
+      return null;
+    }
+
+    const parsedEchoUri = EID.tryParse(dxn);
+    const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
+    const spaceId = (parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined) ?? sourceSpaceId;
+    if (!objectId || !spaceId) {
+      return null;
+    }
+
+    const metas = await this._runInRuntime(this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }));
+    if (metas.length === 0) {
+      return null;
+    }
+
+    const [item] = await this._loadDocumentsAfterSqlQuery(metas);
+    return item ?? null;
   }
 
   private async _loadFromDXN(dxn: URI.URI, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
