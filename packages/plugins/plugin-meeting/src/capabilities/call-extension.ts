@@ -31,7 +31,7 @@ export default Capability.makeModule(
 
     const store = capabilities.get(MeetingCapabilities.State);
 
-    return Capability.contributes(CallsCapabilities.Extension, {
+    return Capability.contributes(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const client = capabilities.get(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
