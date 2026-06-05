@@ -54,7 +54,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
-    //  Currently this is required due to useOnEditAnalytics.
+    //  Currently this is required because Chat renders an object tile via a Surface.
     withPluginManager({
       plugins: corePlugins(),
       capabilities: [
