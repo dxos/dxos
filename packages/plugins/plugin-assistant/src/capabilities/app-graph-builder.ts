@@ -7,7 +7,7 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -18,7 +18,13 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
+import {
+  ASSISTANT_COMPANION_VARIANT,
+  SPACE_HOME_NODE_ID,
+  SPACE_HOME_NODE_TYPE,
+  SPACE_HOME_SUBJECT_PREFIX,
+  meta,
+} from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
@@ -157,6 +163,33 @@ export default Capability.makeModule(
               }),
             ];
           }),
+      }),
+
+      // Per-space Home virtual node, hoisted to the top of every space's navtree (including the
+      // personal space). The node is virtual (no backing ECHO object); the matching Article surface
+      // resolves the space from the subject (`${SPACE_HOME_SUBJECT_PREFIX}${space.id}`). The
+      // extension is positioned `first` so the node sorts ahead of other `position: 'first'`
+      // siblings (Settings, Collections) under the space.
+      GraphBuilder.createExtension({
+        id: 'spaceHome',
+        position: 'first',
+        match: AppNodeMatcher.whenSpace,
+        connector: (space) =>
+          Effect.succeed([
+            {
+              id: SPACE_HOME_NODE_ID,
+              type: SPACE_HOME_NODE_TYPE,
+              data: `${SPACE_HOME_SUBJECT_PREFIX}${space.id}`,
+              properties: {
+                label: ['space-home-node.label', { ns: meta.id }],
+                icon: 'ph--house--regular',
+                iconHue: 'cyan',
+                position: 'first',
+                draggable: false,
+                droppable: false,
+              },
+            } satisfies Node.NodeArg<string>,
+          ]),
       }),
 
       GraphBuilder.createExtension({

@@ -13,5 +13,6 @@ export const ChatDialog: ComponentType<any> = lazy(() => import('./ChatDialog'))
 export const PlanArticle: ComponentType<any> = lazy(() => import('./PlanArticle'));
 export const RoutineArticle: ComponentType<any> = lazy(() => import('./RoutineArticle'));
 export const RoutineList: ComponentType<any> = lazy(() => import('./RoutineList'));
+export const SpaceHomeArticle: ComponentType<any> = lazy(() => import('./SpaceHomeArticle'));
 export const TracePanel: ComponentType<any> = lazy(() => import('./TracePanel'));
 export const TriggerStatus: ComponentType<any> = lazy(() => import('./TriggerStatus'));

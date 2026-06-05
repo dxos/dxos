@@ -28,10 +28,11 @@ import {
   PlanArticle,
   RoutineArticle,
   RoutineList,
+  SpaceHomeArticle,
   TracePanel,
   TriggerStatus,
 } from '#containers';
-import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
+import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, SPACE_HOME_SUBJECT_PREFIX, meta } from '#meta';
 import { type Assistant } from '#types';
 
 export default Capability.makeModule(() =>
@@ -160,6 +161,15 @@ export default Capability.makeModule(() =>
 
           return <TriggerStatus role='status-indicator' space={space} />;
         },
+      }),
+      Surface.create({
+        id: 'spaceHome',
+        filter: AppSurface.subject(
+          AppSurface.Article,
+          (subject): subject is string =>
+            typeof subject === 'string' && subject.startsWith(SPACE_HOME_SUBJECT_PREFIX),
+        ),
+        component: ({ data, role }) => <SpaceHomeArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'prompts',

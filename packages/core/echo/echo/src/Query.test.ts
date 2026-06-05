@@ -36,6 +36,12 @@ describe('query api', () => {
       log('getAllPeopleOrderedByName', { ast: getAllPeopleOrderedByName.ast });
     });
 
+    test('order by updated timestamp', () => {
+      const recentlyUpdated = Query.type(TestSchema.Person).orderBy(Order.updated('desc')).limit(3);
+
+      Schema.validateSync(QueryAST.Query)(recentlyUpdated.ast);
+    });
+
     test('get all people named Fred', () => {
       const PeopleNamedFred = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
 

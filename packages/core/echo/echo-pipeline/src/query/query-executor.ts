@@ -77,6 +77,13 @@ type QueryItem = {
    * Defaults to 1 for non-ranked queries (predicate matches).
    */
   rank: number;
+
+  /**
+   * System timestamps from the object meta index (unix ms), used for `timestamp` ordering.
+   * Null when the index has not recorded a timestamp for the item.
+   */
+  createdAt: number | null;
+  updatedAt: number | null;
 };
 
 const QueryItem = Object.freeze({
@@ -775,6 +782,8 @@ export class QueryExecutor extends Resource {
                 doc: null,
                 data: snapshot as Obj.JSON,
                 rank: rankMap.get(result.recordId) ?? 1,
+                createdAt: result.createdAt,
+                updatedAt: result.updatedAt,
               };
             })
             .filter(isNonNullable);
@@ -1312,6 +1321,14 @@ export class QueryExecutor extends Resource {
         const comparison = a.rank - b.rank;
         return order.direction === 'desc' ? -comparison : comparison;
       }
+      case 'timestamp': {
+        // Order by the system createdAt/updatedAt timestamp from the meta index.
+        // Missing timestamps sort as oldest (0).
+        const aValue = (order.field === 'updatedAt' ? a.updatedAt : a.createdAt) ?? 0;
+        const bValue = (order.field === 'updatedAt' ? b.updatedAt : b.createdAt) ?? 0;
+        const comparison = aValue - bValue;
+        return order.direction === 'desc' ? -comparison : comparison;
+      }
       default:
         // Should never reach here with proper TypeScript types.
         return 0;
@@ -1518,6 +1535,8 @@ export class QueryExecutor extends Resource {
       doc: null,
       data: snapshot as Obj.JSON,
       rank: 1,
+      createdAt: meta.createdAt,
+      updatedAt: meta.updatedAt,
     };
   }
 
@@ -1549,6 +1568,8 @@ export class QueryExecutor extends Resource {
       doc: object,
       data: null,
       rank: 1,
+      createdAt: meta.createdAt,
+      updatedAt: meta.updatedAt,
     };
   }
 
@@ -1589,6 +1610,9 @@ export class QueryExecutor extends Resource {
         data: null,
         doc: inlineObject,
         rank: 1,
+        // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
+        createdAt: null,
+        updatedAt: null,
       };
     }
 
@@ -1618,6 +1642,9 @@ export class QueryExecutor extends Resource {
       data: null,
       doc: object,
       rank: 1,
+      // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
+      createdAt: null,
+      updatedAt: null,
     };
   }
 
