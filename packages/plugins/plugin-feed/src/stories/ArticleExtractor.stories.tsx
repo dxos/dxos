@@ -14,7 +14,7 @@ import { translations } from '#translations';
 
 import { PostContent } from '../components';
 import { Subscription } from '../types';
-import { type ExtractedArticle, extractArticle } from '../util';
+import { type ExtractedArticle, extractArticle } from '../extraction';
 
 type State =
   | { status: 'idle' }

@@ -9,7 +9,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { FeedOperation } from '../types';
-import { appendPostContent } from '../util';
+import { appendPostContent } from '../state';
 
 const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = FeedOperation.AddPostToMagazine.pipe(
   Operation.withHandler(

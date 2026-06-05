@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { extractArticle } from './extract-article';
+import { extractArticle } from '../extraction/article';
+
+import { applyCorsProxy } from './cors';
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 2_000_000;
@@ -93,9 +95,7 @@ export type FetchArticleOptions = {
 export const fetchArticle = async (link: string, options: FetchArticleOptions = {}): Promise<FetchArticleResult> => {
   try {
     const url = validateUrl(link);
-    const fetchTarget = options.corsProxy
-      ? `${options.corsProxy}${encodeURIComponent(url.toString())}`
-      : url.toString();
+    const fetchTarget = applyCorsProxy(url.toString(), options.corsProxy);
     const response = await fetch(fetchTarget, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       redirect: 'follow',

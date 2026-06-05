@@ -10,7 +10,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { FeedOperation, type Magazine, Subscription } from '../types';
-import { findSystemTagUri, hasTag } from '../util';
+import { findSystemTagUri, hasTag } from '../state';
+import { dxnTailId } from '../util/dxn';
+import { publishedTimestamp } from '../util/sorting';
 
 export default FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
@@ -70,18 +72,6 @@ export default FeedOperation.CurateMagazine.pipe(
   Operation.opaqueHandler,
 );
 
-/** Bare-id tail of a DXN, robust to local (`@`) vs space-scoped DXN forms. */
-const dxnTailId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
-
-/** Sortable timestamp from `post.published`; missing/unparseable falls last. */
-const publishedTimestamp = (post: Subscription.Post): number => {
-  if (!post.published) {
-    return Number.NEGATIVE_INFINITY;
-  }
-  const ms = Date.parse(post.published);
-  return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
-};
-
 /**
  * Apply each Subscription.Subscription's `keep` bound to `magazine.posts`. Each
  * feed contributes up to its own `feed.keep ?? DEFAULT_KEEP` posts. Starred
@@ -129,7 +119,7 @@ export const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string
     const starredPairs = pairs.filter(({ post }) => isStarred(post));
     const candidatePairs = pairs
       .filter(({ post }) => !isStarred(post))
-      .sort((pairA, pairB) => publishedTimestamp(pairB.post) - publishedTimestamp(pairA.post));
+      .sort((pairA, pairB) => publishedTimestamp(pairB.post.published) - publishedTimestamp(pairA.post.published));
     const keptCandidates = candidatePairs.slice(0, Math.max(0, feedKeep));
     nextRefs.push(...starredPairs.map(({ ref }) => ref), ...keptCandidates.map(({ ref }) => ref));
   }

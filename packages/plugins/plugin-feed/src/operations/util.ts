@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { type Magazine, Subscription } from '../types';
+import { publishedTimestamp } from '../util/sorting';
 
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing
@@ -35,15 +36,6 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
     return candidates;
   });
 
-/** Parses a Post's `published` field to a sort key (newest first); missing/unparseable falls to the bottom. */
-export const publishedTimestamp = (post: Subscription.Post): number => {
-  if (!post.published) {
-    return Number.NEGATIVE_INFINITY;
-  }
-  const ms = Date.parse(post.published);
-  return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
-};
-
 /**
  * Partitions posts into those to keep and those to drop, given a maximum
  * non-starred retention bound. Starred posts are always kept; the remaining
@@ -67,7 +59,7 @@ export const partitionByKeepBound = <T extends Subscription.Post>(
       candidates.push(post);
     }
   }
-  candidates.sort((a, b) => publishedTimestamp(b) - publishedTimestamp(a));
+  candidates.sort((a, b) => publishedTimestamp(b.published) - publishedTimestamp(a.published));
   const retained = candidates.slice(0, Math.max(0, keep));
   const dropped = candidates.slice(Math.max(0, keep));
   return { kept: [...kept, ...retained], dropped };

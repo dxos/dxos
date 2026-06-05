@@ -17,17 +17,9 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-import {
-  appendPostContent,
-  fetchArticle,
-  makeSnippet,
-  setReadAt,
-  setTag,
-  stripHtml,
-  usePostContentAtom,
-  useReadState,
-  useTagState,
-} from '../../util';
+import { makeSnippet, stripHtml } from '../../extraction';
+import { browserCorsProxy, fetchArticle } from '../../sources';
+import { appendPostContent, setReadAt, setTag, usePostContentAtom, useReadState, useTagState } from '../../state';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -120,8 +112,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
 
     setRefreshing(true);
     try {
-      const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
-      const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
+      const { text, imageUrls } = await fetchArticle(post.link, { corsProxy: browserCorsProxy() });
       if (text) {
         await appendPostContent(space, subscription, {
           post,

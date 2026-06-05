@@ -20,7 +20,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { findSystemTagUri, getReadAt, hasTag, setReadAt, setTag, useVisibleMagazinePosts } from '../../util';
+import { findSystemTagUri, getReadAt, hasTag, setReadAt, setTag, useVisibleMagazinePosts } from '../../state';
 import { MagazineTile } from './MagazineTile';
 import { type CurateState, MagazineToolbar, type MagazineView } from './MagazineToolbar';
 

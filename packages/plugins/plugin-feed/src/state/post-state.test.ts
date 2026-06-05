@@ -12,7 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { Magazine, Subscription } from '../types';
-import { appendPostContent, findPostContent, queryPostContentForPost } from './post-state';
+import { appendPostContent, findPostContent, queryPostContentForPost } from './post-content';
 
 describe('PostContent reverse-ref lookup', () => {
   let builder: EchoTestBuilder;

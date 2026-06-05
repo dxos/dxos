@@ -4,9 +4,9 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { fetchAtproto, parseAtprotoActor } from './fetch-atproto';
+import { fetchAtproto, parseAtprotoActor } from './atproto';
 
-// RSS/Atom coverage lives in fetch-rss.test.ts.
+// RSS/Atom coverage lives in rss.test.ts.
 
 // Sample Bluesky XRPC response fixture.
 const BSKY_RESPONSE = {

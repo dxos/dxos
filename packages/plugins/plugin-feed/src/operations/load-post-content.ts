@@ -9,7 +9,9 @@ import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '../types';
-import { appendPostContent, fetchArticle, findPostContent, makeSnippet, stripHtml } from '../util';
+import { makeSnippet, stripHtml } from '../extraction';
+import { browserCorsProxy, fetchArticle } from '../sources';
+import { appendPostContent, findPostContent } from '../state';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
@@ -37,8 +39,7 @@ export default FeedOperation.LoadPostContent.pipe(
         try: async () => {
           // In the browser, route through the dev-server CORS proxy. Server-side callers
           // (e.g. agent operations) pass no proxy and fetch directly.
-          const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
-          const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy });
+          const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy: browserCorsProxy() });
           if (text) {
             // Store the body plus refined snippet/imageUrl derived from the full article — preferred
             // over the description-derived defaults wherever the Post is rendered.

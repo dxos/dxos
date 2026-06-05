@@ -8,8 +8,10 @@ import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 
 import { Magazine, Subscription } from '../types';
+import { publishedTimestamp } from '../util/sorting';
 
-import { getImageUrl, getReadAt, getSnippet, hasTag, pickLatestPostContent, queryPostContentForPost } from './post-state';
+import { getImageUrl, getSnippet, pickLatestPostContent, queryPostContentForPost } from './post-content';
+import { getReadAt, hasTag } from './post-state';
 
 /**
  * Tile filter mode. Mutually exclusive — `default` shows everything except archived,
@@ -164,15 +166,6 @@ const postDisplayAtom = Atom.family((post: Subscription.Post) =>
   }).pipe(Atom.keepAlive),
 );
 
-/** Sortable timestamp from a Post's `published`; missing/unparseable sorts last. */
-const publishedTimestamp = (post: Subscription.Post): number => {
-  if (!post.published) {
-    return Number.NEGATIVE_INFINITY;
-  }
-  const ms = Date.parse(post.published);
-  return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
-};
-
 /**
  * Ordered Posts referenced by the Magazine, derived directly from the `magazine.posts` refs — no
  * query. Fires when the refs array changes (membership/order) or when a ref resolves. Resolving each
@@ -185,7 +178,7 @@ const magazinePostsAtom = Atom.family((magazine: Magazine.Magazine) =>
     const posts = refs
       .map((ref) => get(AtomRef.make(ref)))
       .filter((post): post is Subscription.Post => Boolean(post));
-    return [...posts].sort((postA, postB) => publishedTimestamp(postB) - publishedTimestamp(postA));
+    return [...posts].sort((postA, postB) => publishedTimestamp(postB.published) - publishedTimestamp(postA.published));
   }),
 );
 

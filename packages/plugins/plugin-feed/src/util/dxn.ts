@@ -10,3 +10,6 @@ import { EID, type EntityId, type URI } from '@dxos/keys';
  * EID.getEntityId.
  */
 export const dxnToEntityId = (uri: URI.URI): EntityId | URI.URI => EID.getEntityId(EID.tryParse(uri)!) ?? uri;
+
+/** Bare-id tail of a DXN string, robust to local (`@`) vs space-scoped DXN forms. */
+export const dxnTailId = (dxn: string): string => dxn.split(':').pop() ?? dxn;

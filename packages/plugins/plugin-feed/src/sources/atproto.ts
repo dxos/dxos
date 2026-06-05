@@ -4,6 +4,7 @@
 
 import { Subscription } from '#types';
 
+import { applyCorsProxy } from './cors';
 import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 
 const BSKY_PUBLIC_API = 'https://public.api.bsky.app/xrpc';
@@ -26,7 +27,7 @@ export const fetchAtproto: FeedFetcher = async (url: string, options?: FetchOpti
   const actor = parseAtprotoActor(url);
   const endpoint = `${BSKY_PUBLIC_API}/app.bsky.feed.getAuthorFeed?actor=${encodeURIComponent(actor)}&limit=50`;
 
-  const fetchUrl = options?.corsProxy ? `${options.corsProxy}${encodeURIComponent(endpoint)}` : endpoint;
+  const fetchUrl = applyCorsProxy(endpoint, options?.corsProxy);
   const response = await fetch(fetchUrl);
   if (!response.ok) {
     throw new Error(`AT Protocol fetch failed: ${response.status} ${response.statusText}`);

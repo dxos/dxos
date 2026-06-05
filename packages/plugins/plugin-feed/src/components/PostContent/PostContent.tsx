@@ -10,9 +10,8 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 
 import { Subscription } from '#types';
 
+import { getImageUrl, usePostContentAtom } from '../../state';
 import { formatDate } from '../../util/format-date';
-import { usePostContentAtom } from '../../util/post-atoms';
-import { getImageUrl } from '../../util/post-state';
 
 export type PostContentProps = {
   /** Post to render. */

@@ -9,7 +9,7 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';
-import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
+import { browserCorsProxy, type FeedFetcher, fetchAtproto, fetchRss } from '../sources';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, atproto uses the post URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
@@ -35,9 +35,10 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(echoFeed, 'Backing ECHO feed not found.');
       invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
 
-      const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       const fetcher = getFetcher(subscriptionFeed.type);
-      const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () => fetcher(url, { corsProxy }));
+      const { feed: feedMeta, posts } = yield* Effect.tryPromise(async () =>
+        fetcher(url, { corsProxy: browserCorsProxy() }),
+      );
 
       // Dedup against existing posts already in the backing queue. The
       // `cursor` field on the subscription was previously used as a single-guid

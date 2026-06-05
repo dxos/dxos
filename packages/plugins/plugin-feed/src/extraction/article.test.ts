@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { extractArticle, pruneTrailingChrome } from './extract-article';
+import { extractArticle, pruneTrailingChrome } from './article';
 
 const parse = (html: string): Document => new DOMParser().parseFromString(html, 'text/html');
 
