@@ -37,6 +37,7 @@ import { configuredCredentialsLayer } from '@dxos/functions';
 import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
+import { Runtime } from 'effect';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
@@ -73,7 +74,7 @@ interface TestLayerOptions {
    * Extra services to make available in the service resolver.
    * Operations can depend on those services.
    */
-  extraServices?: Context.Context<any>;
+  extraServices?: Layer.Layer<any, never, never>;
 }
 
 export type AssistantTestServices =
@@ -109,7 +110,7 @@ export const AssistantTestLayer = ({
   blueprints = [],
   systemPrompt,
   enableToolBackgrounding = false,
-  extraServices,
+  extraServices = Layer.empty as any,
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const resolvedModel: ModelName =
     model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
@@ -120,19 +121,23 @@ export const AssistantTestLayer = ({
   types.push(Blueprint.Blueprint, Routine.Routine, Operation.PersistentOperation, Feed.Feed, Trigger.Trigger, Tag.Tag);
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
+
   return Layer.empty.pipe(
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel, enableToolBackgrounding })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
     Layer.provideMerge(
-      Layer.effect(
+      Layer.scoped(
         ServiceResolver.ServiceResolver,
         Effect.gen(function* () {
           const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
             Effect.map(Context.pick(Database.Service, Feed.FeedService)),
             Effect.map(Layer.succeedContext),
           );
+
+          const extraSericesRt = yield* Layer.toRuntime(extraServices);
+
           return ServiceResolver.compose(
             ServiceResolver.succeed(AiContext.Service, (context) =>
               Effect.gen(function* () {
@@ -176,7 +181,7 @@ export const AssistantTestLayer = ({
               OperationRegistry.Service,
               Blueprint.RegistryService,
             ),
-            ServiceResolver.fromContext(extraServices ?? (Context.empty() as Context.Context<any>)),
+            ServiceResolver.fromContext(extraSericesRt.context),
           );
         }),
       ),
@@ -210,7 +215,7 @@ export const AssistantTestLayer = ({
   );
 };
 
-interface TestLayerWithTriggersOptions extends TestLayerOptions {}
+interface TestLayerWithTriggersOptions extends TestLayerOptions { }
 
 export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerDispatcher | TriggerStateStore;
 

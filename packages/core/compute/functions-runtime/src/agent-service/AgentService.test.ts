@@ -7,6 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Context, Fiber, Layer } from 'effect';
 import { Deferred } from 'effect';
 import * as Effect from 'effect/Effect';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { expect } from 'vitest';
@@ -85,10 +86,12 @@ class ResearchService extends Context.Tag('@dxos/functions-runtime/ResearchServi
   }
 >() { }
 
-const makeResearchService = () => {
+const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* () {
+  const taskSignal = yield* Queue.unbounded<void>();
   const tasks: ResearchTask[] = [];
   const complete = (task: ResearchTask) =>
     Effect.gen(function* () {
+      log.info('complete research', { website: task.website });
       const result = TEST_DATA.research[task.website];
       if (!result) {
         yield* Effect.die(new Error(`No research found for ${task.website}`));
@@ -100,16 +103,13 @@ const makeResearchService = () => {
   return ResearchService.of({
     research: (website: string) =>
       Effect.gen(function* () {
+        log.info('start research', { website });
         const task = yield* Deferred.make<string>();
         tasks.push({ website, deferred: task });
+        yield* Queue.offer(taskSignal, undefined);
         return yield* Deferred.await(task);
       }),
-    waitForTaskToAppear: () =>
-      Effect.gen(function* () {
-        while (tasks.length === 0) {
-          yield* Effect.sleep(100);
-        }
-      }),
+    waitForTaskToAppear: () => Queue.take(taskSignal).pipe(Effect.asVoid),
     completeOneTask: () =>
       Effect.gen(function* () {
         const task = tasks.shift();
@@ -125,7 +125,7 @@ const makeResearchService = () => {
         }
       }),
   });
-};
+}));
 
 const Research = Operation.make({
   meta: {
@@ -144,10 +144,8 @@ const handlers = OperationHandlerSet.make(
   Research.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ website }) {
-        log.info('begin research', { website });
         const research = yield* ResearchService;
         const result = yield* research.research(website);
-        log.info('end research', { website });
         return result;
       }),
     ),
@@ -162,12 +160,12 @@ const ResearchBlueprint = Blueprint.make({
 
 const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
-  tracing: 'console',
+  tracing: 'pretty',
   aiServicePreset: 'edge-remote',
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
-  enableToolBackgrounding: true,
-  extraServices: Context.make(ResearchService, makeResearchService()),
+  enableToolBackgrounding: false,
+  extraServices: makeResearchService,
 });
 
 describe('Agent Service', () => {
@@ -189,7 +187,7 @@ describe('Agent Service', () => {
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped.only(
+  it.scoped(
     'tool call',
     Effect.fnUntraced(
       function* (_) {
