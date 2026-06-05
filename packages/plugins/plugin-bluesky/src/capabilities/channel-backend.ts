@@ -54,7 +54,13 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
         }
 
         const handle = config.handle;
+        // Skip a tick if the previous request is still in flight (avoids overlap / out-of-order updates).
+        let inFlight = false;
         const poll = () => {
+          if (inFlight) {
+            return;
+          }
+          inFlight = true;
           void BlueskyApi.getAuthorFeed({ actor: handle })
             .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
             .then((response) => {
@@ -73,9 +79,18 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
               });
               onMessages(messages);
             })
-            // Best-effort: transient network/5xx/timeout failures are already retried
-            // inside getAuthorFeed; swallow the rest so polling continues.
-            .catch(() => {});
+            // Transient network/5xx/timeout failures are already retried inside
+            // getAuthorFeed. If the very first fetch fails (nothing cached yet),
+            // emit an empty list so the channel leaves the loading state; later
+            // failures keep the last rendered list.
+            .catch(() => {
+              if (!cancelled && cache.size === 0) {
+                onMessages([]);
+              }
+            })
+            .finally(() => {
+              inFlight = false;
+            });
         };
 
         poll();
