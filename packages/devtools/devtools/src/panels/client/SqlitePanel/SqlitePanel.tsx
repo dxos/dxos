@@ -11,11 +11,7 @@ import { type StorageInfo } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Icon, Input, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
-import {
-  arrayToString,
-  decodeUint8ArrayFromJson,
-  isEncodedUint8Array,
-} from '@dxos/util';
+import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
 
@@ -38,8 +34,7 @@ type DatabaseInfo = {
 
 const quoteIdentifier = (name: string): string => `"${name.replace(/"/g, '""')}"`;
 
-const tableSelectQuery = (tableName: string): string =>
-  `SELECT * FROM ${quoteIdentifier(tableName)} LIMIT 500;`;
+const tableSelectQuery = (tableName: string): string => `SELECT * FROM ${quoteIdentifier(tableName)} LIMIT 500;`;
 
 const parseScalar = (rows: Record<string, unknown>[]): unknown => {
   const first = rows[0];
@@ -130,17 +125,25 @@ export const SqlitePanel = () => {
   );
 
   const loadDatabaseInfo = useCallback(async () => {
-    const [version, pageSize, pageCount, freelistCount, journalMode, storageInfo, configResponse, databaseListResponse] =
-      await Promise.all([
-        queryScalar('SELECT sqlite_version() AS value'),
-        queryScalar('PRAGMA page_size'),
-        queryScalar('PRAGMA page_count'),
-        queryScalar('PRAGMA freelist_count'),
-        queryScalar('PRAGMA journal_mode'),
-        devtoolsHost.getStorageInfo(),
-        devtoolsHost.getConfig(),
-        devtoolsHost.runSqliteQuery({ query: DATABASE_LIST_QUERY }),
-      ]);
+    const [
+      version,
+      pageSize,
+      pageCount,
+      freelistCount,
+      journalMode,
+      storageInfo,
+      configResponse,
+      databaseListResponse,
+    ] = await Promise.all([
+      queryScalar('SELECT sqlite_version() AS value'),
+      queryScalar('PRAGMA page_size'),
+      queryScalar('PRAGMA page_count'),
+      queryScalar('PRAGMA freelist_count'),
+      queryScalar('PRAGMA journal_mode'),
+      devtoolsHost.getStorageInfo(),
+      devtoolsHost.getConfig(),
+      devtoolsHost.runSqliteQuery({ query: DATABASE_LIST_QUERY }),
+    ]);
 
     let configuredSqliteMode: number | string | undefined;
     let servicesMode: number | string | undefined;
@@ -285,10 +288,7 @@ export const SqlitePanel = () => {
               <InfoItem label='Services' value={formatServicesMode(databaseInfo.servicesMode)} />
               {databaseInfo.configuredSqliteMode != null &&
                 formatSqliteMode(databaseInfo.configuredSqliteMode) !== databaseInfo.backing && (
-                  <InfoItem
-                    label='Config'
-                    value={`${formatSqliteMode(databaseInfo.configuredSqliteMode)} (stale)`}
-                  />
+                  <InfoItem label='Config' value={`${formatSqliteMode(databaseInfo.configuredSqliteMode)} (stale)`} />
                 )}
               <InfoItem label='Journal' value={databaseInfo.journalMode} />
               <InfoItem label='Size' value={databaseSize != null ? bytes.format(databaseSize) : undefined} />
@@ -589,9 +589,7 @@ const formatHexDump = (data: Uint8Array): string => {
   for (let offset = 0; offset < data.length; offset += 16) {
     const chunk = data.subarray(offset, offset + 16);
     const hex = Array.from(chunk, (byte) => byte.toString(16).padStart(2, '0')).join(' ');
-    const ascii = Array.from(chunk, (byte) =>
-      byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '.',
-    ).join('');
+    const ascii = Array.from(chunk, (byte) => (byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '.')).join('');
     lines.push(`${offset.toString(16).padStart(8, '0')}  ${hex.padEnd(16 * 3 - 1, ' ')}  ${ascii}`);
   }
 
@@ -614,9 +612,7 @@ const BinaryCell = ({ data }: { data: Uint8Array }) => {
           )}
         </span>
       </summary>
-      <pre className='mt-1 max-h-48 overflow-auto text-[10px] leading-4 whitespace-pre'>
-        {formatHexDump(data)}
-      </pre>
+      <pre className='mt-1 max-h-48 overflow-auto text-[10px] leading-4 whitespace-pre'>{formatHexDump(data)}</pre>
     </details>
   );
 };
