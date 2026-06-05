@@ -642,7 +642,9 @@ const LoginTab = ({
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content side='bottom' sideOffset={8} collisionPadding={16} classNames='!w-80'>
+            {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
+                onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
+            <DropdownMenu.Content side='bottom' sideOffset={8} collisionPadding={16} classNames='!w-80 !z-50'>
               <DropdownMenu.Viewport>
                 {moreOptions.map((opt) => (
                   <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
