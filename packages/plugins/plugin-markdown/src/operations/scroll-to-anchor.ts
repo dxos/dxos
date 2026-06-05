@@ -11,6 +11,20 @@ import { Cursor, setSelection } from '@dxos/ui-editor';
 
 import { MarkdownCapabilities, MarkdownOperation } from '../types';
 
+/**
+ * Whether the [from, to] range is already entirely within the editor's scroll
+ * viewport. Returns false if either endpoint isn't currently rendered (off-screen).
+ */
+const isRangeVisible = (view: EditorView, range: { from: number; to: number }): boolean => {
+  const from = view.coordsAtPos(range.from);
+  const to = view.coordsAtPos(range.to);
+  if (!from || !to) {
+    return false;
+  }
+  const { top, bottom } = view.scrollDOM.getBoundingClientRect();
+  return from.top >= top && to.bottom <= bottom;
+};
+
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, cursor, ref }) {
@@ -22,7 +36,10 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
       const range = Cursor.getRangeFromCursor(entry.view.state, cursor);
       if (range) {
         const selection = entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
-        const effects: any[] = [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
+        // Only scroll when the anchored range isn't already entirely visible.
+        const effects: any[] = isRangeVisible(entry.view, range)
+          ? []
+          : [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
         if (ref || selection) {
           // Mark the referenced comment (thread) as current so the editor highlights
           // it; fall back to the document id when no ref is supplied. Always update
@@ -30,10 +47,12 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
           // if the caret is already at the anchor start (or two threads share it).
           effects.push(setSelection.of({ current: ref ?? entry.documentId }));
         }
-        entry.view.dispatch({
-          effects,
-          selection: selection ? { anchor: range.from } : undefined,
-        });
+        if (effects.length > 0 || selection) {
+          entry.view.dispatch({
+            effects,
+            selection: selection ? { anchor: range.from } : undefined,
+          });
+        }
       }
     }),
   ),
