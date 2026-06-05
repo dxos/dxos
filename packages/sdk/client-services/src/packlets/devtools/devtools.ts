@@ -11,6 +11,7 @@ import {
   type EnableDebugLoggingRequest,
   type EnableDebugLoggingResponse,
   type Event,
+  type ExportSqliteDatabaseResponse,
   type GetBlobsResponse,
   type GetConfigResponse,
   type GetNetworkPeersRequest,
@@ -19,6 +20,8 @@ import {
   type GetSpaceSnapshotRequest,
   type GetSpaceSnapshotResponse,
   type ResetStorageRequest,
+  type RunSqliteQueryRequest,
+  type RunSqliteQueryResponse,
   type SaveSpaceSnapshotRequest,
   type SaveSpaceSnapshotResponse,
   type SignalResponse,
@@ -56,6 +59,8 @@ export type DevtoolsServiceProps = {
   events: DevtoolsHostEvents;
   config: Config;
   context: ServiceContext;
+  exportSqliteDatabase: () => Promise<Uint8Array>;
+  runSqliteQuery: (query: string, params?: unknown[]) => Promise<readonly Record<string, unknown>[]>;
 };
 
 /**
@@ -171,5 +176,21 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   subscribeToMetadata(): Stream<SubscribeToMetadataResponse> {
     return subscribeToMetadata({ context: this.params.context });
+  }
+
+  async exportSqliteDatabase(): Promise<ExportSqliteDatabaseResponse> {
+    return {
+      data: await this.params.exportSqliteDatabase(),
+    };
+  }
+
+  async runSqliteQuery(request: RunSqliteQueryRequest): Promise<RunSqliteQueryResponse> {
+    try {
+      const params = request.params ? JSON.parse(request.params) : undefined;
+      const rows = await this.params.runSqliteQuery(request.query, params);
+      return { rows: JSON.stringify(rows) };
+    } catch (err) {
+      return { rows: '[]', error: err instanceof Error ? err.message : String(err) };
+    }
   }
 }

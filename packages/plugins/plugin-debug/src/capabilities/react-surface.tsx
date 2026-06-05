@@ -31,6 +31,7 @@ import {
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
+  SqlitePanel,
   StoragePanel,
   SwarmPanel,
   TestingPanel,
@@ -219,6 +220,11 @@ export default Capability.makeModule(
         id: 'client.storage',
         filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Storage),
         component: () => <StoragePanel />,
+      }),
+      Surface.create({
+        id: 'client.sqlite',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Client.Sqlite),
+        component: () => <SqlitePanel />,
       }),
       Surface.create({
         id: 'client.logs',
