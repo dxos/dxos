@@ -517,8 +517,7 @@ export const makeAlarmToolkit = (alarmManager: AlarmManager): OpaqueToolkit.Opaq
           yield* alarmManager.setWakeAt(resolved.right);
           return `Alarm scheduled to wake you at ${new Date(resolved.right).toISOString()}.`;
         }),
-      'get-current-date': () =>
-        Effect.sync(() => new Date(alarmManager.now()).toISOString()),
+      'get-current-date': () => Effect.sync(() => new Date(alarmManager.now()).toISOString()),
     }),
   );
 
