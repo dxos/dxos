@@ -11,7 +11,7 @@ import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
-import { ThreadCapabilities } from '#types';
+import { ThreadCapabilities, ThreadOperation } from '#types';
 
 import { threads } from '../extensions';
 
@@ -54,8 +54,11 @@ export default Capability.makeModule(
 
         return EditorView.updateListener.of((update) => {
           update.transactions.forEach((transaction) => {
-            transaction.effects.forEach(async (effect) => {
+            transaction.effects.forEach((effect) => {
               if (effect.is(commentClickedEffect)) {
+                // Select the clicked comment's thread (its id is the thread URI) so
+                // the companion highlights and scrolls to it, then open the companion.
+                void invokePromise(ThreadOperation.Select, { current: effect.value });
                 void invokePromise(LayoutOperation.UpdateCompanion, {
                   subject: linkedSegment('comments'),
                 });

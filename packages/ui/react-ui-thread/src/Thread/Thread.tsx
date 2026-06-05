@@ -110,10 +110,10 @@ ThreadContent.displayName = 'Thread.Content';
 
 export type ThreadHeaderProps = PropsWithChildren<{
   detached?: boolean;
-  /** Invoked when the caret affordance is activated to select/focus this thread. */
-  onSelect?: () => void;
   /** Trailing controls rendered in the right column (aligns with message-tile controls). */
   controls?: ReactNode;
+  /** Invoked when the caret affordance is activated to select/focus this thread. */
+  onSelect?: () => void;
 }>;
 
 /**
@@ -122,7 +122,7 @@ export type ThreadHeaderProps = PropsWithChildren<{
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
-  ({ children, detached, onSelect, controls, ...props }, forwardedRef) => {
+  ({ children, detached, controls, onSelect, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
       <div
@@ -136,6 +136,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
           <IconButton
             iconOnly
             variant='ghost'
+            density='sm'
             icon='ph--caret-double-right--regular'
             label={t('select-thread.label')}
             classNames='text-description'
