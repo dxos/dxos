@@ -32,7 +32,7 @@ export type ChannelChatProps = {
  */
 export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
   ({ space, channel, ...props }, forwardedRef) => {
-    const identity = useIdentity()!;
+    const identity = useIdentity();
     const members = useMembers(space.id);
     const id = Obj.getURI(channel);
     const activity = useStatus(space, id);
@@ -45,7 +45,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
 
     const handleSend = useCallback(
       (text: string) => {
-        if (readOnly) {
+        if (!identity || readOnly) {
           return false;
         }
 
@@ -57,14 +57,14 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
 
         return true;
       },
-      [readOnly, channel, identity, invokePromise],
+      [channel, identity, readOnly, invokePromise],
     );
 
     return (
       <Chat
         {...composableProps(props)}
         id={id}
-        identity={identity}
+        identity={identity || undefined}
         members={members}
         messages={messages}
         activity={activity}

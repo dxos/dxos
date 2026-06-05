@@ -10,7 +10,8 @@ import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
 
-import { ChannelCreatePanel } from '../containers/ChannelChat/ChannelCreatePanel';
+import { ChannelCreatePanel } from '#components';
+
 import { ThreadCapabilities, resolveProvider } from '../types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];

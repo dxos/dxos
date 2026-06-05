@@ -4,6 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
+export * from './ChannelCreatePanel';
 export * from './Chat';
 export * from './CommentsPanel';
 export * from './MessagePanel';
