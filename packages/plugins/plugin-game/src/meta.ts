@@ -19,7 +19,7 @@ export const meta = Plugin.makeMeta({
     input form).
 
     Game variants (chess, tic-tac-toe, and others) are contributed by separate
-    plugins via the \`GameCapabilities.Variant\` capability. Each variant supplies
+    plugins via the \`GameCapabilities.VariantProvider\` capability. Each variant supplies
     its own state schema, player roles, create factory, and surface components
     (Article and Card). Plugin-game resolves the correct variant at runtime and
     delegates rendering, keeping the host layer fully decoupled from game logic.

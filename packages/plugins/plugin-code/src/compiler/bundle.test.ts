@@ -20,7 +20,7 @@ afterAll(async () => {
   }
 });
 
-describe('bundleEntry (F-12b)', () => {
+describe('bundleEntry (F-12b)', { tags: ['compiler'] }, () => {
   test('bundles a two-file project with relative import', async ({ expect }) => {
     const files: File[] = [
       { path: 'src/util.ts', content: "export const MESSAGE = 'from util';\n" },
@@ -56,7 +56,7 @@ describe('bundleEntry (F-12b)', () => {
   });
 });
 
-describe('compileEntry dispatch (F-12a vs F-12b)', () => {
+describe('compileEntry dispatch (F-12a vs F-12b)', { tags: ['compiler'] }, () => {
   test('multi-file project round-trips through bundle + execute', async ({ expect }) => {
     resetCompiler();
     const files: File[] = [

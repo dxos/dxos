@@ -62,7 +62,7 @@ const meta = {
   title: 'plugins/plugin-trip/containers/SegmentArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withPluginManager(() => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [

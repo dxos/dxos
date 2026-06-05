@@ -26,6 +26,8 @@ export const TodoListAnnotation = Annotation.make({
 
 export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));
-  Annotation.set(space.properties, TodoListAnnotation, Ref.make(list));
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, TodoListAnnotation, Ref.make(list));
+  });
   return list;
 };

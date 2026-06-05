@@ -19,50 +19,54 @@ export type AiServicePreset = {
 };
 
 const createModelLabel = (model: ModelName) => {
-  const parts = model.split('/');
+  const parts = model.split('.');
   return parts[parts.length - 1];
 };
 
 // TODO(burdon): Users should be able to create and edit presets.
 export const AiServicePresets: AiServicePreset[] = [
+  // Sonnet is first so it is the default selection.
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-opus-4-6' as const,
+    model: 'ai.claude.model.claude-sonnet-4-6' as const,
+    label: 'Claude Sonnet',
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-sonnet-4-5' as const,
+    model: 'ai.claude.model.claude-opus-4-8' as const,
+    label: 'Claude Opus',
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-3-5-haiku-20241022' as const,
+    model: 'ai.claude.model.claude-haiku-4-5' as const,
+    label: 'Claude Haiku',
   },
   {
     provider: 'ollama' as const,
-    model: 'gpt-oss:20b' as const,
+    model: 'ai.ollama.model.gpt-oss:20b' as const,
   },
   {
     provider: 'ollama' as const,
-    model: 'gemma4:latest' as const,
+    model: 'ai.ollama.model.gemma4:latest' as const,
   },
   {
     provider: 'lm-studio' as const,
-    model: '@google/gemma-3-27b' as const,
+    model: 'ai.google.model.gemma-3-27b' as const,
   },
   {
     provider: 'lm-studio' as const,
-    model: '@meta/llama-3.2-3b-instruct' as const,
+    model: 'ai.meta.model.llama-3.2-3b-instruct' as const,
   },
   {
-    model: 'deepseek-r1:latest' as const,
+    model: 'ai.ollama.model.deepseek-r1:latest' as const,
     provider: 'dxos-local' as const,
   },
 ].map(
-  ({ model, provider }, i) =>
+  ({ model, provider, label }, i) =>
     ({
       id: `preset-${i}`,
       provider,
       model,
-      label: createModelLabel(model),
+      label: label ?? createModelLabel(model),
     }) satisfies AiServicePreset,
 );

@@ -28,35 +28,47 @@ export const make = () =>
           : undefined;
         const max_tokens = 16_384;
         switch (model) {
-          case '@anthropic/claude-3-5-haiku-20241022':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022', config: { max_tokens } }).pipe(
+          case 'ai.claude.model.claude-opus-4-8':
+            return AnthropicLanguageModel.layer({ model: 'claude-opus-4-8', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-3-5-sonnet-20241022':
-            return AnthropicLanguageModel.layer({ model: 'claude-3-5-sonnet-20241022', config: { max_tokens } }).pipe(
+          case 'ai.claude.model.claude-sonnet-4-6':
+            return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-6', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-haiku-4-5':
+          case 'ai.claude.model.claude-haiku-4-5':
             return AnthropicLanguageModel.layer({ model: 'claude-haiku-4-5', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-opus-4-0':
+          case 'ai.claude.model.claude-3-5-haiku-latest':
+            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-latest', config: { max_tokens } }).pipe(
+              Layer.provide(clientLayer),
+            );
+          case 'ai.claude.model.claude-3-5-haiku-20241022':
+            return AnthropicLanguageModel.layer({ model: 'claude-3-5-haiku-20241022', config: { max_tokens } }).pipe(
+              Layer.provide(clientLayer),
+            );
+          case 'ai.claude.model.claude-3-5-sonnet-20241022':
+            return AnthropicLanguageModel.layer({ model: 'claude-3-5-sonnet-20241022', config: { max_tokens } }).pipe(
+              Layer.provide(clientLayer),
+            );
+          case 'ai.claude.model.claude-opus-4-0':
             return AnthropicLanguageModel.layer({ model: 'claude-opus-4-0', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-opus-4-5':
+          case 'ai.claude.model.claude-opus-4-5':
             return AnthropicLanguageModel.layer({ model: 'claude-opus-4-5', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-opus-4-6':
+          case 'ai.claude.model.claude-opus-4-6':
             return AnthropicLanguageModel.layer({ model: 'claude-opus-4-6', config: { thinking, max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-sonnet-4-0':
+          case 'ai.claude.model.claude-sonnet-4-0':
             return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-0', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );
-          case '@anthropic/claude-sonnet-4-5':
+          case 'ai.claude.model.claude-sonnet-4-5':
             return AnthropicLanguageModel.layer({ model: 'claude-sonnet-4-5', config: { max_tokens } }).pipe(
               Layer.provide(clientLayer),
             );

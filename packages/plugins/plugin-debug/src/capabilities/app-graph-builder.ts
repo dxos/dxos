@@ -121,6 +121,15 @@ export default Capability.makeModule(
                         },
                       }),
                       Node.make({
+                        id: Devtools.Client.Sqlite,
+                        data: Devtools.Client.Sqlite,
+                        type: DEVTOOLS_TYPE,
+                        properties: {
+                          label: ['sqlite.label', { ns: meta.id }],
+                          icon: 'ph--database--regular',
+                        },
+                      }),
+                      Node.make({
                         id: Devtools.Client.Logs,
                         data: Devtools.Client.Logs,
                         type: DEVTOOLS_TYPE,

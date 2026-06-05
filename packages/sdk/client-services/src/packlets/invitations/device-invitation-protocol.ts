@@ -5,7 +5,7 @@
 import { type Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -21,7 +21,7 @@ import { type InvitationProtocol } from './invitation-protocol';
 
 export class DeviceInvitationProtocol implements InvitationProtocol {
   constructor(
-    private readonly _keyring: Keyring,
+    private readonly _keyring: KeyringApi,
     private readonly _getIdentity: () => Identity,
     private readonly _acceptIdentity: (identity: JoinIdentityProps) => Promise<Identity>,
   ) {}

@@ -16,7 +16,7 @@ const handler = Summarize.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ text }) {
       const result = yield* AiService.run({
-        model: AiService.model('@anthropic/claude-sonnet-4-5'),
+        model: AiService.model('ai.claude.model.claude-sonnet-4-5'),
         system: 'You are a concise summarizer. Reply in one sentence.',
         messages: [{ role: 'user', content: text }],
       });
@@ -34,7 +34,7 @@ When the model needs to call other operations as tools:
 
 ```ts
 const result = yield* AiService.run({
-  model: AiService.model('@anthropic/claude-sonnet-4-5'),
+  model: AiService.model('ai.claude.model.claude-sonnet-4-5'),
   toolkit: OpaqueToolkit.fromOperations([Search, Fetch]),
   toolExecutor: ToolExecutionService,
   toolResolver: ToolResolverService,

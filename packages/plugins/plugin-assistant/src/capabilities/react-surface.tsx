@@ -166,8 +166,7 @@ export default Capability.makeModule(() =>
         id: 'spaceHome',
         filter: AppSurface.subject(
           AppSurface.Article,
-          (subject): subject is string =>
-            typeof subject === 'string' && subject.startsWith(SPACE_HOME_SUBJECT_PREFIX),
+          (subject): subject is string => typeof subject === 'string' && subject.startsWith(SPACE_HOME_SUBJECT_PREFIX),
         ),
         component: ({ data, role }) => <SpaceHomeArticle role={role} subject={data.subject} />,
       }),

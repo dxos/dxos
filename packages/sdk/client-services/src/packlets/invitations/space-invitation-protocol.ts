@@ -10,7 +10,7 @@ import {
 } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { type Keyring } from '@dxos/keyring';
+import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
@@ -30,7 +30,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
     private readonly _spaceManager: DataSpaceManager,
     private readonly _signingContext: SigningContext,
-    private readonly _keyring: Keyring,
+    private readonly _keyring: KeyringApi,
     private readonly _spaceKey?: PublicKey,
   ) {}
 
