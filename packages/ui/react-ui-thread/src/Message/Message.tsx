@@ -11,6 +11,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from 'react';
@@ -268,48 +269,57 @@ const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | '
   },
 ];
 
-const MessageTextbox = ({
-  id,
-  authorId,
-  authorName,
-  authorImgSrc,
-  authorAvatarProps,
-  disabled,
-  extensions,
-  onSend,
-  onClear,
-  onEditorFocus,
-  ...editorProps
-}: MessageTextboxProps) => {
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
-      id,
-      extensions: [
-        keymap.of(keyBindings({ onSend, onClear })),
-        listener({
-          onFocus: ({ focusing }) => {
-            if (focusing) {
-              onEditorFocus?.();
-            }
-          },
-        }),
-        extensions,
-      ].filter(isTruthy),
-      ...editorProps,
-    }),
-    [id, extensions],
-  );
+export type MessageTextboxHandle = { focus: () => void };
 
-  return (
-    <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-      <div
-        ref={parentRef}
-        className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
-        {...focusAttributes}
-      />
-    </MessageRoot>
-  );
-};
+const MessageTextbox = forwardRef<MessageTextboxHandle, MessageTextboxProps>(
+  (
+    {
+      id,
+      authorId,
+      authorName,
+      authorImgSrc,
+      authorAvatarProps,
+      disabled,
+      extensions,
+      onSend,
+      onClear,
+      onEditorFocus,
+      ...editorProps
+    },
+    forwardedRef,
+  ) => {
+    const { parentRef, focusAttributes, view } = useTextEditor(
+      () => ({
+        id,
+        extensions: [
+          keymap.of(keyBindings({ onSend, onClear })),
+          listener({
+            onFocus: ({ focusing }) => {
+              if (focusing) {
+                onEditorFocus?.();
+              }
+            },
+          }),
+          extensions,
+        ].filter(isTruthy),
+        ...editorProps,
+      }),
+      [id, extensions],
+    );
+
+    useImperativeHandle(forwardedRef, () => ({ focus: () => view?.focus() }), [view]);
+
+    return (
+      <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+        <div
+          ref={parentRef}
+          className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
+          {...focusAttributes}
+        />
+      </MessageRoot>
+    );
+  },
+);
 
 MessageTextbox.displayName = 'Message.Textbox';
 

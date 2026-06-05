@@ -7,6 +7,8 @@ import React, {
   type ReactNode,
   forwardRef,
   type PropsWithChildren,
+  useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -30,7 +32,7 @@ import { type Extension, createBasicExtensions, createThemeExtensions, listener 
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { command } from '../command';
-import { ThreadContextProvider } from '../context';
+import { ThreadContextProvider, useThreadContext } from '../context';
 import { Message } from '../Message';
 import { translationKey } from '../translations';
 import { type MessageMetadata, type ThreadContextValue } from '../types';
@@ -60,12 +62,23 @@ const ThreadRoot = ({
   onMessageDelete,
   onAcceptProposal,
 }: ThreadRootProps) => {
+  // Composer focus handler registered by Thread.Textbox; invoked by Thread.Header's caret.
+  const composerFocus = useRef<(() => void) | undefined>(undefined);
+
+  const registerComposerFocus = useCallback((focus: (() => void) | undefined) => {
+    composerFocus.current = focus;
+  }, []);
+
+  const focusComposer = useCallback(() => composerFocus.current?.(), []);
+
   return (
     <ThreadContextProvider
       getMetadata={getMetadata}
       components={components ?? {}}
       identityDid={identityDid}
       editable={editable}
+      registerComposerFocus={registerComposerFocus}
+      focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
       onAcceptProposal={onAcceptProposal}
     >
@@ -136,6 +149,12 @@ export type ThreadHeaderProps = ComposableProps<ThreadHeaderExtra>;
 const ThreadHeader = composable<HTMLDivElement, ThreadHeaderExtra>(
   ({ children, detached, controls, onSelect, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+    const { focusComposer } = useThreadContext('Thread.Header');
+    const handleSelect = useCallback(() => {
+      onSelect?.();
+      focusComposer();
+    }, [onSelect, focusComposer]);
+
     return (
       <div
         {...composableProps(props, {
@@ -155,7 +174,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderExtra>(
             icon='ph--caret-double-right--regular'
             label={t('select-thread.label')}
             classNames='text-description'
-            onClick={onSelect}
+            onClick={handleSelect}
           />
         </div>
         <div className='flex items-center overflow-hidden'>
@@ -250,8 +269,16 @@ export type ThreadTextboxProps = MessageMetadata & {
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
   const { t } = useTranslation(translationKey);
   const { themeMode } = useThemeContext();
+  const { registerComposerFocus } = useThreadContext('Thread.Textbox');
+  const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
   const [count, setCount] = useState(0);
+
+  // Expose the composer's focus to Thread.Root so the header caret can focus it.
+  useEffect(() => {
+    registerComposerFocus(() => composerRef.current?.focus());
+    return () => registerComposerFocus(undefined);
+  }, [registerComposerFocus]);
 
   const editorExtensions = useMemo(
     () =>
@@ -278,6 +305,7 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
 
   return (
     <Message.Textbox
+      ref={composerRef}
       {...metadata}
       autoFocus={autoFocus}
       disabled={disabled}
