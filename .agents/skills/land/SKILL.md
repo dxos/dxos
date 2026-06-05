@@ -214,8 +214,8 @@ On each `send_later` wake-up:
    mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
    ```
    d. Log: "PR was dequeued — re-synced with main and re-enabled auto-merge."
-   e. Schedule the next check-in in 15 minutes.
-5. **If open and auto_merge is set** (still in queue): schedule the next check-in in 15 minutes silently.
+   e. Schedule the next check-in in 15 minutes (call `send_later` again as in step 1).
+5. **If open and auto_merge is set** (still in queue): schedule the next check-in in 15 minutes silently (call `send_later` again).
 
 Stop scheduling check-ins once the PR is merged or closed, or the user says to stop.
 
