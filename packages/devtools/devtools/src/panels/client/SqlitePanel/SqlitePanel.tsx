@@ -295,9 +295,7 @@ export const SqlitePanel = () => {
                   configuredModeLabel != null &&
                   ((configuredModeLabel.startsWith('OPFS') && !databaseInfo.backing?.startsWith('OPFS')) ||
                     (configuredModeLabel === 'Memory' && databaseInfo.backing !== 'Memory'));
-                return configIsStale ? (
-                  <InfoItem label='Config' value={`${configuredModeLabel} (stale)`} />
-                ) : null;
+                return configIsStale ? <InfoItem label='Config' value={`${configuredModeLabel} (stale)`} /> : null;
               })()}
               <InfoItem label='Journal' value={databaseInfo.journalMode} />
               <InfoItem label='Size' value={databaseSize != null ? bytes.format(databaseSize) : undefined} />
