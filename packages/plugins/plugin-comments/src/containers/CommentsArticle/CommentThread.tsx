@@ -74,8 +74,7 @@ export type CommentThreadProps = {
 
 /**
  * A single anchored comment thread, rendered on the `@dxos/react-ui-thread`
- * primitives (`Thread.*` / `Message.Tile`). Intrinsic-height (non-virtual) so
- * it scrolls within the outer companion container.
+ * primitives (`Thread.*` / `Message.Tile`).
  */
 export const CommentThread = ({
   anchor,
@@ -182,7 +181,7 @@ export const CommentThread = ({
         </div>
       </div>
 
-      <Thread.Messages virtual={false} messages={loadedMessages} currentId={current ? threadUri : undefined} />
+      <Thread.Messages messages={loadedMessages} currentId={current ? threadUri : undefined} />
 
       {/*
         Autofocus only newly-created (draft) threads. Once the first message is

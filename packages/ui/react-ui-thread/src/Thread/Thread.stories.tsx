@@ -24,14 +24,8 @@ const DefaultStory = () => {
   };
 
   return (
-    <Thread.Root
-      classNames='grow min-h-0'
-      getMetadata={getStoryMetadata}
-      identityDid={IDENTITY.identityDid}
-      editable
-      onMessageDelete={() => {}}
-    >
-      <Thread.Messages classNames='grow min-h-0' messages={messages} />
+    <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable onMessageDelete={() => {}}>
+      <Thread.Messages messages={messages} />
       <Thread.Textbox id='composer' authorId={IDENTITY.identityDid} authorName={IDENTITY.name} onSend={handleSend} />
       <Thread.Status />
     </Thread.Root>
@@ -41,7 +35,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-thread/Thread',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

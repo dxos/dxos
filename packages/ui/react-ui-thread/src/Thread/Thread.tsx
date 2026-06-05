@@ -146,43 +146,13 @@ export type ThreadMessagesProps = ThemedClassName<{
   messages: readonly MessageType.Message[];
   /** Estimated tile height for the virtualizer. */
   estimateSize?: number;
-  /**
-   * Virtualize the stack within an internal scroll area. Default `true` (channel
-   * chat). Pass `false` for intrinsic-height inline threads (e.g. comments) that
-   * scroll within an outer container.
-   */
-  virtual?: boolean;
   currentId?: string;
 }>;
 
-/** Linear stack of message tiles, rendered via a Mosaic (virtual) stack. */
-const ThreadMessages = ({
-  messages,
-  estimateSize = 80,
-  virtual = true,
-  currentId,
-  classNames,
-}: ThreadMessagesProps) => {
+/** Virtualized stack of message tiles (via Mosaic), within an internal scroll area. */
+const ThreadMessages = ({ messages, estimateSize = 80, currentId, classNames }: ThreadMessagesProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useMemo(() => messages.filter(Boolean), [messages]);
-
-  if (!virtual) {
-    return (
-      <Mosaic.Container
-        orientation='vertical'
-        currentId={currentId}
-        eventHandler={{ id: 'thread', canDrop: () => false }}
-      >
-        <Mosaic.Stack
-          classNames={classNames}
-          items={items}
-          getId={getMessageId}
-          Tile={MessageTileAdapter}
-          draggable={false}
-        />
-      </Mosaic.Container>
-    );
-  }
 
   return (
     <Mosaic.Container

@@ -16,18 +16,16 @@ import { Message } from './Message';
 const DefaultStory = () => {
   const [message] = useMemo(() => createMessages(1), []);
   return (
-    <div className='mx-auto w-96 overflow-y-auto'>
-      <Thread.Root getMetadata={getStoryMetadata} identityDid='did:key:alice' editable onMessageDelete={() => {}}>
-        <Message.Tile message={message} />
-      </Thread.Root>
-    </div>
+    <Thread.Root getMetadata={getStoryMetadata} identityDid='did:key:alice' editable onMessageDelete={() => {}}>
+      <Message.Tile message={message} />
+    </Thread.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-thread/Message',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'border w-(min-card-width)' })],
   parameters: {
     layout: 'fullscreen',
     translations,

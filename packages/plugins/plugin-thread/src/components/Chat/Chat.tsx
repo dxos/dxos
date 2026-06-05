@@ -19,8 +19,6 @@ import { meta } from '#meta';
 
 import { getMessageMetadata } from '../../util';
 
-export type ChatOrientation = 'top' | 'bottom';
-
 export type ChatProps = ThemedClassName<{
   /** Stable id used for the underlying thread root and message metadata. */
   id: string;
@@ -40,14 +38,6 @@ export type ChatProps = ThemedClassName<{
   autoFocusTextbox?: boolean;
   /** Marks the thread as the current/attended one. */
   current?: boolean | string;
-  /**
-   * Where the composer sits relative to the messages.
-   * - `'top'` (default) — composer follows the messages at intrinsic height,
-   *   suitable for inline threads.
-   * - `'bottom'` — composer pinned to the bottom of the panel, messages
-   *   scrolling above it (virtualized). Suitable for full-panel channel chat.
-   */
-  orientation?: ChatOrientation;
   /**
    * When true, hide the composer textbox and activity indicator. Used for
    * channels whose source-of-truth lives elsewhere (e.g. externally-synced
@@ -84,7 +74,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   (
-    { id, identity, members, messages, activity, onSend, autoFocusTextbox, current, orientation = 'top', readOnly },
+    { id, identity, members, messages, activity, onSend, autoFocusTextbox, current, readOnly },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.id);
@@ -119,7 +109,7 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
         classNames='dx-container'
         ref={forwardedRef}
       >
-        <Thread.Messages messages={messages} virtual={orientation === 'bottom'} />
+        <Thread.Messages messages={messages} />
         {!readOnly && (
           <>
             <Thread.Textbox
