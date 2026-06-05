@@ -42,7 +42,9 @@ export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Ma
     const { starred } = get(postTagsAtom(post));
     // Magazine postState carries agent-written snippet/imageUrl; fall back to description derivation.
     const magazineSnapshot = get(AtomObj.make(magazine));
-    const postState = (magazineSnapshot.postState as Record<string, Partial<Magazine.PostState>> | undefined)?.[post.id];
+    const postState = (magazineSnapshot.postState as Record<string, Partial<Magazine.PostState>> | undefined)?.[
+      post.id
+    ];
     return {
       post: snapshot,
       feedName,
@@ -55,7 +57,5 @@ export const postDisplayAtom = Atom.family((key: readonly [Subscription.Post, Ma
 );
 
 /** Aggregate per-Post display data for a magazine tile. */
-export const useMagazinePostData = (
-  post: Subscription.Post,
-  magazine: Magazine.Magazine,
-): MagazinePostData => useAtomValue(postDisplayAtom([post, magazine]));
+export const useMagazinePostData = (post: Subscription.Post, magazine: Magazine.Magazine): MagazinePostData =>
+  useAtomValue(postDisplayAtom([post, magazine]));

@@ -89,9 +89,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         void Subscription.setReadAt(subscription, post.id, new Date().toISOString());
       }
       if (post.link) {
-        void invoker.invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) }).catch((err) =>
-          log.catch(err, { postLink: post.link }),
-        );
+        void invoker
+          .invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) })
+          .catch((err) => log.catch(err, { postLink: post.link }));
       }
       void showItem({
         contextId: id,

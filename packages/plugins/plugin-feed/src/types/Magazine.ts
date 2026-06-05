@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Template } from '@dxos/compute';
 import { BlueprintsAnnotation, StateMap } from '@dxos/app-toolkit';
+import { Template } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { type EntityId } from '@dxos/keys';
