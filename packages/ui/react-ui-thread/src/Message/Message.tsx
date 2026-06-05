@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, {
   type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
@@ -44,22 +45,34 @@ const buttonClassNames = 'p-1! transition-opacity';
 //
 
 export type MessageRootProps = ThemedClassName<
-  ComponentPropsWithRef<'div'> & MessageMetadata & Partial<{ continues: boolean }>
+  ComponentPropsWithRef<'div'> & MessageMetadata & Partial<{ continues: boolean; controls: ReactNode }>
 >;
 
 // TODO(burdon): Show authorName on tooltip.
 const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
-    { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
+    {
+      authorImgSrc,
+      authorId,
+      authorName,
+      authorAvatarProps,
+      continues = true,
+      controls,
+      children,
+      classNames,
+      ...rootProps
+    },
     forwardedRef,
   ) => {
     // Must wrap the message since Avatar.Label may be used in the content.
+    // Columns mirror Thread.Header (avatar/rail · content · controls) so trailing
+    // controls align with the thread header's controls.
     return (
       <Avatar.Root>
         <div
           data-testid='thread.message'
           {...rootProps}
-          className={mx('grid grid-cols-[var(--dx-rail-size)_1fr] w-full', classNames)}
+          className={mx('grid grid-cols-[var(--dx-rail-size)_1fr_min-content] w-full', classNames)}
           ref={forwardedRef}
         >
           <div className='flex flex-col items-center gap-2 pt-1'>
@@ -72,6 +85,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
             {continues && <div className='w-px grow bg-separator' />}
           </div>
           <div className='py-1 min-w-0'>{children}</div>
+          {controls && <div className='self-start'>{controls}</div>}
         </div>
       </Avatar.Root>
     );
@@ -337,45 +351,55 @@ const MessageTile = ({ message, classNames }: MessageTileProps) => {
     [message],
   );
 
+  const showEdit = isAuthor && editable;
+  const showAccept = hasProposal && !!onAcceptProposal;
+  const showDelete = !!onMessageDelete;
+  const controls =
+    showEdit || showAccept || showDelete ? (
+      <div className={buttonGroupClassNames}>
+        {showEdit && (
+          <IconButton
+            data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
+            variant='ghost'
+            icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
+            iconOnly
+            label={t(editing ? 'save-message.label' : 'edit-message.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleEdit}
+          />
+        )}
+        {showAccept && (
+          <IconButton
+            data-testid='thread.message.accept'
+            variant='ghost'
+            icon='ph--check--regular'
+            iconOnly
+            label={t('accept-proposal.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleAcceptProposal}
+          />
+        )}
+        {showDelete && (
+          <IconButton
+            data-testid='thread.message.delete'
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('delete-message.label')}
+            classNames={[buttonClassNames, hoverableControlItem]}
+            onClick={handleDelete}
+          />
+        )}
+      </div>
+    ) : undefined;
+
   return (
-    <MessageRoot {...metadata} classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}>
-      <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp}>
-        <div className={buttonGroupClassNames}>
-          {isAuthor && editable && (
-            <IconButton
-              data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
-              variant='ghost'
-              icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
-              iconOnly
-              label={t(editing ? 'save-message.label' : 'edit-message.label')}
-              classNames={[buttonClassNames, hoverableControlItem]}
-              onClick={handleEdit}
-            />
-          )}
-          {hasProposal && onAcceptProposal && (
-            <IconButton
-              data-testid='thread.message.accept'
-              variant='ghost'
-              icon='ph--check--regular'
-              iconOnly
-              label={t('accept-proposal.label')}
-              classNames={[buttonClassNames, hoverableControlItem]}
-              onClick={handleAcceptProposal}
-            />
-          )}
-          {onMessageDelete && (
-            <IconButton
-              data-testid='thread.message.delete'
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              label={t('delete-message.label')}
-              classNames={[buttonClassNames, hoverableControlItem]}
-              onClick={handleDelete}
-            />
-          )}
-        </div>
-      </MessageHeading>
+    <MessageRoot
+      {...metadata}
+      controls={controls}
+      classNames={[hoverableControls, hoverableFocusedWithinControls, classNames]}
+    >
+      <MessageHeading authorName={metadata.authorName} timestamp={metadata.timestamp} />
       <MessageBody message={message} isAuthor={isAuthor} editing={editing} onSave={handleSave} />
     </MessageRoot>
   );

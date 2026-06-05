@@ -4,6 +4,7 @@
 
 import React, {
   type ComponentPropsWithRef,
+  type ReactNode,
   forwardRef,
   type PropsWithChildren,
   useMemo,
@@ -16,7 +17,7 @@ import { Icon, IconButton, ScrollArea, type ThemedClassName, useThemeContext, us
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
-import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { command } from '../command';
 import { ThreadContextProvider } from '../context';
@@ -111,16 +112,26 @@ export type ThreadHeaderProps = PropsWithChildren<{
   detached?: boolean;
   /** Invoked when the caret affordance is activated to select/focus this thread. */
   onSelect?: () => void;
+  /** Trailing controls rendered in the right column (aligns with message-tile controls). */
+  controls?: ReactNode;
 }>;
 
+/**
+ * Thread header row: caret (rail) · snippet (content) · controls. Owns its own
+ * `[rail · 1fr · controls]` grid so the trailing controls align with message-tile
+ * controls (which use the same template) — no grid is leaked in from the caller.
+ */
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
-  ({ children, detached, onSelect, ...props }, forwardedRef) => {
+  ({ children, detached, onSelect, controls, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    // Renders two cells (caret + snippet) that flow into the parent header grid,
-    // so callers can place trailing controls in a third column. The caret is an
-    // affordance for selecting/focusing the thread (sets it current).
     return (
-      <>
+      <div
+        className={mx(
+          'grid grid-cols-[var(--dx-rail-size)_1fr_min-content] items-center',
+          hoverableControls,
+          hoverableFocusedWithinControls,
+        )}
+      >
         <div className='flex items-center justify-center'>
           <IconButton
             iconOnly
@@ -142,7 +153,8 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
             {children}
           </p>
         </div>
-      </>
+        {controls}
+      </div>
     );
   },
 );

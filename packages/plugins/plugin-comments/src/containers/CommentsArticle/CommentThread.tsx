@@ -11,7 +11,7 @@ import { useObject } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Card, IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
-import { Thread, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import { Message as MessageComponent, Thread, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, type Thread as ThreadType } from '@dxos/types';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
@@ -127,6 +127,46 @@ export const CommentThread = ({
     [anchor, onComment],
   );
 
+  const headerControls = (
+    <div className={buttonGroupClassNames}>
+      {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
+      {onResolve && !(thread.status === 'staged') && (
+        <IconButton
+          data-testid='thread.resolve'
+          variant='ghost'
+          icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
+          iconOnly
+          label={t('resolve-thread.label')}
+          classNames={[buttonClassNames, thread.status !== 'resolved' && hoverableControlItem]}
+          onClick={handleResolve}
+        />
+      )}
+      {onThreadDelete && (
+        <IconButton
+          data-testid='thread.delete'
+          variant='ghost'
+          icon='ph--x--regular'
+          iconOnly
+          label={t('delete-thread.label')}
+          classNames={[buttonClassNames, hoverableControlItem]}
+          onClick={handleThreadDelete}
+        />
+      )}
+    </div>
+  );
+
+  const header = detached ? (
+    <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
+      <Thread.Header detached onSelect={handleAttend} controls={headerControls}>
+        {thread.name}
+      </Thread.Header>
+    </Tooltip.Trigger>
+  ) : (
+    <Thread.Header onSelect={handleAttend} controls={headerControls}>
+      {thread.name}
+    </Thread.Header>
+  );
+
   return (
     <Thread.Root
       getMetadata={getMetadata}
@@ -143,50 +183,16 @@ export const CommentThread = ({
         onClickCapture={handleAttend}
         onFocusCapture={handleAttend}
       >
-        <div
-          className={mx(
-            'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
-            hoverableControls,
-            hoverableFocusedWithinControls,
-          )}
-        >
-          {detached ? (
-            <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
-              <Thread.Header detached onSelect={handleAttend}>
-                {thread.name}
-              </Thread.Header>
-            </Tooltip.Trigger>
-          ) : (
-            <Thread.Header onSelect={handleAttend}>{thread.name}</Thread.Header>
-          )}
-          <div className={buttonGroupClassNames}>
-            {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
-            {onResolve && !(thread.status === 'staged') && (
-              <IconButton
-                data-testid='thread.resolve'
-                variant='ghost'
-                icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
-                iconOnly
-                label={t('resolve-thread.label')}
-                classNames={[buttonClassNames, thread.status !== 'resolved' && hoverableControlItem]}
-                onClick={handleResolve}
-              />
-            )}
-            {onThreadDelete && (
-              <IconButton
-                data-testid='thread.delete'
-                variant='ghost'
-                icon='ph--x--regular'
-                iconOnly
-                label={t('delete-thread.label')}
-                classNames={[buttonClassNames, hoverableControlItem]}
-                onClick={handleThreadDelete}
-              />
-            )}
-          </div>
-        </div>
+        {header}
 
-        <Thread.Messages messages={loadedMessages} currentId={current ? threadUri : undefined} />
+        {/*
+          Comment threads have few messages and live inside the companion's outer
+          scroll area, so render tiles inline (not the virtual stack) — this keeps
+          them at full width so their controls align with the header's controls.
+        */}
+        {loadedMessages.map((message) => (
+          <MessageComponent.Tile key={Obj.getURI(message)} message={message} />
+        ))}
 
         {/*
         Autofocus only newly-created (draft) threads. Once the first message is
