@@ -44,15 +44,17 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
       <div className='p-form-padding'>
         <Message.Root>
           <Message.Content>
-            <Trans
-              {...{
-                t,
-                i18nKey: 'no-comments.message',
-                components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                },
-              }}
-            />
+            <span>
+              <Trans
+                {...{
+                  t,
+                  i18nKey: 'no-comments.message',
+                  components: {
+                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
+                  },
+                }}
+              />
+            </span>
           </Message.Content>
         </Message.Root>
       </div>
