@@ -83,15 +83,15 @@ describe('markdown', () => {
   });
 
   test('collapses multiple blank lines in plain text', ({ expect }) => {
-  // Three or more blank lines between text → one blank line.
-  expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');
-  // Whitespace-only lines also count as blank.
-  expect(normalizeText('aaa\n   \n\n   \nbbb')).to.equal('aaa\n\nbbb');
-  // One blank line is preserved unchanged.
-  expect(normalizeText('aaa\n\nbbb')).to.equal('aaa\n\nbbb');
-  // No blank line is preserved unchanged.
-  expect(normalizeText('aaa\nbbb')).to.equal('aaa\nbbb');
-});
+    // Three or more blank lines between text → one blank line.
+    expect(normalizeText('aaa\n\n\n\nbbb')).to.equal('aaa\n\nbbb');
+    // Whitespace-only lines also count as blank.
+    expect(normalizeText('aaa\n   \n\n   \nbbb')).to.equal('aaa\n\nbbb');
+    // One blank line is preserved unchanged.
+    expect(normalizeText('aaa\n\nbbb')).to.equal('aaa\n\nbbb');
+    // No blank line is preserved unchanged.
+    expect(normalizeText('aaa\nbbb')).to.equal('aaa\nbbb');
+  });
 
   describe('residual tags', () => {
     test('strips MS Office namespaced tags', ({ expect }) => {
