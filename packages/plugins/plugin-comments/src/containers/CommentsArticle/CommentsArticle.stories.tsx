@@ -19,8 +19,9 @@ import {
 } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
+import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -30,8 +31,8 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { linkedSegment, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
@@ -45,6 +46,71 @@ import { AgentIdentity, ThreadCapabilities } from '../../types';
 random.seed(1);
 
 const STORY_AGENT_NAME = 'Kai';
+
+const SAMPLE_CONTENT = [
+  '# Sample',
+  '',
+  'This document has comment threads attached to it.',
+  '',
+  'Select text in the editor to add a new comment, or view existing threads in the companion.',
+  '',
+].join('\n');
+
+const LARGE_CONTENT = [
+  '# Sample',
+  '',
+  'This document has comment threads attached to it.',
+  '',
+  'Comments are anchored to ranges of text using an Effect schema relation, so they survive edits to the surrounding prose.',
+  '',
+  'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
+  '',
+  random.lorem.paragraphs(2),
+  '',
+  'Select text in the editor to add a new comment, or view existing threads in the companion.',
+  '',
+  random.lorem.paragraphs(3),
+  '',
+].join('\n');
+
+// Phrases in LARGE_CONTENT that the seeded comment threads are anchored to.
+const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
+
+/**
+ * Seed anchored comment threads over known phrases so the editor renders the
+ * highlighted ranges and the companion lists the threads (with snippets).
+ */
+const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => {
+  const accessor = createDocAccessor(text, ['content']);
+  const content = text.content;
+  for (const phrase of SEED_PHRASES) {
+    const start = content.indexOf(phrase);
+    if (start < 0) {
+      continue;
+    }
+    const anchor = toCursorRange(accessor, start, start + phrase.length);
+    const thread = Thread.make({
+      name: phrase,
+      status: 'active',
+      messages: [
+        Ref.make(
+          Obj.make(Message.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'user', name: 'Alice' },
+            blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
+          }),
+        ),
+      ],
+    });
+    const relation = Relation.make(AnchoredTo.AnchoredTo, {
+      [Relation.Source]: thread,
+      [Relation.Target]: doc,
+      anchor,
+    });
+    space.db.add(thread);
+    space.db.add(relation);
+  }
+};
 
 /**
  * Canned echo runner — never makes network calls. On each turn finds the
@@ -153,6 +219,10 @@ type StoryArgs = {
    * config by ThreadOperation.Create.
    */
   agentMode?: Markdown.Settings['commentAgentMode'];
+  /** Seed a longer, multi-paragraph document. */
+  largeDoc?: boolean;
+  /** Seed three anchored comment threads over known phrases in the document. */
+  seedComments?: boolean;
 };
 
 const DefaultStory = ({ agentMode }: StoryArgs) => {
@@ -181,8 +251,15 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   }, [markdownSettings, registry, agentMode]);
 
   const articleData = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
+  // Nest the companion's attendable id under the article's so that
+  // `getParentId` in CommentsArticle resolves to the editor's registration key
+  // (mirrors the deck companion layout), enabling editor ↔ comment selection sync.
   const companionData = useMemo(
-    () => ({ subject: 'comments', companionTo: doc, attendableId: attendableId ?? 'story' }),
+    () => ({
+      subject: 'comments',
+      companionTo: doc,
+      attendableId: attendableId ? `${attendableId}/${linkedSegment('comments')}` : 'story',
+    }),
     [doc, attendableId],
   );
 
@@ -203,7 +280,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryArgs>(() => ({
+    withPluginManager<StoryArgs>(({ args }) => ({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
@@ -212,21 +289,15 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(
-                Markdown.make({
-                  name: 'Sample',
-                  content: [
-                    '# Sample',
-                    '',
-                    'This document has comment threads attached to it.',
-                    '',
-                    'Select text in the editor to add a new comment, or view existing threads in the companion.',
-                    '',
-                  ].join('\n'),
-                }),
-              );
-
+              const doc = Markdown.make({ name: 'Sample', content: args.largeDoc ? LARGE_CONTENT : SAMPLE_CONTENT });
+              personalSpace.db.add(doc);
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+
+              if (args.seedComments) {
+                const text = yield* Effect.promise(() => doc.content.load());
+                seedComments(personalSpace, doc, text);
+                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              }
             }),
         }),
         SpacePlugin({}),
@@ -270,5 +341,17 @@ export const WithMentionAgent: Story = {
 export const WithAutoAgent: Story = {
   args: {
     agentMode: 'auto',
+  },
+};
+
+/**
+ * A larger, multi-paragraph document seeded with three existing comment threads
+ * anchored to ranges in the text — exercises snippet rendering and the
+ * companion ↔ editor selection sync.
+ */
+export const WithComments: Story = {
+  args: {
+    largeDoc: true,
+    seedComments: true,
   },
 };

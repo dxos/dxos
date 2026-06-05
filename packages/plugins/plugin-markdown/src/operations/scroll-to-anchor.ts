@@ -13,7 +13,7 @@ import { MarkdownCapabilities, MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, cursor }) {
+    Effect.fnUntraced(function* ({ subject, cursor, ref }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
       const entry = editorViews.get(subject);
       if (!entry) {
@@ -24,7 +24,9 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
         const selection = entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
         const effects: any[] = [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
         if (selection) {
-          effects.push(setSelection.of({ current: entry.documentId }));
+          // Mark the referenced comment (thread) as current so the editor highlights
+          // it; fall back to the document id when no ref is supplied.
+          effects.push(setSelection.of({ current: ref ?? entry.documentId }));
         }
         entry.view.dispatch({
           effects,

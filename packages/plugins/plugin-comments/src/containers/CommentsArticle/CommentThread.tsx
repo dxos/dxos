@@ -117,10 +117,11 @@ export const CommentThread = ({
 
   const handleComment = useCallback(
     (text: string): boolean => {
-      if (!text) {
+      // Reject (don't clear the composer) when there's no text or no handler.
+      if (!onComment || !text) {
         return false;
       }
-      onComment?.(anchor, text);
+      onComment(anchor, text);
       return true;
     },
     [anchor, onComment],

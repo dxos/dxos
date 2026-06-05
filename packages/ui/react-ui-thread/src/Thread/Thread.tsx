@@ -111,8 +111,10 @@ export type ThreadHeaderProps = PropsWithChildren<{ detached?: boolean }>;
 
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
   ({ children, detached, ...props }, forwardedRef) => {
+    // Renders two cells (caret + snippet) that flow into the parent header grid,
+    // so callers can place trailing controls in a third column.
     return (
-      <div className='grid grid-cols-[var(--dx-rail-size)_1fr]'>
+      <>
         <div className='flex items-center justify-center text-description'>
           <Icon icon='ph--caret-double-right--regular' />
         </div>
@@ -127,7 +129,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
             {children}
           </p>
         </div>
-      </div>
+      </>
     );
   },
 );
