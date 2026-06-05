@@ -12,15 +12,8 @@ import { BYOK_HEADER } from '@dxos/protocols';
 import * as Credential from './Credential';
 
 /**
- * BYOK (Bring Your Own Key) header injector for AI-service traffic.
- *
- * Wraps the ambient {@link HttpClient.HttpClient} with a `mapRequestEffect` that looks up a
- * credential for the supplied upstream provider host (e.g. `'anthropic.com'`) from
- * {@link Credential.CredentialsService}. When a matching space `AccessToken` is present, its token
- * is attached as `X-BYOK` on outbound requests; otherwise the request is forwarded unchanged and
- * the AI service falls back to its server-side default key.
- *
- * The provider host matches `AccessToken.source` (the upstream provider's domain, not the proxy's).
+ * Wraps an `HttpClient` so outbound requests carry `X-BYOK: <apiKey>` whenever the active space
+ * has an `AccessToken` for `providerHost`. Lookup failures pass the request through unchanged.
  */
 export const byokHeaderLayer = (
   providerHost: string,
@@ -29,22 +22,19 @@ export const byokHeaderLayer = (
     HttpClient.HttpClient,
     Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
-      // mapRequestEffect threads CredentialsService into the client type; callers must provide it
-      // in the same fiber (space layer for Composer chat, FunctionContext for workers).
+      // The cast erases the per-request `CredentialsService` requirement from the returned client's
+      // type. That requirement is real: `mapRequestEffect`'s callback yields it on every request,
+      // pulled from the *caller's fiber context*. The Layer's R says `CredentialsService` for
+      // bookkeeping but `Layer.provide` upstream only satisfies the type — runtime injection has to
+      // happen via the fiber executing the request (e.g. `AgentProcess.requires`).
       return HttpClient.mapRequestEffect(client, (request) =>
         Effect.gen(function* () {
           const credentials = yield* Credential.CredentialsService;
-          // Best-effort: a failed credentials lookup (DB error, missing space context) must not
-          // break the outbound request — fall through to the unmodified request so the AI service
-          // can use its server-side default key.
           const matches = yield* Effect.tryPromise(() => credentials.queryCredentials({ service: providerHost })).pipe(
             Effect.orElseSucceed((): Credential.ServiceCredential[] => []),
           );
           const apiKey = matches.find((credential) => credential.apiKey)?.apiKey;
-          if (!apiKey) {
-            return request;
-          }
-          return HttpClientRequest.setHeader(request, BYOK_HEADER, apiKey);
+          return apiKey ? HttpClientRequest.setHeader(request, BYOK_HEADER, apiKey) : request;
         }),
       ) as HttpClient.HttpClient;
     }),

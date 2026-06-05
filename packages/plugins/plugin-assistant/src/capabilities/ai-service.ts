@@ -23,9 +23,6 @@ export default Capability.makeModule<AssistantPluginOptions | void, Capability.A
       AiModelResolver.AiModelResolver.fromModelMap({ name: 'Fallback' }, Effect.succeed({})), // Empty resolver as fallback.
     );
 
-    // The combined resolver layer inherits `Credential.CredentialsService` from any BYOK-enabled
-    // resolver (e.g. the edge Anthropic resolver wraps its HTTP client with `byokHeaderLayer`). The
-    // requirement is satisfied by the space-affinity `CredentialsLayerSpec` in `plugin-client`.
     let aiServiceLayer: Layer.Layer<AiService.AiService, never, Credential.CredentialsService> =
       AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer));
 

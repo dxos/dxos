@@ -151,13 +151,9 @@ export namespace AppCapabilities {
   export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.plugin-asset');
 
   /**
-   * Plugins can contribute model resolvers.
-   *
-   * The layer type declares {@link Credential.CredentialsService} as a required input; the
-   * `AiService.AiService` LayerSpec that aggregates resolvers declares the same requirement and
-   * the LayerSpec graph supplies `CredentialsService` from the active space. Resolvers that need
-   * per-space BYOK wrap their HTTP client with `byokHeaderLayer(...)`; resolvers that don't simply
-   * carry the requirement through unused.
+   * Plugins can contribute model resolvers. The `Credential.CredentialsService` requirement is
+   * supplied by the active-space resolver — BYOK-aware resolvers wrap their HTTP client with
+   * `byokHeaderLayer(...)`; the rest carry it through unused.
    */
   export const AiModelResolver = Capability$.make<
     Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>

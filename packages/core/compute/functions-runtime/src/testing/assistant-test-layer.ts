@@ -169,8 +169,6 @@ export const AssistantTestLayer = ({
               AiService.AiService,
               OperationRegistry.Service,
               Registry.Service,
-              // `AgentProcess` requires `CredentialsService` so `byokHeaderLayer` can resolve a BYOK
-              // token per request. Provided by `configuredCredentialsLayer` below.
               Credential.CredentialsService,
             ),
           );

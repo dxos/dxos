@@ -21,10 +21,6 @@ import { ANTHROPIC_SOURCE } from '../constants';
 // `@dxos/ai/AiModelResolver` Layer type into the emitted declarations).
 export type EdgeModelResolverCapabilities = Capability.Capability<typeof AppCapabilities.AiModelResolver>[];
 
-// Carry the `Credential.CredentialsService` requirement contributed by `byokHeaderLayer`. The
-// LayerSpec graph (space affinity in `ai-service.ts`) supplies `CredentialsService` from the active
-// space; consumers that materialize the resolver outside that graph must provide one too.
-
 const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilities>(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
@@ -55,21 +51,11 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
       return edgeClient;
     };
 
-    const anthropicResolverLayer = AnthropicResolver.make().pipe(
-      Layer.provide(
-        AnthropicClient.layer({
-          // Host-only sentinel; `EdgeAiHttpClient` re-bases the request onto the EDGE
-          // `/ai/generate/anthropic` route and signs it with the verifiable presentation.
-          apiUrl: 'http://edge.internal',
-        }).pipe(
-          // `byokHeaderLayer` is the outer wrapper: it consumes an `HttpClient.HttpClient` (provided
-          // by `EdgeAiHttpClient.layer`) and contributes a wrapped one that injects `X-BYOK`. The
-          // remaining unprovided requirement, `Credential.CredentialsService`, is satisfied by the
-          // space-affinity `LayerSpec` in `ai-service.ts`.
-          Layer.provide(byokHeaderLayer(ANTHROPIC_SOURCE).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient)))),
-        ),
-      ),
-    );
+    // `apiUrl` is a sentinel; `EdgeAiHttpClient` rewrites the request onto the EDGE
+    // `/ai/generate/anthropic` route. `byokHeaderLayer` wraps that client to inject `X-BYOK`.
+    const httpClient = byokHeaderLayer(ANTHROPIC_SOURCE).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient)));
+    const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://edge.internal' }).pipe(Layer.provide(httpClient));
+    const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
     const contribution: Capability.Capability<typeof AppCapabilities.AiModelResolver> = Capability.contributes(
       AppCapabilities.AiModelResolver,

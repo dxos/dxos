@@ -16,12 +16,7 @@ import { AccessToken } from '@dxos/types';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
 
-/**
- * Manual-credential form for the Anthropic BYOK provider.
- *
- * The user supplies an Anthropic API key from `console.anthropic.com`. The key is stored as-is
- * with no validation — BYOK enforcement happens on the edge.
- */
+/** API-key form for the Anthropic BYOK provider; key is stored as-is, validation happens on the edge. */
 const AnthropicTokenForm = Schema.Struct({
   token: Schema.String.annotations({
     title: 'API key',
@@ -48,12 +43,6 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenFor
     }),
 };
 
-/**
- * Contributes the Anthropic `IntegrationProvider` entry. A user who enables `plugin-assistant`
- * sees "Anthropic" in the standard Create Integration provider picker; selecting it pastes their
- * Anthropic API key and creates a paired `AccessToken` (`source = 'anthropic.com'`) + `Integration`
- * (`providerId = 'anthropic'`) in the active space.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(IntegrationProviderCapability, [

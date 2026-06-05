@@ -72,10 +72,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
-        // `byokHeaderLayer` inside the resolver's HTTP client `mapRequestEffect` yields
-        // `CredentialsService` per request — it must be in the process fiber's context at
-        // execution time, not just at AiService-build time (Layer.provide consumes it during
-        // build). Mirrors the worker fallback in `functions/protocol.ts:208-210`.
+        // Needed in the fiber's context — `byokHeaderLayer`'s per-request callback reads it.
         Credential.CredentialsService,
       ],
     },
