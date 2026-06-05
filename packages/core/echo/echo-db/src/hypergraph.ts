@@ -407,10 +407,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         continue;
       }
 
-      const queue = queueFactory.get(feedDXN);
-      const [obj] = await queue.getObjectsById([objectId]);
-      if (obj) {
-        return obj;
+      try {
+        const queue = queueFactory.get(feedDXN);
+        const [obj] = await queue.getObjectsById([objectId]);
+        if (obj) {
+          return obj;
+        }
+      } catch (error) {
+        log.warn('failed to resolve object from feed queue', { spaceId, objectId, feed: feedDXN.toString(), error });
       }
     }
 
