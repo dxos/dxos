@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import { GameCapabilities, type GameVariant } from '#types';
 
 export type CreateGamePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
-  /** Optional override (primarily for stories/tests). Defaults to GameCapabilities.Variant. */
+  /** Optional override (primarily for stories/tests). Defaults to GameCapabilities.VariantProvider. */
   variants?: GameVariant[];
 };
 
@@ -30,7 +30,7 @@ export type CreateGamePanelProps = SpaceCapabilities.CreateObjectCustomPanelProp
  * it in a Game.
  */
 export const CreateGamePanel = ({ target, onCreateObject, variants: variantsProp }: CreateGamePanelProps) => {
-  const capabilityVariants = useCapabilities(GameCapabilities.Variant);
+  const capabilityVariants = useCapabilities(GameCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const selected = useMemo(() => variants.find((v) => v.id === selectedId), [variants, selectedId]);

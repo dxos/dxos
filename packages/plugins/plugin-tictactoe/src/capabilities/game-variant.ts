@@ -58,4 +58,4 @@ const variant: GameVariant = {
   article: TicTacToeArticle,
 };
 
-export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.Variant, variant)));
+export default Capability.makeModule(() => Effect.succeed(Capability.contributes(GameCapabilities.VariantProvider, variant)));
