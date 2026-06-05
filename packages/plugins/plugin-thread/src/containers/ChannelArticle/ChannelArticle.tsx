@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Channel } from '@dxos/types';
 
-import { ChannelChat } from '../ChannelChat';
+import { ChannelCompanion } from '../ChannelCompanion';
 
 export type ChannelArticleProps = AppSurface.ObjectArticleProps<
   Channel.Channel | undefined,
@@ -30,7 +30,7 @@ export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
     return (
       <Panel.Root classNames='dx-document'>
         <Panel.Content asChild>
-          <ChannelChat space={space} channel={channel} />
+          <ChannelCompanion space={space} channel={channel} />
         </Panel.Content>
       </Panel.Root>
     );

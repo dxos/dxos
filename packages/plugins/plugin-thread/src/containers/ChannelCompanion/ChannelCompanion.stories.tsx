@@ -23,7 +23,7 @@ import { Channel, Message, Thread } from '@dxos/types';
 import { translations } from '#translations';
 
 import { ThreadPlugin } from '../../ThreadPlugin';
-import { ChannelChat } from './ChannelChat';
+import { ChannelCompanion } from './ChannelCompanion';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -32,11 +32,11 @@ const DefaultStory = () => {
     return <Loading data={{ channel }} />;
   }
 
-  return <ChannelChat space={space} channel={channel} />;
+  return <ChannelCompanion space={space} channel={channel} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/containers/ChannelChat',
+  title: 'plugins/plugin-thread/containers/ChannelCompanion',
   render: DefaultStory,
   decorators: [
     withTheme(),

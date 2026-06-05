@@ -15,7 +15,7 @@ import { Chat } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
 
-export type ChannelChatProps = {
+export type ChannelCompanionProps = {
   space: Space;
   channel: Channel.Channel;
 };
@@ -27,7 +27,7 @@ export type ChannelChatProps = {
  * policy, or to "channel carries foreign-key `Obj.Meta`" when the provider has
  * none.
  */
-export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
+export const ChannelCompanion = composable<HTMLDivElement, ChannelCompanionProps>(
   ({ space, channel, ...props }, forwardedRef) => {
     const identity = useIdentity()!;
     const members = useMembers(space.id);
