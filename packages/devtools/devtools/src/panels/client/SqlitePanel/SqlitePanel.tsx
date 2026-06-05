@@ -257,6 +257,21 @@ export const SqlitePanel = () => {
     return pageSize * freelistCount;
   }, [databaseInfo]);
 
+  const configStaleInfo = useMemo(() => {
+    if (databaseInfo?.configuredSqliteMode == null) {
+      return null;
+    }
+    const label = formatSqliteMode(databaseInfo.configuredSqliteMode);
+    if (!label) {
+      return null;
+    }
+    const isStale =
+      (label.startsWith('OPFS') && !databaseInfo.backing?.startsWith('OPFS')) ||
+      (label === 'Memory' && databaseInfo.backing !== 'Memory') ||
+      (label.startsWith('File') && !databaseInfo.backing?.startsWith('File'));
+    return isStale ? `${label} (stale)` : null;
+  }, [databaseInfo]);
+
   return (
     <PanelContainer
       classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'
@@ -286,10 +301,7 @@ export const SqlitePanel = () => {
               <InfoItem label='Backing' value={databaseInfo.backing} />
               <InfoItem label='File' value={databaseInfo.databaseFile} />
               <InfoItem label='Services' value={formatServicesMode(databaseInfo.servicesMode)} />
-              {databaseInfo.configuredSqliteMode != null &&
-                formatSqliteMode(databaseInfo.configuredSqliteMode) !== databaseInfo.backing && (
-                  <InfoItem label='Config' value={`${formatSqliteMode(databaseInfo.configuredSqliteMode)} (stale)`} />
-                )}
+              {configStaleInfo && <InfoItem label='Config' value={configStaleInfo} />}
               <InfoItem label='Journal' value={databaseInfo.journalMode} />
               <InfoItem label='Size' value={databaseSize != null ? bytes.format(databaseSize) : undefined} />
               <InfoItem label='Free' value={freeSpace != null ? bytes.format(freeSpace) : undefined} />
@@ -597,10 +609,11 @@ const formatHexDump = (data: Uint8Array): string => {
 };
 
 const BinaryCell = ({ data }: { data: Uint8Array }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const text = isMostlyPrintable(data) ? new TextDecoder().decode(data) : undefined;
 
   return (
-    <details>
+    <details onToggle={(event) => setIsOpen((event.currentTarget as HTMLDetailsElement).open)}>
       <summary className='cursor-pointer list-none'>
         <span className='inline-flex flex-wrap items-center gap-1'>
           <span className='rounded bg-neutral-500/15 px-1 text-neutral-400'>blob</span>
@@ -612,7 +625,9 @@ const BinaryCell = ({ data }: { data: Uint8Array }) => {
           )}
         </span>
       </summary>
-      <pre className='mt-1 max-h-48 overflow-auto text-[10px] leading-4 whitespace-pre'>{formatHexDump(data)}</pre>
+      {isOpen && (
+        <pre className='mt-1 max-h-48 overflow-auto text-[10px] leading-4 whitespace-pre'>{formatHexDump(data)}</pre>
+      )}
     </details>
   );
 };
