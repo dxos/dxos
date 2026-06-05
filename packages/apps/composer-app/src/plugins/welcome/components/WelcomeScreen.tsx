@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -18,6 +18,7 @@ import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
 import { removeQueryParamByValue } from '../../../util';
 import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
+import { useForceDarkTheme } from '../hooks';
 import { meta } from '../meta';
 import { WelcomeOperation } from '../operations';
 import { translations } from '../translations';
@@ -38,20 +39,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
 
-  // The welcome screen is always dark. Theme tokens resolve their `light-dark()` values from the
-  // `color-scheme` on the element where they're declared (`:root`), so a nested `.dark` class can't
-  // re-resolve them — only `.dark` on the document element flips the tokens. Force it while the
-  // welcome screen is mounted and restore the prior (system-derived) value on unmount.
-  useEffect(() => {
-    const root = document.documentElement;
-    const hadDark = root.classList.contains('dark');
-    root.classList.add('dark');
-    return () => {
-      if (!hadDark) {
-        root.classList.remove('dark');
-      }
-    };
-  }, []);
+  // The welcome screen always renders dark, regardless of the system theme.
+  useForceDarkTheme();
 
   const handleLogin = useCallback(
     async (email: string) => {
