@@ -368,8 +368,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   /**
    * Search feed-backed queues in this space for an object with the given id.
-   * Queue items use ECHO URIs (`echo://spaceId/itemId`) without feed routing, so refs
-   * (e.g. magazine curated posts) must resolve without `context.feed`.
+   * Queue items use ECHO URIs (`echo://spaceId/itemId`) without feed routing, so cross-db refs
+   * must resolve without `context.feed`.
    */
   private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: EntityId): Promise<Entity.Unknown | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);

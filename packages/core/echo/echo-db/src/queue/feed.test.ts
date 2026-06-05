@@ -235,7 +235,7 @@ describe('Feed', () => {
       const post = Obj.make(TestSchema.Person, { name: 'alice' });
       yield* Feed.append(feed, [post]);
 
-      // Re-query to obtain a queue-decoded proxy (matches the curate-magazine path).
+      // Re-query to obtain a queue-decoded proxy (cross-db ref resolution path).
       const items = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(items).toHaveLength(1);
       const queuePost = items[0];
@@ -289,7 +289,7 @@ describe('Feed', () => {
       yield* Database.flush({ indexes: true });
     }).pipe(Effect.provide(testLayer1), runAndForwardErrors);
 
-    // Fresh client: empty knownQueues cache (magazine-style ref resolution path).
+    // Fresh client: empty knownQueues cache (exercises cold cross-db ref resolution).
     await using client2 = await peer.createClient();
     await using db2 = await peer.openDatabase(spaceKey, db1.rootUrl!, { client: client2 });
     const queues2 = client2.constructQueueFactory(db2.spaceId);
