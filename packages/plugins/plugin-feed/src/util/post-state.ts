@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { StateMap, TagIndex } from '@dxos/app-toolkit';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { type Database, Feed as EchoFeed, Filter, Obj, Query, Ref, Scope, StateMap, Tag, TagIndex, URI } from '@dxos/echo';
+import { type Database, Feed as EchoFeed, Filter, Obj, Query, Ref, Scope, Tag, URI } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { type Magazine, Subscription } from '../types';

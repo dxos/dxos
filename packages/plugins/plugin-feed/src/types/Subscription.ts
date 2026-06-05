@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Feed as EchoFeed, Obj, Ref, StateMap, TagIndex, Type } from '@dxos/echo';
+import { StateMap, TagIndex } from '@dxos/app-toolkit';
+import { DXN, Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
 

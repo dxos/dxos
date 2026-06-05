@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { FormInputAnnotation } from './internal';
-import * as Obj from './Obj';
+import { Obj } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /**
  * A per-object state side-map: an in-document `Record<objectId, S>` holding small mutable metadata

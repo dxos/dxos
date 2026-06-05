@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
+import { BlueprintsAnnotation, StateMap } from '@dxos/app-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
-import { DXN, Annotation, Obj, Ref, StateMap, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';

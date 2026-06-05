@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { FormInputAnnotation } from './internal';
-import * as Obj from './Obj';
+import { Obj } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /**
  * An inverse tag index: an in-document `Record<tagId, objectId[]>` mapping a tag id to the ids of

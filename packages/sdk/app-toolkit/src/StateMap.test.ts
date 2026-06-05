@@ -5,11 +5,10 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import * as Obj from './Obj';
 import * as StateMap from './StateMap';
-import * as Type from './Type';
 
 /** Per-item state stored in the side-map (the non-tag metadata for a feed item). */
 const PostState = Schema.Struct({

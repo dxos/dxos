@@ -5,10 +5,12 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { DXN, Feed, Obj, Ref, Tag, TagIndex, Tagging, Type } from '@dxos/echo';
+import { DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
+import * as TagIndex from './TagIndex';
+import * as Tagging from './Tagging';
 
 /** A minimal immutable feed item. */
 const Item = Schema.Struct({
