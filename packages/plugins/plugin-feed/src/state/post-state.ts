@@ -3,12 +3,13 @@
 //
 
 import { StateMap, TagIndex } from '@dxos/app-toolkit';
-import { type Database, Filter, Obj, Tag, URI } from '@dxos/echo';
+import { type Database, Filter, Obj, Tag } from '@dxos/echo';
+import { type EntityId } from '@dxos/keys';
 
 import { type Magazine, Subscription } from '../types';
 
 /**
- * Per-Post mutable state, keyed by Post id (Posts themselves are immutable queue items):
+ * Per-Post mutable state, keyed by Post entity id (Posts themselves are immutable queue items):
  *
  * - Shared across magazines, on the {@link Subscription}: `readAt` (a {@link StateMap}) and the
  *   star/archive flags (a {@link TagIndex} over system {@link Tag} objects).
@@ -32,7 +33,7 @@ export type SystemTag = keyof typeof SYSTEM_TAG;
 /** ISO timestamp the Post was first opened, or undefined. */
 export const getReadAt = (
   subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription> | undefined,
-  postId: URI.URI,
+  postId: EntityId,
 ): string | undefined => {
   if (!subscription) {
     return undefined;
@@ -43,8 +44,11 @@ export const getReadAt = (
 };
 
 /** Sets/clears the Post's read marker. */
-export const setReadAt = (subscription: Subscription.Subscription, postId: string, value: string | undefined): void =>
-  StateMap.bind<Subscription.PostState>(subscription, 'postState').patch(postId, { readAt: value });
+export const setReadAt = (
+  subscription: Subscription.Subscription,
+  postId: EntityId,
+  value: string | undefined,
+): void => StateMap.bind<Subscription.PostState>(subscription, 'postState').patch(postId, { readAt: value });
 
 /** Resolves the uri of an existing system Tag without creating one; `undefined` when absent. Async. */
 export const findSystemTagUri = async (
@@ -58,7 +62,7 @@ export const findSystemTagUri = async (
 /** Whether a Post carries the given (resolved) tag uri on its Subscription. Pure. */
 export const hasTag = (
   subscription: Subscription.Subscription | Obj.Snapshot<Subscription.Subscription> | undefined,
-  postId: string,
+  postId: EntityId,
   tagUri: string | undefined,
 ): boolean =>
   // Snapshot<T> omits OfKind but preserves all data fields; TagIndex.bind works at runtime.
@@ -71,7 +75,7 @@ export const hasTag = (
 /** Sets/clears a system tag (`starred`/`archived`) on a Post (find-or-creates the Tag object). Async. */
 export const setTag = async (
   subscription: Subscription.Subscription,
-  postId: string,
+  postId: EntityId,
   db: Pick<Database.Database, 'query' | 'add'>,
   which: SystemTag,
   value: boolean,
@@ -91,9 +95,9 @@ export const setTag = async (
 //
 
 /** Agent-assigned relevance of a Post within a Magazine, or undefined. */
-export const getRank = (magazine: Magazine.Magazine | undefined, postId: string): number | undefined =>
+export const getRank = (magazine: Magazine.Magazine | undefined, postId: EntityId): number | undefined =>
   magazine ? StateMap.bind<Magazine.PostState>(magazine, 'postState').get(postId).rank : undefined;
 
 /** Sets the magazine-scoped rank for a Post. */
-export const setRank = (magazine: Magazine.Magazine, postId: string, rank: number): void =>
+export const setRank = (magazine: Magazine.Magazine, postId: EntityId, rank: number): void =>
   StateMap.bind<Magazine.PostState>(magazine, 'postState').patch(postId, { rank });

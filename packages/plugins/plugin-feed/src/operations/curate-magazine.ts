@@ -79,7 +79,7 @@ export default FeedOperation.CurateMagazine.pipe(
  */
 export const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string | undefined): void => {
   const isStarred = (post: Subscription.Post) =>
-    hasTag(post.source?.target, Obj.getURI(post), starredUri);
+    hasTag(post.source?.target, post.id, starredUri);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {

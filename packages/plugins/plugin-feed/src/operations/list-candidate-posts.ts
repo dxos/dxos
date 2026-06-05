@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 
 import { FeedOperation } from '../types';
 import { collectCandidates } from './util';
@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ListCandidatePosts> = 
       const magazine = yield* Database.load(magazineRef);
       const candidates = yield* collectCandidates(magazine);
       return candidates.map(({ post, feed }) => ({
-        postId: Obj.getURI(post),
+        postId: post.id,
         feedName: feed.name,
         title: post.title,
         description: post.description,

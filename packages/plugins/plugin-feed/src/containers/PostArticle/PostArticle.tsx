@@ -31,7 +31,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
   const subscription = post.source?.target;
-  const postId = Obj.getURI(post);
+  const { id } = post;
   // Per-Post read/tag slices: re-render the toolbar only when THIS post's state changes (not when a
   // sibling post sharing the same Subscription mutates).
   const { readAt } = useReadState(subject);
@@ -46,18 +46,17 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // from re-firing on every render.
   const requestedContentFor = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const postUri = Obj.getURI(post);
-    if (requestedContentFor.current === postUri) {
+    if (requestedContentFor.current === id) {
       return;
     }
     if (!post.link || postContent) {
       return;
     }
-    requestedContentFor.current = postUri;
+    requestedContentFor.current = id;
     void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(subject) }).catch((err) =>
       log.catch(err, { postLink: post.link }),
     );
-  }, [subject, post, post.link, postContent, invokePromise]);
+  }, [subject, post, post.link, postContent, invokePromise, id]);
 
   // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
   // synchronously when the ref is already resolved; querying feeds via useQuery means
@@ -79,21 +78,21 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
 
   const handleMarkUnread = useCallback(() => {
     if (subscription) {
-      setReadAt(subscription, postId, undefined);
+      setReadAt(subscription, id, undefined);
     }
-  }, [subscription, postId]);
+  }, [subscription, id]);
 
   const handleToggleArchive = useCallback(() => {
     if (db && subscription) {
-      void setTag(subscription, postId, db, 'archived', !archived);
+      void setTag(subscription, id, db, 'archived', !archived);
     }
-  }, [db, subscription, postId, archived]);
+  }, [db, subscription, id, archived]);
 
   const handleToggleStar = useCallback(() => {
     if (db && subscription) {
-      void setTag(subscription, postId, db, 'starred', !starred);
+      void setTag(subscription, id, db, 'starred', !starred);
     }
-  }, [db, subscription, postId, starred]);
+  }, [db, subscription, id, starred]);
 
   // Re-fetch the article body from the source. Same path MagazineArticle uses on
   // first open, but unconditional — appends a fresh content entry to the

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Feed, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -59,7 +59,7 @@ export const ListCandidatePosts = Operation.make({
   }),
   output: Schema.Array(
     Schema.Struct({
-      postId: Schema.String.annotations({ description: 'DXN of the candidate Post.' }),
+      postId: Obj.ID.annotations({ description: 'Entity id of the candidate Post.' }),
       feedName: Schema.optional(Schema.String),
       title: Schema.optional(Schema.String),
       description: Schema.optional(Schema.String),
@@ -98,7 +98,8 @@ export const FetchArticleContent = Operation.make({
 
 /**
  * Fetches a Post's article page over HTTP and writes the extracted plain text
- * and hero image URL to the source Subscription's `postState[postId]` map
+ * and hero image URL to the source Subscription's content feed. Per-Post read/star/archive
+ * state on the Subscription is keyed by Post entity id.
  * (the Post itself is an immutable queue item). Idempotent — skips if
  * `content` is already set or the Post has no link. Used by the reader view
  * to populate the full article on first open.

@@ -65,7 +65,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     async (post: Subscription.Post, starred: boolean) => {
       const subscription = await post.source?.load();
       if (db && subscription) {
-        void setTag(subscription, Obj.getURI(post), db, 'starred', !starred);
+        void setTag(subscription, post.id, db, 'starred', !starred);
       }
     },
     [db],
@@ -87,7 +87,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             }),
           );
           const next = Array.zipWith(loaded, subscriptions, (post, subscription) => ({ post, subscription }))
-            .filter(({ post, subscription }) => hasTag(subscription, Obj.getURI(post), starredUri))
+            .filter(({ post, subscription }) => hasTag(subscription, post.id, starredUri))
             .map(({ post }) => Ref.make(post));
           if (next.length === magazine.posts.length) {
             return;
@@ -103,9 +103,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const handleOpen = useCallback(
     async (post: Subscription.Post) => {
       const subscription = await post.source?.load();
-      const postId = Obj.getURI(post);
-      if (subscription && !getReadAt(subscription, postId)) {
-        void setReadAt(subscription, postId, new Date().toISOString());
+      if (subscription && !getReadAt(subscription, post.id)) {
+        void setReadAt(subscription, post.id, new Date().toISOString());
       }
       // Fetch the full article content in the background. The operation appends a PostContent entry
       // to the subscription's contentFeed and is idempotent (no-op when an entry already exists or
@@ -141,9 +140,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const tileItems = useMemo<TileData[]>(
     () =>
       posts.map((post) => ({
-        id: Obj.getURI(post),
+        id: post.id,
         post,
-        current: currentId === Obj.getURI(post),
+        current: currentId === post.id,
         onToggleStar: handleToggleStar,
         onOpen: handleOpen,
       })),

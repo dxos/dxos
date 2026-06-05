@@ -7,12 +7,70 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { EID } from '@dxos/keys';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { Magazine, Subscription } from '../types';
 import { appendPostContent, findPostContent, queryPostContentForPost } from './post-content';
+import { findSystemTagUri, getReadAt, hasTag, setReadAt, setTag } from './post-state';
+
+describe('per-Post state keyed by entity id', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const loadQueuePost = async () => {
+    const { db, queues } = await builder.createDatabase({
+      types: [Feed.Feed, Tag.Tag, Subscription.Subscription, Subscription.Post],
+    });
+
+    const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com/rss' }));
+    await db.flush();
+
+    const postFeed = subscription.feed.target!;
+    const post = Obj.make(Subscription.Post, {
+      title: 'Article',
+      link: 'https://example.com/a',
+      source: Ref.make(subscription),
+    });
+    await runAndForwardErrors(
+      Feed.append(postFeed, [post]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+    );
+    const [queuePost] = await runAndForwardErrors(
+      Feed.runQuery(postFeed, Filter.type(Subscription.Post)).pipe(
+        Effect.provide(createFeedServiceLayer(queues)),
+      ),
+    );
+    expect(queuePost).toBeDefined();
+    return { db, subscription, queuePost: queuePost! };
+  };
+
+  test('setTag indexes queue posts by entity id, not echo uri', async () => {
+    const { db, subscription, queuePost } = await loadQueuePost();
+
+    await setTag(subscription, queuePost.id, db, 'starred', true);
+    await db.flush();
+
+    const starredUri = await findSystemTagUri(db, 'starred');
+    expect(hasTag(subscription, queuePost.id, starredUri)).toBe(true);
+    expect(hasTag(subscription, Obj.getURI(queuePost), starredUri)).toBe(false);
+  });
+
+  test('setReadAt indexes queue posts by entity id, not echo uri', async () => {
+    const { subscription, queuePost } = await loadQueuePost();
+
+    setReadAt(subscription, queuePost.id, '2026-01-01T00:00:00Z');
+    expect(getReadAt(subscription, queuePost.id)).toBe('2026-01-01T00:00:00Z');
+    expect(getReadAt(subscription, Obj.getURI(queuePost))).toBeUndefined();
+  });
+});
 
 describe('PostContent reverse-ref lookup', () => {
   let builder: EchoTestBuilder;

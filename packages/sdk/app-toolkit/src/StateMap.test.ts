@@ -16,6 +16,11 @@ const PostState = Schema.Struct({
   imageUrl: Schema.optional(Schema.String),
 });
 
+/** A minimal immutable feed item. */
+const Item = Schema.Struct({
+  text: Schema.String,
+}).pipe(Type.makeObject(DXN.make('org.dxos.test.StateMapItem', '0.1.0')));
+
 /** A host object carrying a per-object state side-map alongside (a notional feed of) items. */
 const Host = Schema.Struct({
   postState: StateMap.field(PostState),
@@ -26,30 +31,30 @@ describe('StateMap', () => {
     const host = Obj.make(Host, {});
     const state = StateMap.bind(host, 'postState');
 
-    const itemA = 'item-a';
-    const itemB = 'item-b';
+    const itemA = Obj.make(Item, { text: 'a' });
+    const itemB = Obj.make(Item, { text: 'b' });
 
     // Absent → empty object (no ?-chains at call sites).
-    expect(state.get(itemA)).toEqual({});
+    expect(state.get(itemA.id)).toEqual({});
 
     // Patch creates, then shallow-merges.
-    state.patch(itemA, { readAt: 't1' });
-    expect(state.get(itemA)).toEqual({ readAt: 't1' });
-    state.patch(itemA, { imageUrl: 'u1' });
-    expect(state.get(itemA)).toEqual({ readAt: 't1', imageUrl: 'u1' });
+    state.patch(itemA.id, { readAt: 't1' });
+    expect(state.get(itemA.id)).toEqual({ readAt: 't1' });
+    state.patch(itemA.id, { imageUrl: 'u1' });
+    expect(state.get(itemA.id)).toEqual({ readAt: 't1', imageUrl: 'u1' });
     // Overwrite a field.
-    state.patch(itemA, { readAt: 't2' });
-    expect(state.get(itemA)).toEqual({ readAt: 't2', imageUrl: 'u1' });
+    state.patch(itemA.id, { readAt: 't2' });
+    expect(state.get(itemA.id)).toEqual({ readAt: 't2', imageUrl: 'u1' });
 
-    state.patch(itemB, { imageUrl: 'u2' });
+    state.patch(itemB.id, { imageUrl: 'u2' });
 
     // Predicate-filtered ids.
-    expect(state.ids().sort()).toEqual([itemA, itemB]);
-    expect(state.ids((value) => Boolean(value.readAt))).toEqual([itemA]);
+    expect(state.ids().sort()).toEqual([itemA.id, itemB.id].sort());
+    expect(state.ids((value) => Boolean(value.readAt))).toEqual([itemA.id]);
 
     // Remove drops the entry.
-    state.remove(itemA);
-    expect(state.get(itemA)).toEqual({});
-    expect(state.ids()).toEqual([itemB]);
+    state.remove(itemA.id);
+    expect(state.get(itemA.id)).toEqual({});
+    expect(state.ids()).toEqual([itemB.id]);
   });
 });

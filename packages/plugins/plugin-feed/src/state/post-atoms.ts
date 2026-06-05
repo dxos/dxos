@@ -74,10 +74,9 @@ const postReadAtom = Atom.family((post: Subscription.Post) =>
     if (!subscription) {
       return EMPTY_READ_SLICE;
     }
-    const postId = Obj.getURI(post);
-    let previous = getReadAt(subscription, postId);
+    let previous = getReadAt(subscription, post.id);
     const unsubscribe = Obj.subscribe(subscription, () => {
-      const next = getReadAt(subscription, postId);
+      const next = getReadAt(subscription, post.id);
       if (next !== previous) {
         previous = next;
         get.setSelf({ readAt: next });
@@ -104,10 +103,9 @@ const postTagsAtom = Atom.family((post: Subscription.Post) =>
     }
     const db = Obj.getDatabase(subscription);
     const { starredUri, archivedUri } = db ? get(tagUrisAtom(db)) : EMPTY_TAG_URIS;
-    const postId = Obj.getURI(post);
     const compute = (): TagSlice => ({
-      starred: hasTag(subscription, postId, starredUri),
-      archived: hasTag(subscription, postId, archivedUri),
+      starred: hasTag(subscription, post.id, starredUri),
+      archived: hasTag(subscription, post.id, archivedUri),
     });
     let previous = compute();
     const unsubscribe = Obj.subscribe(subscription, () => {
