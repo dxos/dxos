@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Filter, Query } from '@dxos/echo';
 
 import { type Magazine, Subscription } from '../types';
 import { publishedTimestamp } from '../util/date';

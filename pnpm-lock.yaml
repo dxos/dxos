@@ -10000,6 +10000,9 @@ importers:
       '@dxos/markdown':
         specifier: workspace:*
         version: link:../../common/markdown
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
