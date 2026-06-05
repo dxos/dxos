@@ -285,21 +285,25 @@ export class IndexEngine {
     return Effect.gen(this, function* () {
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
 
+      // Reads run OUTSIDE the transaction: getChangedObjects may call RuntimeProvider.runPromise
+      // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
+      // TransactionConnection context. If those reads ran inside withTransaction, they would
+      // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
+      const cursors = yield* this.#tracker.queryCursors({
+        indexName: opts.indexName,
+        sourceName: source.sourceName,
+        // Pass undefined to get all cursors when spaceId is null.
+        spaceId: opts.spaceId ?? undefined,
+      });
+      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, { limit: opts.limit });
+
+      if (objects.length === 0) {
+        return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
+      }
+
+      // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {
-          const cursors = yield* this.#tracker.queryCursors({
-            indexName: opts.indexName,
-            sourceName: source.sourceName,
-            // Pass undefined to get all cursors when spaceId is null.
-            spaceId: opts.spaceId ?? undefined,
-          });
-          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, {
-            limit: opts.limit,
-          });
-          if (objects.length === 0) {
-            return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
-          }
-
           // Ensure objects exist in EntityMetaIndex.
           yield* this.#objectMetaIndex.update(objects);
 

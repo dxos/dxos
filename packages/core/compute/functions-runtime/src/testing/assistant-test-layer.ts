@@ -106,7 +106,7 @@ export const AssistantTestLayer = ({
   enableToolBackgrounding = false,
 }: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const resolvedModel: ModelName =
-    model ?? (aiServicePreset === 'ollama' ? 'gpt-oss:20b' : '@anthropic/claude-opus-4-6');
+    model ?? (aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)

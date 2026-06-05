@@ -42,16 +42,10 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-graph"
-    },
-    {
       "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -70,12 +64,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../../ui/ui-types"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-deck"

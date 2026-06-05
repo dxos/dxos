@@ -16,9 +16,8 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
-import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
+import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Composer } from '@dxos/brand';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
@@ -330,12 +329,12 @@ const main = async () => {
         : defs.Runtime.Client.ServicesMode.HOST
       : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
-  // Host mode uses OPFS SQLite in a dedicated worker; worker modes run their own in-memory SQLite
-  // (OPFS does not yet work from inside a SharedWorker per the TODO in `worker-runtime.ts`).
+  // Host and dedicated worker use OPFS-backed SQLite. SharedWorker still uses in-memory SQLite
+  // because OPFS is not available there (see `onconnect.ts`).
   const sqliteMode =
-    servicesMode === defs.Runtime.Client.ServicesMode.HOST
-      ? defs.Runtime.Client.Storage.SqliteMode.OPFS
-      : defs.Runtime.Client.Storage.SqliteMode.MEMORY;
+    servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
+      ? defs.Runtime.Client.Storage.SqliteMode.MEMORY
+      : defs.Runtime.Client.Storage.SqliteMode.OPFS;
 
   config = new Config(
     {
@@ -465,14 +464,12 @@ const main = async () => {
     );
   };
 
-  const ComposerPlaceholder = (props: PlaceholderComponentProps) => (
-    <Placeholder {...props} logo={(logoProps) => <Composer {...logoProps} />} />
-  );
-
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      placeholder: ComposerPlaceholder,
+      // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
+      // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
+      // relays startup progress into it and dismisses it — no placeholder here.
       pluginLoader,
       onPluginRemove,
       pluginRegistryProvider,

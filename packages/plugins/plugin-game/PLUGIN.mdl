@@ -46,7 +46,7 @@ type Game
 type GameVariant
   desc: |
     Contribution interface from a variant plugin. Registered via
-    `Capability.contributes(GameCapabilities.Variant, variant)`.
+    `Capability.contributes(GameCapabilities.VariantProvider, variant)`.
   fields:
     id: string                  # stable variant id; matches the variant state typename
     label: string               # human-readable name shown in the picker
@@ -69,7 +69,7 @@ component CreateGamePanel
   props:
     target: Space | Obj
     onCreateObject: (args: { variantId: string; input?: Record }) => void
-    variants?: GameVariant[]    # override; defaults to GameCapabilities.Variant
+    variants?: GameVariant[]    # override; defaults to GameCapabilities.VariantProvider
   state:
     selectedId?: string         # id of the variant chosen in stage 1
   actions:
@@ -142,7 +142,7 @@ op createGame
   errors:
     UnknownVariant: no registered GameVariant matches variantId
   effects: [echo:write]
-  requires: [GameCapabilities.Variant, SpaceOperation.AddObject, SpaceOperation.RemoveObjects]
+  requires: [GameCapabilities.VariantProvider, SpaceOperation.AddObject, SpaceOperation.RemoveObjects]
   note: |
     Invoked by CreateObjectEntry.createObject.
     Variant state is added with `hidden: true` so it does not appear
@@ -156,10 +156,10 @@ feat F-1: Variant Registration
 
   req F-1.1:
     when: a variant plugin loads
-    then: it contributes a GameVariant via `Capability.contributes(GameCapabilities.Variant, …)`
+    then: it contributes a GameVariant via `Capability.contributes(GameCapabilities.VariantProvider, …)`
 
   req F-1.2:
-    when: GameCapabilities.Variant contributions are queried
+    when: GameCapabilities.VariantProvider contributions are queried
     then: all registered variants are returned as an ordered list
 ```
 

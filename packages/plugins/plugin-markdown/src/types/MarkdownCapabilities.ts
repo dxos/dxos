@@ -48,4 +48,4 @@ export const EditorState = Capability.make<EditorStateStore>(`${meta.id}.capabil
 export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.id}.capability.editor-views`);
 
 // TODO(burdon): Move to ./types (external API)?
-export const Extensions = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}.capability.extensions`);
+export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}.capability.extensions`);

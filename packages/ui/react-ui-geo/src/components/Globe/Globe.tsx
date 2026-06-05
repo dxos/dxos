@@ -336,8 +336,11 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    // Keep the context alpha-enabled: when a style set omits `background`, `renderLayers`
+    // clears to transparent so the canvas's themed CSS background (below) shows through the
+    // area outside the globe — correct in both light and dark mode.
     const generator = useMemo(
-      () => canvas && projection && geoPath(projection, canvas.getContext('2d', { alpha: false })),
+      () => canvas && projection && geoPath(projection, canvas.getContext('2d')),
       [canvas, projection],
     );
 
@@ -368,7 +371,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
       return null;
     }
 
-    return <canvas ref={canvasRef} width={size.width} height={size.height} />;
+    return <canvas ref={canvasRef} className='bg-base-surface' width={size.width} height={size.height} />;
   },
 );
 

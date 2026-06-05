@@ -9,9 +9,10 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type CallState, type MediaState, CallsCapabilities } from '@dxos/plugin-calls';
+import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space } from '@dxos/react-client/echo';
@@ -31,7 +32,7 @@ export default Capability.makeModule(
 
     const store = capabilities.get(MeetingCapabilities.State);
 
-    return Capability.contributes(CallsCapabilities.Extension, {
+    return Capability.contributes(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const client = capabilities.get(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
@@ -50,7 +51,9 @@ export default Capability.makeModule(
         // }
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        const transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
+        const transcriptionManager = await capabilities
+          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
+          .open();
         store.updateState((current) => ({ ...current, transcriptionManager }));
       },
       onLeave: async () => {

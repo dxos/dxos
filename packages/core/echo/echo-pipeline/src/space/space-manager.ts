@@ -16,11 +16,11 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Teleport } from '@dxos/teleport';
-import { type BlobStore } from '@dxos/teleport-extension-object-sync';
+import { type BlobStoreApi } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
-import { type MetadataStore } from '../metadata';
+import { type IMetadataStore } from '../metadata';
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
@@ -28,9 +28,9 @@ import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 export type SpaceManagerProps = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: SwarmNetworkManager;
-  metadataStore: MetadataStore;
+  metadataStore: IMetadataStore;
 
-  blobStore: BlobStore;
+  blobStore: BlobStoreApi;
 
   disableP2pReplication?: boolean;
 };
@@ -63,8 +63,8 @@ export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: SwarmNetworkManager;
-  private readonly _metadataStore: MetadataStore;
-  private readonly _blobStore: BlobStore;
+  private readonly _metadataStore: IMetadataStore;
+  private readonly _blobStore: BlobStoreApi;
   private readonly _disableP2pReplication: boolean;
 
   constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerProps) {

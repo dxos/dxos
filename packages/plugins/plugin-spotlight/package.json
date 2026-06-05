@@ -83,7 +83,6 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@tauri-apps/api": "catalog:"
   },

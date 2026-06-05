@@ -27,7 +27,6 @@ import {
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EID, PublicKey, URI } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -1074,7 +1073,7 @@ describe('Query', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
@@ -1084,7 +1083,7 @@ describe('Query', () => {
     }
 
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, root);
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
     }
@@ -1102,7 +1101,7 @@ describe('Query', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -1118,7 +1117,7 @@ describe('Query', () => {
     }
 
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(1);
@@ -1175,7 +1174,6 @@ describe('Query', () => {
   });
 
   test('query immediately after delete and indexing works', async () => {
-    const kv = createTestLevel();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -1183,7 +1181,7 @@ describe('Query', () => {
       await builder.close();
     });
 
-    const peer = await builder.createPeer({ kv });
+    const peer = await builder.createPeer();
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 

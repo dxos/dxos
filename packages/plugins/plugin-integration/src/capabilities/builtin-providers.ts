@@ -8,11 +8,12 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
+import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
-import { Integration, IntegrationProvider, type IntegrationProviderEntry } from '#types';
+import { type CredentialForm, Integration, IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
-import { CUSTOM_PROVIDER_ID } from '../constants';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES, CUSTOM_PROVIDER_ID } from '../constants';
 
 /** Default form for manually entered access tokens (custom provider). */
 const CustomTokenForm = Schema.Struct({
@@ -30,6 +31,21 @@ const CustomTokenForm = Schema.Struct({
     description: 'The access token value.',
   }),
 });
+
+/** Pre-flight form for the Atmosphere (atproto) OAuth flow: the user's handle becomes the login hint. */
+const AtprotoPreflightForm = Schema.Struct({
+  handle: Schema.String.annotations({
+    title: 'Handle',
+    description: 'Your atproto handle or DID (e.g. user.bsky.social).',
+    examples: ['user.bsky.social'],
+  }),
+});
+
+const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
+  schema: AtprotoPreflightForm,
+  defaultValues: { handle: '' },
+  onSubmit: ({ values }) => Effect.succeed({ kind: 'oauth', loginHint: values.handle.trim() }),
+};
 
 /**
  * Built-in `IntegrationProvider` entries: just the manual-token provider.
@@ -63,6 +79,22 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
               return { kind: 'complete', accessToken, integration };
             }),
         },
+      },
+      {
+        // Atmosphere: the same atproto OAuth flow as the Bluesky provider but credential-only — no
+        // sync targets. Connects an atproto account without syncing feeds, and is the provider the
+        // OAuth account-recovery flow routes its Integration to.
+        id: ATMOSPHERE_PROVIDER_ID,
+        source: ATMOSPHERE_SOURCE,
+        label: 'Atmosphere',
+        oauth: {
+          provider: OAuthProvider.ATPROTO,
+          scopes: [...ATPROTO_OAUTH_SCOPES],
+          // bsky.social nullifies window.opener, so popup + postMessage can't be used; rely on Edge
+          // redirecting to `/redirect/oauth`.
+          useRedirectFlow: true,
+        },
+        credentialForm: atprotoCredentialForm,
       },
       // GitHub, Linear, and Slack are implemented as dedicated plugins
       // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).

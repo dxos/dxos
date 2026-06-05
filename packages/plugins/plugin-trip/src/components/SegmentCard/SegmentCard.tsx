@@ -110,11 +110,16 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                 readonly
                 tooltips={false}
               >
-                <Form.Viewport>
-                  <Form.Content>
-                    <Form.Layout template={FLIGHT_LAYOUT} />
-                  </Form.Content>
-                </Form.Viewport>
+                {/*
+                 * No `Form.Viewport`: it would nest its own full-bleed Column +
+                 * gutter, so the fields wouldn't line up with the header. Rendering
+                 * `Form.Content` directly lets `withColumn.center()` place the body
+                 * in the Card's content column — aligned under the title, matching
+                 * the `Card.Row` route/date branch.
+                 */}
+                <Form.Content>
+                  <Form.Layout template={FLIGHT_LAYOUT} />
+                </Form.Content>
               </Form.Root>
             </Card.Body>
           ) : (

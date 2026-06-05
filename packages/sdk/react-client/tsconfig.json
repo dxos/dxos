@@ -54,9 +54,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {

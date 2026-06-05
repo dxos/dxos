@@ -22,7 +22,8 @@ import { AttendableContainer, useSelected } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
-import { Booking, type Routing, Segment, Trip, TripCapabilities } from '#types';
+import { translations } from '#translations';
+import { Booking, type Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
 import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
@@ -53,6 +54,85 @@ const seedRoadTrip = (space: Space, name: string, cities: string[]): void => {
   space.db.add(trip);
 };
 
+//
+// Live OSRM + Nominatim routing service hitting the public demo servers. Network-dependent and
+// non-deterministic; used only by the `LiveRoute` story to exercise real geocoding + routing of
+// arbitrary city names. The OSRM/Nominatim mapping is inlined here (mirrors @dxos/plugin-osrm)
+// because plugin-trip cannot depend on plugin-osrm — which depends on plugin-trip.
+//
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+type NominatimResult = { lat: string; lon: string };
+type OsrmStep = { name?: string; ref?: string; geometry?: { coordinates?: Array<[number, number]> } };
+type OsrmLeg = { distance?: number; duration?: number; summary?: string; steps?: OsrmStep[] };
+type OsrmRoute = { distance?: number; duration?: number; legs?: OsrmLeg[] };
+type OsrmResponse = { routes?: OsrmRoute[] };
+
+const liveRoutingService: Routing.RoutingService = {
+  id: 'osrm-live',
+  label: 'OSRM (live)',
+  profiles: ['driving'],
+  route: async ({ waypoints }) => {
+    const places: Place.Place[] = [];
+    let geocodeCount = 0;
+    for (const waypoint of waypoints) {
+      if (typeof waypoint !== 'string') {
+        places.push(waypoint);
+        continue;
+      }
+      // Respect Nominatim's ≤ 1 req/s policy.
+      if (geocodeCount++ > 0) {
+        await delay(1_100);
+      }
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(waypoint)}&format=jsonv2&limit=1`,
+        { headers: { Accept: 'application/json' } },
+      );
+      if (!response.ok) {
+        throw new Routing.GeocodeError(waypoint);
+      }
+      // External, untyped JSON — asserted to the documented Nominatim shape at this boundary.
+      const [first] = (await response.json()) as NominatimResult[];
+      if (!first) {
+        throw new Routing.GeocodeError(waypoint);
+      }
+      places.push({ name: waypoint, geo: [Number(first.lon), Number(first.lat)] });
+    }
+
+    const path = places
+      .map((place) => place.geo)
+      .filter((geo): geo is NonNullable<typeof geo> => geo != null)
+      .map(([lon, lat]) => `${lon},${lat}`)
+      .join(';');
+    if (path.split(';').length < 2) {
+      throw new Routing.RouteError('All waypoints must resolve to coordinates to plan a route.');
+    }
+
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson&steps=true`,
+    );
+    if (!response.ok) {
+      throw new Routing.RouteError(`OSRM request failed: ${response.status}`);
+    }
+    // External, untyped JSON — asserted to the documented OSRM shape at this boundary.
+    const data = (await response.json()) as OsrmResponse;
+    const routes: Routing.Route[] = (data.routes ?? []).map((route) => ({
+      distance: route.distance ?? 0,
+      duration: route.duration ?? 0,
+      legs: (route.legs ?? []).map((leg) => ({
+        distance: leg.distance ?? 0,
+        duration: leg.duration ?? 0,
+        summary: leg.summary || undefined,
+        geometry: (leg.steps ?? []).flatMap((step) => step.geometry?.coordinates ?? []),
+        steps: (leg.steps ?? []).map((step) => ({ name: step.name || undefined, ref: step.ref || undefined })),
+      })),
+    }));
+
+    return { waypoints: places, routes };
+  },
+};
+
 const ATTENDABLE_ID = 'story';
 
 // Initialize the global keyboard system (normally done by plugin-navtree) so the
@@ -62,6 +142,7 @@ const withKeyboard: Decorator = (Story) => {
     Keyboard.singleton.initialize();
     return () => Keyboard.singleton.destroy();
   }, []);
+
   return <Story />;
 };
 
@@ -145,7 +226,10 @@ const MapStory = () => {
 const meta = {
   title: 'plugins/plugin-trip/containers/TripArticle',
   render: DefaultStory,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -251,6 +335,50 @@ export const RoadTripMap: Story = {
   decorators: baseDecorators((space) => {
     seedRoadTrip(space, 'London → Barcelona (via Avignon)', ['London', 'Avignon', 'Barcelona']);
   }),
+};
+
+// A single road segment whose origin/destination have ONLY the `city` property set (no name, code,
+// or geo). Exercises the city-based geocoding path (`toWaypoint` → "City" query → RoutingService)
+// and the segment form rendering city-only places. The London → Avignon pair has a captured route
+// fixture, so planning yields a real road-following polyline (not a straight haversine fallback).
+export const CityOnly: Story = {
+  args: { showMap: true },
+  decorators: baseDecorators((space) => {
+    const trip = Trip.make({ name: 'London → Avignon (city only)' });
+    const segment = Segment.make({
+      details: {
+        _tag: 'road',
+        subKind: 'car',
+        origin: { city: 'London' },
+        destination: { city: 'Avignon' },
+      },
+    });
+    Trip.addSegment(trip, segment);
+    space.db.add(segment);
+    space.db.add(trip);
+  }),
+};
+
+// Single city-only road segment planned against the LIVE public OSRM + Nominatim demo servers
+// (network, non-deterministic). Unlike the fake router's fixed table, this geocodes arbitrary city
+// names (e.g. Birmingham) and returns real road geometry. May be slow or fail if the demo servers
+// are down or rate-limit the request.
+export const LiveRoute: Story = {
+  args: { showMap: true },
+  decorators: baseDecorators((space) => {
+    const trip = Trip.make({ name: 'London → Birmingham (live)' });
+    const segment = Segment.make({
+      details: {
+        _tag: 'road',
+        subKind: 'car',
+        origin: { city: 'London' },
+        destination: { city: 'Birmingham' },
+      },
+    });
+    Trip.addSegment(trip, segment);
+    space.db.add(segment);
+    space.db.add(trip);
+  }, liveRoutingService),
 };
 
 export const Empty: Story = {

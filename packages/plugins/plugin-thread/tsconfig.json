@@ -19,22 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/display-name"
-    },
-    {
-      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -43,46 +28,19 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
-    },
-    {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-atom"
-    },
-    {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../devtools/devtools"
     },
     {
       "path": "../../sdk/app-framework"
@@ -97,85 +55,25 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
-    },
-    {
-      "path": "../../ui/react-ui-dnd"
-    },
-    {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
-    },
-    {
       "path": "../../ui/react-ui-thread"
-    },
-    {
-      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
-      "path": "../plugin-calls"
-    },
-    {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-observability"
-    },
-    {
-      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

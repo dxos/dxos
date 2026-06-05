@@ -20,8 +20,9 @@ import {
   isLiteralUnion,
   isNestedType,
 } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -273,6 +274,7 @@ export const FormField = (props: FormFieldProps) => {
           readonly={readonly}
           layout={layout}
           label={label}
+          collapsible
           projection={projection}
           fieldMap={fieldMap}
           fieldProvider={fieldProvider}
@@ -292,6 +294,18 @@ export const FormField = (props: FormFieldProps) => {
 };
 
 FormField.displayName = 'Form.FormField';
+
+//
+// Layout components
+//
+
+export const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
+  return (
+    <div className={mx('h-full flex px-1', inline ? 'items-center' : 'flex-col pt-2.5')}>
+      <IconButton variant='ghost' density='xs' square iconOnly {...props} />
+    </div>
+  );
+};
 
 /**
  * Get property input component.

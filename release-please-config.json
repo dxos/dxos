@@ -280,6 +280,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute/assistant-evals/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/assistant-toolkit/package.json",
           "jsonpath": "$.version"
         },
@@ -566,6 +571,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-code/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-comments/package.json",
           "jsonpath": "$.version"
         },
         {

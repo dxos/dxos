@@ -35,8 +35,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/teleport": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/teleport": "workspace:*"
   },
   "publishConfig": {
     "access": "public",

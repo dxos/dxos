@@ -18,12 +18,6 @@
       "path": "../../common/invariant"
     },
     {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../core/mesh/edge-client"
     },
     {

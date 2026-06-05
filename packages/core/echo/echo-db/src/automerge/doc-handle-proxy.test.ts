@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/kv-store/testing';
+import { createTestSqliteRuntime } from '@dxos/echo-pipeline/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { DocHandleProxy } from './doc-handle-proxy';
@@ -103,11 +103,9 @@ describe('DocHandleProxy', () => {
   });
 });
 
-const setup = async (kv = createTestLevel()) => {
-  await openAndClose(kv);
-  const host = new AutomergeHost({
-    db: kv,
-  });
+const setup = async () => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  const host = new AutomergeHost({ runtime });
   await openAndClose(host);
-  return { kv, host };
+  return { dispose, host };
 };

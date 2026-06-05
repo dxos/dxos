@@ -6,8 +6,13 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
+import type { AssistantPluginOptions } from '#types';
+
 export const AiContext = Capability.lazy<void, Capability.Any[]>('AiContext', () => import('./ai-context'));
-export const AiService = Capability.lazy<void, Capability.Any[]>('AiService', () => import('./ai-service'));
+export const AiService = Capability.lazy<AssistantPluginOptions | void, Capability.Any[]>(
+  'AiService',
+  () => import('./ai-service'),
+);
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CompanionChatProvisioner = Capability.lazy(
@@ -17,7 +22,7 @@ export const CompanionChatProvisioner = Capability.lazy(
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const EdgeModelResolver = Capability.lazy('EdgeModelResolver', () => import('./edge-model-resolver'));
 export const LocalModelResolver = Capability.lazy('LocalModelResolver', () => import('./local-model-resolver'));
-export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown'));
+export const MarkdownExtension = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));
 export const Migrations = Capability.lazy('AssistantMigrations', () => import('./migrations'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

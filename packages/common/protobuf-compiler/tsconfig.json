@@ -19,9 +19,6 @@
       "path": "../invariant"
     },
     {
-      "path": "../log"
-    },
-    {
       "path": "../node-std"
     }
   ]

@@ -17,7 +17,7 @@ import * as AiService from '../../AiService';
 import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator';
 import * as OllamaResolver from './OllamaResolver';
 
-const MODEL = 'gpt-oss:20b';
+const MODEL = 'ai.ollama.model.gpt-oss:20b';
 
 const ResolverLayer = OllamaResolver.make().pipe(Layer.provide(FetchHttpClient.layer));
 

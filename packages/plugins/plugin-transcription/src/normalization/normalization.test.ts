@@ -59,7 +59,7 @@ describe.skip('SentenceNormalization', () => {
         //     ? new Edge AiServiceClient({
         //         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
         //         defaultGenerationOptions: {
-        //           model: '@anthropic/claude-3-5-sonnet-20241022',
+        //           model: 'ai.claude.model.claude-3-5-sonnet-20241022',
         //         },
         //       })
         //     : new Ollama AiServiceClient({

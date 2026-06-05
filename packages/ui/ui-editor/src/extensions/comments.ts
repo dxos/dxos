@@ -100,26 +100,26 @@ export const commentsState = StateField.define<CommentsState>({
  * NOTE: Matches search.
  */
 const styles = EditorView.theme({
-  '.cm-comment, .cm-comment-current': {
-    padding: '3px 0',
-    color: 'var(--color-cm-comment-text)',
-    backgroundColor: 'var(--color-cm-comment-surface)',
-  },
-  '.cm-comment > span, .cm-comment-current > span': {
+  '.cm-comment > span': {
     boxDecorationBreak: 'clone',
     boxShadow: '0 0 0 3px var(--color-cm-comment-surface)',
     backgroundColor: 'var(--color-cm-comment-surface)',
-    color: 'var(--color-cm-comment-text)',
+    color: 'var(--color-cm-comment-text) !important',
     cursor: 'pointer',
+  },
+  '.cm-comment[data-current="1"] > span': {
+    boxShadow: '0 0 0 3px var(--color-cm-comment-current-surface)',
+    backgroundColor: 'var(--color-cm-comment-current-surface)',
   },
 });
 
 const createCommentMark = (id: string, isCurrent: boolean) =>
   Decoration.mark({
-    class: isCurrent ? 'cm-comment-current' : 'cm-comment',
+    class: 'cm-comment',
     attributes: {
       'data-testid': 'cm-comment',
       'data-comment-id': id,
+      'data-current': isCurrent ? '1' : '0',
     },
   });
 
@@ -510,34 +510,57 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 // Utils.
 //
 
-export const scrollThreadIntoView = (view: EditorView, id: string, center = true) => {
+/**
+ * Whether the [from, to] document range is entirely within the editor's scroll
+ * viewport. Returns false if either endpoint isn't currently rendered (off-screen).
+ */
+export const isRangeVisible = (view: EditorView, range: { from: number; to: number }): boolean => {
+  const from = view.coordsAtPos(range.from);
+  const to = view.coordsAtPos(range.to);
+  if (!from || !to) {
+    return false;
+  }
+
+  const { top, bottom } = view.scrollDOM.getBoundingClientRect();
+  return from.top >= top && to.bottom <= bottom;
+};
+
+export type ScrollThreadOptions = {
+  /** Vertical alignment when scrolling. */
+  y?: 'start' | 'center' | 'end' | 'nearest';
+  /** Vertical margin (px) to keep around the target when scrolling. */
+  yMargin?: number;
+};
+
+/**
+ * Scroll the comment thread with the given id into view (if not already entirely
+ * visible) and mark it the current comment so the editor highlights it.
+ */
+export const scrollThreadIntoView = (
+  view: EditorView,
+  id: string,
+  { y = 'center', yMargin }: ScrollThreadOptions = {},
+) => {
   const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
   if (!comment?.comment.cursor) {
     return;
   }
+
   const range = Cursor.getRangeFromCursor(view.state, comment.comment.cursor);
-  if (range) {
-    const currentSelection = view.state.selection.main;
-    const currentScrollPosition = view.scrollDOM.scrollTop;
-    const targetScrollPosition = view.coordsAtPos(range.from)?.top;
-
-    const needsScroll =
-      targetScrollPosition !== undefined &&
-      (targetScrollPosition < currentScrollPosition ||
-        targetScrollPosition > currentScrollPosition + view.scrollDOM.clientHeight);
-
-    const needsSelectionUpdate = currentSelection.from !== range.from || currentSelection.to !== range.from;
-
-    if (needsScroll || needsSelectionUpdate) {
-      view.dispatch({
-        selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
-        effects: [
-          needsScroll ? EditorView.scrollIntoView(range.from, center ? { y: 'center' } : undefined) : [],
-          needsSelectionUpdate ? setSelection.of({ current: id }) : [],
-        ].flat(),
-      });
-    }
+  if (!range) {
+    return;
   }
+
+  const { from, to } = view.state.selection.main;
+  const needsSelectionUpdate = from !== range.from || to !== range.from;
+  view.dispatch({
+    selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
+    effects: [
+      isRangeVisible(view, range) ? [] : EditorView.scrollIntoView(range.from, { y, yMargin }),
+      // Always mark this thread current so the highlight follows the selected thread.
+      setSelection.of({ current: id }),
+    ].flat(),
+  });
 };
 
 /**

@@ -12,13 +12,7 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
     },
     {
       "path": "../../common/effect"
@@ -48,25 +42,13 @@
       "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/compute/assistant"
-    },
-    {
-      "path": "../../core/compute/assistant-toolkit"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
       "path": "../../core/compute/functions-runtime"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -114,25 +96,16 @@
       "path": "../../ui/react-ui-components"
     },
     {
-      "path": "../../ui/react-ui-editor"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

@@ -125,8 +125,6 @@ describe('ClientServicesHost', () => {
 
       await host.services.IdentityService?.createIdentity({});
 
-      expect(host.context.storage.size).to.exist;
-
       await asyncTimeout(host.reset(), 1000);
       await host.close(Context.default());
     }

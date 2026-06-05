@@ -134,12 +134,10 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
   }
 
   return (
-    <div className='p-1 border border-subdued-separator rounded-sm'>
-      <Form.Root schema={formSchema} defaultValues={defaultValues as any} db={db} onValuesChanged={handleChange}>
-        <Form.Content>
-          <Form.FieldSet readonly={readonly} />
-        </Form.Content>
-      </Form.Root>
-    </div>
+    <Form.Root db={db} schema={formSchema} defaultValues={defaultValues as any} onValuesChanged={handleChange}>
+      <Form.Content>
+        <Form.FieldSet collapsible readonly={readonly} />
+      </Form.Content>
+    </Form.Root>
   );
 };

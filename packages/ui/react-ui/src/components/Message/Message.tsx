@@ -44,34 +44,34 @@ const MESSAGE_NAME = 'Message';
 type ValenceCSSVars = CSSProperties & {
   '--dx-valence-bg': string;
   '--dx-valence-bg-hover': string;
-  '--dx-valence-fg': string;
+  '--dx-valence-text': string;
 };
 
 const valenceVars: Record<MessageValence, ValenceCSSVars> = {
   success: {
     '--dx-valence-bg': 'var(--color-success-bg)',
     '--dx-valence-bg-hover': 'var(--color-success-bg-hover)',
-    '--dx-valence-fg': 'var(--color-success-fg)',
+    '--dx-valence-text': 'var(--color-success-text)',
   },
   info: {
     '--dx-valence-bg': 'var(--color-info-bg)',
     '--dx-valence-bg-hover': 'var(--color-info-bg-hover)',
-    '--dx-valence-fg': 'var(--color-info-fg)',
+    '--dx-valence-text': 'var(--color-info-text)',
   },
   warning: {
     '--dx-valence-bg': 'var(--color-warning-bg)',
     '--dx-valence-bg-hover': 'var(--color-warning-bg-hover)',
-    '--dx-valence-fg': 'var(--color-warning-fg)',
+    '--dx-valence-text': 'var(--color-warning-text)',
   },
   error: {
     '--dx-valence-bg': 'var(--color-error-bg)',
     '--dx-valence-bg-hover': 'var(--color-error-bg-hover)',
-    '--dx-valence-fg': 'var(--color-error-fg)',
+    '--dx-valence-text': 'var(--color-error-text)',
   },
   neutral: {
     '--dx-valence-bg': 'var(--color-neutral-bg)',
     '--dx-valence-bg-hover': 'var(--color-neutral-bg-hover)',
-    '--dx-valence-fg': 'var(--color-neutral-fg)',
+    '--dx-valence-text': 'var(--color-neutral-text)',
   },
 };
 
@@ -149,14 +149,16 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
           {children}
         </h2>
         {onClose && (
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('toolbar-close.label')}
-            classNames={tx('message.close', {})}
-            onClick={onClose}
-          />
+          <div className={tx('message.close', {})}>
+            <IconButton
+              variant='ghost'
+              icon='ph--x--regular'
+              iconOnly
+              density='sm'
+              label={t('toolbar-close.label')}
+              onClick={onClose}
+            />
+          </div>
         )}
       </Column.Row>
     );
