@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { type SpaceCapabilities } from '@dxos/plugin-space';
-import { useTranslation } from '@dxos/react-ui';
+import { Column, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
@@ -78,12 +78,14 @@ export const CreateGamePanel = ({ target, onCreateObject, variants: variantsProp
       onSave={handleSubmit}
       testId='create-game-form'
     >
-      <Form.Viewport>
+      {/* Rendered inside the create dialog's Dialog.Body (which owns the gutter Column); use
+          Column.Center to align with the dialog title rather than nesting another Column.Root. */}
+      <Column.Center>
         <Form.Content>
           <Form.FieldSet />
           <Form.Submit />
         </Form.Content>
-      </Form.Viewport>
+      </Column.Center>
     </Form.Root>
   );
 };
