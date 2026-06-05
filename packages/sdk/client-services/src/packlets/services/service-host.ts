@@ -358,6 +358,8 @@ export class ClientServicesHost {
         events: new DevtoolsHostEvents(),
         config: this._config,
         context: this._serviceContext,
+        exportSqliteDatabase: () => this.exportSqliteDatabase(),
+        runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
       }),
 
       EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
