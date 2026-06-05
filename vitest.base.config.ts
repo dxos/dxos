@@ -159,11 +159,7 @@ const createBrowserProject = ({
 
       testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
-      poolOptions: {
-        threads: {
-          singleThread: true,
-        },
-      },
+      maxWorkers: 1,
 
       browser: {
         enabled: true,
