@@ -35,9 +35,9 @@ export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities
   return (
     <Form.Root
       autoFocus
+      db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
       schema={schema}
       defaultValues={{}}
-      db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
       onSave={handleSave}
       testId='create-channel-form'
     >

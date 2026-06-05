@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { lazy } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
@@ -11,15 +10,13 @@ import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
 
+// Lazily loaded (via the #containers barrel) so the react-ui-form dependency
+// graph isn't pulled into this capability module's evaluation.
+import { ChannelCreatePanel } from '#containers';
+
 import { ThreadCapabilities, resolveProvider } from '../types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
-
-// Lazily loaded so the react-ui-form dependency graph isn't pulled into this
-// capability module's evaluation (it's only needed when the panel renders).
-const ChannelCreatePanel = lazy(() =>
-  import('../components/ChannelCreatePanel').then(({ ChannelCreatePanel }) => ({ default: ChannelCreatePanel })),
-);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
