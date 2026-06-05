@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 
 import { AssistantOperation } from '#types';
 
@@ -16,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(MarkdownCapabilities.Extensions, [
+    return Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc }) => {
         if (!doc) {
           return undefined;

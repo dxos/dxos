@@ -82,6 +82,11 @@
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "default": "./dist/lib/neutral/testing.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

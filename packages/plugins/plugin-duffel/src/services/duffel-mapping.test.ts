@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type BookingSearch } from '@dxos/plugin-trip';
+import { type BookingSearch } from '@dxos/plugin-trip/types';
 
 import { offerRequestBody, parseOffers } from './duffel-mapping';
 

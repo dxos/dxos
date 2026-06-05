@@ -27,7 +27,7 @@ export default Capability.makeModule(
         options: CreateOptions,
       ) =>
         Effect.gen(function* () {
-          const variants = yield* Capability.getAll(GameCapabilities.Variant);
+          const variants = yield* Capability.getAll(GameCapabilities.VariantProvider);
           const variant = variants.find((v) => v.id === variantId);
           invariant(variant, `Unknown game variant: ${variantId}`);
 
