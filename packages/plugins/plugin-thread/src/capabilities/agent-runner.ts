@@ -10,8 +10,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { ServiceResolver } from '@dxos/compute';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-db';
 import { log } from '@dxos/log';
@@ -182,10 +182,9 @@ const normalizeRoles = (messages: readonly Message.Message[]): Message.Message[]
  * on whether the thread has an anchored range. Splicing uses `updateText`
  * (Automerge-diff based) so cursors on other comment threads stay valid.
  *
- * The `AiServiceLayer` capability is resolved per turn (not at module
- * activation) so plugin order doesn't matter for live wiring. When no host
- * has contributed an `AppCapabilities.AiServiceLayer`, the runner logs a
- * warning and returns; storybook stub paths contribute their own
+ * `AiService.AiService` is resolved per turn through the space-affinity
+ * `LayerSpec` (the same path the assistant chat uses), so per-space BYOK
+ * credentials flow through. Storybook stub paths contribute their own
  * `AgentRunner` earlier in plugin order to short-circuit this module entirely.
  */
 export default Capability.makeModule(
@@ -193,12 +192,15 @@ export default Capability.makeModule(
     const runner: ThreadCapabilities.AgentRunner = {
       run: ({ thread, subject }) =>
         Effect.gen(function* () {
-          const aiServiceLayers = yield* Capability.getAll(AppCapabilities.AiServiceLayer);
-          const aiServiceLayer = aiServiceLayers[0];
-          if (!aiServiceLayer) {
-            log.warn('comment-thread agent runner: no AiServiceLayer contributed; skipping turn');
+          const db = Obj.getDatabase(thread);
+          if (!db) {
+            log.warn('comment-thread agent runner: thread has no database; skipping turn');
             return;
           }
+          const serviceResolver = yield* Capability.get(Capabilities.ServiceResolver);
+          const aiServiceLayer = ServiceResolver.provide({ space: db.spaceId }, AiService.AiService).pipe(
+            Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+          );
           const identity = yield* Capability.get(AgentIdentity);
 
           // Load every referenced message into a plain Message.Message[].

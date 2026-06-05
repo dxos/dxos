@@ -9,7 +9,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo } from 'react';
 
-import { AiModelResolver } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -76,13 +75,18 @@ const StubAgentRunner: ThreadCapabilities.AgentRunner = {
 };
 
 /**
- * Live `AppCapabilities.AiServiceLayer` wired through the DXOS edge so
+ * Live `AppCapabilities.AiModelResolver` wired through the DXOS edge so
  * `ThreadPlugin`'s default `AgentRunner` can call Claude. The edge endpoint is
  * open in dev — no API key is needed for the storybook to round-trip a real
  * LLM response. Used by the WithLiveAgent variant.
  *
  * Headless `test-storybook` runs render the story but don't submit a comment,
  * so no network call is made there either.
+ *
+ * Note: this contributes a resolver to the LayerSpec graph; the runner resolves
+ * `AiService.AiService` via `ServiceResolver.provide({space}, AiService.AiService)`,
+ * so the storybook also needs the AiService `LayerSpec` (contributed by
+ * `AssistantPlugin`) to be loaded for the live-agent variant to actually fire.
  */
 const anthropicResolverLayer = AnthropicResolver.make().pipe(
   Layer.provide(
@@ -91,14 +95,6 @@ const anthropicResolverLayer = AnthropicResolver.make().pipe(
     }),
   ),
   Layer.provide(FetchHttpClient.layer),
-);
-
-const aiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
-  Layer.provide(
-    anthropicResolverLayer.pipe(
-      Layer.provide(AiModelResolver.AiModelResolver.fromModelMap({ name: 'Fallback' }, Effect.succeed({}))),
-    ),
-  ),
 );
 
 /**
@@ -184,9 +180,10 @@ const StoryStubAgentPlugin = Plugin.define(
 );
 
 /**
- * Live agent runner hookup — contributes `AppCapabilities.AiServiceLayer` so
- * ThreadPlugin's default `AgentRunner` routes through Anthropic via the DXOS
- * edge. Used by the WithLiveAgent variant.
+ * Live agent runner hookup — contributes an Anthropic resolver via
+ * `AppCapabilities.AiModelResolver` so ThreadPlugin's default `AgentRunner`
+ * routes through the LayerSpec-assembled `AiService` to Anthropic via the
+ * DXOS edge. Used by the WithLiveAgent variant.
  */
 const StoryLiveAgentPlugin = Plugin.define(
   Plugin.makeMeta({
@@ -195,9 +192,9 @@ const StoryLiveAgentPlugin = Plugin.define(
   }),
 ).pipe(
   Plugin.addModule({
-    id: 'story-live-agent.ai-service',
+    id: 'story-live-agent.ai-model-resolver',
     activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(AppCapabilities.AiServiceLayer, aiServiceLayer)),
+    activate: () => Effect.succeed(Capability.contributes(AppCapabilities.AiModelResolver, anthropicResolverLayer)),
   }),
   Plugin.make,
 );
