@@ -45,6 +45,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Editable: Story = { args: { editable: true } };
+export const Editable: Story = {
+  args: {
+    editable: true,
+  },
+};
 
-export const NonEditable: Story = { args: { editable: false } };
+export const NonEditable: Story = {
+  args: {
+    editable: false,
+  },
+};

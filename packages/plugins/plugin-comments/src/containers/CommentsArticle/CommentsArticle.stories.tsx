@@ -52,24 +52,15 @@ const SAMPLE_CONTENT = [
   '',
   'This document has comment threads attached to it.',
   '',
-  'Select text in the editor to add a new comment, or view existing threads in the companion.',
-  '',
-].join('\n');
-
-const LARGE_CONTENT = [
-  '# Sample',
-  '',
-  'This document has comment threads attached to it.',
-  '',
   'Comments are anchored to ranges of text using an Effect schema relation, so they survive edits to the surrounding prose.',
   '',
   'The companion renders each thread on a virtual stack, mirroring the chat experience while keeping the editor in sync.',
   '',
-  random.lorem.paragraphs(2),
+  random.lorem.paragraphs(1),
   '',
   'Select text in the editor to add a new comment, or view existing threads in the companion.',
   '',
-  random.lorem.paragraphs(3),
+  random.lorem.paragraphs(1),
   '',
 ].join('\n');
 
@@ -219,8 +210,6 @@ type StoryArgs = {
    * config by ThreadOperation.Create.
    */
   agentMode?: Markdown.Settings['commentAgentMode'];
-  /** Seed a longer, multi-paragraph document. */
-  largeDoc?: boolean;
   /** Seed three anchored comment threads over known phrases in the document. */
   seedComments?: boolean;
 };
@@ -268,7 +257,7 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-[3fr_2fr] gap-4' {...attentionAttrs}>
+    <div className='dx-container grid grid-cols-[3fr_2fr]' {...attentionAttrs}>
       <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
       <Surface.Surface type={AppSurface.Article} data={companionData} limit={1} />
     </div>
@@ -289,7 +278,7 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
-              const doc = Markdown.make({ name: 'Sample', content: args.largeDoc ? LARGE_CONTENT : SAMPLE_CONTENT });
+              const doc = Markdown.make({ name: 'Sample', content: SAMPLE_CONTENT });
               personalSpace.db.add(doc);
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
 
@@ -351,7 +340,6 @@ export const WithAutoAgent: Story = {
  */
 export const WithComments: Story = {
   args: {
-    largeDoc: true,
     seedComments: true,
   },
 };
