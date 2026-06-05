@@ -2,60 +2,108 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { ComponentPropsWithRef, forwardRef, PropsWithChildren } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  forwardRef,
+  type PropsWithChildren,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { type Message as MessageType } from '@dxos/types';
+import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '#translations';
+import { command } from '../command';
+import { ThreadContextProvider } from '../context';
+import { Message } from '../Message';
+import { translationKey } from '../translations';
+import { type MessageMetadata, type ThreadContextValue } from '../types';
 
-import type { ThreadEntity } from '../types';
-
-// TODO(burdon): Avoid exporting fragments.
-export const threadLayout = 'w-full place-self-start grid grid-cols-[var(--dx-rail-size)_1fr]';
+const getMessageId = (message: MessageType.Message) => Obj.getURI(message);
 
 //
 // Root
 //
 
-type ThreadRootProps = ThemedClassName<
+export type ThreadRootProps = ThemedClassName<
   PropsWithChildren<
-    ThreadEntity & { current?: boolean } & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>
+    Omit<ThreadContextValue, 'components'> &
+      Partial<Pick<ThreadContextValue, 'components'>> & {
+        id?: string;
+        current?: boolean | string;
+      } & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>
   >
 >;
 
+/**
+ * Root of a thread. Provides message-tile context and the Mosaic root that
+ * `Thread.Messages` renders its (virtual) stack within.
+ */
 const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
-  ({ current, children, classNames, ...props }, forwardedRef) => {
+  (
+    {
+      children,
+      classNames,
+      current,
+      id,
+      getMetadata,
+      components,
+      identityDid,
+      editable,
+      onMessageDelete,
+      onAcceptProposal,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     return (
-      <div
-        role='group'
-        data-testid='thread'
-        {...(current && { 'aria-current': typeof current === 'string' ? current : 'location' })}
-        {...props}
-        className={mx(
-          threadLayout,
-          hoverableFocusedWithinControls,
-          'bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
-          classNames,
-        )}
-        ref={forwardedRef}
+      <ThreadContextProvider
+        getMetadata={getMetadata}
+        components={components ?? {}}
+        identityDid={identityDid}
+        editable={editable}
+        onMessageDelete={onMessageDelete}
+        onAcceptProposal={onAcceptProposal}
       >
-        {children}
-      </div>
+        <Mosaic.Root>
+          <div
+            role='group'
+            data-testid='thread'
+            id={id}
+            aria-current={current ? 'location' : undefined}
+            {...props}
+            className={mx(
+              'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
+              hoverableFocusedWithinControls,
+              classNames,
+            )}
+            ref={forwardedRef}
+          >
+            {children}
+          </div>
+        </Mosaic.Root>
+      </ThreadContextProvider>
     );
   },
 );
 
+ThreadRoot.displayName = 'Thread.Root';
+
 //
-// Heading
+// Header
 //
 
-type ThreadHeaderProps = PropsWithChildren<{ detached?: boolean }>;
+export type ThreadHeaderProps = PropsWithChildren<{ detached?: boolean }>;
 
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
   ({ children, detached, ...props }, forwardedRef) => {
     return (
-      <>
+      <div className='grid grid-cols-[var(--dx-rail-size)_1fr]'>
         <div className='flex items-center justify-center text-description'>
           <Icon icon='ph--caret-double-right--regular' />
         </div>
@@ -70,16 +118,145 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
             {children}
           </p>
         </div>
-      </>
+      </div>
     );
   },
 );
+
+ThreadHeader.displayName = 'Thread.Header';
+
+//
+// Messages
+//
+
+const MessageTileAdapter = ({ id, data, location, draggable, current, selected }: MosaicTileProps<MessageType.Message>) => (
+  <Mosaic.Tile id={id} data={data} location={location} draggable={draggable} current={current} selected={selected}>
+    <Message.Tile message={data} />
+  </Mosaic.Tile>
+);
+
+export type ThreadMessagesProps = ThemedClassName<{
+  messages: readonly MessageType.Message[];
+  /** Estimated tile height for the virtualizer. */
+  estimateSize?: number;
+  /**
+   * Virtualize the stack within an internal scroll area. Default `true` (channel
+   * chat). Pass `false` for intrinsic-height inline threads (e.g. comments) that
+   * scroll within an outer container.
+   */
+  virtual?: boolean;
+  currentId?: string;
+}>;
+
+/** Linear stack of message tiles, rendered via a Mosaic (virtual) stack. */
+const ThreadMessages = ({ messages, estimateSize = 80, virtual = true, currentId, classNames }: ThreadMessagesProps) => {
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const items = useMemo(() => messages.filter(Boolean), [messages]);
+
+  if (!virtual) {
+    return (
+      <Mosaic.Container orientation='vertical' currentId={currentId} eventHandler={{ id: 'thread', canDrop: () => false }}>
+        <Mosaic.Stack
+          classNames={classNames}
+          items={items}
+          getId={getMessageId}
+          Tile={MessageTileAdapter}
+          draggable={false}
+        />
+      </Mosaic.Container>
+    );
+  }
+
+  return (
+    <Mosaic.Container
+      asChild
+      orientation='vertical'
+      autoScroll={viewport}
+      currentId={currentId}
+      eventHandler={{ id: 'thread', canDrop: () => false }}
+    >
+      <ScrollArea.Root classNames={mx('col-span-2', classNames)} orientation='vertical'>
+        <ScrollArea.Viewport ref={setViewport}>
+          <Mosaic.VirtualStack
+            items={items}
+            getId={getMessageId}
+            Tile={MessageTileAdapter}
+            draggable={false}
+            getScrollElement={() => viewport}
+            estimateSize={() => estimateSize}
+          />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Mosaic.Container>
+  );
+};
+
+ThreadMessages.displayName = 'Thread.Messages';
+
+//
+// Textbox
+//
+
+export type ThreadTextboxProps = MessageMetadata & {
+  placeholder?: string;
+  autoFocus?: boolean;
+  disabled?: boolean;
+  extensions?: Extension;
+  /**
+   * Called with the composer content on send. Return `true` to accept (the
+   * editor is cleared and remounted), `false` to reject.
+   */
+  onSend?: (text: string) => boolean;
+};
+
+/** Message composer pinned at the foot of a thread. */
+const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
+  const { t } = useTranslation(translationKey);
+  const { themeMode } = useThemeContext();
+  const messageRef = useRef('');
+  const [count, setCount] = useState(0);
+
+  const editorExtensions = useMemo(
+    () =>
+      [
+        createBasicExtensions({ placeholder: placeholder ?? t('message.placeholder') }),
+        createThemeExtensions({ themeMode }),
+        listener({ onChange: ({ text }) => (messageRef.current = text) }),
+        command,
+        extensions,
+      ].filter(Boolean) as Extension[],
+    [themeMode, placeholder, t, extensions, count],
+  );
+
+  const handleSend = () => {
+    const text = messageRef.current;
+    if (!text?.length || !onSend) {
+      return;
+    }
+    if (onSend(text)) {
+      messageRef.current = '';
+      setCount((value) => value + 1);
+    }
+  };
+
+  return (
+    <Message.Textbox
+      {...metadata}
+      autoFocus={autoFocus}
+      disabled={disabled}
+      extensions={editorExtensions}
+      onSend={handleSend}
+    />
+  );
+};
+
+ThreadTextbox.displayName = 'Thread.Textbox';
 
 //
 // Status
 //
 
-type ThreadStatusProps = ThemedClassName<PropsWithChildren> & {
+export type ThreadStatusProps = ThemedClassName<PropsWithChildren> & {
   activity?: boolean;
 };
 
@@ -109,10 +286,16 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
   },
 );
 
+ThreadStatus.displayName = 'Thread.Status';
+
+//
+// Thread
+//
+
 export const Thread = {
   Root: ThreadRoot,
   Header: ThreadHeader,
+  Messages: ThreadMessages,
+  Textbox: ThreadTextbox,
   Status: ThreadStatus,
 };
-
-export type { ThreadRootProps, ThreadHeaderProps, ThreadStatusProps };

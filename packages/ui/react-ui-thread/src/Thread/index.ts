@@ -2,4 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Thread';
+export { Thread } from './Thread';
+export type {
+  ThreadRootProps,
+  ThreadHeaderProps,
+  ThreadMessagesProps,
+  ThreadTextboxProps,
+  ThreadStatusProps,
+} from './Thread';

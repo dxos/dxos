@@ -3,33 +3,25 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { type MessageEntity, MessageStoryText } from '../testing';
+import { Message } from './Message';
+import { createMessages, getStoryMetadata } from '../testing';
 import { Thread } from '../Thread';
-import { MessageRoot } from './Message';
 
 const DefaultStory = () => {
-  const [identityKey] = useState(PublicKey.random());
-  const [message] = useState<MessageEntity>({
-    id: 'm1',
-    timestamp: new Date().toISOString(),
-    authorId: identityKey.toHex(),
-    text: 'hello',
-  });
-
+  const messages = useMemo(() => createMessages(3), []);
   return (
     <div className='mx-auto w-96 overflow-y-auto'>
-      <Thread.Root id='t1'>
-        <MessageRoot {...message} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
-          <MessageStoryText {...message} onDelete={() => console.log('delete')} />
-        </MessageRoot>
+      <Thread.Root getMetadata={getStoryMetadata} identityDid='did:key:alice' editable onMessageDelete={() => {}}>
+        {messages.map((message) => (
+          <Message.Tile key={Obj.getURI(message)} message={message} />
+        ))}
       </Thread.Root>
     </div>
   );
@@ -37,7 +29,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'ui/react-ui-thread/Message',
-  component: MessageRoot as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
