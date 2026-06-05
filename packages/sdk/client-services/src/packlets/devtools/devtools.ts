@@ -186,8 +186,11 @@ export class DevtoolsServiceImpl implements DevtoolsHost {
 
   async runSqliteQuery(request: RunSqliteQueryRequest): Promise<RunSqliteQueryResponse> {
     try {
-      const params = request.params ? JSON.parse(request.params) : undefined;
-      const rows = await this.params.runSqliteQuery(request.query, params);
+      const parsedParams = request.params ? JSON.parse(request.params) : undefined;
+      if (parsedParams !== undefined && !Array.isArray(parsedParams)) {
+        throw new Error('Query params must be a JSON array.');
+      }
+      const rows = await this.params.runSqliteQuery(request.query, parsedParams);
       return { rows: JSON.stringify(rows) };
     } catch (err) {
       return { rows: '[]', error: err instanceof Error ? err.message : String(err) };
