@@ -199,12 +199,6 @@ export const layer = (opts?: {
         hydrate: hydrateAgents,
       };
 
-      yield* Effect.forkDaemon(
-        service.hydrate().pipe(
-          Effect.catchAllCause((cause) => Effect.sync(() => log.warn('agent hydrate failed', { cause: Cause.pretty(cause) }))),
-        ),
-      );
-
       return service;
     }),
   );
