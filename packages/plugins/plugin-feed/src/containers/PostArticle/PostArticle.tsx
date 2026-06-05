@@ -13,12 +13,12 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
 
+import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
 import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-import { usePostContentAtom } from '#atoms';
 import { PostToolbar } from './PostToolbar';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
@@ -26,8 +26,7 @@ export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) => {
   // When shown as a companion the `attendableId` is a linked segment, but attention lives on the
   // parent plank — resolve to the parent so the toolbar reads as attended (active).
-  const toolbarAttendableId =
-    attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
   const { invokePromise } = useOperationInvoker();
   const registry = useContext(RegistryContext);
   const [post] = useObject(subject);

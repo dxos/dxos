@@ -3,7 +3,6 @@
 //
 
 import { type Subscription } from '../types';
-
 import { extractImageUrls, makeSnippet, stripHtml } from './text';
 
 /**

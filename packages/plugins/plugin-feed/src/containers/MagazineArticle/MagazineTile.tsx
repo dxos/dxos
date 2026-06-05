@@ -8,9 +8,9 @@ import { Obj } from '@dxos/echo';
 import { Card, Focus, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { useMagazinePostData } from '#atoms';
 import { type Subscription } from '#types';
 
-import { useMagazinePostData } from '#atoms';
 import { formatDate } from '../../util/date';
 
 export type MagazineTileProps = {
@@ -46,12 +46,7 @@ export const MagazineTile = ({ post, current, onToggleStar, onOpen }: MagazineTi
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Card.Poster
-            alt={snapshot.title ?? 'Article'}
-            image={imageUrl}
-            fit='cover'
-            classNames='rounded-t-xs'
-          />
+          <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
           <Card.IconBlock>

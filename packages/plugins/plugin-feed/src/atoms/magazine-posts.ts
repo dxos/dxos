@@ -9,7 +9,6 @@ import { AtomObj, AtomRef } from '@dxos/echo-atom';
 
 import { type Magazine, type Subscription } from '../types';
 import { publishedTimestamp } from '../util/date';
-
 import { postTagsAtom } from './post-tags';
 
 /**

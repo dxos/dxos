@@ -8,9 +8,9 @@ import { ScrollArea } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
+import { usePostContentAtom } from '#atoms';
 import { Subscription } from '#types';
 
-import { usePostContentAtom } from '#atoms';
 import { formatDate, getImageUrl } from '../../util';
 
 export type PostContentProps = {

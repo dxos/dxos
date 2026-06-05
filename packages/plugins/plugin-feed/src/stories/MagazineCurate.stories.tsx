@@ -93,13 +93,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [
-            Feed.Feed,
-            Subscription.Subscription,
-            Subscription.Post,
-            Magazine.Magazine,
-            Text.Text,
-          ],
+          types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,
         }),
         SpacePlugin({}),

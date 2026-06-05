@@ -9,10 +9,9 @@ import { AtomObj } from '@dxos/echo-atom';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { type MagazineView } from '#atoms';
 import { meta } from '#meta';
 import { type Magazine } from '#types';
-
-import { type MagazineView } from '#atoms';
 
 export type MagazineToolbarProps = {
   magazine: Magazine.Magazine;
@@ -31,7 +30,14 @@ export type MagazineToolbarProps = {
  * inside the builder, so it subscribes to those atoms and rebuilds itself whenever they change.
  * Deps hold only stable references (atoms + callbacks), never the reactive values.
  */
-export const MagazineToolbar = ({ magazine, viewAtom, busyAtom, attendableId, onClear, onCurate }: MagazineToolbarProps) => {
+export const MagazineToolbar = ({
+  magazine,
+  viewAtom,
+  busyAtom,
+  attendableId,
+  onClear,
+  onCurate,
+}: MagazineToolbarProps) => {
   const setView = useAtomSet(viewAtom);
 
   const menuActions = useMenuBuilder(

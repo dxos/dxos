@@ -50,8 +50,7 @@ export default FeedOperation.CurateMagazine.pipe(
       // Select matching Posts via the agent (single-shot structured output), then add them mechanically.
       const candidates = yield* collectCandidates(magazine);
       const spaceId = Obj.getDatabase(magazine)?.spaceId;
-      const selectedIds =
-        candidates.length > 0 && spaceId ? yield* selectPostIds(magazine, candidates, spaceId) : [];
+      const selectedIds = candidates.length > 0 && spaceId ? yield* selectPostIds(magazine, candidates, spaceId) : [];
       const selected = resolveSelected(candidates, selectedIds);
 
       // Build the next posts list as a pure function of (existing curated + newly selected), bounded
@@ -91,16 +90,18 @@ const loadValidFeeds = (magazine: Magazine.Magazine) =>
       Effect.tapError((error) => Effect.sync(() => log.catch(error))),
       Effect.option,
     ),
-  ).pipe(
-    Effect.map((feeds) => feeds.flatMap(Option.toArray).filter((feed) => Boolean(feed.url))),
-  );
+  ).pipe(Effect.map((feeds) => feeds.flatMap(Option.toArray).filter((feed) => Boolean(feed.url))));
 
 /** Syncs all feeds in parallel, tolerating per-feed failures; resolves to the count synced successfully. */
 const syncFeeds = (validFeeds: readonly Subscription.Subscription[]) =>
   Effect.forEach(
     validFeeds,
     (feed) =>
-      Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(feed) }, { spaceId: Obj.getDatabase(feed)?.spaceId }).pipe(
+      Operation.invoke(
+        FeedOperation.SyncFeed,
+        { feed: Ref.make(feed) },
+        { spaceId: Obj.getDatabase(feed)?.spaceId },
+      ).pipe(
         Effect.as(true),
         Effect.catchAll((error) => Effect.sync(() => (log.catch(error, { feedUrl: feed.url }), false))),
       ),
@@ -182,9 +183,7 @@ export const applyKeep = (
   starredUri: string | undefined,
 ): Ref.Ref<Subscription.Post>[] => {
   const isStarred = (post: Subscription.Post) => Subscription.hasTag(post.source?.target, post.id, starredUri);
-  const resolved = posts
-    .map((ref) => ref.target)
-    .filter((post): post is Subscription.Post => post !== undefined);
+  const resolved = posts.map((ref) => ref.target).filter((post): post is Subscription.Post => post !== undefined);
   const unresolved = posts.filter((ref) => !ref.target);
   const { kept } = partitionByKeepBound(resolved, keep, isStarred);
   return [...kept.map((post) => Ref.make(post)), ...unresolved];

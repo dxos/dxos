@@ -15,10 +15,10 @@ import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
+import { type MagazineView, useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { type MagazineView, useVisibleMagazinePosts } from '#atoms';
 import { MagazineTile } from './MagazineTile';
 import { MagazineToolbar } from './MagazineToolbar';
 

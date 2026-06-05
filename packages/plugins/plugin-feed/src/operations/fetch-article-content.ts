@@ -9,7 +9,6 @@ import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '../types';
-
 import { browserCorsProxy, fetchArticle } from './sources';
 
 const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> = FeedOperation.FetchArticleContent.pipe(

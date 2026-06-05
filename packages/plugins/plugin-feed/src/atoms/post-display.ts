@@ -9,7 +9,6 @@ import { AtomObj, AtomRef } from '@dxos/echo-atom';
 
 import { type Subscription } from '../types';
 import { getImageUrl, getSnippet } from '../util/post-content';
-
 import { postReadAtom } from './post-read';
 import { postTagsAtom } from './post-tags';
 

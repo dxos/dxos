@@ -1612,7 +1612,9 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const metas = await this._runInRuntime(this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }));
+    const metas = await this._runInRuntime(
+      this._indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
+    );
     if (metas.length === 0) {
       return null;
     }

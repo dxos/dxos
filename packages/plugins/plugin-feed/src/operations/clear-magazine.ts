@@ -54,7 +54,9 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
               return loaded
                 .filter((post) =>
                   Subscription.hasTag(
-                    post.source ? subscriptionById.get(EID.getEntityId(EID.parse(post.source.uri)) ?? post.source.uri) : undefined,
+                    post.source
+                      ? subscriptionById.get(EID.getEntityId(EID.parse(post.source.uri)) ?? post.source.uri)
+                      : undefined,
                     post.id,
                     uri,
                   ),

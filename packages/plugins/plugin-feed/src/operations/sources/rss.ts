@@ -9,7 +9,6 @@ import { normalizeText } from '@dxos/markdown';
 import { Subscription } from '#types';
 
 import { decodeEntities } from '../../util/text';
-
 import { applyCorsProxy } from './cors';
 import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 

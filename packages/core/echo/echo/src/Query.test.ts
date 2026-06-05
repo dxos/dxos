@@ -16,8 +16,8 @@ import * as Obj from './Obj';
 import * as Order from './Order';
 import * as Query from './Query';
 import * as Ref from './Ref';
-import * as Type from './Type';
 import { TestSchema } from './testing';
+import * as Type from './Type';
 
 describe('query api', () => {
   describe('Query', () => {

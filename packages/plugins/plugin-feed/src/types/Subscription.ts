@@ -254,7 +254,11 @@ export const hasTag = (
   tagUri: string | undefined,
 ): boolean =>
   // Snapshot<T> omits OfKind but preserves all data fields; TagIndex.bind works at runtime.
-  subscription && tagUri ? TagIndex.bind(subscription as Subscription, 'tags').objects(tagUri).includes(postId) : false;
+  subscription && tagUri
+    ? TagIndex.bind(subscription as Subscription, 'tags')
+        .objects(tagUri)
+        .includes(postId)
+    : false;
 
 /** Sets/clears a system tag (`starred`/`archived`) on a Post (find-or-creates the Tag object). Async. */
 export const setTag = async (
@@ -360,5 +364,8 @@ export const appendPostContent = async (
     ...(entry.imageUrl ? { imageUrl: entry.imageUrl } : {}),
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
-  await Feed.append(echoFeed, [content]).pipe(Effect.provide(createFeedServiceLayer(space.queues)), runAndForwardErrors);
+  await Feed.append(echoFeed, [content]).pipe(
+    Effect.provide(createFeedServiceLayer(space.queues)),
+    runAndForwardErrors,
+  );
 };

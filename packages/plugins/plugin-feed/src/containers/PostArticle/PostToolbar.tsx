@@ -8,10 +8,9 @@ import React from 'react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
+import { postReadAtom, postTagsAtom } from '#atoms';
 import { meta } from '#meta';
 import { type Subscription } from '#types';
-
-import { postReadAtom, postTagsAtom } from '#atoms';
 
 export type PostToolbarProps = {
   post: Subscription.Post;

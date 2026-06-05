@@ -17,7 +17,10 @@ export const MagazineProperties = ({ subject }: AppSurface.ObjectPropertiesProps
   const [text, updateText] = useObject(subject.instructions);
 
   const setContent = useCallback(
-    (value: string) => updateText((t) => { t.content = value; }),
+    (value: string) =>
+      updateText((t) => {
+        t.content = value;
+      }),
     [updateText],
   );
 
