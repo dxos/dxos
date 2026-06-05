@@ -25,7 +25,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-thread/Message',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'border w-(min-card-width)' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'border w-card-min-width' })],
   parameters: {
     layout: 'fullscreen',
     translations,

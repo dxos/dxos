@@ -149,55 +149,55 @@ export const CommentThread = ({
             hoverableFocusedWithinControls,
           )}
         >
-        {detached ? (
-          <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
-            <Thread.Header detached>{thread.name}</Thread.Header>
-          </Tooltip.Trigger>
-        ) : (
-          <Thread.Header>{thread.name}</Thread.Header>
-        )}
-        <div className={buttonGroupClassNames}>
-          {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
-          {onResolve && !(thread.status === 'staged') && (
-            <IconButton
-              data-testid='thread.resolve'
-              variant='ghost'
-              icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
-              iconOnly
-              label={t('resolve-thread.label')}
-              classNames={[buttonClassNames, thread.status !== 'resolved' && hoverableControlItem]}
-              onClick={handleResolve}
-            />
+          {detached ? (
+            <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
+              <Thread.Header detached>{thread.name}</Thread.Header>
+            </Tooltip.Trigger>
+          ) : (
+            <Thread.Header>{thread.name}</Thread.Header>
           )}
-          {onThreadDelete && (
-            <IconButton
-              data-testid='thread.delete'
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              label={t('delete-thread.label')}
-              classNames={[buttonClassNames, hoverableControlItem]}
-              onClick={handleThreadDelete}
-            />
-          )}
+          <div className={buttonGroupClassNames}>
+            {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
+            {onResolve && !(thread.status === 'staged') && (
+              <IconButton
+                data-testid='thread.resolve'
+                variant='ghost'
+                icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
+                iconOnly
+                label={t('resolve-thread.label')}
+                classNames={[buttonClassNames, thread.status !== 'resolved' && hoverableControlItem]}
+                onClick={handleResolve}
+              />
+            )}
+            {onThreadDelete && (
+              <IconButton
+                data-testid='thread.delete'
+                variant='ghost'
+                icon='ph--x--regular'
+                iconOnly
+                label={t('delete-thread.label')}
+                classNames={[buttonClassNames, hoverableControlItem]}
+                onClick={handleThreadDelete}
+              />
+            )}
+          </div>
         </div>
-      </div>
 
-      <Thread.Messages messages={loadedMessages} currentId={current ? threadUri : undefined} />
+        <Thread.Messages messages={loadedMessages} currentId={current ? threadUri : undefined} />
 
-      {/*
+        {/*
         Autofocus only newly-created (draft) threads. Once the first message is
         posted the thread transitions from 'staged' → 'active' and stops stealing
         focus, so multiple active threads no longer fight for focus.
       */}
-      <Thread.Textbox
-        {...textboxMetadata}
-        placeholder={t('message.placeholder')}
-        autoFocus={thread.status === 'staged'}
-        onSend={handleComment}
-      />
+        <Thread.Textbox
+          {...textboxMetadata}
+          placeholder={t('message.placeholder')}
+          autoFocus={thread.status === 'staged'}
+          onSend={handleComment}
+        />
 
-      <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
+        <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
       </Thread.Content>
     </Thread.Root>
   );

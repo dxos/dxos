@@ -73,10 +73,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
  * `ChannelChat`, `ChannelArticle`, and `ThreadContainer`.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
-  (
-    { id, identity, members, messages, activity, onSend, autoFocusTextbox, current, readOnly },
-    forwardedRef,
-  ) => {
+  ({ id, identity, members, messages, activity, onSend, autoFocusTextbox, current, readOnly }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
@@ -99,12 +96,7 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
     const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
 
     return (
-      <Thread.Root
-        getMetadata={getMetadata}
-        components={components}
-        identityDid={identity?.did}
-        editable={false}
-      >
+      <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
         <Thread.Content id={id} current={current} classNames='dx-container' ref={forwardedRef}>
           <Thread.Messages messages={messages} />
           {!readOnly && (
