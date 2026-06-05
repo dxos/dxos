@@ -3,6 +3,7 @@
 //
 
 import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -26,43 +27,50 @@ export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazi
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
   const [magazine] = useObject(subject);
   const registry = useContext(RegistryContext);
 
   const showItem = useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelected(id, 'single');
-  // View filter and curate-busy flag are atoms so the toolbar's action graph subscribes to them
-  // directly (via `get`) and rebuilds reactively, rather than being driven by React deps. The list
-  // still needs the view value, so we read it here; `busy` is write-only here (read only by the toolbar).
   const viewAtom = useMemo(() => Atom.make<MagazineView>('default'), []);
   const busyAtom = useMemo(() => Atom.make(false), []);
   const view = useAtomValue(viewAtom);
   const db = Obj.getDatabase(magazine);
-  // Atom families are keyed by the live `subject` (snapshots are fresh objects each change and would
-  // break memoization). The list atom fires only on membership changes (add/remove, or a post
-  // crossing the view filter); per-post state changes are isolated to their own tiles.
   const posts = useVisibleMagazinePosts(subject, view);
 
-  const handleCurate = useCallback(async () => {
+  const handleCurate = useCallback(() => {
     if (registry.get(busyAtom)) {
       return;
     }
     registry.set(busyAtom, true);
-    try {
-      // Thread the spaceId so the handler's spawn environment has `space` — required for the
-      // process-affinity services (Database.Service, and AgentPrompt when AI curation is restored).
-      // Failures surface as a toast via `notify` (invokePromise resolves with `{ error }`, never throws).
-      await invokePromise(
-        FeedOperation.CurateMagazine,
-        { magazine: Ref.make(subject) },
-        { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.id }] } },
-      );
-    } finally {
-      registry.set(busyAtom, false);
+    void Effect.runPromise(
+      invoker
+        .invoke(
+          FeedOperation.CurateMagazine,
+          { magazine: Ref.make(subject) },
+          { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.id }] } },
+        )
+        .pipe(Effect.ensuring(Effect.sync(() => registry.set(busyAtom, false)))),
+    );
+  }, [registry, busyAtom, invoker, subject, db]);
+
+  const handleClear = useCallback(() => {
+    if (registry.get(busyAtom)) {
+      return;
     }
-  }, [registry, busyAtom, subject, invokePromise, db]);
+    registry.set(busyAtom, true);
+    void Effect.runPromise(
+      invoker
+        .invoke(
+          FeedOperation.ClearMagazine,
+          { magazine: Ref.make(subject) },
+          { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.id }] } },
+        )
+        .pipe(Effect.ensuring(Effect.sync(() => registry.set(busyAtom, false)))),
+    );
+  }, [registry, busyAtom, invoker, subject, db]);
 
   const handleToggleStar = useCallback(
     async (post: Subscription.Post, starred: boolean) => {
@@ -74,31 +82,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     [db],
   );
 
-  const handleClear = useCallback(() => {
-    // Failures surface as a toast via `notify`; invokePromise resolves with `{ error }`, never throws.
-    void invokePromise(
-      FeedOperation.ClearMagazine,
-      { magazine: Ref.make(subject) },
-      { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.id }] } },
-    );
-  }, [invokePromise, subject, db]);
-
   const handleOpen = useCallback(
     async (post: Subscription.Post) => {
       const subscription = await post.source?.load();
       if (subscription && !Subscription.getReadAt(subscription, post.id)) {
         void Subscription.setReadAt(subscription, post.id, new Date().toISOString());
       }
-      // Fetch the full article content in the background. The operation appends a PostContent entry
-      // to the subscription's contentFeed and is idempotent (no-op when an entry already exists or
-      // the Post has no link); failures are logged and non-fatal.
       if (post.link) {
-        void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) }).catch((err) =>
+        void invoker.invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) }).catch((err) =>
           log.catch(err, { postLink: post.link }),
         );
       }
-      // Use the Magazine's path (which lives in space.db) — the Post itself is a queue item and has
-      // no graph path. `selectionId: post.id` carries the post identity through the showItem call.
       void showItem({
         contextId: id,
         selectionId: post.id,
@@ -106,19 +100,17 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         path: getObjectPathFromObject(subject),
       });
     },
-    [id, showItem, invokePromise, subject],
+    [id, showItem, invoker, subject],
   );
 
-  // Open the ObjectProperties companion when the magazine has no posts so the user
-  // can configure subscription feeds without an empty pane staring back at them.
   const noPosts = posts.length === 0;
   useEffect(() => {
     if (noPosts) {
-      void invokePromise(LayoutOperation.UpdateCompanion, {
+      void invoker.invokePromise(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('settings'),
       });
     }
-  }, [noPosts, invokePromise]);
+  }, [noPosts, invoker]);
 
   const tileItems = useMemo<TileData[]>(
     () =>
