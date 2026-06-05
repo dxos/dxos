@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { Integration } from '@dxos/plugin-integration';
 import { useQuery } from '@dxos/react-client/echo';
 /**
@@ -19,7 +20,7 @@ export const useTargetIntegration = <T extends Obj.Any>(
   const db = Obj.getDatabase(target);
   const integrations = useQuery(db, Filter.type(Integration.Integration));
   const integration = integrations.find((candidate) =>
-    candidate.targets.some((entry) => entry.object?.dxn.asEchoDXN()?.echoId === target.id),
+    candidate.targets.some((entry) => entry.object && EID.getEntityId(EID.tryParse(entry.object.uri)!) === target.id),
   );
   return { integration };
 };
@@ -37,6 +38,7 @@ export const useTargetSync = <T extends Obj.Any>(
   target: T,
   operation: Operation.Definition<any, any>,
   targetKey: string,
+  notify?: Operation.NotifyOptions,
 ): {
   integration: Integration.Integration | undefined;
   sync: () => Promise<void>;
@@ -52,14 +54,18 @@ export const useTargetSync = <T extends Obj.Any>(
     }
     setSyncing(true);
     try {
-      await invokePromise(operation, {
-        integration: Ref.make(integration),
-        [targetKey]: Ref.make(target),
-      });
+      await invokePromise(
+        operation,
+        {
+          integration: Ref.make(integration),
+          [targetKey]: Ref.make(target),
+        },
+        { spaceId: Obj.getDatabase(target)?.spaceId, notify },
+      );
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, integration, operation, target, targetKey]);
+  }, [invokePromise, integration, operation, target, targetKey, notify]);
 
   return { integration, sync, syncing };
 };

@@ -12,7 +12,7 @@ import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Serializer, getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
@@ -501,7 +501,12 @@ describe('Spaces', () => {
 
     const getTypename = (obj: any) => {
       const typeRef = getObjectCore(obj).getType();
-      return typeRef ? EncodedReference.toDXN(typeRef).asTypeDXN()?.type : undefined;
+      if (!typeRef) {
+        return undefined;
+      }
+      const uri = EncodedReference.toURI(typeRef);
+      const parsed = DXN.tryMake(uri);
+      return parsed ? DXN.getName(parsed) : undefined;
     };
 
     spaceA.db.query(Filter.everything()).subscribe(
@@ -655,7 +660,7 @@ describe('Spaces', () => {
 
     const feedObj = space.db.add(Obj.make(Feed.Feed, { name: 'test-feed' }));
     await space.db.flush();
-    const feedDXN = Feed.getQueueDxn(feedObj);
+    const feedDXN = Feed.getQueueUri(feedObj);
     expect(feedDXN).toBeDefined();
     const queue = space.queues.get(feedDXN!);
     await queue.append([createObject({ name: 'queue-item-1' }), createObject({ name: 'queue-item-2' })]);
@@ -694,7 +699,7 @@ describe('Spaces', () => {
     const space = await client1.spaces.create();
     const feedObj = space.db.add(Feed.make({ name: 'test-feed' }));
     await space.db.flush();
-    const feedDXN = Feed.getQueueDxn(feedObj);
+    const feedDXN = Feed.getQueueUri(feedObj);
     expect(feedDXN).toBeDefined();
     const queue = space.queues.get(feedDXN!);
     await queue.append([createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
@@ -770,7 +775,7 @@ describe('Spaces', () => {
     const feedObj = sourceSpace.db.add(Feed.make({ name: 'test-feed', namespace: 'data' }));
     await sourceSpace.db.flush();
 
-    const feedQueueDXN = Feed.getQueueDxn(feedObj);
+    const feedQueueDXN = Feed.getQueueUri(feedObj);
     expect(feedQueueDXN).toBeDefined();
     const sourceQueue = sourceSpace.queues.get(feedQueueDXN!);
     await sourceQueue.append([createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
@@ -806,7 +811,7 @@ describe('Spaces', () => {
     expect(importedFeed).toBeDefined();
 
     // Import feed messages.
-    const targetFeedQueueDXN = Feed.getQueueDxn(importedFeed as Feed.Feed);
+    const targetFeedQueueDXN = Feed.getQueueUri(importedFeed as Feed.Feed);
     expect(targetFeedQueueDXN).toBeDefined();
     const targetQueue = targetSpace.queues.get(targetFeedQueueDXN!);
 

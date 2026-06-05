@@ -8,11 +8,9 @@ import * as Schema from 'effect/Schema';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AgentPrompt, LinearBlueprint, PlanningBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Template } from '@dxos/compute';
-import { Script, Trigger } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
-import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
@@ -325,8 +323,8 @@ export const WithMail: Story = {
     config: config.remote,
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feedDXN = Feed.getQueueDxn(feed)!;
-      const queue = space.queues.get<Message.Message>(feedDXN);
+      const feedDxn = Feed.getQueueUri(feed)!;
+      const queue = space.queues.get<Message.Message>(feedDxn);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
@@ -433,15 +431,15 @@ export const WithMap: Story = {
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
-      const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
+      const type = await space.db.addType(createLocationSchema());
       const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
         db: space.db,
-        typename: schema.typename,
+        typename: Type.getTypename(type),
       });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
       const { view: mapView } = await ViewModel.makeFromDatabase({
         db: space.db,
-        typename: schema.typename,
+        typename: Type.getTypename(type),
         pivotFieldName: 'location',
       });
       const map = Map.make({ name: 'Map', view: mapView });
@@ -618,10 +616,10 @@ export const WithTranscription: Story = {
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const queueDXN = Feed.getQueueDxn(feed);
-      invariant(queueDXN);
+      const queueDxn = Feed.getQueueUri(feed);
+      invariant(queueDxn);
       const messages = createTestTranscription();
-      await space.queues.get(queueDXN).append(messages);
+      await space.queues.get(queueDxn).append(messages);
       space.db.add(Transcript.make(Ref.make(feed)));
     },
     onChatCreated: async ({ space, binder }) => {
@@ -746,9 +744,9 @@ export const WithResearchQueue: Story = {
       const feed = space.db.add(Feed.make());
       const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      const feedQueueDXN = Feed.getQueueDxn(feed);
-      invariant(feedQueueDXN);
-      await space.queues.get(feedQueueDXN).append(orgs);
+      const feedQueueDxn = Feed.getQueueUri(feed);
+      invariant(feedQueueDxn);
+      await space.queues.get(feedQueueDxn).append(orgs);
 
       const researchPrompt = space.db.add(
         Routine.make({
@@ -768,7 +766,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
+          spec: Trigger.specFeed(feed),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -817,17 +815,18 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
-      const tagDXN = Obj.getDXN(tag).toString();
+      const tagRef = Ref.make(tag);
+      const tagUri = Obj.getURI(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagDXN];
+          Obj.getMeta(person).tags = [tagRef];
         });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const mailboxDXN = Feed.getQueueDxn(mailbox)!;
-      const queue = space.queues.get<Message.Message>(mailboxDXN);
+      const mailboxDxn = Feed.getQueueUri(mailbox)!;
+      const queue = space.queues.get<Message.Message>(mailboxDxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
@@ -845,7 +844,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagDXN];
+          Obj.getMeta(research).tags = [tagRef];
         });
       });
 
@@ -853,7 +852,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagDXN];
+          Obj.getMeta(organization).tags = [tagRef];
         });
       });
 
@@ -873,9 +872,9 @@ export const WithProject: Story = {
       //   }),
       // );
 
-      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDXN));
-      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDXN));
-      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDXN));
+      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
+      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
+      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagUri));
 
       const researchPrompt = space.db.add(
         Routine.make({
@@ -910,7 +909,7 @@ export const WithProject: Story = {
       space.db.add(researchTrigger);
 
       const mailboxView = ViewModel.make({
-        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDXN)).from(mailbox),
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagUri)).from(mailbox),
         jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
       const contactsView = ViewModel.make({

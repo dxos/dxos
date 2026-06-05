@@ -8,40 +8,46 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import * as Meeting from './Meeting';
 
-const MEETING_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 export const Create = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.create`, name: 'Create Meeting', icon: 'ph--video-camera--regular' },
+  meta: { key: makeKey('create'), name: 'Create Meeting', icon: 'ph--video-camera--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    channel: Channel.Channel,
+    channel: Type.getSchema(Channel.Channel),
   }),
   output: Schema.Struct({
-    object: Meeting.Meeting,
+    object: Type.getSchema(Meeting.Meeting),
   }),
 });
 
 export const SetActive = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.set-active`, name: 'Set Active Meeting', icon: 'ph--video-camera--regular' },
+  meta: {
+    key: makeKey('setActive'),
+    name: 'Set Active Meeting',
+    icon: 'ph--video-camera--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
-    object: Schema.optional(Meeting.Meeting),
+    object: Schema.optional(Type.getSchema(Meeting.Meeting)),
   }),
   output: Schema.Struct({
-    object: Schema.optional(Meeting.Meeting),
+    object: Schema.optional(Type.getSchema(Meeting.Meeting)),
   }),
 });
 
 export const HandlePayload = Operation.make({
   meta: {
-    key: `${MEETING_OPERATION}.handle-payload`,
+    key: makeKey('handlePayload'),
     name: 'Handle Meeting Payload',
     icon: 'ph--arrows-clockwise--regular',
   },
@@ -55,10 +61,14 @@ export const HandlePayload = Operation.make({
 });
 
 export const Summarize = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.summarize`, name: 'Summarize Meeting', icon: 'ph--text-align-left--regular' },
+  meta: {
+    key: makeKey('summarize'),
+    name: 'Summarize Meeting',
+    icon: 'ph--text-align-left--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
-    meeting: Meeting.Meeting,
+    meeting: Type.getSchema(Meeting.Meeting),
   }),
   output: Schema.Void,
 });

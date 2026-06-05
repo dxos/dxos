@@ -1,0 +1,326 @@
+---
+id: org.dxos.plugin.stack
+name: StackPlugin
+version: 0.1.0
+---
+
+Collections plugin for `DXOS` Composer — renders any `Collection` object as a vertically scrollable stack of collapsible sections, where each section displays an arbitrary ECHO object via the `section` surface role. Supports adding, removing, navigating, and collapsing individual sections.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type SectionSchema
+  fields:
+    height?: number              # explicit height override for the section
+    custom?: Record<string, any> # view-instance-specific data (e.g. cover mode for images)
+```
+
+```mdl
+type StackViewType
+  typename: org.dxos.type.stackView
+  version: 0.1.0
+  fields:
+    sections: Record<string, SectionSchema>
+```
+
+```mdl
+type StackSectionView
+  fields:
+    title?: string
+    size?: StackItemSize
+    height?: number
+    collapsed?: boolean
+    custom?: Record<string, any>
+```
+
+```mdl
+type StackSectionMetadata
+  fields:
+    icon?: string
+    placeholder?: Label
+    viewActions?: (item: CollectionItem) => StackSectionAction
+```
+
+```mdl
+type StackSectionItem
+  fields:
+    id: string                   # DXN string for the contained object
+    object: Obj.Unknown
+    view: StackSectionView
+    metadata: StackSectionMetadata
+```
+
+```mdl
+type AddSectionPosition
+  literals: before | after | beforeAll | afterAll
+```
+
+```mdl
+type StackSettingsProps
+  fields:
+    separation: boolean          # whether visual separators are shown between sections
+```
+
+## Components
+
+```mdl
+component StackArticle
+  desc: Full-page article view of a Collection — renders items as a vertical stack of StackSection components with a toolbar for adding sections.
+  props:
+    subject: Collection
+    role: AppSurface.Role
+    attendableId?: string
+  state:
+    collapsedSections: Record<string, boolean>  # collapsed state by DXN string
+    items: StackSectionItem[]                   # derived from collection objects
+  slots:
+    (none)
+  actions:
+    handleAdd(id: string, position: AddSectionPosition)
+    handleDelete(id: string)
+    handleNavigate(id: string)
+    handleCollapse(id: string, collapsed: boolean)
+    handleAddSection()
+  emits:
+    (none)
+  layout: |
+    ┌──────────────────────────────┐
+    │ Toolbar  [+ Add Section]     │
+    ├──────────────────────────────┤
+    │ Stack (vertical, intrinsic)  │
+    │  ┌────────────────────────┐  │
+    │  │ StackSection           │  │
+    │  │  ▾ [icon] Title  [→]   │  │
+    │  │  └─ Surface:section    │  │
+    │  └────────────────────────┘  │
+    │  ┌────────────────────────┐  │
+    │  │ StackSection (collapsed│  │
+    │  │  ▸ [icon] Title  [↕]   │  │
+    │  └────────────────────────┘  │
+    │  …                           │
+    └──────────────────────────────┘
+```
+
+```mdl
+component StackSection
+  desc: A single collapsible section in the stack — shows a sigil icon button with a dropdown menu and delegates content rendering to the section surface slot.
+  props:
+    id: string
+    object: Obj.Unknown
+    view: StackSectionView
+    metadata: StackSectionMetadata
+  state:
+    optionsMenuOpen: boolean
+    attendableId: string         # composed as parentAttendableId/object.id
+  slots:
+    content: ReactNode           # rendered by Surface(type=section, subject=object)
+  actions:
+    navigate(id: string)
+    add(id: string, position: AddSectionPosition)
+    collapse(id: string, collapsed: boolean)
+    delete(id: string)
+  layout: |
+    ┌─────────────────────────────────┐
+    │ StackItem.Heading               │
+    │  [sigil▾]  (sticky)  [→ or ↕]  │
+    ├─────────────────────────────────┤
+    │ CollapsibleContent              │
+    │  Surface type=section           │
+    └─────────────────────────────────┘
+```
+
+```mdl
+component StackSettings
+  desc: Settings panel for configuring stack-level display preferences such as section separation.
+  props:
+    settings: StackSettingsProps
+  layout: |
+    ┌─────────────────────────────┐
+    │ Settings.Section            │
+    │  Separation  [toggle]       │
+    └─────────────────────────────┘
+```
+
+## Features
+
+```mdl
+feat F-1: Stack Rendering
+
+  req F-1.1: StackPlugin registers a surface for the article role filtered to Collection objects.
+  req F-1.2: StackArticle renders each item in the collection as a StackSection in document order.
+  req F-1.3: Each StackSection title is derived from the object's title property or graph node label.
+  req F-1.4: The icon displayed on the section sigil is taken from the object schema's IconAnnotation.
+```
+
+```mdl
+feat F-2: Section Management
+
+  req F-2.1:
+    when: user clicks the Add Section button in the toolbar
+    then: SpaceOperation.OpenCreateObject dialog is invoked with the collection as target
+  req F-2.2:
+    when: user selects "Add Before" or "Add After" from a section dropdown
+    then: LayoutOperation.UpdateDialog is invoked with the AddSectionDialog, position, and collection context
+  req F-2.3:
+    when: user selects "Remove" from a section dropdown
+    then: SpaceOperation.RemoveObjects is invoked; section is removed from the collection
+  req F-2.4:
+    when: user selects "Navigate to" from a collapsed section dropdown or the navigate button
+    then: LayoutOperation.Open is invoked with the section's id
+```
+
+```mdl
+feat F-3: Collapse / Expand
+
+  req F-3.1: Each section can be individually collapsed via the dropdown menu or caret trigger.
+  req F-3.2:
+    when: section is expanded
+    then: full Surface:section content is visible; navigate button shown in heading
+  req F-3.3:
+    when: section is collapsed
+    then: only the title is shown in StackItem.Content; expand toggle shown in heading
+  req F-3.4: Collapsed state is managed locally in StackArticle component state (not persisted).
+```
+
+```mdl
+feat F-4: Settings
+
+  req F-4.1: StackPlugin exposes a settings panel via the StackSettings component.
+  req F-4.2: The separation setting controls whether visual separators appear between sections.
+```
+
+```mdl
+feat F-5: Schema Registration
+
+  req F-5.1: StackPlugin registers StackViewType with the ECHO schema module on activation.
+  req F-5.2: StackViewType stores per-section metadata (height, custom data) keyed by object id.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Collection renders as stack
+  given: a Collection with three objects is opened in article role
+  then:
+    - StackArticle is displayed
+    - three StackSection components are rendered in order
+    - each section shows the object's title
+```
+
+```mdl
+test T-2: Add section via toolbar
+  given: StackArticle is open
+  when: user clicks the Add Section toolbar button
+  then: SpaceOperation.OpenCreateObject is invoked with the collection as target
+```
+
+```mdl
+test T-3: Remove section
+  given: StackArticle is open with at least one section
+  when: user selects Remove from a section dropdown
+  then:
+    - SpaceOperation.RemoveObjects is invoked
+    - section no longer appears in the stack
+```
+
+```mdl
+test T-4: Collapse section
+  given: a section is expanded
+  when: user selects Collapse from the section dropdown
+  then:
+    - section content is hidden
+    - section title is shown in collapsed state
+    - expand toggle is visible in heading
+```
+
+```mdl
+test T-5: Navigate to section
+  given: StackArticle is open
+  when: user clicks the navigate button on a section heading
+  then: LayoutOperation.Open is invoked with the section's DXN id
+```
+
+```mdl
+test T-6: StackViewType registered
+  given: StackPlugin is active
+  then: StackViewType (typename org.dxos.type.stackView) is registered with the ECHO schema module
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

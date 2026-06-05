@@ -3,7 +3,19 @@
 //
 
 import { type Database, type Entity } from '@dxos/echo';
-import { type DXN, type ObjectId } from '@dxos/keys';
+import { type EID, type EntityId } from '@dxos/keys';
+
+/**
+ * @deprecated Queues are migrating to feeds (regular ECHO objects).
+ *   Pass a literal `'data'` / `'trace'` to APIs that still accept a subspaceTag.
+ */
+export const QueueSubspaceTags = Object.freeze({
+  DATA: 'data',
+  TRACE: 'trace',
+});
+
+/** @deprecated */
+export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
 
 /**
  * @deprecated Migrate to Feed
@@ -11,7 +23,7 @@ import { type DXN, type ObjectId } from '@dxos/keys';
  */
 // TODO(dmaretskyi): Remove type parameter -- all queues are untyped, and we use query to enforce type.
 export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
-  readonly dxn: DXN;
+  readonly uri: EID.EID;
 
   /**
    * Subscribe to queue updates.
@@ -64,7 +76,7 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
    * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
+  getObjectsById(ids: EntityId[]): Promise<(T | undefined)[]>;
 
   /**
    * Refreshes the queue from the server.

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Array from 'effect/Array';
@@ -29,10 +29,11 @@ import {
 } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
-import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
+import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
+import { registryLayer } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
-import { configuredCredentialsLayer, QueueService } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
@@ -77,14 +78,13 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | QueueService
-  | Blueprint.RegistryService
+  | Registry.Service
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
   | Process.ProcessMonitorService
-  | Registry.AtomRegistry
+  | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
@@ -93,7 +93,7 @@ export type AssistantTestServices =
   | FeedTraceSink.FeedTraceSink;
 
 export const AssistantTestLayer = ({
-  aiServicePreset = 'edge-remote',
+  aiServicePreset = 'direct',
   model,
   operationHandlers = [],
   toolkits = [],
@@ -133,7 +133,7 @@ export const AssistantTestLayer = ({
                 if (!context.conversation) {
                   return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
                 }
-                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const binder = yield* acquireReleaseResource(
                   () =>
@@ -150,7 +150,7 @@ export const AssistantTestLayer = ({
                 if (!context.conversation) {
                   return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
                 }
-                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const session = yield* acquireReleaseResource(
                   () =>
@@ -168,8 +168,7 @@ export const AssistantTestLayer = ({
               Feed.FeedService,
               AiService.AiService,
               OperationRegistry.Service,
-              Blueprint.RegistryService,
-              QueueService,
+              Registry.Service,
             ),
           );
         }),
@@ -195,11 +194,11 @@ export const AssistantTestLayer = ({
         configuredCredentialsLayer(credentials),
       ),
     ),
-    Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
+    Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),
-    Layer.provideMerge(Registry.layer),
+    Layer.provideMerge(AtomRegistry.layer),
     Layer.orDie,
   );
 };
@@ -214,7 +213,7 @@ export const AssistantTestLayerWithTriggers = (
   Layer.mergeAll(
     AssistantTestLayer(options),
     TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(Registry.layer),
+      Layer.provide(AtomRegistry.layer),
     ),
     TriggerStateStore.layerMemory,
   ) as any;

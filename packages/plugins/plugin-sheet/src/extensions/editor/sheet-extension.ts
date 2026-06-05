@@ -170,7 +170,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
       tooltipClass: () =>
         mx(
           '!-left-[1px] !top-[33px] !-m-0 border border-h-0! [&>ul]:!min-w-[198px]',
-          '[&>ul>li[aria-selected]]:!bg-accent-surface',
+          '[&>ul>li[aria-selected]]:!bg-accent-bg',
           'border-separator',
         ),
     }),

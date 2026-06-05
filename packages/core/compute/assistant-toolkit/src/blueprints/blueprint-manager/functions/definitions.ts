@@ -6,23 +6,24 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Registry, Type } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 export const QueryBlueprints = Operation.make({
   meta: {
-    key: 'org.dxos.function.blueprint-manager.query-blueprints',
+    key: DXN.make('org.dxos.function.blueprintManager.queryBlueprints'),
     name: 'Query blueprints',
     description: 'Queries available blueprints.',
     icon: 'ph--blueprint--regular',
   },
   input: Schema.Struct({}),
-  output: Schema.Array(Blueprint.Blueprint),
-  services: [Blueprint.RegistryService],
+  output: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
+  services: [Registry.Service],
 });
 
 export const EnableBlueprints = Operation.make({
   meta: {
-    key: 'org.dxos.function.blueprint-manager.enable-blueprints',
+    key: DXN.make('org.dxos.function.blueprintManager.enableBlueprints'),
     name: 'Enable blueprints',
     description:
       'Enables blueprints in the current conversation by their keys. Only blueprints with agentCanEnable=true can be enabled. Always call [query-blueprints] first to discover available blueprint keys.',
@@ -35,7 +36,7 @@ export const EnableBlueprints = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    enabled: Schema.Array(Blueprint.Blueprint),
+    enabled: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
     rejected: Schema.Array(
       Schema.Struct({
         key: Schema.String,
@@ -43,18 +44,5 @@ export const EnableBlueprints = Operation.make({
       }),
     ),
   }),
-  services: [Blueprint.RegistryService, Database.Service, AiContext.Service],
-});
-
-export const UpdateBlueprints = Operation.make({
-  meta: {
-    key: 'org.dxos.function.blueprint-manager.refresh-blueprints',
-    name: 'Refresh blueprints',
-    description:
-      'Updates the blueprints saved to the database with the latest version from the registry. Sometimes blueprints in the database can become outdated. Use this function to pull in the latest versions.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({}),
-  output: Schema.Void,
-  services: [Blueprint.RegistryService, Database.Service],
+  services: [Registry.Service, Database.Service, AiContext.Service],
 });

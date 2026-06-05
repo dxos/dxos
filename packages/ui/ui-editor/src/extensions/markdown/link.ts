@@ -12,7 +12,7 @@ import { mx, surfaceShadow } from '@dxos/ui-theme';
 import { type RenderCallback } from '../../types';
 
 const tooltipClassName = mx(
-  'inline-flex items-center p-1 max-w-64 text-sm bg-inverse-surface text-inverse-foreground rounded-sm',
+  'inline-flex items-center p-1 max-w-64 text-sm bg-inverse-surface text-inverse-fg rounded-sm',
   surfaceShadow({ elevation: 'positioned' }),
 );
 

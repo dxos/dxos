@@ -6,32 +6,23 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { MigrationVersionAnnotation, Migrations } from '@dxos/migrations';
 import { ViewAnnotation } from '@dxos/schema';
 
-import { buildViewIndex } from './shared';
+import { buildViewIndex, checkPendingMigration } from './shared';
 
 const TestContact = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'test/Contact',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
 
 const TestViewWrapper = Schema.Struct({
   name: Schema.optional(Schema.String),
   view: Ref.Ref(View.View),
-}).pipe(
-  Type.object({
-    typename: 'test/ViewWrapper',
-    version: '0.1.0',
-  }),
-  ViewAnnotation.set(['view']),
-);
+}).pipe(ViewAnnotation.set(['view']), Type.makeObject(DXN.make('com.example.type.viewWrapper', '0.1.0')));
 
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;
@@ -58,7 +49,10 @@ describe('buildViewIndex', () => {
     db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
     await db.flush();
 
-    const allSchemas = db.schemaRegistry.query({ location: ['runtime'] }).runSync();
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !Type.isTypeKind(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(true);
@@ -73,7 +67,10 @@ describe('buildViewIndex', () => {
     db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
     await db.flush();
 
-    const allSchemas = db.schemaRegistry.query({ location: ['runtime'] }).runSync();
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !Type.isTypeKind(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     expect(viewIndex.typenamesWithViews.has(Type.getTypename(TestContact))).toBe(false);
@@ -89,7 +86,10 @@ describe('buildViewIndex', () => {
     const tableView = db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
     await db.flush();
 
-    const allSchemas = db.schemaRegistry.query({ location: ['runtime'] }).runSync();
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !Type.isTypeKind(t));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
 
     const views = viewIndex.getViewsForTypename(Type.getTypename(TestContact));
@@ -100,13 +100,71 @@ describe('buildViewIndex', () => {
   test('returns empty index when no view schemas exist', async ({ expect }) => {
     await db.flush();
 
-    const userSchemas = db.schemaRegistry
-      .query({ location: ['runtime'] })
-      .runSync()
+    const userSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !Type.isTypeKind(t))
       .filter((schema) => !ViewAnnotation.has(schema));
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, userSchemas);
 
     expect(viewIndex.typenamesWithViews.size).toBe(0);
     expect(viewIndex.getViewsForTypename(Type.getTypename(TestContact))).toHaveLength(0);
+  });
+});
+
+describe('checkPendingMigration', () => {
+  const TARGET = '1970-01-02';
+
+  // Minimal fake exercising only the fields checkPendingMigration reads (state, properties).
+  // Must pass isEntity (checks for Entity.KindId) and have Obj.Meta so Annotation.get works.
+  const makeFakeProperties = (version?: string): Record<string | symbol, unknown> => {
+    const annotations: Record<string, unknown> = {};
+    if (version !== undefined) {
+      Annotation.setDictionary(annotations as any, MigrationVersionAnnotation, version);
+    }
+    return {
+      [Entity.KindId]: Entity.Kind.Object,
+      [Obj.Meta]: { keys: [], annotations },
+    };
+  };
+
+  const makeFakeSpace = (state: SpaceState, version?: string): Space =>
+    ({ state: { get: () => state }, properties: makeFakeProperties(version) }) as unknown as Space;
+
+  let savedNamespace: string | undefined;
+  let savedMigrations: typeof Migrations.migrations;
+
+  beforeEach(() => {
+    savedNamespace = Migrations.namespace;
+    savedMigrations = Migrations.migrations;
+    Migrations.define('test', [
+      { version: '1970-01-01', next: async () => {} },
+      { version: TARGET, next: async () => {} },
+    ]);
+  });
+
+  afterEach(() => {
+    Migrations.namespace = savedNamespace;
+    Migrations.migrations = savedMigrations;
+  });
+
+  test('SPACE_REQUIRES_MIGRATION is pending regardless of version property', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_REQUIRES_MIGRATION, TARGET);
+    expect(checkPendingMigration(space)).toBe(true);
+  });
+
+  test('READY with version matching target is not pending', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_READY, TARGET);
+    expect(checkPendingMigration(space)).toBe(false);
+  });
+
+  test('READY with undefined version is pending (legacy property-migration preserved)', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_READY);
+    expect(checkPendingMigration(space)).toBe(true);
+  });
+
+  test('READY with stale version is pending', ({ expect }) => {
+    const space = makeFakeSpace(SpaceState.SPACE_READY, '1970-01-01');
+    expect(checkPendingMigration(space)).toBe(true);
   });
 });

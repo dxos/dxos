@@ -155,7 +155,7 @@ export const SelectOptionField = ({
                       </div>
                       {selected === item.id && (
                         <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
-                          <Input.Label classNames='text-xs'>{t('select-option.label')}</Input.Label>
+                          <Input.Label classNames='text-sm'>{t('select-option.label')}</Input.Label>
                           <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
                             <Input.TextInput
                               disabled={!!readonly}

@@ -30,9 +30,6 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../protocols"
     },
     {

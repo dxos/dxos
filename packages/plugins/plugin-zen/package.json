@@ -61,6 +61,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -75,7 +76,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -89,8 +91,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

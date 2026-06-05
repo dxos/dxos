@@ -7,7 +7,8 @@ import { deepMapValues } from '@dxos/util';
 
 import type * as Obj from '../../Obj';
 import { makeObject } from '../common/proxy';
-import { getMeta, getSchema } from '../common/types';
+import { getSchema, getStaticTypeSchema, getType } from '../common/types';
+import { getMeta } from '../common/types/meta';
 import { Ref } from '../Ref';
 
 /**
@@ -17,8 +18,12 @@ import { Ref } from '../Ref';
  */
 export const clone = <T extends Obj.Any>(obj: T, opts?: Obj.CloneOptions): T => {
   const { id, ...data } = obj;
-  const schema = getSchema(obj);
-  invariant(schema != null, 'Object should have a schema');
+  // Prefer cloning through the type entity so the cloned instance preserves
+  // `Obj.getType` identity. Falls back to the raw schema for older instances
+  // that don't have a type-entity back-reference set (e.g. deserialized).
+  const typeEntity = getType(obj);
+  const schema = typeEntity != null ? getStaticTypeSchema(typeEntity) : getSchema(obj);
+  invariant(schema != null, 'Object should have a type or schema');
   const props: any = deepMapValues(data, (value, recurse) => {
     if (Ref.isRef(value)) {
       if (opts?.deep) {
@@ -44,5 +49,5 @@ export const clone = <T extends Obj.Any>(obj: T, opts?: Obj.CloneOptions): T => 
     return recurse(value);
   });
 
-  return makeObject(schema, props, meta);
+  return makeObject(schema, props, meta, typeEntity as object | undefined);
 };

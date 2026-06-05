@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Operation, Routine } from '@dxos/compute';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -21,12 +21,15 @@ const DEFAULT_MAGAZINE_FEED = {
   type: 'rss',
 } as Subscription.Subscription;
 
+/** Example curation instructions seeded into every new Magazine's Routine. */
+const DEFAULT_MAGAZINE_INSTRUCTIONS = 'Prefer stories relating to sovereign AI.';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Subscription.Subscription.typename,
-        inputSchema: Subscription.Subscription,
+        id: Type.getTypename(Subscription.Subscription),
+        inputSchema: Subscription.CreateSubscriptionSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Subscription.makeSubscription(props);
@@ -38,13 +41,17 @@ export default Capability.makeModule(
             });
             // Auto-sync after creation if URL is provided.
             if (object.url) {
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(object) },
+                { spaceId: Obj.getDatabase(object)?.spaceId },
+              );
             }
             return result;
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Magazine.Magazine.typename,
+        id: Type.getTypename(Magazine.Magazine),
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -63,17 +70,42 @@ export default Capability.makeModule(
                 hidden: true,
                 targetNodeId: options.targetNodeId,
               });
-              yield* Operation.schedule(FeedOperation.SyncFeed, { feed: defaultFeed });
+              yield* Operation.schedule(
+                FeedOperation.SyncFeed,
+                { feed: Ref.make(defaultFeed) },
+                { spaceId: Obj.getDatabase(defaultFeed)?.spaceId },
+              );
               return defaultFeed;
             }).pipe(Effect.option);
 
             const initialFeeds = Option.isSome(seededFeed) ? [Ref.make(seededFeed.value)] : [];
             const object = Magazine.make({ ...props, feeds: initialFeeds });
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
+            const result = yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
               targetNodeId: options.targetNodeId,
             });
+
+            // Seed a curation Routine owned by (parented to) the Magazine. Cascade-deleted with it.
+            // Best-effort: a seeding failure must not abort Magazine creation.
+            yield* Effect.gen(function* () {
+              const routine = Routine.make({
+                name: 'Curation',
+                instructions: DEFAULT_MAGAZINE_INSTRUCTIONS,
+              });
+              Obj.setParent(routine, object);
+              yield* Operation.invoke(SpaceOperation.AddObject, {
+                object: routine,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+              Obj.update(object, (object) => {
+                (object as Obj.Mutable<typeof object>).routine = Ref.make(routine);
+              });
+            }).pipe(Effect.option);
+
+            return result;
           }),
       }),
     ];

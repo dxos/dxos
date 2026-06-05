@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation, Script, Trigger } from '@dxos/compute';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { type DXN } from '@dxos/keys';
+import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
@@ -44,9 +43,9 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
             });
             break;
           }
-          case 'queue': {
+          case 'feed': {
             Obj.update(trigger, (trigger) => {
-              trigger.spec = Trigger.specQueue((template.queueDXN as DXN).toString());
+              trigger.spec = Trigger.specFeed(template.feed as Feed.Feed);
             });
             break;
           }

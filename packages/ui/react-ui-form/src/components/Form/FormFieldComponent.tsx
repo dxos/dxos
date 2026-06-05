@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { format as formatDate } from 'date-fns';
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, {
@@ -13,10 +14,10 @@ import React, {
   type ReactNode,
 } from 'react';
 
-import { type Database } from '@dxos/echo';
-import { type Format } from '@dxos/echo/internal';
-import { Icon, Input, Tooltip } from '@dxos/react-ui';
+import { type Database, Format } from '@dxos/echo';
+import { Icon, Input, ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
 import { useFormTooltips } from './FormTooltipsContext';
@@ -45,6 +46,8 @@ export type Presentation = 'full' | 'compact' | 'inline' | 'static';
  * Props passed to input components.
  */
 export type FormFieldComponentProps<T = any> = {
+  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
+  db?: Database.Database;
   type: SchemaAST.AST;
   format?: Format.TypeFormat;
   readonly?: boolean;
@@ -59,51 +62,63 @@ export type FormFieldComponentProps<T = any> = {
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
-  /** Database the form is editing against; populated for fields whose value is an ECHO object/Ref. */
-  db?: Database.Database;
 } & FormFieldStateProps<T>;
 
-/**
- * Form field component.
- */
 export type FormFieldComponent = FC<FormFieldComponentProps>;
 
 export type FormFieldMap = Record<string, FormFieldComponent>;
 
 export type FormFieldProvider = (props: {
-  prop: string; // TODO(burdon): Path?
+  prop: string;
   schema: Schema.Schema<any>;
   fieldProps: FormFieldComponentProps;
-}) => ReactElement | undefined;
+}) => ReactElement | null | undefined;
 
 //
 // FormFieldLabel
 //
 
-export type FormFieldLabelProps = {
-  asChild?: boolean;
-  error?: string;
-  /**
-   * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
-   * Surfaced as a hover tooltip on the label when the enclosing `Form.Root`
-   * has `tooltips` enabled (the default) -- useful for spotting which field
-   * maps to which path when authoring schemas or filing bugs against a form.
-   * Callers can supply the path unconditionally; the label suppresses the
-   * tooltip when `Form.Root tooltips={false}`.
-   */
-  path?: string;
-} & Pick<FormFieldComponentProps, 'label' | 'readonly'>;
+export type FormFieldLabelProps = ThemedClassName<
+  {
+    asChild?: boolean;
+    error?: string;
+    /**
+     * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
+     * Surfaced as a hover tooltip on the label when the enclosing `Form.Root`
+     * has `tooltips` enabled (the default) -- useful for spotting which field
+     * maps to which path when authoring schemas or filing bugs against a form.
+     * Callers can supply the path unconditionally; the label suppresses the
+     * tooltip when `Form.Root tooltips={false}`.
+     */
+    path?: string;
+    /**
+     * Trailing button rendered at the end of the label row (third grid column).
+     * Used by nested-object field sets to surface a collapse toggle.
+     */
+    button?: ReactNode;
+    onClick?: () => void;
+  } & Pick<FormFieldComponentProps, 'label' | 'readonly'>
+>;
 
-export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFieldLabelProps) => {
+export const FormFieldLabel = ({
+  classNames,
+  label,
+  error,
+  readonly,
+  asChild,
+  path,
+  button,
+  onClick,
+}: FormFieldLabelProps) => {
   const tooltips = useFormTooltips();
   const Label = readonly || asChild ? 'span' : Input.Label;
-  // Surface the field's JSON path as a hover tooltip on the label (e.g.
-  // `runtime.client.storage.persistent`). Wrapping with `Tooltip.Trigger
-  // asChild` keeps the underlying `Input.Label` (or `span`) intact so form
-  // semantics and label-for-input linking are unchanged.
-  const labelNode = <Label className={inputTextLabel}>{label}</Label>;
+  const labelNode = <Label className={mx(inputTextLabel, 'text-sm')}>{label}</Label>;
+
   return (
-    <div className='flex items-center justify-between'>
+    <div
+      className={mx('grid grid-cols-[1fr_auto_auto] items-center select-none', onClick && 'cursor-pointer', classNames)}
+      onClick={onClick}
+    >
       {tooltips && path ? (
         <Tooltip.Trigger asChild content={path} side='bottom'>
           {labelNode}
@@ -111,11 +126,14 @@ export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFi
       ) : (
         labelNode
       )}
-      {error && (
+      {error ? (
         <Tooltip.Trigger asChild content={error} side='bottom'>
           <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
         </Tooltip.Trigger>
+      ) : (
+        <span />
       )}
+      {button}
     </div>
   );
 };
@@ -128,13 +146,39 @@ FormFieldLabel.displayName = 'Form.FieldLabel';
 
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldComponentProps,
-  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue' | 'jsonPath'
+  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue' | 'jsonPath' | 'format'
 > & {
   children?: (props: { value: T }) => ReactNode;
 };
 
+/**
+ * Formats a value for `static` (read-only, plain-DOM) presentation based on its
+ * type `format`. Dates/times are rendered human-readable; everything else falls
+ * back to `String(value)`.
+ */
+const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string => {
+  if (value == null) {
+    return '';
+  }
+
+  switch (format) {
+    case Format.TypeFormat.DateTime:
+    case Format.TypeFormat.Date:
+    case Format.TypeFormat.Time: {
+      const date = new Date(value as string);
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+      const pattern = format === Format.TypeFormat.DateTime ? 'PPp' : format === Format.TypeFormat.Date ? 'PP' : 'p';
+      return formatDate(date, pattern);
+    }
+    default:
+      return String(value);
+  }
+};
+
 export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
-  const { children, readonly, layout, label, jsonPath, getStatus, getValue } = props;
+  const { children, readonly, layout, label, jsonPath, format, getStatus, getValue } = props;
   const { status, error } = getStatus();
 
   const value = getValue();
@@ -142,14 +186,20 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
     return null;
   }
 
-  const str = String(value ?? '');
+  const str = formatStaticValue(value, format);
 
   return (
     <div className='contents'>
       <Input.Root validationValence={status}>
         {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-        {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
-        {layout === 'full' && (
+        {layout === 'static' ? (
+          <p className='truncate min-w-0' title={str}>
+            {str}
+          </p>
+        ) : children ? (
+          children({ value })
+        ) : null}
+        {layout === 'full' && error && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>
           </Input.DescriptionAndValidation>
@@ -187,8 +237,8 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
   override render() {
     if (this.state.error) {
       return (
-        <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
-          <span className='bg-rose-fill text-base-foreground px-1 font-thin'>ERROR</span>
+        <div className='flex gap-2 border border-rose-bg font-mono text-sm'>
+          <span className='bg-rose-bg text-base-fg px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

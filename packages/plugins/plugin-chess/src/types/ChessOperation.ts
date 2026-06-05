@@ -7,14 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
-import { GameRef } from '@dxos/plugin-game';
+import { Database, DXN } from '@dxos/echo';
+import { GameRef } from '@dxos/plugin-game/types';
 
 import * as Chess from './Chess';
 
 export const Move = Operation.make({
   meta: {
-    key: 'org.dxos.function.chess.move',
+    key: DXN.make('org.dxos.function.chess.move'),
     name: 'Move',
     description: 'Makes a move in the given chess game.',
     icon: 'ph--play--regular',
@@ -38,7 +38,7 @@ export const Move = Operation.make({
 
 export const Play = Operation.make({
   meta: {
-    key: 'org.dxos.function.chess.play',
+    key: DXN.make('org.dxos.function.chess.play'),
     name: 'Play',
     description: 'Uses the chess engine to play the next move.',
     icon: 'ph--play--regular',
@@ -65,7 +65,7 @@ export const Play = Operation.make({
 
 export const Print = Operation.make({
   meta: {
-    key: 'org.dxos.function.chess.print',
+    key: DXN.make('org.dxos.function.chess.print'),
     name: 'Print game',
     description: 'Prints the chess game to ASCII.',
     icon: 'ph--clipboard-text--regular',

@@ -1,0 +1,372 @@
+---
+id: org.dxos.plugin.file
+name: FilePlugin
+version: 0.1.0
+---
+
+FilePlugin enables DXOS Composer to store and preview binary files — images, videos, and PDFs — as first-class ECHO objects.
+Uploaded bytes are routed through a pluggable backend system: the built-in `inline` backend serialises the file directly
+onto the ECHO document, while external backends (e.g. WNFS) can be contributed by other plugins.
+A URL-resolver capability lets external-storage backends convert opaque storage URIs into renderable blob, data, or HTTP URLs
+at view time, keeping the ECHO object schema backend-agnostic.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type FileDataInline
+  desc: File bytes stored directly on the ECHO object.
+  fields:
+    _tag: 'inline'
+    bytes: Uint8Array
+```
+
+```mdl
+type FileDataExternal
+  desc: File bytes stored outside ECHO; referenced by URL.
+  fields:
+    _tag: 'external'
+    url: string
+    cid?: string             # optional content-addressed identifier
+```
+
+```mdl
+type FileData
+  desc: Discriminated union of inline and external storage.
+  literals: FileDataInline | FileDataExternal
+```
+
+```mdl
+type File
+  desc: ECHO object (typename dxos.org.type.file) representing an uploaded binary asset.
+  fields:
+    name?: string
+    type: string             # MIME type
+    size: number             # byte count
+    data: FileData
+    timestamp?: string       # ISO 8601 upload time
+```
+
+```mdl
+type UploadResult
+  desc: Normalised return value from a Backend.upload call.
+  fields:
+    name: string
+    type: string
+    size: number
+    data: FileData
+```
+
+```mdl
+type Settings
+  desc: Per-user plugin settings stored in the ECHO space.
+  fields:
+    backend?: string         # active backend id; defaults to 'inline'
+```
+
+## Components
+
+```mdl
+component FilePreview
+  desc: |
+    Renders a File object using the appropriate HTML element for its MIME type.
+    Images use <img>, videos use <video controls>, PDFs use <iframe>, and
+    all other types fall back to a download link.
+  props:
+    type: string             # MIME type
+    url: string              # renderable blob:, data:, or http(s): URL
+  layout: |
+    ┌──────────────────────────────┐
+    │  <img> / <video> / <iframe>  │
+    │  or [Download file] link     │
+    └──────────────────────────────┘
+```
+
+```mdl
+component FileInput
+  desc: Drag-and-drop / browse file picker used inside the Create Object form.
+  props:
+    schema: Schema           # effect/Schema with UploadAnnotation on the file field
+  emits:
+    onChange(file: File)
+  layout: |
+    ┌──────────────────────────────┐
+    │  [ Drop file or click here ] │
+    └──────────────────────────────┘
+```
+
+```mdl
+component FileSettings
+  desc: Plugin settings panel rendered in the Composer settings surface.
+  props:
+    settings: Settings
+  emits:
+    onSettingsChange(settings: Settings)
+  layout: |
+    ┌──────────────────────────────┐
+    │  Storage backend: [select ▼] │
+    │  (one row per registered     │
+    │   backend with description)  │
+    └──────────────────────────────┘
+```
+
+```mdl
+component FileArticle
+  desc: |
+    Full-viewport article container rendered for article, section, and slide
+    roles. Resolves a renderable URL from the File object via inline blob
+    conversion or registered UrlResolver capabilities, then delegates to
+    FilePreview. Shows an empty state while the URL is resolving.
+  props:
+    role: AppSurface.Role
+    subject: File
+  layout: |
+    ┌──────────────────────────────┐
+    │                              │
+    │      FilePreview             │
+    │      (fills container)       │
+    │                              │
+    └──────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op Create
+  key: org.dxos.plugin.file.operation.create
+  desc: |
+    Validates a browser File object (MIME type and size), routes the upload to the
+    active Backend capability, and constructs a File ECHO object from the result.
+    Does not add the object to the space — callers do that separately.
+  input:
+    file: BrowserFile        # browser File (globalThis.File)
+    db: Database
+  output: { object: File }
+  errors:
+    UnsupportedFileTypeError: MIME type is not image/*, video/*, or application/pdf
+    FileTooLargeError: file exceeds the 4 MB inline limit
+    NoBackendError: no Backend capability is registered
+```
+
+## Features
+
+```mdl
+feat F-1: File upload
+
+  req F-1.1: Accepted MIME types MUST be image/* (jpg, jpeg, png, gif, webp, svg),
+    video/* (mp4, webm, mov), and application/pdf only.
+
+  req F-1.2: Maximum upload size MUST be 4 MB for the inline backend.
+
+  req F-1.3:
+    when: user submits the Create Object form with a valid file
+    then:
+      - op:Create is invoked with the selected file and active database
+      - the resulting File object is added to the space via SpaceOperation.AddObject
+      - FileUploader capability returns metadata to the caller (name, type, url/cid)
+
+  req F-1.4:
+    when: file MIME type is not accepted
+    then: UnsupportedFileTypeError returned; no ECHO write occurs
+
+  req F-1.5:
+    when: file size exceeds the limit
+    then: FileTooLargeError returned; no ECHO write occurs
+```
+
+```mdl
+feat F-2: Backend capability system
+
+  req F-2.1: Any plugin may contribute a Backend capability. Multiple backends
+    may be registered simultaneously.
+
+  req F-2.2: The inline backend MUST always be registered by FilePlugin itself.
+    It serialises bytes directly onto the ECHO object.
+
+  req F-2.3: The active backend is determined by Settings.backend. If the
+    configured id is absent or unrecognised, the inline backend is used.
+
+  req F-2.4: A UrlResolver capability allows external backends to convert an
+    opaque storage URI (e.g. wnfs://…) into a renderable URL at view time.
+    FileArticle iterates registered resolvers and uses the first that matches.
+```
+
+```mdl
+feat F-3: File preview
+
+  req F-3.1: FileArticle MUST resolve a renderable URL before rendering
+    FilePreview. For inline files a blob: URL is created from the stored bytes
+    and revoked on unmount.
+
+  req F-3.2: FilePreview MUST render the appropriate element for each MIME class:
+    image/* → <img>, video/* → <video controls>, application/pdf → <iframe>,
+    other → <a download>.
+
+  req F-3.3: FileArticle surfaces are registered for article, section,
+    and slide roles so files embed correctly in Markdown and Presenter layouts.
+```
+
+```mdl
+feat F-4: Markdown integration
+
+  req F-4.1: A Markdown extension contributed at MarkdownEvents.SetupExtensions
+    MUST allow files to be embedded in Markdown documents as inline attachments.
+```
+
+```mdl
+feat F-5: Settings
+
+  req F-5.1: The Settings panel MUST list all registered backends with their
+    id, display name, and optional description.
+
+  req F-5.2: Selecting a backend MUST persist the choice to Settings.backend
+    via the SettingsAtom capability.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Upload image inline
+  given: only the inline backend is registered
+  when: user uploads a 1 MB PNG via the Create Object form
+  then:
+    - op:Create returns a File with data._tag === 'inline'
+    - File.type === 'image/png', File.size === byte count
+    - File is added to the space
+```
+
+```mdl
+test T-2: Reject oversized file
+  given: inline backend registered, 4 MB limit
+  when: user uploads a 5 MB JPEG
+  then:
+    - FileTooLargeError is returned
+    - no File object is created
+    - no ECHO write occurs
+```
+
+```mdl
+test T-3: Reject unsupported MIME type
+  given: inline backend registered
+  when: user uploads a .zip file
+  then:
+    - UnsupportedFileTypeError is returned
+    - no File object is created
+```
+
+```mdl
+test T-4: Preview inline image
+  given: a File with data._tag === 'inline' and type === 'image/png'
+  when: FileArticle is rendered
+  then:
+    - a blob: URL is created from File.data.bytes
+    - FilePreview renders an <img> element with that URL
+    - the blob: URL is revoked on unmount
+```
+
+```mdl
+test T-5: Preview PDF
+  given: a File with type === 'application/pdf' and a resolved HTTP URL
+  when: FilePreview is rendered
+  then: an <iframe> element is rendered with the file URL as src
+```
+
+```mdl
+test T-6: Backend fallback to inline
+  given: Settings.backend is 'wnfs' but no WNFS backend is registered
+  when: op:Create is invoked
+  then: the inline backend is used and the file is stored inline
+```
+
+```mdl
+test T-7: External URL resolved by UrlResolver
+  given: a File with data._tag === 'external' and data.url === 'wnfs://cid/file.jpg'
+  and: a UrlResolver capability registered that handles 'wnfs://' URIs
+  when: FileArticle is rendered
+  then:
+    - UrlResolver.resolve is called with the wnfs:// URL
+    - FilePreview receives the resolved renderable URL
+```
+
+```mdl
+test T-8: No backend error
+  given: no Backend capability is registered
+  when: op:Create is invoked
+  then: NoBackendError is returned
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared errors.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

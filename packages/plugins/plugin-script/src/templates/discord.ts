@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { DXN, EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
+import { DXN, EchoObject, Filter, EntityId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 import {
@@ -22,7 +22,7 @@ import * as Redacted from 'https://esm.sh/effect@3.17.0/Redacted?bundle=false';
 import * as Ref from 'https://esm.sh/effect@3.17.0/Ref?bundle=false';
 
 const MessageSchema = S.Struct({
-  id: ObjectId,
+  id: EntityId,
   foreignId: S.Any, // bigint?
   from: S.String,
   created: S.String,
@@ -64,7 +64,7 @@ export default defineFunction({
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(DXN.parse(queueId)),
+        try: () => space.queues.queryQueue(DXN.tryMake(queueId)!),
         catch: (e: any) => e,
       });
       const backfill = objects.length === 0;
@@ -84,7 +84,7 @@ export default defineFunction({
           const queueMessages = messages
             .map((message: any) =>
               create(MessageSchema, {
-                id: ObjectId.random(),
+                id: EntityId.random(),
                 foreignId: message.id,
                 from: message.author.username,
                 created: message.timestamp,
@@ -94,7 +94,7 @@ export default defineFunction({
             .toReversed();
           if (queueMessages.length > 0) {
             yield* Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(DXN.parse(queueId), queueMessages),
+              try: () => space.queues.insertIntoQueue(DXN.tryMake(queueId)!, queueMessages),
               catch: (e: any) => e,
             });
             yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);

@@ -9,7 +9,7 @@ import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import { describe, it } from 'vitest';
 
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 
 import * as AiContext from './AiContext';
 
@@ -24,6 +24,7 @@ const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
         run: async () => [],
       }) as any,
     sync: async () => {},
+    getSyncState: async () => ({ blocksToPull: 0, blocksToPush: 0, totalBlocks: 0 }),
   };
   const layer = Layer.succeed(Feed.FeedService, mockFeedService);
   return Effect.runSync(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(layer)));
@@ -35,12 +36,7 @@ describe('AiContext.Binder', () => {
     const runtime = createMockFeedRuntime();
     const binder = new AiContext.Binder({ feed, runtime });
 
-    const TestSchema = Schema.Struct({}).pipe(
-      Type.object({
-        typename: 'org.dxos.type.example',
-        version: '0.1.0',
-      }),
-    );
+    const TestSchema = Schema.Struct({}).pipe(Type.makeObject(DXN.make('org.dxos.type.example', '0.1.0')));
 
     const obj = Obj.make(TestSchema, {});
     const ref = Ref.make(obj);

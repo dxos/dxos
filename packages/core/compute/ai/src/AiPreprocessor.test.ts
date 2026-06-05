@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
 import { Obj } from '@dxos/echo';
-import { type ContentBlock, Message } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
 import * as AiPreprocessor from './AiPreprocessor';
@@ -656,6 +656,63 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           providerExecuted: false,
         }),
       );
+    }),
+  );
+
+  it.effect(
+    'expands ContentBlockResult tool messages into stub tool-results and a user message with blocks',
+    Effect.fn(function* ({ expect }) {
+      const pdfBytes = bufferToArray(Buffer.from('JVBERi0x', 'base64'));
+      const messages = [
+        makeMessage('assistant', [
+          {
+            _tag: 'toolCall',
+            toolCallId: 'call_1',
+            name: 'getPdf',
+            input: '{}',
+            providerExecuted: false,
+          },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'getPdf',
+            result: ContentBlock.ContentBlockResult.make({
+              content: [
+                ContentBlock.Text.make({ text: 'summary' }),
+                ContentBlock.File.make({
+                  name: 'file.pdf',
+                  mediaType: 'application/pdf',
+                  url: Buffer.from(pdfBytes).toString('base64'),
+                }),
+              ],
+            }),
+            providerExecuted: false,
+          },
+        ]),
+      ];
+
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
+      expect(input.content).toHaveLength(3);
+
+      const toolMessage = input.content[1] as Prompt.ToolMessage;
+      expect(toolMessage.role).toBe('tool');
+      expect(toolMessage.content).toEqual([
+        Prompt.makePart('tool-result', {
+          id: 'call_1',
+          name: 'getPdf',
+          result: 'See result for call_1 below',
+          isFailure: false,
+          providerExecuted: false,
+        }),
+      ]);
+
+      const userMessage = input.content[2] as Prompt.UserMessage;
+      expect(userMessage.role).toBe('user');
+      expect(userMessage.content[0]).toEqual(Prompt.makePart('text', { text: 'Result from call_1:' }));
+      expect(userMessage.content[1]).toEqual(Prompt.makePart('text', { text: 'summary' }));
+      expect(userMessage.content[2]?.type).toBe('file');
     }),
   );
 });

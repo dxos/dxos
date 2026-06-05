@@ -8,12 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, DXN } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-const DISCORD_OPERATION = `${meta.id}.operation`;
+const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
 
 /** Wire-shape of a `RemoteTarget` for `GetDiscordChannels.output`. */
 const RemoteTarget = Schema.Struct({
@@ -33,7 +33,7 @@ const RemoteTarget = Schema.Struct({
  */
 export const GetDiscordChannels = Operation.make({
   meta: {
-    key: `${DISCORD_OPERATION}.get-discord-channels`,
+    key: makeKey('getDiscordChannels'),
     name: 'Get Discord Channels',
     description: 'List Discord text channels reachable from an integration without materializing local Channels.',
     icon: 'ph--hash--regular',
@@ -56,7 +56,7 @@ export const GetDiscordChannels = Operation.make({
  */
 export const SyncDiscordChannel = Operation.make({
   meta: {
-    key: `${DISCORD_OPERATION}.sync-discord-channel`,
+    key: makeKey('syncDiscordChannel'),
     name: 'Sync Discord Channel',
     description: 'Reconcile messages for currently-selected Discord targets in an Integration.',
     icon: 'ph--arrows-clockwise--regular',

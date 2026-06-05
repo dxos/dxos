@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { type Magazine, Subscription } from '../types';
-import { getSubscriptionPostState } from '../util';
 
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing
@@ -15,7 +14,7 @@ import { getSubscriptionPostState } from '../util';
  */
 export const collectCandidates = (magazine: Magazine.Magazine) =>
   Effect.gen(function* () {
-    const seenPostIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
+    const seenPostIds = new Set(magazine.posts.map((ref) => ref.uri));
     const candidates: Array<{ post: Subscription.Post; feed: Subscription.Subscription }> = [];
     for (const feedRef of magazine.feeds) {
       const feed = yield* Database.load(feedRef);
@@ -25,11 +24,11 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       }
       const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
       for (const post of posts) {
-        const postDXN = Obj.getDXN(post).toString();
-        if (seenPostIds.has(postDXN)) {
+        const postUri = Obj.getURI(post);
+        if (seenPostIds.has(postUri)) {
           continue;
         }
-        seenPostIds.add(postDXN);
+        seenPostIds.add(postUri);
         candidates.push({ post, feed });
       }
     }
@@ -45,23 +44,19 @@ export const publishedTimestamp = (post: Subscription.Post): number => {
   return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
 };
 
-/** Default `isStarred` predicate: reads from each Post's source Subscription's `postState`. */
-export const isPostStarred = (post: Subscription.Post): boolean =>
-  Boolean(getSubscriptionPostState(post.source?.target, (post as { id: string }).id).starred);
-
 /**
  * Partitions posts into those to keep and those to drop, given a maximum
  * non-starred retention bound. Starred posts are always kept; the remaining
  * non-starred posts are sorted newest-first by `published` and the top
  * `keep` retained.
  *
- * `isStarred` is injectable for testability; default reads from each Post's
- * source Subscription's `postState`.
+ * `isStarred` is injectable; callers with a starred-tag uri pass a predicate backed by it
+ * (defaults to treating nothing as starred).
  */
 export const partitionByKeepBound = <T extends Subscription.Post>(
   posts: readonly T[],
   keep: number,
-  isStarred: (post: T) => boolean = isPostStarred,
+  isStarred: (post: T) => boolean = () => false,
 ): { kept: T[]; dropped: T[] } => {
   const kept: T[] = [];
   const candidates: T[] = [];

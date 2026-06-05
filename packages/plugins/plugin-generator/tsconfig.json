@@ -24,6 +24,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -40,9 +43,6 @@
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"

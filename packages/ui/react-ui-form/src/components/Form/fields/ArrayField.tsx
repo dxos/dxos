@@ -15,13 +15,13 @@ import {
   isDiscriminatedUnion,
   isNestedType,
 } from '@dxos/effect';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
 import { getFormProperties } from '../../../util';
 import { useFormValues } from '../Form';
-import { FormField, type FormFieldProps } from '../FormField';
+import { FormField, IconBlock, type FormFieldProps } from '../FormField';
 import { FormFieldLabel, type FormFieldStateProps } from '../FormFieldComponent';
 
 export type ArrayFieldProps = {
@@ -96,14 +96,7 @@ export const ArrayField = ({
             <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
           </div>
           {!readonly && layout !== 'static' && (
-            <IconButton
-              iconOnly
-              density='md'
-              variant='ghost'
-              icon='ph--plus--regular'
-              label={t('add-item.button')}
-              onClick={handleAdd}
-            />
+            <IconBlock inline icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
           )}
         </div>
       )}
@@ -111,6 +104,7 @@ export const ArrayField = ({
       <div className='flex flex-col'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
+
           // Object items: each row contains a recursively-rendered FormField
           //   (multiple sub-rows for the object's fields) wrapped in a border,
           //   with the delete button bottom-aligned next to it.
@@ -134,40 +128,15 @@ export const ArrayField = ({
           );
 
           return (
-            <div
-              key={index}
-              className='grid grid-cols-[1fr_min-content] gap-form-gap items-center mb-1 last:mb-form-gap'
-            >
-              {renderItemAsObject ? (
-                <div className='p-1 border border-subdued-separator'>{fieldField}</div>
-              ) : (
-                fieldField
-              )}
-
+            <div key={index} className='grid grid-cols-[1fr_min-content] items-center mb-1 last:mb-form-gap'>
+              {fieldField}
               {!readonly && layout !== 'static' && (
-                <div className='h-full flex flex-col justify-end'>
-                  {renderItemAsObject ? (
-                    <IconButton
-                      variant='ghost'
-                      icon='ph--x--regular'
-                      iconOnly
-                      label={t('remove-item.button')}
-                      onClick={() => handleDelete(index)}
-                    />
-                  ) : (
-                    // Centers against the inline single-row FormField.
-                    <div className='flex items-center h-[2rem]'>
-                      <IconButton
-                        variant='ghost'
-                        icon='ph--x--regular'
-                        iconOnly
-                        label={t('remove-item.button')}
-                        onClick={() => handleDelete(index)}
-                        classNames='self-center'
-                      />
-                    </div>
-                  )}
-                </div>
+                <IconBlock
+                  inline={!renderItemAsObject}
+                  icon='ph--x--regular'
+                  label={t('remove-item.button')}
+                  onClick={() => handleDelete(index)}
+                />
               )}
             </div>
           );

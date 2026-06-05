@@ -10,7 +10,7 @@ import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
@@ -209,13 +209,10 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
         {/* TODO(burdon): Move to layout? */}
         {toast && (
           <Toast.Root>
-            <Toast.Body>
-              <Toast.Title>
-                <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
-                <span>{toast.title}</span>
-              </Toast.Title>
-              {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-            </Toast.Body>
+            <Toast.Title icon='ph--gift--duotone'>
+              <span>{toast.title}</span>
+            </Toast.Title>
+            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
           </Toast.Root>
         )}
 

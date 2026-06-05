@@ -69,6 +69,7 @@ export default Capability.makeModule(
       Capability.contributes(ClientCapabilities.Client, client, () =>
         Effect.gen(function* () {
           log.info('client capability: destroying client');
+          // TODO(dmaretskyi): use scope for destroy.
           subscription.unsubscribe();
           yield* Effect.tryPromise(() => client.destroy());
         }),

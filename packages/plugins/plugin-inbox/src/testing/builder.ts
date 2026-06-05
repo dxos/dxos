@@ -10,8 +10,6 @@ import { random } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { Actor, Event, Message, Person } from '@dxos/types';
 
-import { LABELS } from './data';
-
 //
 // Types
 //
@@ -248,7 +246,7 @@ export class Builder {
       for (let index = 0; index < linkCount; index++) {
         const fullName = random.person.fullName();
         const obj = space.db.add(Person.make({ fullName }));
-        const dxn = Ref.make(obj).dxn.toString();
+        const dxn = Ref.make(obj).uri;
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
       }
@@ -274,10 +272,6 @@ export class Builder {
           subject:
             random.helpers.arrayElement(['', 'Re: ']) + random.lorem.sentence(random.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),
-          labels: random.helpers.randomSubset(Object.keys(LABELS), {
-            min: 0,
-            max: Math.min(3, Object.keys(LABELS).length),
-          }),
         },
       }),
     );

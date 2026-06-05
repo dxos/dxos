@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation, GraphPropsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
@@ -25,21 +25,15 @@ export const Document = Schema.Struct({
   fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.document',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--text-aa--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   GraphPropsAnnotation.set({ managesAutofocus: true }),
+  Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),
 );
 
-export type Document = Schema.Schema.Type<typeof Document>;
+export type Document = Type.InstanceType<typeof Document>;
 
 /**
  * Document factory.

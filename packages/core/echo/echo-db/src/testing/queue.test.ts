@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Entity, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from './echo-test-builder';
@@ -25,19 +25,20 @@ describe('queues', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queue = queues.create();
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Ref.fromDXN(queues.create().dxn) as Ref.Ref<Feed.Feed>,
+        queue: Ref.fromURI(queues.create().uri) as Ref.Ref<Feed.Feed>,
       }),
     );
 
     expect(obj.queue.target).toBeDefined();
-    expect(obj.queue.target!.dxn).toBeInstanceOf(DXN);
+    expect(typeof obj.queue.target!.uri).toBe('string');
     expect(await obj.queue.load()).toBeDefined();
   });
 
-  test('Entity.getDXN on queue objects returns absolute dxn', async () => {
+  test('Entity.getURI on queue objects returns absolute dxn', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -45,7 +46,8 @@ describe('queues', () => {
 
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
-    expect(Entity.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
+    // Queue items now receive an ECHO-kind DXN (echo://spaceId/itemId), not a queue DXN.
+    expect(Entity.getURI(obj)).toEqual(EID.make({ spaceId: db.spaceId, entityId: obj.id }));
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -58,21 +60,15 @@ describe('queues', () => {
     await queue.append([obj]);
 
     {
+      // Resolve queue item using feed context. Since queue items have ECHO-kind DXNs
+      // (echo://spaceId/itemId) without queue routing info, a local object DXN + feed
+      // context is the correct way to resolve them.
       const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: spaceId } })
-        .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
+        .createRefResolver({ context: { space: spaceId, feed: queue.uri } })
+        .resolve(EID.make({ entityId: obj.id }));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
-    }
-
-    {
-      const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: spaceId, feed: queue.dxn } })
-        .resolve(DXN.fromLocalObjectId(obj.id));
-      expect(resolved?.id).toEqual(obj.id);
-      expect(resolved?.name).toEqual('john');
-      expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
+      expect(Obj.getType(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
     }
   });
 
@@ -375,7 +371,7 @@ describe('queues', () => {
       await peer.reload();
 
       const queues2 = peer.client.constructQueueFactory(spaceId);
-      const objects2 = await queues2.get(queue.dxn).query(Filter.everything()).run();
+      const objects2 = await queues2.get(queue.uri).query(Filter.everything()).run();
 
       expect(objects2).toHaveLength(1);
       expect(objects2[0].name).toEqual('john');

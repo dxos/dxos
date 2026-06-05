@@ -1,0 +1,515 @@
+---
+id: org.dxos.plugin.script
+name: ScriptPlugin
+version: 0.1.0
+---
+
+A scripting plugin for `DXOS` Composer that lets users write, deploy, and run custom TypeScript functions as
+ECHO objects inside their spaces.
+Scripts execute on the Cloudflare Workers-based EDGE runtime and can call DXOS SDK packages, Effect-TS,
+and a curated set of third-party libraries.
+An AI assistant blueprint wires CRUD, deploy, invoke, and inspection operations as tools so an agent can
+scaffold, iterate, and test scripts entirely within a chat session.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Script
+  desc: |
+    Root ECHO object (typename from @dxos/compute Script.Script).
+    Represents a single deployable TypeScript function.
+  fields:
+    name?: string
+    source: string              # TypeScript source, must follow Operation pattern
+    description?: string
+```
+
+```mdl
+type Notebook
+  desc: |
+    Root ECHO object for a multi-cell notebook view.
+    Each cell is a Script; the Notebook provides a sequential execution surface.
+  fields:
+    name?: string
+```
+
+```mdl
+type Settings
+  desc: Plugin-scoped settings atom. Persisted across sessions.
+  fields:
+    editorInputMode?: EditorInputMode   # default, vim, or emacs keybindings
+```
+
+```mdl
+type InvocationSpan
+  desc: A single function invocation record from the EDGE trace feed.
+  fields:
+    id: string
+    timestamp: number           # epoch ms
+    duration: number            # ms
+    outcome: success | failure | pending
+    input: object
+    error?: object
+```
+
+```mdl
+type DeployedFunction
+  desc: Metadata about a function already deployed to the EDGE runtime.
+  fields:
+    key?: string                # unique key; pass to InstallFunction
+    name: string
+    version: string
+    description?: string
+    updated?: string            # ISO timestamp
+```
+
+## Components
+
+```mdl
+component ScriptArticle
+  desc: |
+    Primary editor surface for a Script object. Rendered for the Article and
+    Section roles. Shows a TypeScript CodeMirror editor with syntax highlight,
+    lint, and completion. Companion panels (Execute and Logs) are available
+    via the app graph for running and inspecting the script.
+  props:
+    role: string
+    subject: Script
+    attendableId?: string
+    settings?: Settings
+    env?: CompilerEnvironment
+  layout: |
+    ┌──────────────────────────────────────┐
+    │ ScriptToolbar (run, deploy, …)       │
+    ├──────────────────────────────────────┤
+    │ TypescriptEditor (CodeMirror)        │
+    │                                      │
+    │   // script source                   │
+    └──────────────────────────────────────┘
+```
+
+```mdl
+component NotebookArticle
+  desc: |
+    Multi-cell notebook surface for a Notebook object. Each cell renders a
+    ScriptArticle in Section role. Cells can be added, removed, and reordered.
+  props:
+    role: string
+    subject: Notebook
+    attendableId?: string
+    env?: CompilerEnvironment
+```
+
+```mdl
+component TestContainer
+  desc: |
+    Execute companion panel. Renders a form driven by the script's Operation
+    input schema; submits the form to invoke the script and shows the response.
+  props:
+    script: Script
+    role: string
+```
+
+```mdl
+component DeploymentDialog
+  desc: |
+    Dialog for deploying or redeploying a Script to the EDGE runtime.
+    Shows current deployment status and lets the user trigger a new deployment.
+  props:
+    script: Script
+```
+
+```mdl
+component ScriptPluginSettings
+  desc: Plugin settings panel; exposes editor keybinding mode selector.
+  props:
+    settings: Settings
+    onSettingsChange: (settings: Settings) → void
+    onAuthenticate: () → Promise<void>
+```
+
+## Operations
+
+Blueprint operations (called by the Script assistant via its tool set).
+
+```mdl
+op create
+  desc: |
+    Creates a new Script ECHO object with the given name and TypeScript source,
+    and adds it to the space. Optionally seeds from a built-in template or a
+    GitHub Gist URL. Returns a function reference ID.
+  input:
+    name: string
+    source?: string
+    templateId?: string
+  output: { function: string }
+  effects: [echo:write]
+  note: Operation key `org.dxos.function.script.create`.
+```
+
+```mdl
+op read
+  desc: Reads the name, source code, and description of an existing Script.
+  input:
+    function: Ref<Script>
+  output: { name?: string, source: string, description?: string }
+  effects: [echo:read]
+  note: Operation key `org.dxos.function.script.read`.
+```
+
+```mdl
+op update
+  desc: |
+    Applies one or more string edits (find/replace pairs) to a Script's source
+    and optionally updates its name and description.
+  input:
+    function: Ref<Script>
+    name?: string
+    description?: string
+    edits?: { oldString: string, newString: string, replaceAll?: boolean }[]
+  output: { function: string }
+  effects: [echo:read, echo:write]
+  note: Operation key `org.dxos.function.script.update`.
+```
+
+```mdl
+op delete
+  desc: Permanently removes a Script and its source from the space.
+  input:
+    function: Ref<Script>
+  output: void
+  effects: [echo:read, echo:write]
+  note: Operation key `org.dxos.function.script.delete`.
+```
+
+```mdl
+op deploy
+  desc: |
+    Compiles and deploys a Script to the EDGE (Cloudflare Workers) runtime.
+    The source must export a single Operation handler as default.
+    Returns the deployed function ID and optional public URL.
+  input:
+    function: Ref<Script>
+  output: { function: string, functionUrl?: string }
+  effects: [echo:read, http]
+  errors:
+    CompileError: TypeScript source fails to compile
+    DeploymentFailed: EDGE runtime rejected the deployment
+  note: Operation key `org.dxos.function.script.deploy`.
+```
+
+```mdl
+op invoke
+  desc: Calls a deployed EDGE function with an optional JSON payload.
+  input:
+    function: Ref<Script>
+    payload?: unknown
+  output: { response: unknown }
+  effects: [http]
+  errors:
+    NotDeployed: function has not been deployed
+    InvocationError: function threw at runtime
+  note: Operation key `org.dxos.function.script.invoke`.
+```
+
+```mdl
+op inspectInvocations
+  desc: |
+    Queries the EDGE invocation trace feed for a function and returns
+    recent invocation spans (id, timestamp, duration, outcome, input, error).
+  input:
+    function: Ref<Script>
+    limit?: number              # default 20
+  output: { invocations: InvocationSpan[], total: number }
+  effects: [echo:read]
+  note: Operation key `org.dxos.function.script.inspect-invocations`.
+```
+
+```mdl
+op queryDeployedFunctions
+  desc: Lists all functions currently deployed to the EDGE runtime.
+  input:
+    (none)
+  output: { functions: DeployedFunction[] }
+  effects: [http]
+  note: Operation key `org.dxos.function.script.query-deployed`.
+```
+
+```mdl
+op installFunction
+  desc: |
+    Installs a globally-deployed EDGE function into the current space by key.
+    Creates a Script ECHO object backed by the remote function.
+    The returned function ID can be passed directly to op:invoke.
+  input:
+    key: string
+  output: { function: string, name: string, version: string }
+  effects: [echo:write, http]
+  note: Operation key `org.dxos.function.script.install`.
+```
+
+UI-facing operation (creates Script via the navtree / "create object" flow).
+
+```mdl
+op createScript
+  desc: Creates a new Script ECHO object via the Composer create-object flow.
+  input:
+    name?: string
+    gistUrl?: string
+    initialTemplateId?: string
+    db: Database
+  output: { object: Script }
+  effects: [echo:write]
+  note: Operation key `org.dxos.plugin.script.operation.create-script`.
+```
+
+## Features
+
+```mdl
+feat F-1: Script ECHO Object
+
+  req F-1.1: Script objects are registered via `addSchemaModule` and visible in space object lists.
+  req F-1.2: Script objects can be created from the navtree "+" menu.
+  req F-1.3:
+    when: user creates a Script without a template
+    then: source is seeded from the default template
+  req F-1.4:
+    when: user provides a GitHub Gist URL
+    then: gist content is fetched and used as initial source
+```
+
+```mdl
+feat F-2: Script Editor
+
+  req F-2.1: ScriptArticle renders a TypeScript-aware CodeMirror editor for the Article role.
+  req F-2.2: Editor keybinding mode (default/vim/emacs) is configurable via plugin settings.
+  req F-2.3: Changes to source are persisted to the Script ECHO object reactively.
+  req F-2.4:
+    when: script object changes externally (peer edit)
+    then: editor content updates without losing cursor position if possible
+```
+
+```mdl
+feat F-3: Deploy to EDGE
+
+  req F-3.1: A Deploy button in the ScriptToolbar opens the DeploymentDialog.
+  req F-3.2:
+    when: user confirms deployment
+    then: op:deploy is called; script compiled and sent to EDGE runtime
+  req F-3.3:
+    when: compilation fails
+    then: error messages are surfaced to the user; no deployment occurs
+  req F-3.4:
+    when: deployment succeeds
+    then: dialog shows the function URL (if available)
+```
+
+```mdl
+feat F-4: Execute Companion
+
+  req F-4.1: An "Execute" companion node is added to every Script in the app graph.
+  req F-4.2: TestContainer renders a form derived from the script's Operation input schema.
+  req F-4.3:
+    when: user submits the form
+    then: op:invoke is called with the form payload; response displayed
+  req F-4.4: A "Logs" companion node shows the invocation trace via InvocationTraceContainer.
+```
+
+```mdl
+feat F-5: Script Blueprint
+
+  req F-5.1: A blueprint with key `org.dxos.blueprint.script` is contributed via `addBlueprintDefinitionModule`.
+  req F-5.2: Blueprint tool set includes: create, read, update, delete, deploy, invoke,
+             inspectInvocations, queryDeployedFunctions, installFunction.
+  req F-5.3: System instructions describe the EDGE Operation pattern, required export format,
+             and available packages.
+  req F-5.4: Blueprint is agent-enabled; the assistant can activate it autonomously.
+```
+
+```mdl
+feat F-6: Notebook
+
+  req F-6.1: Notebook objects are registered and can be created from the navtree.
+  req F-6.2: NotebookArticle renders each linked Script as a sequential cell.
+  req F-6.3: Cells can be added and removed independently.
+```
+
+```mdl
+feat F-7: Plugin Settings
+
+  req F-7.1: ScriptPluginSettings is rendered via the app settings surface.
+  req F-7.2: Editor input mode is persisted in the Settings atom.
+  req F-7.3: An Authenticate button lets the user write an access credential to HALO.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create script from default template
+  given: a space is open and plugin-script is loaded
+  when: user creates a new Script without template selection
+  then:
+    - a Script object appears in the space
+    - its source contains the default template code
+    - ScriptArticle renders the source in the editor
+```
+
+```mdl
+test T-2: Create script from Gist
+  given: a public GitHub Gist URL is known
+  when: user creates a Script with the Gist URL
+  then:
+    - gist content is fetched and stored as the script source
+    - editor shows the fetched content
+```
+
+```mdl
+test T-3: Edit and persist source
+  given: a Script is open in ScriptArticle
+  when: user edits the source
+  then:
+    - the Script ECHO object's source field is updated
+    - closing and reopening the article shows the same content
+```
+
+```mdl
+test T-4: Deploy script
+  given: a Script with valid source following the Operation pattern
+  when: user opens DeploymentDialog and confirms
+  then:
+    - op:deploy succeeds
+    - dialog shows success state and function URL
+```
+
+```mdl
+test T-5: Invoke deployed function
+  given: a Script is deployed
+  when: user opens the Execute companion and submits a payload
+  then:
+    - op:invoke is called with the payload
+    - response is displayed in TestContainer
+```
+
+```mdl
+test T-6: Inspect invocations
+  given: a Script has been invoked at least once
+  when: user opens the Logs companion
+  then:
+    - InvocationTraceContainer shows at least one invocation span
+    - span includes timestamp, duration, and outcome
+```
+
+```mdl
+test T-7: Blueprint tools resolve
+  given: composer-app with plugin-script loaded
+  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.script`
+  then:
+    - blueprint is present
+    - tool set includes create, read, update, delete, deploy, invoke,
+      inspectInvocations, queryDeployedFunctions, and installFunction
+```
+
+```mdl
+test T-8: Agent creates and deploys script
+  given: a Script assistant session is active
+  when: agent calls op:create with a name and source
+  then: a Script object is created in the space
+  when: agent calls op:deploy
+  then: function is deployed; op returns a function ID
+  when: agent calls op:invoke with a payload
+  then: response is returned without error
+```
+
+```mdl
+test T-9: QueryDeployedFunctions and install
+  given: at least one function is deployed to the EDGE runtime
+  when: op:queryDeployedFunctions is called
+  then:
+    - result contains at least one DeployedFunction entry
+  when: op:installFunction is called with that entry's key
+  then:
+    - a new Script ECHO object appears in the space
+    - op returns the function ID, name, and version
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

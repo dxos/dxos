@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 import { type FunctionNotFoundError, type Operation, type OperationRegistry, Template } from '@dxos/compute';
 import { type Database, Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
-import { type ObjectNotFoundError } from '@dxos/echo/Err';
-import { type ObjectId } from '@dxos/keys';
+import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -29,7 +29,7 @@ export const formatSystemPrompt = ({
   objects = [],
 }: Pick<AiRequest.RunProps, 'system' | 'blueprints' | 'objects'>): Effect.Effect<
   string,
-  FunctionNotFoundError | ObjectNotFoundError,
+  FunctionNotFoundError | EntityNotFoundError,
   Database.Service | OperationRegistry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
@@ -57,7 +57,7 @@ export const formatSystemPrompt = ({
       Effect.forEach((object) =>
         Effect.succeed(trim`
           <object>
-            <dxn>${Obj.getDXN(object)}</dxn>
+            <dxn>${Obj.getURI(object)}</dxn>
             <typename>${Obj.getTypename(object)}</typename>
           </object>
         `),
@@ -117,8 +117,8 @@ export const formatUserPrompt = ({
     });
   }).pipe(Effect.withSpan('formatUserPrompt'));
 
-const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, ObjectVersion> => {
-  const artifactIds = new Map<ObjectId, ObjectVersion>();
+const gatherObjectVersions = (messages: Message.Message[]): Map<EntityId, ObjectVersion> => {
+  const artifactIds = new Map<EntityId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.blocks) {
       if (block._tag === 'anchor') {
@@ -131,7 +131,7 @@ const gatherObjectVersions = (messages: Message.Message[]): Map<ObjectId, Object
 };
 
 const createArtifactUpdateBlock = (
-  artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
+  artifactDiff: Map<EntityId, { version: ObjectVersion; diff?: string }>,
 ): ContentBlock.Any => {
   return {
     _tag: 'text',

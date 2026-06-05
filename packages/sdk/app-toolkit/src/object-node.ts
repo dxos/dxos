@@ -112,7 +112,7 @@ export const getCollectionGraphNodePartials = ({
   db: Database.Database;
   collection: Collection.Collection;
 }) => {
-  const id = Obj.getDXN(collection).toString();
+  const id = Obj.getURI(collection);
   let cached = collectionPartialsCache.get(id);
   if (!cached) {
     cached = buildCollectionPartials(collection, db);
@@ -141,16 +141,22 @@ export const createObjectNode = ({
   navigable?: boolean;
   parentCollection?: Collection.Collection;
 }) => {
-  const type = Obj.getTypename(object);
-  if (!type) {
+  const typename = Obj.getTypename(object);
+  if (!typename) {
     return null;
   }
 
-  // Obj.getSchema uses the stored type DXN to look up the schema. For database-registered
+  // Obj.getType uses the stored type DXN to look up the schema. For database-registered
   // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
-  // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
-  // Fall back to a typename query which matches the PersistentSchema.typename field.
-  const schema = Obj.getSchema(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
+  // TypeSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
+  // Fall back to a typename query against the registry which matches the TypeSchema.typename field.
+  const type =
+    Obj.getType(object) ??
+    db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .find((t) => Type.getTypename(t) === typename);
+  const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
   // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target
@@ -161,8 +167,8 @@ export const createObjectNode = ({
     }
     const refValue = (object as any)?.[iconFromRefProp];
     const target = Ref.isRef(refValue) ? refValue.target : undefined;
-    const targetSchema = target ? Obj.getSchema(target as Obj.Unknown) : undefined;
-    return targetSchema ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetSchema)) : undefined;
+    const targetType = target ? Obj.getType(target as Obj.Unknown) : undefined;
+    return targetType ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(targetType))) : undefined;
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;
@@ -171,44 +177,47 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ db, collection: object })
     : graphProps;
 
-  const label = Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
+  const label =
+    Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDXN = Obj.getDXN(parentCollection).toString();
-    onRearrange = rearrangeCache.get(collectionDXN);
+    const collectionUri = Obj.getURI(parentCollection);
+    onRearrange = rearrangeCache.get(collectionUri);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
         Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionDXN, onRearrange);
+      rearrangeCache.set(collectionUri, onRearrange);
     }
   }
 
-  const objectDXN = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectDXN);
+  const objectUri = Obj.getURI(object);
+  let blockInstruction = blockInstructionCache.get(objectUri);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectDXN, blockInstruction);
+    blockInstructionCache.set(objectUri, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
 
   return {
     id: object.id,
-    type,
+    type: typename,
     cacheable: CACHEABLE_PROPS,
     data: object,
     properties: {
       label,
       icon:
-        schema && Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular'),
-      iconHue: schema && Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue,
+        type && Type.getDatabase(type) != null
+          ? 'ph--cube--regular'
+          : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular'),
+      iconHue: type && Type.getDatabase(type) != null ? 'neutral' : iconAnnotation?.hue,
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',

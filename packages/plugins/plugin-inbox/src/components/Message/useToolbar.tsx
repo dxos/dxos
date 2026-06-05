@@ -7,23 +7,17 @@ import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
+import { type ViewMode, viewModeGroup } from '../ViewMode';
 import { useExtractorActions } from './useExtractorActions';
-
-export type ViewMode = 'plain' | 'enriched' | 'plain-only';
-
-/**
- * How the selected block's text is rendered.
- *   - `markdown`: parsed and decorated via the markdown extensions.
- *   - `plain`:    shown verbatim, no markdown parsing.
- */
-export type RenderMode = 'markdown' | 'plain';
 
 export type UseMessageToolbarActionsProps = {
   message: Message.Message;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  renderMode: RenderMode;
-  setRenderMode: (mode: RenderMode) => void;
+  /** Whether remote images are currently loaded inline. */
+  loadRemoteImages: boolean;
+  /** Toggle the remote-image loading setting. */
+  onToggleLoadImages: () => void;
   onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
@@ -34,14 +28,20 @@ export const useMessageActions = ({
   message,
   viewMode,
   setViewMode,
-  renderMode,
-  setRenderMode,
+  loadRemoteImages,
+  onToggleLoadImages,
   onOpen,
   onReply,
   onReplyAll,
   onForward,
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
+
+  // The enriched option is only offered when the message carries a non-empty enriched (second) block.
+  const enrichedAvailable = (() => {
+    const textBlocks = message.blocks.filter((block) => 'text' in block);
+    return textBlocks.length > 1 && !!textBlocks[1]?.text;
+  })();
 
   return useMenuBuilder(() => {
     let builder = MenuBuilder.make()
@@ -58,16 +58,25 @@ export const useMessageActions = ({
               onOpen,
             )),
       )
-      .action(
-        'renderMode',
-        {
-          label: [
-            renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
-            { ns: meta.id },
-          ],
-          icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
-        },
-        () => setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown'),
+      .subgraph(
+        viewModeGroup({
+          ns: meta.id,
+          viewMode,
+          setViewMode,
+          modes: enrichedAvailable ? ['enriched', 'markdown', 'plain'] : ['markdown', 'plain'],
+        }),
+      )
+      .subgraph((b) =>
+        b.action(
+          'load-images',
+          {
+            label: ['message-toolbar-load-images.menu', { ns: meta.id }],
+            icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
+            iconOnly: true,
+            checked: loadRemoteImages,
+          },
+          onToggleLoadImages,
+        ),
       )
       .separator('gap')
       .subgraph(
@@ -105,31 +114,36 @@ export const useMessageActions = ({
               },
               onForward,
             )),
-      )
-      .action(
-        'viewMode',
-        {
-          label: [
-            viewMode === 'plain'
-              ? 'message toolbar show enriched message'
-              : viewMode === 'enriched'
-                ? 'message toolbar show plain message'
-                : 'message toolbar enriched message not available',
-            { ns: meta.id },
-          ],
-          icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
-        },
-        () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
       );
 
-    for (const item of extractorActions) {
-      builder = builder.action(
-        `extract-${item.id}`,
-        { label: item.label, icon: 'ph--magic-wand--regular' },
-        item.onSelect,
+    if (extractorActions.length > 0) {
+      builder = builder.group(
+        'extract',
+        {
+          label: ['message-toolbar-extract.menu', { ns: meta.id }],
+          icon: 'ph--magic-wand--regular',
+          iconOnly: true,
+          variant: 'dropdownMenu',
+        },
+        (group) => {
+          for (const item of extractorActions) {
+            group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+          }
+        },
       );
     }
 
     return builder.build();
-  }, [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward, extractorActions]);
+  }, [
+    viewMode,
+    setViewMode,
+    loadRemoteImages,
+    onToggleLoadImages,
+    enrichedAvailable,
+    onOpen,
+    onReply,
+    onReplyAll,
+    onForward,
+    extractorActions,
+  ]);
 };

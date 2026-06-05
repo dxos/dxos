@@ -15,8 +15,8 @@ interface TestContext {
     id: string;
     concurrency: number;
     spec: {
-      kind: 'queue';
-      queue: string;
+      kind: 'feed';
+      feed: string;
     };
   };
   function: {

@@ -45,6 +45,7 @@ export type RunProps<R = never> = {
 export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Feed.FeedService>;
+  /** @effect-atom/atom-react Registry for reactive state. */
   registry?: Registry.Registry;
 };
 
@@ -117,7 +118,7 @@ export class Session extends Resource {
     OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | OperationRegistry.Service
   > {
     return ToolExecutionServices.pipe(
-      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() })),
+      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) })),
     );
   }
 
@@ -193,7 +194,7 @@ export class Session extends Resource {
             binder: this.context,
           }),
           Layer.succeed(Service, this),
-          Operation.withInvocationOptions({ conversation: Obj.getDXN(this._feed).toString() }),
+          Operation.withInvocationOptions({ conversation: Obj.getURI(this._feed) }),
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),

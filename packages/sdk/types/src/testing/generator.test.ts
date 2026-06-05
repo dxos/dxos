@@ -2,16 +2,40 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type Database, Query } from '@dxos/echo';
+import { DXN, type Database, Obj, Query, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from '@dxos/schema/testing';
+import {
+  type RelationSpec,
+  type TypeSpec,
+  type ValueGenerator,
+  createGenerator,
+  createObjectFactory,
+  createRelationFactory,
+} from '@dxos/schema/testing';
 import { stripUndefined } from '@dxos/util';
 
 import { Message, Organization, Person, Pipeline } from '../types';
+
+// Local relation type (Person → Person) with only optional props, so the generated relation's
+// properties come entirely from annotations / endpoints.
+const Knows = Schema.Struct({
+  id: Obj.ID,
+  since: Schema.optional(Schema.Number),
+})
+  .annotations({ description: 'A person knows another person.' })
+  .pipe(
+    Type.makeRelation({
+      dxn: DXN.make('org.dxos.relation.knows', '0.1.0'),
+      source: Person.Person,
+      target: Person.Person,
+    }),
+  );
 
 random.seed(1);
 
@@ -22,11 +46,12 @@ const generator: ValueGenerator = {
 
 const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
-    const objects = await db.query(Query.type(type)).run();
+    const query = Type.isType(type) ? Query.type(type) : Query.type(type);
+    const objects = await db.query(query).run();
     expect(objects).to.have.length(count);
     log('objects', {
-      typename: type.typename,
-      objects: objects.map((obj) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
+      typename: Type.getTypename(type),
+      objects: objects.map((obj: any) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
     });
   }
 };
@@ -71,7 +96,7 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    await db.graph.schemaRegistry.register([Organization.Organization, Pipeline.Pipeline, Person.Person]);
+    db.graph.registry.add([Organization.Organization, Pipeline.Pipeline, Person.Person]);
 
     const spec: TypeSpec[] = [
       { type: Organization.Organization, count: 5 },
@@ -88,9 +113,9 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register mutable schema.
-    const [organization] = await db.schemaRegistry.register([Organization.Organization]);
-    const [person] = await db.schemaRegistry.register([Person.Person]);
-    const [project] = await db.schemaRegistry.register([Pipeline.Pipeline]);
+    const organization = await db.addType(Organization.Organization);
+    const person = await db.addType(Person.Person);
+    const project = await db.addType(Pipeline.Pipeline);
 
     const spec: TypeSpec[] = [
       { type: organization, count: 5 },
@@ -102,6 +127,30 @@ describe('Generator', () => {
     await queryObjects(db, spec);
   });
 
+  test('generate relations between objects', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    db.graph.registry.add([Person.Person, Knows]);
+
+    // Create endpoint objects first.
+    const createObjects = createObjectFactory(db, generator);
+    await createObjects([{ type: Person.Person, count: 8 }]);
+
+    // Create relations between them, with a static prop override.
+    const createRelations = createRelationFactory(db, generator);
+    const spec: RelationSpec[] = [{ type: Knows, count: 6, data: { since: 2020 } }];
+    await createRelations(spec);
+
+    const relations = await db.query(Query.type(Knows)).run();
+    expect(relations).to.have.length(6);
+    const personTypename = Type.getTypename(Person.Person);
+    for (const relation of relations) {
+      expect(Obj.getTypename(Relation.getSource(relation))).to.eq(personTypename);
+      expect(Obj.getTypename(Relation.getTarget(relation))).to.eq(personTypename);
+      expect(Relation.getSource(relation).id).not.to.eq(Relation.getTarget(relation).id);
+      expect((relation as { since?: number }).since).to.eq(2020);
+    }
+  });
+
   test('generate message from static schema', async ({ expect }) => {
     const schema = Message.Message;
     const objectGenerator = createGenerator(generator, schema, { force: true });
@@ -111,8 +160,9 @@ describe('Generator', () => {
 
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const schema = (await db.schemaRegistry.register([Message.Message]))[0];
-    const objectGenerator = createGenerator(generator, schema, { force: true });
+    const type = await db.addType(Message.Message);
+    invariant(Type.isObject(type), 'expected object type');
+    const objectGenerator = createGenerator(generator, type, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;
   });

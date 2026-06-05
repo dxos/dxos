@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -29,7 +30,7 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Task]);
+      graph.registry.add([TestSchema.Task]);
 
       const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
@@ -37,7 +38,7 @@ describe('Serializer', () => {
       expect(data).to.deep.include({
         id: task.id,
         '@meta': { keys: [] },
-        '@type': `dxn:type:${Type.getTypename(TestSchema.Task)}:${Type.getVersion(TestSchema.Task)}`,
+        '@type': `dxn:${Type.getTypename(TestSchema.Task)}:${Type.getVersion(TestSchema.Task)}`,
         title: 'Testing',
       });
     });
@@ -200,7 +201,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        await graph.schemaRegistry.register([TestSchema.Person]);
+        graph.registry.add([TestSchema.Person]);
         const contact = Obj.make(TestSchema.Person, { name });
         db.add(contact);
         await db.flush();
@@ -212,7 +213,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        await graph.schemaRegistry.register([TestSchema.Person]);
+        graph.registry.add([TestSchema.Person]);
 
         await new Serializer().import(db, data);
         expect(await db.query(Query.select(Filter.everything())).run()).to.have.length(1);
@@ -220,7 +221,65 @@ describe('Serializer', () => {
         const [contact] = await db.query(Filter.type(TestSchema.Person)).run();
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
-        expect(Obj.getSchema(contact)).to.eq(TestSchema.Person);
+      }
+    });
+
+    test('Type.Type entity survives export/import round-trip with correct kind brand', async () => {
+      let data: SerializedSpace;
+      const typename = 'example.type.roundTrip';
+
+      {
+        const { db } = await builder.createDatabase();
+        const roundTrip = await db.addType(
+          Type.makeObjectFromJsonSchema({
+            typename,
+            version: '0.1.0',
+            jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
+          }),
+        );
+        Type.update(roundTrip, (draft) => {
+          draft.name = 'Round Trip Type';
+        });
+        await db.flush();
+        data = await new Serializer().export(db);
+      }
+
+      // Snapshot must NOT carry `kind` as a data field — it's the entity-kind
+      // brand (lives on [KindId] / SYSTEM namespace), not a data field on
+      // TypeSchema. Earlier the export side was leaking it.
+      // `typename` / `version` are not data fields either; they live in
+      // `EntityMeta` (the canonical registry-provenance pair) and surface
+      // through `@meta.key` / `@meta.version` in the JSON snapshot.
+      const typeRow = data.objects.find((o: any) => o['@meta']?.key === typename);
+      expect(typeRow).toBeDefined();
+      expect(typeRow).not.toHaveProperty('kind');
+      expect(typeRow).not.toHaveProperty('typename');
+      expect(typeRow).not.toHaveProperty('version');
+
+      // Survive a JSON round-trip — mirrors what `client.spaces.import` does.
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db } = await builder.createDatabase();
+        await new Serializer().import(db, data);
+
+        // The reconstituted Type.Type entity must brand `KindId = Type`.
+        // `Filter.type(Type.Type)` fans into both the DB and the in-process
+        // registry (which holds the pre-seeded `Type.Type` and builder defaults),
+        // so locate the round-tripped entity by typename rather than by count.
+        const entities = await db.query(Filter.type(Type.Type)).run();
+        const roundTrip = entities.find((entity) => Type.getTypename(entity) === typename);
+        expect(roundTrip).toBeDefined();
+        expect(Type.isType(roundTrip!)).to.be.true;
+        expect(Type.getTypename(roundTrip!)).to.eq(typename);
+
+        // Every returned schema must have a valid typename — the `getSortKey` path that
+        // Composer's markdown editor hits via `useLinkQuery` must not throw `Invalid typename`.
+        // Persisted types live in the db (not the shared registry), so query the space.
+        for (const schema of entities) {
+          expect(() => Type.getTypename(schema as any)).not.to.throw();
+        }
+        expect(entities.some((schema) => Type.getTypename(schema as any) === typename)).to.be.true;
       }
     });
 

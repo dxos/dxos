@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Segment from './Segment';
@@ -23,18 +23,12 @@ export const Trip = Schema.Struct({
   end: Schema.optional(Format.DateTime),
   segments: Schema.Array(Ref.Ref(Segment.Segment)).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trip',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--airplane-takeoff--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--airplane-takeoff--regular', hue: 'sky' }),
+  Type.makeObject(DXN.make('org.dxos.type.trip', '0.1.0')),
 );
 
-export interface Trip extends Schema.Schema.Type<typeof Trip> {}
+export interface Trip extends Type.InstanceType<typeof Trip> {}
 
 export const instanceOf = (value: unknown): value is Trip => Obj.instanceOf(Trip, value);
 
@@ -60,4 +54,22 @@ export const removeSegment = (trip: Trip, segmentId: string): void => {
       trip.segments.splice(index, 1);
     }
   });
+};
+
+/**
+ * Resolves a trip's segment refs to the currently-loaded Segment objects,
+ * sorted ascending by primary (departure) date; undated segments sort last
+ * (stable by original order). This is the canonical segment order — used for
+ * both display (SegmentStack) and keyboard navigation, so they stay in sync.
+ * Refs whose target is not yet loaded are skipped.
+ */
+export const getSegments = (trip: Trip): Segment.Segment[] => {
+  const list = (trip.segments ?? [])
+    .map((ref) => (Ref.isRef(ref) ? ref.target : undefined))
+    .filter((segment): segment is Segment.Segment => Segment.instanceOf(segment));
+  return list.sort(
+    (a, b) =>
+      (Segment.getPrimaryDate(a)?.getTime() ?? Number.POSITIVE_INFINITY) -
+      (Segment.getPrimaryDate(b)?.getTime() ?? Number.POSITIVE_INFINITY),
+  );
 };

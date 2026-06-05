@@ -4,11 +4,11 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
@@ -89,13 +89,13 @@ type TaskSnapshot = {
 const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) });
 
 /**
- * Generic foreign-key lookup. Schema is forwarded to `Filter.foreignKeys`
+ * Generic foreign-key lookup. Type is forwarded to `Filter.foreignKeys`
  * untyped — the caller supplies the result type via the explicit `T` parameter
  * (mirrors how plugin-trello casts after `Database.runQuery`).
  */
-const findByForeignId = <T>(schema: Schema.Schema<any, any>, id: string | number) =>
+const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
   Effect.gen(function* () {
-    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])));
+    const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(type as never, [fkFor(id)])));
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 
@@ -308,8 +308,8 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (assignedPerson && !existing.assigned) {
         existing.assigned = Ref.make(assignedPerson);
       }
-      const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
-      const projectId = Ref.make(project).dxn.asEchoDXN()?.echoId;
+      const currentProjectId = existing.project ? EID.getEntityId(EID.tryParse(existing.project.uri)!) : undefined;
+      const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);
       }
@@ -514,9 +514,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
         }
 
-        const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+        const integrationId = EID.getEntityId(EID.tryParse(integration.uri)!) ?? 'unknown';
         const toastIdSuffix = repoRef
-          ? `${integrationId}.${repoRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+          ? `${integrationId}.${EID.getEntityId(EID.tryParse(repoRef.uri)!) ?? 'unknown'}`
           : integrationId;
 
         const outcome = yield* Effect.either(
@@ -533,7 +533,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const reposById = new Map(allRepos.map((repo) => [String(repo.id), repo]));
 
             // Optional narrow filter to a single Project echo id.
-            const repoFilterId = repoRef?.dxn.asEchoDXN()?.echoId;
+            const repoFilterId = repoRef ? EID.getEntityId(EID.tryParse(repoRef.uri)!) : undefined;
 
             // Materialize per-target work: ensure local Project exists, wire
             // `target.object` ref, then later batch-pull each repo's owning org

@@ -1,0 +1,387 @@
+---
+id: org.dxos.plugin.meeting
+name: MeetingPlugin
+version: 0.1.0
+---
+
+A meeting management plugin for DXOS Composer that captures notes, transcribes audio in real time, and generates AI-powered summaries of meetings held inside a call or video session.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Meeting
+  typename: org.dxos.type.meeting
+  fields:
+    name?: string                     # user-defined label; falls back to created timestamp
+    created: string                   # ISO 8601 creation timestamp
+    participants: string[]            # DIDs of identities that joined the meeting
+    transcript?: Ref<Transcript>      # live transcript feed
+    notes?: Ref<Text>                 # freeform markdown notes
+    summary?: Ref<Text>               # AI-generated markdown summary
+```
+
+```mdl
+type Settings
+  fields:
+    entityExtraction: boolean         # default: true — annotate transcript with known objects
+```
+
+```mdl
+type MeetingState
+  fields:
+    activeMeeting?: Meeting
+    transcriptionManager?: TranscriptionManager
+```
+
+## Components
+
+```mdl
+component MeetingArticle
+  desc: Detail view for a single Meeting object; shows notes and AI summary side-by-side.
+  props:
+    meeting: Meeting
+    attendableId: string
+    role: string
+  state:
+    notes: Text                       # resolved from meeting.notes ref
+    summary: Text                     # resolved from meeting.summary ref
+    hasSummary: boolean               # true when summary.content is non-empty
+  actions:
+    generateSummary() → void          # invokes op:Summarize
+    regenerateSummary() → void        # same as generateSummary; label differs
+  layout: |
+    ┌─────────────────────────┐
+    │  Notes section          │
+    │  ┌───────────────────┐  │
+    │  │ markdown editor   │  │
+    │  └───────────────────┘  │
+    ├─────────────────────────┤
+    │  Summary section        │
+    │  ┌───────────────────┐  │
+    │  │ [summary content] │  │
+    │  │  or               │  │
+    │  │ [Generate button] │  │
+    │  └───────────────────┘  │
+    └─────────────────────────┘
+```
+
+```mdl
+component MeetingsList
+  desc: Companion panel shown alongside a call channel; lists all meetings in the space.
+  props:
+    channel: Channel                  # the call channel object providing space context
+  state:
+    meetings: Meeting[]               # reactive ECHO query, sorted newest-first
+  actions:
+    createMeeting() → Meeting         # invokes op:Create then op:SetActive
+    selectMeeting(meeting: Meeting)   # invokes op:SetActive
+  layout: |
+    ┌─────────────────────────┐
+    │ [Create Meeting button] │
+    ├─────────────────────────┤
+    │ meeting row             │
+    │  name / timestamp   [→] │
+    │ meeting row             │
+    │  ...                    │
+    └─────────────────────────┘
+```
+
+```mdl
+component MeetingSettings
+  desc: Settings panel for configuring meeting plugin preferences.
+  props:
+    settings: Settings
+  actions:
+    toggleEntityExtraction(enabled: boolean)
+```
+
+## Operations
+
+```mdl
+op Create
+  desc: Creates a new Meeting object in the given space, including linked Transcript, notes, and summary Text objects.
+  input:
+    name?: string
+    channel: Channel
+  output: Meeting
+  effects: [echo:write]
+  note: Also invokes TranscriptOperation.Create to initialise the transcript feed.
+```
+
+```mdl
+op SetActive
+  desc: Sets the currently active meeting in plugin state and broadcasts the meeting DXN to the call layer as an activity payload.
+  input:
+    object?: Meeting
+  output: Meeting
+  effects: [calls:activity]
+  requires: [MeetingCapabilities.State, CallsCapabilities.Manager]
+```
+
+```mdl
+op HandlePayload
+  desc: Processes an incoming call-layer meeting payload; resolves the Meeting and Transcript feed objects from ECHO and updates transcription state.
+  input:
+    meetingId?: string
+    transcriptDXN?: string
+    transcriptionEnabled?: boolean
+  output: void
+  effects: [echo:read]
+  requires: [ClientCapabilities.Client, MeetingCapabilities.State]
+  note: Called whenever the remote call state is updated with a new meeting activity.
+```
+
+```mdl
+op Summarize
+  desc: Reads transcript and notes content from the active Meeting, sends them to the AI model, and writes the resulting markdown back to meeting.summary.
+  input:
+    meeting: Meeting
+  output: void
+  effects: [echo:write, ai:inference]
+  requires: [AiService, AppCapabilities.TextContent]
+  note: Uses claude-3-5-haiku-latest; result is a structured markdown document with key points, quotes, and actionable task checkboxes.
+```
+
+## Features
+
+```mdl
+feat F-1: Meeting Creation
+
+  req F-1.1: A new Meeting is created with an ISO timestamp and empty participants list.
+  req F-1.2: The meeting is linked to a freshly created Transcript feed object.
+  req F-1.3: Empty notes and summary Text objects are created and linked.
+  req F-1.4:
+    when: meeting is created from the MeetingsList panel
+    then: meeting is immediately set as the active meeting
+```
+
+```mdl
+feat F-2: Active Meeting
+
+  req F-2.1:
+    when: op:SetActive is invoked with a meeting
+    then: plugin state activeMeeting is updated
+
+  req F-2.2:
+    when: op:SetActive is invoked with a meeting
+    then: call layer is updated with meeting DXN as activity payload
+
+  req F-2.3:
+    when: op:SetActive is invoked with undefined
+    then: active meeting is cleared and call layer activity is reset
+```
+
+```mdl
+feat F-3: Real-Time Transcription
+
+  req F-3.1:
+    when: user joins a call
+    then: TranscriptionManager is opened and stored in plugin state
+
+  req F-3.2:
+    when: HandlePayload is received with transcriptionEnabled: true
+    then: transcription starts writing to the linked Transcript feed
+
+  req F-3.3:
+    when: user's speaking state changes
+    then: TranscriptionManager.setRecording is called with the current value
+
+  req F-3.4:
+    when: user leaves the call
+    then: TranscriptionManager is closed and plugin state is reset
+```
+
+```mdl
+feat F-4: AI Summary
+
+  req F-4.1:
+    when: user requests a summary
+    then: op:Summarize combines transcript text and notes content as input
+
+  req F-4.2:
+    when: AI model returns a result
+    then: markdown is written to meeting.summary and persisted via ECHO
+
+  req F-4.3:
+    when: summary already exists
+    then: MeetingArticle shows a regenerate button instead of the initial generate button
+
+  req F-4.4:
+    when: no tasks are found in the transcript
+    then: tasks section is omitted from the summary
+```
+
+```mdl
+feat F-5: Notes
+
+  req F-5.1: Notes section always rendered in MeetingArticle regardless of summary state.
+  req F-5.2: Notes are persisted as a linked Text object in ECHO and replicated to all peers.
+```
+
+```mdl
+feat F-6: Entity Extraction
+
+  req F-6.1:
+    when: entityExtraction setting is true and a transcript message arrives
+    then: Assistant annotates mentions of known objects (people, organisations) in the message
+
+  req F-6.2:
+    when: entityExtraction setting is false
+    then: messages are stored without annotation enrichment
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create meeting
+  given: a call channel exists in an ECHO space
+  when: op:Create is invoked with that channel
+  then:
+    - a Meeting object is present in the space
+    - meeting.transcript resolves to a Transcript object
+    - meeting.notes resolves to an empty Text object
+    - meeting.summary resolves to an empty Text object
+    - meeting.created is a valid ISO 8601 string
+```
+
+```mdl
+test T-2: Set active meeting
+  given: a Meeting object exists
+  when: op:SetActive is invoked with the meeting
+  then:
+    - MeetingCapabilities.State.activeMeeting === meeting
+    - call layer activity payload contains meeting DXN
+```
+
+```mdl
+test T-3: Clear active meeting
+  given: a meeting is currently active
+  when: op:SetActive is invoked with undefined
+  then:
+    - MeetingCapabilities.State.activeMeeting === undefined
+    - call layer activity meetingId is empty string
+```
+
+```mdl
+test T-4: Handle incoming payload
+  given: a Meeting and Transcript feed exist in the space
+  when: op:HandlePayload is invoked with meetingId, transcriptDXN, and transcriptionEnabled: true
+  then:
+    - state.activeMeeting resolves to the correct Meeting
+    - TranscriptionManager.setFeed is called with the resolved Feed
+    - TranscriptionManager.setEnabled is called with true
+```
+
+```mdl
+test T-5: Generate summary
+  given: a Meeting with transcript content and notes
+  when: op:Summarize is invoked
+  then:
+    - AI model receives concatenated transcript + notes content
+    - meeting.summary.content is updated with markdown text
+    - summary contains key points section
+    - summary contains tasks section when actionable items were found
+```
+
+```mdl
+test T-6: Regenerate summary
+  given: MeetingArticle is rendered with a non-empty summary
+  when: user clicks the regenerate button
+  then:
+    - op:Summarize is invoked
+    - meeting.summary is overwritten with new AI output
+```
+
+```mdl
+test T-7: Transcription lifecycle
+  given: user is in a call
+  when: user joins the call
+  then: TranscriptionManager is opened and stored in state
+
+  when: user leaves the call
+  then:
+    - TranscriptionManager is closed
+    - plugin state is reset to empty
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ai:inference | calls:activity
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

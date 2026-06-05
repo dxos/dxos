@@ -19,6 +19,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
 import {
+  AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
   AssistantState,
@@ -36,9 +37,14 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AssistantEvents, AssistantOperation } from '#types';
+import { AssistantEvents, AssistantOperation, type AssistantPluginOptions } from '#types';
 
-export const AssistantPlugin = Plugin.define(meta).pipe(
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
+const StateReady = AppActivationEvents.createStateEvent(meta.id);
+
+export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
@@ -77,6 +83,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: AppActivationEvents.SetupSettings,
+    firesAfterActivation: [StateReady],
     activate: AssistantState,
   }),
   Plugin.addModule({
@@ -97,11 +104,21 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: LocalModelResolver,
   }),
-  Plugin.addModule({
+  Plugin.addModule((options) => ({
+    id: Capability.getModuleTag(AiService),
     firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: ActivationEvents.SetupProcessManager,
-    activate: AiService,
+    activate: () => AiService(options),
+  })),
+  Plugin.addModule({
+    // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+    // dispatched as their own processes (e.g. via `Operation.invoke` from
+    // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
+    // conversation-scoped services without an inline `Effect.provideService`
+    // upstream. See `capabilities/ai-context.ts` for the rationale.
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: AiContextCapability,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): Use a different event.
@@ -113,12 +130,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       DeckEvents.StateReady,
+      StateReady,
     ),
     activate: CompanionChatProvisioner,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

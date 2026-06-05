@@ -10,10 +10,10 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
+import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore, SyncServer } from '@dxos/feed';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
@@ -49,7 +49,7 @@ const createEdgeConnection = ({
   serverRuntime: ReturnType<typeof createRuntime>;
   messageListeners: Set<(message: RouterMessage) => void>;
 }): EdgeConnection => {
-  const reconnectListeners = new Set<() => void>();
+  const reconnectListeners = new Set<ReconnectListener>();
 
   return {
     statusChanged: new Event<any>(),
@@ -77,7 +77,7 @@ const createEdgeConnection = ({
       messageListeners.add(listener);
       return () => messageListeners.delete(listener);
     },
-    onReconnected: (listener: () => void) => {
+    onReconnected: (listener: ReconnectListener) => {
       reconnectListeners.add(listener);
       return () => reconnectListeners.delete(listener);
     },
@@ -151,8 +151,8 @@ describe('FeedSyncer', () => {
     const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
       spaceId,
     });
-    const serverFeedId = ObjectId.random();
-    const clientFeedId = ObjectId.random();
+    const serverFeedId = EntityId.random();
+    const clientFeedId = EntityId.random();
 
     await serverFeedStore
       .appendLocal([
@@ -209,13 +209,49 @@ describe('FeedSyncer', () => {
     });
   });
 
+  test('pushes unpositioned backlog on open without new local writes', async () => {
+    const spaceId = SpaceId.random();
+    const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
+      spaceId,
+    });
+    const clientFeedId = EntityId.random();
+
+    await clientFeedStore
+      .appendLocal([
+        {
+          spaceId,
+          feedId: clientFeedId,
+          feedNamespace: syncNamespace,
+          data: new Uint8Array([9, 8, 7]),
+        },
+      ])
+      .pipe(RuntimeProvider.runPromise(clientRuntime.runtimeEffect));
+
+    await syncer.open(new Context());
+
+    await vi.waitFor(async () => {
+      const { blocks } = await serverFeedStore
+        .query({
+          spaceId,
+          feedNamespace: syncNamespace,
+          position: -1,
+          query: { feedIds: [clientFeedId] },
+        })
+        .pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].data).toEqual(new Uint8Array([9, 8, 7]));
+      expect(blocks[0].position).toBeDefined();
+    });
+  });
+
   test('requestPoll triggers best-effort pull for a space', async () => {
     const spaceId = SpaceId.random();
     const { serverRuntime, clientRuntime, serverFeedStore, clientFeedStore, syncer } = await createFeedSyncHarness({
       spaceId,
       pollingInterval: 60_000,
     });
-    const serverFeedId = ObjectId.random();
+    const serverFeedId = EntityId.random();
 
     await serverFeedStore
       .appendLocal([
@@ -291,8 +327,8 @@ describe('FeedSyncer', () => {
       spaceId,
       syncNamespaces,
     });
-    const serverDataFeedId = ObjectId.random();
-    const serverTraceFeedId = ObjectId.random();
+    const serverDataFeedId = EntityId.random();
+    const serverTraceFeedId = EntityId.random();
 
     await serverFeedStore
       .appendLocal([

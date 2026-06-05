@@ -38,7 +38,7 @@ export const MessageArticle = ({
 
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
-    return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
+    return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'markdown';
   }, [message]);
 
   const db = Obj.getDatabase(message);

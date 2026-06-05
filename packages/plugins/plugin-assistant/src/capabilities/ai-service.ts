@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -10,8 +11,10 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { LayerSpec } from '@dxos/compute';
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+import type { AssistantPluginOptions } from '#types';
+
+export default Capability.makeModule<AssistantPluginOptions | void, Capability.Any[]>(
+  Effect.fnUntraced(function* (options) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
     // TODO(dmaretskyi): Extract function to reduce them.
@@ -20,9 +23,19 @@ export default Capability.makeModule(
       AiModelResolver.AiModelResolver.fromModelMap({ name: 'Fallback' }, Effect.succeed({})), // Empty resolver as fallback.
     );
 
-    const aiServiceLayer: Layer.Layer<AiService.AiService> = AiModelResolver.AiModelResolver.buildAiService.pipe(
+    let aiServiceLayer: Layer.Layer<AiService.AiService> = AiModelResolver.AiModelResolver.buildAiService.pipe(
       Layer.provide(combinedLayer),
     );
+
+    const aiServiceMiddleware = options?.aiServiceMiddleware;
+    if (aiServiceMiddleware) {
+      aiServiceLayer = aiServiceLayer.pipe(
+        Layer.map((context) => {
+          const aiService = Context.get(context, AiService.AiService);
+          return Context.make(AiService.AiService, aiServiceMiddleware(aiService));
+        }),
+      );
+    }
 
     const aiServiceSpec = LayerSpec.make(
       {

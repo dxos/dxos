@@ -28,6 +28,11 @@
 ## Planning
 
 - **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+  - "Cast" means `as T`, `as any`, `as unknown as T`, non-null `!`, or a widened/`any` signature added to silence a type error. `as const` is NOT a cast in this sense — it narrows a literal rather than bypassing the checker, and is always acceptable (no comment or justification needed).
+  - Default: fix the type at its source (inference, signature, generic), not the call site that surfaced the error. A red typecheck during a refactor is a finding, not an obstacle to paper over.
+  - Casts are only acceptable at genuine type-system boundaries (external/untyped data, deliberate coercions), and must carry a concise comment saying why no typed alternative exists.
+  - **Before every commit/PR**, audit your diff for new casts: `git diff origin/main | grep -nE '\bas (any|unknown|[A-Z])|as unknown as'`. Justify or remove each; do not defer to review. (`as const` is intentionally excluded from this pattern.)
+  - Casts accumulate fastest during large codemods — treat each as a deliberate decision, never an autopilot stopgap.
 
 ## Knowledge
 
@@ -54,6 +59,13 @@
 - Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
 - Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
 - Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
+- For exported functions with multiple overloads, declare them as `const` with the overload signatures inline in the type annotation rather than using `export function` with repeated declarations. This keeps the implementation as an arrow function and groups all signatures together:
+  ```ts
+  export const myFn: {
+    <T extends Foo>(a: T): Bar<T>;
+    (a: string): Bar<any>;
+  } = (a): Bar<unknown> => { ... };
+  ```
 
 ### React
 
@@ -66,11 +78,9 @@
 
 ## Workflow
 
-- Never work on `main`
-  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
-  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
-  - If there are unstaged changes, stash these and move them into the worktree.
+- Never work on `main`; always work within the session-generated worktree.
+  - If there are unstaged changes, stash these and move them into the worktree; tell the user.
+  - Before working on code, tell the user the worktree.
   - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
   - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
@@ -82,6 +92,12 @@
 
 - When collaborating closely with the User, determine if the user's role can be automated.
 - Be precise about what you are asking the user to do and actively manage the process.
+- **IMPORTANT**: Model the user as a very expensive, intermittent resource and minimize round-trips to them. The wasteful pattern to avoid: the user waits a long time for the agent to finish, only to be asked to test or supply something the agent could have anticipated.
+  - At task start, analyze ALL human dependencies up-front (test credentials, assets, design decisions, accounts, manual verification steps).
+  - Gather/build/scaffold anything obtainable autonomously BEFORE asking the user for anything.
+  - Request all needed resources from the user in ONE batch, alongside a very concise plan; get a single go-ahead.
+  - Then execute the remainder of the task uninterrupted; do not bounce back for things that could have been front-loaded.
+  - If you hit an unforeseen human dependency mid-task, park it and continue all other reachable work; only surface an immediate ask when you are fully blocked and cannot make progress otherwise. Batch parked asks for the next checkpoint.
 
 ## PR Naming Convention
 
@@ -114,7 +130,7 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push all pending changes.
+  - Commit and push all pending changes (including any edits that the user may have made in the worktree).
   - **IMPORTANT**: Verify `git status` shows a clean working tree after the final push. If any files remain modified or untracked, either commit them or confirm with the user before proceeding.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - You must attempt to diagnose and if possible fix all CI errors -- regardless of whether they relate to the current branch
@@ -122,6 +138,7 @@ Examples:
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
   - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.
+  - **IMPORTANT**: ALWAYS surface the Composer preview URL next to the PR number/link in chat summaries AND in the final message. The `preview-deploy.yml` workflow publishes a sticky `composer-preview` comment on the PR containing a branch-alias URL of the form `https://<branch-alias>.composer-app.pages.dev` and a per-deployment URL — fetch it with `gh pr view <pr> --json comments` (or `gh api repos/dxos/dxos/issues/<pr>/comments`) and include it verbatim. If the preview comment is not yet posted (deploy still running), say "preview pending" alongside the PR link and re-check on the next status update.
 
 ## Cursor Cloud specific instructions
 

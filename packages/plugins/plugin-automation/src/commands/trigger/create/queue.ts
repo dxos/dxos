@@ -14,18 +14,19 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
+import { Database, Feed as FeedNs, Filter, JsonSchema, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
-import { Enabled, Input, Queue } from '../options';
+import { Enabled, Feed, Input } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectFeed } from '../util';
 
 export const queue = Command.make(
-  'queue',
+  'feed',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
     enabled: Enabled,
     functionId: Common.functionId.pipe(Options.optional),
-    queue: Queue.pipe(Options.optional),
+    feed: Feed.pipe(Options.optional),
     input: Input.pipe(Options.optional),
   },
   (options) =>
@@ -42,9 +43,9 @@ export const queue = Command.make(
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
       }
 
-      const queueDXN = yield* Option.match(options.queue, {
+      const feed = yield* Option.match(options.feed, {
         onNone: () => selectFeed(),
-        onSome: (dxn) => Effect.succeed(dxn.toString()),
+        onSome: (uri) => Database.resolve(EID.parse(uri), FeedNs.Feed),
       });
 
       const input = yield* Option.match(options.input, {
@@ -65,7 +66,7 @@ export const queue = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: Trigger.specQueue(queueDXN),
+        spec: Trigger.specFeed(feed),
         input,
       });
 
@@ -80,7 +81,7 @@ export const queue = Command.make(
       yield* flushAndSync({ indexes: true });
     }),
 ).pipe(
-  Command.withDescription('Create a queue trigger.'),
+  Command.withDescription('Create a feed trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
   Command.provideEffectDiscard(() => withTypes(Operation.PersistentOperation, Trigger.Trigger)),
 );

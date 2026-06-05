@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Json, Obj, Query } from '@dxos/echo';
-import type { ObjectId } from '@dxos/keys';
+import type { EntityId } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Clipboard, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -20,7 +20,7 @@ export type DebugObjectPanelProps = Pick<
 
 export const DebugObjectPanel = ({ role, companionTo }: DebugObjectPanelProps) => {
   const db = Obj.getDatabase(companionTo);
-  const [selectedId, setSelectedId] = useState<ObjectId | null>(null);
+  const [selectedId, setSelectedId] = useState<EntityId | null>(null);
   const [depth, setDepth] = useState(0);
   const [selectedObject] = useQuery(
     db,

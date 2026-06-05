@@ -1,0 +1,396 @@
+---
+id: org.dxos.plugin.sample
+name: SamplePlugin
+version: 0.1.0
+---
+
+A pedagogical reference plugin for `DXOS` Composer that demonstrates all common
+plugin patterns in a single, well-commented package. Use this plugin as a living
+guide when building new plugins.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type SampleItem
+  fields:
+    name?: string
+    description?: string
+    status?: active | archived | draft    # default: active
+  typename: org.dxos.type.sample
+  version: 0.1.0
+```
+
+```mdl
+type Settings
+  fields:
+    showStatusIndicator?: boolean         # default: true
+```
+
+## Components
+
+```mdl
+component SampleItemView
+  desc: Presentational form for viewing and editing a SampleItem's fields.
+  props:
+    name?: string
+    description?: string
+    status?: active | archived | draft
+  emits:
+    onValuesChanged(values: Partial<SampleItem>)
+```
+
+```mdl
+component SampleArticle
+  desc: |
+    Main article/section surface for SampleItem objects. Subscribes to
+    the ECHO object via `useObject` and forwards a snapshot to SampleItemView.
+    Builds toolbar actions from the app graph and wires them via Menu.Root.
+  props:
+    subject: SampleItem
+    role?: string
+    attendableId?: string
+  state:
+    snapshot: SampleItem              # reactive snapshot from useObject
+    actions: MenuActions              # toolbar actions from the app graph
+  layout: |
+    ┌─────────────────────────┐
+    │ Panel.Toolbar            │
+    │  [Menu.Root / Toolbar]  │
+    ├─────────────────────────┤
+    │ Panel.Content           │
+    │  SampleItemView         │
+    └─────────────────────────┘
+```
+
+```mdl
+component SampleCompanionPanel
+  desc: |
+    Plank companion that shows related SampleItems from the same space.
+    Queries all SampleItems via `useQuery` and filters out the current item.
+  props:
+    companionTo: SampleItem
+  state:
+    allItems: SampleItem[]            # reactive ECHO query result
+    relatedItems: SampleItem[]        # allItems minus companionTo
+  layout: |
+    ┌─────────────────────────┐
+    │ Panel.Toolbar (empty)   │
+    ├─────────────────────────┤
+    │ Panel.Content           │
+    │  RelatedItemsList       │
+    └─────────────────────────┘
+```
+
+```mdl
+component SampleDeckCompanion
+  desc: |
+    Workspace-wide deck companion panel. Rendered once per session,
+    not tied to a specific object. Shows a summary view of SampleItems
+    in the active space.
+  props:
+    space: Space
+    role?: string
+    attendableId?: string
+```
+
+```mdl
+component SampleSettings
+  desc: Plugin settings form rendered inside the global settings panel.
+  props:
+    settings: Settings
+  emits:
+    onSettingsChange(patch: Partial<Settings>)
+```
+
+```mdl
+component SampleStatusIndicator
+  desc: |
+    Status-bar widget. Shown or hidden based on the `showStatusIndicator`
+    setting. Reads the setting atom via `useAtomCapability`.
+  state:
+    showStatusIndicator: boolean      # from SampleCapabilities.Settings atom
+```
+
+```mdl
+component SampleProperties
+  desc: Per-object properties panel (gear icon companion) for SampleItems.
+  props:
+    subject: SampleItem
+```
+
+```mdl
+component ActiveSpacePanel
+  desc: Panel component displaying SampleItems in the currently active space.
+  props:
+    space?: Space
+```
+
+```mdl
+component RelatedItemsList
+  desc: List of SampleItems that are related to the current item.
+  props:
+    items: SampleItem[]
+  emits:
+    onNavigate(id: string)
+```
+
+## Operations
+
+```mdl
+op createSampleItem
+  desc: Creates a new SampleItem with an optional name and writes it to ECHO.
+  input:
+    name?: string
+  output: { object: SampleItem }
+  effects: [echo:write]
+  note: object is returned so callers can navigate to it immediately.
+```
+
+```mdl
+op randomize
+  desc: Randomizes all fields of an existing SampleItem using faker data.
+  input:
+    item: SampleItem
+  output: void
+  effects: [echo:write]
+  note: uses `@dxos/random` (faker); mutates name, description, and status.
+```
+
+```mdl
+op updateStatus
+  desc: Sets the status field on an existing SampleItem.
+  input:
+    item: SampleItem
+    status: string
+  output: void
+  effects: [echo:write]
+  note: uses `Obj.update` for safe property assignment on the ECHO proxy.
+```
+
+## Features
+
+```mdl
+feat F-1: SampleItem CRUD
+
+  req F-1.1:
+    when: user triggers "Create Sample Item" from the global action menu
+    then: op:createSampleItem is invoked; new item appears in the space graph
+
+  req F-1.2:
+    when: SampleArticle is open and the user edits a field
+    then: `Obj.update` is called; change replicates to all peers via ECHO
+
+  req F-1.3:
+    when: user triggers "Archive" from the navtree context menu
+    then: op:updateStatus is invoked with status "archived"
+```
+
+```mdl
+feat F-2: Randomize Action
+
+  req F-2.1:
+    when: a SampleItem node is active in the Composer
+    then: a "Randomize" action appears in the article toolbar
+
+  req F-2.2:
+    when: the user triggers "Randomize"
+    then: op:randomize sets name, description, and status to random values
+```
+
+```mdl
+feat F-3: App Graph Integration
+
+  req F-3.1:
+    when: a space contains at least one SampleItem
+    then: a "Samples" section node appears in the navigation tree under that space
+
+  req F-3.2:
+    when: the Samples section is expanded
+    then: all SampleItems in the space appear as child nodes
+
+  req F-3.3:
+    when: the space contains no SampleItems
+    then: no Samples section node is created
+```
+
+```mdl
+feat F-4: Companion Panels
+
+  req F-4.1:
+    when: a SampleItem article is open
+    then: a companion panel shows related SampleItems from the same space
+
+  req F-4.2:
+    when: the user clicks a related item in the companion panel
+    then: the item is opened via `LayoutOperation.Open`
+
+  req F-4.3:
+    when: the deck companion is enabled
+    then: a workspace-wide SampleDeckCompanion panel appears in the companion bar
+```
+
+```mdl
+feat F-5: Settings
+
+  req F-5.1:
+    when: the user opens Global Settings and selects the Sample plugin
+    then: SampleSettings form is rendered with the current setting values
+
+  req F-5.2:
+    when: the user toggles "Show status indicator"
+    then: SampleStatusIndicator in the status bar shows or hides immediately
+
+  req F-5.3:
+    when: the app is restarted
+    then: settings are restored from local KVS
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create item from global action
+  given: composer is open with an active space
+  when: user invokes "Create Sample Item"
+  then:
+    - op:createSampleItem returns an object
+    - the new SampleItem is visible in the Samples section of the nav tree
+```
+
+```mdl
+test T-2: Edit item inline
+  given: SampleArticle is open for an existing SampleItem
+  when: user changes the name field
+  then:
+    - Obj.update is called with the new name
+    - all peers see the updated name via ECHO replication
+```
+
+```mdl
+test T-3: Randomize action in toolbar
+  given: SampleArticle is open, it is the active object
+  when: user clicks Randomize in the toolbar
+  then:
+    - op:randomize is invoked
+    - item's name, description, and status change to random values
+```
+
+```mdl
+test T-4: Archive from context menu
+  given: a SampleItem node is shown in the nav tree
+  when: user right-clicks and selects Archive
+  then:
+    - op:updateStatus is invoked with status "archived"
+    - item.status === "archived"
+```
+
+```mdl
+test T-5: Companion shows related items
+  given: a space contains three SampleItems, item A is open
+  when: the companion panel is shown
+  then:
+    - RelatedItemsList shows items B and C
+    - item A is not listed
+```
+
+```mdl
+test T-6: Navigate from companion
+  given: companion panel is showing related items
+  when: user clicks item B in the list
+  then: LayoutOperation.Open is invoked with item B's path
+```
+
+```mdl
+test T-7: Status indicator toggle
+  given: SampleSettings showStatusIndicator is true
+  when: user sets showStatusIndicator to false in settings
+  then: SampleStatusIndicator is no longer rendered in the status bar
+```
+
+```mdl
+test T-8: Settings persisted across restart
+  given: user has set showStatusIndicator to false
+  when: app reloads
+  then: showStatusIndicator is still false (loaded from KVS)
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

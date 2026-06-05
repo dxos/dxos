@@ -23,20 +23,22 @@ export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text
  * remains the canonical surface for full article views.
  */
 export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => {
-  const id = Obj.getDXN(subject).toString();
+  const id = Obj.getURI(subject);
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
   const initialValue = docContent ?? textContent;
 
   return (
     <Card.Section classNames='overflow-hidden'>
-      <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
-        {(editorRootProps) => (
-          <Editor.Root {...editorRootProps}>
-            <MarkdownEditor.Content compact initialValue={initialValue} />
-          </Editor.Root>
-        )}
-      </MarkdownEditorProvider>
+      <Card.Row fullWidth>
+        <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
+          {(editorRootProps) => (
+            <Editor.Root {...editorRootProps}>
+              <MarkdownEditor.Content compact initialValue={initialValue} />
+            </Editor.Root>
+          )}
+        </MarkdownEditorProvider>
+      </Card.Row>
     </Card.Section>
   );
 };

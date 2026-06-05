@@ -231,6 +231,25 @@ const expandBindings = <T extends Record<string, any>>(
 };
 
 /**
+ * Validates that a surface or extension local ID follows NSID conventions:
+ * each dot-separated segment must be alphanumeric, and the final segment must
+ * be camelCase (no hyphens). This mirrors the rule enforced when the id is
+ * appended to a plugin's NSID to form a full DXN path.
+ *
+ * @example Valid:   'about', 'integrationArticle', 'article.journal'
+ * @example Invalid: 'integration-article', 'plugin-spec'
+ */
+const validateLocalId = (id: string): void => {
+  const segments = id.split('.');
+  const finalSegment = segments[segments.length - 1];
+  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
+    throw new Error(
+      `Invalid surface id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
+    );
+  }
+};
+
+/**
  * Creates a React surface definition.
  */
 export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
@@ -240,6 +259,7 @@ export function create<T extends Record<string, any> = any>(
 export function create<T extends Record<string, any> = any>(
   definition: TypedReactDefinition<T> | Omit<ReactDefinition<T>, 'kind'>,
 ): ReactDefinition<T> {
+  validateLocalId(definition.id);
   if (isSurfaceFilter(definition.filter)) {
     const { id, filter, component, position } = definition as TypedReactDefinition<T>;
     const { role, guard } = expandBindings(filter);
@@ -260,6 +280,7 @@ export function createWeb<T extends Record<string, any> = any>(
 export function createWeb<T extends Record<string, any> = any>(
   definition: TypedWebComponentDefinition<T> | Omit<WebComponentDefinition<T>, 'kind'>,
 ): WebComponentDefinition<T> {
+  validateLocalId(definition.id);
   if (isSurfaceFilter(definition.filter)) {
     const { id, filter, tagName, position } = definition as TypedWebComponentDefinition<T>;
     const { role, guard } = expandBindings(filter);

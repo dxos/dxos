@@ -56,6 +56,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -71,26 +72,25 @@
   "files": [
     "dist",
     "src",
-    "docs/PLUGIN.mdl"
+    "docs/PLUGIN.mdl",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@babylonjs/core": "catalog:",
     "@babylonjs/loaders": "catalog:",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "babylonjs-gltf2interface": "catalog:",

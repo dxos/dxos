@@ -24,10 +24,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../common/keyboard"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -48,9 +48,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -58,9 +55,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/react-client"
     },
     {
       "path": "../../ui/lit-ui"
@@ -76,9 +70,6 @@
     },
     {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-search"
@@ -103,9 +94,6 @@
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-space"

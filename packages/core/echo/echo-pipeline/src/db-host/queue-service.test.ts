@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -33,7 +33,7 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
+      const queueId = EntityId.random();
       const object1 = { id: 'obj1', data: 'test1' };
       const object2 = { id: 'obj2', data: 'test2' };
 
@@ -64,8 +64,8 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
 
       const spaceId = SpaceId.random();
-      const queueId = ObjectId.random();
-      const object1Id = ObjectId.random();
+      const queueId = EntityId.random();
+      const object1Id = EntityId.random();
       const object1 = { id: object1Id, data: 'test1' };
 
       yield* Effect.promise(() =>
@@ -102,7 +102,7 @@ describe('LocalQueueServiceImpl', () => {
       yield* feedStore.migrate();
       const service = new LocalQueueServiceImpl(runtime, feedStore);
       const spaceId = 'space-1' as SpaceId;
-      const queueId = ObjectId.random();
+      const queueId = EntityId.random();
 
       // Insert 10 items
       const items = Array.from({ length: 10 }, (_, i) => ({ id: `obj${i}`, data: `test${i}` }));
@@ -140,6 +140,32 @@ describe('LocalQueueServiceImpl', () => {
       expect(page2.objects).toHaveLength(5);
       expect(JSON.parse(page2.objects![0])).toMatchObject(items[5]);
       expect(JSON.parse(page2.objects![4])).toMatchObject(items[9]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should report local push backlog in getSyncState', () =>
+    Effect.gen(function* () {
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      yield* feedStore.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      yield* Effect.promise(() =>
+        service.insertIntoQueue({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          queueId,
+          objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
+        }),
+      );
+
+      const state = yield* Effect.promise(() => service.getSyncState({ spaceId }));
+      const dataState = state.namespaces?.find((entry) => entry.namespace === FeedProtocol.WellKnownNamespaces.data);
+      expect(dataState?.blocksToPush).toBe('1');
+      expect(dataState?.blocksToPull).toBe('0');
+      expect(dataState?.totalBlocks).toBe('1');
     }).pipe(Effect.provide(TestLayer)),
   );
 });

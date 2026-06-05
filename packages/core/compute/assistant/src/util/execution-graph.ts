@@ -5,7 +5,7 @@
 import { AgentStatus } from '@dxos/ai';
 import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
-import { type ObjectId } from '@dxos/keys';
+import { EID, type EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
@@ -250,7 +250,7 @@ export class ExecutionGraph {
   /**
    * Gets the branch name for a tool call.
    */
-  private _getToolCallBranch(parentMessage?: ObjectId, toolCallId?: string): string {
+  private _getToolCallBranch(parentMessage?: EntityId, toolCallId?: string): string {
     if (toolCallId) {
       return toolCallId;
     }
@@ -477,11 +477,11 @@ const getToolCallBranchFromCommitId = (toolCallCommitId: string, toolCallId: str
   return `${messageId}_${toolCallId}`;
 };
 
-const getToolCallId = (messageId: ObjectId, toolCallId: string) => `${messageId}_toolCall_${toolCallId}`;
-const getToolResultId = (messageId: ObjectId, toolCallId: string) => `${messageId}_toolResult_${toolCallId}`;
-const getGenericBlockId = (messageId: ObjectId, idx: number) => `${messageId}_block_${idx}`;
+const getToolCallId = (messageId: EntityId, toolCallId: string) => `${messageId}_toolCall_${toolCallId}`;
+const getToolResultId = (messageId: EntityId, toolCallId: string) => `${messageId}_toolResult_${toolCallId}`;
+const getGenericBlockId = (messageId: EntityId, idx: number) => `${messageId}_block_${idx}`;
 
-const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string }) => {
+const getBranchName = (options: { parentMessage?: EntityId; toolCallId?: string }) => {
   if (options.toolCallId) {
     return options.toolCallId;
   } else if (options.parentMessage) {
@@ -511,7 +511,8 @@ const stringifyRef = (ref: Ref.Unknown) => {
     return stringifyObject(ref.target);
   }
 
-  return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
+  const echoUri = EID.tryParse(ref.uri);
+  return (echoUri ? EID.getEntityId(echoUri) : undefined) ?? '';
 };
 
 const stringifyObject = (obj: Obj.Unknown) => {

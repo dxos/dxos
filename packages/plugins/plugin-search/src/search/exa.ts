@@ -14,11 +14,11 @@ import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
-export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
+export type SearchOptions<T extends Type.AnyEntity> = {
   query?: string;
   // TODO(dmaretskyi): How can we pass this through.
   context?: string;
-  schema: Schema[];
+  types: T[];
   exaApiKey: string;
   liveCrawl?: boolean;
 };
@@ -32,8 +32,8 @@ export type SearchResult<T = unknown> = {
 };
 
 /** @deprecated Use MixedStreamParser */
-export const search = async <Schema extends Schema.Schema.AnyNoContext>(
-  options: SearchOptions<Schema>,
+export const search = async <T extends Type.AnyEntity>(
+  options: SearchOptions<T>,
 ): Promise<SearchResult<Entity.Unknown>> => {
   throw new Error('Not implemented');
   // assertArgument(options.query || options.context, "query or context", "query or context is required");
@@ -186,7 +186,7 @@ const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
 
   return entries
     .map((entry) => {
-      idMap.set(entry.data.id, Key.ObjectId.random());
+      idMap.set(entry.data.id, Key.EntityId.random());
       entry.data.id = idMap.get(entry.data.id);
       return entry;
     })

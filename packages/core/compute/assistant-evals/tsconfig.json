@@ -1,0 +1,57 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../../tools/vite-plugin-import-source"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../plugins/plugin-assistant"
+    },
+    {
+      "path": "../../../plugins/plugin-automation"
+    },
+    {
+      "path": "../../../plugins/plugin-client"
+    },
+    {
+      "path": "../../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../assistant-toolkit"
+    },
+    {
+      "path": "../compute"
+    }
+  ]
+}

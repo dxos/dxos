@@ -10,6 +10,9 @@ import { AppGraphBuilder, CallManager, ReactRoot, ReactSurface } from '#capabili
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../PLUGIN.mdl?raw';
+
 export const CallsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
@@ -19,6 +22,9 @@ export const CallsPlugin = Plugin.define(meta).pipe(
     id: 'call-manager',
     activatesOn: ClientEvents.ClientReady,
     activate: CallManager,
+  }),
+  AppPlugin.addPluginAssetModule({
+    asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
   }),
   Plugin.make,
 );

@@ -155,7 +155,7 @@ const ScrollContainerContent = composable<HTMLDivElement, ScrollContainerContent
   ({ children, thin, padding, centered, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: 'relative' })}
+        {...composableProps(props, { classNames: 'relative isolate' })}
         thin={thin}
         padding={padding}
         centered={centered}

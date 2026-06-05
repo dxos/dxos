@@ -34,10 +34,12 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/lang-xml": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",

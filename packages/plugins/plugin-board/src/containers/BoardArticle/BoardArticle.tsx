@@ -12,6 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -100,7 +101,10 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
-      const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
+      const idx = board.items.findIndex((ref) => {
+        const echoUri = EID.tryParse(ref.uri);
+        return (echoUri ? EID.getEntityId(echoUri) : undefined) === id;
+      });
       Obj.update(board, (board) => {
         if (idx !== -1) {
           board.items.splice(idx, 1);

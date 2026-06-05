@@ -2,19 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.table',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.table'),
   name: 'Tables',
   author: 'DXOS',
   description: trim`
-    Powerful relational database tables with custom columns, sorting, and filtering capabilities.
-    Build structured data models with relationships between tables and export to multiple formats.
+    Tables brings structured, spreadsheet-style data views to DXOS Composer.
+    Any ECHO schema type can be bound to a Table, giving users a familiar grid interface
+    for browsing, creating, and editing objects stored in a local-first collaborative space.
+
+    Columns are derived automatically from the schema's fields and persisted in a View object
+    alongside the table. Rows can be inserted inline, sorted by column, filtered by tag or
+    global search, and deleted with multi-row selection — all changes are replicated in
+    real-time across peers via ECHO.
+
+    The plugin integrates deeply with the Composer lifecycle: a default Task table is created
+    when a new space is initialised, and a table is automatically opened whenever a new schema
+    type is added to a space. An AI blueprint lets agents create and populate tables
+    programmatically using the plugin's operation set.
   `,
   icon: 'ph--table--regular',
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-table',
+  spec: 'PLUGIN.mdl',
   screenshots: ['https://dxos.network/plugin-details-tables-dark.png'],
-};
+});

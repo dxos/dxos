@@ -105,7 +105,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
       classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface')}
       onClick={handleSelect}
     >
-      <Card.Toolbar>
+      <Card.Header>
         <Avatar.Root>
           <Avatar.Content
             hue={data.properties.hue}
@@ -118,7 +118,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
           <Avatar.Label>{name}</Avatar.Label>
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
-      </Card.Toolbar>
+      </Card.Header>
     </Card.Root>
   );
 };

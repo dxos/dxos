@@ -6,13 +6,27 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed as EchoFeed, Obj, Ref, StateMap, TagIndex, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
 
 /** Subscription protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
+
+/**
+ * System {@link Tag} foreign keys for per-Post flags (resolved to `Tag` objects via
+ * `Tag.findOrCreate` on first use), so star/archive participate in the space-wide tag system.
+ */
+export const STARRED_TAG = { source: 'org.dxos.plugin.feed', id: 'starred' };
+export const ARCHIVED_TAG = { source: 'org.dxos.plugin.feed', id: 'archived' };
+
+/** Per-Post mutable state stored on the Subscription (shared across magazines), keyed by Post id. */
+export const PostState = Schema.Struct({
+  /** ISO 8601 timestamp when first opened. */
+  readAt: Schema.optional(Schema.String),
+});
+export type PostState = Schema.Schema.Type<typeof PostState>;
 
 /**
  * Default upper bound on the number of (non-starred) Posts retained when
@@ -68,51 +82,27 @@ export const Subscription = Schema.Struct({
    */
   contentFeed: Ref.Ref(EchoFeed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
   /**
-   * Per-Post state keyed by Post id. The Posts themselves live in this
-   * subscription's `feed` queue (immutable feed entries); their mutable
-   * state lives here so the queue stays append-only and Posts never enter
-   * `space.db`.
-   *
-   * Authority: shared across every Magazine that references this
-   * Subscription's Posts. Marking a Post read here makes it read in every
-   * magazine view; archiving / starring likewise.
-   *
-   * Only small per-Post state lives here — fetched bodies (which can be
-   * many KB each) go into the {@link contentFeed} queue.
-   *
-   * - `imageUrl`: hero image extracted at curate time (from `description`) or
-   *   later refined by `LoadPostContent` (from the full article HTML). Hot-
-   *   path: every magazine tile reads it.
-   * - `readAt`: ISO 8601 timestamp when first opened.
-   * - `archived`: hides the Post from default magazine views.
-   * - `starred` / `starredAt`: cross-magazine star flag (replaces the older
-   *   `Obj.getMeta(post).tags + STAR_TAG` pattern).
+   * Per-Post mutable state keyed by Post id, shared across every Magazine that references the Post.
+   * Posts live immutably in the `feed` queue; their `readAt` marker lives here. (`snippet`/`imageUrl`
+   * are derived from the Post, or refined onto `contentFeed` entries — not stored here; star/archive
+   * are tags — see `tags`.)
    */
-  postState: Schema.Record({
-    key: Schema.String,
-    value: Schema.Struct({
-      imageUrl: Schema.optional(Schema.String),
-      readAt: Schema.optional(Schema.String),
-      archived: Schema.optional(Schema.Boolean),
-      starred: Schema.optional(Schema.Boolean),
-      starredAt: Schema.optional(Schema.String),
-    }),
-  }).pipe(FormInputAnnotation.set(false), Schema.optional),
+  postState: StateMap.field(PostState),
+  /**
+   * Per-Post tags keyed by tag uri → Post ids. Boolean flags (starred, archived — see
+   * {@link STARRED_TAG} / {@link ARCHIVED_TAG}) are modelled as {@link Tag} objects so they
+   * participate in the space-wide tag system.
+   */
+  tags: TagIndex.field(),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.subscription.feed',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['name', 'url']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--rss--regular',
-    hue: 'orange',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--rss--regular', hue: 'orange' }),
   FeedAnnotation.set(true),
   FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
+  Type.makeObject(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
 );
 
-export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
+export type Subscription = Type.InstanceType<typeof Subscription>;
 
 /** Checks if a value is a Subscription.Subscription object. */
 export const instanceOf = (value: unknown): value is Subscription => Obj.instanceOf(Subscription, value);
@@ -148,16 +138,15 @@ export const PostContent = Schema.Struct({
   postId: Schema.String,
   /** Extracted article body, in Markdown. */
   text: Schema.String,
+  /** Refined snippet derived from the full article (preferred over the description-derived one). */
+  snippet: Schema.optional(Schema.String),
+  /** Refined hero image derived from the full article (preferred over the description-derived one). */
+  imageUrl: Schema.optional(Schema.String),
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.subscription.post-content',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
 
-export interface PostContent extends Schema.Schema.Type<typeof PostContent> {}
+export type PostContent = Type.InstanceType<typeof PostContent>;
 
 /**
  * A single post/entry within a subscription feed.
@@ -175,8 +164,10 @@ export const Post = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
   /** URL link to the original article. */
   link: Schema.String.pipe(Schema.optional),
-  /** Plain-text or HTML description/summary. */
+  /** Plain-text or summary. */
   description: Schema.String.pipe(Schema.optional),
+  /** Plain-text or HTML content. */
+  content: Schema.String.pipe(Schema.optional),
   /** Author name. */
   author: Schema.String.pipe(Schema.optional),
   /** ISO 8601 publication date. */
@@ -184,18 +175,12 @@ export const Post = Schema.Struct({
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.subscription.post',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['title']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--article--regular',
-    hue: 'orange',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'orange' }),
+  Type.makeObject(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
 );
 
-export interface Post extends Schema.Schema.Type<typeof Post> {}
+export type Post = Type.InstanceType<typeof Post>;
 
 /** Creates a Subscription.Post object. */
 export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.make(Post, props);

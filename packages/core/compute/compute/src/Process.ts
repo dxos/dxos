@@ -14,8 +14,8 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
+import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ObjectId } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -138,9 +138,15 @@ export interface Params {
   readonly name: string | null;
 
   /**
-   * Target object that this process is assigned to.
+   * URI of the target this process is assigned to.
    */
-  readonly target: ObjectId | null;
+  readonly target: URI.URI | null;
+
+  /**
+   * User-facing notifications requested for this process's lifecycle phases.
+   * Surfaced on {@link Info} so a notification tracker can subscribe to the process monitor.
+   */
+  readonly notify?: Operation.NotifyOptions;
 }
 
 //
@@ -244,7 +250,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 ): Process<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
   make(
     {
-      key: op.meta.key,
+      key: DXN.getName(op.meta.key),
       input: op.input,
       output: op.output,
       services: op.services,
@@ -261,6 +267,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
               });
               // Emit ephemeral operation input event for live subscribers
               // (history tracker, devtools) without persisting raw input.
@@ -293,6 +300,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
                 outcome: 'success',
               });
             }).pipe(
@@ -303,6 +311,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
+                    icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
                   });

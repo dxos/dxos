@@ -6,10 +6,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { useQuery, useSchema as defaultUseSchema } from '@dxos/echo-react';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
+import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
+import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -27,7 +27,7 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
-    const id = Entity.getDXN(result).toString();
+    const id = Entity.getURI(result);
     const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
     return { id, label: label ?? id };
@@ -38,7 +38,7 @@ const defaultUseResults: NonNullable<RefFieldProps['useResults']> = (db, typenam
     db,
     typename
       ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
-        typename === Type.getTypename(Obj.Unknown)
+        typename === ANY_OBJECT_TYPENAME
         ? Filter.everything()
         : Filter.typename(typename)
       : Filter.nothing(),
@@ -51,7 +51,7 @@ export type RefFieldProps = FormFieldComponentProps &
   > & {
     db?: Database.Database;
     // TODO(burdon): Replace hooks with callbacks.
-    useSchema?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    useType?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     /**
@@ -78,7 +78,7 @@ export const RefField = (props: RefFieldProps) => {
     createInitialValuePath,
     createFieldMap,
     db,
-    useSchema = defaultUseSchema,
+    useType = defaultUseType,
     useResults = defaultUseResults,
     getOptions = defaultGetOptions,
     onCreate,
@@ -100,21 +100,24 @@ export const RefField = (props: RefFieldProps) => {
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
-    // Match form-value Refs against options by the bare object id (last DXN
-    // segment), not by full DXN string. Ref.make uses
-    // `DXN.fromLocalObjectId(id)` (`dxn:echo:@:<id>`), but
-    // `Entity.getDXN(obj)` on a registered object produces the space-scoped
-    // form (`dxn:echo:<spaceId>:<id>`). String-comparing the two never
-    // matches, so the just-created Ref's option lookup fails and the slot
-    // displays as empty even though the underlying form value IS set.
-    const dxnToObjectId = (dxn: string): string => dxn.split(':').pop() ?? dxn;
+    // Match form-value Refs against options by the bare entity id, not by full
+    // URI string. A just-created object's Ref (`Ref.make`) carries the LOCAL
+    // EID `echo:/<id>`, while options derived from `Entity.getURI` carry the
+    // qualified EID `echo://<spaceId>/<id>`; encoded snapshots use the DXN
+    // form `dxn:echo:<space|@>:<id>`. The entity id (a ULID) contains neither
+    // `:` nor `/`, so it is always the final delimiter-separated segment —
+    // splitting on both reconciles all three forms. Comparing full strings (or
+    // splitting on `:` alone, which leaves `/`-delimited EIDs intact) makes the
+    // just-created Ref's lookup fail and the slot render empty even though the
+    // underlying form value IS set.
+    const dxnToEntityId = (dxn: string): string => dxn.split(/[:/]/).filter(Boolean).pop() ?? dxn;
 
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
-        const dxnString = isRef ? value.dxn.toString() : value['/'];
-        const objectId = dxnToObjectId(dxnString);
-        const matchingOption = options.find((option) => dxnToObjectId(option.id) === objectId);
+        const dxnString = isRef ? value.uri : value['/'];
+        const objectId = dxnToEntityId(dxnString);
+        const matchingOption = options.find((option) => dxnToEntityId(option.id) === objectId);
         if (matchingOption) {
           return matchingOption;
         }
@@ -128,7 +131,7 @@ export const RefField = (props: RefFieldProps) => {
 
   const item = handleGetValue();
   const selectedIds = useMemo(() => (item ? [item.id] : []), [item]);
-  const createSchema = useSchema(db, typename);
+  const createSchema = useType(db, typename);
 
   // Lift the popover open state so we can dismiss it after a successful create.
   const [open, setOpen] = useState(false);
@@ -153,7 +156,7 @@ export const RefField = (props: RefFieldProps) => {
   const handleUpdate = useCallback(
     (id: string | undefined) => {
       const item = options.find((option) => option.id === id);
-      const ref = item ? Ref.fromDXN(DXN.parse(item.id)) : undefined;
+      const ref = item ? Ref.fromURI(URI.make(item.id)) : undefined;
       onValueChange(type, ref);
     },
     [options, type, onValueChange],
@@ -214,7 +217,7 @@ export const RefField = (props: RefFieldProps) => {
                 // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
                 // form's validator doesn't reject required-but-hidden fields
                 // such as backing-object refs supplied by a `FactoryAnnotation`.
-                createSchema={createSchema && omitHiddenFormFields(omitId(createSchema))}
+                createSchema={createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema)))}
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}

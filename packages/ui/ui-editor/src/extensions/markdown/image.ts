@@ -3,23 +3,48 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, type Range, StateField, type Transaction } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import {
+  type EditorState,
+  type Extension,
+  type Range,
+  StateEffect,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { focusField } from '../focus';
 
-export type ImageOptions = {};
+// Effect dispatched when the viewport extends (e.g., scrolling reveals new content). The state
+// field listens for this and rebuilds decorations across the full doc so images outside the
+// initial parse range get widgetized.
+const rebuildEffect = StateEffect.define<void>();
+
+export type ImageNodeData = { name: 'Image'; url: string };
+
+export type ImageOptions = {
+  /**
+   * Predicate that returns true to suppress rendering of an image node.
+   * When skipped, the markdown link source is left visible to the user instead of being
+   * replaced by an `<img>` widget.
+   */
+  skip?: (node: ImageNodeData) => boolean;
+};
 
 /**
  * Create image decorations.
  */
-export const image = (_options: ImageOptions = {}): Extension => {
+export const image = (options: ImageOptions = {}): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => {
-        return Decoration.set(buildDecorations(state, 0, state.doc.length));
+        return Decoration.set(buildDecorations(state, 0, state.doc.length, options));
       },
       update: (value: DecorationSet, tr: Transaction) => {
+        // Full rebuild when the viewport extended (lazy parse now covers more of the doc).
+        if (tr.effects.some((effect) => effect.is(rebuildEffect))) {
+          return Decoration.set(buildDecorations(tr.state, 0, tr.state.doc.length, options));
+        }
         if (!tr.docChanged && !tr.selection) {
           return value;
         }
@@ -42,15 +67,25 @@ export const image = (_options: ImageOptions = {}): Extension => {
           filterFrom: from,
           filterTo: to,
           filter: () => false,
-          add: buildDecorations(tr.state, from, to),
+          add: buildDecorations(tr.state, from, to, options),
         });
       },
       provide: (field) => EditorView.decorations.from(field),
     }),
+    // Block-replace decorations have to live in a state field, but viewport changes are only
+    // observable from a view plugin. Bridge the two by dispatching a rebuild effect whenever
+    // the viewport extends so newly-parsed image nodes get widgetized without requiring focus.
+    ViewPlugin.define((view) => ({
+      update: (update) => {
+        if (update.viewportChanged) {
+          queueMicrotask(() => view.dispatch({ effects: rebuildEffect.of(undefined) }));
+        }
+      },
+    })),
   ];
 };
 
-const buildDecorations = (state: EditorState, from: number, to: number) => {
+const buildDecorations = (state: EditorState, from: number, to: number, options: ImageOptions = {}) => {
   const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
   syntaxTree(state).iterate({
@@ -63,6 +98,11 @@ const buildDecorations = (state: EditorState, from: number, to: number) => {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
           // Some plugins might be using custom URLs; avoid attempts to render those URLs.
           if (url.match(/^https?:\/\//) === null && url.match(/^file?:\/\//) === null) {
+            return;
+          }
+
+          // Consumer-supplied filter (e.g., disable remote-image rendering by setting).
+          if (options.skip?.({ name: 'Image', url })) {
             return;
           }
 
@@ -106,13 +146,34 @@ class ImageWidget extends WidgetType {
     const img = document.createElement('img');
     img.setAttribute('src', this._url);
     img.setAttribute('class', 'cm-image');
+    const focused = view.state.field(focusField);
     // If focused, hide image until successfully loaded to avoid flickering effects.
-    if (view.state.field(focusField)) {
-      img.onload = () => img.classList.add('cm-loaded-image');
+    if (focused) {
+      img.onload = () => {
+        img.classList.add('cm-loaded-image');
+        collapseIfTrackingPixel(img);
+      };
     } else {
       img.classList.add('cm-loaded-image');
+      img.onload = () => collapseIfTrackingPixel(img);
     }
+    // Error (e.g., blocked tracker URL): also collapse so we don't leave a hole.
+    img.onerror = () => collapseLine(img);
 
     return img;
   }
 }
+
+/**
+ * Tracking pixels are commonly 1×1 (or 0×0) transparent images embedded by mail senders.
+ * They add no visual value, so hide them once their natural dimensions are known.
+ */
+const collapseIfTrackingPixel = (img: HTMLImageElement) => {
+  if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
+    collapseLine(img);
+  }
+};
+
+const collapseLine = (img: HTMLImageElement) => {
+  img.style.display = 'none';
+};

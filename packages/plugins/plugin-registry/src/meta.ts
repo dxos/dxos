@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { pinnedWorkspaceId } from '@dxos/app-toolkit';
+import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 export const REGISTRY_ID = pinnedWorkspaceId('dxos:plugin-registry');
@@ -30,8 +31,8 @@ export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/
  */
 export const getPluginSpecPath = (pluginId: string): string => `${getPluginPath(pluginId)}/spec`;
 
-export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.registry',
+export const meta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.registry'),
   name: 'Plugins',
   author: 'DXOS',
   description: trim`
@@ -40,7 +41,7 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--squares-four--regular',
   tags: ['system'],
-};
+});
 
 /** Cascade-disable confirmation dialog surface id. */
-export const DISABLE_DEPENDENTS_DIALOG = `${meta.id}.disable-dependents-dialog`;
+export const DISABLE_DEPENDENTS_DIALOG = DXN.make(`${meta.id}.disableDependentsDialog`);

@@ -217,6 +217,12 @@ export type RecoverIdentityRequest = {
   lookupKey?: string;
   signature?: RecoverIdentitySignature;
   token?: string;
+  /**
+   * One-time proof minted by kms-service after a successful OAuth recovery flow.
+   * When provided, db-service redeems the proof to obtain the bound identityKey directly
+   * and `lookupKey`/`signature` are not required.
+   */
+  recoveryProof?: string;
 };
 
 export type RecoverIdentityResponseBody = {
@@ -335,8 +341,17 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   scopes: Schema.mutable(Schema.Array(Schema.String)),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
   noRefresh: Schema.optional(Schema.Boolean),
-  // Provider-specific (user handle or did for bluesky) hint for auth server resolution
+  // Provider-specific (user handle or did for atproto) hint for auth server resolution
   loginHint: Schema.optional(Schema.String),
+  // Return a 302 redirect to composer://oauth/callback instead of HTML.
+  // Required for ASWebAuthenticationSession (iOS) which blocks JavaScript redirects.
+  nativeAppRedirect: Schema.optional(Schema.Boolean),
+  // OAuth-based account recovery: when purpose === 'register', kms-service writes a
+  // recovery binding for `identityKey` after the OAuth flow completes; when 'recovery',
+  // kms-service mints a one-time `recoveryProof` the client forwards to db-service.
+  registerRecovery: Schema.optional(Schema.Boolean),
+  identityKey: Schema.optional(Schema.String),
+  purpose: Schema.optional(Schema.Literal('register', 'recovery')),
 });
 export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 
@@ -345,8 +360,28 @@ export type InitiateOAuthFlowResponse = {
 };
 
 export type OAuthFlowResult =
-  | { success: true; accessToken: string; accessTokenId: string }
+  | { success: true; accessToken: string; accessTokenId: string; recoveryProof?: string }
   | { success: false; reason: string };
+
+/**
+ * Completes OAuth recovery registration for an existing identity: routes the OAuth refresh token
+ * into the personal space and writes the recovery binding.
+ */
+export type CompleteOAuthRegistrationRequest = {
+  registrationToken: string;
+  identityKey: string;
+  spaceKey: string;
+};
+
+export type CompleteOAuthRegistrationResponse = {
+  email?: string;
+  provider: OAuthProvider;
+  accessTokenId: string;
+  accessToken: string;
+  expiresInSeconds: number;
+  scopes: string[];
+  identifier: string;
+};
 
 export enum EdgeWebsocketProtocol {
   V0 = 'edge-ws-v0',
@@ -553,7 +588,7 @@ export type InspectSpaceResponse = {
     objectCount: number;
     deletedObjectCount: number;
     indexedDocumentCount: number;
-    objectsByType: { typeDXN: string; count: number }[];
+    objectsByType: { typeURI: string; count: number }[];
     indexerStatus: {
       indexingInProgress: boolean;
       cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];
@@ -612,3 +647,167 @@ export type DeleteSpaceResponse = { status: string; spaceId: string };
 
 export type DeleteIdentityRequest = { identityKey: string };
 export type DeleteIdentityResponse = { status: string; identityKey: string };
+
+//
+// Account / Invitation
+//
+
+export const INVITATION_CODE_LENGTH = 8;
+export const DEFAULT_INVITATIONS_PER_ACCOUNT = 5;
+
+/** Crockford base32 alphabet (no I, L, O, U). Case-insensitive on the wire. */
+export const INVITATION_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+export const InvitationCodeSchema = Schema.String.pipe(
+  Schema.pattern(new RegExp(`^[${INVITATION_CODE_ALPHABET}]{${INVITATION_CODE_LENGTH}}$`)),
+);
+
+export const CheckEmailExistsRequestSchema = Schema.Struct({
+  email: Schema.String,
+});
+export type CheckEmailExistsRequest = Schema.Schema.Type<typeof CheckEmailExistsRequestSchema>;
+export type CheckEmailExistsResponse = { exists: boolean };
+
+export const ValidateInvitationCodeRequestSchema = Schema.Struct({
+  code: InvitationCodeSchema,
+});
+export type ValidateInvitationCodeRequest = Schema.Schema.Type<typeof ValidateInvitationCodeRequestSchema>;
+export type ValidateInvitationCodeResponse = { valid: boolean };
+
+/**
+ * Body of `POST /account/login`. Existing-account email recovery only --
+ * unlike `/account/signup`, this never creates new identities or waitlist rows.
+ */
+export const LoginRequestSchema = Schema.Struct({
+  email: Schema.String,
+  identityDid: Schema.optional(Schema.String),
+  identityKey: Schema.optional(Schema.String),
+});
+export type LoginRequest = Schema.Schema.Type<typeof LoginRequestSchema>;
+
+/**
+ * Response from `POST /account/login`. The shape is identical regardless of
+ * whether the email is registered, so the endpoint is safe against enumeration.
+ * Regular emails are delivered out-of-band and the response is `{}`.
+ */
+export const LoginResponseSchema = Schema.Struct({
+  token: Schema.optional(Schema.String),
+  needsIdentity: Schema.optional(Schema.Boolean),
+  admitted: Schema.optional(Schema.Boolean),
+});
+export type LoginResponse = Schema.Schema.Type<typeof LoginResponseSchema>;
+
+// Two-step signup: invitation code + identity DID + email.
+export const RedeemInvitationCodeRequestSchema = Schema.Struct({
+  code: Schema.optional(InvitationCodeSchema),
+  identityDid: Schema.optional(Schema.String),
+  /** Raw hex public key, stored alongside the DID for the magic-link recovery flow. */
+  identityKey: Schema.optional(Schema.String),
+  email: Schema.String,
+});
+export type RedeemInvitationCodeRequest = Schema.Schema.Type<typeof RedeemInvitationCodeRequestSchema>;
+export type RedeemInvitationCodeResponse =
+  | { accountId: string; emailVerificationSent: boolean }
+  | { needsIdentity: true };
+
+export const GetAccountResponseSchema = Schema.Struct({
+  identityDid: Schema.String,
+  email: Schema.String,
+  emailVerified: Schema.Boolean,
+  /** ISO timestamp. */
+  createdAt: Schema.String,
+  invitationsRemaining: Schema.Number,
+});
+export type GetAccountResponse = Schema.Schema.Type<typeof GetAccountResponseSchema>;
+
+export const AccountInvitationSchema = Schema.Struct({
+  code: Schema.String,
+  /** ISO timestamp. */
+  createdAt: Schema.String,
+  redeemedByIdentityDid: Schema.optional(Schema.String),
+  /** ISO timestamp. */
+  redeemedAt: Schema.optional(Schema.String),
+});
+export type AccountInvitation = Schema.Schema.Type<typeof AccountInvitationSchema>;
+
+export const ListAccountInvitationsResponseSchema = Schema.Struct({
+  invitations: Schema.Array(AccountInvitationSchema),
+});
+export type ListAccountInvitationsResponse = Schema.Schema.Type<typeof ListAccountInvitationsResponseSchema>;
+
+export type IssueInvitationResponse = { code: string };
+
+export type ResendVerificationEmailResponse = {
+  sent: boolean;
+  cooldownSecondsRemaining?: number;
+};
+
+/**
+ * Submitted by users without an Account who want to request access. Captured
+ * by Hub for admin follow-up (e.g. mailing list, Discord notification).
+ */
+export const RequestAccessRequestSchema = Schema.Struct({
+  email: Schema.String,
+  /** Optional: identity DID the user is currently signed in as. */
+  identityDid: Schema.optional(Schema.String),
+  /** Optional free-form message from the requester. */
+  message: Schema.optional(Schema.String),
+});
+export type RequestAccessRequest = Schema.Schema.Type<typeof RequestAccessRequestSchema>;
+export type RequestAccessResponse = { received: boolean };
+
+//
+// Admin (X-API-KEY)
+//
+
+export type AdminListAccountsResponse = {
+  accounts: GetAccountResponse[];
+};
+
+export const AdminGrantInvitationsRequestSchema = Schema.Struct({
+  identityDid: Schema.String,
+  count: Schema.Number,
+});
+export type AdminGrantInvitationsRequest = Schema.Schema.Type<typeof AdminGrantInvitationsRequestSchema>;
+
+export const AdminCreateInvitationCodesRequestSchema = Schema.Struct({
+  count: Schema.Number,
+  note: Schema.optional(Schema.String),
+});
+export type AdminCreateInvitationCodesRequest = Schema.Schema.Type<typeof AdminCreateInvitationCodesRequestSchema>;
+export type AdminCreateInvitationCodesResponse = { codes: string[] };
+
+export type AdminListInvitationCodesResponse = {
+  codes: Array<{
+    code: string;
+    /** ISO timestamp. */
+    createdAt: string;
+    note?: string;
+    issuedByIdentityDid?: string;
+    redeemedByIdentityDid?: string;
+    /** ISO timestamp. */
+    redeemedAt?: string;
+    /** ISO timestamp. Set when revoked. */
+    revokedAt?: string;
+  }>;
+};
+
+export const AdminRevokeInvitationCodeRequestSchema = Schema.Struct({
+  code: InvitationCodeSchema,
+});
+export type AdminRevokeInvitationCodeRequest = Schema.Schema.Type<typeof AdminRevokeInvitationCodeRequestSchema>;
+
+/**
+ * Account/invitation-related variants placed in `EdgeFailure.data.type`.
+ * EdgeErrorData is open-ended; these are documentation for known values.
+ */
+export type AccountErrorType =
+  | 'invitation_code_invalid'
+  | 'invitation_code_already_redeemed'
+  | 'invitation_code_revoked'
+  | 'email_already_registered'
+  | 'identity_already_associated'
+  | 'no_invitations_remaining'
+  | 'identity_not_associated_with_account'
+  | 'no_account'
+  | 'rate_limited';

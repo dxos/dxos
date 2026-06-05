@@ -12,7 +12,7 @@ import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
-import { Filter, Obj, Query, View } from '@dxos/echo';
+import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
@@ -63,8 +63,9 @@ export default Capability.makeModule(() =>
             invariant(extensions?.space, 'No space');
             invariant(extensions?.invoke, 'No operation invoker');
 
-            // Validate schema exists first
-            const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+            // Validate schema exists first.
+            const types = extensions.space.db.graph.registry.list().filter(Type.isType);
+            const schema = types.find((t) => Type.getTypename(t) === typename);
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
@@ -105,7 +106,7 @@ export default Capability.makeModule(() =>
                 }
 
                 return {
-                  id: Obj.getDXN(view).toString(),
+                  id: Obj.getURI(view),
                   name: view.name ?? 'Unnamed Kanban',
                   typename: view.query.typename,
                 };
@@ -132,7 +133,8 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(Kanban.Kanban, kanban));
 
             const typename = view.query.typename;
-            const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+            const types = space.db.graph.registry.list().filter(Type.isType);
+            const schema = types.find((t) => Type.getTypename(t) === typename);
             invariant(schema);
 
             return ToolResult.Success({

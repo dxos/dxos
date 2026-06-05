@@ -11,13 +11,13 @@ import { inspectCustom } from '@dxos/debug';
 import {
   type DatabaseDirectory,
   EncodedReference,
-  type ObjectStructure,
+  type EntityStructure,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
+import { EntityKind, type EntityMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { assertArgument, invariant } from '@dxos/invariant';
+import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -35,7 +35,7 @@ const SYSTEM_NAMESPACE = 'system';
 
 export type ObjectCoreOptions = {
   type?: EncodedReference;
-  meta?: ObjectMeta;
+  meta?: EntityMeta;
   immutable?: boolean;
 };
 
@@ -50,7 +50,7 @@ export class ObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = ObjectId.random();
+  public id = EntityId.random();
 
   /**
    * Set if when the object is bound to a database.
@@ -60,7 +60,7 @@ export class ObjectCore {
   /**
    * Set if when the object is not bound to a database.
    */
-  public doc?: Doc<ObjectStructure> | undefined;
+  public doc?: Doc<EntityStructure> | undefined;
 
   /**
    * Set if when the object is bound to a database.
@@ -69,7 +69,7 @@ export class ObjectCore {
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
-   * The value at path must be of type `ObjectStructure`.
+   * The value at path must be of type `EntityStructure`.
    */
   public mountPath: KeyPath = [];
 
@@ -94,11 +94,13 @@ export class ObjectCore {
 
     initialProps ??= {};
 
-    this.doc = A.from<ObjectStructure>({
-      data: this.encode(initialProps as any),
+    this.doc = A.from<EntityStructure>({
+      data: this.encode(initialProps),
       meta: this.encode({
-        keys: [],
         ...opts?.meta,
+        keys: opts?.meta?.keys ?? [],
+        tags: opts?.meta?.tags ?? [],
+        annotations: opts?.meta?.annotations ?? {},
       }),
       system: {},
     });
@@ -141,8 +143,8 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
-  getObjectStructure(): ObjectStructure {
-    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
+  getObjectStructure(): EntityStructure {
+    return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
   }
 
   /**
@@ -199,7 +201,7 @@ export class ObjectCore {
   }
 
   getDocAccessor(path: KeyPath = []): DocAccessor {
-    invariant(isValidKeyPath(path));
+    assertArgument(isValidKeyPath(path), 'path');
     const self = this;
     return {
       handle: {
@@ -254,8 +256,11 @@ export class ObjectCore {
 
   /**
    * Encode a value to be stored in the Automerge document.
+   * Accepts arbitrary decoded input: in addition to {@link DecodedAutomergePrimaryValue}, this recursively
+   * serializes structured values such as entity meta, whose annotation dictionary holds opaque
+   * (schema-encoded) payloads that are not statically typed.
    */
-  encode(value: DecodedAutomergePrimaryValue) {
+  encode(value: unknown) {
     if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
@@ -337,7 +342,7 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
+  private _getRaw(path: KeyPath): Doc<EntityStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -358,7 +363,8 @@ export class ObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this._getRaw(path)) as DecodedAutomergePrimaryValue;
+    const decoded = this.decode(this._getRaw(path));
+    return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
@@ -441,11 +447,13 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
   }
 
-  getMeta(): ObjectMeta {
-    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
+  getMeta(): EntityMeta {
+    // Codec boundary: raw decoded automerge data is returned typed as the logical `EntityMeta`
+    // (tags are encoded references at rest; the handler materializes them into live refs on access).
+    return this.getDecoded([META_NAMESPACE]) as unknown as EntityMeta;
   }
 
-  setMeta(meta: ObjectMeta): void {
+  setMeta(meta: EntityMeta): void {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
@@ -460,10 +468,11 @@ export class ObjectCore {
       const parentRef = this.getParent();
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
-        const parentDXN = EncodedReference.toDXN(parentRef);
-        const echoDXN = parentDXN.asEchoDXN();
-        if (echoDXN && (echoDXN.spaceId === undefined || echoDXN.spaceId === this.database.spaceId)) {
-          const parentId = echoDXN.echoId;
+        const parentDXN = EncodedReference.toURI(parentRef);
+        const parentEchoUri = EID.tryParse(parentDXN);
+        const spaceId = parentEchoUri ? EID.getSpaceId(parentEchoUri) : undefined;
+        const parentId = parentEchoUri ? EID.getEntityId(parentEchoUri) : undefined;
+        if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
@@ -482,35 +491,46 @@ export class ObjectCore {
   }
 
   /**
-   * DXNs of objects that this object strongly depends on.
-   * Strong references are loaded together with the source object.
-   * Currently this is the schema reference and the source and target for relations.
+   * EIDs of objects that this object strongly depends on.
+   * Strong references are loaded together with the source object — only ECHO-scheme refs
+   * (object refs) qualify; type DXNs are resolved separately via the schema registry.
+   * Currently this is the schema reference (when stored as an object), source/target for
+   * relations, and the parent ref.
    */
-  getStrongDependencies(): DXN[] {
-    const res: DXN[] = [];
+  getStrongDependencies(): EID.EID[] {
+    const res: EID.EID[] = [];
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeDXN = EncodedReference.toDXN(typeRef);
-      if (typeDXN.kind === DXN.kind.ECHO) {
-        res.push(typeDXN);
+      const typeEchoUri = EID.tryParse(EncodedReference.toURI(typeRef));
+      if (typeEchoUri) {
+        res.push(typeEchoUri);
       }
     }
 
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        res.push(EncodedReference.toDXN(sourceRef));
+        const id = EID.tryParse(EncodedReference.toURI(sourceRef));
+        if (id) {
+          res.push(id);
+        }
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        res.push(EncodedReference.toDXN(targetRef));
+        const id = EID.tryParse(EncodedReference.toURI(targetRef));
+        if (id) {
+          res.push(id);
+        }
       }
     }
 
     const parentRef = this.getParent();
     if (parentRef) {
-      res.push(EncodedReference.toDXN(parentRef));
+      const id = EID.tryParse(EncodedReference.toURI(parentRef));
+      if (id) {
+        res.push(id);
+      }
     }
 
     return res;
@@ -535,6 +555,52 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
   return false;
 };
 
+/**
+ * Lazily normalizes `meta` on read so the now-required `tags`/`annotations` fields are always present,
+ * and upgrades legacy string entries in `meta.tags` (bare DXN/EID URIs) to {@link EncodedReference}s so
+ * they materialize as `Ref<Tag>` like any other reference. Mirrors {@link convertLegacyProtoReference}:
+ * the transform happens on read and persists physically only on the next write. This keeps data written
+ * before these fields existed (or before tags became refs) readable without an eager migration.
+ * Scoped strictly to the `meta` namespace so unrelated values in `data` are untouched.
+ */
+const upgradeMeta = (path: KeyPath, value: unknown): unknown => {
+  if (path[0] !== META_NAMESPACE) {
+    return value;
+  }
+  // Whole `meta` object: backfill required fields and upgrade tag ids.
+  if (path.length === 1 && value != null && typeof value === 'object') {
+    const meta = value as Record<string, unknown>;
+    return {
+      ...meta,
+      tags: Array.isArray(meta.tags) ? meta.tags.map(upgradeTagRef) : [],
+      annotations: meta.annotations ?? {},
+    };
+  }
+  // `meta.tags`: default to an empty array when absent; upgrade string entries.
+  if (path.length === 2 && path[1] === 'tags') {
+    return Array.isArray(value) ? value.map(upgradeTagRef) : [];
+  }
+  // `meta.annotations`: default to an empty dictionary when absent.
+  if (path.length === 2 && path[1] === 'annotations') {
+    return value ?? {};
+  }
+  // A single `meta.tags[i]` element.
+  if (path.length === 3 && path[1] === 'tags') {
+    return upgradeTagRef(value);
+  }
+  return value;
+};
+
+const upgradeTagRef = (value: unknown): unknown => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  // Normalize legacy DXN object references (e.g. `dxn:echo:@:<id>`) to the canonical `echo:` EID;
+  // leave non-EID ids (e.g. `dxn:type:…`) untouched.
+  const uri = EID.tryParse(value) ?? value;
+  return EncodedReference.fromURI(URI.make(uri));
+};
+
 // TODO(burdon): Move to echo-protocol.
 const maybeReference = (value: unknown): value is { objectId: string; protocol?: string; host?: string } =>
   typeof value === 'object' &&
@@ -553,13 +619,16 @@ const convertLegacyProtoReference = (value: {
   host?: string;
 }): EncodedReference => {
   const TYPE_PROTOCOL = 'protobuf';
-  let dxn: DXN;
+  let uri: URI.URI;
   if (value.protocol === TYPE_PROTOCOL) {
-    dxn = new DXN(DXN.kind.TYPE, [value.objectId]);
+    uri = DXN.make(value.objectId);
   } else if (value.host) {
-    dxn = new DXN(DXN.kind.ECHO, [value.host, value.objectId]);
+    invariant(SpaceId.isValid(value.host), 'Invalid space id');
+    invariant(EntityId.isValid(value.objectId), 'Invalid object id');
+    uri = EID.make({ spaceId: value.host, entityId: value.objectId });
   } else {
-    dxn = DXN.fromLocalObjectId(value.objectId);
+    invariant(EntityId.isValid(value.objectId), 'Invalid object id');
+    uri = EID.make({ entityId: value.objectId });
   }
-  return EncodedReference.fromDXN(dxn);
+  return EncodedReference.fromURI(uri);
 };

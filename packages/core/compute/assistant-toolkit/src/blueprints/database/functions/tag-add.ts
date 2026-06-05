@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Database, Entity, Obj } from '@dxos/echo';
+import { Database, Entity } from '@dxos/echo';
 
 import { TagAdd } from './definitions';
 
@@ -13,8 +13,7 @@ export default TagAdd.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ tag, obj }) {
       const object = yield* Database.load(obj);
-      const tagObj = yield* Database.load(tag);
-      Entity.update(object, (object) => Entity.addTag(object, Obj.getDXN(tagObj).toString()));
+      Entity.update(object, (object) => Entity.addTag(object, tag));
       return Entity.toJSON(object);
     }),
   ),

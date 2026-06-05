@@ -62,7 +62,7 @@ export default AgentPrompt.pipe(
           Effect.map(Array.map((option) => option.value)),
         );
 
-        const promptInstructions = yield* Database.load(prompt.instructions.source);
+        const promptInstructions = yield* Database.load(prompt.instructions);
         let promptText = Template.process(promptInstructions.content, input);
 
         if (input !== undefined) {
@@ -213,7 +213,7 @@ const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
             log('invoking operation', { operationDef, input });
             const result = yield* operationInvoker
               .invoke(operationDef, input, {
-                conversation: Obj.getDXN(feed).toString(),
+                conversation: Obj.getURI(feed),
               })
               .pipe(Effect.orDie);
             log('result', { result });

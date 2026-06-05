@@ -65,7 +65,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2'>
-        <TemplateEditor id={subject.id} template={subject.instructions} />
+        <TemplateEditor id={subject.id} source={subject.instructions} />
         <RoutineResult state={state} />
       </Panel.Content>
     </Panel.Root>
@@ -91,7 +91,7 @@ const usePromptHandler = (routine: Routine.Routine) => {
   const data = useMemo<Operation.Definition.Input<typeof AgentPrompt> | undefined>(() => {
     if (db && routine) {
       return {
-        prompt: db.makeRef(Obj.getDXN(routine)),
+        prompt: db.makeRef(Obj.getURI(routine)),
         input: {},
       };
     }

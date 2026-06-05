@@ -155,6 +155,13 @@ export interface Space extends Messenger {
   close(): Promise<void>;
 
   /**
+   * Tombstones (soft-deletes) the space and replicates the deletion to the user's other devices.
+   * Every device stops replicating and unloads the space. Underlying data is not removed until
+   * garbage collection (future work). This is terminal: the space cannot be re-opened via {@link open}.
+   */
+  delete(): Promise<void>;
+
+  /**
    * Waits until the space is in the ready state, with database initialized.
    */
   waitUntilReady(): Promise<this>;

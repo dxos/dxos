@@ -1,0 +1,371 @@
+---
+id: org.dxos.plugin.wnfs
+name: WnfsPlugin
+version: 0.1.0
+---
+
+A decentralized file storage plugin for `DXOS` Composer built on the Web Native File System (WNFS) protocol.
+
+WNFS provides a content-addressed, end-to-end encrypted private file system using a cryptographic "dark forest"
+structure. Files are stored as IPLD blocks referenced by CID, replicated to a DXOS edge blob service, and
+cached locally in IndexedDB. The plugin implements the `FileCapabilities.Backend` and `FileCapabilities.UrlResolver`
+interfaces from `plugin-file`, so other plugins (e.g. `plugin-gallery`) can upload and resolve `wnfs://` URLs
+without knowing the underlying storage layer. Uploads are scoped to a DXOS Space; the private forest root CID
+is persisted on the space's ECHO properties and updated atomically on every write.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Cid
+  desc: A content-addressed identifier encoded as a base-32 multibase string (CIDv1, sha2-256).
+  fields:
+    value: string
+```
+
+```mdl
+type WnfsPath
+  desc: A WNFS path encoded as a wnfs:// URL; segments are percent-encoded.
+  fields:
+    url: string               # wnfs://spaces/<spaceId>/files/<cid>
+```
+
+```mdl
+type FileInfo
+  desc: Metadata returned after a successful upload.
+  fields:
+    name: string              # Original file name
+    type: string              # MIME type
+    url: WnfsPath             # wnfs:// URL for later retrieval
+    cid: Cid                  # Raw content CID of the file bytes
+```
+
+```mdl
+type BlockstoreState
+  desc: Runtime state of the MixedBlockstore.
+  fields:
+    isConnected: boolean      # Online / offline status
+    queueLength: number       # Blocks pending remote flush
+    apiHost: string           # DXOS edge service base URL
+```
+
+```mdl
+type WnfsInstances
+  desc: In-memory cache mapping forest CID → loaded PrivateDirectory/PrivateForest pair.
+  fields:
+    entries: Record<string, WnfsInstance>
+```
+
+```mdl
+type WnfsInstance
+  desc: A loaded WNFS private file system rooted at a specific forest CID.
+  fields:
+    directory: PrivateDirectory
+    forest: PrivateForest
+```
+```
+
+## Operations
+
+Pure operations — no external effects.
+
+```mdl
+op wnfsUrl
+  desc: Encodes a WNFS path array into a wnfs:// URL with percent-encoded segments.
+  input:
+    filePath: string[]
+  output: string
+```
+
+```mdl
+op getPathFromUrl
+  desc: Decodes a wnfs:// URL back into a path segment array.
+  input:
+    wnfsUrl: string
+  output: string[]
+```
+
+Effectful operations — read or write persistent state.
+
+```mdl
+op uploadFile
+  desc: |
+    Reads a File, writes its bytes into the WNFS private directory at a
+    CID-derived path, persists the updated forest pointer to the space's
+    ECHO properties, and returns FileInfo.
+  input:
+    file: File
+    space: Space
+  output: FileInfo
+  effects: [fs:read, echo:write, http:post]
+  errors:
+    SpaceNotFound: no space matching the given spaceId
+    BlockstoreError: local or remote block I/O failure
+  note: |
+    Uses sha256 for block hashing (not the rs-wnfs default Blake3) for
+    broader runtime support. Writes are atomic from ECHO's perspective:
+    the forest CID property is only updated after the forest is stored.
+```
+
+```mdl
+op resolveWnfsUrl
+  desc: |
+    Reads file bytes from the WNFS private directory for a wnfs:// URL,
+    wraps them in a Blob, and returns an object URL for in-browser display.
+  input:
+    wnfsUrl: string
+    space: Space
+    type?: string             # MIME type hint for Blob construction
+  output: string              # blob: object URL
+  effects: [fs:read, http:get]
+  errors:
+    UrlNotResolvable: space not available or file not found in directory
+  note: Errors are swallowed and undefined is returned to avoid breaking image renders.
+```
+
+```mdl
+op flushBlockQueue
+  desc: |
+    Drains the pending-upload queue by assembling a CAR archive and POSTing
+    it to the edge blob service. Called automatically (debounced 5 s) on
+    block writes and on the browser `online` event.
+  input:
+    blockstore: Blockstore
+  output: void
+  effects: [http:post]
+  errors:
+    NetworkError: remote POST failed
+  note: Queue is persisted to IndexedDB so pending blocks survive page reloads.
+```
+
+## Features
+
+```mdl
+feat F-1: Upload File
+
+  req F-1.1:
+    when: a FileCapabilities.Backend consumer calls upload(file, db)
+    then: the file is read, hashed, written to the WNFS private directory,
+          and stored in the blockstore
+
+  req F-1.2:
+    when: the write succeeds
+    then: the space's ECHO properties are updated with the new privateForestCid
+
+  req F-1.3:
+    when: the upload completes
+    then: a FileInfo object with name, type, size, and wnfs:// URL is returned to the caller
+```
+
+```mdl
+feat F-2: Resolve wnfs:// URL
+
+  req F-2.1:
+    when: FileCapabilities.UrlResolver.test(url) is called with a wnfs:// URL
+    then: returns true
+
+  req F-2.2:
+    when: FileCapabilities.UrlResolver.resolve(url, file, space) is called
+    then: loads or reuses a cached WnfsInstance for the space and reads the file bytes
+
+  req F-2.3:
+    when: bytes are successfully read
+    then: a blob: object URL is returned for in-browser display
+
+  req F-2.4:
+    when: the space is undefined or reading fails
+    then: undefined is returned; no error is propagated
+```
+
+```mdl
+feat F-3: Blockstore Sync
+
+  req F-3.1:
+    when: a block is written via blockstore.put
+    then: the block is saved to IndexedDB and added to the upload queue
+
+  req F-3.2:
+    when: the browser is online and the queue is non-empty
+    then: blocks are batched into a CAR archive and flushed to the edge service
+
+  req F-3.3:
+    when: the browser goes offline
+    then: the queue is persisted to IndexedDB; no upload is attempted
+
+  req F-3.4:
+    when: the browser comes back online
+    then: the flush is triggered automatically
+
+  req F-3.5:
+    when: a block is requested via blockstore.get and is present in IndexedDB
+    then: the block is returned from the local cache without a network request
+
+  req F-3.6:
+    when: a block is not in IndexedDB and the browser is online
+    then: the block is fetched from the edge service and cached locally
+```
+
+```mdl
+feat F-4: Space-Scoped Private File System
+
+  req F-4.1:
+    when: a space has no existing WNFS properties
+    then: a new PrivateForest and PrivateDirectory are created and stored
+
+  req F-4.2:
+    when: a space already has a privateForestCid
+    then: the existing forest and directory are loaded from the blockstore
+
+  req F-4.3:
+    when: a WnfsInstance is already cached for the current forest CID
+    then: the cached instance is reused without reloading from the blockstore
+
+  req F-4.4:
+    when: legacy snake_case WNFS properties are found on a space
+    then: they are deleted and replaced with the current camelCase schema
+    tags: [migration]
+```
+
+## Acceptance
+
+```mdl
+test T-1: Upload creates FileInfo
+  given: an active space and a registered WNFS backend
+  when: a file is uploaded via the Backend capability
+  then:
+    - FileInfo.url starts with wnfs://
+    - space.properties.wnfs.privateForestCid is set
+    - block for the file is present in the local IndexedDB blockstore
+```
+
+```mdl
+test T-2: Resolve uploaded file
+  given: a file was previously uploaded and FileInfo.url is known
+  when: UrlResolver.resolve(url, file, space) is called
+  then:
+    - a blob: object URL is returned
+    - URL can be used as an img src
+```
+
+```mdl
+test T-3: Resolve without space returns undefined
+  given: a wnfs:// URL
+  when: UrlResolver.resolve is called with space = undefined
+  then: undefined is returned; no error is thrown
+```
+
+```mdl
+test T-4: Blockstore offline queuing
+  given: the browser is offline
+  when: a block is written to the blockstore
+  then:
+    - block is saved to IndexedDB
+    - queue length increases by 1
+    - no HTTP request is made
+```
+
+```mdl
+test T-5: Blockstore queue flushes on reconnect
+  given: blocks are queued while offline
+  when: the browser comes back online
+  then:
+    - a CAR archive containing all queued blocks is POSTed to the edge service
+    - the queue is cleared
+```
+
+```mdl
+test T-6: New space initializes WNFS directory
+  given: a space with no WNFS properties
+  when: loadWnfs is called for that space
+  then:
+    - a new PrivateForest and PrivateDirectory are created
+    - space.properties.wnfs.privateForestCid is populated
+```
+
+```mdl
+test T-7: WnfsInstance cache hit
+  given: a WnfsInstance is cached for the current forest CID
+  when: loadWnfs is called again for the same space
+  then: the cached instance is returned; no blockstore reads occur
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

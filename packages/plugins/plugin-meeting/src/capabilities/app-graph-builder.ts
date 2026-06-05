@@ -12,7 +12,7 @@ import { Feed, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CallsCapabilities } from '@dxos/plugin-calls';
+import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -45,7 +45,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
       GraphBuilder.createTypeExtension({
-        id: 'share-call-link',
+        id: 'shareCallLink',
         type: Channel.Channel,
         actions: (channel, get) => {
           const space = getSpace(channel);
@@ -55,12 +55,12 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             {
-              id: 'action.share-meeting-link',
+              id: 'action.shareMeetingLink',
               data: Effect.fnUntraced(function* () {
                 invariant(space);
                 yield* Operation.invoke(SpaceOperation.GetShareLink, {
                   space,
-                  target: Obj.getDXN(channel).toString(),
+                  target: Obj.getURI(channel),
                   copyToClipboard: true,
                 });
               }),
@@ -74,14 +74,14 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'call-companion',
+        id: 'callCompanion',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(CallsCapabilities.Manager);
-          const channelDXN = Obj.getDXN(channel).toString();
+          const channelUri = Obj.getURI(channel);
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDXN) {
+          if (!joined || roomId !== channelUri) {
             return [];
           }
 
@@ -101,7 +101,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'call-transcript',
+        id: 'callTranscript',
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
@@ -109,7 +109,7 @@ export default Capability.makeModule(
           const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
           return [
             {
-              id: 'action.start-stop-transcription',
+              id: 'action.startStopTranscription',
               data: Effect.fnUntraced(function* () {
                 const store = yield* Capability.get(MeetingCapabilities.State);
                 let meeting = store.state.activeMeeting;
@@ -130,12 +130,12 @@ export default Capability.makeModule(
                 const callManager = yield* Capability.get(CallsCapabilities.Manager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
                 const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                const transcriptFeedDXN = Feed.getQueueDxn(transcriptFeed);
-                invariant(transcriptFeedDXN, 'Transcript feed has no DXN');
+                const transcriptQueueDxn = Feed.getQueueUri(transcriptFeed);
+                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                  meetingId: Obj.getDXN(meeting).toString(),
-                  transcriptDXN: transcriptFeedDXN.toString(),
+                  meetingId: Obj.getURI(meeting),
+                  transcriptDxn: transcriptQueueDxn.toString(),
                   transcriptionEnabled,
                 });
 
@@ -176,7 +176,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: 'meeting-transcript-companion',
+        id: 'meetingTranscriptCompanion',
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.succeed([

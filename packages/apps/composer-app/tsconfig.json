@@ -23,7 +23,6 @@
   ],
   "include": [
     "demos",
-    "script-frame",
     "scripts",
     "src"
   ],
@@ -143,16 +142,7 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
-    },
-    {
       "path": "../../core/compute/mcp-client"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -257,6 +247,9 @@
       "path": "../../plugins/plugin-code"
     },
     {
+      "path": "../../plugins/plugin-commerce"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
@@ -275,7 +268,13 @@
       "path": "../../plugins/plugin-doctor"
     },
     {
+      "path": "../../plugins/plugin-duffel"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
+    },
+    {
+      "path": "../../plugins/plugin-extension"
     },
     {
       "path": "../../plugins/plugin-feed"
@@ -342,6 +341,9 @@
     },
     {
       "path": "../../plugins/plugin-observability"
+    },
+    {
+      "path": "../../plugins/plugin-osrm"
     },
     {
       "path": "../../plugins/plugin-outliner"
@@ -411,9 +413,6 @@
     },
     {
       "path": "../../plugins/plugin-table"
-    },
-    {
-      "path": "../../plugins/plugin-template"
     },
     {
       "path": "../../plugins/plugin-theme"
@@ -528,9 +527,6 @@
     },
     {
       "path": "../../ui/react-ui-dnd"
-    },
-    {
-      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"

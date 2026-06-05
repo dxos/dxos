@@ -26,6 +26,8 @@ export const translations = [
         'boolean-input-false.value': 'No',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
+        'expand-fields.label': 'Expand',
+        'collapse-fields.label': 'Collapse',
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',

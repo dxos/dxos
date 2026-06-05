@@ -11,7 +11,8 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Annotation, JsonSchema, Migration, Obj, Ref, Type, type DXN, type Key } from '@dxos/echo';
+import { DXN, Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
+import type { URI } from '@dxos/keys';
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
@@ -40,7 +41,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
   readonly output: Schema<O>;
 
   readonly meta: {
-    readonly key: string;
+    readonly key: DXN.DXN;
     readonly name?: string;
     readonly version?: string;
     readonly description?: string;
@@ -53,6 +54,12 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
      * Assigned by the EDGE function service when deployed.
      */
     readonly deployedId?: string;
+
+    /**
+     * Dictionary of annotations for the operation.
+     */
+    // TODO(dmaretskyi): Make required, but this complicates `make` to fill in defaults.
+    readonly annotations?: Annotation.Dictionary;
   };
 
   /**
@@ -135,7 +142,7 @@ export const isOperationWithHandler = (value: unknown): value is WithHandler<Def
   return isOperationDefinition(value) && 'handler' in value;
 };
 
-/**a
+/**
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
@@ -168,21 +175,6 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
       return Pipeable.pipeArguments(this, arguments);
     },
   } as any;
-};
-
-/**
- * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
- * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
- * built-in implementation registered with the runtime.
- */
-export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
-  return {
-    ...op,
-    meta: {
-      ...op.meta,
-      deployedId: `intrinsic:${op.meta.key}`,
-    },
-  };
 };
 
 /**
@@ -332,17 +324,14 @@ export const PersistentOperation = Schema$.Struct({
    */
   icon: Schema$.optional(Schema$.String),
 }).pipe(
-  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
-  //  backward compatibility with existing data and avoid requiring data migration.
-  Type.object({
-    typename: 'org.dxos.type.function',
-    version: '0.2.0',
-  }),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-  Annotation.SystemTypeAnnotation.set(true),
+  Annotation.HiddenAnnotation.set(true),
+  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
+  //  backward compatibility with existing data and avoid requiring data migration.
+  Type.makeObject(DXN.make('org.dxos.type.function', '0.2.0')),
 );
-export interface PersistentOperation extends Schema$.Schema.Type<typeof PersistentOperation> {}
+export type PersistentOperation = Type.InstanceType<typeof PersistentOperation>;
 
 const FUNCTION_META_KEY = 'org.dxos.service.function';
 
@@ -365,6 +354,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
       key: operation.meta.key,
       version: operation.meta.version ?? '0.0.0',
       keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+      annotations: operation.meta.annotations,
     },
     name: operation.meta.name ?? '',
     description: operation.meta.description,
@@ -391,12 +381,13 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
     executionMode: 'async',
     types: [],
     meta: {
-      key: meta.key ?? record.name,
+      key: DXN.tryMake(meta.key ?? record.name) ?? DXN.make(meta.key ?? record.name),
       name: record.name,
       version: meta.version ?? '0.0.0',
       description: record.description,
       icon: record.icon,
       deployedId,
+      annotations: meta.annotations ?? {},
     },
   });
 };
@@ -422,8 +413,29 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
     if (sourceMeta.keys.length > 0) {
       targetMeta.keys = JSON.parse(JSON.stringify(sourceMeta.keys));
     }
+    targetMeta.annotations = sourceMeta.annotations ?? targetMeta.annotations;
   });
 };
+
+/**
+ * Translatable label — a plain string or an i18next-style `[key, options]` tuple.
+ * Defined locally to avoid a core dependency on UI translation packages; structurally compatible with
+ * the app-level `Label` type so values flow into UI toasts unchanged.
+ */
+export type Label = string | [string, { ns: string | readonly string[]; count?: number; defaultValue?: string }];
+
+/**
+ * Per-phase user notification messages for an invocation.
+ * A phase is notified to the user iff its message is provided; messages are translatable {@link Label}s.
+ */
+export interface NotifyOptions {
+  /** Shown when the invocation starts. */
+  start?: Label;
+  /** Shown when the invocation succeeds. */
+  success?: Label;
+  /** Shown when the invocation fails. */
+  error?: Label;
+}
 
 /**
  * Options for operation invocation.
@@ -434,10 +446,16 @@ export interface InvokeOptions {
    */
   spaceId?: Key.SpaceId;
   /**
-   * DXN string of the conversation feed (queue).
+   * Request user-facing notifications at the given invocation phases.
+   */
+  notify?: NotifyOptions;
+  /**
+   * URI of the conversation feed (queue) — today always an EID, but typed as
+   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EID.parse`
+   * at the point of use.
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
-  conversation?: DXN.String;
+  conversation?: URI.URI;
   /**
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */
@@ -573,13 +591,8 @@ export const PersistentOperation_v0_1_0 = Schema$.Struct({
   outputSchema: Schema$.optional(JsonSchema.JsonSchema),
   services: Schema$.optional(Schema$.Array(Schema$.String)),
   binding: Schema$.optional(Schema$.String),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.function',
-    version: '0.1.0',
-  }),
-);
-export interface PersistentOperation_v0_1_0 extends Schema$.Schema.Type<typeof PersistentOperation_v0_1_0> {}
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.function', '0.1.0')));
+export type PersistentOperation_v0_1_0 = Type.InstanceType<typeof PersistentOperation_v0_1_0>;
 
 /**
  * Migration from {@link PersistentOperation_v0_1_0} (v0.1.0) to {@link PersistentOperation} (v0.2.0).

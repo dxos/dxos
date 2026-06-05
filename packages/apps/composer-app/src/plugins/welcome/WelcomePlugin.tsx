@@ -7,19 +7,33 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
-import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  DefaultContent,
+  OAuthRecoveryRedirect,
+  Onboarding,
+  OperationHandler,
+  ReactSurface,
+  type WelcomeOptions,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const WelcomePlugin = Plugin.define(meta).pipe(
+export const WelcomePlugin = Plugin.define<WelcomeOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
+    id: 'oauth-recovery-redirect',
+    activatesOn: ActivationEvents.Startup,
+    activate: OAuthRecoveryRedirect,
+  }),
+  Plugin.addModule((options) => ({
     id: 'default-content',
     activatesOn: SpaceEvents.PersonalSpaceReady,
-    activate: DefaultContent,
-  }),
+    activate: () => DefaultContent(options),
+  })),
   Plugin.addModule({
     id: 'onboarding',
     activatesOn: ActivationEvent.allOf(

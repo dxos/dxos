@@ -2,23 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import * as Option from 'effect/Option';
+import React, { useMemo, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, type SchemaProperty } from '@dxos/effect';
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '#translations';
 
 import { type FormHandlerProps } from '../../hooks';
 import { getFormProperties } from '../../util';
 import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
 import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
+import { DEFAULT_LAYOUT_NAME, FormLayout, FormLayoutAnnotation } from './Layout';
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
 export type FormFieldSetProps<T extends AnyProperties> = {
   label?: string;
   sort?: string[];
+  /**
+   * When set, renders a toggle button at the end of the label row that
+   * shows/hides the field set body. Used for nested objects.
+   */
+  collapsible?: boolean;
   exclude?: (props: SchemaProperty[]) => SchemaProperty[];
+  /**
+   * Picks a named layout out of `FormLayoutAnnotation` when present.
+   * Falls back to `'default'`. Ignored when the schema has no annotation
+   * (linear rendering then takes over).
+   */
+  layoutName?: string;
 } & Pick<FormHandlerProps<T>, 'schema'> &
   Pick<
     FormFieldProps,
@@ -35,7 +52,7 @@ export type FormFieldSetProps<T extends AnyProperties> = {
     | 'createInitialValuePath'
     | 'createFieldMap'
     | 'db'
-    | 'useSchema'
+    | 'useType'
     | 'getOptions'
     | 'onCreate'
   >;
@@ -49,21 +66,38 @@ export const FormFieldSet = ({
   readonly,
   path,
   sort,
+  collapsible,
   exclude,
   projection,
   layout,
+  layoutName = DEFAULT_LAYOUT_NAME,
   ...props
 }: FormFieldSetProps<any>) => {
+  const { t } = useTranslation(translationKey);
   const values = useFormValues(FORM_FIELDSET_NAME, path);
   const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
+  // TODO(burdon): Generalize collapse state (cf. useSelected in react-ui-attention, plugin-markdown cursor state).
+  const [collapsed, setCollapsed] = useState(false);
   if ((readonly || layout === 'static') && values == null) {
     return null;
   }
 
-  return (
-    <>
-      {layout !== 'inline' && label && <FormFieldLabel label={label} path={createJsonPath(path ?? [])} asChild />}
-      {properties.map((property) => {
+  // If the schema carries a layout template, hand off to <Form.Layout/> which renders the DSL.
+  // Linear rendering still runs when no annotation is present, so existing call sites are unchanged.
+  const layouts = schema ? Option.getOrUndefined(FormLayoutAnnotation.get(schema)) : undefined;
+  const body =
+    layouts?.[layoutName] !== undefined && schema ? (
+      <FormLayout
+        schema={schema}
+        name={layoutName}
+        path={path}
+        readonly={readonly}
+        layout={layout}
+        projection={projection}
+        {...props}
+      />
+    ) : (
+      properties.map((property) => {
         const name = property.name.toString();
         return (
           <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
@@ -78,9 +112,44 @@ export const FormFieldSet = ({
             />
           </FormFieldErrorBoundary>
         );
-      })}
+      })
+    );
+
+  const showBody = !(collapsible && collapsed);
+  const content = (
+    <>
+      {layout !== 'inline' && label && (
+        <FormFieldLabel
+          asChild
+          classNames='pl-2'
+          label={label}
+          path={createJsonPath(path ?? [])}
+          button={
+            collapsible && (
+              <IconButton
+                classNames='px-1 mr-0.5'
+                variant='ghost'
+                density='xs'
+                iconOnly
+                icon='ph--caret-right--regular'
+                iconClassNames={mx('transition-transform', !collapsed && 'rotate-90')}
+                label={t(collapsed ? 'expand-fields.label' : 'collapse-fields.label')}
+              />
+            )
+          }
+          onClick={() => setCollapsed((value) => !value)}
+        />
+      )}
+      {showBody && (collapsible ? <div className='px-2 pb-2'>{body}</div> : body)}
     </>
   );
+
+  // Nested field sets render inside an indented, bordered container with a collapse toggle.
+  if (collapsible) {
+    return <div className='border border-subdued-separator rounded-sm mt-2'>{content}</div>;
+  }
+
+  return content;
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;

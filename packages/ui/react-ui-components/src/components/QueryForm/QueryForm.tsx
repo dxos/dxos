@@ -32,10 +32,7 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
   const [type, setType] = useState<string | null>(initialType ?? null);
   const [tag, setTag] = useState<string | null>(initialTag ?? null);
 
-  const tagOptions = useMemo(
-    () => tags?.map((tag) => ({ value: Obj.getDXN(tag).toString(), label: tag.label })),
-    [tags],
-  );
+  const tagOptions = useMemo(() => tags?.map((tag) => ({ value: Obj.getURI(tag), label: tag.label })), [tags]);
 
   const handleChange = useCallback(
     ({ type, tag }: { type: string | null; tag: string | null }) => {

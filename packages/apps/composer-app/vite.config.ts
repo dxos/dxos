@@ -44,15 +44,19 @@ const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as con
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
-  // Building from dist when creating a prod bundle.
-  env.command === 'serve' &&
-    !isFastBundle &&
+  // Resolve `@dxos/*` (and matching `#*` subpath imports) via the `source`
+  // condition rather than the published `dist/`. This is required at both
+  // `serve` and `build` time so Vite-specific constructs survive into the
+  // consumer's transform pipeline:
+  //   * `import.meta.glob` runs at this app's build (not pre-baked as plain
+  //     text in `dist`).
+  //   * `?url` static-asset imports (e.g. plugin-zen's m4a samples,
+  //     plugin-script's `esbuild.wasm`) get real bundled URLs instead of
+  //     the `""` empty-url stub that `dx-compile` writes into `dist`.
+  // Disabled under `DX_FASTBUNDLE` for the smoke-test/preview build where
+  // build speed wins over correctness for unchanged source.
+  !isFastBundle &&
     importSource({
-      // Include `#*` subpath imports so that intra-package imports
-      // (e.g. `#capabilities`) from source-served files keep resolving to
-      // source — required for Vite-specific constructs like
-      // `import.meta.glob` to run at the consumer (this app), not be
-      // pre-baked as plain text in the published dist.
       include: ['@dxos/**', '#*'],
       exclude: [
         '@dxos/random-access-storage',
@@ -125,7 +129,6 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
-        'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
@@ -147,9 +150,8 @@ export default defineConfig((env) => ({
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
-    // to `internal.html` / `devtools.html` / `reset.html` /
-    // `script-frame/index.html` don't trip a "discovered new dependencies"
-    // reload mid-session.
+    // to `internal.html` / `devtools.html` / `reset.html` don't trip a
+    // "discovered new dependencies" reload mid-session.
     //
     // Additionally, point the scanner at every plugin's entry files. Plugins
     // are loaded via `await import(...)` at runtime so their bare-module
@@ -164,7 +166,6 @@ export default defineConfig((env) => ({
       './internal.html',
       './devtools.html',
       './reset.html',
-      './script-frame/index.html',
       path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },

@@ -4,8 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { JsonSchema, Obj } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 
@@ -17,20 +16,16 @@ const handler: Operation.WithHandler<typeof KanbanOperation.RestoreCardField> = 
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');
-      const schema = yield* Effect.promise(() =>
-        db.schemaRegistry
-          .query({
-            typename: getTypenameFromQuery(view.query.ast)!,
-            location: ['database', 'runtime'],
-          })
-          .first(),
-      );
+      const types = db.graph.registry.list().filter(Type.isType);
+      const type = types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast));
+      invariant(type, 'Schema not found');
 
+      invariant(Type.isType(type), 'expected stored Type.Type for card schema');
       const projection = new ProjectionModel({
         registry,
         view,
-        baseSchema: JsonSchema.toJsonSchema(schema),
-        change: createEchoChangeCallback(view, schema as EchoSchema),
+        baseSchema: type.jsonSchema,
+        change: createEchoChangeCallback(view, type),
       });
 
       projection.setFieldProjection({ field, props }, index);

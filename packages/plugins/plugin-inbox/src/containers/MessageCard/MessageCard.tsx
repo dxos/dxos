@@ -15,8 +15,8 @@ import { getMessageProps } from '../../util';
 export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
   const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), { compact: true });
   return (
-    <Card.Content>
-      <Card.Toolbar>
+    <Card.Body>
+      <Card.Header>
         <Card.IconBlock>
           <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
         </Card.IconBlock>
@@ -24,7 +24,7 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
           <span className='grow truncate'>{from}</span>
           <span className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</span>
         </div>
-      </Card.Toolbar>
+      </Card.Header>
       <Card.Row>
         <p className='text-xs text-description text-info-text'>{email}</p>
       </Card.Row>
@@ -42,6 +42,6 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
           </div>
         )}
       </Card.Row>
-    </Card.Content>
+    </Card.Body>
   );
 };

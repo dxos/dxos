@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { type MakeOptional } from '@dxos/util';
 
@@ -41,19 +41,12 @@ export const Message = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.message',
-    version: '0.1.0',
-  }),
   LabelAnnotation.set(['properties.subject']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--note--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--note--regular', hue: 'rose' }),
+  Type.makeObject(DXN.make('org.dxos.type.message', '0.1.0')),
 );
 
-export interface Message extends Schema.Schema.Type<typeof Message> {}
-
+export type Message = Type.InstanceType<typeof Message>;
 export const make = ({
   created,
   sender,

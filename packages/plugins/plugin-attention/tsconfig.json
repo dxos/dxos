@@ -21,13 +21,13 @@
       "path": "../../common/keyboard"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"

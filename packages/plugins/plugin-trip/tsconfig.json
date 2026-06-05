@@ -21,7 +21,16 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/keyboard"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/markdown"
     },
     {
       "path": "../../common/storybook-utils"
@@ -30,10 +39,19 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../sdk/app-framework"
@@ -43,9 +61,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -66,10 +81,10 @@
       "path": "../../ui/react-ui-geo"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
+      "path": "../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/react-ui-stack"
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/ui-theme"
@@ -85,6 +100,9 @@
     },
     {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-map"
     },
     {
       "path": "../plugin-preview"

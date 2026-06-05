@@ -16,7 +16,7 @@ export class DxIcon extends LitElement {
   size: Size = 4;
 
   @property({ type: String })
-  icon: string = 'ph--placeholder--regular';
+  icon: string = 'ph--circle-dashed--regular';
 
   @property({ type: Boolean })
   noCache: boolean = true;

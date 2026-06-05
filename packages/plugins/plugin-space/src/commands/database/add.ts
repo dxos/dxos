@@ -11,13 +11,13 @@ import * as Option from 'effect/Option';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { AppActivationEvents, RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Type } from '@dxos/echo';
-import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
+import { Annotation, Collection, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 
 import { SpaceCapabilities } from '#types';
 
@@ -45,7 +45,8 @@ export const add = Command.make(
       };
 
       const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
-      const collection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
+      const rootCollectionRef = Annotation.get(properties, RootCollectionAnnotation).pipe(Option.getOrUndefined);
+      const collection = rootCollectionRef ? yield* Database.load<Collection.Collection>(rootCollectionRef) : undefined;
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),
@@ -56,7 +57,7 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const result = yield* metadata.createObject({}, { db, target: collection });
+      const result = yield* metadata.createObject({}, { db, target: collection ?? db });
       const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
@@ -81,15 +82,14 @@ export const add = Command.make(
 const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
-  const schemas = yield* Database.runSchemaQuery({
-    location: ['database', 'runtime'],
-    includeSystem: false,
-  }).pipe(
-    Effect.map((schemas) => schemas.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)),
-    Effect.map((schemas) => schemas.filter((schema) => !!resolve(Type.getTypename(schema)))),
-  );
+  const { db } = yield* Database.Service;
+  const allTypes = yield* Database.runQuery(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()));
+  const types = allTypes
+    .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
+    .filter((schema) => !!resolve(Type.getTypename(schema)));
 
-  const choices = schemas.map((schema) => ({
+  const choices = types.map((schema) => ({
     // TODO(wittjosiah): Translations.
     title: Type.getTypename(schema),
     value: Type.getTypename(schema),

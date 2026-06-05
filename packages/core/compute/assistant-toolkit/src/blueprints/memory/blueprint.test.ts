@@ -12,14 +12,14 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 
 import { Memory } from '../../types/Memory';
 import { WebSearchBlueprint, WebSearchToolkit } from '../websearch';
 import MemoryBlueprint from './blueprint';
 import { MemoryHandlers } from './functions';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',

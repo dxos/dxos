@@ -1,0 +1,461 @@
+---
+id: org.dxos.plugin.conductor
+name: ConductorPlugin
+version: 0.1.0
+---
+
+Visual node-based compute graph plugin for `DXOS` Composer — wire data sources, AI models, logic, and transformations into reactive pipelines that execute in the local-first runtime.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type ComputeValueType
+  literals: string | number | boolean | object
+```
+
+```mdl
+type NodeType
+  literals:
+    input | output | constant | template | switch | rng |
+    audio | chat | text | json | json-transform | surface |
+    beacon | scope | reducer | thread | queue | make-queue | append |
+    and | or | not | if | if-else |
+    function | gpt | gpt-realtime |
+    database | text-to-image
+```
+
+```mdl
+type ComputeNode
+  desc: A node in the compute graph persisted via ECHO.
+  extends: [Graph.Node]
+  fields:
+    inputSchema?: JsonSchema
+    outputSchema?: JsonSchema
+    subgraph?: Ref<ComputeGraph>       # composition: nested graph
+    function?: Ref<PersistentOperation> # composition: reusable function node
+    valueType?: ComputeValueType        # for constant/template nodes
+    value?: any                         # for constant and template nodes
+    enabled?: boolean                   # for switch nodes
+```
+
+```mdl
+type ComputeEdge
+  desc: A directed edge connecting an output port on one node to an input port on another.
+  extends: [Graph.Edge]
+  fields:
+    input: string                      # target node input property name
+    output: string                     # source node output property name
+```
+
+```mdl
+type ComputeGraph
+  desc: Persistent ECHO object holding the full node-edge graph plus special I/O reference nodes.
+  fields:
+    graph: Graph.Graph
+    input?: ComputeNode
+    output?: ComputeNode
+```
+
+```mdl
+type ValueBag
+  desc: A set of named asynchronous value effects passed between nodes.
+  fields:
+    _tag: "ValueBag"
+    values: Record<string, ValueEffect<any>>
+```
+
+## Components
+
+```mdl
+component CanvasArticle
+  desc: Full-screen canvas editor for a ComputeGraph; renders as an article or a section embed.
+  props:
+    role: "article" | "section"
+    subject: CanvasBoard
+    attendableId?: string
+  state:
+    graph: CanvasGraphModel<ComputeShape>
+    controller?: ComputeGraphController
+    registry: ShapeRegistry
+    layout?: ComputeShapeLayout
+  slots:
+    toolbar?: ReactNode             # injected by AppSurface frame
+  layout: |
+    ┌──────────────────────────────────────────────┐
+    │  [toolbar — zoom, tools, minimap]            │
+    ├──────────────────────────────────────────────┤
+    │                                              │
+    │   ┌──────┐    ┌──────┐    ┌──────┐          │
+    │   │ node │───▶│ node │───▶│ node │          │
+    │   └──────┘    └──────┘    └──────┘          │
+    │                                              │
+    │   canvas — pan / zoom / connect nodes        │
+    └──────────────────────────────────────────────┘
+```
+
+## Operations
+
+Pure operations — no effects, no service dependencies.
+
+```mdl
+op evalConstant
+  desc: Returns the scalar value stored on a constant node.
+  input:
+    node: ComputeNode
+  output: Scalar
+  errors:
+    MissingValue: node has no value set
+```
+
+```mdl
+op jsonTransform
+  desc: Evaluates a JSONPath expression over an input value.
+  input:
+    input: any
+    expression: string
+  output: any
+  errors:
+    InvalidExpression: JSONPath expression could not be parsed
+```
+
+```mdl
+op boolAnd
+  desc: Logical AND of two boolean inputs.
+  input:
+    a: boolean
+    b: boolean
+  output: boolean
+```
+
+```mdl
+op boolOr
+  desc: Logical OR of two boolean inputs.
+  input:
+    a: boolean
+    b: boolean
+  output: boolean
+```
+
+```mdl
+op boolNot
+  desc: Logical NOT of a boolean input.
+  input:
+    input: boolean
+  output: boolean
+```
+
+```mdl
+op ifRoute
+  desc: Routes a value to the true or false output port based on a condition.
+  input:
+    condition: boolean
+    value: any
+  output: IfOutput                   # { true?: any; false?: any }
+```
+
+```mdl
+op ifElseSelect
+  desc: Ternary — returns trueValue or falseValue depending on condition.
+  input:
+    condition: boolean
+    true: any
+    false: any
+  output: any
+```
+
+Effectful operations — mutate persistent state or call external services.
+
+```mdl
+op createComputeGraph
+  desc: Creates a new CanvasBoard with an empty ComputeGraph and adds it to the target space.
+  input:
+    target?: Space | Collection
+  output: string                     # DXN of created CanvasBoard
+  effects: [echo:write]
+```
+
+```mdl
+op appendToQueue
+  desc: Appends items to an ECHO queue or collection identified by DXN.
+  input:
+    id: string                       # DXN — dxn:queue or dxn:echo
+    items: any[]
+  output: void
+  effects: [echo:write, feed:write]
+  errors:
+    UnsupportedDXN: DXN kind not supported
+    SpaceMismatch: ECHO DXN belongs to a different space
+```
+
+```mdl
+op createQueue
+  desc: Allocates a new append-only Feed and returns a Ref to it.
+  input:
+  output: Ref<Feed>
+  effects: [feed:write]
+```
+
+```mdl
+op invokeGpt
+  desc: Sends the current conversation thread to the configured AI model and streams the reply.
+  input:
+    thread: Ref<Thread>
+    tools?: Tool[]
+    systemPrompt?: string
+  output: Message
+  effects: [http]
+  requires: [AiService]
+  errors:
+    ModelUnavailable: AI service could not be reached
+```
+
+```mdl
+op invokeFunction
+  desc: Deserialises a PersistentOperation from ECHO and invokes it with the provided input bag.
+  input:
+    function: Ref<PersistentOperation>
+    input: any
+  output: any
+  effects: [echo:read]
+  requires: [Database.Service, OperationRegistry.Service]
+  errors:
+    FunctionNotFound: referenced operation does not exist
+    InvocationFailed: operation returned an error
+```
+
+## Features
+
+```mdl
+feat F-1: Canvas Editor
+
+  req F-1.1: User can create a new compute graph via the "Create object" entry.
+  req F-1.2: Canvas renders nodes as draggable, resizable shapes on an infinite panning surface.
+  req F-1.3:
+    when: user drags from an output port to an input port
+    then: a ComputeEdge is created connecting the two ports
+  req F-1.4:
+    when: a ComputeEdge is deleted
+    then: downstream nodes stop receiving values from the disconnected output
+```
+
+```mdl
+feat F-2: Node Palette
+
+  req F-2.1: Toolbar exposes all built-in NodeTypes; user can drag them onto the canvas.
+  req F-2.2: Constant nodes display an inline editor for their scalar value and valueType.
+  req F-2.3: Template nodes render a text input with {{variable}} interpolation.
+  req F-2.4: Function nodes allow selecting a PersistentOperation from the space.
+```
+
+```mdl
+feat F-3: Reactive Execution
+
+  req F-3.1:
+    when: any upstream node value changes
+    then: ComputeGraphController re-evaluates dependent nodes in topological order
+
+  req F-3.2: Node execution is lazy; nodes only run when their outputs are consumed.
+
+  req F-3.3:
+    when: a node fails with ConductorError
+    then: downstream nodes receive a NotExecuted marker and do not throw
+
+  req F-3.4:
+    when: a node emits a ValueBag
+    then: individual output ports can resolve at different times (async bag semantics)
+```
+
+```mdl
+feat F-4: AI Integration
+
+  req F-4.1: GPT node connects to AiService; configuration includes model, system prompt, and tools.
+  req F-4.2:
+    when: GPT node executes
+    then: op:invokeGpt streams the model response back to the output port
+
+  req F-4.3: Function node can reference any PersistentOperation registered in the space.
+```
+
+```mdl
+feat F-5: Data Sources and Sinks
+
+  req F-5.1: Queue node reads messages from a Feed referenced by DXN.
+  req F-5.2: Append node writes items to a Feed or ECHO collection referenced by DXN.
+  req F-5.3: Database node exposes ECHO space contents as a query tool for AI nodes.
+  req F-5.4: Thread node surfaces a conversation thread with its message history.
+```
+
+```mdl
+feat F-6: Logic and Control Flow
+
+  req F-6.1: If node routes a value to true or false output port based on a boolean condition.
+  req F-6.2: IfElse node selects one of two values using a ternary condition.
+  req F-6.3: Reducer node collects an array of values from multiple upstream ports.
+  req F-6.4: And / Or / Not nodes implement standard boolean combinators.
+```
+
+```mdl
+feat F-7: Persistence and Collaboration
+
+  req F-7.1: ComputeGraph is stored as an ECHO object; graph topology is replicated to peers.
+  req F-7.2:
+    when: a peer modifies a node value or edge
+    then: all collaborators see the change reflected on the canvas in real time
+
+  req F-7.3:
+    when: a CanvasBoard is embedded as a section in another document
+    then: the graph renders in the section aspect-square container and remains interactive
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create empty graph
+  given: user opens the Create Object menu
+  when: user selects "Compute Graph"
+  then:
+    - a new CanvasBoard with an empty ComputeGraph is created in the space
+    - the canvas opens with no nodes
+```
+
+```mdl
+test T-2: Add constant node and read value
+  given: an empty canvas
+  when: user adds a constant node, sets value "hello", connects it to a text node
+  then:
+    - text node receives "hello" on its input port
+    - text node renders "hello"
+```
+
+```mdl
+test T-3: Boolean AND gate
+  given: two switch nodes with values true and false connected to an AND node
+  when: graph executes
+  then:
+    - AND node output is false
+    - switching both inputs to true produces output true
+```
+
+```mdl
+test T-4: JSONPath transform
+  given: a constant node with value { "a": { "b": 42 } } connected to a json-transform node
+  when: expression "$.a.b" is set on the transform node
+  then:
+    - output port value is [42]
+```
+
+```mdl
+test T-5: GPT node invocation
+  given: a thread node connected to a GPT node with a system prompt
+  when: graph executes with AiService available
+  then:
+    - GPT node output port receives a Message
+    - Message content is non-empty
+  errors: [ModelUnavailable]
+```
+
+```mdl
+test T-6: Append to queue
+  given: a make-queue node connected to an append node; constant node provides input items
+  when: graph executes
+  then:
+    - queue contains the appended items
+    - downstream queue node reads them back
+```
+
+```mdl
+test T-7: Collaborative edit
+  given: two peers have the same CanvasBoard open
+  when: peer A moves a node on the canvas
+  then:
+    - peer B sees the node in the new position within one replication round-trip
+    tags: [collaborative]
+```
+
+```mdl
+test T-8: NotExecuted propagation
+  given: an if node whose condition is false, connected to a text node on the true port
+  when: graph executes
+  then:
+    - text node receives a NotExecuted marker
+    - text node renders nothing (no error thrown)
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

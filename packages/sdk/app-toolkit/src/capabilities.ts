@@ -13,7 +13,8 @@ import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint, Operation } from '@dxos/compute';
-import type { Database, DXN, Type } from '@dxos/echo';
+import type { Database, Type } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
 
 import { LAYOUT_CAPABILITY_ID } from './capability-ids';
@@ -125,6 +126,31 @@ export namespace AppCapabilities {
   );
 
   /**
+   * A static asset bundled with a plugin's published package, exposed for
+   * other plugins to read.
+   *
+   * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
+   * and contribute it via this capability on
+   * {@link AppActivationEvents.SetupPluginAssets}. Consumers read all
+   * contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+   */
+  export type PluginAsset = Readonly<{
+    /** Owning plugin id (matches `Plugin.Meta.id`). */
+    pluginId: string;
+    /** Path within the plugin package — typically equal to `Plugin.Meta.spec`. */
+    path: string;
+    /** Raw text content. */
+    content: string;
+    /** Optional MIME type (e.g. `text/markdown`, `application/x-mdl`). */
+    mimeType?: string;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const PluginAsset = Capability$.make<PluginAsset>('org.dxos.app-framework.capability.plugin-asset');
+
+  /**
    * @deprecated Resolve {@link AiService.AiService} through the process manager
    * runtime (via {@link Capabilities.ProcessManagerRuntime} or a
    * {@link ServiceResolver}) instead of pulling this layer directly. The
@@ -198,7 +224,7 @@ export namespace AppCapabilities {
   };
 
   export type NavigationQuery = {
-    dxn?: DXN.String;
+    dxn?: string;
   };
 
   /**
@@ -232,7 +258,7 @@ export namespace AppCapabilities {
    * Used to validate navigation targets against remote services (e.g., edge).
    * @category Capability
    */
-  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<DXN>>;
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EID.EID>>;
 
   export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
     'org.dxos.app-framework.capability.navigation-path-resolver',

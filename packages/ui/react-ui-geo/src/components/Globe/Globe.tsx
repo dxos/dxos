@@ -336,8 +336,11 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    // Keep the context alpha-enabled: when a style set omits `background`, `renderLayers`
+    // clears to transparent so the canvas's themed CSS background (below) shows through the
+    // area outside the globe — correct in both light and dark mode.
     const generator = useMemo(
-      () => canvas && projection && geoPath(projection, canvas.getContext('2d', { alpha: false })),
+      () => canvas && projection && geoPath(projection, canvas.getContext('2d')),
       [canvas, projection],
     );
 
@@ -351,16 +354,24 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
             .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
             .rotate(rotation ?? [0, 0, 0]);
 
-          renderLayers(generator, layers, zoom, styles);
+          // Provide a view-center for per-frame culling — only meaningful for
+          // projections that present a single visible hemisphere (e.g.
+          // orthographic). For Mercator/transverse-mercator the whole sphere
+          // is always visible, so we skip culling.
+          const isOrthographic = !projectionProp || projectionProp === 'orthographic';
+          const [lambda, phi] = (rotation ?? [0, 0, 0]) as Vector;
+          const viewCenter: [number, number] | undefined = isOrthographic ? [-lambda, -phi] : undefined;
+
+          renderLayers(generator, layers, zoom, styles, viewCenter);
         });
       }
-    }, [generator, size, zoom, translation, rotation, layers]);
+    }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
 
     if (!size.width || !size.height) {
       return null;
     }
 
-    return <canvas ref={canvasRef} width={size.width} height={size.height} />;
+    return <canvas ref={canvasRef} className='bg-base-surface' width={size.width} height={size.height} />;
   },
 );
 

@@ -27,8 +27,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "koffi": "catalog:",
-    "nan": "catalog:"
+    "koffi": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

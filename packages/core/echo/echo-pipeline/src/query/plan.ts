@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -59,7 +59,7 @@ export namespace QueryPlan {
     /**
      * Where to select from.
      */
-    scope: QueryAST.Scope;
+    scope: readonly QueryAST.Scope[];
 
     /**
      * Optional limit on the number of results to select.
@@ -81,7 +81,7 @@ export namespace QueryPlan {
   export type IdSelector = {
     _tag: 'IdSelector';
 
-    objectIds: readonly ObjectId[];
+    objectIds: readonly EntityId[];
   };
 
   /**
@@ -91,7 +91,7 @@ export namespace QueryPlan {
   export type TypeSelector = {
     _tag: 'TypeSelector';
 
-    typename: DXN.String[];
+    typename: URI.URI[];
     /**
      * If true, select objects that do not match the typename.
      */
@@ -110,12 +110,12 @@ export namespace QueryPlan {
     /**
      * Optionally select only objects of the given typenames.
      */
-    typename: DXN.String[] | null;
+    typename: URI.URI[] | null;
   };
 
   /**
    * Select objects by timestamp range (createdAt / updatedAt).
-   * Uses the ObjectMetaIndex timestamp columns.
+   * Uses the EntityMetaIndex timestamp columns.
    */
   export type TimestampSelector = {
     _tag: 'TimestampSelector';

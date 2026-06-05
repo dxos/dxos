@@ -59,13 +59,13 @@ const PreviewCard = () => {
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport classNames='dx-card-popover-width'>
           <Card.Root border={false}>
-            <Card.Toolbar>
+            <Card.Header>
               <Card.Icon icon='ph--file-text--regular' />
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
                 <Card.ActionIconButton action='close' />
               </Popover.Close>
-            </Card.Toolbar>
+            </Card.Header>
             <Card.Row>
               <Card.Text variant='description'>{target.text}</Card.Text>
             </Card.Row>
@@ -165,7 +165,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
     <Menu.Root>
       <Card.Root classNames={hoverableControls}>
         {!view?.state.readOnly && (
-          <Card.Toolbar>
+          <Card.Header>
             <Card.Icon icon='ph--bookmark--regular' />
             <Card.Title>{link.label}</Card.Title>
             {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -173,7 +173,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
               <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
             </Menu.Trigger>
             <Menu.Content items={menuItems} />
-          </Card.Toolbar>
+          </Card.Header>
         )}
         {target && (
           <Card.Row>

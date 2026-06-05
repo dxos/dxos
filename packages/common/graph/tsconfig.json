@@ -22,9 +22,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
       "path": "../async"
     },
     {
@@ -32,9 +29,6 @@
     },
     {
       "path": "../invariant"
-    },
-    {
-      "path": "../log"
     },
     {
       "path": "../random"

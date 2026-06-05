@@ -8,12 +8,15 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Annotation as EchoAnnotation } from '@dxos/echo';
+import { Annotation as EchoAnnotation, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
+  Column,
+  type ColumnRootProps,
   IconButton,
   type IconButtonProps,
+  Input,
   ScrollArea,
   type ThemedClassName,
   useMergeRefs,
@@ -37,15 +40,30 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 import { FormTooltipsContext } from './FormTooltipsContext';
+import { FormLayout as NaturalFormLayout } from './Layout';
+import { type FormLayoutProps as NaturalFormLayoutProps } from './Layout/FormLayout';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
+export type ExcludeId<S extends Schema.Schema.AnyNoContext | Type.AnyEntity> = Omit<
+  S extends Type.AnyEntity
+    ? Type.InstanceType<S>
+    : S extends Schema.Schema.AnyNoContext
+      ? Schema.Schema.Type<S>
+      : never,
+  'id'
+>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
-export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
-  schema.pipe(Schema.omit('id')) as any;
+export const omitId = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(
+  schemaOrType: S,
+): Schema.Schema<ExcludeId<S>, ExcludeId<S>> => {
+  const schema = Type.isType(schemaOrType)
+    ? Type.getSchema(schemaOrType)
+    : (schemaOrType as Schema.Schema.AnyNoContext);
+  return schema.pipe(Schema.omit('id')) as any;
+};
 
 /**
  * Drop fields annotated with `FormInputAnnotation.set(false)` from a schema so
@@ -188,15 +206,32 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = {};
+type FormViewportProps = { scroll?: boolean; gutter?: ColumnRootProps['gutter'] };
 
-const FormViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-});
+// The viewing window: owns the gutter Column (chrome/side-padding).
+// Content-height by default; `scroll` makes it fill its parent and scroll (the gutter then hosts the scrollbar).
+const FormViewport = composable<HTMLDivElement, FormViewportProps>(
+  ({ children, scroll, gutter = 'xs', ...props }, forwardedRef) => {
+    // Span the full width when nested inside another Column grid (e.g. Card.Root)
+    // instead of landing in a single narrow track.
+    const span = '[.dx-column-root_&]:col-span-full';
+    if (scroll) {
+      return (
+        <Column.Root gutter={gutter} classNames={['dx-expander', span]}>
+          <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
+            <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Column.Root>
+      );
+    }
+
+    return (
+      <Column.Root {...composableProps(props)} gutter={gutter} classNames={['w-full min-w-0', span]} ref={forwardedRef}>
+        {children}
+      </Column.Root>
+    );
+  },
+);
 
 FormViewport.displayName = FORM_VIEWPORT_NAME;
 
@@ -208,6 +243,7 @@ const FORM_CONTENT_NAME = 'Form.Content';
 
 type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
+// The viewed body: centered in the viewport's gutter. Pure body — the gutter Column is owned by `Form.Viewport`.
 const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
   const { form, testId } = useFormContext(FORM_CONTENT_NAME);
   const localRef = useRef<HTMLDivElement>(null);
@@ -218,7 +254,7 @@ const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ..
     <div
       {...composableProps(props, {
         role: 'form',
-        classNames: mx(withColumn.center(), 'flex flex-col w-full pb-form-gap'),
+        classNames: mx(withColumn.center(), 'flex flex-col w-full'),
       })}
       data-testid={testId}
       ref={mergedRef}
@@ -245,6 +281,26 @@ const FormFieldSet = (props: FormFieldSetProps) => {
 };
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
+
+//
+// Layout
+//
+
+const FORM_LAYOUT_NAME = 'Form.Layout';
+
+type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
+
+const FormLayout = ({ schema, ...props }: FormLayoutProps) => {
+  const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
+  const resolvedSchema = schema ?? form.schema;
+  if (!resolvedSchema) {
+    return null;
+  }
+
+  return <NaturalFormLayout schema={resolvedSchema} {...contextProps} {...props} />;
+};
+
+FormLayout.displayName = FORM_LAYOUT_NAME;
 
 //
 // Actions
@@ -364,6 +420,29 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
 FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 //
+// Error
+//
+
+const FORM_ERROR_NAME = 'Form.Error';
+
+type FormErrorProps = ThemedClassName<PropsWithChildren>;
+
+/** Form-level error/validation message (e.g. a failed submit), styled via the error valence. */
+const FormError = ({ children, classNames }: FormErrorProps) => {
+  if (!children) {
+    return null;
+  }
+
+  return (
+    <Input.Root validationValence='error'>
+      <Input.Validation classNames={classNames}>{children}</Input.Validation>
+    </Input.Root>
+  );
+};
+
+FormError.displayName = FORM_ERROR_NAME;
+
+//
 // Form
 // https://www.radix-ui.com/primitives/docs/guides/composition
 //
@@ -374,9 +453,11 @@ export const Form = {
   Content: FormContent,
   Section: FormSection,
   FieldSet: FormFieldSet,
+  Layout: FormLayout,
   Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,
+  Error: FormError,
 };
 
 export { useFormContext, useFormValues, useFormFieldState };
@@ -387,6 +468,7 @@ export type {
   FormContentProps,
   FormSectionProps,
   FormFieldSetProps,
+  FormLayoutProps,
   FormFieldLabelProps,
   FormActionsProps,
   FormSubmitProps,

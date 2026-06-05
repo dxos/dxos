@@ -44,15 +44,17 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
       <div className='p-form-padding'>
         <Message.Root>
           <Message.Content>
-            <Trans
-              {...{
-                t,
-                i18nKey: 'no-comments.message',
-                components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                },
-              }}
-            />
+            <span>
+              <Trans
+                {...{
+                  t,
+                  i18nKey: 'no-comments.message',
+                  components: {
+                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
+                  },
+                }}
+              />
+            </span>
           </Message.Content>
         </Message.Root>
       </div>
@@ -63,7 +65,7 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
     <div>
       {filteredAnchors.map((anchor) => {
         const thread = Relation.getSource(anchor) as Thread.Thread;
-        const threadId = Obj.getDXN(thread).toString();
+        const threadId = Obj.getURI(thread);
         return <CommentsThread key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
       })}
     </div>

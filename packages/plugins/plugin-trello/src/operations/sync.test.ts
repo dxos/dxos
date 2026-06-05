@@ -34,12 +34,7 @@ describe('reconcileBoardCards (pull)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -328,12 +323,7 @@ describe('pushBoardCards (push)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
-      AccessToken.AccessToken,
-      Integration.Integration,
-      Kanban.Kanban,
-      Expando.Expando,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Integration.Integration, Kanban.Kanban, Expando.Expando]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, {
         source: TRELLO_SOURCE,
@@ -485,7 +475,7 @@ describe('findOrCreateKanbanForBoard', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
+    graph.registry.add([Kanban.Kanban, Expando.Expando]);
     return { db };
   };
 
@@ -527,7 +517,7 @@ describe('findOrCreateKanbanForBoard', () => {
       return yield* findOrCreateKanbanForBoard(board('board1'));
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
 
-    expect(Obj.getDXN(first).toString()).toBe(Obj.getDXN(second).toString());
+    expect(Obj.getURI(first)).toBe(Obj.getURI(second));
   });
 
   test('creates distinct Kanbans for distinct boards', async ({ expect }) => {
@@ -542,7 +532,7 @@ describe('findOrCreateKanbanForBoard', () => {
       return yield* findOrCreateKanbanForBoard(board('boardB', 'B'));
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
 
-    expect(Obj.getDXN(a).toString()).not.toBe(Obj.getDXN(b).toString());
+    expect(Obj.getURI(a)).not.toBe(Obj.getURI(b));
     expect(a.name).toBe('A');
     expect(b.name).toBe('B');
   });

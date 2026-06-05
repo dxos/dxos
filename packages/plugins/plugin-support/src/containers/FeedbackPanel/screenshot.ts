@@ -48,7 +48,7 @@ const obscureInputs = (root: HTMLElement): (() => void) => {
     // don't blow up the layout when a user has a long body field.
     const dots = '•'.repeat(Math.min(Math.max(text.length, 4), 32));
     span.textContent = dots;
-    span.style.color = 'var(--dx-base-foreground, currentColor)';
+    span.style.color = 'var(--dx-base-fg, currentColor)';
     span.style.fontFamily = 'inherit';
     return span;
   };

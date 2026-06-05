@@ -40,7 +40,7 @@ export const CollectionPresenterArticle = ({ role, subject: collection }: Collec
             type={AppSurface.Slide}
             data={{
               subject: collection.objects[slide],
-              attendableId: Obj.getDXN(collection).toString(),
+              attendableId: Obj.getURI(collection),
             }}
           />
         </PresenterLayout>

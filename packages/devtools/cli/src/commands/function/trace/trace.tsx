@@ -16,7 +16,6 @@ import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from
 import { ClientService, ConfigService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Feed, Filter, type Key } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -39,7 +38,7 @@ export const trace = Command.make(
   ({ functionId, spaceId, localTriggers }) =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
-      const { queues } = yield* QueueService;
+      const feedService = yield* Feed.FeedService;
       log.info('Starting invocation trace...');
 
       const logBuffer = createLogBuffer();
@@ -47,17 +46,19 @@ export const trace = Command.make(
       log.runtimeConfig.processors = [logBuffer.processor];
       log.info('trace: command starting', { spaceId, functionId, localTriggers });
 
-      // Query for SpaceProperties to get the invocation trace queue DXN.
+      // Query for SpaceProperties to get the invocation trace feed.
       const objects = yield* Database.runQuery(Filter.type(SpaceProperties));
       const properties = objects.at(0);
       invariant(properties, 'SpaceProperties not found');
       const traceFeed = properties.invocationTraceFeed?.target;
-      const queueDXN = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
 
-      if (!queueDXN) {
+      if (!traceFeed) {
         log.info('trace: no invocationTraceFeed found in space properties', { spaceId: db.spaceId });
       } else {
-        log.info('trace: found invocationTraceFeed', { spaceId: db.spaceId, queueDXN });
+        log.info('trace: found invocationTraceFeed', {
+          spaceId: db.spaceId,
+          feed: Feed.getQueueUri(traceFeed)?.toString(),
+        });
       }
 
       // Start trigger runtime in background if enabled
@@ -69,12 +70,12 @@ export const trace = Command.make(
       // Render.
       yield* render({
         app: () => (
-          // TODO(wittjosiah): Rather than pass db and queues probably should have some sort of context provider then introduce hooks for interacting with the db and queues.
+          // TODO(wittjosiah): Rather than pass db and feedService probably should have some sort of context provider then introduce hooks for interacting with the db and feeds.
           <App focusElements={['table']} logBuffer={logBuffer} theme={theme}>
             <Trace
               db={db}
-              queues={queues}
-              queueDXN={queueDXN ? Option.some(queueDXN) : Option.none()}
+              feedService={feedService}
+              feed={traceFeed ? Option.some(traceFeed) : Option.none()}
               functionId={functionId}
             />
           </App>

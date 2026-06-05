@@ -14,8 +14,8 @@ import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
-import { feedServiceFromQueueServiceLayer, QueueService } from '../effect-queue-service';
 import type { EchoDatabaseImpl } from '../proxy-db';
+import { makeFeedService } from '../queue/feed-service';
 import type { QueueFactory } from '../queue/queue-factory';
 import { EchoTestBuilder } from './echo-test-builder';
 
@@ -37,94 +37,90 @@ export type TestDatabaseOptions = {
    */
   spaceKey?: PublicKey | 'fixed';
   storagePath?: string;
-  onInit?: () => Effect.Effect<void, never, Database.Service | QueueService>;
+  onInit?: () => Effect.Effect<void, never, Database.Service | Feed.FeedService>;
 };
 
 export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}): Layer.Layer<
-  Database.Service | QueueService | Feed.FeedService,
+  Database.Service | Feed.FeedService,
   never,
   never
 > =>
-  feedServiceFromQueueServiceLayer.pipe(
-    Layer.provideMerge(
-      Layer.scopedContext(
-        Effect.gen(function* () {
-          types ??= [];
-          types.push(...DEFAULT_TYPES);
-          types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
+  Layer.scopedContext(
+    Effect.gen(function* () {
+      types ??= [];
+      types.push(...DEFAULT_TYPES);
+      types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
-          const key = spaceKey === 'fixed' ? FIXED_SPACE_KEY : (spaceKey ?? PublicKey.random());
+      const key = spaceKey === 'fixed' ? FIXED_SPACE_KEY : (spaceKey ?? PublicKey.random());
 
-          const builder = yield* testBuilder;
+      const builder = yield* testBuilder;
 
-          let kv: LevelDB | undefined;
-          if (storagePath) {
-            kv = createTestLevel(storagePath);
-            yield* Effect.promise(() => kv!.open());
-          }
-          const peer = yield* Effect.promise(() => builder.createPeer({ types, kv, assignQueuePositions: true }));
+      let kv: LevelDB | undefined;
+      if (storagePath) {
+        kv = createTestLevel(storagePath);
+        yield* Effect.promise(() => kv!.open());
+      }
+      const peer = yield* Effect.promise(() => builder.createPeer({ types, kv, assignQueuePositions: true }));
 
-          let db: EchoDatabaseImpl | undefined;
-          let queues: QueueFactory | undefined;
+      let db: EchoDatabaseImpl | undefined;
+      let queues: QueueFactory | undefined;
 
-          if (storagePath) {
-            const testMetadata = yield* Effect.promise(async () => {
-              try {
-                return await kv!.get('test-metadata', { valueEncoding: 'json' });
-              } catch (e) {
-                if ((e as any).code === 'LEVEL_NOT_FOUND') {
-                  return undefined;
-                }
-                throw e;
-              }
-            });
-            log('starting persistant test db', { storagePath, testMetadata });
-            if (!testMetadata) {
-              db = yield* Effect.promise(() => peer.createDatabase(key));
-              queues = peer.client.constructQueueFactory(db.spaceId);
-
-              yield* Effect.promise(() =>
-                kv!.put('test-metadata', { key: key.toHex(), rootUrl: db!.rootUrl }, { valueEncoding: 'json' }),
-              );
-
-              if (onInit) {
-                yield* onInit().pipe(
-                  Effect.provideService(Database.Service, Database.makeService(db)),
-                  Effect.provideService(QueueService, QueueService.make(queues)),
-                );
-              }
-            } else {
-              const key = PublicKey.from((testMetadata as any).key);
-              const rootUrl = (testMetadata as any).rootUrl;
-              db = yield* Effect.promise(() => peer.openDatabase(key, rootUrl));
-              queues = peer.client.constructQueueFactory(db.spaceId);
-              // Rebuild index after reopening since in-memory SQLite is recreated.
-              yield* Effect.promise(() => db!.flush());
+      if (storagePath) {
+        const testMetadata = yield* Effect.promise(async () => {
+          try {
+            return await kv!.get('test-metadata', { valueEncoding: 'json' });
+          } catch (e) {
+            if ((e as any).code === 'LEVEL_NOT_FOUND') {
+              return undefined;
             }
-          } else {
-            db = yield* Effect.promise(() => peer.createDatabase(key));
-            queues = peer.client.constructQueueFactory(db.spaceId);
-            if (onInit) {
-              yield* onInit().pipe(
-                Effect.provideService(Database.Service, Database.makeService(db)),
-                Effect.provideService(QueueService, QueueService.make(queues)),
-              );
-            }
+            throw e;
           }
+        });
+        log('starting persistant test db', { storagePath, testMetadata });
+        if (!testMetadata) {
+          db = yield* Effect.promise(() => peer.createDatabase(key));
+          queues = peer.client.constructQueueFactory(db.spaceId);
 
-          yield* Effect.addFinalizer(() =>
-            Effect.promise(async () => {
-              if (kv) {
-                await kv.close();
-              }
-            }),
+          yield* Effect.promise(() =>
+            kv!.put('test-metadata', { key: key.toHex(), rootUrl: db!.rootUrl }, { valueEncoding: 'json' }),
           );
 
-          return Context.mergeAll(
-            Context.make(Database.Service, Database.makeService(db)),
-            Context.make(QueueService, QueueService.make(queues)),
+          if (onInit) {
+            yield* onInit().pipe(
+              Effect.provideService(Database.Service, Database.makeService(db)),
+              Effect.provideService(Feed.FeedService, makeFeedService(queues)),
+            );
+          }
+        } else {
+          const key = PublicKey.from((testMetadata as any).key);
+          const rootUrl = (testMetadata as any).rootUrl;
+          db = yield* Effect.promise(() => peer.openDatabase(key, rootUrl));
+          queues = peer.client.constructQueueFactory(db.spaceId);
+          // Rebuild index after reopening since in-memory SQLite is recreated.
+          yield* Effect.promise(() => db!.flush());
+        }
+      } else {
+        db = yield* Effect.promise(() => peer.createDatabase(key));
+        queues = peer.client.constructQueueFactory(db.spaceId);
+        if (onInit) {
+          yield* onInit().pipe(
+            Effect.provideService(Database.Service, Database.makeService(db)),
+            Effect.provideService(Feed.FeedService, makeFeedService(queues)),
           );
+        }
+      }
+
+      yield* Effect.addFinalizer(() =>
+        Effect.promise(async () => {
+          if (kv) {
+            await kv.close();
+          }
         }),
-      ),
-    ),
+      );
+
+      return Context.mergeAll(
+        Context.make(Database.Service, Database.makeService(db)),
+        Context.make(Feed.FeedService, makeFeedService(queues)),
+      );
+    }),
   );

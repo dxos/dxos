@@ -23,7 +23,7 @@ export const CellValidationMessage = ({
   }
 
   const bgClass = variant === 'error' ? 'bg-error-surface' : 'bg-warning-surface';
-  const textClass = variant === 'error' ? 'text-error-foreground' : 'text-warning-foreground';
+  const textClass = variant === 'error' ? 'text-error-fg' : 'text-warning-fg';
 
   return (
     <div

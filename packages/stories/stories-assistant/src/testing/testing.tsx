@@ -26,8 +26,8 @@ import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -265,10 +265,12 @@ type StoryPluginOptions = {
   createAgent?: boolean | CreateAgentOptions;
 };
 
-const StoryPlugin = Plugin.define<StoryPluginOptions>({
-  id: 'com.example.plugin.testing',
-  name: 'Testing',
-}).pipe(
+const StoryPlugin = Plugin.define<StoryPluginOptions>(
+  Plugin.makeMeta({
+    key: DXN.make('com.example.plugin.testing'),
+    name: 'Testing',
+  }),
+).pipe(
   Plugin.addModule({
     id: 'com.example.plugin.testing.module.testing',
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
@@ -305,7 +307,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           AgentBlueprint.make(),
         ).pipe(
           Effect.provide(
-            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService, QueueService).pipe(
+            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService).pipe(
               Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
             ),
           ),

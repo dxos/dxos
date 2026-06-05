@@ -35,9 +35,9 @@
   html .dark,
   .sb-show-main {
     background-color: var(--color-base-surface);
-    color: var(--color-base-foreground);
+    color: var(--color-base-fg);
     --surface-bg: var(--color-base-surface);
-    --foreground: var(--color-base-foreground);
+    --foreground: var(--color-base-fg);
     --description-text: var(--color-description);
   }
 }

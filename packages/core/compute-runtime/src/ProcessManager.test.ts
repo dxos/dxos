@@ -11,12 +11,21 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as PubSub from 'effect/PubSub';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Operation, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
+import {
+  Operation,
+  OperationHandlerSet,
+  Process,
+  ServiceNotAvailableError,
+  ServiceResolver,
+  Trace,
+} from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -32,13 +41,13 @@ import { TestDatabaseLayer } from './testing';
 //
 
 const Double = Operation.make({
-  meta: { key: 'org.dxos.test.double', name: 'Double' },
+  meta: { key: DXN.make('org.dxos.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
 
 const Failing = Operation.make({
-  meta: { key: 'org.dxos.test.failing', name: 'Failing' },
+  meta: { key: DXN.make('org.dxos.test.failing'), name: 'Failing' },
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -410,6 +419,247 @@ describe('ProcessOperationInvoker', () => {
       const fiber = yield* invoker.invokeFiber(Failing, undefined);
       const output = yield* fiber.await;
       expect(output).toEqual(Exit.die('Test Error'));
+    }, Effect.provide(TestLayer)),
+  );
+});
+
+//
+// Environment inheritance for nested operation invocations.
+//
+// When a parent operation invokes a child via `Operation.invoke`, the child
+// must inherit the parent's `ProcessManager.Environment` (space, conversation)
+// unless explicitly overridden in `InvokeOptions`. This keeps space-affinity
+// service resolution (e.g. `Database.Service`) coherent across the call tree
+// instead of forcing every call site to thread the space id manually.
+//
+
+describe('ProcessOperationInvoker environment inheritance', () => {
+  // Operation whose handler reports the spaceId visible through the
+  // strict resolver below. If `Database.Service` resolves, the test layer
+  // has correctly propagated the space context from the parent.
+  const ChildOp = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.invoker.child'), name: 'Child' },
+    input: Schema.Void,
+    output: Schema.Struct({ spaceId: Schema.String }),
+    services: [Database.Service],
+  });
+
+  // Operation that, from its own handler, invokes `ChildOp` and surfaces the
+  // resulting spaceId so the test can compare it against the expected one.
+  const ParentOp = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.invoker.parent'), name: 'Parent' },
+    input: Schema.Struct({
+      override: Schema.optional(Schema.String),
+    }),
+    output: Schema.Struct({ childSpaceId: Schema.String }),
+  });
+
+  const inheritanceHandlers = OperationHandlerSet.make(
+    ChildOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* () {
+          const { db } = yield* Database.Service;
+          return { spaceId: db.spaceId };
+        }),
+      ),
+    ),
+    ParentOp.pipe(
+      Operation.withHandler(
+        Effect.fn(function* (input) {
+          const result = yield* Operation.invoke(
+            ChildOp,
+            undefined,
+            input.override !== undefined ? { spaceId: input.override as any } : undefined,
+          );
+          return { childSpaceId: result.spaceId };
+        }),
+      ),
+    ),
+  );
+
+  /**
+   * Build a `ServiceResolver` that mirrors the production `LayerStack`:
+   * `Database.Service` materialises only when the caller supplies a `space`
+   * in the {@link ServiceResolver.ResolutionContext}. Spawns without a space
+   * fail with the exact `ServiceNotAvailable` shape the live runtime emits.
+   *
+   * Closed over the live test database so the resolved service is the same
+   * one the outer test fiber already holds.
+   */
+  const SpaceAwareResolverLayer = Layer.effect(
+    ServiceResolver.ServiceResolver,
+    Effect.gen(function* () {
+      const dbService = yield* Database.Service;
+      return ServiceResolver.make((tag, context) =>
+        Effect.gen(function* () {
+          if (tag.key !== Database.Service.key) {
+            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
+          }
+          if (context.space !== dbService.db.spaceId) {
+            return yield* Effect.fail(
+              new ServiceNotAvailableError(
+                `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
+              ),
+            );
+          }
+          return dbService as any;
+        }),
+      );
+    }),
+  );
+
+  const InheritanceTestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(SpaceAwareResolverLayer),
+    Layer.provideMerge(
+      TestDatabaseLayer({
+        types: [Organization.Organization],
+      }),
+    ),
+    Layer.provide(KeyValueStore.layerMemory),
+    Layer.provide(OperationHandlerSet.provide(inheritanceHandlers)),
+    Layer.provideMerge(Registry.layer),
+    Layer.provide(Trace.layerNoop),
+  );
+
+  it.effect(
+    "child operations inherit the parent process's space when no options are supplied",
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+
+      const fiber = yield* invoker.invokeFiber(
+        ParentOp,
+        { override: undefined },
+        { environment: { space: db.spaceId } },
+      );
+      const output = yield* fiber.await;
+      expect(output).toEqual(Exit.succeed({ childSpaceId: db.spaceId }));
+    }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    'child operation options override the inherited space',
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+
+      // The override is a bogus space id; the strict resolver refuses to
+      // materialise `Database.Service` for it. A successful trip through the
+      // override path therefore surfaces as a child-side resolution failure,
+      // which propagates as a die.
+      const fiber = yield* invoker.invokeFiber(
+        ParentOp,
+        { override: 'BBOGUS00000000000000000000' },
+        { environment: { space: db.spaceId } },
+      );
+      const output = yield* fiber.await;
+      expect(Exit.isFailure(output)).toBe(true);
+      const cause = Exit.isFailure(output) ? Cause.pretty(output.cause) : '';
+      expect(cause).toContain('Database.Service requires space context');
+      expect(cause).toContain('BBOGUS00000000000000000000');
+    }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    'top-level invocations with no environment fail to resolve space-affinity services',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+
+      // No environment is set on the top-level spawn, so no space context
+      // exists for `Database.Service` resolution. The failure surfaces while
+      // spawning (the runtime resolves declared `services` eagerly), so the
+      // entire `invokeFiber` call is wrapped in `Effect.exit` rather than
+      // awaiting a fiber that never gets created. Confirms the resolver is
+      // actually strict and the inheritance tests above aren't passing by
+      // accident.
+      const spawnExit = yield* invoker.invokeFiber(ChildOp, undefined).pipe(Effect.exit);
+      expect(Exit.isFailure(spawnExit)).toBe(true);
+      const cause = Exit.isFailure(spawnExit) ? Cause.pretty(spawnExit.cause) : '';
+      expect(cause).toContain('Database.Service requires space context');
+      expect(cause).toContain('got none');
+    }, Effect.provide(InheritanceTestLayer)),
+  );
+
+  it.effect(
+    "child operations inherit the parent process's conversation when no options are supplied",
+    Effect.fn(function* ({ expect }) {
+      const { db } = yield* Database.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const monitor = yield* Process.ProcessMonitorService;
+      const manager = yield* ProcessManager.Service;
+
+      const conversation = 'dxn:queue:test-conversation' as DXN.DXN;
+
+      const fiber = yield* invoker.invokeFiber(
+        ParentOp,
+        { override: undefined },
+        { environment: { space: db.spaceId, conversation } },
+      );
+      yield* fiber.await;
+
+      // The parent op spawns the child via Operation.invoke; locate the
+      // child's handle through the process tree and assert its environment
+      // carries both inherited fields.
+      const tree = yield* monitor.processTree;
+      const childInfo = tree.find((node) => node.parentPid === fiber.pid);
+      if (!childInfo) {
+        throw new Error('child process not present in process tree');
+      }
+      const childHandle = yield* manager.attach(childInfo.pid);
+      expect(childHandle.environment).toEqual({ space: db.spaceId, conversation });
+    }, Effect.provide(InheritanceTestLayer)),
+  );
+});
+
+describe('ProcessOperationInvoker invocations', () => {
+  it.effect(
+    'publishes a success event with the output',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          // Subscribe before invoking so the event is not missed.
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const output = yield* invoker.invoke(Double, { value: 5 });
+          expect(output).toEqual(10);
+
+          const event = yield* Queue.take(events);
+          expect(event.operation.meta.key).toEqual(Double.meta.key);
+          expect(event.output).toEqual(10);
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'does not publish an event when the operation fails (error propagates)',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const events = yield* PubSub.subscribe(invoker.invocations);
+
+          const exit = yield* invoker.invoke(Failing).pipe(Effect.exit);
+          expect(Exit.isFailure(exit)).toBe(true);
+
+          // No success event should be queued for a failed invocation.
+          expect(yield* Queue.size(events)).toBe(0);
+        }),
+      );
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'forwards notify options onto the spawned process params',
+    Effect.fn(function* ({ expect }) {
+      // Notifications ride the process monitor: `notify` is forwarded onto the spawned process's params
+      // (and thereby surfaced on Process.Info for a notification tracker), not onto the invocation event.
+      const manager = yield* ProcessManager.Service;
+      const notify = { success: 'Done', error: 'Failed' };
+      const handle = yield* manager.spawn(makeSumAggregator(), { notify });
+      expect(handle.params.notify).toEqual(notify);
     }, Effect.provide(TestLayer)),
   );
 });

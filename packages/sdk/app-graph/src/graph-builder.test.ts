@@ -269,14 +269,14 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: 'outbound-connector',
+          id: 'outboundConnector',
           connector: () => Atom.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
         }),
       );
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: 'inbound-connector',
+          id: 'inboundConnector',
           relation: Node.childRelation('inbound'),
           connector: () => Atom.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
         }),
@@ -389,7 +389,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: 'connector-2',
+          id: 'connector2',
           connector: () => Atom.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
         }),
       );
@@ -507,7 +507,7 @@ describe('GraphBuilder', () => {
         GraphBuilder.addExtension(
           builder,
           GraphBuilder.createExtensionRaw({
-            id: 'inline-connector',
+            id: 'inlineConnector',
             connector: () => Atom.make((get) => get(nodesAtom)),
           }),
         );
@@ -861,7 +861,7 @@ describe('GraphBuilder', () => {
         GraphBuilder.addExtension(
           builder,
           GraphBuilder.createExtensionRaw({
-            id: 'test-connector',
+            id: 'testConnector',
             connector,
           }),
         );
@@ -883,7 +883,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
           }),
@@ -909,7 +909,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               Effect.succeed([
@@ -945,7 +945,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: 'c' }]),
             actions: (node, get) =>
@@ -985,7 +985,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'late-extension',
+            id: 'lateExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               Effect.succeed([{ id: 'late-act', data: () => Effect.void, properties: { label: 'Late' } }]),
@@ -1020,7 +1020,7 @@ describe('GraphBuilder', () => {
         // Note: The actions callback must USE the service for R to be inferred correctly.
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) =>
               // Use TestService in the callback to include it in R.
@@ -1075,7 +1075,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             resolver: (id, get) => Effect.succeed({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
           }),
@@ -1097,7 +1097,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
             actions: (node, get) =>
@@ -1139,7 +1139,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'test-extension',
+            id: 'testExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }]),
           }),
@@ -1177,7 +1177,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'failing-extension',
+            id: 'failingExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.fail(new Error('Connector failed intentionally')),
           }),
@@ -1204,7 +1204,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'failing-actions-extension',
+            id: 'failingActionsExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             actions: (node, get) => Effect.fail(new Error('Actions failed intentionally')),
           }),
@@ -1231,7 +1231,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'failing-resolver-extension',
+            id: 'failingResolverExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             resolver: (id, get) => Effect.fail(new Error('Resolver failed intentionally')),
           }),
@@ -1255,7 +1255,7 @@ describe('GraphBuilder', () => {
         // Add a failing extension.
         const failingExtensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'failing-extension',
+            id: 'failingExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) => Effect.fail(new Error('This one fails')),
           }),
@@ -1264,7 +1264,7 @@ describe('GraphBuilder', () => {
         // Add a working extension.
         const workingExtensions = Effect.runSync(
           GraphBuilder.createExtension({
-            id: 'working-extension',
+            id: 'workingExtension',
             match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
             connector: (node, get) =>
               Effect.succeed([{ id: 'child-from-working', type: EXAMPLE_TYPE, data: 'success' }]),
@@ -1295,7 +1295,7 @@ describe('GraphBuilder', () => {
 
         const extensions = Effect.runSync(
           GraphBuilder.createTypeExtension({
-            id: 'type-extension',
+            id: 'typeExtension',
             type: TestSchema.Person,
             connector: (object) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: object }]),
           }),
@@ -1323,7 +1323,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: 'bad-connector',
+          id: 'badConnector',
           connector: () => Atom.make([{ id: 'foo/bar', type: EXAMPLE_TYPE, data: null }]),
         }),
       );
@@ -1384,7 +1384,7 @@ describe('GraphBuilder', () => {
       GraphBuilder.addExtension(
         builder,
         GraphBuilder.createExtensionRaw({
-          id: 'inline-connector',
+          id: 'inlineConnector',
           connector: () =>
             Atom.make([
               {
@@ -1442,7 +1442,7 @@ describe('GraphBuilder', () => {
             ),
         }),
         GraphBuilder.createExtensionRaw({
-          id: 'constant-child',
+          id: 'constantChild',
           connector: () => Atom.make([{ id: 'shared', type: EXAMPLE_TYPE, data: 'constant' }]),
         }),
       ]);

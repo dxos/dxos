@@ -4,17 +4,20 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Obj, Query, Relation } from '@dxos/echo';
-import { type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
-import { range } from '@dxos/util';
+import {
+  type RelationSpec,
+  type TypeSpec,
+  type ValueGenerator,
+  createObjectFactory,
+  createRelationFactory,
+} from '@dxos/schema/testing';
+import { HasConnection, Organization, Person } from '@dxos/types';
 
 import { type BundleEdge } from '../components/Tree/layout';
 import { type TreeNode } from '../components/Tree/types';
 
 const SECTORS = ['Technology', 'Finance', 'Research', 'Media'];
 const CONNECTION_KINDS = ['partner', 'investor', 'vendor', 'customer'];
-
-const pick = <T>(arr: readonly T[], rng = Math.random): T => arr[Math.floor(rng() * arr.length)];
 
 export type ConnectedOrgsResult = {
   organizations: Obj.Any[];
@@ -31,8 +34,8 @@ export type ConnectedOrgsOptions = {
 /**
  * Populate a space with Organizations, People, and HasConnection relations between organizations.
  * Uses `createObjectFactory` to generate Org/Person properties from their `GeneratorAnnotation`s,
- * then layers manual HasConnection relations on top — the connection schema is fixed
- * (Org→Org) so it isn't a fit for the generator's reference inference.
+ * then `createRelationFactory` to wire HasConnection relations (Org→Org) between them, spreading
+ * the connections across the available kinds.
  */
 export const generateConnectedOrgs = async (
   space: Space,
@@ -45,35 +48,20 @@ export const generateConnectedOrgs = async (
     { type: Person.Person, count: personCount },
   ];
 
-  const factory = createObjectFactory(space.db, generator);
-  await factory(specs);
+  await createObjectFactory(space.db, generator)(specs);
+
+  // Distribute the requested connections evenly across the connection kinds.
+  const relationSpecs: RelationSpec[] = CONNECTION_KINDS.map((kind, index) => ({
+    type: HasConnection.HasConnection,
+    count:
+      Math.floor(connectionCount / CONNECTION_KINDS.length) +
+      (index < connectionCount % CONNECTION_KINDS.length ? 1 : 0),
+    data: { kind },
+  }));
+  const connections = await createRelationFactory(space.db, generator)(relationSpecs);
 
   const organizations = await space.db.query(Query.type(Organization.Organization)).run();
   const people = await space.db.query(Query.type(Person.Person)).run();
-
-  const connections: Obj.Any[] = [];
-  const seen = new Set<string>();
-  for (let i = 0; i < connectionCount && organizations.length >= 2; i++) {
-    const source = pick(organizations);
-    const target = pick(organizations);
-    if (source.id === target.id) {
-      continue;
-    }
-    const key = `${source.id}->${target.id}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-
-    const relation = Relation.make(HasConnection.HasConnection, {
-      [Relation.Source]: source as any,
-      [Relation.Target]: target as any,
-      kind: pick(CONNECTION_KINDS),
-    });
-    connections.push(space.db.add(relation as any));
-  }
-
-  await space.db.flush();
   return { organizations, people, connections };
 };
 
@@ -106,69 +94,6 @@ export const buildOrgHierarchy = (organizations: Obj.Any[], sectors: readonly st
       children: buckets.get(sector) ?? [],
     })),
   };
-};
-
-export type GenerateOptions = {
-  spec?: TypeSpec[];
-  relations?: {
-    count: number;
-    kind: string;
-  };
-};
-
-const defaultGenerateTypes: TypeSpec[] = [
-  {
-    type: Organization.Organization,
-    count: 20,
-  },
-  {
-    type: Person.Person,
-    count: 20,
-  },
-  {
-    type: Pipeline.Pipeline,
-    count: 20,
-  },
-];
-
-const defaultGenerateRelations: NonNullable<GenerateOptions['relations']> = {
-  kind: 'friend',
-  count: 10,
-};
-
-/**
- * Populate a space with a mixed dataset (Orgs, Pipelines, People) plus
- * `HasRelationship` edges between random pairs of People.
- *
- * Used by the force-directed and canvas-force graph stories that want a
- * heterogeneous typed dataset without caring about the precise shape of relations.
- */
-export const generate = async (
-  space: Space,
-  generator: ValueGenerator,
-  { spec = defaultGenerateTypes, relations = defaultGenerateRelations }: GenerateOptions = {},
-) => {
-  const createObjects = createObjectFactory(space.db, generator);
-  await createObjects(spec);
-
-  const contacts: Obj.Any[] = await space.db.query(Query.type(Person.Person)).run();
-  if (contacts.length < 2 || relations.count <= 0) {
-    return;
-  }
-
-  for (const _ of range(relations.count)) {
-    const source = pick(contacts);
-    const target = pick(contacts);
-    if (source.id !== target.id) {
-      space.db.add(
-        Relation.make(HasRelationship.HasRelationship, {
-          [Relation.Source]: source as any,
-          [Relation.Target]: target as any,
-          kind: relations.kind,
-        }) as any,
-      );
-    }
-  }
 };
 
 /**

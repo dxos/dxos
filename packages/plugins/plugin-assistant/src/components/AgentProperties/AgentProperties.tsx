@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Agent } from '@dxos/assistant-toolkit';
-import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -31,13 +31,15 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
       return Filter.nothing();
     }
 
-    const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
-    const feedSchemas = schemas.filter((schema) => {
-      const annotation = FeedAnnotation.get(schema);
+    const schemas = db.graph.registry.list().filter(Type.isType);
+    const feedSchemas = schemas.filter((type) => {
+      const annotation = FeedAnnotation.get(Type.getSchema(type));
       return Option.isSome(annotation) && annotation.value === true;
     });
 
-    return feedSchemas.length === 0 ? Filter.nothing() : Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
+    return feedSchemas.length === 0
+      ? Filter.nothing()
+      : Filter.or(...feedSchemas.map((schema: Type.AnyEntity) => Filter.type(schema)));
   }, [db]);
 
   const subscribedObjects = useQuery(db, feedFilter);
@@ -50,7 +52,7 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
           Atom.make((get) => {
             const agentObj = get(_);
             const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
-              agentObj.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
+              agentObj.subscriptions.some((subscription) => subscription.uri === Obj.getURI(object)),
             );
 
             return selectedSubscriptions;
@@ -65,11 +67,9 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
     (object: Obj.Unknown, checked: boolean) => {
       Obj.update(agent, (agent) => {
         if (checked) {
-          agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
+          agent.subscriptions.push(Ref.fromURI(Obj.getURI(object)));
         } else {
-          agent.subscriptions = agent.subscriptions.filter(
-            (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
-          );
+          agent.subscriptions = agent.subscriptions.filter((subscription) => subscription.uri !== Obj.getURI(object));
         }
       });
     },

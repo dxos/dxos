@@ -5,9 +5,9 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type Hypergraph } from '@dxos/echo';
+import { type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { IndexQuerySource } from './index-query-source-provider';
@@ -21,15 +21,13 @@ const makeQuery = (): QueryAST.Query => ({
     type: 'select',
     filter: {
       type: 'object',
-      typename: 'dxn:type:org.dxos.type.person:0.1.0',
+      typename: DXN.make('org.dxos.type.person', '0.1.0'),
       props: {},
     },
   },
   from: {
     _tag: 'scope',
-    scope: {
-      spaceIds: [SpaceId.random()],
-    },
+    scopes: [Scope.space(SpaceId.random())],
   },
 });
 

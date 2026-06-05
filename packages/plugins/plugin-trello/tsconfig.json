@@ -24,6 +24,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -49,9 +52,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/schema"

@@ -82,7 +82,7 @@ type Provider
     label + machine identifier + optional Ref to a rich object. Plain
     Schema.Struct (not a Type.object); embedded inline by callers.
   fields:
-    name?: string                   # e.g. "United Airlines"
+    name?: string                   # e.g. "Air France"
     domain?: Hostname               # e.g. "united.com"
     ref?: Ref<Organization>         # rich link once an Organization exists
 ```
@@ -450,7 +450,7 @@ feat TravelMessageExtractor
     extracted: ExtractedFrom[]      # one per created object
     trip: Trip                      # resolved per Trip resolution rules below
   v1 parser coverage:
-    - United Airlines flight confirmations (sender ending in @united.com)
+    - Air France flight confirmations (sender ending in @united.com)
       → Booking + one Flight Segment.
     - Booking.com hotel confirmations (sender ending in @booking.com)
       → Booking + one Accommodation Segment.
@@ -554,6 +554,20 @@ feat TripCalendarSource
   notes:
     - id format: `trip:<trip-id>:seg:<seg-id>` so projections are stable across query calls.
     - sourceObject is set to a Ref of the underlying Segment so consumers can navigate to it.
+```
+
+```mdl
+feat TripMapMarkers
+  desc: >
+    plugin-trip contributes a MapCapabilities.MarkerProvider (from @dxos/plugin-map) that plots a
+    Trip's segments: one marker per segment (keyed by segment id) plus origin→destination arcs for
+    transport segments, with IATA-code geocoding for flights. Selection is single-mode against the
+    trip's attendable context. plugin-map then renders the map (article toolbar toggle when the
+    provider matches, and a map companion). The former in-plugin TripMapView / TripMapArticle and the
+    `trip-map` surface are removed in favour of this generic integration.
+  notes:
+    - The TripArticle map toggle is shown only when a MarkerProvider matches the trip.
+    - Selecting a marker dispatches LayoutOperation.Select so the segment stack stays in sync.
 ```
 
 ## Out of scope for Phase 1

@@ -13,7 +13,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { AgentService } from '@dxos/functions-runtime';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { EntityId } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -24,7 +24,7 @@ import MarkdownBlueprint from '../blueprints/markdown-blueprint';
 import { MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
 
-ObjectId.dangerouslyDisableRandomness();
+EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
@@ -57,7 +57,7 @@ describe('update', () => {
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });
 
-        const updatedDoc = yield* Database.resolve(Obj.getDXN(doc), Markdown.Document);
+        const updatedDoc = yield* Database.resolve(Obj.getURI(doc), Markdown.Document);
         expect(updatedDoc.name).toBe(doc.name);
         const text = yield* Database.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');
