@@ -14,7 +14,11 @@ import { Channel, Message } from '@dxos/types';
 
 import { ThreadCapabilities } from '../types';
 
-/** Local ECHO-feed-backed channel provider (the default backend). */
+/**
+ * Default local ECHO-feed-backed channel provider. Stores messages in a `Feed`
+ * (`makeConfig` → `Feed.make()`), reads them via a reactive database query, and
+ * writes via `Feed.append`. This is the backend `Channel.make()` defaults to.
+ */
 export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
   kind: Channel.FeedBackendKind,
   label: 'Feed',

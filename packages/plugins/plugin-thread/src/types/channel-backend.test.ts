@@ -11,15 +11,6 @@ import { Feed } from '@dxos/echo';
 import { buildChannelFormSchema, resolveProvider } from './channel-backend';
 import * as ThreadCapabilities from './ThreadCapabilities';
 
-const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ThreadCapabilities.ChannelBackendProvider => ({
-  kind,
-  label: kind,
-  createFields: fields,
-  makeConfig: () => Feed.make(),
-  subscribe: () => () => {},
-  send: () => Effect.void,
-});
-
 describe('channel-backend helpers', () => {
   test('resolveProvider finds by kind', ({ expect }) => {
     const providers = [fakeProvider('a', Schema.Struct({})), fakeProvider('b', Schema.Struct({}))];
@@ -29,7 +20,7 @@ describe('channel-backend helpers', () => {
 
   test('buildChannelFormSchema with a single empty-field provider is just a name field', ({ expect }) => {
     const schema = buildChannelFormSchema([fakeProvider('feed', Schema.Struct({}))]);
-    const value = Schema.decodeUnknownSync(schema)({ name: 'general' }) as { name?: string; backend?: unknown };
+    const value = Schema.decodeUnknownSync(schema)({ name: 'general' });
     expect(value.name).to.eq('general');
     expect(value.backend).to.be.undefined;
   });
@@ -45,4 +36,13 @@ describe('channel-backend helpers', () => {
     expect(atValue.backend.kind).to.eq('atproto');
     expect(atValue.backend.channelId).to.eq('c');
   });
+});
+
+const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ThreadCapabilities.ChannelBackendProvider => ({
+  kind,
+  label: kind,
+  createFields: fields,
+  makeConfig: () => Feed.make(),
+  subscribe: () => () => {},
+  send: () => Effect.void,
 });

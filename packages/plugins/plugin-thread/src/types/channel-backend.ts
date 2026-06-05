@@ -13,6 +13,17 @@ export const resolveProvider = (
   kind: string,
 ): ThreadCapabilities.ChannelBackendProvider | undefined => providers.find((provider) => provider.kind === kind);
 
+/** Throws if two providers share a `kind` (which would make resolution order-dependent). */
+export const assertUniqueKinds = (providers: readonly ThreadCapabilities.ChannelBackendProvider[]): void => {
+  const seen = new Set<string>();
+  for (const provider of providers) {
+    if (seen.has(provider.kind)) {
+      throw new Error(`Duplicate channel backend kind: ${provider.kind}`);
+    }
+    seen.add(provider.kind);
+  }
+};
+
 /**
  * Builds the create-channel form schema from the registered providers.
  *
@@ -24,6 +35,7 @@ export const resolveProvider = (
 export const buildChannelFormSchema = (
   providers: readonly ThreadCapabilities.ChannelBackendProvider[],
 ): Schema.Schema.AnyNoContext => {
+  assertUniqueKinds(providers);
   const needsSelector = providers.length > 1 || providers.some((provider) => fieldCount(provider.createFields) > 0);
   if (!needsSelector) {
     return Schema.Struct({ name: Schema.optional(Schema.String) });

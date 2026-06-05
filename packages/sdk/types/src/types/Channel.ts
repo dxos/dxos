@@ -55,6 +55,9 @@ export const make = ({ backend, ...rest }: ChannelProps = {}) => {
 
 /** Returns the backing `Feed` for a feed-backed channel (when loaded), else undefined. */
 export const getFeed = (channel: Channel): Feed.Feed | undefined => {
+  if (channel.backend.kind !== FeedBackendKind) {
+    return undefined;
+  }
   const config = channel.backend.config?.target;
   return Obj.instanceOf(Feed.Feed, config) ? config : undefined;
 };
