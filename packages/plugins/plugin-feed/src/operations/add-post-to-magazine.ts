@@ -8,8 +8,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { FeedOperation } from '../types';
-import { appendPostContent } from '../state';
+import { FeedOperation, Subscription } from '../types';
 
 const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = FeedOperation.AddPostToMagazine.pipe(
   Operation.withHandler(
@@ -24,7 +23,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
       // contentFeed (shared across magazines, preferred over the description-derived defaults).
       const space = getSpace(magazine);
       if (subscription && space && (snippet || imageUrl)) {
-        yield* Effect.promise(() => appendPostContent(space, subscription, { post, text: '', snippet, imageUrl }));
+        yield* Effect.promise(() => Subscription.appendPostContent(space, subscription, { post, text: '', snippet, imageUrl }));
       }
 
       Obj.update(magazine, (magazine) => {

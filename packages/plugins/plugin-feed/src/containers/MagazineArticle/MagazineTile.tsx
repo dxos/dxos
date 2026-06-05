@@ -10,8 +10,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { type Subscription } from '#types';
 
-import { useMagazinePostData } from '../../state';
-import { formatDate } from '../../util/format-date';
+import { useMagazinePostData } from '#atoms';
+import { formatDate } from '../../util/date';
 
 export type MagazineTileProps = {
   post: Subscription.Post;

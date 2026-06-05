@@ -12,7 +12,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { meta } from '#meta';
 import { type Magazine } from '#types';
 
-import { type MagazineView } from '../../state';
+import { type MagazineView } from '#atoms';
 
 export type MagazineToolbarProps = {
   magazine: Magazine.Magazine;

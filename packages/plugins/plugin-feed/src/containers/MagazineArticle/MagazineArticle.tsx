@@ -18,7 +18,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { getReadAt, type MagazineView, setReadAt, setTag, useVisibleMagazinePosts } from '../../state';
+import { type MagazineView, useVisibleMagazinePosts } from '#atoms';
 import { MagazineTile } from './MagazineTile';
 import { MagazineToolbar } from './MagazineToolbar';
 
@@ -68,7 +68,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     async (post: Subscription.Post, starred: boolean) => {
       const subscription = await post.source?.load();
       if (db && subscription) {
-        void setTag(subscription, post.id, db, 'starred', !starred);
+        void Subscription.setTag(subscription, post.id, db, 'starred', !starred);
       }
     },
     [db],
@@ -86,8 +86,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const handleOpen = useCallback(
     async (post: Subscription.Post) => {
       const subscription = await post.source?.load();
-      if (subscription && !getReadAt(subscription, post.id)) {
-        void setReadAt(subscription, post.id, new Date().toISOString());
+      if (subscription && !Subscription.getReadAt(subscription, post.id)) {
+        void Subscription.setReadAt(subscription, post.id, new Date().toISOString());
       }
       // Fetch the full article content in the background. The operation appends a PostContent entry
       // to the subscription's contentFeed and is idempotent (no-op when an entry already exists or

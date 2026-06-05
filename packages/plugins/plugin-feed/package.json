@@ -13,6 +13,11 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
+    "#atoms": {
+      "source": "./src/atoms/index.ts",
+      "types": "./dist/types/src/atoms/index.d.ts",
+      "default": "./dist/lib/neutral/atoms/index.mjs"
+    },
     "#blueprints": {
       "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts",

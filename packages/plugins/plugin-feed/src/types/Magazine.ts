@@ -9,11 +9,12 @@ import * as Schema from 'effect/Schema';
 import { BlueprintsAnnotation, StateMap } from '@dxos/app-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
 import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
-
-export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { type EntityId } from '@dxos/keys';
 
 import * as Subscription from './Subscription';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 
 /** Per-Post magazine-scoped curation state, keyed by Post id. */
 export const PostState = Schema.Struct({
@@ -118,3 +119,15 @@ export const CreateMagazineSchema = Schema.Struct({
     }),
   ),
 });
+
+//
+// Per-Post magazine-scoped curation state (rank), keyed by Post id.
+//
+
+/** Agent-assigned relevance of a Post within a Magazine, or undefined. */
+export const getRank = (magazine: Magazine | undefined, postId: EntityId): number | undefined =>
+  magazine ? StateMap.bind<PostState>(magazine, 'postState').get(postId).rank : undefined;
+
+/** Sets the magazine-scoped rank for a Post. */
+export const setRank = (magazine: Magazine, postId: EntityId, rank: number): void =>
+  StateMap.bind<PostState>(magazine, 'postState').patch(postId, { rank });

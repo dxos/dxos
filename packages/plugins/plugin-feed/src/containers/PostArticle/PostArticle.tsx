@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-import { setReadAt, setTag, usePostContentAtom } from '../../state';
+import { usePostContentAtom } from '#atoms';
 import { PostToolbar } from './PostToolbar';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
@@ -75,7 +75,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
 
   const handleMarkUnread = useCallback(() => {
     if (subscription) {
-      setReadAt(subscription, id, undefined);
+      Subscription.setReadAt(subscription, id, undefined);
     }
   }, [subscription, id]);
 
@@ -84,7 +84,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
   const handleSetArchived = useCallback(
     (value: boolean) => {
       if (db && subscription) {
-        void setTag(subscription, id, db, 'archived', value);
+        void Subscription.setTag(subscription, id, db, 'archived', value);
       }
     },
     [db, subscription, id],
@@ -93,7 +93,7 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
   const handleSetStarred = useCallback(
     (value: boolean) => {
       if (db && subscription) {
-        void setTag(subscription, id, db, 'starred', value);
+        void Subscription.setTag(subscription, id, db, 'starred', value);
       }
     },
     [db, subscription, id],

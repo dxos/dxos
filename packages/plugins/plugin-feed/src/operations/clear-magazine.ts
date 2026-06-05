@@ -7,10 +7,9 @@ import * as Option from 'effect/Option';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
 import { FeedOperation, Subscription } from '../types';
-import { findSystemTagUri, hasTag } from '../state';
-import { dxnToEntityId } from '../util/dxn';
 
 /**
  * Clears a Magazine's curated posts, preserving any that are starred. With no `starred` tag in the
@@ -25,7 +24,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
       if (!db || magazine.posts.length === 0) {
         return;
       }
-      const starredUri = yield* Effect.promise(() => findSystemTagUri(db, 'starred'));
+      const starredUri = yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred'));
 
       const next = yield* Option.fromNullable(starredUri).pipe(
         Option.match({
@@ -42,7 +41,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
               const sourceById = new Map<string, Ref.Ref<Subscription.Subscription>>();
               for (const post of loaded) {
                 if (post.source) {
-                  sourceById.set(String(dxnToEntityId(post.source.uri)), post.source);
+                  sourceById.set(EID.getEntityId(EID.parse(post.source.uri)) ?? post.source.uri, post.source);
                 }
               }
               const subscriptionEntries = yield* Effect.all(
@@ -54,8 +53,8 @@ const handler: Operation.WithHandler<typeof FeedOperation.ClearMagazine> = FeedO
               const subscriptionById = new Map(subscriptionEntries);
               return loaded
                 .filter((post) =>
-                  hasTag(
-                    post.source ? subscriptionById.get(String(dxnToEntityId(post.source.uri))) : undefined,
+                  Subscription.hasTag(
+                    post.source ? subscriptionById.get(EID.getEntityId(EID.parse(post.source.uri)) ?? post.source.uri) : undefined,
                     post.id,
                     uri,
                   ),

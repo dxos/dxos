@@ -7,12 +7,11 @@ import * as Effect from 'effect/Effect';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedOperation, type Magazine, Subscription } from '../types';
-import { findSystemTagUri, hasTag } from '../state';
-import { dxnTailId } from '../util/dxn';
-import { publishedTimestamp } from '../util/sorting';
+import { publishedTimestamp } from '../util/date';
 
 export default FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
@@ -63,7 +62,7 @@ export default FeedOperation.CurateMagazine.pipe(
 
       // Per-feed keep bounds how many posts each feed contributes.
       const db = Obj.getDatabase(magazine);
-      const starredUri = db ? yield* Effect.promise(() => findSystemTagUri(db, 'starred')) : undefined;
+      const starredUri = db ? yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred')) : undefined;
       applyPerFeedKeep(magazine, starredUri);
 
       return { synced };
@@ -79,13 +78,13 @@ export default FeedOperation.CurateMagazine.pipe(
  */
 export const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string | undefined): void => {
   const isStarred = (post: Subscription.Post) =>
-    hasTag(post.source?.target, post.id, starredUri);
+    Subscription.hasTag(post.source?.target, post.id, starredUri);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {
     const feed = feedRef.target;
     if (feed) {
-      feedKeepById.set(dxnTailId(feedRef.uri), feed.keep ?? Subscription.DEFAULT_KEEP);
+      feedKeepById.set(EID.getEntityId(EID.parse(feedRef.uri)) ?? feedRef.uri, feed.keep ?? Subscription.DEFAULT_KEEP);
     }
   }
 
@@ -103,7 +102,7 @@ export const applyPerFeedKeep = (magazine: Magazine.Magazine, starredUri: string
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
     const feedRefURI = pair.post.source?.uri;
-    const feedId = feedRefURI ? dxnTailId(feedRefURI) : undefined;
+    const feedId = feedRefURI ? EID.getEntityId(EID.parse(feedRefURI)) ?? feedRefURI : undefined;
     const arr = byFeedId.get(feedId) ?? [];
     arr.push(pair);
     byFeedId.set(feedId, arr);

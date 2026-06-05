@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { fetchRss } from '../sources';
+import { fetchRss } from '../operations/sources';
 import registerFeedXml from './fixtures/theregister-ai.xml?raw';
 
 const REGISTER_FEED_URL = 'https://api.theregister.com/api/v1/article?remapper=rss';

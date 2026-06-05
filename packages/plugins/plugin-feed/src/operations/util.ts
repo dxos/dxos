@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { type Magazine, Subscription } from '../types';
-import { publishedTimestamp } from '../util/sorting';
+import { publishedTimestamp } from '../util/date';
 
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing

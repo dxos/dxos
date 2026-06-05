@@ -9,7 +9,8 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '../types';
-import { browserCorsProxy, type FeedFetcher, fetchAtproto, fetchRss } from '../sources';
+
+import { browserCorsProxy, type FeedFetcher, fetchAtproto, fetchRss } from './sources';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, atproto uses the post URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;

@@ -11,7 +11,7 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { meta } from '#meta';
 import { type Subscription } from '#types';
 
-import { postReadAtom, postTagsAtom } from '../../state';
+import { postReadAtom, postTagsAtom } from '#atoms';
 
 export type PostToolbarProps = {
   post: Subscription.Post;

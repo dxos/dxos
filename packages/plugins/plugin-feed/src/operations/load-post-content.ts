@@ -8,10 +8,10 @@ import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 
-import { FeedOperation } from '../types';
-import { makeSnippet, stripHtml } from '../extraction';
-import { browserCorsProxy, fetchArticle } from '../sources';
-import { appendPostContent, findPostContent } from '../state';
+import { FeedOperation, Subscription } from '../types';
+import { makeSnippet, stripHtml } from '../util/text';
+
+import { browserCorsProxy, fetchArticle } from './sources';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
@@ -32,7 +32,7 @@ export default FeedOperation.LoadPostContent.pipe(
       invariant(space, 'Subscription is not in a space.');
       // Idempotent by default (first-open auto-load); `force` re-fetches for the reader's refresh.
       if (!force) {
-        const existing = yield* Effect.tryPromise(() => findPostContent(subscription, post));
+        const existing = yield* Effect.tryPromise(() => Subscription.findPostContent(subscription, post));
         if (existing) {
           return;
         }
@@ -46,7 +46,7 @@ export default FeedOperation.LoadPostContent.pipe(
           if (text) {
             // Store the body plus refined snippet/imageUrl derived from the full article — preferred
             // over the description-derived defaults wherever the Post is rendered.
-            await appendPostContent(space, subscription, {
+            await Subscription.appendPostContent(space, subscription, {
               post,
               text,
               snippet: makeSnippet(stripHtml(text)),

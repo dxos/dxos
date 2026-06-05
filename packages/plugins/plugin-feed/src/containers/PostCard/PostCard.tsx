@@ -11,8 +11,7 @@ import { Card } from '@dxos/react-ui';
 
 import { Subscription } from '#types';
 
-import { formatDate } from '../../util/format-date';
-import { getImageUrl, getSnippet } from '../../state';
+import { formatDate, getImageUrl, getSnippet } from '../../util';
 
 export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 
