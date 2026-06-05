@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { TripCapabilities } from '@dxos/plugin-trip';
+import { TripCapabilities } from '@dxos/plugin-trip/types';
 
 export const RoutingService: Capability.LazyCapability<
   void,

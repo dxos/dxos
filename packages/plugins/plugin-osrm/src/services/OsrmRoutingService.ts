@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Place, Routing } from '@dxos/plugin-trip';
+import { type Place, Routing } from '@dxos/plugin-trip/types';
 
 import { geocode } from './NominatimClient';
 import { parseRoutes } from './osrm-mapping';

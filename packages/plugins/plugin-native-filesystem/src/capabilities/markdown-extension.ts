@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { listener } from '@dxos/ui-editor';
 
 import { NativeFilesystemCapabilities, type FilesystemWorkspace, type NativeFilesystemState } from '#types';
