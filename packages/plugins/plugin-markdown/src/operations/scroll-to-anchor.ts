@@ -7,23 +7,11 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Cursor, setSelection } from '@dxos/ui-editor';
+import { Cursor, isRangeVisible, scrollThreadIntoView } from '@dxos/ui-editor';
 
 import { MarkdownCapabilities, MarkdownOperation } from '../types';
 
-/**
- * Whether the [from, to] range is already entirely within the editor's scroll
- * viewport. Returns false if either endpoint isn't currently rendered (off-screen).
- */
-const isRangeVisible = (view: EditorView, range: { from: number; to: number }): boolean => {
-  const from = view.coordsAtPos(range.from);
-  const to = view.coordsAtPos(range.to);
-  if (!from || !to) {
-    return false;
-  }
-  const { top, bottom } = view.scrollDOM.getBoundingClientRect();
-  return from.top >= top && to.bottom <= bottom;
-};
+const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
@@ -33,26 +21,18 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
       if (!entry) {
         return;
       }
+
+      // When a thread ref is supplied, delegate to the shared editor helper which
+      // scrolls (only if not already visible) and marks the comment current.
+      if (ref) {
+        scrollThreadIntoView(entry.view, ref, SCROLL_OPTIONS);
+        return;
+      }
+
+      // Fallback: no thread ref — scroll the cursor range into view if needed.
       const range = Cursor.getRangeFromCursor(entry.view.state, cursor);
-      if (range) {
-        const selection = entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
-        // Only scroll when the anchored range isn't already entirely visible.
-        const effects: any[] = isRangeVisible(entry.view, range)
-          ? []
-          : [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
-        if (ref || selection) {
-          // Mark the referenced comment (thread) as current so the editor highlights
-          // it; fall back to the document id when no ref is supplied. Always update
-          // when a `ref` is given so the highlight follows the selected thread even
-          // if the caret is already at the anchor start (or two threads share it).
-          effects.push(setSelection.of({ current: ref ?? entry.documentId }));
-        }
-        if (effects.length > 0 || selection) {
-          entry.view.dispatch({
-            effects,
-            selection: selection ? { anchor: range.from } : undefined,
-          });
-        }
+      if (range && !isRangeVisible(entry.view, range)) {
+        entry.view.dispatch({ effects: EditorView.scrollIntoView(range.from, SCROLL_OPTIONS) });
       }
     }),
   ),
