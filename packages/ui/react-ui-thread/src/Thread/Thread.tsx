@@ -129,25 +129,26 @@ ThreadContent.displayName = 'Thread.Content';
 // Header
 //
 
-type ThreadHeaderExtra = {
-  /** Snippet text. Must be a string — it is rendered inside a `<p>`. */
-  children?: string;
-  detached?: boolean;
-  /** Trailing controls rendered in the right column (aligns with message-tile controls). */
-  controls?: ReactNode;
-  /** Invoked when the caret affordance is activated to select/focus this thread. */
-  onSelect?: () => void;
-};
-
-export type ThreadHeaderProps = ComposableProps<ThreadHeaderExtra>;
+export type ThreadHeaderProps = Omit<
+  ComposableProps<{
+    /** Snippet text rendered inside a `<p>` (a string, not a DOM element). */
+    title?: string;
+    detached?: boolean;
+    /** Trailing controls rendered in the right column (aligns with message-tile controls). */
+    controls?: ReactNode;
+    /** Invoked when the caret affordance is activated to select/focus this thread. */
+    onSelect?: () => void;
+  }>,
+  'children'
+>;
 
 /**
  * Thread header row: caret (rail) · snippet (content) · controls. Owns its own
  * `[rail · 1fr · controls]` grid so the trailing controls align with message-tile
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
-const ThreadHeader = composable<HTMLDivElement, ThreadHeaderExtra>(
-  ({ children, detached, controls, onSelect, ...props }, forwardedRef) => {
+const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
+  ({ title, detached, controls, onSelect, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
@@ -183,7 +184,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderExtra>(
             data-testid='thread.heading'
             className={mx('me-2 text-description font-medium truncate italic', detached && 'line-through decoration-1')}
           >
-            {children}
+            {title}
           </p>
         </div>
         {controls}
