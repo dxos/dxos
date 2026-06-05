@@ -4,6 +4,7 @@
 
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
 import { tags } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -44,4 +45,14 @@ const styles = HighlightStyle.define([
   },
 ]);
 
-export const command: Extension = [parser, syntaxHighlighting(styles)];
+// Center the inline `.dx-tag` pills on the text line. `.dx-tag` is `inline-block`
+// with vertical padding, so on a CodeMirror line it baseline-aligns and rides
+// high; overriding `vertical-align` recentres it (cf. the `cm-reference-pill`
+// precedent in `@dxos/react-ui-chat`).
+const theme = EditorView.theme({
+  '.dx-tag': {
+    verticalAlign: 'bottom',
+  },
+});
+
+export const command: Extension = [parser, syntaxHighlighting(styles), theme];

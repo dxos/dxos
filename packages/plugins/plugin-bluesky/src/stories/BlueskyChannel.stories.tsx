@@ -42,7 +42,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-bluesky/ChannelBackend',
+  title: 'plugins/plugin-bluesky/stories/ChannelBackend',
   render: DefaultStory,
   decorators: [
     withTheme(),
