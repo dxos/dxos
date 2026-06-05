@@ -78,6 +78,8 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
 
+    const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
+
     const getMetadata = useCallback(
       (message: Message.Message) => {
         const senderIdentity = members.find(
@@ -92,8 +94,6 @@ export const Chat = composable<HTMLDivElement, ChatProps>(
       },
       [members],
     );
-
-    const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
 
     return (
       <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
