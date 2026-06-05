@@ -22,6 +22,7 @@ import {
   OperationHandler,
   UndoMappings,
   ReactSurface,
+  ThreadSettings,
   ThreadState,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -55,12 +56,9 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
-  // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
-  // Plugin.addModule({
-  //   id: 'settings',
-  //   activatesOn: Events.SetupSettings,
-  //   activate: ThreadSettings,
-  // }),
+  // Settings are rendered by the framework's generic settings surface from the
+  // contributed schema (no bespoke settings UI in this plugin).
+  AppPlugin.addSettingsModule({ activate: ThreadSettings }),
   Plugin.addModule({
     id: 'state',
     // TODO(wittjosiah): Does not integrate with settings store.
