@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -610,6 +611,48 @@ describe('Reactive Object with ECHO database', () => {
 
       expect(person.previousEmployment![0]!.target?.name).to.eq('DXOS');
       expect(person.previousEmployment![1]!.target?.name).to.eq('Braneframe');
+    });
+  });
+
+  // Annotations store their values in entity meta. A Ref-valued annotation must persist its
+  // unsaved target just like a Ref assigned to an ordinary property does, otherwise the stored
+  // DXN dangles and resolution throws EntityNotFoundError (see CollectionModel root collection).
+  describe('annotation references', () => {
+    const RootCollection = Schema.Struct({
+      name: Schema.optional(Schema.String),
+    }).pipe(Type.makeObject(DXN.make('com.example.type.rootCollection', '0.1.0')));
+
+    const RootRefAnnotation = Annotation.make({
+      id: 'com.example.annotation.rootRef',
+      schema: Ref.Ref(RootCollection),
+    });
+
+    test('Annotation.set persists an unsaved Ref target into the host database', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(Obj.make(RootCollection, { name: 'root' })));
+      });
+
+      const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
+      const target = await ref.load();
+      expect(target.name).to.eq('root');
+    });
+
+    test('Annotation.set leaves an already-persisted Ref target untouched', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const root = db.add(Obj.make(RootCollection, { name: 'root' }));
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(root));
+      });
+
+      const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
+      expect((await ref.load()).id).to.eq(root.id);
     });
   });
 
