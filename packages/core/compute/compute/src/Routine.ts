@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, JsonSchema, Obj, Ref, Type, Format } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 
 import * as Blueprint from './Blueprint';
-import * as Template from './Template';
 
 /**
  * Prompt-based operation.
@@ -24,19 +24,15 @@ export const Routine = Schema.Struct({
   output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
     description: 'Output schema',
   }),
-  // TODO(burdon): Form editor.
-  instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
-    description: 'Agent instructions',
-  }),
+  instructions: Ref.Ref(Text.Text).pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Schema.annotations({ title: 'Instructions', description: 'Agent instructions' }),
+  ),
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
-  // TODO(burdon): Change to map?
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--scroll--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--scroll--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.routine', '0.1.0')),
 );
 
@@ -65,7 +61,7 @@ export const make = ({
     description,
     input: JsonSchema.toJsonSchema(input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(output ?? Schema.Void),
-    instructions: Template.make({ source: instructions }),
+    instructions: Ref.make(Text.make({ content: instructions ?? '' })),
     blueprints,
     context,
   });

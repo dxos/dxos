@@ -26,7 +26,13 @@ export const BeaconStatusIndicator = () => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon='ph--broadcast--regular' iconOnly label={t('beacon-status.label')} classNames={iconClass} />
+          <IconButton
+            variant='ghost'
+            icon='ph--broadcast--regular'
+            iconOnly
+            label={t('beacon-status.label')}
+            classNames={iconClass}
+          />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>

@@ -220,10 +220,16 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
           }
 
           const virtualIndex = draggable ? itemIndex * 2 + 1 : itemIndex;
-          virtualizer.scrollToIndex(virtualIndex, { align: 'start', behavior: 'smooth' });
+          // Align to the item's start, but offset by the inter-item `gap` so the tile lands
+          // one gap below the viewport edge rather than flush against it (a plain
+          // `scrollToIndex({ align: 'start' })` scrolls the preceding gap out of view).
+          const [offset] = virtualizer.getOffsetForIndex(virtualIndex, 'start') ?? [];
+          if (offset != null) {
+            virtualizer.scrollToOffset(Math.max(0, offset - (gap ?? 0)), { behavior: 'smooth' });
+          }
         }
       },
-      [visibleItems, getId, draggable, virtualizer, scrollIntoView],
+      [visibleItems, getId, draggable, virtualizer, scrollIntoView, gap],
     );
 
     useEffect(() => {

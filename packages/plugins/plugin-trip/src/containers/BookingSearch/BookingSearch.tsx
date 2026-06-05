@@ -31,6 +31,19 @@ const SEARCH_LAYOUT = trim`
   </grid>
 `;
 
+/**
+ * True when the (date-only component of the) ISO departure date falls before today (UTC, matching
+ * the provider's date-only `departure_date`). Providers like Duffel reject past dates, so this drives
+ * a client-side guard with an actionable message. Empty/undefined dates are not "past" (the
+ * presence check in `canSearch` handles them).
+ */
+const isPastDate = (iso?: string): boolean => {
+  if (!iso) {
+    return false;
+  }
+  return iso.slice(0, 10) < new Date().toISOString().slice(0, 10);
+};
+
 export type BookingSearchProps = {
   segment: Segment.Segment;
 };
@@ -70,6 +83,34 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
   // so the user gets actionable feedback rather than a server error.
   const canSearch = Boolean(service && query.origin && query.destination && query.departureDate);
 
+  // Field-level validation surfaced inline by the Form. A past departure date is the most common
+  // provider rejection (e.g. Duffel's "departure_date must be in the future"), so catch it here and
+  // block submit before hitting the provider.
+  const handleValidate = useCallback(
+    (values: BookingSearchType.FlightSearchFields) =>
+      isPastDate(values.departureDate)
+        ? [{ path: 'departureDate', message: t('booking.past-date.message') }]
+        : undefined,
+    [t],
+  );
+
+  // Map an operation/provider error onto a user-facing message: a missing key and a provider
+  // rejection (e.g. Duffel's "departure_date must be in the future") are actionable, so prefer them
+  // over the generic fallback.
+  const messageForError = useCallback(
+    (cause: { name?: string; message?: string }): string => {
+      switch (cause.name) {
+        case 'MissingApiKeyError':
+          return t('booking.missing-key.message');
+        case 'BookingProviderError':
+          return cause.message || t('booking.error.message');
+        default:
+          return t('booking.error.message');
+      }
+    },
+    [t],
+  );
+
   const handleSearch = useCallback(async () => {
     if (!service) {
       return;
@@ -92,18 +133,16 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
         provider: service.id,
       });
       if (invocationError) {
-        const missingKey = invocationError.name === 'MissingApiKeyError';
-        setError(missingKey ? t('booking.missing-key.message') : t('booking.error.message'));
+        setError(messageForError(invocationError));
         return;
       }
       setOffers(data?.offers);
     } catch (err) {
-      const missingKey = err instanceof Error && err.name === 'MissingApiKeyError';
-      setError(missingKey ? t('booking.missing-key.message') : t('booking.error.message'));
+      setError(messageForError(err instanceof Error ? err : {}));
     } finally {
       setPending(false);
     }
-  }, [service, query, invokePromise, t]);
+  }, [service, query, invokePromise, messageForError]);
 
   const handleSelectOffer = useCallback(
     (offer: BookingSearchType.Offer) => {
@@ -161,6 +200,7 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
       <Form.Root
         schema={BookingSearchType.FlightSearchFields}
         values={query}
+        onValidate={handleValidate}
         onValuesChanged={(values) => setQuery(values)}
         onSave={() => void handleSearch()}
       >

@@ -26,10 +26,7 @@ export const Journal = Schema.Struct({
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--calendar-check--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--calendar-check--regular', hue: 'indigo' }),
   Type.makeObject(DXN.make('org.dxos.type.journal', '0.1.0')),
 );
 

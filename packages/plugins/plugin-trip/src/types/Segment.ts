@@ -140,10 +140,7 @@ export const Segment = Schema.Struct({
   notes: Schema.optional(Schema.String),
   details: Details,
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--ticket--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--ticket--regular', hue: 'sky' }),
   Annotation.HiddenAnnotation.set(true),
   Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
 );
@@ -253,6 +250,35 @@ export const getDestination = (seg: Segment): Place | undefined => {
     default:
       return seg.details.destination;
   }
+};
+
+/**
+ * Sets the "from" Place across variants, mirroring {@link getOrigin} — `origin`
+ * for transport, `location` for accommodation, `venue` for activity. Writes a
+ * fresh copy: the decoded `Place` carries a readonly `geo` tuple, so the value
+ * is normalized to the live object's mutable shape before assignment.
+ */
+export const setOrigin = (seg: Segment, place: Place): void => {
+  const value = {
+    name: place.name,
+    code: place.code,
+    city: place.city,
+    country: place.country,
+    geo: place.geo ? [...place.geo] : undefined,
+  };
+  Obj.update(seg, (seg) => {
+    switch (seg.details._tag) {
+      case 'accommodation':
+        seg.details.location = value;
+        break;
+      case 'activity':
+        seg.details.venue = value;
+        break;
+      default:
+        seg.details.origin = value;
+        break;
+    }
+  });
 };
 
 //

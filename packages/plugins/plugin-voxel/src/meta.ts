@@ -34,5 +34,6 @@ export const meta = Plugin.makeMeta({
     go through ECHO, so changes are immediately visible to every collaborator.
   `,
   icon: 'ph--cube--regular',
+  iconHue: 'yellow',
   tags: ['labs'],
 });

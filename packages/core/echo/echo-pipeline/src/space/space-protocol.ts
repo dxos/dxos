@@ -18,7 +18,7 @@ import {
 } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type MuxerStats, Teleport } from '@dxos/teleport';
-import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
+import { type BlobStoreApi, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
@@ -41,7 +41,7 @@ export type SpaceProtocolOptions = {
   swarmIdentity: SwarmIdentity;
   networkManager: SwarmNetworkManager;
 
-  blobStore: BlobStore;
+  blobStore: BlobStoreApi;
 
   onFeed?: (feed: FeedWrapper<FeedMessage>) => Promise<void>;
 

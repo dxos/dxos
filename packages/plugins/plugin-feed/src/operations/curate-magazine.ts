@@ -52,6 +52,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
       if (seenIds.has(postId) || !item.description) {
         continue;
       }
+
       // The Ref carries the queue DXN; the Post stays in the queue and never enters space.db.
       fresh.push(Ref.make(item));
       seenIds.add(postId);

@@ -51,13 +51,7 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
       "path": "../../core/compute/functions-runtime"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -70,9 +64,6 @@
     },
     {
       "path": "../../core/echo/echo-generator"
-    },
-    {
-      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -96,9 +87,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/react-edge-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
@@ -109,12 +97,6 @@
     },
     {
       "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui-theme"

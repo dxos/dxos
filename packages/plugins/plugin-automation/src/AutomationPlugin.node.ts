@@ -7,7 +7,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, LayerSpecs, OperationHandler, TriggerRuntimeController } from '#capabilities';
+import { AppGraphBuilder, LayerSpecs, OperationHandler, RegistrySync, TriggerRuntimeController } from '#capabilities';
 import { meta } from '#meta';
 
 import { trigger } from './commands';
@@ -20,6 +20,10 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: LayerSpecs,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: RegistrySync,
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),

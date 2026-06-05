@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Operation } from '@dxos/compute';
+import { Database, Feed, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { Agent } from '../../../types';
@@ -45,7 +45,7 @@ export const CreateAgent = Operation.make({
     }),
   }),
   output: Type.getSchema(Agent.Agent),
-  services: [Blueprint.RegistryService, Database.Service, Feed.FeedService],
+  services: [Registry.Service, Database.Service, Feed.FeedService],
 });
 
 export const SyncTriggers = Operation.make({

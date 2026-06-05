@@ -10,7 +10,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Database, type Key } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -108,12 +108,12 @@ export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: Cu
           defaultValues={credentialForm.defaultValues ?? {}}
           onSave={handleSave}
         >
-          <Form.Viewport>
+          <Column.Center>
             <Form.Content>
               <Form.FieldSet />
               <Form.Submit />
             </Form.Content>
-          </Form.Viewport>
+          </Column.Center>
         </Form.Root>
         {error && <p className='text-error'>{error}</p>}
       </Dialog.Body>

@@ -15,13 +15,13 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { Markdown } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { AgentIdentity, ThreadCapabilities } from '../types';
 
-const DEFAULT_MODEL = '@anthropic/claude-sonnet-4-5';
+const DEFAULT_MODEL = 'ai.claude.model.claude-sonnet-4-5';
 
 const baseInstructions = trim`
   You are a helpful assistant participating in a comment thread on a document.

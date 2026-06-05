@@ -90,6 +90,7 @@ const ErrorIndicator = () => {
     return (
       <StatusBar.Item>
         <IconButton
+          variant='ghost'
           icon='ph--warning-circle--duotone'
           iconOnly
           label={errorRef.current.message}

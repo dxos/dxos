@@ -20,10 +20,7 @@ export const Sandbox = Schema.Struct({
   createdAt: Schema.optional(Schema.String),
   expiresAt: Schema.optional(Schema.String),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--terminal--regular',
-    hue: 'green',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--terminal--regular', hue: 'green' }),
   Type.makeObject(DXN.make('org.dxos.type.sandbox', '0.1.0')),
 );
 

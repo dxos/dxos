@@ -98,10 +98,7 @@ export const Agent = Schema.Struct({
   feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--drone--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.agent', '0.1.0')),
 );
 

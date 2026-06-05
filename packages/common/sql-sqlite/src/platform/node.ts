@@ -8,6 +8,8 @@ import type * as SqlError from '@effect/sql/SqlError';
 import type * as ConfigError from 'effect/ConfigError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 import * as SqlExport from '../SqlExport';
 
@@ -36,17 +38,21 @@ export const layerMemory: Layer.Layer<
 /**
  * Creates a file-based SQLite layer for Node.js.
  * Unlike layerMemory, this persists data across runtime restarts.
+ * Creates the parent directory if it does not already exist, since better-sqlite3
+ * requires it to be present before opening the database file.
  */
 export const layerFile = (
   filename: string,
 ): Layer.Layer<
   SqlClient.SqlClient | SqliteClient.SqliteClient | SqlExport.SqlExport,
   ConfigError.ConfigError | SqlError.SqlError
-> =>
-  sqlExportLayer.pipe(
+> => {
+  mkdirSync(dirname(filename), { recursive: true });
+  return sqlExportLayer.pipe(
     Layer.provideMerge(
       SqliteClient.layer({
         filename,
       }),
     ),
   );
+};

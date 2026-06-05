@@ -38,10 +38,7 @@ export const World = Schema.Struct({
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--cube--regular',
-    hue: 'white',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'white' }),
   Type.makeObject(DXN.make('org.dxos.type.voxel', '0.1.0')),
 );
 

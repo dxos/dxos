@@ -27,7 +27,7 @@ export const BlueprintModule = ({ space }: ModuleProps) => {
         <div className='flex-1' />
         <Toolbar.IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' />
       </Toolbar.Root>
-      <TemplateEditor id={blueprint.id} template={blueprint.instructions} />
+      <TemplateEditor id={blueprint.id} source={blueprint.instructions.source} />
     </div>
   );
 };

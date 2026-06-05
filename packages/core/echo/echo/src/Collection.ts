@@ -21,10 +21,7 @@ export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--folder--regular',
-    hue: 'amber',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--folder--regular', hue: 'amber' }),
   Type.makeObject(DXN.make('org.dxos.type.collection', '0.1.0')),
 );
 

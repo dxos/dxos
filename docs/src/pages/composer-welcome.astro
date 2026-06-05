@@ -111,12 +111,12 @@ import IconX from '../components/svg/IconX.astro';
         const email = form.querySelector('[name="email"]').value;
         const block = form.closest('.w-form');
         try {
-          const res = await fetch('https://hub.dxos.network/account/signup', {
+          const res = await fetch('https://hub.dxos.network/account/request-access', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email }),
           });
-          if (!res.ok) throw new Error('signup failed');
+          if (!res.ok) throw new Error('request-access failed');
           block.querySelector('.w-form-done').style.display = 'block';
           form.style.display = 'none';
           const expires = new Date(Date.now() + 365 * 864e5).toUTCString();

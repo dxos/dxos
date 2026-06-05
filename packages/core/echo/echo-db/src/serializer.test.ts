@@ -9,7 +9,6 @@ import { Context } from '@dxos/context';
 import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
@@ -293,7 +292,7 @@ describe('Serializer', () => {
 
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       {
@@ -306,7 +305,7 @@ describe('Serializer', () => {
       }
       {
         const peer = await builder.createPeer({
-          kv: createTestLevel(tmpPath),
+          storagePath: tmpPath,
         });
         const db = await peer.openDatabase(spaceKey, root.url);
         data = await serializer.export(db);

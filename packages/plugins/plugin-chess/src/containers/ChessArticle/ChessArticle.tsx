@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type GameVariantSurfaceProps } from '@dxos/plugin-game';
+import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';

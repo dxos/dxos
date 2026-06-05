@@ -1,0 +1,19 @@
+diff --git a/package.json b/package.json
+index 261265d0cb2e55d6ec7a6c9fce854a90753b375f..08b12a1acb9a451af5b4646828bbb713ab85aaaf 100644
+--- a/package.json
++++ b/package.json
+@@ -11,10 +11,10 @@
+   "author": "Effect contributors",
+   "homepage": "https://github.com/tim-smart/effect-atom",
+   "peerDependencies": {
+-    "@effect/experimental": "^0.58.0",
+-    "@effect/platform": "^0.94.2",
+-    "@effect/rpc": "^0.73.0",
+-    "effect": "^3.19.15"
++    "@effect/experimental": ">=0.58.0",
++    "@effect/platform": ">=0.94.0",
++    "@effect/rpc": ">=0.73.0",
++    "effect": ">=3.19.0"
+   },
+   "main": "./dist/cjs/index.js",
+   "module": "./dist/esm/index.js",

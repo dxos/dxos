@@ -59,7 +59,13 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon={getIcon(status)} iconOnly label={t(`${status}.label`)} classNames={classNames} />
+          <IconButton
+            variant='ghost'
+            icon={getIcon(status)}
+            iconOnly
+            label={t(`${status}.label`)}
+            classNames={classNames}
+          />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>

@@ -52,8 +52,8 @@ export interface RouteStep extends Schema.Schema.Type<typeof RouteStep> {}
 
 /** A leg between two consecutive route waypoints. `geometry` is the decoded `[lon, lat]` polyline. */
 export const RouteLeg = Schema.Struct({
-  distance: Schema.Number,
-  duration: Schema.Number,
+  distance: Schema.Number.annotations({ description: 'Distance in meters.' }),
+  duration: Schema.Number.annotations({ description: 'Duration in seconds.' }),
   summary: Schema.optional(Schema.String),
   // Hidden from schema-driven forms — geometry is computed/plotted, not user-editable.
   geometry: Schema.Array(Format.GeoPoint).pipe(Annotation.FormInputAnnotation.set(false)),
@@ -63,8 +63,8 @@ export interface RouteLeg extends Schema.Schema.Type<typeof RouteLeg> {}
 
 /** A computed route. Its geometry is derived from the legs (see {@link routeGeometry}), not stored. */
 export const Route = Schema.Struct({
-  distance: Schema.Number,
-  duration: Schema.Number,
+  distance: Schema.Number.annotations({ description: 'Total distance in meters.' }),
+  duration: Schema.Number.annotations({ description: 'Total duration in seconds.' }),
   legs: Schema.Array(RouteLeg),
 });
 export interface Route extends Schema.Schema.Type<typeof Route> {}

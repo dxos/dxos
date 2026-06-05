@@ -27,10 +27,7 @@ export const Document = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--text-aa--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   GraphPropsAnnotation.set({ managesAutofocus: true }),
   Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),

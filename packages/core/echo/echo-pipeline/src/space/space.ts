@@ -15,7 +15,7 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
 
-import { type MetadataStore } from '../metadata';
+import { type IMetadataStore } from '../metadata';
 import { type PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { type SpaceProtocol } from './space-protocol';
@@ -29,7 +29,7 @@ export type SpaceProps = {
   protocol: SpaceProtocol;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: FeedProvider;
-  metadataStore: MetadataStore;
+  metadataStore: IMetadataStore;
   memberKey: PublicKey;
 
   // TODO(dmaretskyi): Superseded by epochs.

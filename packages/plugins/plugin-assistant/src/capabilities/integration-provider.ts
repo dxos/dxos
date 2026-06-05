@@ -55,6 +55,9 @@ const validateAnthropicKey = (token: string) =>
 const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenForm>> = {
   schema: AnthropicTokenForm,
   defaultValues: { token: '' },
+  // Validation failures (empty key, 401/403 from Anthropic) stay in the error channel so the
+  // generic provider-form dialog can surface them via `Effect.catchAll`. Squashing them with
+  // `Effect.orDie` would turn them into defects that bypass the dialog's failure handler.
   onSubmit: ({ values, provider }) =>
     Effect.gen(function* () {
       const token = values.token.trim();
@@ -73,7 +76,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AnthropicTokenFor
         targets: [],
       });
       return { kind: 'complete' as const, accessToken, integration };
-    }).pipe(Effect.orDie),
+    }),
 };
 
 /**

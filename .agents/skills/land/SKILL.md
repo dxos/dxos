@@ -182,6 +182,45 @@ Ask the user what happened and whether to reopen.
 
 ---
 
+## Step 9.5 — Poll the merge queue every 15 minutes
+
+Webhooks do **not** fire when a PR is automatically dequeued from the merge queue (e.g., due to a conflict or a failed queue CI run). You must poll for this yourself.
+
+After auto-merge is enabled, attempt to schedule a recurring self check-in using `send_later`:
+
+```text
+mcp__claude-code-remote__send_later({ delay_minutes: 15, message: "merge-queue-poll" })
+```
+
+If `send_later` is **not available** in this session, notify the user:
+
+> ⚠️ `send_later` is unavailable — automated auto-dequeue recovery cannot be scheduled. The session will continue in webhook-only mode. If the PR is silently dequeued, you will need to manually re-run `/land` or re-enable auto-merge.
+
+On each `send_later` wake-up:
+
+1. Call `mcp__github__pull_request_read` to get the current PR state.
+2. **If merged**: print success, unsubscribe, stop.
+3. **If closed**: ask the user what happened.
+4. **If open and auto_merge is null** (was dequeued):
+   a. Sync with `main`:
+   ```bash
+   git fetch origin main
+   git merge origin/main --no-edit
+   git push -u origin <headRefName>
+   ```
+   b. Resolve any conflicts that arise, commit, push.
+   c. Re-enable auto-merge:
+   ```text
+   mcp__github__enable_pr_auto_merge({ owner: "dxos", repo: "dxos", pullNumber: <number>, mergeMethod: "squash" })
+   ```
+   d. Log: "PR was dequeued — re-synced with main and re-enabled auto-merge."
+   e. Schedule the next check-in in 15 minutes (call `send_later` again as in step 1).
+5. **If open and auto_merge is set** (still in queue): schedule the next check-in in 15 minutes silently (call `send_later` again).
+
+Stop scheduling check-ins once the PR is merged or closed, or the user says to stop.
+
+---
+
 ## Step 10 — Keep in sync
 
 Whenever CI detects the branch is behind `main`, or whenever you push a fix, check:

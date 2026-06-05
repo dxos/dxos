@@ -54,10 +54,7 @@ export const Mailbox = Schema.Struct({
     threshold: Schema.Number.pipe(Schema.between(0, 1)),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--tray--regular',
-    hue: 'rose',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
   FeedAnnotation.set(true),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),

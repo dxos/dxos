@@ -62,7 +62,11 @@ const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilitie
           // `/ai/generate/anthropic` route and signs it with the verifiable presentation.
           apiUrl: 'http://edge.internal',
         }).pipe(
-          Layer.provide(EdgeAiHttpClient.layer(getEdgeClient).pipe(Layer.provide(byokHeaderLayer(ANTHROPIC_SOURCE)))),
+          // `byokHeaderLayer` is the outer wrapper: it consumes an `HttpClient.HttpClient` (provided
+          // by `EdgeAiHttpClient.layer`) and contributes a wrapped one that injects `X-BYOK`. The
+          // remaining unprovided requirement, `Credential.CredentialsService`, is satisfied by the
+          // space-affinity `LayerSpec` in `ai-service.ts`.
+          Layer.provide(byokHeaderLayer(ANTHROPIC_SOURCE).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient)))),
         ),
       ),
     );
