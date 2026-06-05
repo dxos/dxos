@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -15,13 +14,11 @@ import { Thread } from '../Thread';
 import { Message } from './Message';
 
 const DefaultStory = () => {
-  const messages = useMemo(() => createMessages(3), []);
+  const [message] = useMemo(() => createMessages(1), []);
   return (
     <div className='mx-auto w-96 overflow-y-auto'>
       <Thread.Root getMetadata={getStoryMetadata} identityDid='did:key:alice' editable onMessageDelete={() => {}}>
-        {messages.map((message) => (
-          <Message.Tile key={Obj.getURI(message)} message={message} />
-        ))}
+        <Message.Tile message={message} />
       </Thread.Root>
     </div>
   );

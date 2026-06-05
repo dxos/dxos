@@ -41,7 +41,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-thread/Thread',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: {
     layout: 'fullscreen',
     translations,
