@@ -17,8 +17,8 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { generateFeed } from '../testing';
-import { Magazine, Subscription } from '../types';
+import { generateFeed } from '../../testing';
+import { Magazine, Subscription } from '../../types';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
@@ -37,7 +37,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-feed/stories/MagazineProperties',
+  title: 'plugins/plugin-feed/MagazineProperties',
   render: DefaultStory,
   decorators: [
     withTheme(),
