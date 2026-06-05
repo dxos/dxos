@@ -198,6 +198,48 @@ Plugin modules that contribute functionality to the framework. Each is a single 
 
 See: `plugin-chess/src/capabilities/`
 
+#### Cross-plugin capabilities (`src/types/XCapabilities.ts`)
+
+Some plugins expose capability keys for other plugins to implement — a decoupled provider/extension
+contract. See `packages/plugins/AUDIT.md` for the current registry.
+
+**Naming convention** — use one of three suffixes depending on the role:
+
+| Suffix | Use when | Example |
+|---|---|---|
+| `Provider` | The contributor supplies data, a factory, or an array of extensions | `MapCapabilities.MarkerProvider`, `GameCapabilities.VariantProvider`, `MarkdownCapabilities.ExtensionProvider` |
+| `Service` | The contributor performs active async work (search, routing, …) | `TripCapabilities.BookingService`, `TripCapabilities.RoutingService` |
+| `EventHandler` | The contributor registers callbacks for host-plugin lifecycle events | `CallsCapabilities.EventHandler` |
+
+**Where to define** — add the `Capability.make<T>()` call in the defining plugin's
+`src/types/XCapabilities.ts`, namespace-exported from `src/types/index.ts`:
+
+```ts
+// packages/plugins/plugin-foo/src/types/FooCapabilities.ts
+export const BarProvider = Capability.make<BarProvider>(`${meta.id}.capability.bar-provider`);
+```
+
+Expose it via a `./types` subpath in `package.json` (see `plugin-game/package.json` as a reference).
+The `--entryPoint=src/types/index.ts` entry in `moon.yml` is typically already present.
+
+**Where to implement** — the donor plugin places its contribution in a dedicated file in
+`src/capabilities/`, named after the capability it implements (e.g. `routing-service.ts`,
+`markdown-extension.ts`). Wire it via `Capability.lazy` in `src/capabilities/index.ts`.
+
+**How to import the key** — use the `/types` subpath, not the root entrypoint:
+
+```ts
+// ✓
+import { FooCapabilities } from '@dxos/plugin-foo/types';
+// ✗ — pulls in the full barrel (meta, hooks, operations, …)
+import { FooCapabilities } from '@dxos/plugin-foo';
+```
+
+**Reference implementations:**
+- Provider: `plugin-osrm/src/capabilities/routing-service.ts` → `TripCapabilities.RoutingService`
+- Enumeration Provider: `plugin-chess/src/capabilities/game-variant.ts` → `GameCapabilities.VariantProvider`
+- EventHandler: `plugin-meeting/src/capabilities/call-extension.ts` → `CallsCapabilities.EventHandler`
+
 #### LayerSpec contributions (`src/capabilities/layer-specs.ts`)
 
 Plugins that contribute Effect services to the process-manager runtime do so via `Capabilities.LayerSpec` entries (see `plugin-client/src/capabilities/layer-specs.ts` for a minimal reference).
