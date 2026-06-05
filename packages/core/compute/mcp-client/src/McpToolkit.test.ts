@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 
 import * as McpToolkit from './McpToolkit';
 
-const AiServiceLayer = AiService.model('@anthropic/claude-opus-4-6', { thinking: false }).pipe(
+const AiServiceLayer = AiService.model('ai.claude.model.claude-opus-4-6', { thinking: false }).pipe(
   Layer.provide(
     TestAiService({
       disableMemoization: true,

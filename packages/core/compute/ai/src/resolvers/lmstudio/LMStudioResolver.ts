@@ -44,11 +44,11 @@ export const make = ({
       name: 'LM Studio',
     },
     Effect.succeed({
-      '@google/gemma-3-27b': createModelLayer('google/gemma-3-27b'),
-      '@meta/llama-3.1-8b-instruct': createModelLayer('meta-llama-3.1-8b-instruct'),
-      '@meta/llama-3.2-3b-instruct': createModelLayer('llama-3.2-3b-instruct'),
-      'ministral-3-14b-reasoning': createModelLayer('ministral-3-14b-reasoning'),
-      'openai/gpt-oss-20b': createModelLayer('openai/gpt-oss-20b'),
+      'ai.google.model.gemma-3-27b': createModelLayer('google/gemma-3-27b'),
+      'ai.meta.model.llama-3.1-8b-instruct': createModelLayer('meta-llama-3.1-8b-instruct'),
+      'ai.meta.model.llama-3.2-3b-instruct': createModelLayer('llama-3.2-3b-instruct'),
+      'ai.mistral.model.ministral-3-14b-reasoning': createModelLayer('ministral-3-14b-reasoning'),
+      'ai.openai.model.gpt-oss-20b': createModelLayer('openai/gpt-oss-20b'),
     } satisfies Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>),
   );
 };
