@@ -151,7 +151,9 @@ If the repo uses a merge queue, this will enqueue the PR. If auto-merge is not a
 mcp__github__subscribe_pr_activity({ owner: "dxos", repo: "dxos", pullNumber: <number> })
 ```
 
-Then **end your turn** — do NOT poll or sleep. You will receive `<github-webhook-activity>` events.
+Then **end your turn** — do NOT actively poll.
+Use webhook-driven wakeups, plus the Step 9.5 background sleep alarm for merge-queue dequeue detection.
+You will receive `<github-webhook-activity>` events.
 
 On each event:
 
@@ -188,7 +190,7 @@ Webhooks do **not** fire when a PR is automatically dequeued from the merge queu
 
 After auto-merge is enabled, arm a 15-minute wakeup alarm using a background Bash sleep:
 
-```
+```text
 Bash("sleep 900", { run_in_background: true })
 ```
 
