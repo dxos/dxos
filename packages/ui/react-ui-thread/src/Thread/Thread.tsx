@@ -299,7 +299,7 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
     [themeMode, placeholder, t, extensions, count],
   );
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const text = messageRef.current;
     if (!text?.length || !onSend) {
       return;
@@ -308,7 +308,7 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
       messageRef.current = '';
       setCount((value) => value + 1);
     }
-  };
+  }, []);
 
   return (
     <Message.Textbox

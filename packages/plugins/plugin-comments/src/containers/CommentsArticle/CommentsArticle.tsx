@@ -6,24 +6,66 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Icon, Message as MessageHint, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, Message as MessageHint, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { getParentId, useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, Thread } from '@dxos/types';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
+import { CommentThread } from '#components';
 import { meta } from '#meta';
 import { ThreadOperation } from '#types';
 import { ThreadCapabilities, type ViewState } from '#types';
 
-import { CommentThread } from './CommentThread';
-
 const initialViewState: ViewState = { showResolvedThreads: false };
+
+/**
+ * Reads a best-effort string label off an untyped ECHO object for the object-tile fallback.
+ */
+const stringField = (subject: Obj.Unknown, key: string): string | undefined => {
+  // `subject` is an untyped ECHO object (Obj.Unknown); index into it for a best-effort title label.
+  const value = (subject as unknown as Record<string, unknown>)[key];
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value && typeof value === 'object' && 'content' in value && typeof value.content === 'string') {
+    return value.content;
+  }
+  return undefined;
+};
+
+/**
+ * Object/reference message-block tile injected into comment threads so that
+ * `@dxos/react-ui-thread` stays free of `@dxos/app-framework`. Renders the
+ * referenced subject via an app-framework `Surface` (the card role).
+ */
+const ObjectTile: ObjectTileComponent = ({ subject }) => {
+  // TODO(burdon): Use annotation to get title.
+  const title = useMemo(
+    () => stringField(subject, 'name') ?? stringField(subject, 'title') ?? stringField(subject, 'type') ?? 'Object',
+    [subject],
+  );
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
+  return (
+    <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
+      <Surface.Surface
+        type={AppSurface.Card}
+        limit={1}
+        data={{ subject } satisfies AppSurface.ObjectCardData}
+        fallback={Fallback}
+      />
+    </Card.Root>
+  );
+};
+
+const threadComponents = { Object: ObjectTile };
 
 /**
  * Subject is the host object being commented on (e.g. a Markdown.Document),
@@ -213,6 +255,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
             <CommentThread
               key={threadId}
               anchor={anchor}
+              components={threadComponents}
               current={currentId === threadId}
               onAttend={handleAttend}
               onComment={handleComment}

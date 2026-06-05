@@ -4,65 +4,24 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Card, IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
-import { Message as MessageComponent, Thread, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Message as MessageComponent, type ThreadComponents, Thread } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Message, type Thread as ThreadType } from '@dxos/types';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import { hoverableControlItem } from '@dxos/ui-theme';
 
 import { useStatus } from '#hooks';
 import { meta } from '#meta';
 
 import { getMessageMetadata } from '../../util';
 
-const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
-const buttonClassNames = 'p-1! transition-opacity';
-
-/**
- * Object/reference message-block tile, injected into `Thread.Root` so that
- * `@dxos/react-ui-thread` stays free of `@dxos/app-framework`. Renders the
- * referenced subject via an app-framework `Surface` (the card role).
- */
-const stringField = (subject: Obj.Unknown, key: string): string | undefined => {
-  // `subject` is an untyped ECHO object (Obj.Unknown); index into it for a best-effort title label.
-  const value = (subject as unknown as Record<string, unknown>)[key];
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (value && typeof value === 'object' && 'content' in value && typeof value.content === 'string') {
-    return value.content;
-  }
-  return undefined;
-};
-
-const ObjectTile: ObjectTileComponent = ({ subject }) => {
-  // TODO(burdon): Use annotation to get title.
-  const title = useMemo(
-    () => stringField(subject, 'name') ?? stringField(subject, 'title') ?? stringField(subject, 'type') ?? 'Object',
-    [subject],
-  );
-
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{title}</span>, [title]);
-
-  return (
-    <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
-      <Surface.Surface
-        type={AppSurface.Card}
-        limit={1}
-        data={{ subject } satisfies AppSurface.ObjectCardData}
-        fallback={Fallback}
-      />
-    </Card.Root>
-  );
-};
-
 export type CommentThreadProps = {
   anchor: AnchoredTo.AnchoredTo;
+  /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
+  components: ThreadComponents;
   current?: boolean;
   onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
@@ -78,6 +37,7 @@ export type CommentThreadProps = {
  */
 export const CommentThread = ({
   anchor,
+  components,
   current,
   onAttend,
   onComment,
@@ -95,7 +55,6 @@ export const CommentThread = ({
   const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, threadUri);
 
-  const components = useMemo(() => ({ Object: ObjectTile }), []);
   const getMetadata = useCallback((message: Message.Message) => getMessageMetadata(Obj.getURI(message)), []);
   const textboxMetadata = useMemo(() => getMessageMetadata(threadUri, identity ?? undefined), [threadUri, identity]);
   const loadedMessages = useMemo(
@@ -128,7 +87,7 @@ export const CommentThread = ({
   );
 
   const headerControls = (
-    <div className={buttonGroupClassNames}>
+    <div className='flex flex-row items-center gap-0.5 pe-2'>
       {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
       {onResolve && !(thread.status === 'staged') && (
         <IconButton
@@ -137,7 +96,7 @@ export const CommentThread = ({
           icon={thread.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
           iconOnly
           label={t('resolve-thread.label')}
-          classNames={[buttonClassNames, thread.status !== 'resolved' && hoverableControlItem]}
+          classNames={['p-1! transition-opacity', thread.status !== 'resolved' && hoverableControlItem]}
           onClick={handleResolve}
         />
       )}
@@ -148,7 +107,7 @@ export const CommentThread = ({
           icon='ph--x--regular'
           iconOnly
           label={t('delete-thread.label')}
-          classNames={[buttonClassNames, hoverableControlItem]}
+          classNames={['p-1! transition-opacity', hoverableControlItem]}
           onClick={handleThreadDelete}
         />
       )}
