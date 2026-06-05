@@ -57,6 +57,7 @@ export const translations = [
         'client.label': 'Client',
         'config.label': 'Config',
         'storage.label': 'Storage',
+        'sqlite.label': 'SQLite',
         'logs.label': 'Logs',
         'diagnostics.label': 'Diagnostics',
         'tracing.label': 'Tracing',

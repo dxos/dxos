@@ -202,7 +202,7 @@ export class ClientServicesHost {
   /**
    * Debugging util.
    */
-  async runSqliteQuery(query: string, params?: any[]): Promise<readonly Record<string, unknown>[]> {
+  async runSqliteQuery(query: string, params?: unknown[]): Promise<readonly Record<string, unknown>[]> {
     return await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -358,6 +358,8 @@ export class ClientServicesHost {
         events: new DevtoolsHostEvents(),
         config: this._config,
         context: this._serviceContext,
+        exportSqliteDatabase: () => this.exportSqliteDatabase(),
+        runSqliteQuery: (query, params) => this.runSqliteQuery(query, params),
       }),
 
       EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
