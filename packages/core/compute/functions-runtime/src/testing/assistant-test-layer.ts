@@ -41,6 +41,12 @@ import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+
+  /**
+   * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
+   * When set, `aiServicePreset` and `disableLlmMemoization` are ignored.
+   */
+  aiService?: Layer.Layer<AiService.AiService>;
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
@@ -94,6 +100,7 @@ export type AssistantTestServices =
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
+  aiService,
   model,
   operationHandlers = [],
   toolkits = [],
@@ -186,7 +193,7 @@ export const AssistantTestLayer = ({
     ),
     Layer.provideMerge(
       Layer.mergeAll(
-        TestAiService({ preset: aiServicePreset, disableMemoization: disableLlmMemoization }),
+        aiService ?? TestAiService({ preset: aiServicePreset, disableMemoization: disableLlmMemoization }),
         TestDatabaseLayer({
           spaceKey: 'fixed',
           types,

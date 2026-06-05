@@ -4,20 +4,23 @@
 
 import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as TestClock from 'effect/TestClock';
 import { expect } from 'vitest';
 
+import { MemoizedAiService } from '@dxos/ai/testing';
 import { PartialBlock } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
-import { Feed } from '@dxos/echo';
+import { Feed, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Organization } from '@dxos/types';
+import { Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as AgentService from './AgentService';
@@ -164,5 +167,92 @@ describe('Agent Executable', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },
+  );
+});
+
+//
+// Alarm e2e (memoized LLM).
+//
+
+const ALARM_SYSTEM_PROMPT = trim`
+  You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).
+  When asked to set an alarm, you MUST call the set-alarm tool with the requested duration.
+  Do not pretend to set an alarm in text — always use the set-alarm tool.
+  After the tool succeeds, briefly confirm the alarm was scheduled and stop.
+  When you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.
+`;
+
+const AlarmTestLayer = AssistantTestLayer({
+  types: [Organization.Organization, Feed.Feed],
+  systemPrompt: ALARM_SYSTEM_PROMPT,
+  aiServicePreset: 'direct',
+  model: '@anthropic/claude-sonnet-4-5',
+});
+
+/**
+ * Summarizes assistant text blocks and tool-call blocks persisted to the conversation feed.
+ */
+const countBlocks = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const queryResult = yield* Feed.query(feed, Filter.type(Message.Message));
+    const messages = (yield* Effect.promise(() => queryResult.run())).filter(Obj.instanceOf(Message.Message));
+    let assistantTexts = 0;
+    let setAlarmCalls = 0;
+    for (const message of messages) {
+      for (const block of message.blocks) {
+        if (message.sender.role === 'assistant' && block._tag === 'text') {
+          assistantTexts++;
+        }
+        if (block._tag === 'toolCall' && block.name === 'set-alarm') {
+          setAlarmCalls++;
+        }
+      }
+    }
+    return { assistantTexts, setAlarmCalls };
+  });
+
+/**
+ * Polls until `predicate` holds. Each iteration advances the TestClock (for alarm scheduling) and
+ * yields real wall time so async I/O such as memoized LLM HTTP can complete.
+ */
+const driveUntil = <R>(predicate: Effect.Effect<boolean, never, R>) =>
+  Effect.gen(function* () {
+    for (let step = 0; step < 120; step++) {
+      if (yield* predicate) {
+        return;
+      }
+      yield* TestClock.adjust(Duration.millis(50));
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
+    }
+    return yield* Effect.dieMessage('driveUntil: condition not reached');
+  });
+
+describe('Agent alarms', () => {
+  it.scoped(
+    'agent schedules a self-wake and resumes when its alarm fires (TestClock)',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* AgentService.createSession({});
+
+        yield* agent.submitPrompt('Use the set-alarm tool to schedule a wake-up in 1 hour.');
+
+        // First request: the agent calls `set-alarm` then finishes, leaving a self-wake armed ~1h out.
+        yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ setAlarmCalls }) => setAlarmCalls >= 1)));
+        expect((yield* countBlocks(agent.feed)).setAlarmCalls).toBe(1);
+
+        // The process is hibernating until the self-wake fires. Advancing the clock past it resumes
+        // the agent, which produces a second response.
+        yield* TestClock.adjust(Duration.hours(1));
+        yield* driveUntil(countBlocks(agent.feed).pipe(Effect.map(({ assistantTexts }) => assistantTexts >= 2)));
+        yield* agent.waitForCompletion();
+
+        const final = yield* countBlocks(agent.feed);
+        expect(final.setAlarmCalls).toBe(1);
+        expect(final.assistantTexts).toBeGreaterThanOrEqual(2);
+      },
+      Effect.provide(AlarmTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000 },
   );
 });

@@ -6,8 +6,10 @@
 
 import { Atom, type Registry } from '@effect-atom/atom';
 import * as Cause from 'effect/Cause';
+import type * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -54,7 +56,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   #wallTimeMs = 0;
   #inputCount = 0;
   #outputCount = 0;
-  #alarmTimer: ReturnType<typeof setTimeout> | null = null;
+  // Fiber running the pending alarm `Effect.sleep`. Driven by the ambient `Clock`, so alarms honor
+  // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
+  // once the sleep has elapsed and the handler is running.
+  #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
 
@@ -64,6 +69,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
+  readonly #clock: Clock.Clock;
 
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
   readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
@@ -85,6 +91,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     params: Process.Params,
     environment: ProcessManager.Environment,
     traceSink: Trace.Sink,
+    clock: Clock.Clock,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
@@ -100,6 +107,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     this.#outputQueue = outputQueue;
     this.#traceSink = traceSink;
     this.#storage = storage;
+    this.#clock = clock;
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
     this.#hasRunningChildren = hasRunningChildren ?? (() => false);
@@ -310,17 +318,20 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     this.#clearAlarm();
     const delay = timeout ?? 0;
     log('lifecycle: alarm scheduled', { delayMs: delay });
-    this.#alarmTimer = setTimeout(() => {
-      this.#alarmTimer = null;
-      if (!this.#finished) {
-        Effect.runFork(
-          this.#runHandler('alarm', () => this.#callbacks.onAlarm()).pipe(
+    // Schedule via `Effect.sleep` on the captured ambient clock instead of `setTimeout` so the alarm
+    // is driven by the Effect runtime's `Clock` (a `TestClock` in tests, the live clock in prod).
+    this.#alarmFiber = Effect.runFork(
+      Effect.gen(this, function* () {
+        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.withClock(this.#clock));
+        this.#alarmFiber = null;
+        if (!this.#finished) {
+          yield* this.#runHandler('alarm', () => this.#callbacks.onAlarm()).pipe(
             Effect.flatMap(Fiber.join),
             this.#alarmSemaphore.withPermits(1),
-          ),
-        );
-      }
-    }, delay);
+          );
+        }
+      }),
+    );
   }
 
   requestSubmitOutput(output: O): void {
@@ -401,7 +412,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
           Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
         );
       } else if (this.#activeHandlers === 0) {
-        const hybernating = this.#alarmTimer !== null || this.#hasRunningChildren();
+        const hybernating = this.#alarmFiber !== null || this.#hasRunningChildren();
         this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
       }
     });
@@ -437,9 +448,12 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   }
 
   #clearAlarm(): void {
-    if (this.#alarmTimer !== null) {
-      clearTimeout(this.#alarmTimer);
-      this.#alarmTimer = null;
+    if (this.#alarmFiber !== null) {
+      const fiber = this.#alarmFiber;
+      this.#alarmFiber = null;
+      // Only interrupts while the alarm is still sleeping; once the sleep elapses `#alarmFiber` is
+      // cleared, so a running `onAlarm` handler is never interrupted here.
+      Effect.runFork(Fiber.interrupt(fiber));
     }
   }
 

@@ -1,0 +1,477 @@
+{
+  "conversations": [
+    {
+      "parameters": {
+        "model": "@anthropic/claude-sonnet-4-5",
+        "stream": true,
+        "tools": [
+          {
+            "name": "set-alarm",
+            "description": "Schedule an alarm to wake yourself up in the future.\nProvide exactly one of \"in\" (a duration from now) or \"at\" (an absolute time).\nWhen the alarm fires you will receive a prompt and can continue working.\nSetting a new alarm replaces any previously scheduled one.",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "in": {
+                  "type": "string",
+                  "description": "Duration from now expressed as \"<number> <unit>\", e.g. \"30 seconds\", \"5 minutes\", \"2 hours\"."
+                },
+                "at": {
+                  "type": "string",
+                  "description": "Absolute ISO-8601 timestamp to wake at, e.g. \"2026-06-04T18:00:00.000Z\"."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "get-current-date",
+            "description": "Get the current date and time as an ISO-8601 string.",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "Optional IANA timezone name. Defaults to the process clock when omitted."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).\nWhen asked to set an alarm, you MUST call the set-alarm tool with the requested duration.\nDo not pretend to set an alarm in text — always use the set-alarm tool.\nAfter the tool succeeds, briefly confirm the alarm was scheduled and stop.\nWhen you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.",
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "Use the set-alarm tool to schedule a wake-up in 1 hour.",
+            "options": {
+              "anthropic": {
+                "cacheControl": {
+                  "ttl": "5m",
+                  "type": "ephemeral"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01HG5i28wGm7ebpByQtZp2uT",
+          "modelId": "claude-sonnet-4-5-20250929",
+          "timestamp": "1970-01-01T00:00:00.000Z",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-start",
+          "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+          "name": "set-alarm",
+          "providerExecuted": false,
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+          "delta": "",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+          "delta": "{\"in\": \"1 ",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+          "delta": "hour",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+          "delta": "\"}",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-end",
+          "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "tool-calls",
+          "usage": {
+            "inputTokens": 915,
+            "outputTokens": 55,
+            "totalTokens": 970
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 0
+                },
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 915,
+                "output_tokens": 1,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "model": "@anthropic/claude-sonnet-4-5",
+        "stream": true,
+        "tools": [
+          {
+            "name": "set-alarm",
+            "description": "Schedule an alarm to wake yourself up in the future.\nProvide exactly one of \"in\" (a duration from now) or \"at\" (an absolute time).\nWhen the alarm fires you will receive a prompt and can continue working.\nSetting a new alarm replaces any previously scheduled one.",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "in": {
+                  "type": "string",
+                  "description": "Duration from now expressed as \"<number> <unit>\", e.g. \"30 seconds\", \"5 minutes\", \"2 hours\"."
+                },
+                "at": {
+                  "type": "string",
+                  "description": "Absolute ISO-8601 timestamp to wake at, e.g. \"2026-06-04T18:00:00.000Z\"."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "get-current-date",
+            "description": "Get the current date and time as an ISO-8601 string.",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "Optional IANA timezone name. Defaults to the process clock when omitted."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).\nWhen asked to set an alarm, you MUST call the set-alarm tool with the requested duration.\nDo not pretend to set an alarm in text — always use the set-alarm tool.\nAfter the tool succeeds, briefly confirm the alarm was scheduled and stop.\nWhen you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.",
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "Use the set-alarm tool to schedule a wake-up in 1 hour.",
+            "options": {}
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+                "name": "set-alarm",
+                "params": {
+                  "in": "1 hour"
+                },
+                "providerExecuted": false,
+                "options": {}
+              }
+            ],
+            "options": {}
+          },
+          {
+            "role": "tool",
+            "content": [
+              {
+                "type": "tool-result",
+                "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+                "name": "set-alarm",
+                "isFailure": false,
+                "result": "Alarm scheduled to wake you at 1970-01-01T01:00:00.050Z.",
+                "providerExecuted": false,
+                "options": {}
+              }
+            ],
+            "options": {
+              "anthropic": {
+                "cacheControl": {
+                  "ttl": "5m",
+                  "type": "ephemeral"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01CtjgXXJqCYkdTkFD7XSJCG",
+          "modelId": "claude-sonnet-4-5-20250929",
+          "timestamp": "2026-06-05T10:09:52.785Z",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "Alarm set!",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " You'll receive a wake-up notification in 1 hour.",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "stop",
+          "usage": {
+            "inputTokens": 1007,
+            "outputTokens": 21,
+            "totalTokens": 1028
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 0
+                },
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 1007,
+                "output_tokens": 4,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "model": "@anthropic/claude-sonnet-4-5",
+        "stream": true,
+        "tools": [
+          {
+            "name": "set-alarm",
+            "description": "Schedule an alarm to wake yourself up in the future.\nProvide exactly one of \"in\" (a duration from now) or \"at\" (an absolute time).\nWhen the alarm fires you will receive a prompt and can continue working.\nSetting a new alarm replaces any previously scheduled one.",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "in": {
+                  "type": "string",
+                  "description": "Duration from now expressed as \"<number> <unit>\", e.g. \"30 seconds\", \"5 minutes\", \"2 hours\"."
+                },
+                "at": {
+                  "type": "string",
+                  "description": "Absolute ISO-8601 timestamp to wake at, e.g. \"2026-06-04T18:00:00.000Z\"."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          {
+            "name": "get-current-date",
+            "description": "Get the current date and time as an ISO-8601 string.",
+            "inputSchema": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "Optional IANA timezone name. Defaults to the process clock when omitted."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant with access to alarm tools (set-alarm, get-current-date).\nWhen asked to set an alarm, you MUST call the set-alarm tool with the requested duration.\nDo not pretend to set an alarm in text — always use the set-alarm tool.\nAfter the tool succeeds, briefly confirm the alarm was scheduled and stop.\nWhen you receive a wake-up notification that your alarm fired, acknowledge it briefly in text.",
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "Use the set-alarm tool to schedule a wake-up in 1 hour.",
+            "options": {}
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool-call",
+                "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+                "name": "set-alarm",
+                "params": {
+                  "in": "1 hour"
+                },
+                "providerExecuted": false,
+                "options": {}
+              }
+            ],
+            "options": {}
+          },
+          {
+            "role": "tool",
+            "content": [
+              {
+                "type": "tool-result",
+                "id": "toolu_0122s6gDmTAqRg3mhrmYQGDV",
+                "name": "set-alarm",
+                "isFailure": false,
+                "result": "Alarm scheduled to wake you at 1970-01-01T01:00:00.050Z.",
+                "providerExecuted": false,
+                "options": {}
+              }
+            ],
+            "options": {}
+          },
+          {
+            "role": "assistant",
+            "content": "Alarm set! You'll receive a wake-up notification in 1 hour.",
+            "options": {}
+          },
+          {
+            "role": "user",
+            "content": "Your scheduled alarm fired (it was set for 1970-01-01T01:00:00.050Z).\nContinue with whatever you intended to do when you scheduled this wake-up.",
+            "options": {
+              "anthropic": {
+                "cacheControl": {
+                  "ttl": "5m",
+                  "type": "ephemeral"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01WxXby2NHH38UzckgVG54cH",
+          "modelId": "claude-sonnet-4-5-20250929",
+          "timestamp": "2026-06-05T10:09:54.521Z",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "The",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " alarm has fired as scheduled. However, I should clarify - this alarm was set based",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " on your request to demonstrate the set-alarm tool. Since you asked me to schedule a",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " wake-up in 1 hour as a test or demonstration, there wasn't a",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " specific task I had planned to continue with after the alarm.",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "\n\nIf you had a specific purpose in mind for this alarm or if there's something you'd like me to help you with now",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": ", please let me know!",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "stop",
+          "usage": {
+            "inputTokens": 3,
+            "outputTokens": 102,
+            "totalTokens": 105
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 1070
+                },
+                "cache_creation_input_tokens": 1070,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 3,
+                "output_tokens": 1,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

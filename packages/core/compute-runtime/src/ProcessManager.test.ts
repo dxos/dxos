@@ -7,6 +7,7 @@ import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -15,6 +16,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as TestClock from 'effect/TestClock';
 
 import {
   Operation,
@@ -197,15 +199,13 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeWaitingExecutable());
-      {
-        expect(handle.status.state).toEqual(Process.State.HYBERNATING);
-      }
-      {
-        // Process stays HYBERNATING until the alarm fires; `runToCompletion` would block until SUCCEEDED.
-        // Alarms use real `setTimeout`; `it.effect` uses TestClock, so `Effect.sleep` would not advance wall time.
-        yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 600)));
-        expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
-      }
+      expect(handle.status.state).toEqual(Process.State.HYBERNATING);
+
+      // Alarms are scheduled on the ambient `Clock`, so advancing the TestClock fires them
+      // deterministically (no real-time wait).
+      yield* TestClock.adjust(Duration.millis(500));
+      yield* handle.runToCompletion();
+      expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(TestLayer)),
   );
 
