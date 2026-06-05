@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -26,7 +26,7 @@ describe('postReadAtom', () => {
     await builder.close();
   });
 
-  test('fires when this post is marked read', async () => {
+  test('fires when this post is marked read', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -44,7 +44,7 @@ describe('postReadAtom', () => {
     expect(registry.get(atom).readAt).toBeDefined();
   });
 
-  test('does not fire when a sibling post is marked read', async () => {
+  test('does not fire when a sibling post is marked read', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -62,7 +62,7 @@ describe('postReadAtom', () => {
     expect(fireCount).toBe(1); // postA's readAt unchanged — should not re-fire.
   });
 
-  test('does not fire when an unrelated subscription field changes', async () => {
+  test('does not fire when an unrelated subscription field changes', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -93,7 +93,7 @@ describe('postTagsAtom', () => {
     await builder.close();
   });
 
-  test('fires when this post is starred', async () => {
+  test('fires when this post is starred', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const post = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -114,7 +114,7 @@ describe('postTagsAtom', () => {
     expect(registry.get(atom).starred).toBe(true);
   });
 
-  test('does not fire when a sibling post is starred (after tag warm-up)', async () => {
+  test('does not fire when a sibling post is starred (after tag warm-up)', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Tag.Tag, Subscription.Subscription, Subscription.Post] });
     const subscription = db.add(Subscription.makeSubscription({ name: 'Test', url: 'https://example.com' }));
     const postA = db.add(Obj.make(Subscription.Post, { source: Ref.make(subscription) }));
@@ -148,7 +148,7 @@ describe('postCurationAtom', () => {
     await builder.close();
   });
 
-  test('fires when this post gets a curated snippet', async () => {
+  test('fires when this post gets a curated snippet', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
     });
@@ -170,7 +170,7 @@ describe('postCurationAtom', () => {
     expect(registry.get(atom).snippet).toBe('A great article about AI.');
   });
 
-  test('does not fire when a sibling post gets a snippet', async () => {
+  test('does not fire when a sibling post gets a snippet', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
     });
@@ -191,7 +191,7 @@ describe('postCurationAtom', () => {
     expect(fireCount).toBe(1); // postA's curation unchanged — should not re-fire.
   });
 
-  test('does not fire when an unrelated magazine field changes', async () => {
+  test('does not fire when an unrelated magazine field changes', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
     });
@@ -225,7 +225,7 @@ describe('postDisplayAtom', () => {
     await builder.close();
   });
 
-  test('prefers agent snippet over RSS description', async () => {
+  test('prefers agent snippet over RSS description', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
     });
@@ -249,7 +249,7 @@ describe('postDisplayAtom', () => {
     expect(registry.get(atom).snippet).toBe('Agent snippet.');
   });
 
-  test('fires on read state change', async () => {
+  test('fires on read state change', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Tag.Tag, Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
     });
