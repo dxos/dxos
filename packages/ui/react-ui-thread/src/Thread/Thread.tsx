@@ -4,6 +4,7 @@
 
 import React, {
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type ReactNode,
   forwardRef,
   type PropsWithChildren,
@@ -108,13 +109,15 @@ ThreadContent.displayName = 'Thread.Content';
 // Header
 //
 
-export type ThreadHeaderProps = PropsWithChildren<{
+export type ThreadHeaderProps = Omit<ComponentPropsWithoutRef<'p'>, 'children'> & {
+  /** Snippet text. Must be a string — it is rendered inside a `<p>`. */
+  children?: string;
   detached?: boolean;
   /** Trailing controls rendered in the right column (aligns with message-tile controls). */
   controls?: ReactNode;
   /** Invoked when the caret affordance is activated to select/focus this thread. */
   onSelect?: () => void;
-}>;
+};
 
 /**
  * Thread header row: caret (rail) · snippet (content) · controls. Owns its own
