@@ -4,7 +4,6 @@
 
 import React, {
   type ComponentPropsWithRef,
-  type ComponentPropsWithoutRef,
   type ReactNode,
   forwardRef,
   type PropsWithChildren,
@@ -14,7 +13,17 @@ import React, {
 } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Icon, IconButton, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  type ComposableProps,
+  Icon,
+  IconButton,
+  ScrollArea,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
@@ -71,30 +80,28 @@ ThreadRoot.displayName = 'Thread.Root';
 // Content
 //
 
-export type ThreadContentProps = ThemedClassName<
-  PropsWithChildren<
-    {
-      id?: string;
-      current?: boolean | string;
-    } & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>
-  >
->;
+type ThreadContentExtra = {
+  id?: string;
+  current?: boolean | string;
+} & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>;
+
+export type ThreadContentProps = ComposableProps<ThreadContentExtra>;
 
 /** Visible thread container (the attention surface that hosts header / messages / composer). */
-const ThreadContent = forwardRef<HTMLDivElement, ThreadContentProps>(
-  ({ children, classNames, current, id, ...props }, forwardedRef) => {
+const ThreadContent = composable<HTMLDivElement, ThreadContentExtra>(
+  ({ children, current, id, ...props }, forwardedRef) => {
     return (
       <div
-        role='group'
+        {...composableProps(props, {
+          role: 'group',
+          classNames: [
+            'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
+            hoverableFocusedWithinControls,
+          ],
+        })}
         data-testid='thread'
         id={id}
         aria-current={current ? 'location' : undefined}
-        {...props}
-        className={mx(
-          'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
-          hoverableFocusedWithinControls,
-          classNames,
-        )}
         ref={forwardedRef}
       >
         {children}
@@ -109,7 +116,7 @@ ThreadContent.displayName = 'Thread.Content';
 // Header
 //
 
-export type ThreadHeaderProps = Omit<ComponentPropsWithoutRef<'p'>, 'children'> & {
+type ThreadHeaderExtra = {
   /** Snippet text. Must be a string — it is rendered inside a `<p>`. */
   children?: string;
   detached?: boolean;
@@ -119,21 +126,26 @@ export type ThreadHeaderProps = Omit<ComponentPropsWithoutRef<'p'>, 'children'> 
   onSelect?: () => void;
 };
 
+export type ThreadHeaderProps = ComposableProps<ThreadHeaderExtra>;
+
 /**
  * Thread header row: caret (rail) · snippet (content) · controls. Owns its own
  * `[rail · 1fr · controls]` grid so the trailing controls align with message-tile
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
-const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
+const ThreadHeader = composable<HTMLDivElement, ThreadHeaderExtra>(
   ({ children, detached, controls, onSelect, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
       <div
-        className={mx(
-          'grid grid-cols-[var(--dx-rail-size)_1fr_min-content] items-center',
-          hoverableControls,
-          hoverableFocusedWithinControls,
-        )}
+        {...composableProps(props, {
+          classNames: [
+            'grid grid-cols-[var(--dx-rail-size)_1fr_min-content] items-center',
+            hoverableControls,
+            hoverableFocusedWithinControls,
+          ],
+        })}
+        ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
           <IconButton
@@ -150,9 +162,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
           <p
             role='heading'
             data-testid='thread.heading'
-            {...props}
             className={mx('me-2 text-description font-medium truncate italic', detached && 'line-through decoration-1')}
-            ref={forwardedRef}
           >
             {children}
           </p>
