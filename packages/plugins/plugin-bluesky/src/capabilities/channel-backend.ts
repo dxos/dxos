@@ -12,8 +12,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Message } from '@dxos/types';
 
 import { ATPROTO_BACKEND_KIND, ATPROTO_POLL_INTERVAL } from '../constants';
-import { type BlueskyApi } from '../services';
-import { getAuthorFeed } from '../services/BlueskyApi';
+import * as BlueskyApi from '../services/BlueskyApi';
 import { BlueskyChannel, makeBlueskyChannel } from '../types';
 
 /** Maps an ATProto feed-view post to a transient (non-persisted) chat message. */
@@ -54,7 +53,7 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
 
       const handle = config.handle;
       const poll = () => {
-        void getAuthorFeed({ actor: handle })
+        void BlueskyApi.getAuthorFeed({ actor: handle })
           .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
           .then((response) => {
             if (cancelled) {
