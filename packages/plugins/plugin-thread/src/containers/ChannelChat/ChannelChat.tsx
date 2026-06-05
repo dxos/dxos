@@ -4,16 +4,16 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Obj } from '@dxos/echo';
+import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type Channel, Message } from '@dxos/types';
+import { type Channel } from '@dxos/types';
 
 import { Chat } from '#components';
-import { useStatus } from '#hooks';
-import { ThreadOperation } from '#types';
+import { useMessages, useStatus } from '#hooks';
+import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
 
 export type ChannelChatProps = {
   space: Space;
@@ -25,9 +25,10 @@ export type ChannelChatProps = {
  * above it (newest at the bottom). Threading via `Message.threadId` is
  * intentionally not reconstructed in this round.
  *
- * Externally-synced channels (any Channel carrying foreign-key `Obj.Meta`,
- * e.g. Slack/Discord-sourced rooms) render read-only — the composer is
- * suppressed because there's no local-write path back to the source.
+ * Messages are read and written through the channel's backend provider
+ * (resolved by `channel.backend.kind`), so the container is agnostic to where
+ * messages are stored. Read-only state defaults to the provider's policy, or
+ * to "channel carries foreign-key `Obj.Meta`" when the provider has none.
  */
 export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
   ({ space, channel, ...props }, forwardedRef) => {
@@ -37,27 +38,27 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
     const activity = useStatus(space, id);
     const { invokePromise } = useOperationInvoker();
 
-    const feed = channel.feed?.target;
-    const messages = useQuery(
-      space.db,
-      feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+    const provider = resolveProvider(providers, channel.backend.kind);
+    const messages = useMessages(channel);
+    const readOnly = provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0;
+
+    const handleSend = useCallback(
+      (text: string) => {
+        if (readOnly) {
+          return false;
+        }
+
+        void invokePromise(ThreadOperation.AppendChannelMessage, {
+          channel,
+          sender: { identityDid: identity.did },
+          text,
+        });
+
+        return true;
+      },
+      [readOnly, channel, identity, invokePromise],
     );
-
-    const readOnly = Obj.getMeta(channel).keys.length > 0;
-
-    const handleSend = useCallback((text: string) => {
-      if (readOnly) {
-        return false;
-      }
-
-      void invokePromise(ThreadOperation.AppendChannelMessage, {
-        channel,
-        sender: { identityDid: identity.did },
-        text,
-      });
-
-      return true;
-    }, []);
 
     return (
       <Chat

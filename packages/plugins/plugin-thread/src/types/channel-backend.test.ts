@@ -2,21 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Feed } from '@dxos/echo';
 
 import { buildChannelFormSchema, resolveProvider } from './channel-backend';
 import { type ChannelBackendProvider } from './ThreadCapabilities';
 
-const fakeProvider = (kind: string, fields: Schema.Struct<any>): ChannelBackendProvider => ({
+const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ChannelBackendProvider => ({
   kind,
   label: kind,
   createFields: fields,
-  makeConfig: () => Obj.make(Schema.Struct({}), {}),
+  makeConfig: () => Feed.make(),
   subscribe: () => () => {},
-  send: () => undefined as any,
+  send: () => Effect.void,
 });
 
 describe('channel-backend helpers', () => {

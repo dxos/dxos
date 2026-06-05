@@ -23,9 +23,10 @@ import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls
 import { useOnEditAnalytics } from '#hooks';
 import { meta } from '#meta';
 
-import { command } from '../../extensions/command';
+import { command } from '../../extensions';
 import { getMessageMetadata } from '../../util';
 
+// TODO(burdon): Remove need for exported styles.
 export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pe-2';
 export const buttonClassNames = 'p-1! transition-opacity';
 
@@ -37,6 +38,7 @@ export type MessagePanelProps = {
   onAcceptProposal?: (id: string) => void;
 };
 
+// TODO(burdon): Make composable.
 export const MessagePanel = ({
   message: messageOrRef,
   members,
@@ -52,11 +54,14 @@ export const MessagePanel = ({
   const textBlockIndex = message?.blocks.findIndex((block) => block._tag === 'text') ?? -1;
 
   const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
+
   const handleDelete = useCallback(() => message && onDelete?.(message.id), [message, onDelete]);
+
   const handleAcceptProposal = useCallback(
     () => message && onAcceptProposal?.(message.id),
     [message, onAcceptProposal],
   );
+
   const handleTextBlockChange = useCallback(
     (newText: string) => {
       updateMessage((m) => {

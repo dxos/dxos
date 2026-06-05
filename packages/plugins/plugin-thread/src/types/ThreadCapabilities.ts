@@ -58,11 +58,11 @@ export interface ChannelBackendProvider {
   /** Icon name (phosphor) for the create-channel form. */
   icon?: string;
   /**
-   * Per-backend create-form inputs (excludes the `kind` discriminant and the
-   * channel `name`, which the panel adds). Empty struct when the backend needs
-   * no extra input (e.g. the local feed).
+   * Per-backend create-form inputs (a struct; excludes the `kind` discriminant
+   * and the channel `name`, which the panel adds). Empty struct when the backend
+   * needs no extra input (e.g. the local feed).
    */
-  createFields: Schema.Struct<any>;
+  createFields: Schema.Schema.AnyNoContext;
   /** Builds the provider's config object from the collected create-form inputs. */
   makeConfig: (options: Record<string, unknown>) => Obj.Any;
   /**

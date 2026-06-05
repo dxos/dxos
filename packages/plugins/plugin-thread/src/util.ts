@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
-import { type PublicKey } from '@dxos/react-client';
+import { type PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type Selection } from '@dxos/react-ui-attention';
 import { type MessageMetadata } from '@dxos/react-ui-thread';

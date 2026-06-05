@@ -12,10 +12,10 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, Message } from '@dxos/types';
 
-import { type ChannelBackendProvider, ThreadCapabilities } from '../types';
+import { ThreadCapabilities } from '../types';
 
 /** Local ECHO-feed-backed channel provider (the default backend). */
-export const feedChannelBackend: ChannelBackendProvider = {
+export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
   kind: Channel.FeedBackendKind,
   label: 'Feed',
   icon: 'ph--rows--regular',

@@ -3,4 +3,5 @@
 //
 
 export * from './analytics';
+export * from './useMessages';
 export * from './useStatus';

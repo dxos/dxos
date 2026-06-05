@@ -16,6 +16,7 @@ import {
   AgentRunner,
   AppGraphBuilder,
   BlueprintDefinition,
+  ChannelBackendFeed,
   CreateObject,
   Markdown,
   OperationHandler,
@@ -41,6 +42,13 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  // Default local-feed channel backend. Other plugins contribute additional
+  // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
+  Plugin.addModule({
+    id: 'channel-backend-feed',
+    activatesOn: ActivationEvents.Startup,
+    activate: ChannelBackendFeed,
+  }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],

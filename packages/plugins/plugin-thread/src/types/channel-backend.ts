@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type ChannelBackendProvider } from './ThreadCapabilities';
 
@@ -17,24 +18,23 @@ export const resolveProvider = (
  *
  * With a single provider whose create-fields are empty the form is just a
  * `name` field (today's behaviour). With multiple providers (or extra fields)
- * it becomes `{ name?, backend: Union(<{ kind: Literal(p.kind), ...p.createFields }>) }`,
+ * it becomes `{ name?, backend: Union(<{ kind: Literal(p.kind) } & p.createFields>) }`,
  * which react-ui-form renders as a `kind` Select plus the selected branch's fields.
  */
 export const buildChannelFormSchema = (providers: readonly ChannelBackendProvider[]): Schema.Schema.AnyNoContext => {
-  const needsSelector = providers.length > 1 || providers.some((provider) => hasFields(provider.createFields));
+  const needsSelector = providers.length > 1 || providers.some((provider) => fieldCount(provider.createFields) > 0);
   if (!needsSelector) {
     return Schema.Struct({ name: Schema.optional(Schema.String) });
   }
 
   const branches = providers.map((provider) =>
-    Schema.Struct({ kind: Schema.Literal(provider.kind), ...provider.createFields.fields }),
+    Schema.extend(Schema.Struct({ kind: Schema.Literal(provider.kind) }), provider.createFields),
   );
-  const backend =
-    branches.length === 1 ? branches[0] : Schema.Union(...(branches as [Schema.Struct<any>, ...Schema.Struct<any>[]]));
+  const backend = branches.length === 1 ? branches[0] : Schema.Union(...branches);
   return Schema.Struct({
     name: Schema.optional(Schema.String),
     backend,
   });
 };
 
-const hasFields = (struct: Schema.Struct<any>): boolean => Object.keys(struct.fields).length > 0;
+const fieldCount = (schema: Schema.Schema.AnyNoContext): number => SchemaAST.getPropertySignatures(schema.ast).length;
