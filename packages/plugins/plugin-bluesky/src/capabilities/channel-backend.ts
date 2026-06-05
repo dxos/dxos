@@ -42,43 +42,52 @@ export const blueskyChannelBackend: ThreadCapabilities.ChannelBackendProvider = 
     // Cache messages by post uri so identity is stable across polls (avoids list churn).
     const cache = new Map<string, Message.Message>();
 
-    void channel.backend.config.load().then((config) => {
-      if (cancelled) {
-        return;
-      }
-      if (!Obj.instanceOf(BlueskyChannel, config) || !config.handle) {
-        onMessages([]);
-        return;
-      }
+    void channel.backend.config
+      .load()
+      .then((config) => {
+        if (cancelled) {
+          return;
+        }
+        if (!Obj.instanceOf(BlueskyChannel, config) || !config.handle) {
+          onMessages([]);
+          return;
+        }
 
-      const handle = config.handle;
-      const poll = () => {
-        void BlueskyApi.getAuthorFeed({ actor: handle })
-          .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
-          .then((response) => {
-            if (cancelled) {
-              return;
-            }
-            // Author feed is newest-first; reverse so the newest renders at the bottom.
-            const messages = [...response.feed].reverse().map((item) => {
-              const existing = cache.get(item.post.uri);
-              if (existing) {
-                return existing;
+        const handle = config.handle;
+        const poll = () => {
+          void BlueskyApi.getAuthorFeed({ actor: handle })
+            .pipe(Effect.provide(FetchHttpClient.layer), Effect.runPromise)
+            .then((response) => {
+              if (cancelled) {
+                return;
               }
-              const message = toMessage(item);
-              cache.set(item.post.uri, message);
-              return message;
-            });
-            onMessages(messages);
-          })
-          // Best-effort: transient network/5xx/timeout failures are already retried
-          // inside getAuthorFeed; swallow the rest so polling continues.
-          .catch(() => {});
-      };
+              // Author feed is newest-first; reverse so the newest renders at the bottom.
+              const messages = [...response.feed].reverse().map((item) => {
+                const existing = cache.get(item.post.uri);
+                if (existing) {
+                  return existing;
+                }
+                const message = toMessage(item);
+                cache.set(item.post.uri, message);
+                return message;
+              });
+              onMessages(messages);
+            })
+            // Best-effort: transient network/5xx/timeout failures are already retried
+            // inside getAuthorFeed; swallow the rest so polling continues.
+            .catch(() => {});
+        };
 
-      poll();
-      timer = setInterval(poll, ATPROTO_POLL_INTERVAL);
-    });
+        poll();
+        timer = setInterval(poll, ATPROTO_POLL_INTERVAL);
+      })
+      // If the config ref can't be loaded (deleted/invalid/permission), satisfy the
+      // subscribe contract with an empty list rather than leaving the UI loading forever.
+      .catch(() => {
+        if (!cancelled) {
+          onMessages([]);
+        }
+      });
 
     return () => {
       cancelled = true;
