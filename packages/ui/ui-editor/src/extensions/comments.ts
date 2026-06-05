@@ -100,26 +100,26 @@ export const commentsState = StateField.define<CommentsState>({
  * NOTE: Matches search.
  */
 const styles = EditorView.theme({
-  '.cm-comment, .cm-comment-current': {
-    padding: '3px 0',
-    color: 'var(--color-cm-comment-text)',
-    backgroundColor: 'var(--color-cm-comment-surface)',
-  },
-  '.cm-comment > span, .cm-comment-current > span': {
+  '.cm-comment > span': {
     boxDecorationBreak: 'clone',
     boxShadow: '0 0 0 3px var(--color-cm-comment-surface)',
     backgroundColor: 'var(--color-cm-comment-surface)',
-    color: 'var(--color-cm-comment-text)',
+    color: 'var(--color-cm-comment-text) !important',
     cursor: 'pointer',
+  },
+  '.cm-comment[data-current="1"] > span': {
+    boxShadow: '0 0 0 3px var(--color-cm-comment-current-surface)',
+    backgroundColor: 'var(--color-cm-comment-current-surface)',
   },
 });
 
 const createCommentMark = (id: string, isCurrent: boolean) =>
   Decoration.mark({
-    class: isCurrent ? 'cm-comment-current' : 'cm-comment',
+    class: 'cm-comment',
     attributes: {
       'data-testid': 'cm-comment',
       'data-comment-id': id,
+      'data-current': isCurrent ? '1' : '0',
     },
   });
 

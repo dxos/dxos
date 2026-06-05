@@ -140,7 +140,7 @@ export const FormFieldSet = ({
           onClick={() => setCollapsed((value) => !value)}
         />
       )}
-      {showBody && <div className='px-2 pb-2'>{body}</div>}
+      {showBody && (collapsible ? <div className='px-2 pb-2'>{body}</div> : body)}
     </>
   );
 
