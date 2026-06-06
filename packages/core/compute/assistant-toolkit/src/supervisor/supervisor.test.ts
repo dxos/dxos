@@ -81,7 +81,7 @@ describe('supervisor', () => {
                 Plan.addTasks(plan, [{ title: input, status: 'in-progress' }]);
               });
             }),
-          toChildInput: (task) => ({ title: task.title }),
+          toChildInput: (task) => Effect.succeed({ title: task.title }),
           onComplete: (taskId, exit) =>
             Effect.sync(() => {
               if (Exit.isSuccess(exit)) {
@@ -128,7 +128,7 @@ describe('supervisor', () => {
                 Plan.addTasks(plan, [{ title: input, status: 'in-progress' }]);
               });
             }),
-          toChildInput: (task) => ({ title: task.title }),
+          toChildInput: (task) => Effect.succeed({ title: task.title }),
           onComplete: (taskId, exit) =>
             Effect.sync(() => {
               if (Exit.isFailure(exit)) {

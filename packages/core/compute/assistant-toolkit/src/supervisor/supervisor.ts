@@ -6,16 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
-import { type Operation, Process } from '@dxos/compute';
+import { Operation, Process } from '@dxos/compute';
 import { ProcessManager, Supervisor } from '@dxos/compute-runtime';
 import { Database, Obj } from '@dxos/echo';
 
 import { Agent, Plan } from '../types';
 
 /**
- * Services available to a supervisor process and its injected callbacks.
+ * Services available to a supervisor process and its injected callbacks. `Operation.Service` lets
+ * `runTurn`/`toChildInput` invoke operations (e.g. run an agent turn or synthesize a routine).
  */
-type SupervisorServices = Database.Service | ProcessManager.ProcessOperationInvoker.Service;
+type SupervisorServices = Database.Service | ProcessManager.ProcessOperationInvoker.Service | Operation.Service;
 
 export interface MakeSupervisorOptions<ChildInput, ChildOutput> {
   /**
@@ -35,9 +36,10 @@ export interface MakeSupervisorOptions<ChildInput, ChildOutput> {
   readonly runTurn: (input: string) => Effect.Effect<void, never, SupervisorServices>;
 
   /**
-   * Builds the child operation input for a delegated task.
+   * Builds the child operation input for a delegated task. Effectful so it may, for example,
+   * synthesize and persist a routine for the sub-agent to run.
    */
-  readonly toChildInput: (task: Plan.Task) => ChildInput;
+  readonly toChildInput: (task: Plan.Task) => Effect.Effect<ChildInput, never, SupervisorServices>;
 
   /**
    * Invoked when a delegated task completes (after the task status has been updated). Use to notify
@@ -62,7 +64,7 @@ export const makeSupervisor = <ChildInput, ChildOutput>(
       key: 'org.dxos.process.supervisor',
       input: Schema.String,
       output: Schema.Void,
-      services: [Database.Service, ProcessManager.ProcessOperationInvoker.Service],
+      services: [Database.Service, ProcessManager.ProcessOperationInvoker.Service, Operation.Service],
     },
     () =>
       Effect.gen(function* () {
@@ -78,7 +80,8 @@ export const makeSupervisor = <ChildInput, ChildOutput>(
           for (const task of plan.tasks) {
             if (task.status === 'in-progress' && !inFlight.has(task.id)) {
               inFlight.add(task.id);
-              const pid = yield* Supervisor.delegate(options.childOperation, options.toChildInput(task));
+              const childInput = yield* options.toChildInput(task);
+              const pid = yield* Supervisor.delegate(options.childOperation, childInput);
               taskByPid.set(pid, task.id);
             }
           }
