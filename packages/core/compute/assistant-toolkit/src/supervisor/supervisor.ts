@@ -13,8 +13,9 @@ import { Database, Obj } from '@dxos/echo';
 import { Agent, Plan } from '../types';
 
 /**
- * Services available to a supervisor process and its injected callbacks. `Operation.Service` lets
- * `runTurn`/`toChildInput` invoke operations (e.g. run an agent turn or synthesize a routine).
+ * Services available to a supervisor process and its injected callbacks.
+ * `Operation.Service` lets `runTurn`/`toChildInput` invoke operations
+ * (e.g., run an agent turn or synthesize a routine).
  */
 type SupervisorServices = Database.Service | ProcessManager.ProcessOperationInvoker.Service | Operation.Service;
 
@@ -30,20 +31,20 @@ export interface MakeSupervisorOptions<ChildInput, ChildOutput> {
   readonly childOperation: Operation.Definition<ChildInput, ChildOutput>;
 
   /**
-   * Handles a user turn. May enqueue work by adding in-progress tasks to the agent's plan (e.g. by
-   * running an AiSession turn whose tools call DelegateTask). Errors must be handled by the caller.
+   * Handles a user turn. May enqueue work by adding in-progress tasks to the agent's plan
+   * (e.g. by running an AiSession turn whose tools call DelegateTask). Errors must be handled by the caller.
    */
   readonly runTurn: (input: string) => Effect.Effect<void, never, SupervisorServices>;
 
   /**
-   * Builds the child operation input for a delegated task. Effectful so it may, for example,
-   * synthesize and persist a routine for the sub-agent to run.
+   * Builds the child operation input for a delegated task.
+   * Effectful so it may, for example, synthesize and persist a routine for the sub-agent to run.
    */
   readonly toChildInput: (task: Plan.Task) => Effect.Effect<ChildInput, never, SupervisorServices>;
 
   /**
-   * Invoked when a delegated task completes (after the task status has been updated). Use to notify
-   * the user with the result. Errors must be handled by the caller.
+   * Invoked when a delegated task completes (after the task status has been updated).
+   * Use to notify the user with the result. Errors must be handled by the caller.
    */
   readonly onComplete: (
     taskId: Plan.TaskId,

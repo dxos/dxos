@@ -56,6 +56,7 @@ const extractArtifactIds = (value: unknown): string[] => {
   if (typeof value !== 'object' || value === null) {
     return [];
   }
+
   const record = value as { artifactIds?: unknown; artifactId?: unknown };
   const ids = Array.isArray(record.artifactIds)
     ? record.artifactIds

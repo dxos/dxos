@@ -17,8 +17,11 @@ export const DelegateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.delegation.delegateTask'),
     name: 'Delegate task',
-    description:
-      'Delegate a unit of work to a sub-agent. Records the work as an in-progress task on the plan and returns the updated plan. Use this to hand off work that can proceed in the background while you continue the conversation.',
+    description: trim`
+      Delegate a unit of work to a sub-agent. 
+      Records the work as an in-progress task on the plan and returns the updated plan. 
+      Use this to hand off work that can proceed in the background while you continue the conversation.
+    `,
     icon: 'ph--share-network--regular',
   },
   input: Schema.Struct({
