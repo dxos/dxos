@@ -59,7 +59,7 @@ export const ContextModule = ({ space }: ModuleProps) => {
           </Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Masonry.Root Tile={DebugTile}>
+      <Masonry.Root Tile={Tile}>
         <Panel.Content asChild>
           <Masonry.Content padding thin classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
@@ -92,24 +92,6 @@ type ContextItem =
   | { kind: 'object'; id: string; object: Obj.Unknown }
   | { kind: 'artifact'; id: string; name: string; data: Ref.Ref<Obj.Unknown> };
 
-const DebugTile = ({ data }: { data: ContextItem }) => {
-  return (
-    <Card.Root>
-      <Card.Body>
-        <Card.Row fullWidth classNames='max-h-60'>
-          <Syntax.Root data={data}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
-        </Card.Row>
-      </Card.Body>
-    </Card.Root>
-  );
-};
-
 const Tile = ({ data }: { data: ContextItem }) => {
   const artifactRef = data.kind === 'artifact' ? data.data : undefined;
   useObject(artifactRef);
@@ -130,6 +112,24 @@ const Tile = ({ data }: { data: ContextItem }) => {
   return (
     <Card.Root>
       <Surface.Surface type={AppSurface.Card} limit={1} data={{ subject }} />
+    </Card.Root>
+  );
+};
+
+const DebugTile = ({ data }: { data: ContextItem }) => {
+  return (
+    <Card.Root>
+      <Card.Body>
+        <Card.Row fullWidth classNames='max-h-60'>
+          <Syntax.Root data={data}>
+            <Syntax.Content>
+              <Syntax.Viewport>
+                <Syntax.Code classNames='text-xs' />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        </Card.Row>
+      </Card.Body>
     </Card.Root>
   );
 };
