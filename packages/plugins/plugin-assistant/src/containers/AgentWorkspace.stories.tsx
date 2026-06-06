@@ -20,7 +20,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
-import { Loading, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
@@ -31,7 +31,7 @@ import { TracePanel } from './TracePanel/TracePanel';
 
 // Two surfaces side by side: the conversational ChatArticle (left) and the activity TracePanel
 // (right) over a single shared space. The "Start agent" toolbar spawns a simulated agent so the
-// trace timeline has activity to render.
+// trace timeline has activity to render. Plugin/capability setup mirrors ChatArticle.stories.
 const DefaultStory = () => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
@@ -41,6 +41,7 @@ const DefaultStory = () => {
     if (!runtime) {
       return;
     }
+
     void runtime.runPromise(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
@@ -55,8 +56,8 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grid grid-cols-[1fr_24rem] is-full bs-full overflow-hidden'>
-      <ChatArticle role='article' subject={chat} space={space} attendableId='story-chat' />
+    <div className='dx-container grid grid-cols-[1fr_24rem]'>
+      <ChatArticle role='article' subject={chat} attendableId='story-chat' />
       <Panel.Root classNames='border-l border-separator'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -72,10 +73,11 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/AgentWorkspace',
+  title: 'plugins/plugin-assistant/stories/AgentWorkspace',
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
