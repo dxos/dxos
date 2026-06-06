@@ -51,6 +51,12 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, NoHandlerError>;
+  invokePromise: <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
+  ) => Promise<{ data?: O; error?: Error }>;
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent operation completes.
@@ -62,12 +68,6 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<void>;
-  invokePromise: <I, O>(
-    op: Operation.Definition<I, O>,
-    ...args: void extends I
-      ? [input?: I, options?: Operation.InvokeOptions]
-      : [input: I, options?: Operation.InvokeOptions]
-  ) => Promise<{ data?: O; error?: Error }>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
   /** Number of pending followup operations. */

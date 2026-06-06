@@ -112,7 +112,7 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
       >
         <TabsPrimitive.Root
           {...props}
-          className={mx('overflow-hidden', classNames)}
+          className={mx('__overflow-hidden', classNames)}
           orientation={orientation}
           activationMode={activationMode}
           data-active={activePart}

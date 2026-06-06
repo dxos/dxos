@@ -4,6 +4,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
+
 import { type ChatPromptProps } from '#components';
 
 import { type AiServicePreset, AiServicePresets } from '../processor';
@@ -19,10 +21,12 @@ export const usePresets = (online: boolean): UsePresets => {
     () => AiServicePresets.filter((preset) => online === (preset.provider === 'dxos-remote')),
     [online],
   );
+
   const presetOptions = useMemo(
     () => presets.map(({ id, model, label }) => ({ id, label: label ?? model })),
     [presets],
   );
+
   useEffect(() => {
     setPreset(presets[0]);
   }, [presets]);
@@ -36,6 +40,10 @@ export const usePresets = (online: boolean): UsePresets => {
     },
     [presets],
   );
+
+  useEffect(() => {
+    log.info('update', { online, model: preset?.model });
+  }, [online, preset?.model]);
 
   return {
     preset: preset,
