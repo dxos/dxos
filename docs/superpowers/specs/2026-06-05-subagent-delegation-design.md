@@ -37,10 +37,11 @@ back into the conversation as they finish.
 Consequence: results travel through a **durable channel** (the `Plan` `Task` in ECHO, written
 by the child); the `onChildEvent` exit is purely the **wake signal**. This is Approach A.
 
-## Chosen approach — A: Schedule-as-child + Plan-Task result channel
+## Chosen approach — A: Linked-concurrent child + Plan-Task result channel
 
-1. A **delegate tool** invoked during the supervisor's turn schedules a child process running
-   `AgentPrompt` with `parentProcessId = supervisor.pid`, and creates/links a `Plan` `Task`
+1. A **delegate tool** invoked during the supervisor's turn spawns a child process running
+   `AgentPrompt` **via `invokeFiber`** (linked: `parentProcessId = supervisor.pid`;
+   non-blocking: returns a fiber without awaiting), and creates/links a `Plan` `Task`
    (`status: in-progress`, `chat: <sub-agent chat>`).
 2. The child runs the Routine session to completion and writes its **result into its
    `Task`** (`status: done`, plus result text in its chat).
@@ -49,36 +50,44 @@ by the child); the `onChildEvent` exit is purely the **wake signal**. This is Ap
    chat, marking those tasks acknowledged.
 
 Rejected alternatives:
+
 - **B — extend `ChildEvent` with output payload:** mutates a core compute type, bypasses the
   reactive ECHO `Plan`; more invasive.
 - **C — parent subscribes to each child's `subscribeOutputs()` stream:** more handle plumbing,
   does not use hibernation cleanly.
 
-## Open technical risk (resolved by the first test)
+## Resolved: how the supervisor is woken (read from runtime code)
 
-Whether `Operation.schedule`'d followups deliver `onChildEvent` to the scheduling parent is
-unverified — scheduled followups are "tracked separately and won't cancel when parent
-completes." **Slice 1's first failing test targets exactly this.** If `schedule` does not
-deliver the parent wake, the fallback is the supervisor calling `spawn` with `parentProcessId`
-directly (still Approach A), or escalating to Approach B.
+`Operation.schedule` spawns its child `detached` (`parentProcessId: undefined`) **by design**
+(`ProcessOperationInvoker.ts:220-257`), so it does **not** deliver `onChildEvent` to the
+scheduling parent. The correct primitive is **`ProcessOperationInvoker.invokeFiber`**: it
+spawns a **linked** child (`parentProcessId` set) and returns a fiber **without awaiting**
+(`ProcessOperationInvoker.ts:114-155`), so the supervisor's `onInput` stays non-blocking, the
+child runs concurrently, and child exit fires the supervisor's `onChildEvent`
+(`ProcessManager.ts:440-459`). The child's output value (not carried by `ChildEvent`) is read
+in `onChildEvent` via `attachFiber(pid)` — the invoker's fiber cache is deliberately retained
+for this (`ProcessOperationInvoker.ts:144`).
+
+Slice 1 packages this as a `Supervisor` module (`delegate` + `collectResult`) and proves it
+with tests on the real runtime.
 
 ## Components & layering
 
-| Layer | Unit | New work |
-|---|---|---|
-| `compute-runtime` | **Supervisor process pattern** | Spawn children, interleave input, wake on child exit, emit derived output. No AI. **Slice 1.** |
-| `assistant-toolkit` | **Delegation blueprint** (`DelegateTask` tool) + Plan-Task linkage + supervisor wiring over `AiSession` | **Slice 2.** |
-| `plugin-assistant` | Conversational agent runs as the supervisor; children surface in `ProcessTree`/`TracePanel` (mostly automatic via pid hierarchy) | **Slice 3.** |
+| Layer               | Unit                                                                                                                             | New work                                                                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `compute-runtime`   | **Supervisor process pattern**                                                                                                   | Spawn children, interleave input, wake on child exit, emit derived output. No AI. **Slice 1.** |
+| `assistant-toolkit` | **Delegation blueprint** (`DelegateTask` tool) + Plan-Task linkage + supervisor wiring over `AiSession`                          | **Slice 2.**                                                                                   |
+| `plugin-assistant`  | Conversational agent runs as the supervisor; children surface in `ProcessTree`/`TracePanel` (mostly automatic via pid hierarchy) | **Slice 3.**                                                                                   |
 
 ## Data flow
 
 ```
 user → supervisor.onInput → AiSession turn
-     → DelegateTask tool → schedule(AgentPrompt, parentProcessId)
+     → DelegateTask tool → invokeFiber(AgentPrompt) [linked, non-blocking]
                          → create Plan Task (in-progress, chat=subagent chat)
-     → child session runs Routine
+     → child session runs Routine (concurrently; supervisor stays IDLE/HYBERNATING)
                          → child writes result to Task (done) + chat
-     → child exits → supervisor.onChildEvent (wake)
+     → child exits → supervisor.onChildEvent (wake) → collectResult(childPid)
                   → read done Tasks → submitOutput proactive message → ack tasks
 ```
 
@@ -91,11 +100,12 @@ user → supervisor.onInput → AiSession turn
 
 ## Testing strategy
 
-- **Slice 1 — compute-runtime, no AI (mock toy processes).**
-  - First failing test: a supervisor schedules a child; assert the supervisor receives
-    `onChildEvent` on child exit (resolves the open risk above).
-  - Supervisor accepts a second `submitInput` while a child is still running (interleaving).
-  - Supervisor wakes on child exit and emits a derived `submitOutput`.
+- **Slice 1 — compute-runtime, no AI (toy operations as children).**
+  - First failing test: a supervisor `delegate`s a child operation; on child exit the
+    supervisor `collectResult`s it and emits a derived `submitOutput` (proves linked-concurrent
+    spawn + `onChildEvent` wake + result read on the real runtime).
+  - Supervisor handles multiple concurrent delegations, emitting one derived output per child.
+  - Child failure surfaces to the supervisor (`collectResult` yields a failed `Exit`).
 - **Slice 2 — assistant-toolkit, `AssistantTestLayer` + memoized AI.**
   - `DelegateTask` creates a `Plan` `Task` and schedules `AgentPrompt`.
   - Child Routine completes; `Task` transitions to `done` with result; supervisor folds it in.
