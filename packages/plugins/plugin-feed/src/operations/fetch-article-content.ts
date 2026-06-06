@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '../types';
-import { fetchArticle } from '../util';
+import { browserCorsProxy, fetchArticle } from './sources';
 
 const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> = FeedOperation.FetchArticleContent.pipe(
   Operation.withHandler(
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> =
       const post = yield* Database.load(postRef);
       invariant(post.link, 'Post has no link.');
       return yield* Effect.tryPromise({
-        try: () => fetchArticle(post.link!),
+        try: () => fetchArticle(post.link!, { corsProxy: browserCorsProxy() }),
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       });
     }),

@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Routine } from '@dxos/compute';
-import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Filter, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel } from '@dxos/react-ui';
@@ -17,8 +16,8 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { generateFeed } from '../testing';
-import { Magazine, Subscription } from '../types';
+import { generateFeed } from '../../testing';
+import { Magazine, Subscription } from '../../types';
 
 const DefaultStory = () => {
   const { space } = useClientStory();
@@ -37,7 +36,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-feed/stories/MagazineProperties',
+  title: 'plugins/plugin-feed/MagazineProperties',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -45,7 +44,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Magazine.Magazine, Subscription.Subscription, Subscription.Post, Routine.Routine, Tag.Tag, Text.Text],
+      types: [Magazine.Magazine, Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
       onCreateSpace: async ({ space }) => {
         // Pre-seed a couple of feeds so the Feeds combobox has options to pick from,
         // exercising both "select existing" and "create new" flows.
@@ -61,19 +60,8 @@ const meta = {
             url: 'https://vercel.com/changelog/feed',
           }),
         );
-        // Curation Routine, parented to (owned by) the Magazine — surfaced inline
-        // in the properties form (with its Markdown instructions editor) via
-        // `Magazine.routine`'s `FormInlineAnnotation`.
-        const routine = space.db.add(
-          Routine.make({ name: 'Curation', instructions: 'Prefer stories relating to sovereign AI.' }),
-        );
-        const magazine = space.db.add(
-          Magazine.make({
-            name: 'Distributed Systems Reading',
-            routine: Ref.make(routine),
-          }),
-        );
-        Obj.setParent(routine, magazine);
+        const magazine = Magazine.make({ name: 'Distributed Systems Reading' });
+        space.db.add(magazine);
         // Expose the magazine + space on `window` so the play function can
         // assert directly against the underlying ECHO state (e.g. that
         // `magazine.feeds` actually grew after the create-feed flow).
@@ -94,9 +82,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Default Magazine ObjectProperties — exercises the auto-generated form: the
- * Feeds picker and the inline Routine (rendered via `FormInlineAnnotation` as a
- * nested form with its Markdown instructions editor), seeded with an example
- * curation prompt.
+ * Feeds picker and the topic-instructions editor (the MagazineProperties
+ * companion surface).
  *
  * Manual flow:
  *  1. Open the Feeds combobox.
@@ -160,10 +147,9 @@ export const CreateFeed: Story = {
     // 1. Click the Feeds "Add" button. ECHO/space setup is async via
     //    `withClientProvider.onCreateSpace`, so wait long enough for the
     //    magazine to be queried and the form to render. Several array fields
-    //    render an "Add item" button (Tags, Feeds, and the inline Routine's
-    //    Blueprints), so scope the lookup to the Feeds field's row (the
-    //    `ArrayField` label + add button share a `.gap-2` flex row) rather than
-    //    relying on positional ordering.
+    //    render an "Add item" button (Tags, Feeds), so scope the lookup to the
+    //    Feeds field's row (the `ArrayField` label + add button share a `.gap-2`
+    //    flex row) rather than relying on positional ordering.
     const feedsLabel = await canvas.findByText('Feeds', {}, { timeout: 30_000 });
     const feedsRow = feedsLabel.closest('.gap-2');
     if (!feedsRow) {

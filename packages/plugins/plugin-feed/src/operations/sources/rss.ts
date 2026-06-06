@@ -8,7 +8,8 @@ import { normalizeText } from '@dxos/markdown';
 
 import { Subscription } from '#types';
 
-import { decodeEntities } from './extract';
+import { decodeEntities } from '../../util/text';
+import { applyCorsProxy } from './cors';
 import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 
 /**
@@ -65,7 +66,7 @@ const markdown = (value: string | undefined): string | undefined => (value != nu
 
 /** Fetches and parses an RSS/Atom feed URL into Subscription objects. */
 export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOptions = {}): Promise<FetchResult> => {
-  const fetchUrl = corsProxy ? `${corsProxy}${encodeURIComponent(url)}` : url;
+  const fetchUrl = applyCorsProxy(url, corsProxy);
   const response = await fetch(fetchUrl);
   const xml = await response.text();
   const parser = new XMLParser({

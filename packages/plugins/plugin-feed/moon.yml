@@ -6,6 +6,7 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+  - memoized-llm
 tasks:
   compile:
     args:

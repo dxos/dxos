@@ -4,12 +4,9 @@
 
 // @import-as-namespace
 
+import { type Database, Obj, Ref, type Tag } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 
-import type * as Database from './Database';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import type * as Tag from './Tag';
 import * as TagIndex from './TagIndex';
 
 /**
@@ -34,7 +31,7 @@ export interface Options {
 const DEFAULT_KEY = 'tags';
 
 /** Returns the tag ids (URIs) applied to an object. */
-export const get = (object: Obj.Any, options: Options = {}): string[] => {
+export const get = (object: Obj.Any | Obj.Snapshot<Obj.Any>, options: Options = {}): string[] => {
   const { host, key = DEFAULT_KEY } = options;
   if (host) {
     return TagIndex.bind(host, key).tags(object.id);

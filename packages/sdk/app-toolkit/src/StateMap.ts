@@ -4,10 +4,13 @@
 
 // @import-as-namespace
 
+import { Atom } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 
-import { FormInputAnnotation } from './internal';
-import * as Obj from './Obj';
+import { Obj } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
+import { type EntityId } from '@dxos/keys';
 
 /**
  * A per-object state side-map: an in-document `Record<objectId, S>` holding small mutable metadata
@@ -22,15 +25,15 @@ import * as Obj from './Obj';
 /** Read/write accessor over a host object's state side-map field, bound to a single field key. */
 export interface Accessor<S extends object> {
   /** All object ids with an entry, optionally filtered by a predicate over their state. */
-  ids(predicate?: (state: Partial<S>, id: string) => boolean): string[];
+  ids(predicate?: (state: Partial<S>, id: EntityId) => boolean): EntityId[];
   /** The entry for an object id; `{}` when absent (so call sites read fields without `?` chains). */
-  get(id: string): Partial<S>;
+  get(id: EntityId): Partial<S>;
   /** All `[id, state]` entries. */
-  entries(): Array<[string, Partial<S>]>;
+  entries(): Array<[EntityId, Partial<S>]>;
   /** Shallow-merges a patch into an object's entry, creating it when absent. */
-  patch(id: string, patch: Partial<S>): void;
+  patch(id: EntityId, patch: Partial<S>): void;
   /** Removes an object's entry. */
-  remove(id: string): void;
+  remove(id: EntityId): void;
 }
 
 /**
@@ -38,7 +41,42 @@ export interface Accessor<S extends object> {
  * from forms. Keyed by object id; the value is the per-object state struct `S`.
  */
 export const field = <S, I>(value: Schema.Schema<S, I>) =>
-  Schema.Record({ key: Schema.String, value }).pipe(FormInputAnnotation.set(false), Schema.optional);
+  Schema.Record({ key: Obj.ID, value }).pipe(FormInputAnnotation.set(false), Schema.optional);
+
+const shallowEqual = (a: Record<string, unknown>, b: Record<string, unknown>): boolean => {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+  return keysA.every((k) => a[k] === b[k]);
+};
+
+type SliceKey = readonly [Obj.Any, string, EntityId];
+
+const sliceFamily = Atom.family((key: SliceKey) =>
+  Atom.make<Record<string, unknown>>((get) => {
+    const [host, field, id] = key;
+    const read = () => bind(host, field).get(id) as Record<string, unknown>;
+    let previous = read();
+    const unsubscribe = Obj.subscribe(host, () => {
+      const next = read();
+      if (!shallowEqual(previous, next)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }),
+);
+
+/**
+ * Reactive per-key slice of a StateMap field. Fires only when the value at `id` changes — sibling
+ * keys' mutations are discarded without propagating. Memoized via `Atom.family`.
+ */
+export const atom = <S extends object>(host: Obj.Any, field: string, id: EntityId): Atom.Atom<Partial<S>> =>
+  sliceFamily(Data.tuple(host, field, id)) as Atom.Atom<Partial<S>>;
 
 /** Binds an {@link Accessor} over `host[key]`; all mutations go through `Obj.update`. */
 export const bind = <S extends object = Record<string, unknown>>(host: Obj.Any, key: string): Accessor<S> => {
@@ -65,12 +103,12 @@ export const bind = <S extends object = Record<string, unknown>>(host: Obj.Any, 
 
   // Existence check via `Object.keys` — ECHO's reactive record proxy auto-vivifies missing keys on
   // direct access, so `record[id]` is not reliably `undefined` for absent ids.
-  const has = (record: Record<string, Entry>, id: string): boolean => Object.keys(record).includes(id);
+  const has = (record: Record<string, Entry>, id: EntityId): boolean => Object.keys(record).includes(id);
 
   return {
     ids: (predicate) => {
       const record = read();
-      const keys = Object.keys(record);
+      const keys = Object.keys(record) as EntityId[];
       return predicate ? keys.filter((id) => predicate(record[id], id)) : keys;
     },
     get: (id) => {
@@ -79,7 +117,7 @@ export const bind = <S extends object = Record<string, unknown>>(host: Obj.Any, 
     },
     entries: () => {
       const record = read();
-      return Object.keys(record).map((id) => [id, record[id]]);
+      return Object.keys(record).map((id) => [id as EntityId, record[id]]);
     },
     patch: (id, patch) =>
       write((record) => {

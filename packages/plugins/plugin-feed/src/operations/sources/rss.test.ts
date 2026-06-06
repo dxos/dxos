@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { fetchRss } from './fetch-rss';
+import { fetchRss } from './rss';
 // Real-world RSS feed (CDATA-wrapped summary + content:encoded HTML), loaded via Vite's `?raw` suffix.
 import FEED_XML from './testing/feed.xml?raw';
 

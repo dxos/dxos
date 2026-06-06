@@ -5,11 +5,10 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import * as Obj from './Obj';
 import * as TagIndex from './TagIndex';
-import * as Type from './Type';
 
 /** A minimal item standing in for an immutable feed object. */
 const Item = Schema.Struct({

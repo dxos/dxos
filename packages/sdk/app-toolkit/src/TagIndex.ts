@@ -4,10 +4,13 @@
 
 // @import-as-namespace
 
+import { Atom } from '@effect-atom/atom-react';
+import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 
-import { FormInputAnnotation } from './internal';
-import * as Obj from './Obj';
+import { Obj } from '@dxos/echo';
+import { FormInputAnnotation } from '@dxos/echo/internal';
+import { type EntityId } from '@dxos/keys';
 
 /**
  * An inverse tag index: an in-document `Record<tagId, objectId[]>` mapping a tag id to the ids of
@@ -28,13 +31,13 @@ export interface Accessor {
   /** All tag ids present in the index. */
   tagIds(): string[];
   /** Object ids carrying the given tag; `[]` when the tag is absent (filter the feed by tag). */
-  objects(tagId: string): readonly string[];
+  objects(tagId: string): readonly EntityId[];
   /** Inverse lookup: the tag ids applied to the given object id. */
-  tags(objectId: string): string[];
+  tags(objectId: EntityId): string[];
   /** Applies a tag to an object (creating the tag entry when absent); idempotent. */
-  setTag(tagId: string, objectId: string): void;
+  setTag(tagId: string, objectId: EntityId): void;
   /** Removes a tag from an object, pruning the tag entry when it empties. */
-  unsetTag(tagId: string, objectId: string): void;
+  unsetTag(tagId: string, objectId: EntityId): void;
 }
 
 /**
@@ -47,9 +50,44 @@ export const field = () =>
     Schema.optional,
   );
 
+type TagKey = readonly [Obj.Any, string, EntityId, string | undefined];
+
+const tagFamily = Atom.family((key: TagKey) =>
+  Atom.make<boolean>((get) => {
+    const [host, field, objectId, tagUri] = key;
+    const read = (): boolean => {
+      if (!tagUri) {
+        return false;
+      }
+      return bind(host, field).objects(tagUri).includes(objectId);
+    };
+    let previous = read();
+    const unsubscribe = Obj.subscribe(host, () => {
+      const next = read();
+      if (next !== previous) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  }),
+);
+
+/**
+ * Reactive boolean for whether `objectId` carries `tagUri` in a TagIndex field. Fires only when
+ * membership for this specific object+tag changes. Memoized via `Atom.family`.
+ */
+export const atom = (
+  host: Obj.Any,
+  field: string,
+  objectId: EntityId,
+  tagUri: string | undefined,
+): Atom.Atom<boolean> => tagFamily(Data.tuple(host, field, objectId, tagUri));
+
 /** Binds an {@link Accessor} over `host[key]`; all mutations go through `Obj.update`. */
 export const bind = (host: Obj.Any, key: string): Accessor => {
-  type Record_ = Record<string, string[]>;
+  type Record_ = Record<string, EntityId[]>;
 
   // The field is addressed by a runtime key, so the ECHO object is viewed as a keyed record — a
   // deliberate type-system boundary (dynamic field access — the field name is a parameter).

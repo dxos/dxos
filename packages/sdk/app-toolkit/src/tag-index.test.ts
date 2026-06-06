@@ -7,11 +7,12 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, DXN, Feed, Filter, Obj, Ref, TagIndex, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { EchoTestBuilder } from '../testing';
-import { createFeedServiceLayer } from './feed-service';
+import * as TagIndex from './TagIndex';
 
 /** A minimal immutable feed item. */
 const Item = Schema.Struct({
