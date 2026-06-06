@@ -60,7 +60,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     }
 
     return (
-      <ChatComponent.Root db={space?.db} chat={chat} feed={feedTarget} processor={processor} onEvent={onEvent}>
+      <ChatComponent.Root chat={chat} feed={feedTarget} processor={processor} onEvent={onEvent}>
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar className='bg-toolbar-surface'>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
