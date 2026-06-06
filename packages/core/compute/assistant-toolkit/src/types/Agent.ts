@@ -81,6 +81,12 @@ export const Agent = Schema.Struct({
   }),
 
   /**
+   * Input feed for subscriptions.
+   * @deprecated Subscriptions will write directly to the agent.
+   */
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
+
+  /**
    * Allow the agent to filter events.
    * Related events will be added to the input queue of the agent.
    * It is recommended to enable this.
@@ -90,12 +96,6 @@ export const Agent = Schema.Struct({
     title: 'Filter events',
     description: 'Allow the agent to filter events.',
   }),
-
-  /**
-   * Input feed for subscriptions.
-   * @deprecated Subscriptions will write directly to the agent.
-   */
-  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--drone--regular', hue: 'sky' }),
@@ -103,6 +103,17 @@ export const Agent = Schema.Struct({
 );
 
 export type Agent = Type.InstanceType<typeof Agent>;
+
+export type MakeProps = Omit<
+  Obj.MakeProps<typeof Agent>,
+  'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'
+> &
+  Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
+    instructions: string;
+    blueprints?: Ref.Ref<Blueprint.Blueprint>[];
+    contextObjects?: Ref.Ref<Obj.Any>[];
+  };
+
 /**
  * Creates a fully initialized Agent with chat, queue, and context bindings.
  *
@@ -111,12 +122,8 @@ export type Agent = Type.InstanceType<typeof Agent>;
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
-  props: Omit<Obj.MakeProps<typeof Agent>, 'instructions' | 'plan' | 'artifacts' | 'subscriptions' | 'chat'> &
-    Partial<Pick<Obj.MakeProps<typeof Agent>, 'artifacts' | 'subscriptions'>> & {
-      instructions: string;
-      blueprints?: Ref.Ref<Blueprint.Blueprint>[];
-      contextObjects?: Ref.Ref<Obj.Any>[];
-    },
+  props: MakeProps,
+  // TODO(burdon): Reconcile with props.blueprints.
   blueprint: Blueprint.Blueprint,
 ): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
@@ -142,6 +149,7 @@ export const makeInitialized = (
         objects: [Ref.make(agent), ...(props.contextObjects ?? [])],
       }),
     );
+
     const chat = yield* Database.add(
       Chat.make({
         [Obj.Parent]: agent,
@@ -157,7 +165,6 @@ export const makeInitialized = (
     );
 
     const inputFeed = yield* Database.add(Feed.make());
-
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
       agent.feed = Ref.make(inputFeed);
