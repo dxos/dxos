@@ -33,8 +33,8 @@ export type ChatPromptProps = ThemedClassName<
       outline?: boolean;
       settings?: boolean;
       expandable?: boolean;
-      chat?: Chat.Chat;
       db?: Database.Database;
+      chat?: Chat.Chat;
       processor: AiChatProcessor;
       event: Event<ChatEvent>;
       online?: boolean;
@@ -49,8 +49,8 @@ export type ChatPromptProps = ThemedClassName<
 export const ChatPrompt = ({
   classNames,
   outline,
-  chat,
   db,
+  chat,
   processor,
   event,
   online,

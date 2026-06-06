@@ -34,12 +34,12 @@ const header: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('items
 
 const icon: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-1 grid place-items-center', ...etc);
 
-const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
-  mx('col-start-2 overflow-hidden truncate font-medium', ...etc);
+const title: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 truncate font-medium', ...etc);
 
 const close: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-3', ...etc);
 
-const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('col-start-2 text-description', ...etc);
+const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+  mx('col-start-2 overflow-hidden text-description', ...etc);
 
 const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('flex gap-2 mbs-1', ...etc);
 
