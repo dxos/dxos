@@ -128,14 +128,29 @@ export const layer = (opts?: {
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
-      const sessionCache = new Map<string, Session>();
+      // The agent's model is bound to its process at spawn time, so the cache tracks the model
+      // each session was created with. Requesting a different model for the same feed tears down
+      // the old process and spawns a fresh one (see below).
+      const sessionCache = new Map<
+        string,
+        { model: ModelName | undefined; handle: ProcessManager.Handle<string, void>; session: Session }
+      >();
 
       return {
         getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
           Effect.gen(function* () {
+            const model = options?.model ?? opts?.model;
             const cached = sessionCache.get(feed.id);
             if (cached) {
-              return cached;
+              if (cached.model === model) {
+                return cached.session;
+              }
+
+              // Model changed (e.g. the user toggled online/offline): terminate the existing
+              // process so the conversation continues on a fresh process bound to the new model.
+              // Conversation history is preserved via the feed, which the new process replays.
+              yield* cached.handle.terminate();
+              sessionCache.delete(feed.id);
             }
 
             const target = Obj.getURI(feed);
@@ -143,11 +158,15 @@ export const layer = (opts?: {
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
-              model: options?.model ?? opts?.model,
+              model,
               getMcpServers: opts?.getMcpServers,
               enableToolBackgrounding: opts?.enableToolBackgrounding,
             });
-            const processes = yield* processManager.list({ target, key: executable.key });
+
+            // Reuse a still-running process for this feed only when there was no cached session
+            // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
+            // since the process key does not encode the model.
+            const processes = cached ? [] : yield* processManager.list({ target, key: executable.key });
 
             let handle: ProcessManager.Handle<string, void>;
             if (processes.length > 0) {
@@ -167,7 +186,7 @@ export const layer = (opts?: {
             }
 
             const session = makeSession(handle, feed);
-            sessionCache.set(feed.id, session);
+            sessionCache.set(feed.id, { model, handle, session });
             return session;
           }),
       };

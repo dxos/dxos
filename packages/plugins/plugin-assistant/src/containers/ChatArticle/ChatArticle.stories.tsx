@@ -52,9 +52,8 @@ const meta = {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
-
               const feed = space.db.add(Feed.make());
-              space.db.add(Chat.make({ name: 'Test chat', feed: Ref.make(feed) }));
+              space.db.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
