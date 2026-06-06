@@ -33,6 +33,10 @@ export const CreateChannel = Operation.make({
   input: Schema.Struct({
     spaceId: Key.SpaceId,
     name: Schema.optional(Schema.String),
+    /** Backend provider id; defaults to the local feed backend. */
+    kind: Schema.optional(Schema.String),
+    /** Per-backend create options passed to the provider's makeConfig. */
+    options: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   }),
   output: Schema.Struct({
     object: Type.getSchema(Channel.Channel),

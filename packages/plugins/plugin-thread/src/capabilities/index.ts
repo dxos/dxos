@@ -6,6 +6,7 @@ import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { OperationHandlerSet } from '@dxos/compute';
 
+export const ChannelBackendFeed = Capability.lazy('ChannelBackendFeed', () => import('./channel-backend-feed'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
