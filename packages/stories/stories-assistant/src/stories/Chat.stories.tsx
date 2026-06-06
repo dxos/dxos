@@ -7,7 +7,13 @@ import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { AgentPrompt, LinearBlueprint, PlanningBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import {
+  AgentPrompt,
+  DelegationBlueprint,
+  LinearBlueprint,
+  PlanningBlueprint,
+  WebSearchBlueprint,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
@@ -55,6 +61,7 @@ import {
   ScriptModule,
   TasksModule,
   TokenManagerModule,
+  TraceModule,
   TriggersModule,
 } from '../components';
 import {
@@ -138,6 +145,10 @@ const addSpellingMistakes = (text: string, n: number): string => {
   return words.join(' ');
 };
 
+//
+// Tests
+//
+
 export const Default: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
@@ -155,18 +166,37 @@ export const Default: Story = {
 
 export const WithPlanning: Story = {
   decorators: getDecorators({
+    config: config.remote,
+    createAgent: true,
     lazyPlugins: async () => {
       const { MarkdownPlugin } = await import('@dxos/plugin-markdown/plugin');
       return {
         plugins: [MarkdownPlugin()],
       };
     },
-    config: config.remote,
-    createAgent: true,
   }),
   args: {
     modules: [[ChatModule]],
     blueprints: [MarkdownBlueprint.key, PlanningBlueprint.key],
+  },
+};
+
+/**
+ * Two surfaces over a shared space: the conversational ChatModule (left) and the activity
+ * TraceModule (right). Prompt the supervisor to delegate work to a sub-agent; DelegateTask records
+ * it as an in-progress plan task and the sub-agent process surfaces as a nested lane in the trace.
+ */
+export const WithSubAgents: Story = {
+  decorators: getDecorators({
+    config: config.remote,
+    createAgent: {
+      name: 'Supervisor',
+      instructions: 'You delegate units of work to sub-agents using the available tools.',
+    },
+  }),
+  args: {
+    modules: [[ChatModule], [TraceModule]],
+    blueprints: [DelegationBlueprint.key],
   },
 };
 
@@ -186,7 +216,9 @@ export const WithWebSearch: Story = {
   },
 };
 
-// Test with prompt: Propose changes to my document based on the style guide.
+/**
+ * Test with prompt: Propose changes to my document based on the style guide.
+ */
 export const WithMarkdown: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {

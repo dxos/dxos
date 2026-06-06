@@ -4,8 +4,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { log } from '@dxos/log';
-
 import { type ChatPromptProps } from '#components';
 
 import { type AiServicePreset, AiServicePresets } from '../processor';
@@ -40,10 +38,6 @@ export const usePresets = (online: boolean): UsePresets => {
     },
     [presets],
   );
-
-  useEffect(() => {
-    log.info('update', { online, model: preset?.model });
-  }, [online, preset?.model]);
 
   return {
     preset: preset,

@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type FC, useCallback, useMemo } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, getActiveSpaceId, getSpacePath } from '@dxos/app-toolkit';
+import { StorybookCapabilities } from '@dxos/plugin-testing';
 import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -32,7 +33,17 @@ export type ModuleContainerProps = {
 export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showContext }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+  const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const [space] = useSpaces();
+
+  // Set the active workspace so surfaces relying on `useActiveSpace()` (e.g. the TracePanel
+  // deck-companion surface) resolve to this space. Done here, from the React tree, because the
+  // plugin-module activation context resolves a different AtomRegistry than the one the UI reads.
+  useEffect(() => {
+    if (space && getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
+      atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: getSpacePath(space.id) });
+    }
+  }, [space, layoutState, atomRegistry]);
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -105,7 +116,6 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
                   item={{ id: `module-${i}` }}
                   classNames='bg-base-surface rounded-xs border border-separator overflow-hidden'
                 >
-                  {/* TODO(burdon): Should these be surfaces? */}
                   <Component space={space} onEvent={handleEvent} />
                 </StackItem.Root>
               ))}

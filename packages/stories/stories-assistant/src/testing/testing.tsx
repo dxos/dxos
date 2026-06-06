@@ -19,7 +19,15 @@ import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-fram
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
+import {
+  Agent,
+  AgentBlueprint,
+  AgentHandlers,
+  DelegationBlueprint,
+  DelegationHandlers,
+  PlanningBlueprint,
+  PlanningHandlers,
+} from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
@@ -90,6 +98,9 @@ const buildPluginManagerOptions = ({
   createAgent,
   ...props
 }: Omit<DecoratorsProps, 'lazyPlugins'>): WithPluginManagerOptions => ({
+  // Fire SetupSettings so plugins (e.g. AssistantPlugin) contribute their settings capabilities,
+  // which surfaces such as the TracePanel read via `useAtomCapability(AssistantCapabilities.Settings)`.
+  setupEvents: [AppActivationEvents.SetupSettings],
   plugins: [
     ...corePlugins(),
     ClientPlugin({
@@ -276,11 +287,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activatesOn: AppActivationEvents.SetupArtifactDefinition,
     activate: () =>
       Effect.succeed([
-        // TODO(burdon): Needs attention!!!
+        // TODO(burdon): Clean up.
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(AppCapabilities.BlueprintDefinition, DelegationBlueprint),
         Capability.contributes(Capabilities.OperationHandler, MarkdownOperationHandlerSet),
         Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
         Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
         Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
@@ -294,7 +307,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       const space = client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
-      // Ensure workspace is set.
+      // Ensure workspace is set. NOTE: the active workspace that surfaces read via
+      // `useActiveSpace()` is set from the React tree in `ModuleContainer` (the plugin-module
+      // activation context resolves a different AtomRegistry than the UI).
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
       if (createAgent) {

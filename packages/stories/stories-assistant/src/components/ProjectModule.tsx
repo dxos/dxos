@@ -14,6 +14,7 @@ import { type ModuleProps } from './types';
 
 export const ProjectModule = ({ space }: ModuleProps) => {
   const projects = useQuery(space.db, Filter.type(Pipeline.Pipeline));
+
   return (
     <Surface.Surface type={AppSurface.Article} limit={1} data={{ subject: projects.at(-1), attendableId: 'story' }} />
   );
