@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { type ModuleProps } from './types';
 
@@ -15,5 +16,16 @@ import { type ModuleProps } from './types';
  * `ModuleContainer`).
  */
 export const TraceModule = (_props: ModuleProps) => {
-  return <Surface.Surface role='deck-companion--trace' data={{ subject: 'trace' }} />;
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Text>Trace</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <Surface.Surface role='deck-companion--trace' data={{ subject: 'trace' }} />{' '}
+      </Panel.Content>
+    </Panel.Root>
+  );
 };

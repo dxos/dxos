@@ -227,6 +227,40 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     }).pipe(Effect.scoped);
   }
 
+  runUntilSettled(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const deferred = yield* Deferred.make<void>();
+      const unsubscribe = this.#registry.subscribe(
+        this.statusAtom,
+        (state) => {
+          switch (state.state) {
+            case Process.State.SUCCEEDED:
+            case Process.State.TERMINATED:
+            case Process.State.IDLE:
+              return Effect.runSync(Deferred.succeed(deferred, undefined));
+            // The foreground turn is done once no handler is active and no further turn work is
+            // queued (no pending alarm); remaining hybernation is only background children, which we
+            // intentionally do not wait for.
+            case Process.State.HYBERNATING:
+              return this.#alarmTimer === null
+                ? Effect.runSync(Deferred.succeed(deferred, undefined))
+                : Effect.void;
+            case Process.State.FAILED:
+              const error = state.exit.pipe(
+                Option.flatMap(Exit.causeOption),
+                Option.map(Cause.pretty),
+                Option.getOrElse(() => 'Process failed with unknown error'),
+              );
+              return Effect.runSync(Deferred.die(deferred, error));
+          }
+        },
+        { immediate: true },
+      );
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+      yield* Deferred.await(deferred);
+    }).pipe(Effect.scoped);
+  }
+
   runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O> {
     const { inputs } = options;
     return Stream.unwrap(

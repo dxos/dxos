@@ -1,0 +1,168 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+
+import { AiContext } from '@dxos/assistant';
+import { Supervisor } from '@dxos/compute-runtime';
+import { Routine } from '@dxos/compute';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import { type Delegation, type SupervisorStrategy } from '@dxos/functions-runtime';
+import { Message } from '@dxos/types';
+import { trim } from '@dxos/util';
+
+import { DelegationBlueprint } from '../blueprints/delegation';
+import { AgentPrompt } from '../functions';
+import { Agent } from '../types';
+
+/**
+ * Resolves the agent whose chat is backed by the given conversation feed, if any. Plain (agentless)
+ * chats yield `undefined`, so the strategy is a no-op for them.
+ */
+const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
+    for (const agent of agents) {
+      if (!agent.chat) {
+        continue;
+      }
+      const matches = yield* Effect.gen(function* () {
+        const chat = yield* Database.load(agent.chat!);
+        const chatFeed = yield* Database.load(chat.feed);
+        return chatFeed.id === feed.id;
+      }).pipe(Effect.orElseSucceed(() => false));
+      if (matches) {
+        return agent;
+      }
+    }
+    return undefined;
+  });
+
+/**
+ * Renders a sub-agent result for inclusion in a notification message.
+ */
+const formatResult = (value: unknown): string =>
+  typeof value === 'string' ? value : JSON.stringify(value);
+
+/**
+ * Extracts artifact ids a sub-agent reported in its result (see the synthesized routine
+ * instructions). Tolerates the result being a string, or an object with `artifactIds`/`artifactId`.
+ */
+const extractArtifactIds = (value: unknown): string[] => {
+  if (typeof value !== 'object' || value === null) {
+    return [];
+  }
+  const record = value as { artifactIds?: unknown; artifactId?: unknown };
+  const ids = Array.isArray(record.artifactIds)
+    ? record.artifactIds
+    : typeof record.artifactId === 'string'
+      ? [record.artifactId]
+      : [];
+  return ids.filter((id): id is string => typeof id === 'string');
+};
+
+/**
+ * Supervisor behaviour for the conversational agent: after each turn, every in-progress plan task
+ * not already delegated is run by a sub-agent (a synthesized minimal `Routine` executed via
+ * `AgentPrompt`); on completion the task status is updated and a templated message is posted back to
+ * the conversation.
+ */
+export const makeSupervisorStrategy = (): SupervisorStrategy => ({
+  reconcile: (feed, activeIds) =>
+    Effect.gen(function* () {
+      const agent = yield* findAgentForFeed(feed);
+      if (!agent) {
+        return [];
+      }
+      const plan = yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined));
+      if (!plan) {
+        return [];
+      }
+
+      const pending = plan.tasks.filter((task) => task.status === 'in-progress' && !activeIds.has(task.id));
+      if (pending.length === 0) {
+        return [];
+      }
+
+      // Sub-agents inherit the supervisor's bound blueprints (so they have the same tools/
+      // capabilities), minus the delegation blueprint itself — otherwise a sub-agent could
+      // recursively delegate. Resolved from the conversation's AiContext bindings.
+      const inheritedBlueprints = yield* Effect.gen(function* () {
+        const runtime = yield* Effect.runtime<Feed.FeedService>();
+        const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+        return binder
+          .getBlueprints()
+          .filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
+      }).pipe(Effect.scoped);
+      const blueprints = inheritedBlueprints.map((blueprint) => Ref.make(blueprint));
+
+      const delegations: Delegation[] = [];
+      for (const task of pending) {
+        // Synthesize a minimal routine whose goal is the task; the sub-agent runs it via AgentPrompt
+        // with the inherited blueprints bound.
+        const routine = yield* Database.add(
+          Routine.make({
+            name: task.title,
+            instructions: trim`
+              Complete the following task and report the result concisely.
+
+              If you create any documents or artifacts, call completeJob with a JSON object of the
+              form { "summary": string, "artifactIds": string[] }, where artifactIds are the exact
+              ids returned by the tools that created them. Otherwise return a short summary string.
+
+              Task: ${task.title}
+            `,
+            blueprints,
+          }),
+        );
+
+        delegations.push({
+          id: task.id,
+          spawn: Supervisor.delegate(AgentPrompt, { prompt: Ref.make(routine), input: {} }),
+        });
+      }
+      return delegations;
+    }),
+
+  onComplete: (feed, id, exit) =>
+    Effect.gen(function* () {
+      const agent = yield* findAgentForFeed(feed);
+      const plan = agent ? yield* Database.load(agent.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+
+      let title = id;
+      if (plan) {
+        Obj.update(plan, (plan) => {
+          const task = plan.tasks.find((task) => task.id === id);
+          if (task) {
+            task.status = Exit.isSuccess(exit) ? 'done' : 'failed';
+            title = task.title;
+          }
+        });
+      }
+
+      // Fold any artifacts the sub-agent produced into the supervisor agent's context, so follow-up
+      // turns can reference them. The sub-agent runs in its own session but in the same space, so
+      // the artifacts resolve by id.
+      let addedCount = 0;
+      if (agent && Exit.isSuccess(exit)) {
+        for (const artifactId of extractArtifactIds(exit.value)) {
+          const added = yield* Agent.addArtifact(agent, { name: title, id: artifactId }).pipe(
+            Effect.as(true),
+            Effect.orElseSucceed(() => false),
+          );
+          if (added) {
+            addedCount++;
+          }
+        }
+      }
+
+      const text = Exit.isSuccess(exit)
+        ? `The sub-agent completed "${title}"${addedCount > 0 ? ` and added ${addedCount} artifact(s) to the workspace` : ''}: ${formatResult(exit.value)}`
+        : `The sub-agent failed to complete "${title}".`;
+
+      yield* Feed.append(feed, [Message.make({ sender: 'assistant', blocks: [{ _tag: 'text', text }] })]);
+    }),
+});

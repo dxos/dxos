@@ -22,6 +22,8 @@ import {
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 
+import { AutomationCapabilities } from '../types';
+
 //
 // Capability Module
 //
@@ -97,10 +99,17 @@ const OpaqueToolkitSpec = LayerSpec.make(
 const AgentServiceSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ProcessManager.ProcessManagerService],
+    requires: [ProcessManager.ProcessManagerService, Capability.Service],
     provides: [AgentService.AgentService],
   },
-  () => AgentService.layer(),
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        // Optional supervisor behaviour, contributed by a plugin that knows the agent/plan model.
+        const strategies = yield* Capability.getAll(AutomationCapabilities.AgentSupervisorStrategy);
+        return AgentService.layer({ supervisorStrategy: strategies[0] });
+      }),
+    ),
 );
 
 const OperationRegistrySpec = LayerSpec.make(

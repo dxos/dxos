@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { Agent } from '../../../types';
@@ -86,8 +86,9 @@ export const AddArtifact = Operation.make({
     name: Schema.String.annotations({
       description: 'The name of the artifact to add.',
     }),
-    artifact: Ref.Ref(Obj.Unknown).annotations({
-      description: 'The artifact to add. Do NOT guess or try to generate the ID.',
+    artifact: Schema.String.annotations({
+      description:
+        'The id of the artifact to add, exactly as returned by the tool that created it. Do NOT guess or generate the id.',
     }),
   }),
   output: Schema.Void,

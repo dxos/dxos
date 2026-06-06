@@ -10,6 +10,7 @@ import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useSelected } from '@dxos/react-ui-attention';
+import { Panel } from '@dxos/react-ui';
 
 import { type ModuleProps } from './types';
 
@@ -29,5 +30,11 @@ export const MessageModule = ({ space }: ModuleProps) => {
     [message, mailbox],
   );
 
-  return <Surface.Surface type={AppSurface.Section} data={data} limit={1} />;
+  return (
+    <Panel.Root>
+      <Panel.Content>
+        <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+      </Panel.Content>
+    </Panel.Root>
+  );
 };

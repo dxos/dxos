@@ -312,6 +312,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
       // activation context resolves a different AtomRegistry than the UI).
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
+      // Create agent.
       if (createAgent) {
         const agentOptions = typeof createAgent === 'object' ? createAgent : {};
         const agent = yield* Agent.makeInitialized(

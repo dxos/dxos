@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
@@ -63,6 +64,7 @@ import {
   TokenManagerModule,
   TraceModule,
   TriggersModule,
+  ContextModule,
 } from '../components';
 import {
   ModuleContainer,
@@ -189,14 +191,43 @@ export const WithPlanning: Story = {
 export const WithSubAgents: Story = {
   decorators: getDecorators({
     config: config.remote,
+    // TODO(burdon): Move instructions to blueprint?
     createAgent: {
       name: 'Supervisor',
       instructions: 'You delegate units of work to sub-agents using the available tools.',
     },
   }),
   args: {
-    modules: [[ChatModule], [TraceModule]],
-    blueprints: [DelegationBlueprint.key],
+    modules: [[ChatModule], [TraceModule, ContextModule]],
+    blueprints: [DelegationBlueprint.key, MarkdownBlueprint.key, PlanningBlueprint.key],
+  },
+};
+
+/**
+ * Interaction test for end-to-end delegation: enters a prompt that delegates a unit of work, then
+ * waits for the supervisor to run the sub-agent and fold its result back into the conversation.
+ *
+ * Live AI and timing-sensitive, so it is excluded from CI `test` runs (`tags: ['!test']`); run it
+ * manually in storybook (it needs a reachable EDGE AI service via `config.remote`).
+ */
+export const WithSubAgentsTest: Story = {
+  ...WithSubAgents,
+  tags: ['!test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
+    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
+    await expect(editor).toBeTruthy();
+
+    // Enter a prompt that delegates work to a sub-agent and submit it.
+    await userEvent.click(editor!);
+    await userEvent.type(editor!, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.keyboard('{Enter}');
+
+    // The supervisor runs the sub-agent in the background and posts the result back to the chat.
+    await canvas.findByText(/sub-agent completed/i, {}, { timeout: 180_000 });
   },
 };
 

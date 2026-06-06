@@ -23,9 +23,13 @@ import {
   WebSearchBlueprint,
   MemoryBlueprint,
   AutomationBlueprint,
+  DelegationBlueprint,
+  DelegationHandlers,
+  makeSupervisorStrategy,
 } from '@dxos/assistant-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Blueprint } from '@dxos/compute';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import { AssistantBlueprint } from '#blueprints';
 
@@ -44,12 +48,18 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(AppCapabilities.BlueprintDefinition, AutomationBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, BlueprintManagerBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, AgentWizardBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, DelegationBlueprint),
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentBlueprintHandlers),
     Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
     Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
+    Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
+
+    // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
+    // and fold their results back into the conversation (consumed by the AgentService LayerSpec).
+    Capability.contributes(AutomationCapabilities.AgentSupervisorStrategy, makeSupervisorStrategy()),
   ]),
 );
 

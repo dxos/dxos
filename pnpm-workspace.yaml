@@ -772,9 +772,9 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
-    '@effect-atom/atom>@effect/experimental': '0.60.0'
-    '@effect-atom/atom>@effect/platform': '0.96.1'
-    '@effect-atom/atom>@effect/rpc': '0.75.1'
+    '@effect-atom/atom>@effect/experimental': 0.60.0
+    '@effect-atom/atom>@effect/platform': 0.96.1
+    '@effect-atom/atom>@effect/rpc': 0.75.1
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'

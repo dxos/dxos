@@ -18,6 +18,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 
 import { AgentProcess } from './agent-process';
+import { type SupervisorStrategy } from './supervisor-strategy';
 
 export interface Service {
   /**
@@ -123,6 +124,12 @@ export const layer = (opts?: {
    * @default false
    */
   enableToolBackgrounding?: boolean;
+
+  /**
+   * When provided, sessions act as supervisors: the agent delegates outstanding work to sub-agent
+   * child processes and folds their results back into the conversation. Absent — a plain agent.
+   */
+  supervisorStrategy?: SupervisorStrategy;
 }): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
@@ -161,6 +168,7 @@ export const layer = (opts?: {
               model,
               getMcpServers: opts?.getMcpServers,
               enableToolBackgrounding: opts?.enableToolBackgrounding,
+              supervisorStrategy: opts?.supervisorStrategy,
             });
 
             // Reuse a still-running process for this feed only when there was no cached session
@@ -173,7 +181,7 @@ export const layer = (opts?: {
               handle = processes[0];
             } else {
               handle = yield* processManager.spawn(executable, {
-                name: 'agent',
+                name: 'Agent',
                 target,
                 environment: {
                   ...(spaceId !== undefined ? { space: spaceId } : {}),
@@ -196,7 +204,9 @@ export const layer = (opts?: {
 const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
-  waitForCompletion: () => process.runToCompletion(),
+  // Settle when the turn's reply is complete; do NOT block on background sub-agents (a supervisor
+  // delegates work that runs after the turn and reports back out of band).
+  waitForCompletion: () => process.runUntilSettled(),
   subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {

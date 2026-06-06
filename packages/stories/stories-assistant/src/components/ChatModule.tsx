@@ -41,26 +41,25 @@ export const ChatModule = ({ space }: ModuleProps) => {
 
   return (
     <Chat.Root chat={chat} feed={feedTarget} processor={processor}>
-      <Panel.Root className='dx-document'>
+      <Panel.Root>
         <Panel.Toolbar asChild>
-          <Chat.Toolbar />
+          <Chat.Toolbar attendableId={chat.id} alwaysActive>
+            <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content>
+                  <ExecutionGraphModule space={space} />
+                  <Popover.Arrow />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          </Chat.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Chat.Content>
-            <Toolbar.Root>
-              <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
-              <Popover.Root>
-                <Popover.Trigger asChild>
-                  <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content>
-                    <ExecutionGraphModule space={space} />
-                    <Popover.Arrow />
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
-            </Toolbar.Root>
             <Chat.Thread />
             {hasPlan && (
               <div className='flex flex-col items-center py-2 overflow-hidden'>

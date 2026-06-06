@@ -44,7 +44,6 @@ type RootProps = ThemedClassName<
 const Root = composable<HTMLDivElement, RootProps>(
   ({ children, open: openProp, defaultOpen = false, duration = 250, onChangeOpen, ...props }, forwardedRef) => {
     const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
-
     useEffect(() => {
       onChangeOpen?.(open);
     }, [open]);
@@ -53,7 +52,7 @@ const Root = composable<HTMLDivElement, RootProps>(
       <TogglePanelContext duration={duration} open={open} setOpen={setOpen}>
         <div
           {...composableProps(props, {
-            classNames: ['border border-separator rounded-sm overflow-hidden w-full'],
+            classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden',
           })}
           ref={forwardedRef}
         >
