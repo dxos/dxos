@@ -10,7 +10,6 @@ import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EntityId, PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -287,8 +286,7 @@ describe('CoreDatabase', () => {
       const tmpPath = createTmpPath();
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
-      const kv = createTestLevel(tmpPath);
-      const peer = await testBuilder.createPeer({ kv });
+      const peer = await testBuilder.createPeer({ storagePath: tmpPath });
       const db = await peer.createDatabase();
       const object = Obj.make(TestSchema.Expando, { title: 'first object' });
       db.add(object);
@@ -300,8 +298,7 @@ describe('CoreDatabase', () => {
       await peer.close();
 
       {
-        const kv = createTestLevel(tmpPath);
-        const testPeer = await testBuilder.createPeer({ kv });
+        const testPeer = await testBuilder.createPeer({ storagePath: tmpPath });
         const db = await testPeer.openDatabase(spaceKey, rootUrl);
         await db.query(Filter.id(objectId)).first();
         const object = db.getObjectById(objectId);
@@ -377,7 +374,7 @@ const createClientDbInSpaceWithObject = async (
 
   const testBuilder = new EchoTestBuilder();
   await openAndClose(testBuilder);
-  const peer1 = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+  const peer1 = await testBuilder.createPeer({ storagePath: tmpPath });
   const spaceKey = PublicKey.random();
   const db1 = await peer1.createDatabase(spaceKey);
   db1.add(object);
@@ -388,7 +385,7 @@ const createClientDbInSpaceWithObject = async (
   await db1.flush();
   await peer1.close();
 
-  const peer2 = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
+  const peer2 = await testBuilder.createPeer({ storagePath: tmpPath });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 

@@ -66,7 +66,6 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
         messages={messages}
         activity={activity}
         onSend={handleSend}
-        orientation='bottom'
         readOnly={readOnly}
         ref={forwardedRef}
       />

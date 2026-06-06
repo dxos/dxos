@@ -11,7 +11,7 @@ import {
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { type MetadataStore, hasInvitationExpired } from '@dxos/echo-pipeline';
+import { type IMetadataStore, hasInvitationExpired } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -47,7 +47,7 @@ export class InvitationsManager {
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
     private readonly _getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
-    private readonly _metadataStore: MetadataStore,
+    private readonly _metadataStore: IMetadataStore,
   ) {}
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })

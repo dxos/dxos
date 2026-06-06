@@ -10,8 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Routine } from '@dxos/compute';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -19,6 +18,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { MagazineBlueprint } from '#blueprints';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
@@ -76,11 +76,11 @@ const seedRegisterMagazine = ({ client }: { client: Client }) =>
       Subscription.makeSubscription({ name: 'The Register — AI + ML', url: REGISTER_FEED_URL, type: 'rss' }),
     );
 
-    // Magazine pointed at a curation Routine (parented to the magazine).
-    const routine = Routine.make({ name: 'Curation', instructions: 'Prefer stories relating to sovereign AI.' });
-    const magazine = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)], routine: Ref.make(routine) });
-    Obj.setParent(routine, magazine);
+    const magazine = Magazine.make({ name: 'The Register — AI', feeds: [Ref.make(feed)] });
     space.db.add(magazine);
+    // Curation resolves the base methodology blueprint from the registry; register it here since the
+    // automation plugin (which normally syncs BlueprintDefinition capabilities) isn't in this story.
+    client.graph.registry.add([MagazineBlueprint.make()]);
     yield* Effect.promise(() => space.db.flush());
   });
 
@@ -93,14 +93,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [
-            Feed.Feed,
-            Subscription.Subscription,
-            Subscription.Post,
-            Magazine.Magazine,
-            Routine.Routine,
-            Text.Text,
-          ],
+          types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,
         }),
         SpacePlugin({}),

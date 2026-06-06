@@ -1,0 +1,335 @@
+---
+id: org.dxos.plugin.comments
+name: CommentsPlugin
+version: 0.1.0
+---
+
+CommentsPlugin renders comment threads anchored to ECHO objects (primarily Markdown documents).
+It contributes the in-editor comment extension (`MarkdownCapabilities.ExtensionProvider`), a
+companion surface listing a subject's threads, and the per-thread AI agent that responds to
+user comments and may propose document edits. It is fully self-contained and depends on no other
+plugin: shared message/thread UI comes from `@dxos/react-ui-thread`, and the `Thread`/`Message`/
+`AnchoredTo` schema comes from `@dxos/types`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## Types
+
+```mdl
+type AgentMode
+  literals: auto | mention
+  desc: Per-thread agent firing policy.
+```
+
+```mdl
+type AgentConfig
+  desc: |
+    Per-thread agent configuration. Defined in @dxos/types and stored as an optional
+    field on Thread.Thread (`agent?`). Absent or disabled means no AI involvement.
+  fields:
+    enabled: Boolean
+    mode: AgentMode
+```
+
+```mdl
+type AgentIdentity
+  desc: |
+    Effect Context.Tag resolved at runtime (not stored on threads). The default layer
+    reads from plugin Settings; tests/stories provide static layers. Sole source of the
+    agent's display name and @mention token.
+  fields:
+    name: String
+    identityDid?: String
+    avatar?: String
+```
+
+```mdl
+type ViewState
+  desc: Per-subject view state for the comments companion.
+  fields:
+    showResolvedThreads: Boolean
+```
+
+```mdl
+type CommentsState
+  desc: |
+    In-memory comment UI state (atom). Keyed by subject/object URI.
+  fields:
+    toolbar: Map<String, Boolean>     # per-object: does the selection overlap a comment?
+    drafts: Map<String, AnchoredTo[]> # staged (unsent) threads per subject
+    current?: String                  # currently-selected thread URI
+```
+
+## Services
+
+```mdl
+service AgentRunner
+  desc: |
+    Capability that executes one agent turn for a thread + subject. Default implementation
+    performs one LanguageModel.generateText call with edit tools registered per turn
+    (editAnchoredRange, updateDocument). Stub implementations are used in storybook + tests.
+  methods:
+    run(input: { thread: Thread, subject: Obj.Any }) -> Effect<void>
+```
+
+```mdl
+service ExtensionProvider
+  desc: |
+    Implements MarkdownCapabilities.ExtensionProvider (defined by @dxos/plugin-markdown).
+    Returns CodeMirror extensions that sync anchored comment threads with editor ranges,
+    track selection/comment overlap into CommentsState.toolbar, and open the comments
+    companion when a comment marker is clicked.
+```
+
+## Operations
+
+```mdl
+op Create
+  key: org.dxos.plugin.comments.operation.create
+  desc: Create a (staged) comment thread anchored to a subject; seeds CommentsState.drafts.
+  input: { subject: Obj.Any, anchor?: String, name?: String }
+
+op AddMessage
+  key: org.dxos.plugin.comments.operation.add-message
+  desc: |
+    Append a user message to a thread (promoting a staged draft to active). Evaluates the
+    agent trigger gate and schedules RespondToThread when it passes.
+  input: { subject: Obj.Any, anchor: AnchoredTo, sender: Actor, text: String }
+
+op Delete
+  key: org.dxos.plugin.comments.operation.delete
+  desc: Delete a thread + its anchor. Undoable via Restore.
+  input: { anchor: AnchoredTo, subject: Obj.Any, thread?: Thread }
+  output: { thread?: Thread, anchor?: AnchoredTo }
+
+op Restore
+  key: org.dxos.plugin.comments.operation.restore
+  desc: Inverse of Delete.
+  input: { thread: Thread, anchor: AnchoredTo }
+
+op DeleteMessage
+  key: org.dxos.plugin.comments.operation.delete-message
+  desc: Delete a single message from a thread. Undoable via RestoreMessage.
+  input: { anchor: AnchoredTo, subject: Obj.Any, messageId: String }
+  output: { message?: Message, messageIndex?: Number }
+
+op RestoreMessage
+  key: org.dxos.plugin.comments.operation.restore-message
+  desc: Inverse of DeleteMessage.
+  input: { anchor: AnchoredTo, message: Message, messageIndex: Number }
+
+op ToggleResolved
+  key: org.dxos.plugin.comments.operation.toggle-resolved
+  desc: Toggle thread.status between active and resolved.
+  input: { thread: Thread }
+
+op Select
+  key: org.dxos.plugin.comments.operation.select
+  desc: Set the currently-selected thread (CommentsState.current); omit `current` to clear it.
+  input: { current?: String }
+
+op RespondToThread
+  key: org.dxos.plugin.comments.operation.respond-to-thread
+  desc: Run one agent turn against a thread. Scheduled by AddMessage when the gate passes.
+  input: { thread: Ref<Thread>, subject: Ref<Obj.Any> }
+
+op SetAgentConfig
+  key: org.dxos.plugin.comments.operation.set-agent-config
+  desc: Mutate thread.agent. Undefined config means off.
+  input: { thread: Ref<Thread>, config?: AgentConfig }
+
+op CreateProposals
+  key: org.dxos.plugin.comments.operation.create-proposals
+  desc: |
+    Materialise assistant-proposed document edits as NEW proposal-block comment
+    threads, one per diff, each anchored to the document at the diff's cursor
+    range (no pre-existing target thread is required).
+  input: { doc: Ref<Markdown.Document>, diffs: String[] }
+```
+
+## Components
+
+```mdl
+component CommentsArticle
+  desc: |
+    Companion surface (role 'article', linkedSegment 'comments') listing the comment threads
+    anchored to a host object (e.g. a Markdown.Document). Threads are discovered via an
+    AnchoredTo query and combined with in-memory drafts. Tabs switch unresolved / all.
+    Each thread renders via @dxos/react-ui-thread Thread.* with an injected Object tile.
+    Was CommentsCompanion in plugin-thread.
+  props:
+    attendableId?: String
+    subject: Obj.Any
+  layout: |
+    ┌───────────────────────────────┐
+    │ [ Unresolved ] [ All ]        │  ← Panel.Toolbar / Tabs
+    ├───────────────────────────────┤
+    │ Thread (anchor #1)            │
+    │   message · message · …       │
+    │   ▸ composer                  │
+    │ ───────────────────────────── │
+    │ Thread (anchor #2) …          │
+    └───────────────────────────────┘
+
+component AgentToggle
+  desc: |
+    Per-thread radio popover hung off the thread header. Three states off / mention / auto;
+    shows the resolved AgentIdentity.name as a read-only label. Routes through SetAgentConfig.
+  props:
+    value?: AgentConfig
+    agentName: String
+  emits:
+    change: { config?: AgentConfig }
+```
+
+## Features
+
+```mdl
+feat F-1: Comment threads on objects
+
+  req F-1.1: The plugin MUST contribute a CodeMirror extension via
+    MarkdownCapabilities.ExtensionProvider that creates anchored comment threads from
+    editor selections and keeps AnchoredTo cursors in sync with edits.
+
+  req F-1.2: The plugin MUST contribute a companion app-graph node (linkedSegment
+    'comments', icon 'ph--chat-text--regular') for any commentable object (an ECHO
+    object that is NOT a Channel and for which a CommentConfig is registered).
+
+  req F-1.3: The plugin MUST contribute a 'comment' toolbar action for commentable objects,
+    disabled when the selection is invalid or already overlaps an existing comment.
+
+  req F-1.4: CommentsArticle MUST list threads anchored to the subject, sorted by the
+    registered AnchorSort for the subject typename, with staged drafts appended.
+
+  req F-1.5: Resolving, deleting, and message-deleting MUST route through operations
+    (ToggleResolved / Delete / DeleteMessage), never direct schema writes from the view.
+    Delete and DeleteMessage MUST be undoable (Restore / RestoreMessage undo mappings).
+
+feat F-2: Per-thread agent configuration
+
+  req F-2.1: Thread schema's optional `agent: AgentConfig` field MUST gate AI involvement;
+    absent/disabled means none. No migration required for existing threads.
+
+  req F-2.2: The AgentIdentity Effect service MUST be the sole source of the agent's display
+    name. The plugin MUST contribute a default AgentIdentity at activation; hosts override by
+    contributing their own earlier in plugin order.
+
+feat F-3: Trigger gate
+
+  req F-3.1: AddMessage MUST evaluate the gate after appending the message and MUST schedule
+    (not invoke) RespondToThread when it passes.
+
+  req F-3.2: The gate MUST return true iff ALL hold:
+    - thread.agent?.enabled === true
+    - message.sender.role !== 'assistant'
+    - thread.status !== 'resolved'
+    - mode === 'auto' OR text contains '@' + agentName (case-insensitive)
+
+  req F-3.3: The gate MUST NOT fire on assistant messages (self-loop guard) and MUST NOT
+    retroactively respond to prior messages when enabled mid-conversation.
+
+feat F-4: Agent runner
+
+  req F-4.1: The runner MUST be a Capability so storybook/tests can swap a stub without
+    changing call sites.
+
+  req F-4.2: The default runner MUST execute one LLM turn, appending the response (or a
+    synthesized post-tool acknowledgement) as an assistant message on the same thread.
+
+  req F-4.3: When the subject is a Markdown.Document the runner MUST be given edit tools
+    (editAnchoredRange, updateDocument); otherwise it MUST only post a chat reply.
+
+  req F-4.4: Assistant messages MUST carry sender = { role: 'assistant', name, identityDid }
+    from the resolved AgentIdentity.
+
+  req F-4.5: Runner errors MUST be caught at the operation-handler boundary, logged, and emit
+    a `comments.agent.failed` observability event; the user's message MUST remain in the thread.
+
+feat F-5: Presentation via react-ui-thread
+
+  req F-5.1: Comment threads MUST render with @dxos/react-ui-thread Thread.* / Message.*;
+    the plugin MUST NOT re-implement message tiles or the composer.
+
+  req F-5.2: Object/reference message blocks MUST be rendered by an Object tile the plugin
+    injects into Thread.Root (Surface, type AppSurface.Card). react-ui-thread MUST stay free
+    of @dxos/app-framework.
+
+feat F-6: Independence
+
+  req F-6.1: plugin-comments MUST NOT import @dxos/plugin-thread (no plugin → plugin deps).
+
+  req F-6.2: Storybook sample data MUST use the real @dxos/types Message schema generated via
+    @dxos/schema/testing, not bespoke message-entity types.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Auto mode responds to every user message
+  given: A thread with agent = { enabled: true, mode: 'auto' }
+  when: A user appends a text message via AddMessage
+  then:
+    - RespondToThread is scheduled exactly once
+    - The runner's run is invoked with the thread and subject
+
+test T-2: Mention mode gates on @name
+  given: A thread with agent = { enabled: true, mode: 'mention' }, identity.name = 'kai'
+  when: A user posts "hello world" then "hey @Kai check this"
+  then:
+    - The first message does not schedule RespondToThread
+    - The second message schedules RespondToThread
+
+test T-3: Self-loop guard
+  given: A thread with agent = { enabled: true, mode: 'auto' }
+  when: A message with sender.role = 'assistant' is appended
+  then: RespondToThread is NOT scheduled
+
+test T-4: Resolved threads do not trigger
+  given: A thread with agent.enabled = true and status = 'resolved'
+  when: A user appends a message
+  then: RespondToThread is NOT scheduled
+
+test T-5: Disabled mid-conversation preserves history
+  given: A thread with prior assistant messages
+  when: SetAgentConfig is invoked with config = undefined
+  then:
+    - thread.agent becomes undefined
+    - thread.messages is unchanged
+
+test T-6: Delete/restore round-trips
+  given: A comment thread with one message
+  when: Delete is invoked, then its Restore undo mapping is applied
+  then: The thread and its anchor are restored unchanged
+
+test T-7: CommentsArticle lists anchored threads
+  given: A subject with two anchored threads (one resolved) and one staged draft
+  when: CommentsArticle renders in 'unresolved' mode
+  then: The resolved thread is hidden; the active thread and the draft are shown
+
+test T-8: Runner errors do not lose the user message
+  given: A thread with agent enabled and a runner stubbed to fail
+  when: A user appends a message
+  then:
+    - The user message persists in the thread
+    - A `comments.agent.failed` observability event is emitted
+    - No assistant message is appended
+```
+
+## Out of Scope (v1)
+
+- Renaming the donor plugin (plugin-thread → plugin-chat) — tracked separately.
+- Moving Message/Thread/AnchoredTo schema out of @dxos/types.
+- UI to rename the agent within Composer (lives in plugin settings).
+- Streaming / "thinking…" indicator, in-flight turn cancellation, multi-user trigger dedup,
+  token-budget caps — all unchanged from the current implementation.

@@ -7,32 +7,25 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard, SubscriptionsArticle } from '#containers';
+import { FeedArticle, FeedProperties, MagazineArticle, MagazineProperties, PostArticle, PostCard } from '#containers';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'subscriptionFeed',
-        filter: AppSurface.literal(AppSurface.Article, 'feeds-root'),
-        component: ({ data, role }) => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          return <SubscriptionsArticle role={role} space={space} attendableId={data.attendableId} />;
-        },
-      }),
-      Surface.create({
         id: 'magazineArticle',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
         component: ({ data, role }) => (
           <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      Surface.create({
+        id: 'magazineProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Magazine.Magazine),
+        component: ({ data }) => <MagazineProperties subject={data.subject} />,
       }),
       Surface.create({
         id: 'feedArticle',

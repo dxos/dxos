@@ -375,13 +375,13 @@ export class Client {
           : Runtime.Client.ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
-        // - FILE when a sqlitePath was supplied (Node/Bun CLI)
+        // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
         // - MEMORY otherwise
         const sqliteMode = clientCfg?.storage?.sqliteMode
           ? undefined
           : this._options.createOpfsWorker
             ? Runtime.Client.Storage.SqliteMode.OPFS
-            : this._options.sqlitePath
+            : this._options.sqlitePath || clientCfg?.storage?.dataRoot
               ? Runtime.Client.Storage.SqliteMode.FILE
               : Runtime.Client.Storage.SqliteMode.MEMORY;
         this._config = new Config(

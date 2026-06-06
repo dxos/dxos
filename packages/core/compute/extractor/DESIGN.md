@@ -144,7 +144,7 @@ const ExtractionTemplate = Schema.Struct({
   kinds: Schema.Array(Schema.String),
   sourceTypes: Schema.Array(Schema.String),
   prompt: Schema.String,
-  model: Schema.optional(Schema.String), // default '@anthropic/claude-haiku-4-5'.
+  model: Schema.optional(Schema.String), // default 'ai.claude.model.claude-haiku-4-5'.
   targets: Schema.Array(TargetSpec),
   tags: Schema.optional(Schema.Array(Schema.Struct({ label: Schema.String, hue: Schema.optional(Schema.String) }))),
 });

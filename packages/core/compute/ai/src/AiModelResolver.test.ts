@@ -28,7 +28,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
         const claudeSonnet = yield* AnthropicLanguageModel.model('claude-3-5-sonnet-20241022');
         return (name: ModelName) => {
           switch (name) {
-            case '@anthropic/claude-3-5-sonnet-20241022':
+            case 'ai.claude.model.claude-3-5-sonnet-20241022':
               return claudeSonnet;
             default:
               return Layer.fail(new AiModelNotAvailableError(name));
@@ -53,7 +53,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
 
         return (name: ModelName) => {
           switch (name) {
-            case '@google/gemma-3-27b':
+            case 'ai.google.model.gemma-3-27b':
               return gemma;
             default:
               return Layer.fail(new AiModelNotAvailableError(name));
@@ -74,7 +74,7 @@ describe('AiModelResolver', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model('ai.claude.model.claude-3-5-sonnet-20241022').pipe(Layer.provide(TestRouter))),
     ),
   );
 
@@ -85,7 +85,7 @@ describe('AiModelResolver', () => {
         const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model('@google/gemma-3-27b').pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model('ai.google.model.gemma-3-27b').pipe(Layer.provide(TestRouter))),
     ),
   );
 });
