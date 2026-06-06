@@ -23,7 +23,7 @@ export const Task = Schema.Struct({
     description: 'Task title and description.',
   }),
 
-  status: Schema.Literal('todo', 'in-progress', 'done'),
+  status: Schema.Literal('todo', 'in-progress', 'done', 'failed'),
 
   /**
    * Parent task ID.
