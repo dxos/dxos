@@ -19,7 +19,11 @@ export const ProjectModule = ({ space }: ModuleProps) => {
   return (
     <Panel.Root>
       <Panel.Content>
-        <Surface.Surface type={AppSurface.Article} limit={1} data={{ subject: projects.at(-1), attendableId: 'story' }} />
+        <Surface.Surface
+          type={AppSurface.Article}
+          limit={1}
+          data={{ subject: projects.at(-1), attendableId: 'story' }}
+        />
       </Panel.Content>
     </Panel.Root>
   );

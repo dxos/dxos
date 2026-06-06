@@ -51,7 +51,17 @@ const RunWorkHandlers = OperationHandlerSet.make(
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: [AgentBlueprintHandlers, DelegationHandlers, RunWorkHandlers],
-  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Blueprint.Blueprint, Feed.Feed, Text.Text, Message.Message, AiContext.Binding],
+  types: [
+    Agent.Agent,
+    Plan.Plan,
+    Chat.Chat,
+    Chat.CompanionTo,
+    Blueprint.Blueprint,
+    Feed.Feed,
+    Text.Text,
+    Message.Message,
+    AiContext.Binding,
+  ],
   blueprints: [DelegationBlueprint.make()],
   disableLlmMemoization: true,
 });
@@ -86,7 +96,9 @@ describe.skipIf(!process.env.ALLOW_LLM_GENERATION)('supervisor (live agent turn)
 
         const manager = yield* ProcessManager.Service;
         const handle = yield* manager.spawn(supervisor);
-        yield* handle.submitInput('Delegate a task titled "Research widgets" to a sub-agent to work on in the background.');
+        yield* handle.submitInput(
+          'Delegate a task titled "Research widgets" to a sub-agent to work on in the background.',
+        );
 
         yield* Effect.promise(() => expect.poll(() => completed.length, { timeout: 20_000 }).toBeGreaterThanOrEqual(1));
 

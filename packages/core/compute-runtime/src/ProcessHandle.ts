@@ -242,9 +242,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
             // queued (no pending alarm); remaining hybernation is only background children, which we
             // intentionally do not wait for.
             case Process.State.HYBERNATING:
-              return this.#alarmTimer === null
-                ? Effect.runSync(Deferred.succeed(deferred, undefined))
-                : Effect.void;
+              return this.#alarmTimer === null ? Effect.runSync(Deferred.succeed(deferred, undefined)) : Effect.void;
             case Process.State.FAILED:
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),

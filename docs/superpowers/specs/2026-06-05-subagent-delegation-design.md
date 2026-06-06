@@ -148,14 +148,14 @@ Verified end-to-end in the `stories-assistant` `WithSubAgents` story.
 - **Blueprint naming.** The `delegation` blueprint (which exposes the `DelegateTask` tool) could be
   renamed to `supervisor` to match the runtime concept — enabling the blueprint is what makes an
   agent a supervisor that can delegate.
-- **Sub-agent lifecycle: ephemeral vs. pooled.** Today each delegated task spawns a *fresh*
+- **Sub-agent lifecycle: ephemeral vs. pooled.** Today each delegated task spawns a _fresh_
   sub-agent from a synthesized minimal `Routine` — ephemeral, isolated, no shared context. The
   alternative is to maintain a **set of long-lived sub-agents** with distinct roles, contexts, and
   capabilities (blueprints) that the supervisor routes work to. Trade-offs:
-  - *Ephemeral (current):* simple, clean isolation per task, no cross-task state leakage; but no
+  - _Ephemeral (current):_ simple, clean isolation per task, no cross-task state leakage; but no
     warm context, repeated setup, and no specialization. Sub-agents now **inherit the supervisor's
     blueprints** (minus the delegation blueprint), so they share its tools/capabilities.
-  - *Pooled/role-based:* specialization (e.g. "researcher", "coder"), warm/shared context, reuse
+  - _Pooled/role-based:_ specialization (e.g. "researcher", "coder"), warm/shared context, reuse
     across tasks; but lifecycle management, routing logic, and context-bleed concerns.
   - Likely resolution: keep ephemeral as the default; introduce optional named sub-agent roles
     (each a `Routine`/blueprint set) that the supervisor can target when a task names a role.

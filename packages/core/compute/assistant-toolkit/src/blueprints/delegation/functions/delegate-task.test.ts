@@ -31,7 +31,10 @@ describe('DelegateTask', () => {
     'adds an in-progress task to the agent plan for delegated work',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: 'Test.' }, DelegationBlueprint.make());
+        const agent = yield* Agent.makeInitialized(
+          { name: 'Supervisor', instructions: 'Test.' },
+          DelegationBlueprint.make(),
+        );
         yield* Database.flush();
 
         const chatFeed = agent.chat?.target?.feed?.target;

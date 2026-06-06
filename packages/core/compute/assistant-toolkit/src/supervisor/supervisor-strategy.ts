@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { AiContext } from '@dxos/assistant';
-import { Supervisor } from '@dxos/compute-runtime';
 import { Routine } from '@dxos/compute';
+import { Supervisor } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type Delegation, type SupervisorStrategy } from '@dxos/functions-runtime';
@@ -44,8 +44,7 @@ const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefine
 /**
  * Renders a sub-agent result for inclusion in a notification message.
  */
-const formatResult = (value: unknown): string =>
-  typeof value === 'string' ? value : JSON.stringify(value);
+const formatResult = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
 
 /**
  * Extracts artifact ids a sub-agent reported in its result (see the synthesized routine
@@ -93,9 +92,7 @@ export const makeSupervisorStrategy = (): SupervisorStrategy => ({
       const inheritedBlueprints = yield* Effect.gen(function* () {
         const runtime = yield* Effect.runtime<Feed.FeedService>();
         const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-        return binder
-          .getBlueprints()
-          .filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
+        return binder.getBlueprints().filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
       }).pipe(Effect.scoped);
       const blueprints = inheritedBlueprints.map((blueprint) => Ref.make(blueprint));
 

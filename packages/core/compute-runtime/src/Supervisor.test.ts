@@ -100,74 +100,59 @@ const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
 describe('Supervisor', () => {
   it.effect(
     'delegates a child and emits the collected result on child exit',
-    Effect.fn(
-      function* ({ expect }) {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(makeSupervisor());
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSupervisor());
 
-        const outputs: number[] = [];
-        yield* handle
-          .subscribeOutputs()
-          .pipe(
-            Stream.runForEach((output) => Effect.sync(() => outputs.push(output))),
-            Effect.fork,
-          );
+      const outputs: number[] = [];
+      yield* handle.subscribeOutputs().pipe(
+        Stream.runForEach((output) => Effect.sync(() => outputs.push(output))),
+        Effect.fork,
+      );
 
-        yield* handle.submitInput(5);
+      yield* handle.submitInput(5);
 
-        yield* Effect.promise(() => expect.poll(() => outputs).toEqual([50]));
-      },
-      Effect.provide(TestLayer),
-    ),
+      yield* Effect.promise(() => expect.poll(() => outputs).toEqual([50]));
+    }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'surfaces a failed child as a failed Exit without crashing the supervisor',
-    Effect.fn(
-      function* ({ expect }) {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(makeSupervisor());
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSupervisor());
 
-        const outputs: number[] = [];
-        yield* handle
-          .subscribeOutputs()
-          .pipe(
-            Stream.runForEach((output) => Effect.sync(() => outputs.push(output))),
-            Effect.fork,
-          );
+      const outputs: number[] = [];
+      yield* handle.subscribeOutputs().pipe(
+        Stream.runForEach((output) => Effect.sync(() => outputs.push(output))),
+        Effect.fork,
+      );
 
-        yield* handle.submitInput(0);
+      yield* handle.submitInput(0);
 
-        yield* Effect.promise(() => expect.poll(() => outputs).toEqual([FAILURE_SENTINEL]));
-        // Supervisor stays alive (does not fail) and keeps serving inputs.
-        expect(handle.status.state).not.toEqual(Process.State.FAILED);
-      },
-      Effect.provide(TestLayer),
-    ),
+      yield* Effect.promise(() => expect.poll(() => outputs).toEqual([FAILURE_SENTINEL]));
+      // Supervisor stays alive (does not fail) and keeps serving inputs.
+      expect(handle.status.state).not.toEqual(Process.State.FAILED);
+    }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'handles multiple concurrent delegations, emitting one result per child',
-    Effect.fn(
-      function* ({ expect }) {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(makeSupervisor());
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeSupervisor());
 
-        const outputs: number[] = [];
-        yield* handle
-          .subscribeOutputs()
-          .pipe(
-            Stream.runForEach((output) => Effect.sync(() => outputs.push(output))),
-            Effect.fork,
-          );
+      const outputs: number[] = [];
+      yield* handle.subscribeOutputs().pipe(
+        Stream.runForEach((output) => Effect.sync(() => outputs.push(output))),
+        Effect.fork,
+      );
 
-        // Two inputs in flight before either child has reported back.
-        yield* handle.submitInput(5);
-        yield* handle.submitInput(7);
+      // Two inputs in flight before either child has reported back.
+      yield* handle.submitInput(5);
+      yield* handle.submitInput(7);
 
-        yield* Effect.promise(() => expect.poll(() => [...outputs].sort((a, b) => a - b)).toEqual([50, 70]));
-      },
-      Effect.provide(TestLayer),
-    ),
+      yield* Effect.promise(() => expect.poll(() => [...outputs].sort((a, b) => a - b)).toEqual([50, 70]));
+    }, Effect.provide(TestLayer)),
   );
 });

@@ -45,7 +45,10 @@ export interface MakeSupervisorOptions<ChildInput, ChildOutput> {
    * Invoked when a delegated task completes (after the task status has been updated). Use to notify
    * the user with the result. Errors must be handled by the caller.
    */
-  readonly onComplete: (taskId: Plan.TaskId, exit: Exit.Exit<ChildOutput>) => Effect.Effect<void, never, SupervisorServices>;
+  readonly onComplete: (
+    taskId: Plan.TaskId,
+    exit: Exit.Exit<ChildOutput>,
+  ) => Effect.Effect<void, never, SupervisorServices>;
 }
 
 /**

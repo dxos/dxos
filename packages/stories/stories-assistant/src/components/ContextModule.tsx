@@ -93,10 +93,11 @@ type ContextItem =
   | { kind: 'artifact'; id: string; name: string; data: Ref.Ref<Obj.Unknown> };
 
 const Tile = ({ data }: { data: ContextItem }) => {
-  const artifactRef = data.kind === 'artifact' ? data.data : undefined;
-  useObject(artifactRef);
-
-  const subject = data.kind === 'object' ? data.object : artifactRef?.target;
+  // For an artifact, dereference its ref (async-loads + subscribes and RETURNS the resolved
+  // snapshot); reading `ref.target` directly is a synchronous working-set read that stays undefined
+  // until loaded. For an object we already hold the live instance.
+  const [resolved] = useObject(data.kind === 'artifact' ? data.data : data.object);
+  const subject = data.kind === 'object' ? data.object : resolved;
   if (!subject) {
     return (
       <Card.Root>
