@@ -26,6 +26,13 @@ export const Task = Schema.Struct({
   status: Schema.Literal('todo', 'in-progress', 'done', 'failed'),
 
   /**
+   * Whether this task was handed to a sub-agent via the delegation tool. Only delegated tasks are
+   * picked up by the supervisor's reconcile loop, so a task created via ordinary planning
+   * (`update-tasks`) is not double-spawned as a sub-agent.
+   */
+  delegated: Schema.optional(Schema.Boolean),
+
+  /**
    * Parent task ID.
    */
   parent: Schema.optional(TaskId).annotations({
@@ -69,7 +76,7 @@ export const generateTaskId = (plan: Plan): TaskId => {
  */
 export const addTasks = (
   plan: Obj.Mutable<Plan>,
-  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat'>>)[],
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status' | 'parent' | 'chat' | 'delegated'>>)[],
 ) => {
   for (const task of tasks) {
     const taskId = generateTaskId(plan);

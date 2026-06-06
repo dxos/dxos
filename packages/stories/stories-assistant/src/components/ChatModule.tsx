@@ -35,6 +35,11 @@ export const ChatModule = ({ space }: ModuleProps) => {
 
   const feedTarget = chat?.feed?.target;
 
+  // Honor the view mode selected in ChatOptions (persisted on `chat.view`). Subscribe via
+  // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
+  const [viewValue] = useObject(chat, 'view');
+  const view = Assistant.ChatViews.find((value) => value === viewValue);
+
   if (!chat || !processor) {
     return null;
   }
@@ -60,11 +65,9 @@ export const ChatModule = ({ space }: ModuleProps) => {
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Chat.Content>
-            <Chat.Thread />
+            <Chat.Thread viewType={view} />
             {hasPlan && (
-              <div className='flex flex-col items-center py-2 overflow-hidden'>
-                <Chat.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
-              </div>
+              <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
             )}
             <Chat.Prompt
               {...chatProps}

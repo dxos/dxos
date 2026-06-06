@@ -39,7 +39,9 @@ export default DelegateTask.pipe(
       const agent = yield* Agent.getFromChatContext;
       const plan = yield* Database.load(agent.plan);
       Obj.update(plan, (plan) => {
-        Plan.addTasks(plan, [{ title, status: 'in-progress' }]);
+        // Mark as delegated so the supervisor's reconcile loop picks it up (and ordinary
+        // `update-tasks` tasks are NOT spawned as sub-agents).
+        Plan.addTasks(plan, [{ title, status: 'in-progress', delegated: true }]);
       });
       return trim`
         Delegated work as an in-progress task. Current plan:

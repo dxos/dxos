@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { CollectionModel } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
 
 import { Markdown, MarkdownOperation } from '../types';
 
@@ -20,20 +19,16 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = Markdown
       // flow) it builds a detached collection that never triggers the transitive ref-save, leaving
       // the object unattached — so a returned `echo:/<id>` never resolves.
       const object = yield* Database.add(Markdown.make({ name, content }));
-      yield* CollectionModel.add({ object });
+
+      // Best-effort: add to the space root collection for navigation. Do NOT fail document creation
+      // if this races — e.g. concurrent sub-agents both materializing the root collection can throw
+      // EntityNotFoundError while loading a not-yet-flushed collection ref. The document itself is
+      // already persisted above, so swallow the error and still return its id.
+      yield* CollectionModel.add({ object }).pipe(Effect.catchAll(() => Effect.void));
+
       // Persist before returning the id so other tools/processes (e.g. an agent's add-artifact, run
       // as a separate invocation) can resolve the freshly-created document.
       yield* Database.flush();
-
-      // DIAGNOSTIC: confirm the object is now resolvable in its own db, with a qualified URI.
-      const { db } = yield* Database.Service;
-      const roundtrip = db.getObjectById(object.id);
-      log.info('markdown.create', {
-        uri: Obj.getURI(object),
-        objectId: object.id,
-        spaceId: db.spaceId,
-        resolvableInOwnDb: !!roundtrip,
-      });
 
       return {
         id: Obj.getURI(object),

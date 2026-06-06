@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
@@ -13,7 +14,13 @@ import { GetContext } from './definitions';
 export default GetContext.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const agent = yield* Agent.getFromChatContext;
+      // This runs unconditionally during system-prompt formatting. A delegated sub-agent has no
+      // agent bound to its context, so degrade gracefully rather than failing the whole turn.
+      const agentOption = yield* Effect.option(Agent.getFromChatContext);
+      if (Option.isNone(agentOption)) {
+        return { id: '', name: '', instructions: 'No agent context.', plan: 'No plan found.', artifacts: [] };
+      }
+      const agent = agentOption.value;
 
       return {
         id: agent.id,

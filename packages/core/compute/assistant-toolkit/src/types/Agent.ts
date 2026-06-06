@@ -16,7 +16,6 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
 import * as Chat from './Chat';
@@ -246,11 +245,14 @@ export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> 
  * Accepts whatever reference a tool returned — a bare entity id (e.g. `01J…`) or a full ECHO URI
  * (`echo:/…`, `dxn:echo:…`). LLMs frequently strip a returned URI down to the bare id, which is not
  * a resolvable URI on its own; resolving by entity id within the space tolerates both forms.
+ *
+ * Returns the fully-qualified {@link Ref.Ref} that was stored (also usable for an inline message
+ * reference block).
  */
 export const addArtifact = (
   agent: Agent,
   { name, id }: { name: string; id: string },
-): Effect.Effect<void, Error, Database.Service> =>
+): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
   Effect.gen(function* () {
     // Untyped, LLM-provided reference: normalize to the entity id, falling back to the raw value
     // (a bare id is already an entity id) — a genuine external-data boundary.
@@ -264,20 +266,9 @@ export const addArtifact = (
     const { db } = yield* Database.Service;
     const ref = db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId }));
 
-    // DIAGNOSTIC: capture the id the tool received, the entity id we parsed from it, the db/space
-    // this runs against, and whether the referenced object already resolves in THIS db handle.
-    // Compare `spaceId` here against `markdown.create`'s `spaceId` and the UI's `space.id`.
-    const resolved = db.getObjectById(entityId);
-    log.info('Agent.addArtifact', {
-      receivedId: id,
-      entityId,
-      spaceId: db.spaceId,
-      refUri: ref.uri,
-      resolvableInOwnDb: !!resolved,
-    });
-
     Obj.update(agent, (agent) => {
       agent.artifacts.push({ name, data: ref });
     });
     yield* Database.flush();
+    return ref;
   });

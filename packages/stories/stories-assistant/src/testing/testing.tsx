@@ -196,7 +196,10 @@ const PluginManagerHost = ({
     };
   }, [manager, contextId, children]);
 
-  const App = useApp({ pluginManager: manager });
+  // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
+  // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy
+  // `withPluginManager` path forwards them automatically).
+  const App = useApp({ pluginManager: manager, setupEvents: options.setupEvents });
   return <App />;
 };
 

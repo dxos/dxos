@@ -175,3 +175,16 @@ Verified end-to-end in the `stories-assistant` `WithSubAgents` story.
     the unit that carries the capability subset.
 - **Notify composition.** Currently a templated append; consider LLM-composed summaries (the design
   always anticipated "templated now, LLM-composed later").
+- **Planning as the home for delegation.** Should delegation be a _feature of planning_ rather than
+  a separate blueprint? I.e. the supervisor keeps the planning blueprint, and planning itself
+  issues and tracks delegation orders (a task can be marked "delegate" and the supervisor reconciles
+  it). Today delegation is its own blueprint/tool and only `delegated`-marked tasks are reconciled;
+  unifying them would remove the planning-vs-delegation overlap that currently lets the LLM create a
+  redundant non-delegated planning task.
+- **Delegating to other users (task/workflow management).** Delegation today targets ephemeral
+  sub-agent processes. The broader model is human task/workflow management — assign a task to another
+  _user_ (or a mix of agents and humans), track status, and fold results back the same way.
+- **Trace graph should branch per sub-agent.** The execution-graph/trace currently renders the
+  sub-agent's activity inline rather than as its own branch off the supervisor. A delegated
+  sub-agent runs as a linked child process and should appear as a distinct branch in the trace so
+  its lifecycle (Run Routine → tool calls → completion) is visually attributable to that delegation.
