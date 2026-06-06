@@ -79,10 +79,7 @@ export const addTasks = (
 };
 
 interface MakePlanProps {
-  tasks: {
-    title: string;
-    status?: 'todo' | 'in-progress' | 'done';
-  }[];
+  tasks: (Pick<Task, 'title'> & Partial<Pick<Task, 'status'>>)[];
 }
 
 export const makePlan = (props: MakePlanProps): Plan => {
