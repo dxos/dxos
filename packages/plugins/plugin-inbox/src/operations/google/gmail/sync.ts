@@ -13,10 +13,11 @@ import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
+import { Tagging } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, Tagging } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';

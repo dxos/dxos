@@ -9,8 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { Card, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
+import { composable, Card, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type ObjectTileComponent, Thread } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -30,12 +29,8 @@ export type ChatProps = ThemedClassName<{
   messages: readonly Message.Message[];
   /** Activity indicator (e.g. processing) shown beneath the textbox. */
   activity?: boolean;
-  /**
-   * Called with the user's textbox content when they press send.
-   * Returning `true` signals the message was accepted; the textbox is then cleared.
-   */
-  onSend: (text: string) => boolean;
-  autoFocusTextbox?: boolean;
+  /** Autofocus textbox */
+  autoFocus?: boolean;
   /** Marks the thread as the current/attended one. */
   current?: boolean | string;
   /**
@@ -45,7 +40,64 @@ export type ChatProps = ThemedClassName<{
    * because there is no local-write path back to the source.
    */
   readOnly?: boolean;
+  /**
+   * Called with the user's textbox content when they press send.
+   * Returning `true` signals the message was accepted; the textbox is then cleared.
+   */
+  onSend: (text: string) => boolean;
 }>;
+
+/**
+ * Pure chat UI: message list + composer textbox + activity indicator, built on
+ * the `@dxos/react-ui-thread` primitives. Does not load data or invoke
+ * operations — the caller passes messages and an `onSend` callback. Used by
+ * `ChannelArticle` and `ThreadArticle`.
+ */
+export const Chat = composable<HTMLDivElement, ChatProps>(
+  ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+
+    const components = useMemo(() => ({ Object: ObjectTile }), []);
+
+    const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
+
+    const getMetadata = useCallback(
+      (message: Message.Message) => {
+        // TODO(burdon): Factor out.
+        const sender = members.find(
+          (member) =>
+            (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
+            (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
+        );
+
+        // Pass `message.sender` as the fallback so externally-synced messages
+        // (Slack, etc.) display the source-side sender name instead of "Anonymous"
+        // when no DXOS identity matches.
+        return getMessageMetadata(message.id, sender?.identity, message.sender);
+      },
+      [members],
+    );
+
+    return (
+      <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
+        <Thread.Content id={id} current={current} classNames='dx-container' ref={forwardedRef}>
+          <Thread.Messages messages={messages} />
+          {!readOnly && (
+            <>
+              <Thread.Textbox
+                {...textboxMetadata}
+                autoFocus={autoFocus}
+                placeholder={t('message.placeholder')}
+                onSend={onSend}
+              />
+              <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
+            </>
+          )}
+        </Thread.Content>
+      </Thread.Root>
+    );
+  },
+);
 
 /**
  * Object/reference message-block tile, injected into `Thread.Root` so that
@@ -65,53 +117,3 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
     </Card.Root>
   );
 };
-
-/**
- * Pure chat UI: message list + composer textbox + activity indicator, built on
- * the `@dxos/react-ui-thread` primitives. Does not load data or invoke
- * operations — the caller passes messages and an `onSend` callback. Used by
- * `ChannelChat`, `ChannelArticle`, and `ThreadContainer`.
- */
-export const Chat = composable<HTMLDivElement, ChatProps>(
-  ({ id, identity, members, messages, activity, onSend, autoFocusTextbox, current, readOnly }, forwardedRef) => {
-    const { t } = useTranslation(meta.id);
-
-    const components = useMemo(() => ({ Object: ObjectTile }), []);
-
-    const getMetadata = useCallback(
-      (message: Message.Message) => {
-        const senderIdentity = members.find(
-          (member) =>
-            (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
-            (message.sender.identityKey && PublicKey.equals(member.identity.identityKey, message.sender.identityKey)),
-        )?.identity;
-        // Pass `message.sender` as the fallback so externally-synced messages
-        // (Slack, etc.) display the source-side sender name instead of "Anonymous"
-        // when no DXOS identity matches.
-        return getMessageMetadata(message.id, senderIdentity, message.sender);
-      },
-      [members],
-    );
-
-    const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
-
-    return (
-      <Thread.Root getMetadata={getMetadata} components={components} identityDid={identity?.did} editable={false}>
-        <Thread.Content id={id} current={current} classNames='dx-container' ref={forwardedRef}>
-          <Thread.Messages messages={messages} />
-          {!readOnly && (
-            <>
-              <Thread.Textbox
-                {...textboxMetadata}
-                autoFocus={autoFocusTextbox}
-                placeholder={t('message.placeholder')}
-                onSend={onSend}
-              />
-              <Thread.Status activity={activity}>{t('activity.message')}</Thread.Status>
-            </>
-          )}
-        </Thread.Content>
-      </Thread.Root>
-    );
-  },
-);

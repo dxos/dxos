@@ -13,8 +13,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { PostContent } from '../components';
+import { type ExtractedArticle, extractArticle } from '../operations/extraction';
 import { Subscription } from '../types';
-import { type ExtractedArticle, extractArticle } from '../util';
 
 type State =
   | { status: 'idle' }

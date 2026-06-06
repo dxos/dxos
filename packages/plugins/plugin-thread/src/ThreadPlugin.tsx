@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ThreadOperation } from '#types';
@@ -29,6 +29,13 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
+  // Default local-feed channel backend. Other plugins contribute additional
+  // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
+  Plugin.addModule({
+    id: 'channel-backend-feed',
+    activatesOn: ActivationEvents.Startup,
+    activate: ChannelBackendFeed,
+  }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,

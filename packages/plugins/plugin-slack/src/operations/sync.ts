@@ -351,7 +351,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                       return { added: 0 };
                     }
 
-                    const feed = yield* Database.load(targetChannel.feed);
+                    yield* Database.load(targetChannel.backend.config);
+                    const feed = Channel.getFeed(targetChannel);
+                    invariant(feed, 'Channel is not feed-backed');
                     yield* Feed.append(feed, mapped);
 
                     const newestTs = sorted[sorted.length - 1].ts;
