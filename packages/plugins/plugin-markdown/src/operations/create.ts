@@ -20,11 +20,11 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = Markdown
       // the object unattached — so a returned `echo:/<id>` never resolves.
       const object = yield* Database.add(Markdown.make({ name, content }));
 
-      // Best-effort: add to the space root collection for navigation. Do NOT fail document creation
-      // if this races — e.g. concurrent sub-agents both materializing the root collection can throw
-      // EntityNotFoundError while loading a not-yet-flushed collection ref. The document itself is
-      // already persisted above, so swallow the error and still return its id.
-      yield* CollectionModel.add({ object }).pipe(Effect.catchAll(() => Effect.void));
+      // Best-effort: add to the space root collection for navigation. Concurrent sub-agents both
+      // materializing the root collection can throw EntityNotFoundError while loading a
+      // not-yet-flushed collection ref; the document itself is already persisted above, so swallow
+      // ONLY that transient case and let any other (non-race) failure surface.
+      yield* CollectionModel.add({ object }).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.void));
 
       // Persist before returning the id so other tools/processes (e.g. an agent's add-artifact, run
       // as a separate invocation) can resolve the freshly-created document.

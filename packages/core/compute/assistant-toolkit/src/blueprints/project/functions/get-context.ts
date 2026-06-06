@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
@@ -15,12 +15,16 @@ export default GetContext.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       // This runs unconditionally during system-prompt formatting. A delegated sub-agent has no
-      // agent bound to its context, so degrade gracefully rather than failing the whole turn.
-      const agentOption = yield* Effect.option(Agent.getFromChatContext);
-      if (Option.isNone(agentOption)) {
+      // agent bound to its context, so degrade gracefully for the zero-agent case — but still
+      // surface the "more than one agent" invariant rather than masking every failure.
+      const agents = yield* AiContext.Service.findObjects(Agent.Agent);
+      if (agents.length === 0) {
         return { id: '', name: '', instructions: 'No agent context.', plan: 'No plan found.', artifacts: [] };
       }
-      const agent = agentOption.value;
+      if (agents.length > 1) {
+        return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
+      }
+      const agent = agents[0];
 
       return {
         id: agent.id,
