@@ -7,7 +7,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
-import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -42,6 +42,33 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
     const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
+
+    // Debug-only: expose the raw trace messages (the exact `buildExecutionGraph` input) so a real
+    // trace can be captured as a test fixture. In debug mode, run `dxosDumpTrace()` in the console —
+    // it copies the serialized `Trace.Message[]` to the clipboard (and logs it).
+    const traceMessages = useTraceMessages(space);
+    useEffect(() => {
+      if (!tracePanelDebug) {
+        return;
+      }
+      // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
+      const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
+      debugGlobal.dxosDumpTrace = () => {
+        const data = traceMessages.map((message) => ({
+          meta: message.meta,
+          isEphemeral: message.isEphemeral,
+          events: message.events,
+        }));
+        const json = JSON.stringify(data, null, 2);
+        // eslint-disable-next-line no-console
+        console.log(json);
+        void navigator.clipboard?.writeText(json);
+        return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
+      };
+      return () => {
+        delete debugGlobal.dxosDumpTrace;
+      };
+    }, [tracePanelDebug, traceMessages]);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
     const handleCommitSelect = useCallback(
@@ -148,12 +175,12 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
   return useAtomValue(atom);
 };
 
-const getExecutionGraph = (
-  space: Space,
-  processesAtom: Atom.Atom<readonly Process.Info[]>,
-  { eventLimit = 100 }: UseExecutionGraphOptions = {},
-): Atom.Atom<ExecutionGraph> => {
-  const traceMessages = pipe(
+/**
+ * Atom of the raw trace messages for a space — the exact `Trace.Message[]` fed into
+ * `buildExecutionGraph`. Shared by the execution graph and the debug trace export.
+ */
+const getTraceMessagesAtom = (space: Space): Atom.Atom<readonly Trace.Message[]> =>
+  pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
     Atom.map((feeds) =>
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
@@ -166,6 +193,21 @@ const getExecutionGraph = (
     ),
     (atom) => Atom.make((get) => get(get(atom))),
   );
+
+/**
+ * Returns the raw trace messages for a space (used by the debug trace export).
+ */
+const useTraceMessages = (space: Space): readonly Trace.Message[] => {
+  const atom = useMemo(() => getTraceMessagesAtom(space), [space]);
+  return useAtomValue(atom);
+};
+
+const getExecutionGraph = (
+  space: Space,
+  processesAtom: Atom.Atom<readonly Process.Info[]>,
+  { eventLimit = 100 }: UseExecutionGraphOptions = {},
+): Atom.Atom<ExecutionGraph> => {
+  const traceMessages = getTraceMessagesAtom(space);
 
   const activeProcesses = pipe(
     processesAtom,
