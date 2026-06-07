@@ -4,6 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as WebSearchOperations from './definitions';
 
 export const WebSearchHandlers = OperationHandlerSet.lazy(() => import('./fetch'));

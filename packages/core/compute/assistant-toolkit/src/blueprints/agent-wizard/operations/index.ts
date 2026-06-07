@@ -4,10 +4,10 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as AgentWizardOperations from './definitions';
 
 export const AgentWizardHandlers = OperationHandlerSet.lazy(
-  () => import('./create-project'),
-  () => import('./project-rules'),
+  () => import('./create-agent'),
+  () => import('./agent-rules'),
   () => import('./sync-triggers'),
 );

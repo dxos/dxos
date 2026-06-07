@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './agent';
+export * from './agent-wizard';
 export * from './automation';
 export * from './blueprint-manager';
 export * from './browser';
@@ -11,6 +13,4 @@ export * from './discord';
 export * from './linear';
 export * from './memory';
 export * from './planning';
-export * from './project';
-export * from './project-wizard';
 export * from './websearch';

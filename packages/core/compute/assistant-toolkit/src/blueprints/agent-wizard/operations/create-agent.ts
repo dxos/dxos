@@ -8,7 +8,7 @@ import { Blueprint, Operation } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 
 import { Agent } from '../../../types';
-import { AgentBlueprint } from '../../project';
+import { AgentBlueprint } from '../../agent';
 import { CreateAgent, SyncTriggers } from './definitions';
 
 export default CreateAgent.pipe(

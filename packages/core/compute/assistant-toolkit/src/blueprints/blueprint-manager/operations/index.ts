@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as BlueprintManagerOperations from './definitions';
 
 export const BlueprintManagerHandlers = OperationHandlerSet.lazy(
   () => import('./query-blueprints'),

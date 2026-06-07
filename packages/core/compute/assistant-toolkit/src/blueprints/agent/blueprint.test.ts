@@ -26,10 +26,11 @@ import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat, Plan, Agent } from '../../types';
+import { AgentWizardHandlers, AgentWizardOperations } from '../agent-wizard';
 import { PlanningBlueprint, PlanningHandlers } from '../planning';
-import { AgentWizardHandlers, SyncTriggers } from '../project-wizard';
 import AgentBlueprintDef from './blueprint';
-import { AgentWorker, AgentBlueprintHandlers } from './functions';
+import { AgentBlueprintHandlers } from './operations';
+import { AgentWorker } from './operations/definitions';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -72,8 +73,8 @@ describe('Agent', () => {
       function* (_) {
         const agent = yield* Agent.makeInitialized(
           {
-            name: 'Test Project',
-            instructions: 'A test project for adding artifacts.',
+            name: 'Test Agent',
+            instructions: 'A test agent for adding artifacts.',
             blueprints: [Ref.make(MarkdownBlueprint.make())],
           },
           blueprint,
@@ -219,7 +220,7 @@ describe('Agent', () => {
         );
         yield* Database.flush();
 
-        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+        yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
 
         const triggers = yield* Database.runQuery(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.timer'),
@@ -319,7 +320,7 @@ describe('Agent', () => {
         );
         yield* Database.flush();
 
-        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+        yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
 
         const triggers = yield* Database.runQuery(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.toggle-enabled'),
@@ -330,7 +331,7 @@ describe('Agent', () => {
           agent.enabled = true;
         });
         yield* Database.flush();
-        yield* Operation.invoke(SyncTriggers, { agent: Ref.make(agent) });
+        yield* Operation.invoke(AgentWizardOperations.SyncTriggers, { agent: Ref.make(agent) });
 
         const triggersAfter = yield* Database.runQuery(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.blueprint.test.after'),

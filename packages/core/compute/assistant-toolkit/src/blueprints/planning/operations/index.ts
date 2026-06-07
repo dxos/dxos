@@ -4,6 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './update-tasks';
+export * as PlanningOperations from './update-tasks';
 
 export const PlanningHandlers = OperationHandlerSet.lazy(() => import('./update-tasks'));

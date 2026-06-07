@@ -4,6 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as GithubOperations from './definitions';
 
 export const GithubHandlers = OperationHandlerSet.lazy(() => import('./fetch-prs'));

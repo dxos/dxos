@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as DatabaseOperations from './definitions';
 
 export const DatabaseHandlers = OperationHandlerSet.lazy(
   () => import('./context-add'),

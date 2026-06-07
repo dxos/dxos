@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as MemoryOperations from './definitions';
 
 export const MemoryHandlers = OperationHandlerSet.lazy(
   () => import('./save'),

@@ -3,4 +3,4 @@
 //
 
 export { default as DelegationBlueprint } from './blueprint';
-export { DelegateTask, DelegationHandlers } from './functions';
+export { DelegationHandlers, DelegationOperations } from './operations';

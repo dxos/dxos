@@ -24,8 +24,8 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
+import { AgentBlueprintHandlers, AgentBlueprintOperations } from '../blueprints/agent';
 import { DelegationBlueprint, DelegationHandlers } from '../blueprints/delegation';
-import { AgentBlueprintHandlers, AgentWorker } from '../blueprints/project';
 import { Agent, Chat, Plan } from '../types';
 import { makeSupervisor } from './supervisor';
 
@@ -84,7 +84,9 @@ describe.skipIf(!process.env.ALLOW_LLM_GENERATION)('supervisor (live agent turn)
           childOperation: RunWork,
           // Real turn: run the main agent against the AI; the LLM should call DelegateTask.
           runTurn: (input) =>
-            Operation.invoke(AgentWorker, { agent: Ref.make(agent), prompt: input }).pipe(Effect.orDie),
+            Operation.invoke(AgentBlueprintOperations.AgentWorker, { agent: Ref.make(agent), prompt: input }).pipe(
+              Effect.orDie,
+            ),
           toChildInput: (task) => Effect.succeed({ title: task.title }),
           onComplete: (taskId, exit) =>
             Effect.sync(() => {

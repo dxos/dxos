@@ -4,7 +4,7 @@
 
 import { Blueprint } from '@dxos/compute';
 
-import { DelegateTask } from './functions';
+import { DelegateTask } from './operations/delegate-task';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.delegation';
 

@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { AddArtifact } from './functions';
+import { AddArtifact } from './operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.agent';
 

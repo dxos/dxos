@@ -17,7 +17,7 @@ import { EntityId } from '@dxos/keys';
 import { Memory } from '../../types/Memory';
 import { WebSearchBlueprint, WebSearchToolkit } from '../websearch';
 import MemoryBlueprint from './blueprint';
-import { MemoryHandlers } from './functions';
+import { MemoryHandlers } from './operations';
 
 EntityId.dangerouslyDisableRandomness();
 

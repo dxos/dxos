@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { AgentRules, CreateAgent, SyncTriggers } from './functions';
+import { AgentRules, CreateAgent, SyncTriggers } from './operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.agentWizard';
 

@@ -6,7 +6,7 @@ import { Blueprint } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { Fetch } from './functions';
+import { Fetch } from './operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
 

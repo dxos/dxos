@@ -4,7 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * from './definitions';
+export * as AgentBlueprintOperations from './definitions';
 
 export const AgentBlueprintHandlers = OperationHandlerSet.lazy(
   () => import('./add-artifact'),

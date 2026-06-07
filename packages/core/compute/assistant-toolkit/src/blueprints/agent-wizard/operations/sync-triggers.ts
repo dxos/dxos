@@ -59,7 +59,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     const triggersEnabled = agent.enabled ?? true;
 
     // Lazy import to avoid circular dependency issues.
-    const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../project'));
+    const { Qualifier, AgentWorker } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
 
     for (const subscription of agent.subscriptions) {
       const targetOption = yield* Database.loadOption(subscription);
