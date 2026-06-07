@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { type SupervisorStrategy } from '@dxos/functions-runtime';
+import { type DelegationStrategy } from '@dxos/functions-runtime';
 
 /**
  * Optional supervisor strategy for the agent chat service. When contributed (by a plugin that knows
@@ -11,6 +11,6 @@ import { type SupervisorStrategy } from '@dxos/functions-runtime';
  * to sub-agents and folds their results back into the conversation. Consumed by the AgentService
  * LayerSpec; absent by default (a plain conversational agent).
  */
-export const AgentSupervisorStrategy = Capability.make<SupervisorStrategy>(
-  'org.dxos.plugin.automation.capability.agent-supervisor-strategy',
+export const AgentDelegationStrategy = Capability.make<DelegationStrategy>(
+  'org.dxos.plugin.automation.capability.agent-delegation-strategy',
 );

@@ -11,7 +11,7 @@ import { Routine } from '@dxos/compute';
 import { Supervisor } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { type Delegation, type SupervisorStrategy } from '@dxos/functions-runtime';
+import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -72,7 +72,7 @@ const extractArtifactIds = (value: unknown): string[] => {
  * `AgentPrompt`); on completion the task status is updated and a templated message is posted back to
  * the conversation.
  */
-export const makeSupervisorStrategy = (): SupervisorStrategy => ({
+export const makeDelegationStrategy = (): DelegationStrategy => ({
   reconcile: (feed, activeIds) =>
     Effect.gen(function* () {
       const agent = yield* findAgentForFeed(feed);

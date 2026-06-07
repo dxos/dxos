@@ -5,7 +5,7 @@
 /** Points at `AgentService.ts` so consumers get `createSession`/`getSession`/`layer` under `AgentService.*`, not the agent-service barrel. */
 export * as AgentService from './agent-service/AgentService';
 export { AGENT_PROCESS_KEY } from './agent-service/agent-process';
-export { type Delegation, type SupervisorStrategy } from './agent-service/supervisor-strategy';
+export { type Delegation, type DelegationStrategy } from './agent-service/delegation-strategy';
 export * from './executor';
 export { ProcessManager } from './process';
 export * from './services';

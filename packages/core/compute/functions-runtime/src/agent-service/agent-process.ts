@@ -31,7 +31,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { type SupervisorStrategy } from './supervisor-strategy';
+import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
@@ -57,7 +57,7 @@ interface AgentProcessOptions {
    * linked child processes and folds their results back into the conversation on completion. Absent
    * (the default) the process behaves as a plain conversational agent.
    */
-  supervisorStrategy?: SupervisorStrategy;
+  delegationStrategy?: DelegationStrategy;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -101,7 +101,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // outstanding work into linked child processes after each turn and folds their results back
         // into the conversation on completion. Absent (the default), the process behaves as a plain
         // conversational agent.
-        const strategy = Option.fromNullable(options.supervisorStrategy);
+        const strategy = Option.fromNullable(options.delegationStrategy);
         let delegations: Delegation[] = [...(yield* DelegationsKey.get)];
 
         return {

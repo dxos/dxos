@@ -41,7 +41,7 @@ export type StrategyServices = Database.Service | Feed.FeedService;
  * Absent by default — a plain conversational agent.
  */
 // TODO(burdon): Merge with Agent?
-export interface SupervisorStrategy {
+export interface DelegationStrategy {
   /**
    * Called after each agent turn. Returns delegations for outstanding work not already in flight.
    * @param feed - The conversation feed (identifies which agent/plan to reconcile).

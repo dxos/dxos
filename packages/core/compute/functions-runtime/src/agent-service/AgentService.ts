@@ -18,7 +18,7 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 
 import { AgentProcess } from './agent-process';
-import { type SupervisorStrategy } from './supervisor-strategy';
+import { type DelegationStrategy } from './delegation-strategy';
 
 export interface Service {
   /**
@@ -129,7 +129,7 @@ export const layer = (opts?: {
    * When provided, sessions act as supervisors: the agent delegates outstanding work to sub-agent
    * child processes and folds their results back into the conversation. Absent — a plain agent.
    */
-  supervisorStrategy?: SupervisorStrategy;
+  delegationStrategy?: DelegationStrategy;
 }): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
@@ -168,7 +168,7 @@ export const layer = (opts?: {
               model,
               getMcpServers: opts?.getMcpServers,
               enableToolBackgrounding: opts?.enableToolBackgrounding,
-              supervisorStrategy: opts?.supervisorStrategy,
+              delegationStrategy: opts?.delegationStrategy,
             });
 
             // Reuse a still-running process for this feed only when there was no cached session

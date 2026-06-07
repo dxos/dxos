@@ -3,4 +3,4 @@
 //
 
 export * from './supervisor';
-export * from './supervisor-strategy';
+export * from './delegation-strategy';
