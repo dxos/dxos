@@ -32,7 +32,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   toolCall: ContentBlock.ToolCall,
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.Requirements<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
-    const input = safeParseJson<Tool.Parameters<any>>(toolCall.input, {});
+    const input = safeParseJson<Record<string, unknown>>(toolCall.input, {});
 
     // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
     log('toolCall', { toolCall: toolCall.name, input });

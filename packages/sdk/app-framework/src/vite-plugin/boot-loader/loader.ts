@@ -9,7 +9,7 @@ import babelPresetTypeScript from '@babel/preset-typescript';
 // @ts-ignore — babel-preset-solid ships no .d.ts.
 import babelPresetSolid from 'babel-preset-solid';
 import { build, type Plugin as EsbuildPlugin } from 'esbuild';
-import { dirname } from 'node:path';
+import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Plugin } from 'vite';
 
@@ -43,6 +43,12 @@ export type BootLoaderOptions = {
    * text colour. Leave empty/undefined to render only the ring.
    */
   markSvg?: string;
+
+  /**
+   * HTML entry filenames to inject the loader into. Defaults to `index.html` only
+   * so auxiliary pages (`recovery.html`, `reset.html`, etc.) stay unobstructed.
+   */
+  include?: string[];
 };
 
 const VIRTUAL_NS = 'boot-loader-app';
@@ -151,10 +157,15 @@ const getLoaderBundle = (): Promise<string> => (bundlePromise ??= compileLoaderB
  * etc.) in `boot-loader.css`, so consumers can override them at the document
  * level without re-parameterizing this plugin.
  */
-export const bootLoaderPlugin = ({ status, markSvg }: BootLoaderOptions = {}): Plugin => {
+export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: BootLoaderOptions = {}): Plugin => {
   return {
     name: 'app-framework:boot-loader',
-    async transformIndexHtml() {
+    async transformIndexHtml(_html, ctx) {
+      const filename = basename(ctx.filename ?? 'index.html');
+      if (!include.includes(filename)) {
+        return;
+      }
+
       const bundle = await getLoaderBundle();
       // Authoritative backdrop id: injected here, passed to the bundle via
       // config (so `entry.tsx` reads it), and mirrored by the CSS selector in

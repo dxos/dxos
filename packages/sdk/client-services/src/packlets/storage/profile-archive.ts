@@ -90,6 +90,9 @@ export const importProfileData = async (
         batch.put(entry.key, entry.value, { keyEncoding: 'binary', valueEncoding: 'binary' });
         break;
       }
+      case ProfileArchiveEntryType.SQLITE_DATABASE:
+        log.warn('Skipping SQLITE_DATABASE entry (import via OPFS recovery API)', { key: entry.key });
+        break;
       default:
         throw new Error(`Invalid entry type: ${entry.type}`);
     }
