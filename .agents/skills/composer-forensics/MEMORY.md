@@ -10,4 +10,10 @@ Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` 
 - Main DB blob `00000006` (`/DXOS` header) → strip 4096 bytes → valid `DXOS.sqlite` (~119 MB). Journal: `00000011` (`/DXOS-journal`).
 - `AccessHandlePoolVFS` header: path at offset 0, SQLite payload at offset 4096 (`@dxos/wa-sqlite`).
 - Worker DB name is `DXOS` (`worker-runtime.ts`); OPFS VFS mounts at `opfs/` subdir inside origin OPFS root.
-- Extraction scripts live in `.agents/skills/composer-forensics/scripts/`.
+- Probe modules live in `scripts/src/` (not `lib/` — repo root `.gitignore` ignores `lib`).
+- `automerge list-ids` lists classic automerge docs; subduction storage keys (`subduction-*`) are excluded from totals.
+- Largest classic doc on 2026-06-07 extract: `2DWmBh837zCBGPFZheCWBH1KFMRL` (14.2 MiB binary, 90 KiB JSON → **161x** ratio, 4 chunks, ~15s loadIncremental, 32M ops / 3149 changes).
+- **Root cause (2026-06-07):** 96% of ops are `set`; median ~10k ops/change. Reified doc is 1 Mailbox with TagIndex (`tags` map, 3143 ids). DXOS `TagIndex.setTag` replaces whole arrays via spread — quadratic history growth.
+- `automerge-inspect.js --mutations` decodes changes for op breakdown; `automerge-escalate.js` writes `.bin` + `-report.md` for Automerge maintainers.
+- Full command docs: `COMMANDS.md`.
+- Linear issue draft: `LINEAR-tagindex-write-amplification.md`.

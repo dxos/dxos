@@ -2,128 +2,174 @@
 name: composer-forensics
 description: >-
   Extract and validate data from live Composer browser profiles on disk (Chrome OPFS,
-  IndexedDB, SQLite). Use when forensically inspecting main.composer.space or other
-  Composer origins, extracting the DXOS SQLite database from OPFS, or validating profile
-  integrity on a local machine.
+  IndexedDB, SQLite). Use when forensically inspecting Composer origins, extracting the
+  DXOS SQLite database from OPFS, debugging Automerge load perf (binary vs JSON size,
+  mutation/op breakdown), building maintainer escalation bundles, or validating profile
+  integrity locally.
 ---
 
 # Composer forensics
 
-Extract Composer client data from a **live Chrome profile on disk**, then validate and analyze offline.
+Extract Composer client data from a **live Chrome profile on disk**, validate, and analyze offline.
 
-**Scope (v1):** macOS + Google Chrome default profile. Generalize paths for other profiles/channels as needed.
+**Full command reference:** [COMMANDS.md](COMMANDS.md) — locate, extract, validate, probe, automerge, SQL, troubleshooting.
+
+**Scope (v1):** macOS + Google Chrome default profile.
 
 ## When to use
 
-- User asks to inspect, extract, dump, or forensically analyze a Composer profile.
-- Debugging data loss, corruption, or unexpected state on `main.composer.space`, `labs.composer.space`, or preview deploys.
-- Offline SQL analysis of feeds, objects, automerge chunks, blobs, or indexes.
+- Inspect, extract, dump, or forensically analyze a Composer profile.
+- Debug data loss, corruption, or unexpected state on `main.composer.space`, `labs.composer.space`, or preview deploys.
+- Offline analysis of identity, spaces, feeds, objects, automerge documents.
 
 ## Safety
 
-1. **Read-only by default** — copy blobs out; do not delete or modify Chrome profile files unless the user explicitly asks.
-2. **Consistency** — Chrome may have the DB open. Prefer closing Composer tabs before extraction. A hot copy can still be valid for read-mostly forensics but may fail `PRAGMA integrity_check`.
-3. **Privacy** — extracted data may contain credentials, keys, and user content. Keep output under `/tmp` or a user-specified directory; do not commit extracts.
+1. **Read-only by default** — copy blobs out; do not modify Chrome profile files unless asked.
+2. **Consistency** — close Composer tabs before extraction when you need clean `integrity_check`.
+3. **Privacy** — extracts may contain keys and user content; keep under `/tmp`; never commit.
 
-## Quick start
+## Pipeline (always in this order)
+
+```
+locate → extract → validate → probe → (automerge …) → record in MEMORY.md
+```
+
+### 1. Locate
 
 ```bash
-# 1. Locate origin → OPFS directory (see STORAGE.md)
 python3 .agents/skills/composer-forensics/scripts/locate-origin.py \
   --origin https://main.composer.space
+```
 
-# 2. Extract SQLite from OPFS pool blobs
+### 2. Extract
+
+```bash
 python3 .agents/skills/composer-forensics/scripts/extract-opfs-sqlite.py \
-  --opfs-dir "$OPFS_DIR" \
+  --opfs-dir "<opfs_pool_dir from locate>" \
   --out /tmp/composer-forensics/main.composer.space
+```
 
-# 3. Validate extract
+### 3. Validate
+
+```bash
 bash .agents/skills/composer-forensics/scripts/validate-extract.sh \
   /tmp/composer-forensics/main.composer.space/DXOS.sqlite
 ```
 
-## Workflow checklist
+### 4. Probe (JS — uses `@dxos` packages)
 
-Copy and track progress:
+```bash
+export PROTO_HOME="$HOME/.proto" PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+node .agents/skills/composer-forensics/scripts/probe.js \
+  /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+```
+
+### 5. Automerge — find largest doc
+
+```bash
+cd .agents/skills/composer-forensics/scripts
+node automerge-list.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+```
+
+### 6. Automerge — binary vs JSON size (perf debugging)
+
+```bash
+node automerge-inspect.js /tmp/.../DXOS.sqlite --largest
+node automerge-inspect.js /tmp/.../DXOS.sqlite <document-id>
+```
+
+High **binary / JSON ratio** + high **ops / MiB** usually means history bloat: storage and load cost far exceed reified document size.
+
+### 7. Automerge — mutation analysis
+
+```bash
+node automerge-inspect.js /tmp/.../DXOS.sqlite <document-id> --mutations
+```
+
+Decodes all changes and reports op action breakdown (dominant `set` ops → whole-array replacement pattern).
+
+### 8. Automerge — escalate to maintainers
+
+```bash
+node automerge-escalate.js /tmp/.../DXOS.sqlite --largest --out-dir /tmp/am-escalation
+```
+
+Produces `<document-id>.bin` (merged binary) + `<document-id>-report.md` (stats, hypothesis, repro steps) for Automerge issue reports.
+
+### 9. Automerge — bench load
+
+```bash
+node automerge-bench-load.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite --largest
+node automerge-bench-load.js /tmp/.../DXOS.sqlite <document-id>
+```
+
+## Workflow checklist
 
 ```
 Forensics progress:
-- [ ] Identify target origin and Chrome profile
-- [ ] Resolve OPFS directory ID (File System/Origins LevelDB)
-- [ ] List OPFS pool blobs and associated paths (/DXOS, /DXOS-journal, …)
-- [ ] Extract to output dir (strip 4096-byte AccessHandlePoolVFS headers)
-- [ ] Run validate-extract.sh
-- [ ] Run ad-hoc SQL / domain validation (see VALIDATION.md)
-- [ ] Record findings in MEMORY.md (dated section)
+- [ ] locate-origin.py
+- [ ] extract-opfs-sqlite.py
+- [ ] validate-extract.sh
+- [ ] probe.js (summary)
+- [ ] automerge-list.js (or `automerge list`)
+- [ ] automerge-inspect.js for binary vs JSON ratio on slow/large docs
+- [ ] automerge-inspect.js --mutations when ratio is high (check op breakdown)
+- [ ] automerge-escalate.js if escalating to Automerge maintainers
+- [ ] automerge-bench-load.js for slow doc candidates
+- [ ] ad-hoc SQL / domain checks (VALIDATION.md)
+- [ ] MEMORY.md updated; promote findings to LINEAR doc if filing an issue
 ```
 
-## Architecture (what you are extracting)
+## Known issue pattern: TagIndex write amplification
 
-Composer persists ECHO data in a single OPFS-backed SQLite database:
+High **binary / JSON ratio** (e.g. >50×) with dominant **`set` ops** on a small reified doc usually means `TagIndex` whole-array replacement — see [LINEAR-tagindex-write-amplification.md](LINEAR-tagindex-write-amplification.md) for root cause, evidence, and fix plan.
+
+## `scripts/src/` modules
+
+| Module | Role |
+|--------|------|
+| `src/automerge-size.js` | Binary vs JSON analysis |
+| `src/automerge-mutations.js` | Change decode, op breakdown, hypotheses |
+| `src/automerge-escalate.js` | Maintainer bundle writer |
+| `src/automerge-load.js` | Timed load + largest-doc helper |
+| `src/automerge-chunks.js` | Chunk load/merge (StorageSubsystem order) |
+| `src/automerge-keys.js` | Chunk key encode/decode |
+| `src/automerge.js` | Document listing |
+| `src/automerge-dump.js` | `.bin` + `.json` dump |
+| `src/db.js`, `src/metadata.js`, `src/summary.js`, `src/format.js` | Probe helpers |
+
+Use `src/`, not `lib/` — repo `.gitignore` ignores `lib/`.
+
+## Architecture
 
 | Layer | Detail |
 |-------|--------|
-| Browser API | `navigator.storage.getDirectory()` → OPFS root |
-| VFS | `@dxos/wa-sqlite` `AccessHandlePoolVFS` (`opfs/` subdirectory) |
-| DB name | `DXOS` (`packages/sdk/client-services/src/packlets/worker/worker-runtime.ts`) |
-| On-disk pool files | Random names under OPFS; header path `/DXOS` = main DB, `/DXOS-journal` = rollback journal |
-| Header size | **4096 bytes**; SQLite payload starts at offset 4096 |
+| OPFS pool | Chrome `File System/<ID>/t/00/` — see [STORAGE.md](STORAGE.md) |
+| VFS header | 4096 bytes; SQLite at offset 4096 (`AccessHandlePoolVFS`) |
+| DB name | `DXOS` |
+| Metadata | `space_metadata.key = 'main'` → `EchoMetadata` protobuf |
+| Automerge | `automerge_heads`, `automerge_chunks` |
 
-OPFS is **not** IndexedDB. Related but separate storage for the same origin:
+## Scripts
 
-- `~/Library/Application Support/Google/Chrome/Default/IndexedDB/https_<host>_0.indexeddb.leveldb`
-- Log store (if used): separate IndexedDB DB name from `@dxos/log-store-idb`
+| Script | Role |
+|--------|------|
+| `locate-origin.py` | Origin → OPFS path |
+| `extract-opfs-sqlite.py` | Blobs → `DXOS.sqlite` |
+| `validate-extract.sh` | File-level checks |
+| `probe.js` | Profile summary + automerge subcommands |
+| `automerge-list.js` | Document ids + combined binary sizes |
+| `automerge-inspect.js` | Binary vs reified JSON size; `--mutations` for op breakdown |
+| `automerge-escalate.js` | Maintainer bundle: `.bin` + `-report.md` |
+| `automerge-bench-load.js` | Size comparison + loadIncremental timing |
+| `automerge-dump-json.js` | Dump `.bin` + `.json` with size report |
 
-## Extraction output layout
-
-```
-/tmp/composer-forensics/<origin-slug>/
-├── DXOS.sqlite              # Main DB (strip header from largest /DXOS blob)
-├── DXOS-journal.bin         # Rollback journal (optional; not standalone SQLite)
-├── manifest.json            # Paths, sizes, source opfs dir, timestamp
-└── raw-opfs-blobs/          # Original Chrome blobs (with headers)
-```
-
-## Validation phases
-
-### Phase 1 — File-level (automated)
-
-Run `scripts/validate-extract.sh`. Checks:
-
-- SQLite magic (`SQLite format 3`)
-- `PRAGMA integrity_check`
-- Expected table inventory (see VALIDATION.md)
-- Baseline row counts on core tables
-
-### Phase 2 — Domain-level (manual / follow-up)
-
-After file-level passes, run targeted queries:
-
-- **Spaces:** `space_metadata`, `space_large`
-- **Objects:** `objectMeta` (by `spaceId`, `typeDXN`, `deleted`)
-- **Automerge:** `automerge_chunks`, `automerge_heads`
-- **Feeds/queues:** `feeds`, `blocks`, `cursor_tokens`
-- **Blobs:** `blobs_meta`, `blobs_data`
-- **Keys:** `keyring` (handle carefully — secrets)
-
-See [VALIDATION.md](VALIDATION.md) for query templates and expected tables.
-
-## Troubleshooting
-
-| Symptom | Likely cause | Action |
-|---------|--------------|--------|
-| No `SQLite format 3` after strip | Wrong blob or corrupt header | Re-run `locate-origin.py`; inspect headers with `xxd -l 32` on each blob |
-| `integrity_check` fails | Hot copy while Chrome open | Close tabs; re-extract; or use `sqlite3 .recover` as last resort |
-| Origin not in Origins DB | Never visited, different profile, or cleared site data | Check `IndexedDB/https_*` folder names; try another profile |
-| Empty OPFS dir | Site data cleared | Confirm user still has data in live Composer |
-
-## Browser-side export (alternative)
-
-The OPFS worker supports in-browser serialize (`OpfsWorker` `export` message → `sqlite3.serialize`). Prefer **disk extraction** for forensics on a live profile without driving the browser; use in-browser export when Chrome profile path is unavailable.
+Probe package: `@dxos/composer-forensics` in `scripts/package.json` (workspace; run `pnpm install` from repo root).
 
 ## Additional resources
 
-- [STORAGE.md](STORAGE.md) — Chrome paths, origin mapping, OPFS on-disk format
-- [VALIDATION.md](VALIDATION.md) — SQL checks and table reference
-- [MEMORY.md](MEMORY.md) — session notes (append dated findings)
-- `logging` skill — query Composer dev `app.log` when reproducing in dev, not production profile
+- [COMMANDS.md](COMMANDS.md) — every command documented
+- [STORAGE.md](STORAGE.md) — Chrome on-disk layout
+- [VALIDATION.md](VALIDATION.md) — SQL templates
+- [MEMORY.md](MEMORY.md) — session notes
+- [LINEAR-tagindex-write-amplification.md](LINEAR-tagindex-write-amplification.md) — Linear issue draft (root cause + fix plan)
