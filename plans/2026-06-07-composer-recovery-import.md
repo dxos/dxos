@@ -12,20 +12,20 @@
 
 ## Status checklist
 
-| Step | Task | Status |
-|------|------|--------|
-| 1 | OPFS pool worker import path (fix Vite resolve error) | ✅ |
-| 2 | Fix OPFS header flag endianness (match AccessHandlePoolVFS) | ✅ |
-| 3 | Import live-exported `.dxprofile` persists ~124 MB in OPFS | ✅ |
-| 4 | OPFS survives client open attempt (no truncate to 4 KB) | ✅ |
-| 5 | Remote control: `recovery.startClient()` on empty profile | ✅ |
-| 6 | Remote control: `recovery.compactDocuments()` API wired | ✅ |
-| 7 | Boot imported 124 MB profile + compact end-to-end | ⬜ follow-up (boot >3 min hang) |
-| 8 | Tests + lint pass locally | ⬜ in progress |
-| 9 | Commit, push, update PR description | ⬜ |
-| 10 | Wait for CodeRabbit review | ⬜ |
-| 11 | Address CodeRabbit comments | ⬜ |
-| 12 | `/land` — CI green, auto-merge | ⬜ |
+| Step | Task                                                        | Status                          |
+| ---- | ----------------------------------------------------------- | ------------------------------- |
+| 1    | OPFS pool worker import path (fix Vite resolve error)       | ✅                              |
+| 2    | Fix OPFS header flag endianness (match AccessHandlePoolVFS) | ✅                              |
+| 3    | Import live-exported `.dxprofile` persists ~124 MB in OPFS  | ✅                              |
+| 4    | OPFS survives client open attempt (no truncate to 4 KB)     | ✅                              |
+| 5    | Remote control: `recovery.startClient()` on empty profile   | ✅                              |
+| 6    | Remote control: `recovery.compactDocuments()` API wired     | ✅                              |
+| 7    | Boot imported 124 MB profile + compact end-to-end           | ⬜ follow-up (boot >3 min hang) |
+| 8    | Tests + lint pass locally                                   | ⬜ in progress                  |
+| 9    | Commit, push, update PR description                         | ⬜                              |
+| 10   | Wait for CodeRabbit review                                  | ⬜                              |
+| 11   | Address CodeRabbit comments                                 | ⬜                              |
+| 12   | `/land` — CI green, auto-merge                              | ⬜                              |
 
 ---
 
@@ -97,10 +97,10 @@ node composer-recovery.js --session <uuid> \
 
 ## Key files
 
-| File | Role |
-|------|------|
-| `packages/apps/composer-app/src/recovery/opfs-pool-worker.ts` | Sync OPFS write worker |
-| `packages/common/sql-sqlite/src/opfs-pool-sync.ts` | `writePoolSqlitePayload` |
-| `packages/apps/composer-app/src/recovery/compact-documents.ts` | Epoch compaction |
-| `.agents/skills/composer-forensics/scripts/composer-recovery.js` | Debug port server |
-| `plans/2026-06-07-composer-recovery-import.md` | This plan |
+| File                                                             | Role                     |
+| ---------------------------------------------------------------- | ------------------------ |
+| `packages/apps/composer-app/src/recovery/opfs-pool-worker.ts`    | Sync OPFS write worker   |
+| `packages/common/sql-sqlite/src/opfs-pool-sync.ts`               | `writePoolSqlitePayload` |
+| `packages/apps/composer-app/src/recovery/compact-documents.ts`   | Epoch compaction         |
+| `.agents/skills/composer-forensics/scripts/composer-recovery.js` | Debug port server        |
+| `plans/2026-06-07-composer-recovery-import.md`                   | This plan                |
