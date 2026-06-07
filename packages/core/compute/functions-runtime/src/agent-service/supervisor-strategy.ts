@@ -36,9 +36,9 @@ export type StrategyServices = Database.Service | Feed.FeedService;
  * Turns a conversational agent process into a supervisor: after each turn it reconciles outstanding
  * work into linked child processes, and folds their results back into the conversation on completion.
  *
- * Implemented outside `@dxos/functions-runtime` (which cannot depend on the agent/plan types) and
- * passed to {@link AgentService.layer} so {@link AgentProcess} stays generic. Absent by default — a
- * plain conversational agent.
+ * Implemented outside `@dxos/functions-runtime` (which cannot depend on the agent/plan types)
+ * and passed to {@link AgentService.layer} so {@link AgentProcess} stays generic.
+ * Absent by default — a plain conversational agent.
  */
 // TODO(burdon): Merge with Agent?
 export interface SupervisorStrategy {

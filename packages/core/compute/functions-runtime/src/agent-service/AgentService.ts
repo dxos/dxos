@@ -204,8 +204,8 @@ export const layer = (opts?: {
 const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
-  // Settle when the turn's reply is complete; do NOT block on background sub-agents (a supervisor
-  // delegates work that runs after the turn and reports back out of band).
+  // Settle when the turn's reply is complete; do NOT block on background sub-agents
+  // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),
   subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
