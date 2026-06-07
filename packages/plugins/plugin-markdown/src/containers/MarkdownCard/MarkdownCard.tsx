@@ -33,11 +33,12 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
             <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (
                 <Editor.Root {...editorRootProps}>
-                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} />
+                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} compact />
                 </Editor.Root>
               )}
             </MarkdownEditorProvider>
-            <Fade />
+            {/* TODO(burdon): Only show fade if truncated. */}
+            {/* <Fade /> */}
           </Card.Row>
         </Card.Section>
       )}
