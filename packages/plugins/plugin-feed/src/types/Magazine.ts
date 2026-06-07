@@ -33,8 +33,14 @@ export const Magazine = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Feeds to pull content from. */
   feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
-  /** Routine describing what content the Magazine should gather. */
-  routine: Schema.optional(Ref.Ref(Routine.Routine).pipe(Schema.annotations({ title: 'Routine' }))),
+  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
+  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+  /**
+   * Per-Post magazine-scoped curation state (just `rank`), keyed by Post id. Shared per-Post state
+   * (readAt, star/archive tags) lives on `Subscription`; snippet/imageUrl are derived from the Post
+   * (or refined onto the Subscription's contentFeed entries).
+   */
+  postState: StateMap.field(PostState),
   /**
    * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
    * Older posts beyond this bound are dropped; starred posts are preserved regardless.
@@ -47,20 +53,13 @@ export const Magazine = Schema.Struct({
     }),
     Schema.optional,
   ),
-  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
-  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
-  /**
-   * Per-Post magazine-scoped curation state (just `rank`), keyed by Post id. Shared per-Post state
-   * (readAt, star/archive tags) lives on `Subscription`; snippet/imageUrl are derived from the Post
-   * (or refined onto the Subscription's contentFeed entries).
-   */
-  postState: StateMap.field(PostState),
+  /** Routine describing what content the Magazine should gather (inlined in the form). */
+  routine: Schema.optional(
+    Ref.Ref(Routine.Routine).pipe(Annotation.FormInlineAnnotation.set(true), Schema.annotations({ title: 'Routine' })),
+  ),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--newspaper-clipping--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--newspaper-clipping--regular', hue: 'indigo' }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.magazine', '0.1.0')),
 );

@@ -153,7 +153,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   enableBackgrounding: options.enableToolBackgrounding ?? false,
                 }),
                 AsynchronousExectionToolkitLayer,
-                AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
+                AiService.model(options.model ?? 'ai.claude.model.claude-opus-4-6'),
               ).pipe(Layer.orDie),
             ),
           ),
@@ -318,12 +318,12 @@ const ToolExecutionService = ({
               ? yield* awaitWithReport.pipe(
                   Effect.timeout(backgroundThreshold),
                   Effect.catchTag('TimeoutException', () =>
-                    Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid)),
+                    Effect.succeed(Exit.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
                   ),
                 )
               : yield* awaitWithReport;
             log('result', { result });
-            return result;
+            return yield* result;
           }),
       });
     }),

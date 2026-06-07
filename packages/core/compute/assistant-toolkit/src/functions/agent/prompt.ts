@@ -30,7 +30,7 @@ import { PromptError } from '../../errors';
 import * as Chat from '../../types/Chat';
 import { AgentPrompt } from './definitions';
 
-const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-6';
+const DEFAULT_MODEL: ModelName = 'ai.claude.model.claude-opus-4-6';
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
@@ -62,7 +62,7 @@ export default AgentPrompt.pipe(
           Effect.map(Array.map((option) => option.value)),
         );
 
-        const promptInstructions = yield* Database.load(prompt.instructions.source);
+        const promptInstructions = yield* Database.load(prompt.instructions);
         let promptText = Template.process(promptInstructions.content, input);
 
         if (input !== undefined) {

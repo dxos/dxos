@@ -35,10 +35,7 @@ export const State = Schema.Struct({
     description: 'AI difficulty level.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--hash-straight--regular',
-    hue: 'cyan',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--hash-straight--regular', hue: 'cyan' }),
   // Implementation detail of the unified `Game` schema (see plugin-chess/Chess.ts for the
   // same reasoning). Keeps the state out of the navtree's typed branches so an orphaned
   // state doesn't reappear after the wrapping Game is deleted.

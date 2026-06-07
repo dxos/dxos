@@ -31,7 +31,7 @@ const close: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 const content: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 first:font-medium pb-1.5', etc);
+  return mx('col-start-2 flex flex-col first:font-medium pb-1.5', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {

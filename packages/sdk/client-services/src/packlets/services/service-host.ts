@@ -12,7 +12,6 @@ import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -22,7 +21,6 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
@@ -43,7 +41,6 @@ import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
-import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
@@ -56,8 +53,6 @@ export type ClientServicesHostProps = {
   transportFactory?: TransportFactory;
   signalManager?: SignalManager;
   connectionLog?: boolean;
-  storage?: Storage;
-  level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
@@ -89,8 +84,6 @@ export class ClientServicesHost {
   private _config?: Config;
   private _signalManager?: SignalManager;
   private _networkManager?: SwarmNetworkManager;
-  private _storage?: Storage;
-  private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   private _edgeConnection?: EdgeConnection = undefined;
@@ -116,16 +109,12 @@ export class ClientServicesHost {
     config,
     transportFactory,
     signalManager,
-    storage,
-    level,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
     runtime,
     runtimeProps,
   }: ClientServicesHostProps) {
-    this._storage = storage;
-    this._level = level;
     this._callbacks = callbacks;
     this._runtime = runtime;
     this._runtimeProps = runtimeProps ?? {};
@@ -241,9 +230,6 @@ export class ClientServicesHost {
 
       invariant(!this._config, 'config already set');
       this._config = config;
-      if (!this._storage) {
-        this._storage = createStorageObjects(config.get('runtime.client.storage', {})!).storage;
-      }
     }
 
     // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
@@ -297,7 +283,6 @@ export class ClientServicesHost {
     log('opening service host');
 
     invariant(this._config, 'config not set');
-    invariant(this._storage, 'storage not set');
     invariant(this._signalManager, 'signal manager not set');
     invariant(this._networkManager, 'network manager not set');
 
@@ -306,16 +291,9 @@ export class ClientServicesHost {
 
     await this._resourceLock?.acquire();
 
-    if (!this._level) {
-      this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
-    }
-    await this._level.open();
-
     await this._loggingService.open();
 
     this._serviceContext = new ServiceContext(
-      this._storage,
-      this._level,
       this._networkManager,
       this._signalManager,
       this._edgeConnection,
@@ -426,7 +404,6 @@ export class ClientServicesHost {
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
-    await this._level?.close();
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
@@ -439,13 +416,36 @@ export class ClientServicesHost {
     this._resetting = true;
     this._statusUpdate.emit();
     await this._serviceContext?.close();
-    // Clear LevelDB contents to remove all persisted Echo/Automerge/index data.
-    try {
-      await this._level!.clear();
-    } catch (err) {
-      log.warn('failed to clear leveldb during reset', { err });
-    }
-    await this._storage!.reset();
+    // Wipe all SQLite tables so next open starts fresh.
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        // Echo metadata + large space data.
+        yield* sql`DELETE FROM space_metadata`;
+        yield* sql`DELETE FROM space_large`;
+        // Blob store.
+        yield* sql`DELETE FROM blobs_meta`;
+        yield* sql`DELETE FROM blobs_data`;
+        // Keyring.
+        yield* sql`DELETE FROM keyring`;
+        // Automerge chunks + heads.
+        yield* sql`DELETE FROM automerge_chunks`;
+        yield* sql`DELETE FROM automerge_heads`;
+        // Hypercore feed files.
+        yield* sql`DELETE FROM hypercore_files`;
+        // Feed store (queue feeds, blocks, etc.).
+        yield* sql`DELETE FROM feeds`;
+        yield* sql`DELETE FROM blocks`;
+        yield* sql`DELETE FROM subscriptions`;
+        yield* sql`DELETE FROM cursor_tokens`;
+        yield* sql`DELETE FROM sync_state`;
+        // Index tables.
+        yield* sql`DELETE FROM indexCursor`;
+        yield* sql`DELETE FROM objectMeta`;
+        yield* sql`DELETE FROM reverseRef`;
+        yield* sql`DELETE FROM ftsIndex`;
+      }),
+    );
     log.info('reset');
     await this._callbacks?.onReset?.();
   }

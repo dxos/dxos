@@ -9,6 +9,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { MapCapabilities } from '@dxos/plugin-map/types';
 import { getSpace, useObject, useObjects } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -19,7 +20,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SegmentStack, type SegmentCardAction } from '#components';
 import { meta } from '#meta';
-import { RoutingOperation, Segment, Trip } from '#types';
+import { Routing, RoutingOperation, Segment, Trip } from '#types';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
   /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
@@ -101,10 +102,20 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           break;
         case 'delete':
           Trip.removeSegment(subject, action.segmentId);
+          // The companion is resolved from the current selection (app-graph-builder), which only
+          // re-runs on selection change — not on `segments` mutation. So when the active segment is
+          // deleted, clear the selection to re-resolve the companion to empty rather than leaving the
+          // now-orphaned segment shown.
+          if (action.segmentId === currentId) {
+            void invokePromise(LayoutOperation.Select, {
+              contextId: id,
+              subject: { mode: 'single', id: undefined },
+            });
+          }
           break;
       }
     },
-    [id, showItem, subject],
+    [id, currentId, showItem, subject, invokePromise],
   );
 
   // The inline map is rendered by plugin-map's `map` surface; only offer the toggle when a marker
@@ -135,6 +146,8 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       if (!space) {
         return;
       }
+      // The chronologically-last leg, used to chain the new segment's origin from where it ended.
+      const previous = segments.at(-1);
       const segment = space.db.add(Segment.makeDefault(kind));
       Trip.addSegment(subject, segment);
       // Pre-fill the start (and end, for a range) from the current calendar selection.
@@ -144,8 +157,15 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       if (calendarSelection?.to) {
         Segment.setArriveAt(segment, calendarSelection.to.toISOString());
       }
+      // Default the origin to where the previous leg ended so a multi-leg trip chains naturally.
+      const previousDestination = previous && Segment.getDestination(previous);
+      if (previousDestination) {
+        Segment.setOrigin(segment, previousDestination);
+      }
+      // Make the new segment the current item and open its (fresh) companion form.
+      handleNavigate(segment.id);
     },
-    [subject, calendarSelection],
+    [subject, segments, calendarSelection, handleNavigate],
   );
 
   // Computes driving routes for the trip's road segments via the registered RoutingService,
@@ -160,11 +180,15 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         throw error;
       }
     } catch (err) {
-      // Surface routing failures (no provider / geocode / network) as a toast.
+      // Log the technical error; surface a friendly, non-technical toast. Known routing errors
+      // (no provider / geocode miss / OSRM failure) already carry user-facing messages.
+      log.catch(err);
+      const friendly =
+        err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
       await invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}/plan-route-error`,
         title: ['route.error.label', { ns: meta.id }],
-        description: err instanceof Error ? err.message : undefined,
+        description: friendly ?? ['route.error.message', { ns: meta.id }],
         icon: 'ph--warning--regular',
       });
     } finally {

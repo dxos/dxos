@@ -96,11 +96,9 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

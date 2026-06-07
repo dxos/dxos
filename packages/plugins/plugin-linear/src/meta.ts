@@ -35,6 +35,6 @@ export const meta = Plugin.makeMeta({
     team does not prevent other teams from syncing.
   `,
   icon: 'ph--list-checks--regular',
-  iconHue: 'neutral',
+  iconHue: 'green',
   tags: ['labs', 'integration'],
 });

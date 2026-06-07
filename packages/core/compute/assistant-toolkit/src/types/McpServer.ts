@@ -24,10 +24,7 @@ export const McpServer = Schema.Struct({
   enabled: Schema.optional(Schema.Boolean),
 }).pipe(
   LabelAnnotation.set(['name']),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--plugs-connected--regular',
-    hue: 'sky',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--plugs-connected--regular', hue: 'sky' }),
   Type.makeObject(DXN.make('org.dxos.type.assistant.mcpServer', '0.1.0')),
 );
 

@@ -15,9 +15,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -49,12 +46,6 @@
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/echo/echo-query"
     },
     {
       "path": "../../ui/react-ui"

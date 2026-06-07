@@ -29,6 +29,7 @@ export const meta = Plugin.makeMeta({
     invalid syntax is immediately visible without disrupting the rest of the document.
   `,
   icon: 'ph--anchor-simple--regular',
+  iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-mermaid',
   spec: 'PLUGIN.mdl',
 });

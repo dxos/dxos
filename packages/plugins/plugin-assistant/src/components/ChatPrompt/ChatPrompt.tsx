@@ -147,7 +147,7 @@ export const ChatPrompt = ({
           <ChatOptions
             chat={chat}
             db={db}
-            blueprintRegistry={processor.blueprintRegistry}
+            registry={processor.registry}
             context={processor.context}
             preset={preset}
             presets={presets}

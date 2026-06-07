@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
       "path": "../../common/effect"
     },
     {
@@ -64,9 +61,6 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../sdk/types"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -79,12 +73,6 @@
       "path": "../../ui/react-ui-geo"
     },
     {
-      "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -95,12 +83,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
-    },
-    {
-      "path": "../plugin-table"
     },
     {
       "path": "../plugin-testing"

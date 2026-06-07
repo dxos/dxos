@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -17,8 +18,7 @@ import {
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
+import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
@@ -262,7 +262,7 @@ describe('Reactive Object with ECHO database', () => {
 
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+    const peer = await builder.createPeer({ storagePath: tmpPath });
     const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
     peer.client.graph.registry.add([TestSchema.Example]);
 
@@ -277,7 +277,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       peer.client.graph.registry.add([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
@@ -296,7 +296,7 @@ describe('Reactive Object with ECHO database', () => {
 
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+    const peer = await builder.createPeer({ storagePath: tmpPath });
     const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
     let id: string;
@@ -312,7 +312,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
@@ -613,6 +613,48 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 
+  // Annotations store their values in entity meta. A Ref-valued annotation must persist its
+  // unsaved target just like a Ref assigned to an ordinary property does, otherwise the stored
+  // DXN dangles and resolution throws EntityNotFoundError (see CollectionModel root collection).
+  describe('annotation references', () => {
+    const RootCollection = Schema.Struct({
+      name: Schema.optional(Schema.String),
+    }).pipe(Type.makeObject(DXN.make('com.example.type.rootCollection', '0.1.0')));
+
+    const RootRefAnnotation = Annotation.make({
+      id: 'com.example.annotation.rootRef',
+      schema: Ref.Ref(RootCollection),
+    });
+
+    test('Annotation.set persists an unsaved Ref target into the host database', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(Obj.make(RootCollection, { name: 'root' })));
+      });
+
+      const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
+      const target = await ref.load();
+      expect(target.name).to.eq('root');
+    });
+
+    test('Annotation.set leaves an already-persisted Ref target untouched', async () => {
+      const { db, graph } = await builder.createDatabase();
+      graph.registry.add([RootCollection, TestSchema.Example]);
+
+      const root = db.add(Obj.make(RootCollection, { name: 'root' }));
+      const host = db.add(Obj.make(TestSchema.Example, { string: 'host' }));
+      Obj.update(host, (host) => {
+        Annotation.set(host, RootRefAnnotation, Ref.make(root));
+      });
+
+      const ref = Annotation.get(host, RootRefAnnotation).pipe(Option.getOrThrow);
+      expect((await ref.load()).id).to.eq(root.id);
+    });
+  });
+
   describe('isDeleted', () => {
     test.skip('throws when accessing meta of a non-reactive-proxy', async () => {
       expect(() => Obj.isDeleted({} as any)).to.throw();
@@ -644,10 +686,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('can set meta on a non-ECHO object', async () => {
       const obj = Obj.make(TestSchema.Expando, { string: 'foo' });
-      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [] });
+      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [], tags: [], annotations: {} });
       const testKey = { source: 'test', id: 'hello' };
       Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push(testKey));
-      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey] });
+      expect(Obj.getMeta(obj)).to.deep.eq({ keys: [testKey], tags: [], annotations: {} });
       expect(() => Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push(1 as any))).to.throw();
     });
 
@@ -720,7 +762,7 @@ describe('Reactive Object with ECHO database', () => {
       const spaceKey = PublicKey.random();
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+      const peer = await builder.createPeer({ storagePath: tmpPath });
       const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       let id: string;
@@ -736,7 +778,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
+        const peer = await builder.createPeer({ storagePath: tmpPath });
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
         expect(Obj.getMeta(obj).keys).to.deep.eq([metaKey]);
@@ -762,16 +804,17 @@ describe('Reactive Object with ECHO database', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
+      const importantUri = 'dxn:echo:@:TAGIMPORTANT';
       const org = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'DXOS',
-          [Obj.Meta]: { tags: ['important'] },
+          [Obj.Meta]: { tags: [Ref.fromURI(URI.make(importantUri))] },
         }),
       );
 
       log.info('', { acc: createDocAccessor(org, []).handle.doc() });
 
-      expect(Obj.getMeta(org).tags).toEqual(['important']);
+      expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toEqual([importantUri]);
     });
   });
 

@@ -63,10 +63,7 @@ export const Sheet = Schema.Struct({
   // Cell formatting referenced by indexed range.
   ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Annotation.IconAnnotation.set({
-    icon: 'ph--grid-nine--regular',
-    hue: 'indigo',
-  }),
+  Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
   Type.makeObject(DXN.make('org.dxos.type.sheet', '0.1.0')),
 );
 

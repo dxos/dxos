@@ -39,14 +39,14 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AssistantEvents, AssistantOperation } from '#types';
+import { AssistantEvents, AssistantOperation, type AssistantPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 const StateReady = AppActivationEvents.createStateEvent(meta.id);
 
-export const AssistantPlugin = Plugin.define(meta)
+export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
     AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -107,12 +107,13 @@ export const AssistantPlugin = Plugin.define(meta)
       activatesOn: AssistantEvents.SetupAiServiceProviders,
       activate: LocalModelResolver,
     }),
-    Plugin.addModule({
+    Plugin.addModule((options) => ({
+      id: Capability.getModuleTag(AiService),
       firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
       // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
       activatesOn: ActivationEvents.SetupProcessManager,
-      activate: AiService,
-    }),
+      activate: () => AiService(options),
+    })),
     Plugin.addModule({
       activatesOn: ActivationEvents.SetupProcessManager,
       activate: AiContextCapability,

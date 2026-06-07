@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
+import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -10,9 +10,9 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Registry } from '@dxos/echo';
 import {
   FeedTraceSink,
   RemoteFunctionExecutionService,
@@ -58,20 +58,17 @@ const OperationHandlerProviderSpec = LayerSpec.make(
     ),
 );
 
-const BlueprintRegistrySpec = LayerSpec.make(
+const RegistrySpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service],
-    provides: [Blueprint.RegistryService],
+    requires: [ClientService],
+    provides: [Registry.Service],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        const capabilities = yield* Capability.Service;
-        const blueprints = capabilities
-          .getAll(AppCapabilities.BlueprintDefinition)
-          .flatMap((blueprint) => blueprint.make());
-        return Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints));
+        const client = yield* ClientService;
+        return Layer.succeed(Registry.Service, client.graph.registry);
       }),
     ),
 );
@@ -167,7 +164,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
       Feed.FeedService,
       TriggerStateStore,
       ProcessManager.ProcessManagerService,
-      Registry.AtomRegistry,
+      AtomRegistry.AtomRegistry,
     ],
     provides: [TriggerDispatcher],
   },
@@ -177,7 +174,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
-    Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
     Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),

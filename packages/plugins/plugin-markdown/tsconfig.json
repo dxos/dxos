@@ -34,9 +34,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/random"
     },
     {
@@ -82,12 +79,6 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
-      "path": "../../ui/react-primitives/react-hooks"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
@@ -100,13 +91,7 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/ui"
@@ -122,9 +107,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-deck"
     },
     {
       "path": "../plugin-graph"

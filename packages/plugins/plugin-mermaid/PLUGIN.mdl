@@ -138,7 +138,7 @@ feat F-4: Markdown Editor Integration
 
   req F-4.1:
     when: the MermaidPlugin is loaded
-    then: it registers the mermaid CodeMirror extension via MarkdownCapabilities.Extensions
+    then: it registers the mermaid CodeMirror extension via MarkdownCapabilities.ExtensionProvider
 
   req F-4.2: The plugin activates on MarkdownEvents.SetupExtensions.
 ```

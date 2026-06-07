@@ -24,7 +24,7 @@ export const meta = Plugin.makeMeta({
     making it easy to explore large collections without leaving the view.
   `,
   icon: 'ph--wall--regular',
-  iconHue: 'green',
+  iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-masonry',
   spec: 'PLUGIN.mdl',
   screenshots: [],
