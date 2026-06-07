@@ -28,7 +28,8 @@ test.describe('Collaboration tests', () => {
   let guest: AppManager;
 
   test.beforeEach(async ({ browser, browserName }) => {
-    test.setTimeout(60_000);
+    // 120s: beforeEach init (host+guest, up to 30s) + invitation flow + navtree navigation.
+    test.setTimeout(120_000);
     test.skip(browserName === 'firefox' || browserName === 'webkit');
 
     host = new AppManager(browser, false);
