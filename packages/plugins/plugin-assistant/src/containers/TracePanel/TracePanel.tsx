@@ -43,12 +43,15 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // See the comment in `ProcessTreeContainer` for more details.
     const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
 
-    // Debug hatch: expose the raw trace messages (the exact `buildExecutionGraph` input) so a real
-    // trace can be captured as a test fixture. Whenever the TracePanel is mounted, run
+    // Debug hatch (dev builds only): expose the raw trace messages (the exact `buildExecutionGraph`
+    // input) so a real trace can be captured as a test fixture. While the TracePanel is mounted, run
     // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
-    // (and logs it). Always attached (no debug-mode gate) so it's available regardless of view mode.
+    // (and logs it). Gated on `import.meta.env.DEV` so it's stripped from production builds.
     const traceMessages = useTraceMessages(space);
     useEffect(() => {
+      if (!import.meta.env.DEV) {
+        return;
+      }
       // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
       const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
       debugGlobal.dxosDumpTrace = () => {
