@@ -18,6 +18,7 @@
     "composer-forensics-automerge-escalate": "./automerge-escalate.js",
     "composer-forensics-automerge-inspect": "./automerge-inspect.js",
     "composer-forensics-automerge-list": "./automerge-list.js",
+    "composer-forensics-composer-recovery": "./composer-recovery.js",
     "composer-forensics-probe": "./probe.js"
   },
   "dependencies": {

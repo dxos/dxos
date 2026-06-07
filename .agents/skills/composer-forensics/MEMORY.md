@@ -17,3 +17,4 @@ Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` 
 - `automerge-inspect.js --mutations` decodes changes for op breakdown; `automerge-escalate.js` writes `.bin` + `-report.md` for Automerge maintainers.
 - Full command docs: `COMMANDS.md`.
 - Linear issue draft: `LINEAR-tagindex-write-amplification.md`.
+- Composer `/recovery.html`: minimal safe mode (export OPFS SQLite, reset, debug port on :9321). Agent server: `composer-recovery.js`.

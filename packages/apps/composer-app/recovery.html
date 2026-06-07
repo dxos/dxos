@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Composer Recovery</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        background: #0b0f14;
+        color: #d7e0ea;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        padding: 1rem 1.25rem 0.5rem;
+        border-bottom: 1px solid #1e2936;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      header p {
+        margin: 0.35rem 0 0;
+        font-size: 0.8rem;
+        color: #8fa3b8;
+      }
+      #log {
+        flex: 1;
+        margin: 0;
+        padding: 1rem 1.25rem 5.5rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow: auto;
+        font-size: 0.8rem;
+        line-height: 1.45;
+      }
+      footer {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-top: 1px solid #1e2936;
+        background: rgba(11, 15, 20, 0.96);
+        backdrop-filter: blur(8px);
+      }
+      button {
+        flex: 1;
+        border: 1px solid #334155;
+        background: #111827;
+        color: inherit;
+        border-radius: 0.5rem;
+        padding: 0.65rem 0.75rem;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover:not(:disabled) {
+        background: #1e293b;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.primary {
+        border-color: #2563eb;
+        background: #1d4ed8;
+      }
+      button.danger {
+        border-color: #7f1d1d;
+        background: #991b1b;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Composer Recovery</h1>
+      <p>Safe mode — no plugins, sync, or indexing. Nothing runs until you choose an action below.</p>
+    </header>
+    <pre id="log"></pre>
+    <footer>
+      <button type="button" id="export-sqlite">Export SQLite</button>
+      <button type="button" id="reset" class="danger">Reset</button>
+      <button type="button" id="debug-port" class="primary">Open Debug Port</button>
+    </footer>
+    <script type="module" src="/src/recovery.ts"></script>
+  </body>
+</html>

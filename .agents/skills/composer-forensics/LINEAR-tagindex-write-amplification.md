@@ -178,6 +178,8 @@ if (record[tagId].length === 0) {
 
 ### 3. Remediate existing bloated documents (required for affected users)
 
+**If the app will not boot:** open **`/recovery.html`** on the same origin → **Export SQLite** → run offline forensics/compaction → (future) re-import. See composer-forensics skill `composer-recovery.js` for agent-driven recovery.
+
 Code fix alone does **not** shrink existing history. Affected documents need **compaction** — new Automerge doc containing only current materialized state.
 
 **Option A — targeted document compaction (preferred for hot docs)**

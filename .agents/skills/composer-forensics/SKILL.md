@@ -103,6 +103,30 @@ node automerge-bench-load.js /tmp/composer-forensics/main.composer.space/DXOS.sq
 node automerge-bench-load.js /tmp/.../DXOS.sqlite <document-id>
 ```
 
+## Composer recovery mode (in-app)
+
+When Composer cannot boot (e.g. Automerge bloat), open **`/recovery.html`** on the same origin:
+
+| Action | What it does |
+|--------|----------------|
+| **Export SQLite** | OPFS worker only — downloads raw `DXOS.sqlite` bytes (no client/plugins/sync) |
+| **Reset** | Wipe origin storage (same as `/reset.html`) |
+| **Open Debug Port** | Long-poll `http://127.0.0.1:9321` for agent-driven JS snippets |
+
+Agent debug server (from this skill):
+
+```bash
+cd .agents/skills/composer-forensics/scripts
+node composer-recovery.js 'return await recovery.exportSqlite()'
+node composer-recovery.js --interactive
+```
+
+Snippets run with `recovery` in scope (`recovery.status()`, `recovery.exportSqlite()`, `recovery.reset()`, `recovery.log()`).
+
+**HTTPS note:** production origins may block `http://127.0.0.1` fetch (mixed content). Export/Reset still work; use local `vite serve` for debug port on HTTPS profiles, or forensics offline on exported SQLite.
+
+See [LINEAR-tagindex-write-amplification.md](LINEAR-tagindex-write-amplification.md) for the TagIndex bloat recovery path.
+
 ## Workflow checklist
 
 ```
@@ -116,7 +140,8 @@ Forensics progress:
 - [ ] automerge-inspect.js --mutations when ratio is high (check op breakdown)
 - [ ] automerge-escalate.js if escalating to Automerge maintainers
 - [ ] automerge-bench-load.js for slow doc candidates
-- [ ] ad-hoc SQL / domain checks (VALIDATION.md)
+- [ ] `/recovery.html` if app won't boot — export SQLite before reset
+- [ ] `composer-recovery.js` + Open Debug Port for live agent commands
 - [ ] MEMORY.md updated; promote findings to LINEAR doc if filing an issue
 ```
 
@@ -163,6 +188,7 @@ Use `src/`, not `lib/` — repo `.gitignore` ignores `lib/`.
 | `automerge-escalate.js` | Maintainer bundle: `.bin` + `-report.md` |
 | `automerge-bench-load.js` | Size comparison + loadIncremental timing |
 | `automerge-dump-json.js` | Dump `.bin` + `.json` with size report |
+| `composer-recovery.js` | Debug server for Composer `/recovery.html` |
 
 Probe package: `@dxos/composer-forensics` in `scripts/package.json` (workspace; run `pnpm install` from repo root).
 

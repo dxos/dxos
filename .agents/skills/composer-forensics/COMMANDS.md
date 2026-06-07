@@ -244,7 +244,36 @@ sqlite3 /tmp/composer-forensics/main.composer.space/DXOS.sqlite \
 
 ---
 
-## 11. Record findings
+## 12. Composer recovery mode (live browser)
+
+When the main app will not boot, open **`https://<origin>/recovery.html`** (or `http://localhost:5173/recovery.html` in dev).
+
+| Button | Action |
+|--------|--------|
+| Export SQLite | Download raw OPFS `DXOS` database (no plugins/client) |
+| Reset | Wipe all origin storage |
+| Open Debug Port | Connect to local agent server on port **9321** |
+
+Start the agent server:
+
+```bash
+node .agents/skills/composer-forensics/scripts/composer-recovery.js 'return await recovery.exportSqlite()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --interactive
+```
+
+Enqueue more commands while running:
+
+```bash
+curl -s -X POST http://127.0.0.1:9321/enqueue \
+  -H 'content-type: application/json' \
+  -d '{"code":"return recovery.status()"}'
+```
+
+Then run forensics on the exported file (sections 1–8 above).
+
+---
+
+## 13. Record findings
 
 Append a dated section to [MEMORY.md](MEMORY.md) with origin, OPFS dir id, anomalies, and follow-ups.
 
@@ -265,6 +294,7 @@ For product/engineering issues (e.g. Automerge bloat root cause), use or update 
 | `scripts/automerge-escalate.js` | JavaScript | Maintainer bundle: `.bin` + `-report.md` |
 | `scripts/automerge-bench-load.js` | JavaScript | Size comparison + loadIncremental timing |
 | `scripts/automerge-dump-json.js` | JavaScript | Dump `.bin` + `.json` with size report |
+| `scripts/composer-recovery.js` | JavaScript | Debug server for Composer `/recovery.html` |
 | `LINEAR-tagindex-write-amplification.md` | Doc | Linear issue draft (TagIndex bloat root cause + fix) |
 
 ---
@@ -278,3 +308,4 @@ For product/engineering issues (e.g. Automerge bloat root cause), use or update 
 | `integrity_check` fails | Close Chrome; re-extract; hot copies often still query fine |
 | Empty OPFS dir | Site data cleared or wrong profile — check `indexeddb_exists` from locate |
 | Probe identity empty | Profile never finished onboarding or metadata key missing |
+| Debug port won't connect from HTTPS | Mixed content blocks `http://127.0.0.1:9321` — use Export SQLite + offline forensics, or local dev origin |
