@@ -43,14 +43,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     // See the comment in `ProcessTreeContainer` for more details.
     const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
 
-    // Debug-only: expose the raw trace messages (the exact `buildExecutionGraph` input) so a real
-    // trace can be captured as a test fixture. In debug mode, run `dxosDumpTrace()` in the console —
-    // it copies the serialized `Trace.Message[]` to the clipboard (and logs it).
+    // Debug hatch: expose the raw trace messages (the exact `buildExecutionGraph` input) so a real
+    // trace can be captured as a test fixture. Whenever the TracePanel is mounted, run
+    // `dxosDumpTrace()` in the console — it copies the serialized `Trace.Message[]` to the clipboard
+    // (and logs it). Always attached (no debug-mode gate) so it's available regardless of view mode.
     const traceMessages = useTraceMessages(space);
     useEffect(() => {
-      if (!tracePanelDebug) {
-        return;
-      }
       // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
       const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
       debugGlobal.dxosDumpTrace = () => {
@@ -68,7 +66,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       return () => {
         delete debugGlobal.dxosDumpTrace;
       };
-    }, [tracePanelDebug, traceMessages]);
+    }, [traceMessages]);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
     const handleCommitSelect = useCallback(
