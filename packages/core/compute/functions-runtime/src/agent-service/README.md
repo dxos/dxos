@@ -69,12 +69,12 @@ sequenceDiagram
     SUP-->>AP: pid
     AP->>AP: DelegationsKey.set(pid → id)
   end
-  Note over AP: turn settles (runUntilSettled); supervisor stays IDLE/HYBERNATING, accepts more input
+  Note over AP: turn settles via runUntilSettled — supervisor stays IDLE/HYBERNATING and accepts more input
 
   CH-->>AP: exit (wake only — no payload)
   AP->>AP: onChildEvent: match pid → id, drop from DelegationsKey
   AP->>SUP: collectResult(pid)
-  SUP-->>AP: Exit<output>
+  SUP-->>AP: Exit of output value
   AP->>ST: onComplete(feed, id, exit)
   ST->>U: update Task status + post message (reference blocks → dx-anchor)
 ```
