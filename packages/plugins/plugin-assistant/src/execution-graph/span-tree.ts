@@ -109,7 +109,7 @@ export interface BuildSpanTreeOptions {
  *        root span if no span is currently open for that pid (or the event has no pid).
  *   3. Sort each span's children by their earliest event timestamp.
  */
-export const buildSpanTree = (messages: Trace.Message[], options: BuildSpanTreeOptions = {}): Span => {
+export const buildSpanTree = (messages: readonly Trace.Message[], options: BuildSpanTreeOptions = {}): Span => {
   const allEvents = messages.flatMap((message) => Trace.flatten(message));
   allEvents.sort((a, b) => a.timestamp - b.timestamp);
 

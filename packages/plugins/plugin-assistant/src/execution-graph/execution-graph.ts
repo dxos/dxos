@@ -75,7 +75,7 @@ const ICONS = {
 } as const;
 
 export interface BuildExecutionGraphParams {
-  traceMessages: Trace.Message[];
+  traceMessages: readonly Trace.Message[];
   activeProcesses?: readonly Process.Info[];
   eventLimit?: number;
 }
