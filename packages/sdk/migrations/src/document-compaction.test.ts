@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { compactDocumentsEpochMigration } from './document-compaction';
