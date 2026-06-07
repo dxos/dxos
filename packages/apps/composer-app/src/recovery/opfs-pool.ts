@@ -83,11 +83,17 @@ const readAssociatedPath = async (fileHandle: FileSystemFileHandle): Promise<str
   return pathEnd <= 0 ? '' : new TextDecoder().decode(corpus.subarray(0, pathEnd));
 };
 
+const copyToArrayBuffer = (bytes: Uint8Array): Uint8Array<ArrayBuffer> => {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy;
+};
+
 const writeAssociatedPath = async (fileHandle: FileSystemFileHandle, path: string, flags: number): Promise<void> => {
   const header = buildHeader(path, flags);
   const writable = await fileHandle.createWritable({ keepExistingData: false });
   try {
-    await writable.write(header);
+    await writable.write(copyToArrayBuffer(header));
   } finally {
     await writable.close();
   }
@@ -228,8 +234,8 @@ export const writeOpfsSqliteDatabase = async (
   const header = buildHeader(associatedPath, MAIN_DB_FLAGS);
   const writable = await target.handle.createWritable({ keepExistingData: false });
   try {
-    await writable.write(header);
-    await writable.write(database);
+    await writable.write(copyToArrayBuffer(header));
+    await writable.write(copyToArrayBuffer(database));
   } finally {
     await writable.close();
   }

@@ -10,6 +10,8 @@ import { downloadLogs } from '../log-download';
 /** Export NDJSON logs from the IDB log collector and trigger a browser download. */
 export const downloadRecoveryLogs = async (): Promise<{ byteLength: number }> => {
   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
-  const byteLength = await downloadLogs(logStore);
+  const ndjson = await logStore.export();
+  const byteLength = new TextEncoder().encode(ndjson).byteLength;
+  await downloadLogs(logStore);
   return { byteLength };
 };

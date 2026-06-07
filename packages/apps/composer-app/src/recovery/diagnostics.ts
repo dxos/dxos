@@ -110,10 +110,11 @@ export const runRecoveryDiagnostics = async (log: (message: string) => void): Pr
     }
 
     const identityRecord = dxos.halo?.identity.get();
+    const device = dxos.halo?.device;
     identity = identityRecord
       ? {
           identityKey: identityRecord.identityKey.toString(),
-          deviceKey: identityRecord.deviceKey?.toString(),
+          deviceKey: device?.deviceKey?.toString(),
           displayName: identityRecord.profile?.displayName,
         }
       : undefined;
