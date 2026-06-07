@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -129,6 +129,7 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
+        recovery: path.resolve(dirname, './recovery.html'),
       },
       // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
       // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
@@ -166,6 +167,7 @@ export default defineConfig((env) => ({
       './internal.html',
       './devtools.html',
       './reset.html',
+      './recovery.html',
       path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
@@ -234,6 +236,25 @@ export default defineConfig((env) => ({
             res.statusCode = 502;
             res.end(String(error));
           }
+        });
+      },
+    },
+
+    // Dev-only: serve forensics test profile for recovery import testing.
+    {
+      name: 'recovery-test-fixture',
+      configureServer(server) {
+        const fixturePath =
+          process.env.COMPOSER_TEST_DXPROFILE ??
+          '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
+        server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
+          if (!existsSync(fixturePath)) {
+            res.statusCode = 404;
+            res.end(`Test profile not found at ${fixturePath}`);
+            return;
+          }
+          res.setHeader('Content-Type', 'application/octet-stream');
+          createReadStream(fixturePath).pipe(res);
         });
       },
     },
