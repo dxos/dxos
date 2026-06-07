@@ -40,7 +40,6 @@ export type StrategyServices = Database.Service | Feed.FeedService;
  * and passed to {@link AgentService.layer} so {@link AgentProcess} stays generic.
  * Absent by default — a plain conversational agent.
  */
-// TODO(burdon): Merge with Agent?
 export interface DelegationStrategy {
   /**
    * Called after each agent turn. Returns delegations for outstanding work not already in flight.

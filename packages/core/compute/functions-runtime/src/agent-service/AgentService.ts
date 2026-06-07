@@ -39,6 +39,16 @@ export interface Session {
   readonly feed: Feed.Feed;
 
   /**
+   * Gets the context objects from the agent.
+   */
+  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
+
+  /**
+   * Adds context objects to the agent.
+   */
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
+
+  /**
    * Submits a prompt to the agent.
    */
   submitPrompt: (prompt: string) => Effect.Effect<void>;
@@ -53,16 +63,6 @@ export interface Session {
    * Replays buffered events, then streams new ones until the process ends.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
-
-  /**
-   * Adds context objects to the agent.
-   */
-  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Feed.FeedService>;
-
-  /**
-   * Gets the context objects from the agent.
-   */
-  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Feed.FeedService>;
 }
 
 /**
@@ -203,11 +203,12 @@ export const layer = (opts?: {
 
 const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
   feed,
-  submitPrompt: (prompt: string) => process.submitInput(prompt),
-  // Settle when the turn's reply is complete; do NOT block on background sub-agents
-  // (a supervisor delegates work that runs after the turn and reports back out of band).
-  waitForCompletion: () => process.runUntilSettled(),
-  subscribeEphemeral: () => process.subscribeEphemeral(),
+  getContext: () =>
+    Effect.gen(function* () {
+      const runtime = yield* Effect.runtime<Feed.FeedService>();
+      const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+      return binder.getObjects().map((object) => Ref.make(object));
+    }).pipe(Effect.scoped),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime<Feed.FeedService>();
@@ -219,10 +220,9 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
         }),
       );
     }).pipe(Effect.scoped),
-  getContext: () =>
-    Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-      return binder.getObjects().map((object) => Ref.make(object));
-    }).pipe(Effect.scoped),
+  submitPrompt: (prompt: string) => process.submitInput(prompt),
+  // Settle when the turn's reply is complete; do NOT block on background sub-agents
+  // (a supervisor delegates work that runs after the turn and reports back out of band).
+  waitForCompletion: () => process.runUntilSettled(),
+  subscribeEphemeral: () => process.subscribeEphemeral(),
 });

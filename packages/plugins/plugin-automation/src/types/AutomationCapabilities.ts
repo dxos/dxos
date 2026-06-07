@@ -12,5 +12,5 @@ import { type DelegationStrategy } from '@dxos/functions-runtime';
  * LayerSpec; absent by default (a plain conversational agent).
  */
 export const AgentDelegationStrategy = Capability.make<DelegationStrategy>(
-  'org.dxos.plugin.automation.capability.agent-delegation-strategy',
+  'org.dxos.plugin.automation.capability.agentDelegationStrategy',
 );
