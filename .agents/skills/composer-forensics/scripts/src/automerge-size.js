@@ -41,9 +41,9 @@ export const analyzeDocumentSizes = (dbPath, documentId) => {
   const stringifyMs = performance.now() - stringifyStart;
   const jsonBytes = Buffer.byteLength(json, 'utf8');
 
-  const objectMetaRows = Number(
-    db.prepare('SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?').get(documentId)?.n ?? 0,
-  );
+  const objectMetaRows = tableExists(db, 'objectMeta')
+    ? Number(db.prepare('SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?').get(documentId)?.n ?? 0)
+    : 0;
 
   const combinedBytes = merged.byteLength;
   const binToJsonRatio = jsonBytes > 0 ? combinedBytes / jsonBytes : Infinity;

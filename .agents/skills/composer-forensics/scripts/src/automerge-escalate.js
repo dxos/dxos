@@ -10,6 +10,9 @@ import { analyzeDocumentSizes } from './automerge-size.js';
 import { openDatabase } from './db.js';
 import { formatBytes, formatMs } from './format.js';
 
+/** Sanitize document id for use in output filenames. */
+const safeDocumentFilename = (documentId) => documentId.replace(/[^a-zA-Z0-9._-]+/g, '_');
+
 /**
  * Build a markdown report for Automerge maintainers.
  *
@@ -155,8 +158,9 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
 export const writeEscalationBundle = (dbPath, documentId, options = {}) => {
   const outDir = options.outDir ?? '/tmp/composer-forensics/escalation';
   mkdirSync(outDir, { recursive: true });
-  const binPath = join(outDir, `${documentId}.bin`);
-  const reportPath = join(outDir, `${documentId}-report.md`);
+  const safeName = safeDocumentFilename(documentId);
+  const binPath = join(outDir, `${safeName}.bin`);
+  const reportPath = join(outDir, `${safeName}-report.md`);
 
   const size = analyzeDocumentSizes(dbPath, documentId);
   writeFileSync(binPath, size.merged);

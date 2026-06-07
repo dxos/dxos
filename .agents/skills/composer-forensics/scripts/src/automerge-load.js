@@ -82,7 +82,9 @@ export const benchLoadDocument = (dbPath, documentId) => {
   }
 
   const result = loadDocumentTimed(chunks);
-  const objectCount = db.prepare('SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?').get(documentId)?.n;
+  const objectCount = tableExists(db, 'objectMeta')
+    ? db.prepare('SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?').get(documentId)?.n
+    : 0;
 
   const sizeAnalysis = {
     documentId,

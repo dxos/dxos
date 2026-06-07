@@ -7,6 +7,8 @@ import { join } from 'node:path';
 
 import { analyzeDocumentSizes, printSizeComparison } from './automerge-size.js';
 
+const safeDocumentFilename = (documentId) => documentId.replace(/[^a-zA-Z0-9._-]+/g, '_');
+
 /**
  * @param {string} dbPath
  * @param {string} documentId
@@ -16,8 +18,9 @@ export const dumpDocument = (dbPath, documentId, options = {}) => {
   const analysis = analyzeDocumentSizes(dbPath, documentId);
 
   const outDir = options.outDir ?? '/tmp/composer-forensics';
-  const binPath = join(outDir, `${documentId}.bin`);
-  const jsonPath = join(outDir, `${documentId}.json`);
+  const safeName = safeDocumentFilename(documentId);
+  const binPath = join(outDir, `${safeName}.bin`);
+  const jsonPath = join(outDir, `${safeName}.json`);
 
   writeFileSync(binPath, analysis.merged);
 

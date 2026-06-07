@@ -29,16 +29,16 @@ describe('document compaction', () => {
       const epochsBefore = await space.internal.getEpochs();
       const result = await compactDocumentsEpochMigration(space);
 
-      expect(result.compacted.length).to.be.greaterThan(0);
-      expect(result.epochNumber).to.equal(epochsBefore.length);
+      expect(result.compacted.length).toBeGreaterThan(0);
+      expect(result.epochNumber).toBe(epochsBefore.length);
 
       const objects = await space.db.query(Filter.type(TestSchema.Expando)).run();
-      expect(objects).to.have.length(1);
-      expect(objects[0].title).to.equal('before compaction');
-      expect(objects[0].id).to.equal(object.id);
+      expect(objects).toHaveLength(1);
+      expect(objects[0]?.title).toBe('before compaction');
+      expect(objects[0]?.id).toBe(object.id);
 
       const epochsAfter = await space.internal.getEpochs();
-      expect(epochsAfter.length).to.equal(epochsBefore.length + 1);
+      expect(epochsAfter.length).toBe(epochsBefore.length + 1);
     } finally {
       await client.destroy();
     }

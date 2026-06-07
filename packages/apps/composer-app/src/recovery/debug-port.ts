@@ -115,6 +115,17 @@ const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
     );
   });
 
+const parseDebugCommand = (value: unknown): DebugCommand | undefined => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.id !== 'number' || typeof record.code !== 'string') {
+    return undefined;
+  }
+  return { id: record.id, code: record.code };
+};
+
 const pollCommand = async (
   origin: string,
   session: string,
@@ -129,7 +140,11 @@ const pollCommand = async (
   if (!response.ok) {
     throw new Error(`Poll failed: ${response.status} ${response.statusText}`);
   }
-  return (await response.json()) as DebugCommand;
+  const command = parseDebugCommand(await response.json());
+  if (!command) {
+    throw new Error('Invalid debug command payload');
+  }
+  return command;
 };
 
 const postResult = async (origin: string, payload: DebugResultPayload, signal?: AbortSignal) => {
