@@ -27,6 +27,9 @@ import * as MemoizedLanguageModel from './MemoizedLanguageModel';
 const DateToolkit = Toolkit.make(
   Tool.make('get-date', {
     description: 'Get the current date',
+    parameters: {
+      timezone: Schema.optional(Schema.String).annotations({ description: 'Optional IANA timezone identifier' }),
+    },
     success: Schema.DateFromString,
   }),
 );
@@ -39,7 +42,7 @@ const layerTest = DateToolkit.toLayer({
 
 const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('ai.claude.model.claude-sonnet-4-0')).pipe(
   Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('edge-remote')),
+  Layer.provide(AiServiceTestingPreset('direct')),
 );
 
 class TestObjectReadToolkit extends Toolkit.make(
@@ -261,7 +264,7 @@ describe('dynamic value matching', () => {
               dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],
             }),
           ),
-          Layer.provide(AiServiceTestingPreset('edge-remote')),
+          Layer.provide(AiServiceTestingPreset('direct')),
         ),
       ),
       TestHelpers.provideTestContext,
