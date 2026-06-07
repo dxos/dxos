@@ -17,26 +17,29 @@ const Text = ({ children, initial = 'open' }: PropsWithChildren<{ initial?: stri
 
   return (
     <div className='flex flex-col gap-20 w-full'>
-      <div className='flex justify-center text-4xl p-2 rounded-sm border border-separator'>
-        <motion.div className='px-2 text-neutral-500'>{'{'}</motion.div>
+      <div className='flex justify-center text-4xl font-thin'>
         <motion.div
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className='inline-flex p-4 border border-separator rounded-md'
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 20,
+          }}
           animate={state}
           initial={initial}
           variants={{
-            closed: {
-              letterSpacing: '-0.5em',
-              opacity: 0,
-            },
             open: {
-              letterSpacing: '0em',
+              gap: '1em',
               opacity: 100,
+            },
+            closed: {
+              gap: '0.2em',
+              opacity: 0,
             },
           }}
         >
           {children}
         </motion.div>
-        <motion.div className='px-2 text-neutral-500'>{'}'}</motion.div>
       </div>
 
       <div className='flex justify-center'>
@@ -62,11 +65,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     children: (
-      <div className='flex gap-2'>
-        <span className='text-sky-500'>Welcome</span>
-        <span className='text-neutral-500'>to</span>
-        <span className='text-orange-500'>Composer</span>
-      </div>
+      <>
+        <span>D</span>
+        <span>X</span>
+        <span>O</span>
+        <span>S</span>
+      </>
     ),
   },
 };
