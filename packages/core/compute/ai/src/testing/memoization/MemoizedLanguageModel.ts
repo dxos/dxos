@@ -204,7 +204,69 @@ const remapStoredResponse = (
       mapping.set(storedValues[index], live);
     }
   }
-  return replaceTokens(storedResponse, mapping) as readonly unknown[];
+  // `replaceTokens` operates string-by-string via deepMapValues, so tokens that span multiple
+  // streaming `tool-params-delta` chunks are invisible to it. After the per-string pass, merge
+  // consecutive deltas for the same tool call, remap the concatenated string, then re-emit as a
+  // single merged delta so the token is never split across chunk boundaries again.
+  const perStringRemapped = replaceTokens(storedResponse, mapping) as readonly unknown[];
+  return mergeAndRemapDeltaSequences(perStringRemapped, mapping);
+};
+
+/**
+ * Joins consecutive `tool-params-delta` items with the same tool call id, applies token
+ * replacement to the concatenated string, then re-emits the result as a single merged delta.
+ * This ensures dynamic tokens (e.g. space keys) that were split across streaming chunks are
+ * properly remapped even when no individual chunk contains the full token.
+ */
+const mergeAndRemapDeltaSequences = (
+  response: readonly unknown[],
+  mapping: ReadonlyMap<string, string>,
+): readonly unknown[] => {
+  if (mapping.size === 0) {
+    return response;
+  }
+  const tokenMatcher = new RegExp(
+    [...mapping.keys()]
+      .sort((a, b) => b.length - a.length)
+      .map(escapeRegExp)
+      .join('|'),
+    'g',
+  );
+
+  const result: unknown[] = [];
+  let currentId: string | null = null;
+  let accumulated = '';
+  let prototypeItem: Record<string, unknown> | null = null;
+
+  const flush = () => {
+    if (currentId === null) {
+      return;
+    }
+    const remapped = accumulated.replace(tokenMatcher, (token) => mapping.get(token) ?? token);
+    result.push({ ...prototypeItem, delta: remapped });
+    currentId = null;
+    accumulated = '';
+    prototypeItem = null;
+  };
+
+  for (const item of response) {
+    const typed = item as Record<string, unknown>;
+    if (typed.type === 'tool-params-delta') {
+      const id = typed.id as string;
+      if (currentId !== null && currentId !== id) {
+        flush();
+      }
+      currentId = id;
+      accumulated += (typed.delta as string) ?? '';
+      prototypeItem = typed;
+    } else {
+      flush();
+      result.push(item);
+    }
+  }
+
+  flush();
+  return result;
 };
 
 /**
