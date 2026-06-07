@@ -246,6 +246,8 @@ sqlite3 /tmp/composer-forensics/main.composer.space/DXOS.sqlite \
 
 ## 12. Composer recovery mode (live browser)
 
+**Doctor workflow:** [DOCTOR.md](DOCTOR.md) — user opens debug port; agent explores via CLI; session report in `/tmp/composer-forensics/reports/`; **confirm before mutating data**.
+
 When the main app will not boot, open **`https://<origin>/recovery.html`** (or `http://localhost:5173/recovery.html` in dev).
 
 | Button | Action |
@@ -266,6 +268,7 @@ Browser keeps polling (retries every 2s if server down). Each agent command is a
 # 2. Run (stdout = JSON result, then exits):
 node .agents/skills/composer-forensics/scripts/composer-recovery.js 'return dxos.recovery.status()'
 node .agents/skills/composer-forensics/scripts/composer-recovery.js 'await dxos.recovery.boot(); return await dxos.client.services.host.exportSqliteDatabase()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments()'
 ```
 
 Environment:

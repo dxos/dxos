@@ -1,32 +1,38 @@
 ---
 name: composer-forensics
 description: >-
-  Extract and validate data from live Composer browser profiles on disk (Chrome OPFS,
-  IndexedDB, SQLite). Use when forensically inspecting Composer origins, extracting the
-  DXOS SQLite database from OPFS, debugging Automerge load perf (binary vs JSON size,
-  mutation/op breakdown), building maintainer escalation bundles, or validating profile
-  integrity locally.
+  Forensically inspect and repair Composer browser profiles — offline (Chrome OPFS /
+  SQLite extract) or live via /recovery.html debug port. Use for data loss, corruption,
+  slow space open, Automerge bloat, or when the app won't boot. Follow DOCTOR.md for
+  live sessions: user opens debug port, agent explores, keeps a report, confirms before
+  any data changes.
 ---
 
 # Composer forensics
 
-Extract Composer client data from a **live Chrome profile on disk**, validate, and analyze offline.
+Extract Composer client data from a **live Chrome profile on disk**, validate, and analyze offline — or **diagnose and repair live** via recovery mode.
 
-**Full command reference:** [COMMANDS.md](COMMANDS.md) — locate, extract, validate, probe, automerge, SQL, troubleshooting.
+**Live doctor workflow (user has browser):** [DOCTOR.md](DOCTOR.md) — user opens debug port; agent explores; report in `/tmp`; **confirm before any data change**.
 
-**Scope (v1):** macOS + Google Chrome default profile.
+**Full command reference:** [COMMANDS.md](COMMANDS.md) — locate, extract, validate, probe, automerge, SQL, recovery debug port.
+
+**Report template:** [reports/REPORT-TEMPLATE.md](reports/REPORT-TEMPLATE.md)
+
+**Scope (v1):** macOS + Google Chrome default profile (offline extract). Recovery mode works on any origin with `/recovery.html`.
 
 ## When to use
 
-- Inspect, extract, dump, or forensically analyze a Composer profile.
+- **Live doctor session** — user can open `/recovery.html` and debug port; app broken or slow ([DOCTOR.md](DOCTOR.md)).
+- Inspect, extract, dump, or forensically analyze a Composer profile (offline).
 - Debug data loss, corruption, or unexpected state on `main.composer.space`, `labs.composer.space`, or preview deploys.
 - Offline analysis of identity, spaces, feeds, objects, automerge documents.
 
 ## Safety
 
 1. **Read-only by default** — copy blobs out; do not modify Chrome profile files unless asked.
-2. **Consistency** — close Composer tabs before extraction when you need clean `integrity_check`.
-3. **Privacy** — extracts may contain keys and user content; keep under `/tmp`; never commit.
+2. **Live profile changes require user approval** — never run `compactDocuments`, reset, import, or other writes via debug port without explicit confirmation ([DOCTOR.md](DOCTOR.md)).
+3. **Consistency** — close Composer tabs before extraction when you need clean `integrity_check`.
+4. **Privacy** — extracts and reports may contain keys and user content; keep under `/tmp`; never commit.
 
 ## Pipeline (always in this order)
 
@@ -107,18 +113,22 @@ node automerge-bench-load.js /tmp/.../DXOS.sqlite <document-id>
 
 When Composer cannot boot (e.g. Automerge bloat), open **`/recovery.html`** on the same origin.
 
+**Doctor workflow:** see [DOCTOR.md](DOCTOR.md) — user opens **Open Debug Port**; agent uses `composer-recovery.js`; maintain report under `/tmp/composer-forensics/reports/`.
+
 **Default:** static `dxos` globals only (`dxos.Filter`, `dxos.Obj`, `dxos.DXN`, …) — no client, plugins, sync, or indexing.
 
 | Action | What it does |
 |--------|----------------|
 | **Export SQLite** | OPFS-only export, or via client after Boot |
 | **Boot** | Minimal in-process client: `disableP2pReplication`, no vector indexing, no auto-activate spaces |
-| **Reset** | Wipe origin storage |
+| **Reset** | Wipe origin storage (**requires user approval** in doctor workflow) |
 | **Debug Port** | Long-poll `127.0.0.1:9321` (scheme matches page). Browser retries until server appears. |
 
-After **Boot**, `dxos.client`, `dxos.spaces`, `dxos.halo`, `dxos.exportProfile()`, etc. match devtools hooks.
+After **Boot**, `dxos.client`, `dxos.spaces`, `dxos.halo`, `dxos.exportProfile()`, `dxos.recovery.compactDocuments()`, etc. match devtools hooks.
 
 ### Debug port workflow (one-shot — default)
+
+**User opens debug port first.** Agent does not start or control the user's browser.
 
 No persistent server. Browser polls; agent runs one CLI command per eval.
 
@@ -153,6 +163,10 @@ Export/Reset/Boot work without the debug port. Offline forensics on exported SQL
 See [LINEAR-tagindex-write-amplification.md](LINEAR-tagindex-write-amplification.md) for the TagIndex bloat recovery path.
 
 ## Workflow checklist
+
+**Doctor (live):** [DOCTOR.md](DOCTOR.md) checklist.
+
+**Offline forensics:**
 
 ```
 Forensics progress:
@@ -219,6 +233,8 @@ Probe package: `@dxos/composer-forensics` in `scripts/package.json` (workspace; 
 
 ## Additional resources
 
+- [DOCTOR.md](DOCTOR.md) — live recovery / doctor workflow
+- [reports/REPORT-TEMPLATE.md](reports/REPORT-TEMPLATE.md) — session forensics report
 - [COMMANDS.md](COMMANDS.md) — every command documented
 - [STORAGE.md](STORAGE.md) — Chrome on-disk layout
 - [VALIDATION.md](VALIDATION.md) — SQL templates

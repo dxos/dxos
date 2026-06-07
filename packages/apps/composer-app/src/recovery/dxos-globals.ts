@@ -3,6 +3,7 @@
 //
 
 import { type DevtoolsHook, mountDevtoolsHooks } from '@dxos/client/devtools';
+import { type CompactDocumentsResult } from '@dxos/migrations';
 
 /** Static devtools globals only — no Client until {@link bootRecoveryClient}. */
 export const installDxosGlobals = (): DevtoolsHook => {
@@ -25,6 +26,9 @@ export type RecoveryHelpers = {
   reset: () => Promise<void>;
   log: (message: string) => void;
   status: () => Record<string, unknown>;
+  compactDocuments: (options?: { spaceId?: string; objectIds?: string[] }) => Promise<
+    CompactDocumentsResult & { spaceId: string }
+  >;
 };
 
 export const attachRecoveryHelpers = (helpers: RecoveryHelpers): void => {

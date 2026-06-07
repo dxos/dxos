@@ -1,6 +1,8 @@
 # Composer forensics — session memory
 
-Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` + terse bullets. Promote durable rules into `SKILL.md` or `STORAGE.md`.
+Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` + terse bullets. Promote durable rules into `SKILL.md`, `DOCTOR.md`, or `STORAGE.md`.
+
+**Doctor sessions:** full report lives in `/tmp/composer-forensics/reports/` (template: `reports/REPORT-TEMPLATE.md`). MEMORY.md gets a pointer only — no user secrets.
 
 ---
 
@@ -20,3 +22,5 @@ Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` 
 - Composer `/recovery.html`: minimal safe mode (export OPFS SQLite, reset, boot minimal client, debug port on :9321).
 - Recovery debug: browser opens Debug Port first (polls with retry) → `composer-recovery.js '<snippet>'` one-shot (stdout JSON, exits). `--interactive` for REPL. HTTPS needs `COMPOSER_RECOVERY_HTTPS=1` + mkcert.
 - Boot loader excluded from `recovery.html` (only `index.html`).
+- **Doctor workflow (`DOCTOR.md`):** user opens debug port (agent never starts browser) → explore read-only → report in `/tmp/composer-forensics/reports/` → diagnose with separate DXOS / external issue blocks → **always confirm before data changes** → remediate with permission → close-out with next steps and issues to file.
+- `dxos.recovery.compactDocuments()` — document compaction epoch migration (requires boot + user approval).

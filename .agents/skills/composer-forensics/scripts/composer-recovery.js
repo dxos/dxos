@@ -65,6 +65,7 @@ Static \`dxos.Filter\`, \`dxos.Obj\`, etc. are available before boot; \`dxos.cli
   dxos.recovery.status()
   await dxos.recovery.boot()
   await dxos.recovery.exportSqlite()
+  await dxos.recovery.compactDocuments()
   dxos.spaces?.()
 `;
 

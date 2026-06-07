@@ -13,6 +13,7 @@ import {
 } from './recovery/dxos-globals';
 import { runDebugPortLoop } from './recovery/debug-port';
 import { bootRecoveryClient, destroyRecoveryClient, exportBootedSqlite, isRecoveryClientBooted } from './recovery/boot-client';
+import { compactDocumentsInRecovery } from './recovery/compact-documents';
 import { downloadSqliteExport, exportOpfsSqlite } from './recovery/opfs-export';
 import { resetComposerStorage } from './recovery/reset-storage';
 
@@ -81,6 +82,19 @@ const recoveryHelpers: RecoveryHelpers = {
     booted: isRecoveryClientBooted(),
     hasClient: Boolean(getDxos().client),
   }),
+  compactDocuments: async (options) => {
+    print('Compacting linked Automerge documents (epoch migration)…');
+    const started = performance.now();
+    const result = await compactDocumentsInRecovery(options);
+    print(
+      `Compacted ${result.compacted.length} document(s) in space ${result.spaceId} ` +
+        `(epoch ${result.epochNumber}, ${(performance.now() - started).toFixed(0)} ms)`,
+    );
+    if (result.skipped.length > 0) {
+      print(`Skipped ${result.skipped.length} id(s): ${result.skipped.join(', ')}`);
+    }
+    return result;
+  },
 };
 
 attachRecoveryHelpers(recoveryHelpers);

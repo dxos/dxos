@@ -65,6 +65,8 @@ export const runDebugPortLoop = async ({
       continue;
     }
 
+    log(`Command #${command.id}:`);
+    log(command.code);
     log(`Evaluating command #${command.id}…`);
     let payload: DebugResultPayload;
     try {
