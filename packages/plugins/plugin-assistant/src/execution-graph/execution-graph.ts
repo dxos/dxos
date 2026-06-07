@@ -418,6 +418,17 @@ const spanTreeToCommits = (
     const parentBranch = branchOf(parentSpan);
     const ownBranch = branchOf(span);
 
+    // A "process boundary" span is a concurrent child PROCESS (its own pid, differing from the
+    // parent's) with real sub-flow content (a middle event) — e.g. a delegated sub-agent. Such a
+    // span gets its own lane: it forks onto its own branch at begin and collapses back to main at
+    // end (so neither its lane nor its parent's lane dangles). A bare operation (begin+end only)
+    // collapses to a single commit and is NOT treated as a boundary — forking its transient begin
+    // mid-stream would flash a throwaway lane.
+    const ownPid = span.meta.pid;
+    const parentPid = parentSpan?.meta.pid;
+    const spanHasMiddle = span.events.some((event) => !isSpanBeginEvent(event) && !isSpanEndEvent(event));
+    const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid && spanHasMiddle;
+
     let branch: string;
     let parents: string[];
 
@@ -432,20 +443,9 @@ const spanTreeToCommits = (
       branch = parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isBeginEvent) {
-      // Begin commit, anchored to the parent's structural context. A nested sub-span (same process,
-      // or a span with no pid of its own) stays on the parent lane and only its middle events fork
-      // — unchanged. A child PROCESS (its own pid, differing from the parent's) forks onto its OWN
-      // branch from this first event, so a concurrent sub-agent gets its own lane immediately
-      // instead of sharing the parent's lane until its first middle commit (which previously made
-      // the lane "snap" across as events streamed in).
-      const ownPid = span.meta.pid;
-      const parentPid = parentSpan?.meta.pid;
-      // Only fork onto the child's own branch when the span has real sub-flow content (a middle
-      // event). A bare operation (begin+end only) collapses to a single commit; forking its
-      // transient begin while streaming — before its end arrives — would flash a throwaway lane
-      // that vanishes once the span collapses.
-      const spanHasMiddle = span.events.some((event) => !isSpanBeginEvent(event) && !isSpanEndEvent(event));
-      const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid && spanHasMiddle;
+      // Begin commit, anchored to the parent's structural context. A nested sub-span stays on the
+      // parent lane (only its middle events fork). A concurrent child process forks onto its own
+      // branch from this first event so it gets its own lane immediately.
       branch = isProcessBoundary ? ownBranch : parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isEndEvent) {
@@ -456,10 +456,15 @@ const spanTreeToCommits = (
       // sibling span's commits emitted between begin and end — e.g. when two top-level Routine
       // spans overlap on main, R1.end would otherwise draw an arrow back to R1.begin that
       // crosses over R2.begin. Anchoring to the previous main commit keeps main linear.
-      branch = parentBranch;
+      //
+      // A concurrent child process collapses all the way back to MAIN (merging its own branch),
+      // rather than to its parent's branch: the parent (e.g. a supervisor whose turn already merged
+      // to main) would otherwise gain commits after its own merge and never re-collapse — leaving a
+      // dangling lane after the child finishes.
+      branch = isProcessBoundary ? MAIN_BRANCH : parentBranch;
       parents = builder.computeParents(
         CommitSelector.unionAll(
-          CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+          CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last())),
           CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
         ),
       );

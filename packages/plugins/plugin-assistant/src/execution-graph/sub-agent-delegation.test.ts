@@ -33,17 +33,17 @@ describe('sub-agent delegation fixture', () => {
       │  ●     [info] Get Agent Context - Success
       ◆──╯     [atom] Agent completed request
       │  ├──●  [brain] Run Routine
-      │  │  ●  [info] Get Agent Context - Success
-      │  │  ●  [user] Complete the following task and report the result concisely.
-      │  │  ●  [info] Get Agent Context - Success
-      ●  │  │  [pencil] Update Chat Name - Success
-         │  ●  [file-text] Create - Success
-         │  ●  [info] Get Agent Context - Success
-         │  ●  [plus] Add artifact - Error
-         │  ●  [info] Get Agent Context - Success
-         │  ●  [wrench] completeJob - Success
-         │  ●  [info] Get Agent Context - Success
-         ◆──╯  [brain] Run Routine - Success
+      │     ●  [info] Get Agent Context - Success
+      │     ●  [user] Complete the following task and report the result concisely.
+      │     ●  [info] Get Agent Context - Success
+      ●     │  [pencil] Update Chat Name - Success
+      │     ●  [file-text] Create - Success
+      │     ●  [info] Get Agent Context - Success
+      │     ●  [plus] Add artifact - Error
+      │     ●  [info] Get Agent Context - Success
+      │     ●  [wrench] completeJob - Success
+      │     ●  [info] Get Agent Context - Success
+      ◆─────╯  [brain] Run Routine - Success
       "
     `);
   });
