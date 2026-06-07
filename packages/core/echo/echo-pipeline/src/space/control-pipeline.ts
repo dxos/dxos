@@ -22,14 +22,14 @@ import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
 
-import { type MetadataStore } from '../metadata';
+import { type IMetadataStore } from '../metadata';
 import { Pipeline, type PipelineAccessor } from '../pipeline';
 
 export type ControlPipelineProps = {
   spaceKey: PublicKey;
   genesisFeed: FeedWrapper<FeedMessage>;
   feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
-  metadataStore: MetadataStore;
+  metadataStore: IMetadataStore;
 };
 
 const TIMEFRAME_SAVE_DEBOUNCE_INTERVAL = 500;
@@ -50,7 +50,7 @@ export class ControlPipeline {
 
   @trace.info({ spanAttribute: true })
   private readonly _spaceKey: PublicKey;
-  private readonly _metadata: MetadataStore;
+  private readonly _metadata: IMetadataStore;
   private _targetTimeframe?: Timeframe;
   private _lastTimeframeSaveTime: number = Date.now();
 

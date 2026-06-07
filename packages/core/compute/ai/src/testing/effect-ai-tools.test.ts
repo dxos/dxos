@@ -34,7 +34,7 @@ describe('effect AI tool calls', () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          AiService.model('ai.claude.model.claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
         ),
@@ -82,7 +82,7 @@ describe('effect AI tool calls', () => {
         expect(messages.length).toBeGreaterThan(1);
       },
       Effect.provide(
-        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+        AiService.model('ai.claude.model.claude-3-5-sonnet-20241022').pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),

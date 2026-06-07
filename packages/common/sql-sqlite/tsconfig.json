@@ -8,6 +8,9 @@
   "references": [
     {
       "path": "../log"
+    },
+    {
+      "path": "../node-std"
     }
   ]
 }

@@ -38,7 +38,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
 
-    const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
+    const transcriberProvider: TranscriptionCapabilities.TranscriberProvider = ({
       audioStreamTrack,
       onSegments,
       transcriberConfig,
@@ -64,7 +64,9 @@ export default Capability.makeModule(
       });
     };
 
-    const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
+    const transcriptionManagerProvider: TranscriptionCapabilities.TranscriptionManagerProvider = ({
+      messageEnricher,
+    }) => {
       const client = capabilities.get(ClientCapabilities.Client);
       const transcriptionManager = new TranscriptionManager({
         edgeClient: client.edge.http,
@@ -81,8 +83,8 @@ export default Capability.makeModule(
     };
 
     return [
-      Capability.contributes(TranscriptionCapabilities.Transcriber, getTranscriber),
-      Capability.contributes(TranscriptionCapabilities.TranscriptionManager, getTranscriptionManager),
+      Capability.contributes(TranscriptionCapabilities.TranscriberProvider, transcriberProvider),
+      Capability.contributes(TranscriptionCapabilities.TranscriptionManagerProvider, transcriptionManagerProvider),
     ];
   }),
 );

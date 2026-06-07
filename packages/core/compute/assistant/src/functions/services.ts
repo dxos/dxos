@@ -133,6 +133,16 @@ export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.De
 const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
 
 /**
+ * Empty parameters schema annotated with an explicit JSON schema so that
+ * @effect/ai versions that call JSONSchema.fromAST directly (≥0.35.0) still
+ * produce a valid `{type: "object"}` for the Anthropic API instead of the
+ * constEmptyStruct `{anyOf: [{type:"object"},{type:"array"}]}`.
+ */
+const EMPTY_PARAMETERS_SCHEMA = Schema.Struct({}).annotations({
+  [SchemaAST.JSONSchemaAnnotationId]: { type: 'object', properties: {}, required: [], additionalProperties: false },
+});
+
+/**
  * Projects an `Operation.Definition` into an `AiTool`.
  */
 const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
@@ -140,11 +150,14 @@ const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
     return toolCache.get(fn)!;
   }
 
+  const fields = createStructFieldsFromSchema(fn.input);
+  const parametersSchema = Object.keys(fields).length === 0 ? EMPTY_PARAMETERS_SCHEMA : Schema.Struct(fields);
   const tool = Tool.make(makeToolName(fn.meta.name ?? fn.meta.key), {
     description: fn.meta.description,
-    parameters: createStructFieldsFromSchema(fn.input),
     failure: Schema.Any,
-  }).annotate(FunctionToolAnnotation, { definition: fn });
+  })
+    .setParameters(parametersSchema)
+    .annotate(FunctionToolAnnotation, { definition: fn });
   toolCache.set(fn, tool);
   return tool;
 };

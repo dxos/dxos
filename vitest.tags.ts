@@ -20,5 +20,8 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
   { name: 'sync-e2e', description: 'End-to-end tests against the real EDGE worker.' },
   { name: 'functions-e2e', description: 'End-to-end tests that deploy and invoke real Cloudflare functions.' },
   { name: 'tracing-e2e', description: 'End-to-end tracing/observability tests against SigNoz.' },
-  { name: 'compiler', description: 'Tests that exercise the DXOS TypeScript compiler plugin.' },
+  {
+    name: 'compiler',
+    description: 'Tests that depend on external CDN resources (e.g. TypeScript playground lib.d.ts).',
+  },
 ];

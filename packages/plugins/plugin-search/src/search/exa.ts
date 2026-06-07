@@ -61,7 +61,7 @@ export const search = async <T extends Type.AnyEntity>(
   //   systemPrompt += `\n<search_context>${options.context}</search_context>`;
   // }
   // const result = await getStructuredOutput(options.AiService, {
-  //   model: '@anthropic/claude-3-5-haiku-20241022',
+  //   model: 'ai.claude.model.claude-3-5-haiku-20241022',
   //   systemPrompt,
   //   history: [
   //     Obj.make(Message.Message, {
@@ -152,7 +152,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 
 // const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
 //   const { terms } = await getStructuredOutput(AiService, {
-//     model: '@anthropic/claude-3-5-haiku-20241022',
+//     model: 'ai.claude.model.claude-3-5-haiku-20241022',
 //     systemPrompt: trim`
 //       You are a search term extraction agent.
 //       Extract the relevant search terms from the context.

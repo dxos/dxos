@@ -399,6 +399,29 @@ export class EntityMetaIndex implements Index {
   );
 
   /**
+   * Look up object metadata by object id across one or more spaces (space db and queue items).
+   */
+  queryObjectIds = Effect.fn('EntityMetaIndex.queryObjectIds')(
+    (query: {
+      spaceIds: readonly EntityMeta['spaceId'][];
+      objectIds: readonly EntityMeta['objectId'][];
+    }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.spaceIds.length === 0 || query.objectIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const rows =
+          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceIds)} AND ${sql.in('objectId', query.objectIds)}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
    * Look up object metadata by objectId, spaceId, and queueId.
    */
   lookupByObjectId = Effect.fn('EntityMetaIndex.lookupByObjectId')(

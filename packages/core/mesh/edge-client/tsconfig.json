@@ -15,9 +15,6 @@
       "path": "../../../common/crypto"
     },
     {
-      "path": "../../../common/debug"
-    },
-    {
       "path": "../../../common/effect"
     },
     {
@@ -34,9 +31,6 @@
     },
     {
       "path": "../../../common/test-utils"
-    },
-    {
-      "path": "../../../common/tracing"
     },
     {
       "path": "../../../common/util"

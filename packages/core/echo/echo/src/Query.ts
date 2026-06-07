@@ -33,6 +33,17 @@ import type * as View from './View';
 // TODO(dmaretskyi): Filter only properties that are references (or optional references, or unions that include references).
 type RefPropKey<T> = keyof T & string;
 
+type RefArrayElement<A> = A extends readonly (infer E)[] ? E : A extends (infer E)[] ? E : never;
+
+/** Target entity when traversing an outgoing ref or array-of-refs property. */
+type ReferenceTraversalTarget<P> = P extends Ref.Unknown
+  ? Ref.Target<P>
+  : P extends Ref.Unknown | undefined
+    ? Ref.Target<Exclude<P, undefined>>
+    : RefArrayElement<P> extends Ref.Unknown
+      ? Ref.Target<RefArrayElement<P>>
+      : never;
+
 // TODO(burdon): Narrow T to Entity.Unknown?
 export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -53,15 +64,7 @@ export interface Query<T> {
    * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
    */
-  'reference'<K extends RefPropKey<T>>(
-    key: K,
-  ): Query<
-    T[K] extends Ref.Unknown
-      ? Ref.Target<T[K]>
-      : T[K] extends Ref.Unknown | undefined
-        ? Ref.Target<Exclude<T[K], undefined>>
-        : never
-  >;
+  'reference'<K extends RefPropKey<T>>(key: K): Query<ReferenceTraversalTarget<T[K]>>;
 
   /**
    * Find objects referencing this object.

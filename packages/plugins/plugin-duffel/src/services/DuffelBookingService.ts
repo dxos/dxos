@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { BookingSearch } from '@dxos/plugin-trip';
+import { BookingSearch } from '@dxos/plugin-trip/types';
 
 import { offerRequestBody, parseOffers } from './duffel-mapping';
 import { createOfferRequest } from './DuffelClient';

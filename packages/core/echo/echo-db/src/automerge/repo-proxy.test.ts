@@ -5,15 +5,14 @@
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Record from 'effect/Record';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
-import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
+import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-pipeline/testing';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -112,13 +111,12 @@ describe('RepoProxy', () => {
   });
 
   test('load document from disk', async () => {
-    const tmpPath = createTmpPath();
+    const dbPath = createTmpPath();
 
     let url: AutomergeUrl;
     {
-      const level = createTestLevel(tmpPath);
-      await openAndClose(level);
-      const { host, dataService } = await setup(level);
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const { host, dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
@@ -135,13 +133,13 @@ describe('RepoProxy', () => {
       await host.flush(Context.default());
       await clientRepo.close();
       await host.close();
-      await level.close();
+      await dispose();
     }
 
     {
-      const level = createTestLevel(tmpPath);
-      await openAndClose(level);
-      const { dataService } = await setup(level);
+      const { runtime, dispose: disposeRuntime } = createTestSqliteRuntime(dbPath);
+      onTestFinished(() => disposeRuntime());
+      const { dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
@@ -214,12 +212,12 @@ describe('RepoProxy', () => {
   });
 
   test('new document persists without `flush`', async () => {
-    const path = createTmpPath();
+    const dbPath = createTmpPath();
     let url: AutomergeUrl;
 
     {
-      const level = createTestLevel(path);
-      const { host, dataService } = await setup(level);
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const { host, dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
@@ -227,14 +225,15 @@ describe('RepoProxy', () => {
       const clientHandle = clientRepo.create<{ text: string }>({ text: text });
       await sleep(200); // Wait for the object to be saved without flush.
       url = clientHandle.url!;
-      await level.close();
       await host.close();
       await clientRepo.close();
+      await dispose();
     }
 
     {
-      const level = createTestLevel(path);
-      const { dataService } = await setup(level);
+      const { runtime, dispose: disposeRuntime } = createTestSqliteRuntime(dbPath);
+      onTestFinished(() => disposeRuntime());
+      const { dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
@@ -246,12 +245,12 @@ describe('RepoProxy', () => {
   });
 
   test('document mutation persists with `flush`', async () => {
-    const path = createTmpPath();
+    const dbPath = createTmpPath();
     let url: AutomergeUrl;
 
     {
-      const level = createTestLevel(path);
-      const { host, dataService } = await setup(level);
+      const { runtime, dispose } = createTestSqliteRuntime(dbPath);
+      const { host, dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
@@ -262,14 +261,15 @@ describe('RepoProxy', () => {
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url!;
       await sleep(200); // Wait for the object to be saved without flush.
-      await level.close();
       await host.close();
       await clientRepo.close();
+      await dispose();
     }
 
     {
-      const level = createTestLevel(path);
-      const { dataService } = await setup(level);
+      const { runtime, dispose: disposeRuntime } = createTestSqliteRuntime(dbPath);
+      onTestFinished(() => disposeRuntime());
+      const { dataService } = await setup(runtime);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
@@ -434,11 +434,13 @@ describe('RepoProxy', () => {
   });
 });
 
-const setup = async (kv = createTestLevel()) => {
-  await openAndClose(kv);
-  const host = new AutomergeHost({
-    db: kv,
-  });
+const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime']) => {
+  if (!runtime) {
+    const handle = createTestSqliteRuntime();
+    onTestFinished(() => handle.dispose());
+    runtime = handle.runtime;
+  }
+  const host = new AutomergeHost({ runtime });
   await openAndClose(host);
 
   const dataService = new DataServiceImpl({
@@ -452,7 +454,7 @@ const setup = async (kv = createTestLevel()) => {
     log('refreshCollectionState', { documentIds });
     await host.updateLocalCollectionState('default', documentIds);
   };
-  return { kv, host, dataService, refreshCollectionState };
+  return { host, dataService, refreshCollectionState };
 };
 
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {

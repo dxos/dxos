@@ -47,6 +47,7 @@ export const translations = [
         'booking.enable-providers.message': 'Enable a booking plugin from the registry to search.',
         'booking.no-offers.message': 'No offers found.',
         'booking.missing-key.message': 'Set the provider API key in plugin settings to search.',
+        'booking.past-date.message': 'Choose a departure date in the future to search.',
         'booking.error.message': 'Search failed. Check the provider configuration and try again.',
         'route.plan.label': 'Plan route',
         'route.planning.label': 'Planning route…',

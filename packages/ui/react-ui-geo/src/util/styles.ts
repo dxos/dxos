@@ -44,14 +44,11 @@ export const globeStyles = (themeMode: ThemeMode): StyleSet =>
       }
     : {
         water: {
-          fillStyle: '#fff',
+          fillStyle: '#C0DAE4',
         },
         land: {
-          fillStyle: '#f5f5f5',
-          strokeStyle: '#ccc',
-        },
-        graticule: {
-          strokeStyle: '#ddd',
+          fillStyle: '#C2D8B4',
+          strokeStyle: '#A6C291',
         },
         line: {
           lineWidth: 1.5,

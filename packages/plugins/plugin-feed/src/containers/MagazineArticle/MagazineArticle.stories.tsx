@@ -18,6 +18,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { MagazineBlueprint } from '#blueprints';
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
@@ -172,12 +173,14 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     ];
     yield* Effect.promise(() => queue.append(posts));
 
-    space.db.add(
-      Magazine.make({
-        name: 'Curate Flow Test',
-        feeds: [Ref.make(subscriptionFeed)],
-      }),
-    );
+    const mag = Magazine.make({
+      name: 'Curate Flow Test',
+      feeds: [Ref.make(subscriptionFeed)],
+    });
+    space.db.add(mag);
+    // Curation resolves the base methodology blueprint from the registry; register it here since the
+    // automation plugin (which normally syncs BlueprintDefinition capabilities) isn't in this story.
+    client.graph.registry.add([MagazineBlueprint.make()]);
     yield* Effect.promise(() => space.db.flush());
   });
 

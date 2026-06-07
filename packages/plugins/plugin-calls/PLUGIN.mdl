@@ -11,7 +11,7 @@ real-time call. It carries no persistent schema of its own — calls are attache
 to existing objects (typically `Channel`, but pluggable) via a `roomId` derived
 from the object's DXN. Persistent meeting records, transcripts and summaries
 live in `plugin-meeting`, which composes on top of this plugin's
-`CallsCapabilities.Manager` and `Extension`.
+`CallsCapabilities.Manager` and `EventHandler`.
 
 This plugin is the result of extracting all video-call functionality out of
 `plugin-thread`. After the split `plugin-thread` is concerned with chat,
@@ -155,7 +155,7 @@ capability CallsCapabilities.Manager
   type: CallManager
   events: [client-ready]
 
-capability CallsCapabilities.Extension
+capability CallsCapabilities.EventHandler
   desc: |
     Pluggable per-call lifecycle callback. Contributors (e.g. plugin-meeting,
     plugin-transcription) react to join / leave / state changes without
@@ -320,8 +320,8 @@ service SpeakingMonitor
 ```mdl
 op startCall
   desc: |
-    Joins the call for `roomId`, invoking `Extension.onJoin` for every
-    registered extension after the local session is established.
+    Joins the call for `roomId`, invoking `EventHandler.onJoin` for every
+    registered EventHandler after the local session is established.
   input:
     roomId: RoomId
     channel?: Channel             # passed through to extensions
@@ -337,7 +337,7 @@ op startCall
 op leaveCall
   desc: |
     Tears down the local session, turns off audio/video/screenshare,
-    and invokes `Extension.onLeave` for every registered extension.
+    and invokes `EventHandler.onLeave` for every registered EventHandler.
   input:
     roomId?: RoomId
   effects: [device, network]
@@ -451,27 +451,27 @@ feat F-4: Media Controls
 ```mdl
 feat F-5: Extension Lifecycle
 
-  req F-5.1: Plugins may register CallsCapabilities.Extension with optional
+  req F-5.1: Plugins may register CallsCapabilities.EventHandler with optional
              onJoin / onLeave / onCallStateUpdated / onMediaStateUpdated
              callbacks.
   req F-5.2:
     when: op:startCall completes
-    then: every registered Extension.onJoin is invoked once with
+    then: every registered EventHandler.onJoin is invoked once with
           { channel, roomId }
 
   req F-5.3:
     when: CallState changes
-    then: every registered Extension.onCallStateUpdated is invoked with the
+    then: every registered EventHandler.onCallStateUpdated is invoked with the
           new state
 
   req F-5.4:
     when: local MediaState changes (e.g. mic toggled, speech detected)
-    then: every registered Extension.onMediaStateUpdated is invoked with
+    then: every registered EventHandler.onMediaStateUpdated is invoked with
           [mediaState, isSpeaking]
 
   req F-5.5:
     when: op:leaveCall runs
-    then: every registered Extension.onLeave is invoked with the prior roomId
+    then: every registered EventHandler.onLeave is invoked with the prior roomId
 ```
 
 ```mdl
@@ -515,7 +515,7 @@ feat F-8: Independence from plugin-thread
 
   req F-8.4: Existing consumers of `ThreadCapabilities.CallManager` /
              `CallExtension` migrate to `CallsCapabilities.Manager` /
-             `CallsCapabilities.Extension`. The thread capability names
+             `CallsCapabilities.EventHandler`. The thread capability names
              are removed.
 ```
 
@@ -552,7 +552,7 @@ test T-3: Leave a call
     - MediaManager.stop is called for audio / video / screenshare
     - CallState.joined === false
     - "Active Call" companion disappears
-    - every registered Extension.onLeave(R) is invoked
+    - every registered EventHandler.onLeave(R) is invoked
 ```
 
 ```mdl
@@ -568,7 +568,7 @@ test T-4: Display-name gate
 
 ```mdl
 test T-5: Extension receives lifecycle callbacks
-  given: a contributor has registered CallsCapabilities.Extension with
+  given: a contributor has registered CallsCapabilities.EventHandler with
          onJoin / onLeave callbacks
   when: a call is started then ended
   then:
@@ -602,7 +602,7 @@ test T-8: SpeakingMonitor signal
   when: the user speaks above the threshold for 300ms
   then:
     - CallState.self.isSpeaking === true
-    - Extension.onMediaStateUpdated is invoked with isSpeaking === true
+    - EventHandler.onMediaStateUpdated is invoked with isSpeaking === true
 ```
 
 ```mdl

@@ -19,9 +19,7 @@ import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
@@ -38,8 +36,8 @@ type OpenDatabaseOptions = {
 type PeerOptions = {
   types?: Type.AnyEntity[];
   assignQueuePositions?: boolean;
-
-  kv?: LevelDB;
+  /** Path to a file-based SQLite database for persistence tests. Uses in-memory SQLite when omitted. */
+  storagePath?: string;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -51,6 +49,7 @@ export class EchoTestBuilder extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
+    await Promise.all(this._peers.map((peer) => peer.disposeStorage()));
   }
 
   async createPeer(options: PeerOptions = {}): Promise<EchoTestPeer> {
@@ -79,9 +78,9 @@ export class EchoTestBuilder extends Resource {
 }
 
 export class EchoTestPeer extends Resource {
-  private readonly _kv: LevelDB;
   private readonly _types: Type.AnyEntity[];
   private readonly _assignQueuePositions?: boolean;
+  private readonly _storagePath?: string;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -93,14 +92,13 @@ export class EchoTestPeer extends Resource {
     SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction,
     never
   >;
-  private _isReloading = false;
 
-  constructor({ kv = createTestLevel(), types, assignQueuePositions }: PeerOptions) {
+  constructor({ types, assignQueuePositions, storagePath }: PeerOptions = {}) {
     super();
-    this._kv = kv;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._assignQueuePositions = assignQueuePositions;
+    this._storagePath = storagePath;
   }
 
   private _createManagedRuntime(): ManagedRuntime.ManagedRuntime<
@@ -108,7 +106,8 @@ export class EchoTestPeer extends Resource {
     never
   > {
     if (this._persistentRuntime == null) {
-      this._persistentRuntime = ManagedRuntime.make(layerMemory.pipe(Layer.orDie));
+      const baseLayer = this._storagePath ? layerFile(this._storagePath) : layerMemory;
+      this._persistentRuntime = ManagedRuntime.make(baseLayer.pipe(Layer.orDie));
     }
 
     // Keep the same SQLite-backed services across peer reloads by reading them from the
@@ -136,7 +135,6 @@ export class EchoTestPeer extends Resource {
     this._managedRuntime = this._createManagedRuntime();
 
     this._echoHost = new EchoHost({
-      kv: this._kv,
       runtime: this._managedRuntime.runtimeEffect,
       assignQueuePositions: this._assignQueuePositions,
     });
@@ -155,7 +153,6 @@ export class EchoTestPeer extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    await this._kv.open();
     this._initEcho();
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
@@ -172,25 +169,55 @@ export class EchoTestPeer extends Resource {
       client.disconnectFromService();
     }
     await this._echoHost.close(ctx);
-    await this._kv.close();
     await this._managedRuntime.dispose();
-    if (!this._isReloading && this._persistentRuntime != null) {
+    // _persistentRuntime is intentionally preserved here so that data survives close()/open() cycles.
+    // EchoTestBuilder._close() calls disposeStorage() for final cleanup.
+  }
+
+  /** Disposes the underlying SQLite storage. Called by EchoTestBuilder after all peers are closed. */
+  async disposeStorage(): Promise<void> {
+    if (this._persistentRuntime != null) {
       await this._persistentRuntime.dispose();
       this._persistentRuntime = undefined;
     }
+  }
+
+  /** Reads a persistent metadata value from the SQLite storage (key-value table). */
+  async getStorageMetadata(key: string): Promise<string | undefined> {
+    invariant(this._persistentRuntime, 'getStorageMetadata requires a storagePath peer');
+    await this._persistentRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS _test_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)`;
+      }),
+    );
+    const rows = await this._persistentRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        return yield* sql<{ value: string }>`SELECT value FROM _test_metadata WHERE key = ${key}`;
+      }),
+    );
+    return rows.length > 0 ? rows[0].value : undefined;
+  }
+
+  /** Writes a persistent metadata value to the SQLite storage (key-value table). */
+  async setStorageMetadata(key: string, value: string): Promise<void> {
+    invariant(this._persistentRuntime, 'setStorageMetadata requires a storagePath peer');
+    await this._persistentRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS _test_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)`;
+        yield* sql`INSERT OR REPLACE INTO _test_metadata (key, value) VALUES (${key}, ${value})`;
+      }),
+    );
   }
 
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */
   async reload(): Promise<void> {
-    this._isReloading = true;
-    try {
-      await this.close();
-      await this.open();
-    } finally {
-      this._isReloading = false;
-    }
+    await this.close();
+    await this.open();
   }
 
   async createClient(): Promise<EchoClient> {
@@ -200,6 +227,7 @@ export class EchoTestPeer extends Resource {
     client.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
+      queueService: this._echoHost.queuesService,
     });
     await client.open();
     return client;

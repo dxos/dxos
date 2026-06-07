@@ -19,6 +19,11 @@ export type MakeProps = {
   /** Filename for memoized conversations to be stored at. */
   storePath: string;
   allowGeneration: boolean;
+  /**
+   * Patterns matching run-specific identifiers (e.g. {@link MemoizedLanguageModel.SPACE_ID_PATTERN})
+   * to canonicalize for matching and substitute back into the response on a cache hit. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
 };
 
 export const make = (options: MakeProps): MemoizedAiService => ({
@@ -28,6 +33,7 @@ export const make = (options: MakeProps): MemoizedAiService => ({
         modelName: model,
         storePath: options.storePath,
         allowGeneration: options.allowGeneration,
+        dynamicValuePatterns: options.dynamicValuePatterns,
       }),
       options.upstream.model(model),
     ),
@@ -51,8 +57,13 @@ export const layerTest = (options: Partial<Omit<MakeProps, 'upstream'>> = {}) =>
       const upstream = yield* AiService.AiService;
       return make({
         upstream,
-        storePath: options.storePath ?? ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
+        storePath:
+          options.storePath ??
+          (ctx.task.file.filepath.endsWith('.eval.ts')
+            ? ctx.task.file.filepath.replace('.eval.ts', '.conversations.json')
+            : ctx.task.file.filepath.replace('.test.ts', '.conversations.json')),
         allowGeneration: options.allowGeneration ?? isGenerationEnabled(),
+        dynamicValuePatterns: options.dynamicValuePatterns,
       });
     }),
   );

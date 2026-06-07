@@ -28,9 +28,6 @@
     },
     {
       "path": "../../common/timeframe"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }

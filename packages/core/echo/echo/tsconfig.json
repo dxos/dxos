@@ -14,9 +14,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/context"
-    },
-    {
       "path": "../../../common/debug"
     },
     {
@@ -39,9 +36,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../../protocols"
     },
     {
       "path": "../echo-protocol"

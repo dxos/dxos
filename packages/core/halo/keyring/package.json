@@ -29,12 +29,16 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/sql-sqlite": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/sql": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {},
   "publishConfig": {

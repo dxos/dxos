@@ -16,7 +16,7 @@ import {
   type TranscriptionManager as TranscriptionManagerType,
 } from '../transcriber';
 
-export type GetTranscriberProps = {
+export type TranscriberProviderProps = {
   audioStreamTrack: MediaStreamTrack;
   recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
   transcriberConfig?: Partial<TranscriberProps['config']>;
@@ -24,16 +24,16 @@ export type GetTranscriberProps = {
   transcribe?: TranscriberProps['transcribe'];
 };
 
-export type GetTranscriber = (props: GetTranscriberProps) => TranscriberType;
+export type TranscriberProvider = (props: TranscriberProviderProps) => TranscriberType;
 
-export type GetTranscriptionManagerProps = {
+export type TranscriptionManagerProviderProps = {
   messageEnricher?: TranscriptMessageEnricher;
 };
 
-export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManagerType;
+export type TranscriptionManagerProvider = (props: TranscriptionManagerProviderProps) => TranscriptionManagerType;
 
-export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}.capability.transcriber`);
+export const TranscriberProvider = Capability.make<TranscriberProvider>(`${meta.id}.capability.transcriber`);
 
-export const TranscriptionManager = Capability.make<GetTranscriptionManager>(
+export const TranscriptionManagerProvider = Capability.make<TranscriptionManagerProvider>(
   `${meta.id}.capability.transcription-manager`,
 );

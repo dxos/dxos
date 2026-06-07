@@ -25,6 +25,7 @@ import {
   SignalPanel,
   SpaceInfoPanel,
   SpaceListPanel,
+  SqlitePanel,
   StoragePanel,
   SwarmPanel,
   TestingPanel,
@@ -57,6 +58,10 @@ export const useRoutes = () => {
             {
               path: '/client/storage',
               element: <StoragePanel />,
+            },
+            {
+              path: '/client/sqlite',
+              element: <SqlitePanel />,
             },
             {
               path: '/client/logs',

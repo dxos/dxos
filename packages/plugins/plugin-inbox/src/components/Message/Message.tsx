@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Filter, Obj, Tag as EchoTag } from '@dxos/echo';
@@ -18,6 +18,7 @@ import { decorateMarkdown, preview } from '@dxos/ui-editor';
 
 import { InboxCapabilities, Mailbox } from '#types';
 
+import { hideRemoteImages } from '../../extensions';
 import { useExtractedObjects } from '../../hooks';
 import { formatDateTime } from '../../util';
 import { Header } from '../Header';
@@ -96,10 +97,24 @@ const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { attendableId, message, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
+
+  // Settings capability is optional (see MessageBody); fall back to safe defaults outside the plugin.
+  const settingsAtoms = useCapabilities(InboxCapabilities.Settings);
+  const settingsAtom = settingsAtoms[0] ?? FALLBACK_SETTINGS_ATOM;
+  const settings = useAtomValue(settingsAtom);
+  const setSettings = useAtomSet(settingsAtom);
+  const loadRemoteImages = settings.loadRemoteImages ?? false;
+  const onToggleLoadImages = useCallback(
+    () => setSettings((prev) => ({ ...prev, loadRemoteImages: !(prev.loadRemoteImages ?? false) })),
+    [setSettings],
+  );
+
   const menuActions = useMessageActions({
     message,
     viewMode,
     setViewMode,
+    loadRemoteImages,
+    onToggleLoadImages,
     onOpen,
     onReply,
     onReplyAll,
@@ -265,7 +280,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
                   return true;
                 }
                 // When remote-image loading is disabled, suppress http(s) image rendering;
-                // the markdown source is left visible as a plain link instead.
+                // `hideRemoteImages` below also omits the raw markdown source entirely.
                 if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
                   return true;
                 }
@@ -273,6 +288,8 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
               },
             }),
             preview(),
+            // When remote images are disabled, completely omit the image markdown (no visible link).
+            ...(loadRemoteImages ? [] : [hideRemoteImages()]),
           ]
         : [],
     [markdown, loadRemoteImages],

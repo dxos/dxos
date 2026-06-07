@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
-import React, { PropsWithChildren, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import {
@@ -268,25 +268,24 @@ export const FormField = (props: FormFieldProps) => {
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
       return (
-        <Nesting>
-          <FormFieldSet
-            schema={schema}
-            path={path}
-            readonly={readonly}
-            layout={layout}
-            label={label}
-            projection={projection}
-            fieldMap={fieldMap}
-            fieldProvider={fieldProvider}
-            createOptionLabel={createOptionLabel}
-            createOptionIcon={createOptionIcon}
-            createInitialValuePath={createInitialValuePath}
-            db={db}
-            useType={schemaHook}
-            getOptions={getOptions}
-            onCreate={onCreate}
-          />
-        </Nesting>
+        <FormFieldSet
+          schema={schema}
+          path={path}
+          readonly={readonly}
+          layout={layout}
+          label={label}
+          collapsible
+          projection={projection}
+          fieldMap={fieldMap}
+          fieldProvider={fieldProvider}
+          createOptionLabel={createOptionLabel}
+          createOptionIcon={createOptionIcon}
+          createInitialValuePath={createInitialValuePath}
+          db={db}
+          useType={schemaHook}
+          getOptions={getOptions}
+          onCreate={onCreate}
+        />
       );
     }
   }
@@ -299,14 +298,6 @@ FormField.displayName = 'Form.FormField';
 //
 // Layout components
 //
-
-// TODO(burdon): Options (nested or flat).
-// TODO(burdon): Support collapsible.
-export const Nesting = ({ children }: PropsWithChildren) => (
-  <div className='px-2 border border-subdued-separator rounded-sm mt-2'>
-    <div className='pb-2'>{children}</div>
-  </div>
-);
 
 export const IconBlock = ({ inline, ...props }: IconButtonProps & { inline?: boolean }) => {
   return (

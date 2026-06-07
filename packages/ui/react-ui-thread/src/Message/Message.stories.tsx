@@ -3,43 +3,38 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { type MessageEntity, MessageStoryText } from '../testing';
+import { createMessages, getStoryMetadata } from '../testing';
 import { Thread } from '../Thread';
-import { MessageRoot } from './Message';
+import { Message } from './Message';
 
-const DefaultStory = () => {
-  const [identityKey] = useState(PublicKey.random());
-  const [message] = useState<MessageEntity>({
-    id: 'm1',
-    timestamp: new Date().toISOString(),
-    authorId: identityKey.toHex(),
-    text: 'hello',
-  });
+type StoryProps = { editable: boolean };
 
+// Sample messages are authored by 'did:key:alice'; the local identity matches,
+// so `editable` toggles whether the author's own message shows the edit affordance.
+const DefaultStory = ({ editable }: StoryProps) => {
+  const [message] = useMemo(() => createMessages(1), []);
   return (
-    <div className='mx-auto w-96 overflow-y-auto'>
-      <Thread.Root id='t1'>
-        <MessageRoot {...message} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
-          <MessageStoryText {...message} onDelete={() => console.log('delete')} />
-        </MessageRoot>
-      </Thread.Root>
-    </div>
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      identityDid='did:key:alice'
+      editable={editable}
+      onMessageDelete={() => {}}
+    >
+      <Message.Tile message={message} />
+    </Thread.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-thread/Message',
-  component: MessageRoot as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'border w-card-min-width' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -50,4 +45,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Editable: Story = {
+  args: {
+    editable: true,
+  },
+};
+
+export const NonEditable: Story = {
+  args: {
+    editable: false,
+  },
+};

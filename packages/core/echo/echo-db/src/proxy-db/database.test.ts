@@ -15,7 +15,6 @@ import { asyncTimeout, sleep } from '@dxos/async';
 import { Err, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -66,7 +65,7 @@ describe('Database', () => {
     let rootUrl: string;
     {
       const testPeer = await testBuilder.createPeer({
-        kv: createTestLevel(tmpPath),
+        storagePath: tmpPath,
       });
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
@@ -82,7 +81,7 @@ describe('Database', () => {
     // Load database.
     {
       const testPeer = await testBuilder.createPeer({
-        kv: createTestLevel(tmpPath),
+        storagePath: tmpPath,
       });
       const db = await asyncTimeout(testPeer.openDatabase(spaceKey, rootUrl), 1000);
       const objects = await db.query(Query.select(Filter.everything())).run();
