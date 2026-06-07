@@ -21,11 +21,11 @@
 | 5    | Remote control: `recovery.startClient()` on empty profile   | ✅                              |
 | 6    | Remote control: `recovery.compactDocuments()` API wired     | ✅                              |
 | 7    | Boot imported 124 MB profile + compact end-to-end           | ⬜ follow-up (boot >3 min hang) |
-| 8    | Tests + lint pass locally                                   | ⬜ in progress                  |
-| 9    | Commit, push, update PR description                         | ⬜                              |
-| 10   | Wait for CodeRabbit review                                  | ⬜                              |
-| 11   | Address CodeRabbit comments                                 | ⬜                              |
-| 12   | `/land` — CI green, auto-merge                              | ⬜                              |
+| 8    | Tests + lint pass locally                                   | ✅                              |
+| 9    | Commit, push, update PR description                         | ✅                              |
+| 10   | Wait for CodeRabbit review                                  | ✅                              |
+| 11   | Address CodeRabbit comments                                 | ✅                              |
+| 12   | `/land` — CI green, auto-merge                              | ⬜ in progress                  |
 
 ---
 
