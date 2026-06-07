@@ -2,13 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RECOVERY_DEBUG_ORIGIN } from './recovery/constants';
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
+
+import { resolveRecoveryDebugOrigin } from './recovery/constants';
+import {
+  attachRecoveryHelpers,
+  getDxos,
+  installDxosGlobals,
+  type RecoveryHelpers,
+} from './recovery/dxos-globals';
 import { runDebugPortLoop } from './recovery/debug-port';
+import { bootRecoveryClient, destroyRecoveryClient, exportBootedSqlite, isRecoveryClientBooted } from './recovery/boot-client';
 import { downloadSqliteExport, exportOpfsSqlite } from './recovery/opfs-export';
 import { resetComposerStorage } from './recovery/reset-storage';
 
 const logEl = document.getElementById('log')!;
 const exportButton = document.getElementById('export-sqlite') as HTMLButtonElement;
+const bootButton = document.getElementById('boot') as HTMLButtonElement;
 const resetButton = document.getElementById('reset') as HTMLButtonElement;
 const debugButton = document.getElementById('debug-port') as HTMLButtonElement;
 
@@ -17,55 +27,98 @@ const print = (message: string) => {
   logEl.scrollTop = logEl.scrollHeight;
 };
 
+installDxosGlobals();
 print('Composer recovery mode');
 print(`Origin: ${window.location.origin}`);
-print('No plugins, client, sync, or indexing loaded.');
+print('Static dxos globals installed (Filter, Obj, DXN, …). No client until Boot.');
 print('');
-print(`Debug port target: ${RECOVERY_DEBUG_ORIGIN}`);
+const debugOrigin = resolveRecoveryDebugOrigin();
+print(`Debug port: ${debugOrigin}`);
 if (window.location.protocol === 'https:') {
-  print('Note: HTTPS pages may block localhost fetch (mixed content). Export/Reset still work.');
-  print('For debug port on production, use local `vite serve` or a HTTPS recovery server.');
+  print('HTTPS page → use COMPOSER_RECOVERY_HTTPS=1 with mkcert-trusted cert.');
+} else {
+  print('HTTP page → plain HTTP server is fine.');
 }
+print('Debug: node composer-recovery.js "return dxos.recovery.status()"');
 
 let debugAbort: AbortController | undefined;
+
+const exportSqliteBytes = async (): Promise<Uint8Array> => {
+  if (isRecoveryClientBooted()) {
+    return exportBootedSqlite();
+  }
+  return exportOpfsSqlite();
+};
+
+const recoveryHelpers: RecoveryHelpers = {
+  booted: isRecoveryClientBooted,
+  boot: async () => {
+    print('Booting minimal client (no replication, no auto-activate spaces)…');
+    const started = performance.now();
+    const client = await bootRecoveryClient();
+    attachRecoveryHelpers(recoveryHelpers);
+    print(`Booted in ${(performance.now() - started).toFixed(0)} ms — dxos.client available`);
+    bootButton.textContent = 'Booted';
+    bootButton.disabled = true;
+    return { identity: client.halo.identity.get()?.identityKey.truncate() };
+  },
+  exportSqlite: async () => {
+    const bytes = await exportSqliteBytes();
+    downloadSqliteExport(bytes);
+    return { byteLength: bytes.byteLength };
+  },
+  reset: async () => {
+    await destroyRecoveryClient();
+    mountDevtoolsHooks({});
+    attachRecoveryHelpers(recoveryHelpers);
+    bootButton.textContent = 'Boot';
+    bootButton.disabled = false;
+    await resetComposerStorage(print);
+  },
+  log: (message: string) => print(String(message)),
+  status: () => ({
+    origin: window.location.origin,
+    booted: isRecoveryClientBooted(),
+    hasClient: Boolean(getDxos().client),
+  }),
+};
+
+attachRecoveryHelpers(recoveryHelpers);
 
 const setBusy = (busy: boolean) => {
   exportButton.disabled = busy;
   resetButton.disabled = busy;
   debugButton.disabled = busy;
+  if (!isRecoveryClientBooted()) {
+    bootButton.disabled = busy;
+  }
 };
-
-/** Global API available to debug-port snippets via `recovery.*`. */
-const recovery = {
-  status: () => ({
-    origin: window.location.origin,
-    href: window.location.href,
-    userAgent: navigator.userAgent,
-  }),
-  exportSqlite: async () => {
-    const bytes = await exportOpfsSqlite();
-    downloadSqliteExport(bytes);
-    return { byteLength: bytes.byteLength, downloaded: `${bytes.byteLength} bytes` };
-  },
-  reset: async () => {
-    await resetComposerStorage(print);
-  },
-  log: (message: string) => print(String(message)),
-};
-
-(globalThis as typeof globalThis & { recovery: typeof recovery }).recovery = recovery;
 
 exportButton.addEventListener('click', () => {
   void (async () => {
     setBusy(true);
     try {
-      print('Exporting OPFS SQLite (DXOS)…');
+      print('Exporting SQLite…');
       const started = performance.now();
-      const bytes = await exportOpfsSqlite();
-      downloadSqliteExport(bytes);
-      print(`Exported ${bytes.byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
+      const { byteLength } = await recoveryHelpers.exportSqlite();
+      print(`Exported ${byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
     } catch (error) {
       print(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  })();
+});
+
+bootButton.addEventListener('click', () => {
+  void (async () => {
+    setBusy(true);
+    try {
+      await recoveryHelpers.boot();
+    } catch (error) {
+      print(`Boot failed: ${error instanceof Error ? error.message : String(error)}`);
+      bootButton.disabled = false;
+      bootButton.textContent = 'Boot';
     } finally {
       setBusy(false);
     }
@@ -85,7 +138,7 @@ resetButton.addEventListener('click', () => {
   void (async () => {
     setBusy(true);
     try {
-      await resetComposerStorage(print);
+      await recoveryHelpers.reset();
     } finally {
       setBusy(false);
     }
@@ -113,9 +166,14 @@ debugButton.addEventListener('click', () => {
       await runDebugPortLoop({
         session,
         evalCommand: async (code) => {
-          // eslint-disable-next-line no-new-func
-          const runner = new Function('recovery', `"use strict"; return (async () => { ${code} })();`);
-          return runner(recovery);
+          const dxos = getDxos();
+          // eslint-disable-next-line no-new-func -- recovery debug port; user/agent initiated only.
+          const runner = new Function(
+            'dxos',
+            'recovery',
+            `"use strict"; return (async () => { ${code} })();`,
+          );
+          return runner(dxos, recoveryHelpers);
         },
         onLog: print,
         signal: debugAbort?.signal,

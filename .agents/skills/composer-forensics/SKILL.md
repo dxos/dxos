@@ -105,25 +105,50 @@ node automerge-bench-load.js /tmp/.../DXOS.sqlite <document-id>
 
 ## Composer recovery mode (in-app)
 
-When Composer cannot boot (e.g. Automerge bloat), open **`/recovery.html`** on the same origin:
+When Composer cannot boot (e.g. Automerge bloat), open **`/recovery.html`** on the same origin.
+
+**Default:** static `dxos` globals only (`dxos.Filter`, `dxos.Obj`, `dxos.DXN`, …) — no client, plugins, sync, or indexing.
 
 | Action | What it does |
 |--------|----------------|
-| **Export SQLite** | OPFS worker only — downloads raw `DXOS.sqlite` bytes (no client/plugins/sync) |
-| **Reset** | Wipe origin storage (same as `/reset.html`) |
-| **Open Debug Port** | Long-poll `http://127.0.0.1:9321` for agent-driven JS snippets |
+| **Export SQLite** | OPFS-only export, or via client after Boot |
+| **Boot** | Minimal in-process client: `disableP2pReplication`, no vector indexing, no auto-activate spaces |
+| **Reset** | Wipe origin storage |
+| **Debug Port** | Long-poll `127.0.0.1:9321` (scheme matches page). Browser retries until server appears. |
 
-Agent debug server (from this skill):
+After **Boot**, `dxos.client`, `dxos.spaces`, `dxos.halo`, `dxos.exportProfile()`, etc. match devtools hooks.
+
+### Debug port workflow (one-shot — default)
+
+No persistent server. Browser polls; agent runs one CLI command per eval.
+
+```
+1. Open /recovery.html → "Open Debug Port"   (can be before step 2)
+2. node composer-recovery.js '<js snippet>'  (starts, delivers, prints, exits)
+3. Repeat step 2 for each command (browser keeps polling)
+```
 
 ```bash
 cd .agents/skills/composer-forensics/scripts
-node composer-recovery.js 'return await recovery.exportSqlite()'
-node composer-recovery.js --interactive
+node composer-recovery.js 'return dxos.recovery.status()'
+node composer-recovery.js 'await dxos.recovery.boot(); return dxos.spaces?.()'
 ```
 
-Snippets run with `recovery` in scope (`recovery.status()`, `recovery.exportSqlite()`, `recovery.reset()`, `recovery.log()`).
+- **stdout** — JSON result payload (`ok`, `result` / `error`)
+- **stderr** — progress (`Queued`, `Delivered`, `One-shot mode — waiting…`)
+- **Exit code** — `0` on success, `1` on eval error or timeout
+- **`COMPOSER_RECOVERY_TIMEOUT`** — ms to wait for browser (default 120000)
+- **`--interactive`** — persistent REPL when you need many commands without re-running CLI
 
-**HTTPS note:** production origins may block `http://127.0.0.1` fetch (mixed content). Export/Reset still work; use local `vite serve` for debug port on HTTPS profiles, or forensics offline on exported SQLite.
+**Mixed content / HTTPS:** CSP cannot override mixed-content. On `https://` origins the page fetches `https://127.0.0.1:9321`:
+
+```bash
+mkcert -install
+mkcert -cert-file .recovery-tls/cert.pem -key-file .recovery-tls/key.pem localhost 127.0.0.1
+COMPOSER_RECOVERY_HTTPS=1 node composer-recovery.js 'return dxos.recovery.status()'
+```
+
+Export/Reset/Boot work without the debug port. Offline forensics on exported SQLite always works.
 
 See [LINEAR-tagindex-write-amplification.md](LINEAR-tagindex-write-amplification.md) for the TagIndex bloat recovery path.
 
@@ -188,7 +213,7 @@ Use `src/`, not `lib/` — repo `.gitignore` ignores `lib/`.
 | `automerge-escalate.js` | Maintainer bundle: `.bin` + `-report.md` |
 | `automerge-bench-load.js` | Size comparison + loadIncremental timing |
 | `automerge-dump-json.js` | Dump `.bin` + `.json` with size report |
-| `composer-recovery.js` | Debug server for Composer `/recovery.html` |
+| `composer-recovery.js` | One-shot debug bridge for `/recovery.html` (stdout JSON, exits) |
 
 Probe package: `@dxos/composer-forensics` in `scripts/package.json` (workspace; run `pnpm install` from repo root).
 

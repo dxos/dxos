@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RECOVERY_DEBUG_ORIGIN } from './constants';
+import { resolveRecoveryDebugOrigin } from './constants';
 
 export type DebugCommand = {
   id: number;
@@ -30,7 +30,7 @@ export type DebugPortOptions = {
  */
 export const runDebugPortLoop = async ({
   session,
-  origin = RECOVERY_DEBUG_ORIGIN,
+  origin = resolveRecoveryDebugOrigin(),
   evalCommand,
   onLog,
   signal,
@@ -38,10 +38,29 @@ export const runDebugPortLoop = async ({
   const log = (line: string) => onLog?.(line);
 
   log(`Connecting to ${origin} (session ${session})…`);
-  log('Start the server: node composer-recovery.js "<js snippet>"');
+  log('Run one command: node composer-recovery.js "<js snippet>"');
+  log('(Open Debug Port first — browser retries until the server appears.)');
+
+  let waitingLogged = false;
 
   while (!signal?.aborted) {
-    const command = await pollCommand(origin, session, signal);
+    let command: DebugCommand | undefined;
+    try {
+      command = await pollCommand(origin, session, signal);
+    } catch (error) {
+      if (signal?.aborted) {
+        break;
+      }
+      if (!waitingLogged) {
+        log('Waiting for debug server…');
+        waitingLogged = true;
+      }
+      await sleep(RECONNECT_MS, signal);
+      continue;
+    }
+
+    waitingLogged = false;
+
     if (!command) {
       continue;
     }
@@ -62,9 +81,36 @@ export const runDebugPortLoop = async ({
       log(`Command #${command.id} error: ${payload.error}`);
     }
 
-    await postResult(origin, payload, signal);
+    try {
+      await postResult(origin, payload, signal);
+    } catch (error) {
+      if (signal?.aborted) {
+        break;
+      }
+      log(`Debug server unreachable posting result — retrying…`);
+      await sleep(RECONNECT_MS, signal);
+    }
   }
 };
+
+const RECONNECT_MS = 2_000;
+
+const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException('Aborted', 'AbortError'));
+      },
+      { once: true },
+    );
+  });
 
 const pollCommand = async (
   origin: string,

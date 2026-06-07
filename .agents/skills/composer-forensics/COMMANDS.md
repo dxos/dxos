@@ -250,24 +250,48 @@ When the main app will not boot, open **`https://<origin>/recovery.html`** (or `
 
 | Button | Action |
 |--------|--------|
-| Export SQLite | Download raw OPFS `DXOS` database (no plugins/client) |
+| Export SQLite | Download raw OPFS `DXOS` (or via client if booted) |
+| Boot | Minimal client — no P2P replication, no auto-activate spaces |
 | Reset | Wipe all origin storage |
-| Open Debug Port | Connect to local agent server on port **9321** |
+| Debug Port | Long-poll local agent on **9321** — open before running CLI |
 
-Start the agent server:
+On load, **`dxos.*` static globals** are available (same as devtools: `Filter`, `Obj`, `DXN`, …). **`dxos.client`** only after Boot.
+
+### One-shot debug (default)
+
+Browser keeps polling (retries every 2s if server down). Each agent command is a short-lived process:
 
 ```bash
-node .agents/skills/composer-forensics/scripts/composer-recovery.js 'return await recovery.exportSqlite()'
+# 1. /recovery.html → Open Debug Port
+# 2. Run (stdout = JSON result, then exits):
+node .agents/skills/composer-forensics/scripts/composer-recovery.js 'return dxos.recovery.status()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js 'await dxos.recovery.boot(); return await dxos.client.services.host.exportSqliteDatabase()'
+```
+
+Environment:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `COMPOSER_RECOVERY_PORT` | `9321` | Listen port |
+| `COMPOSER_RECOVERY_TIMEOUT` | `120000` | One-shot wait for browser (ms) |
+| `COMPOSER_RECOVERY_HTTPS` | off | TLS for HTTPS origins |
+
+Persistent REPL (optional — multiple commands, one server):
+
+```bash
 node .agents/skills/composer-forensics/scripts/composer-recovery.js --interactive
 ```
 
-Enqueue more commands while running:
+HTTPS origin (production / Cloudflare Pages):
 
 ```bash
-curl -s -X POST http://127.0.0.1:9321/enqueue \
-  -H 'content-type: application/json' \
-  -d '{"code":"return recovery.status()"}'
+cd .agents/skills/composer-forensics/scripts
+mkcert -install
+mkcert -cert-file .recovery-tls/cert.pem -key-file .recovery-tls/key.pem localhost 127.0.0.1
+COMPOSER_RECOVERY_HTTPS=1 node composer-recovery.js 'return dxos.recovery.status()'
 ```
+
+Extra commands in `--interactive` mode only (`POST /enqueue` on persistent server).
 
 Then run forensics on the exported file (sections 1–8 above).
 
@@ -294,7 +318,7 @@ For product/engineering issues (e.g. Automerge bloat root cause), use or update 
 | `scripts/automerge-escalate.js` | JavaScript | Maintainer bundle: `.bin` + `-report.md` |
 | `scripts/automerge-bench-load.js` | JavaScript | Size comparison + loadIncremental timing |
 | `scripts/automerge-dump-json.js` | JavaScript | Dump `.bin` + `.json` with size report |
-| `scripts/composer-recovery.js` | JavaScript | Debug server for Composer `/recovery.html` |
+| `scripts/composer-recovery.js` | JavaScript | One-shot debug bridge for `/recovery.html` |
 | `LINEAR-tagindex-write-amplification.md` | Doc | Linear issue draft (TagIndex bloat root cause + fix) |
 
 ---
@@ -308,4 +332,6 @@ For product/engineering issues (e.g. Automerge bloat root cause), use or update 
 | `integrity_check` fails | Close Chrome; re-extract; hot copies often still query fine |
 | Empty OPFS dir | Site data cleared or wrong profile — check `indexeddb_exists` from locate |
 | Probe identity empty | Profile never finished onboarding or metadata key missing |
-| Debug port won't connect from HTTPS | Mixed content blocks `http://127.0.0.1:9321` — use Export SQLite + offline forensics, or local dev origin |
+| Debug port won't connect from HTTPS | Mixed content — `COMPOSER_RECOVERY_HTTPS=1` + mkcert; CSP does not fix |
+| Debug port stops immediately | Re-open Debug Port (old behavior); now retries — reload `/recovery.html` |
+| One-shot times out | Open Debug Port first; increase `COMPOSER_RECOVERY_TIMEOUT` |

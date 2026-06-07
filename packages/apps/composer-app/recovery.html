@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Allow debug-port fetch to local recovery server (does not bypass mixed-content; use HTTPS server on HTTPS pages). -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="connect-src 'self' http://127.0.0.1:9321 https://127.0.0.1:9321 http://localhost:9321 https://localhost:9321"
+    />
     <title>Composer Recovery</title>
     <style>
       :root {
@@ -85,13 +90,14 @@
   <body>
     <header>
       <h1>Composer Recovery</h1>
-      <p>Safe mode — no plugins, sync, or indexing. Nothing runs until you choose an action below.</p>
+      <p>Safe mode — static <code>dxos</code> globals only until Boot. No plugins, sync, or indexing.</p>
     </header>
     <pre id="log"></pre>
     <footer>
       <button type="button" id="export-sqlite">Export SQLite</button>
+      <button type="button" id="boot" class="primary">Boot</button>
       <button type="button" id="reset" class="danger">Reset</button>
-      <button type="button" id="debug-port" class="primary">Open Debug Port</button>
+      <button type="button" id="debug-port">Debug Port</button>
     </footer>
     <script type="module" src="/src/recovery.ts"></script>
   </body>

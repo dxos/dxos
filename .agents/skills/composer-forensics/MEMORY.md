@@ -17,4 +17,6 @@ Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` 
 - `automerge-inspect.js --mutations` decodes changes for op breakdown; `automerge-escalate.js` writes `.bin` + `-report.md` for Automerge maintainers.
 - Full command docs: `COMMANDS.md`.
 - Linear issue draft: `LINEAR-tagindex-write-amplification.md`.
-- Composer `/recovery.html`: minimal safe mode (export OPFS SQLite, reset, debug port on :9321). Agent server: `composer-recovery.js`.
+- Composer `/recovery.html`: minimal safe mode (export OPFS SQLite, reset, boot minimal client, debug port on :9321).
+- Recovery debug: browser opens Debug Port first (polls with retry) → `composer-recovery.js '<snippet>'` one-shot (stdout JSON, exits). `--interactive` for REPL. HTTPS needs `COMPOSER_RECOVERY_HTTPS=1` + mkcert.
+- Boot loader excluded from `recovery.html` (only `index.html`).
