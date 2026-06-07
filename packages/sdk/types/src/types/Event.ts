@@ -12,13 +12,13 @@ import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
 
 import * as Actor from './Actor';
+import * as Geo from './Geo';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
 
 /**
  * https://schema.org/Event
  */
-// TODO(burdon): Location (string | Ref<Place>)
 export const Event = Schema.Struct({
   id: Obj.ID,
   title: Schema.optional(Schema.String),
@@ -27,6 +27,11 @@ export const Event = Schema.Struct({
   attendees: Schema.Array(Actor.Actor),
   startDate: Schema.String, // TODO(burdon): Date.
   endDate: Schema.String,
+
+  /**
+   * Physical location of the event (https://schema.org/Event `location`).
+   */
+  location: Schema.optional(Geo.PostalAddress),
 
   /**
    * Transcript of the meeting.

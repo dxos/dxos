@@ -3,19 +3,36 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import { addDays, endOfDay, startOfDay } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Calendar } from '@dxos/plugin-inbox';
+import { linkedSegment, type SelectionManager } from '@dxos/react-ui-attention';
+import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Segment, Trip, TripOperation } from '#types';
+
+import { getPlanningWindowDays } from '../operations/extractor/config';
+
+/**
+ * Resolves the inclusive event window [from, to] for a calendar node: the user's committed
+ * `'range'` selection if present, otherwise today through today + the configured planning window.
+ */
+const resolvePlanningWindow = (selectionManager: SelectionManager, nodeId: string): { from: Date; to: Date } => {
+  const selected = selectionManager.getSelected(nodeId, 'range');
+  const now = new Date();
+  const from = selected?.from ? startOfDay(new Date(selected.from)) : startOfDay(now);
+  const to = selected?.to ? endOfDay(new Date(selected.to)) : endOfDay(addDays(now, getPlanningWindowDays()));
+  return { from, to };
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -73,6 +90,53 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension, mergeExtension]);
+    // Context-menu action written into the calendar's menu: create a trip + itinerary from the events
+    // in the calendar's currently-selected date range (or the next N days from today when nothing is
+    // selected). The Trip is created and opened immediately while the planning blueprint runs.
+    const planTripExtension = yield* GraphBuilder.createExtension({
+      id: 'calendarPlanTrip',
+      match: (node) =>
+        Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
+      actions: ({ calendar, nodeId }) =>
+        Effect.succeed([
+          {
+            id: `${calendar.id}-${TripOperation.CreateTripFromEvents.meta.key}`,
+            data: () =>
+              Effect.gen(function* () {
+                const feed = calendar.feed?.target;
+                const db = Obj.getDatabase(calendar);
+                if (!feed || !db) {
+                  return;
+                }
+                const { from, to } = resolvePlanningWindow(selectionManager, nodeId);
+                const events = yield* Effect.promise(() =>
+                  db.query(Query.select(Filter.type(Event.Event)).from(feed)).run(),
+                );
+                const inWindow = events.filter((event) => {
+                  const start = event.startDate ? new Date(event.startDate) : undefined;
+                  return start != null && !Number.isNaN(start.getTime()) && start >= from && start <= to;
+                });
+                yield* Operation.invoke(
+                  TripOperation.CreateTripFromEvents,
+                  { calendar, events: inWindow },
+                  {
+                    spaceId: db.spaceId,
+                    notify: {
+                      success: ['trip.plan-from-calendar-success.title', { ns: meta.id }],
+                      error: ['trip.plan-from-calendar-error.title', { ns: meta.id }],
+                    },
+                  },
+                );
+              }),
+            properties: {
+              label: ['trip.plan-from-calendar.label', { ns: meta.id }],
+              icon: 'ph--airplane-takeoff--regular',
+              disposition: 'list-item',
+            },
+          },
+        ]),
+    });
+
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extension, mergeExtension, planTripExtension]);
   }),
 );

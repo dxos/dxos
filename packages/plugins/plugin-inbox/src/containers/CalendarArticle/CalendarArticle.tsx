@@ -60,6 +60,18 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [events, id, invokePromise],
   );
 
+  // Persist a committed multi-day range into the selection manager (as ISO date strings) so actions
+  // contributed to the calendar — e.g. plugin-trip's "Plan trip from calendar" — can read it.
+  const handleRangeSelect = useCallback(
+    ({ range }: { range: { from: Date; to: Date } }) => {
+      void invokePromise(LayoutOperation.Select, {
+        contextId: id,
+        subject: { mode: 'range', from: range.from.toISOString(), to: range.to.toISOString() },
+      });
+    },
+    [id, invokePromise],
+  );
+
   const handleAction = useCallback<EventStackActionHandler>(
     (action) => {
       switch (action.type) {
@@ -105,6 +117,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
               <NaturalCalendar.Grid
                 dates={events.map((event) => new Date(event.startDate))}
                 onSelect={handleDateSelect}
+                onSelectRange={handleRangeSelect}
               />
             </Panel.Content>
           </NaturalCalendar.Root>
