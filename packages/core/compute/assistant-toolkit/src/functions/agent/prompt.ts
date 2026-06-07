@@ -79,7 +79,7 @@ export default AgentPrompt.pipe(
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
-          systemText += `\n\n${data.systemInstructions}`;
+          systemText += `\n${data.systemInstructions}`;
         }
 
         const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);

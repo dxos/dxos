@@ -27,6 +27,7 @@ export * from './preview';
 export * from './replacer';
 export * from './scrolling';
 export * from './selection';
+export * from './spacing';
 export * from './snippets';
 export * from './state';
 export * from './submit';
