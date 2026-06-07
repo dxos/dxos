@@ -432,8 +432,16 @@ const spanTreeToCommits = (
       branch = parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isBeginEvent) {
-      // Begin commit: fork off the parent branch, attached to the parent's structural context.
-      branch = parentBranch;
+      // Begin commit, anchored to the parent's structural context. A nested sub-span (same process,
+      // or a span with no pid of its own) stays on the parent lane and only its middle events fork
+      // — unchanged. A child PROCESS (its own pid, differing from the parent's) forks onto its OWN
+      // branch from this first event, so a concurrent sub-agent gets its own lane immediately
+      // instead of sharing the parent's lane until its first middle commit (which previously made
+      // the lane "snap" across as events streamed in).
+      const ownPid = span.meta.pid;
+      const parentPid = parentSpan?.meta.pid;
+      const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid;
+      branch = isProcessBoundary ? ownBranch : parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isEndEvent) {
       // End commit: continues the parent branch chronologically and merges in own-branch work.
