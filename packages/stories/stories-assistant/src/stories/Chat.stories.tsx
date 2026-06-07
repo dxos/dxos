@@ -225,11 +225,13 @@ export const WithSubAgentsTest: Story = {
     // The chat prompt is a CodeMirror editor; locate it via its placeholder.
     const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
     const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    await expect(editor).toBeTruthy();
+    if (!editor) {
+      throw new Error('Chat editor not found.');
+    }
 
     // Enter a prompt that delegates work to a sub-agent and submit it.
-    await userEvent.click(editor!);
-    await userEvent.type(editor!, 'Delegate a task to a sub-agent to compute 10 factorial.');
+    await userEvent.click(editor);
+    await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
     await userEvent.keyboard('{Enter}');
 
     // The supervisor runs the sub-agent in the background and posts the result back to the chat.

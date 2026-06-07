@@ -211,13 +211,14 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
             case Process.State.TERMINATED:
             case Process.State.IDLE:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
-            case Process.State.FAILED:
+            case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
               return Effect.runSync(Deferred.die(deferred, error));
+            }
           }
         },
         { immediate: true },
@@ -243,13 +244,14 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
             // intentionally do not wait for.
             case Process.State.HYBERNATING:
               return this.#alarmTimer === null ? Effect.runSync(Deferred.succeed(deferred, undefined)) : Effect.void;
-            case Process.State.FAILED:
+            case Process.State.FAILED: {
               const error = state.exit.pipe(
                 Option.flatMap(Exit.causeOption),
                 Option.map(Cause.pretty),
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
               return Effect.runSync(Deferred.die(deferred, error));
+            }
           }
         },
         { immediate: true },

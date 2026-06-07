@@ -81,7 +81,7 @@ with tests on the real runtime.
 
 ## Data flow
 
-```
+```text
 user → supervisor.onInput → AiSession turn
      → DelegateTask tool → invokeFiber(AgentPrompt) [linked, non-blocking]
                          → create Plan Task (in-progress, chat=subagent chat)

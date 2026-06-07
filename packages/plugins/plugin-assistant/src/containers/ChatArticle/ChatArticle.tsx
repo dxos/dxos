@@ -34,6 +34,12 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
     const pendingSubmitted = useRef(false);
 
+    // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
+    // `attendableId` is still auto-submitted within the same mount.
+    useEffect(() => {
+      pendingSubmitted.current = false;
+    }, [attendableId]);
+
     useEffect(() => {
       if (!processor || !attendableId || pendingSubmitted.current) {
         return;

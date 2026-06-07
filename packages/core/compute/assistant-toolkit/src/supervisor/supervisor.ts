@@ -103,6 +103,9 @@ export const makeSupervisor = <ChildInput, ChildOutput>(
                 return;
               }
               taskByPid.delete(event.pid);
+              // Release the task id so the supervisor doesn't accumulate ids forever (and may
+              // legitimately re-delegate the same task later).
+              inFlight.delete(taskId);
 
               const exit = yield* Supervisor.collectResult<ChildOutput>(event.pid);
               const plan = yield* loadPlan;
