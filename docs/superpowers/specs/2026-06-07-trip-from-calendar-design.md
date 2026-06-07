@@ -40,7 +40,7 @@ the user looks at the new trip.
    Events with no address are skipped (they are not itinerary stops).
 3. **Operation input** — `{ calendar, events }`. The app-graph action resolves the range and
    queries the events; the operation builds the trip. The trip span is derived from the events.
-4. **Blueprint** — a new trip-planning blueprint, tooled with a new `AddSegment` operation plus the
+4. **Blueprint** — a single `Trip` blueprint (the former booking + planning blueprints merged), tooled with a new `AddSegment` operation plus the
    existing `PlanRoute` and `SearchBookings`, so the agent can actually build the itinerary.
 5. **Run mechanism** — `AssistantOperation.RunPromptInNewChat` with `background: true`, binding the
    new trip and the planning blueprint. Navigation to the trip is a separate `LayoutOperation.Open`.
@@ -51,18 +51,22 @@ the user looks at the new trip.
 ## Architecture / components
 
 ### 1. Schema: `Event.location` (`packages/sdk/types/src/types/Event.ts`)
+
 Add `location: Geo.PostalAddress.pipe(Schema.optional)` after `endDate`; import `* as Geo`.
 Remove the prior location-placeholder comment on the schema.
 
 ### 2. Config holder (`plugin-trip/src/operations/extractor/config.ts`)
+
 Add `DEFAULT_PLANNING_WINDOW_DAYS = 14` + `getPlanningWindowDays()` / `setPlanningWindowDays()`,
 mirroring `tripGapDays`.
 
 ### 3. Settings (`plugin-trip/src/types/Settings.ts`, `capabilities/settings.ts`)
+
 Add optional `tripPlanningWindowDays` (int ≥ 1). Sync it into `setPlanningWindowDays` alongside the
 existing gap sync.
 
 ### 4. Operations (`plugin-trip`)
+
 - **`CreateTripFromEvents`** (def in `types/TripOperation.ts`, handler
   `operations/create-trip-from-events.ts`):
   - input `{ calendar: Schema.Any; events: Schema.Array(Schema.Any) }`, output `{ trip }`
@@ -75,7 +79,7 @@ existing gap sync.
     `db.add(trip)` (db from `Obj.getDatabase(calendar)`), attach segments via `Trip.addSegment`.
   - Navigate: `LayoutOperation.Open` to the trip path.
   - Run blueprint: `AssistantOperation.RunPromptInNewChat({ db, objects: [trip],
-    blueprints: [TRIP_PLANNING_KEY], prompt: <kickoff>, background: true })`, wrapped in
+blueprints: [TRIP_PLANNING_KEY], prompt: <kickoff>, background: true })`, wrapped in
     `Effect.catchAll` so a missing assistant runtime (tests/headless) does not fail trip creation.
   - Return `{ trip }`.
 - **`AddSegment`** (def + handler `operations/add-segment.ts`): input
@@ -83,28 +87,34 @@ existing gap sync.
   Creates `Segment.makeDefault(kind)` (merging any `details`), `db.add`, `Trip.addSegment`.
   Registered in `TripOperationHandlerSet`.
 
-### 5. Blueprint (`plugin-trip/src/blueprints/trip-planning-blueprint.ts`)
-Key `${meta.id}/blueprint/planning`. Tools = `[AddSegment, RoutingOperation.PlanRoute,
-BookingOperation.SearchBookings]`. Instructions: given a trip whose `activity` segments are fixed
-appointments at addresses (sorted by time), insert `road`/`transfer` segments connecting
-consecutive stops and `accommodation` for overnight gaps; use `PlanRoute` to geocode/route and
-`SearchBookings` for transport options; do not invent confirmations. Export from `blueprints/index.ts`.
-`capabilities/blueprint-definition.ts` contributes both `BookingBlueprint` and `TripPlanningBlueprint`.
-`Trip.Trip` gets `BlueprintsAnnotation.set([TRIP_PLANNING_KEY])` (import from `@dxos/app-toolkit`).
+### 5. Blueprint (`plugin-trip/src/blueprints/trip-blueprint.ts`)
+
+A single `Trip` blueprint (the former booking + planning blueprints merged). Key
+`${meta.id}/blueprint/trip`. Tools = `[AddSegment, RoutingOperation.PlanRoute,
+BookingOperation.SearchBookings]`. Instructions cover planning (given a trip whose `activity`
+segments are fixed appointments at addresses sorted by time, insert `road`/`transfer` segments
+connecting consecutive stops and `accommodation` for overnight gaps; use `PlanRoute` to
+geocode/route) and booking search (`SearchBookings`); do not invent confirmations. Export from
+`blueprints/index.ts`. `capabilities/blueprint-definition.ts` contributes the single `TripBlueprint`.
+`Trip.Trip` gets `BlueprintsAnnotation.set([TRIP_BLUEPRINT_KEY])` (import from `@dxos/app-toolkit`).
 
 ### 6. App-graph action (`plugin-trip/src/capabilities/app-graph-builder.ts`)
+
 New extension matching `Calendar.instanceOf(node.data)` (import `Calendar` from `@dxos/plugin-inbox`),
 mirroring inbox's `syncCalendar`. Action "Plan trip from calendar":
+
 - At click time read the node's `'range'` selection from `AttentionCapabilities.Selection`
   (`{ from, to }` ISO dates). If absent, default to `today … today + getPlanningWindowDays()`.
 - Query events from `calendar.feed` within `[from, to]` (`Query.select(Filter.type(Event.Event)).from(feed)`,
   filter by `startDate`); invoke `CreateTripFromEvents({ calendar, events })`.
 
 ### 7. Calendar range wiring (`plugin-inbox/src/containers/CalendarArticle/CalendarArticle.tsx`)
+
 Wire `onSelectRange` on `Calendar.Grid` to write `{ mode: 'range', from: fromISO, to: toISO }` into
 the Selection manager for the calendar context id, via `LayoutOperation.Select`.
 
 ### 8. Translations + deps
+
 Add label strings (`trip.plan-from-calendar.label`, blueprint name, notify titles). Add
 `@dxos/plugin-assistant` as a `workspace:*` dependency of `plugin-trip` (no cycle: plugin-assistant
 does not depend on plugin-trip/inbox).

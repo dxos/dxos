@@ -14,7 +14,7 @@ import { Calendar } from '@dxos/plugin-inbox';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { TRIP_PLANNING_BLUEPRINT_KEY } from '../blueprints';
+import { TRIP_BLUEPRINT_KEY } from '../blueprints';
 import { TripOperation } from '../types';
 import { buildTripFromEvents } from './events-to-segments';
 
@@ -46,7 +46,7 @@ export default TripOperation.CreateTripFromEvents.pipe(
       yield* Operation.invoke(AssistantOperation.RunPromptInNewChat, {
         db,
         objects: [trip],
-        blueprints: [TRIP_PLANNING_BLUEPRINT_KEY],
+        blueprints: [TRIP_BLUEPRINT_KEY],
         background: true,
         prompt: trim`
           Plan the connecting travel and accommodation for this trip. Its activity segments are fixed

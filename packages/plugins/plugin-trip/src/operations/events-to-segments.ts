@@ -49,20 +49,33 @@ export const eventsToSegments = (events: readonly Event.Event[]): Segment.Segmen
   return segments;
 };
 
+/** Epoch millis for an ISO timestamp; undefined if missing or unparseable. */
+const toEpoch = (iso?: string): number | undefined => {
+  const value = iso ? Date.parse(iso) : Number.NaN;
+  return Number.isNaN(value) ? undefined : value;
+};
+
 /**
- * Computes the trip span (earliest start, latest end) across a set of events. ISO 8601 strings
- * compare lexicographically, so plain string comparison yields chronological order.
+ * Computes the trip span (earliest start, latest end) across a set of events. Comparison is by epoch
+ * millis (not lexicographic) so timestamps with different UTC offsets order correctly; the original
+ * ISO strings are preserved in the result.
  */
 export const eventsSpan = (events: readonly Event.Event[]): { start?: string; end?: string } => {
   let start: string | undefined;
   let end: string | undefined;
+  let startMs: number | undefined;
+  let endMs: number | undefined;
   for (const event of events) {
-    if (event.startDate && (!start || event.startDate < start)) {
+    const startCandidate = toEpoch(event.startDate);
+    if (startCandidate !== undefined && (startMs === undefined || startCandidate < startMs)) {
       start = event.startDate;
+      startMs = startCandidate;
     }
     const finish = event.endDate || event.startDate;
-    if (finish && (!end || finish > end)) {
+    const finishCandidate = toEpoch(finish);
+    if (finishCandidate !== undefined && (endMs === undefined || finishCandidate > endMs)) {
       end = finish;
+      endMs = finishCandidate;
     }
   }
   return { start, end };

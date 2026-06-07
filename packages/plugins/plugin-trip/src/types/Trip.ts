@@ -10,7 +10,7 @@ import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
-import { TRIP_PLANNING_BLUEPRINT_KEY } from '../blueprints/keys';
+import { TRIP_BLUEPRINT_KEY } from '../blueprints/keys';
 import * as Segment from './Segment';
 
 /**
@@ -27,7 +27,7 @@ export const Trip = Schema.Struct({
 }).pipe(
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--airplane-takeoff--regular', hue: 'sky' }),
-  BlueprintsAnnotation.set([TRIP_PLANNING_BLUEPRINT_KEY]),
+  BlueprintsAnnotation.set([TRIP_BLUEPRINT_KEY]),
   Type.makeObject(DXN.make('org.dxos.type.trip', '0.1.0')),
 );
 

@@ -11,9 +11,6 @@ import { Event } from '@dxos/types';
 import { Segment, Trip } from '../types';
 import { buildTripFromEvents, defaultTripName, eventsSpan, eventsToSegments } from './events-to-segments';
 
-const event = (props: { title?: string; startDate: string; endDate: string; location?: Event.Event['location'] }) =>
-  Event.make({ owner: {}, ...props });
-
 describe('eventsToSegments', () => {
   test('maps only events that have a location to activity segments', ({ expect }) => {
     const events = [
@@ -140,3 +137,6 @@ describe('buildTripFromEvents', () => {
     expect(trip.name).toBe('Summer trip');
   });
 });
+
+const event = (props: { title?: string; startDate: string; endDate: string; location?: Event.Event['location'] }) =>
+  Event.make({ owner: {}, ...props });
