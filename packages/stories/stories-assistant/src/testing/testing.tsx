@@ -335,13 +335,16 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     id: 'com.example.plugin.testing.module.operationHandler',
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
       return Capability.contributes(
         Capabilities.OperationHandler,
         OperationHandlerSet.make(
           Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
           Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
             Effect.gen(function* () {
+              // Resolve the client lazily at invocation time: the `Client` capability is
+              // contributed on `Startup` (concurrently with `SetupProcessManager`), so it is
+              // not guaranteed to exist when this module activates.
+              const client = yield* Capability.get(ClientCapabilities.Client);
               const registry = yield* Capability.get(Capabilities.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');

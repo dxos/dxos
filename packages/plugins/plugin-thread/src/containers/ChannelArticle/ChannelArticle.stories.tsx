@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Feed, Query } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -69,7 +70,9 @@ const meta = {
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
               const channel = personalSpace.db.add(Channel.make({ name: 'general' }));
-              const feed = yield* Effect.promise(() => channel.feed.load());
+              yield* Effect.promise(() => channel.backend.config.load());
+              const feed = Channel.getFeed(channel);
+              invariant(feed, 'Channel is not feed-backed');
               const seed = [
                 Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Hello, channel.' }] }),
                 Message.make({

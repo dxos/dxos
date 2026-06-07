@@ -144,9 +144,9 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
 
     const getStackFrames = (): string[] => {
       // Bun requies the target object for `captureStackTrace` to be an Error.
-      const o = new Error();
-      Error.captureStackTrace(o, causeToError);
-      return o.stack!.split('\n').slice(1);
+      const err = new Error();
+      Error.captureStackTrace(err, causeToError);
+      return err.stack!.split('\n').slice(1);
     };
 
     const stackFrames = getStackFrames();

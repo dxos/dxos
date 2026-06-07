@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
-import { ChannelChat, ChannelArticle, ThreadContainer } from '#containers';
+import { ChannelArticle, ThreadArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -29,15 +29,9 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
         ),
-        component: ({ data: { companionTo: channel } }) => {
-          const space = getSpace(channel);
-          if (!space) {
-            return null;
-          }
-
-          return <ChannelChat channel={channel} space={space} />;
-        },
+        component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} />,
       }),
+      // TODO(burdon): Disambiguate with Channel.
       Surface.create({
         id: 'thread',
         filter: AppSurface.object(AppSurface.Article, Thread.Thread),
@@ -47,7 +41,7 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ThreadContainer thread={subject} space={space} />;
+          return <ThreadArticle space={space} thread={subject} />;
         },
       }),
     ]),
