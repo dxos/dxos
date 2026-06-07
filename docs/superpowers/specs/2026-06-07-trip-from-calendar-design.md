@@ -52,7 +52,7 @@ the user looks at the new trip.
 
 ### 1. Schema: `Event.location` (`packages/sdk/types/src/types/Event.ts`)
 Add `location: Geo.PostalAddress.pipe(Schema.optional)` after `endDate`; import `* as Geo`.
-Replace the existing `// TODO(burdon): Location ...` note.
+Remove the prior location-placeholder comment on the schema.
 
 ### 2. Config holder (`plugin-trip/src/operations/extractor/config.ts`)
 Add `DEFAULT_PLANNING_WINDOW_DAYS = 14` + `getPlanningWindowDays()` / `setPlanningWindowDays()`,

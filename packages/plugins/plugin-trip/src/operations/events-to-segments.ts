@@ -97,7 +97,11 @@ export const defaultTripName = (start?: string, end?: string): string => {
  * spans the events; its name defaults from the span when none is given. Pure of any UI/assistant
  * concerns so it can be exercised directly against a test database.
  */
-export const buildTripFromEvents = (db: Database.Database, events: readonly Event.Event[], name?: string): Trip.Trip => {
+export const buildTripFromEvents = (
+  db: Database.Database,
+  events: readonly Event.Event[],
+  name?: string,
+): Trip.Trip => {
   const span = eventsSpan(events);
   const trip = db.add(
     Trip.make({ name: name ?? defaultTripName(span.start, span.end), start: span.start, end: span.end }),

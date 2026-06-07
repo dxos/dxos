@@ -8,8 +8,8 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { type Place } from '../types/Place';
 import { Segment, Trip, TripOperation } from '../types';
+import { type Place } from '../types/Place';
 
 export default TripOperation.AddSegment.pipe(
   Operation.withHandler(
@@ -18,7 +18,10 @@ export default TripOperation.AddSegment.pipe(
       const db = Obj.getDatabase(trip);
       invariant(db, 'Trip is not attached to a database.');
 
-      const segment = Segment.make({ details: buildDetails({ kind, title, origin, destination, departAt, arriveAt }), notes });
+      const segment = Segment.make({
+        details: buildDetails({ kind, title, origin, destination, departAt, arriveAt }),
+        notes,
+      });
       db.add(segment);
       Trip.addSegment(trip, segment);
 
@@ -53,7 +56,14 @@ const buildDetails = ({ kind, title, origin, destination, departAt, arriveAt }: 
     case 'activity':
       return { _tag: 'activity', title, venue: place(origin), departAt, arriveAt };
     case 'road':
-      return { _tag: 'road', subKind: 'car', origin: place(origin), destination: place(destination), departAt, arriveAt };
+      return {
+        _tag: 'road',
+        subKind: 'car',
+        origin: place(origin),
+        destination: place(destination),
+        departAt,
+        arriveAt,
+      };
     case 'flight':
     case 'train':
     case 'boat':
