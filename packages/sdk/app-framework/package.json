@@ -122,8 +122,8 @@
     "@effect/platform": "catalog:",
     "babel-preset-solid": "catalog:",
     "cjs-module-lexer": "catalog:",
-    "idb-keyval": "catalog:",
     "esbuild": "catalog:",
+    "idb-keyval": "catalog:",
     "solid-js": "catalog:"
   },
   "devDependencies": {
