@@ -440,7 +440,12 @@ const spanTreeToCommits = (
       // the lane "snap" across as events streamed in).
       const ownPid = span.meta.pid;
       const parentPid = parentSpan?.meta.pid;
-      const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid;
+      // Only fork onto the child's own branch when the span has real sub-flow content (a middle
+      // event). A bare operation (begin+end only) collapses to a single commit; forking its
+      // transient begin while streaming — before its end arrives — would flash a throwaway lane
+      // that vanishes once the span collapses.
+      const spanHasMiddle = span.events.some((event) => !isSpanBeginEvent(event) && !isSpanEndEvent(event));
+      const isProcessBoundary = ownPid != null && parentPid != null && ownPid !== parentPid && spanHasMiddle;
       branch = isProcessBoundary ? ownBranch : parentBranch;
       parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isEndEvent) {
