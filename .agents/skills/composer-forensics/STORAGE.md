@@ -4,10 +4,10 @@ Implementation details of Chromium and wa-sqlite; may change between Chrome vers
 
 ## Chrome user data (macOS)
 
-| Channel | Base path |
-|---------|-----------|
-| Chrome | `~/Library/Application Support/Google/Chrome` |
-| Chrome Beta | `~/Library/Application Support/Google/Chrome Beta` |
+| Channel       | Base path                                            |
+| ------------- | ---------------------------------------------------- |
+| Chrome        | `~/Library/Application Support/Google/Chrome`        |
+| Chrome Beta   | `~/Library/Application Support/Google/Chrome Beta`   |
 | Chrome Canary | `~/Library/Application Support/Google/Chrome Canary` |
 
 Profile directory: `<base>/Default/` (or `Profile 1`, etc.).
@@ -31,12 +31,12 @@ Origins are encoded like IndexedDB: `https://main.composer.space` → `ORIGIN:ht
 
 From `@dxos/wa-sqlite` `AccessHandlePoolVFS.js`:
 
-| Offset | Size | Content |
-|--------|------|---------|
-| 0 | 512 | UTF-8 path, null-terminated (e.g. `/DXOS`, `/DXOS-journal`) |
-| 512 | 4 | SQLite open flags |
-| 516 | 8 | Digest |
-| **4096** | rest | **SQLite (or journal) payload** |
+| Offset   | Size | Content                                                     |
+| -------- | ---- | ----------------------------------------------------------- |
+| 0        | 512  | UTF-8 path, null-terminated (e.g. `/DXOS`, `/DXOS-journal`) |
+| 512      | 4    | SQLite open flags                                           |
+| 516      | 8    | Digest                                                      |
+| **4096** | rest | **SQLite (or journal) payload**                             |
 
 Verify main DB:
 
@@ -57,12 +57,12 @@ Useful to confirm the origin exists even when OPFS mapping is unclear.
 
 ## Known Composer origins
 
-| Origin | Typical use |
-|--------|-------------|
-| `https://main.composer.space` | Production |
-| `https://labs.composer.space` | Labs |
-| `https://<branch>.composer-app.pages.dev` | PR previews |
-| `http://localhost:5173` | Local dev (profile-specific) |
+| Origin                                    | Typical use                  |
+| ----------------------------------------- | ---------------------------- |
+| `https://main.composer.space`             | Production                   |
+| `https://labs.composer.space`             | Labs                         |
+| `https://<branch>.composer-app.pages.dev` | PR previews                  |
+| `http://localhost:5173`                   | Local dev (profile-specific) |
 
 Each origin has **isolated** OPFS and IndexedDB.
 

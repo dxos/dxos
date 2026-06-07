@@ -18,10 +18,9 @@ export const printAutomergeDocumentList = (dbPath, options = {}) => {
 
   const documents = listAutomergeDocuments(db);
   const objectCounts = new Map(
-    all(
-      db,
-      "SELECT documentId, COUNT(*) AS n FROM objectMeta WHERE documentId != '' GROUP BY documentId",
-    ).map((row) => [String(row.documentId), Number(row.n)]),
+    all(db, "SELECT documentId, COUNT(*) AS n FROM objectMeta WHERE documentId != '' GROUP BY documentId").map(
+      (row) => [String(row.documentId), Number(row.n)],
+    ),
   );
 
   const rows = documents.map((doc, index) => ({

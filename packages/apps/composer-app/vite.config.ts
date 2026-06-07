@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -236,6 +236,25 @@ export default defineConfig((env) => ({
             res.statusCode = 502;
             res.end(String(error));
           }
+        });
+      },
+    },
+
+    // Dev-only: serve forensics test profile for recovery import testing.
+    {
+      name: 'recovery-test-fixture',
+      configureServer(server) {
+        const fixturePath =
+          process.env.COMPOSER_TEST_DXPROFILE ??
+          '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
+        server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
+          if (!existsSync(fixturePath)) {
+            res.statusCode = 404;
+            res.end(`Test profile not found at ${fixturePath}`);
+            return;
+          }
+          res.setHeader('Content-Type', 'application/octet-stream');
+          createReadStream(fixturePath).pipe(res);
         });
       },
     },

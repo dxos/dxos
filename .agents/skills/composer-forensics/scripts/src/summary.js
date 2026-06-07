@@ -82,7 +82,12 @@ export const printProbeSummary = (dbPath) => {
     ['feeds', countRows(db, 'feeds')],
     ['blocks', countRows(db, 'blocks')],
     ['objectMeta', countRows(db, 'objectMeta')],
-    ['objectMeta (deleted)', countRows(db, 'objectMeta') ? Number(get(db, 'SELECT COUNT(*) AS n FROM objectMeta WHERE deleted != 0')?.n ?? 0) : 0],
+    [
+      'objectMeta (deleted)',
+      countRows(db, 'objectMeta')
+        ? Number(get(db, 'SELECT COUNT(*) AS n FROM objectMeta WHERE deleted != 0')?.n ?? 0)
+        : 0,
+    ],
     ['automerge_heads', countRows(db, 'automerge_heads')],
     ['automerge_chunks', countRows(db, 'automerge_chunks')],
     ['blobs_meta', countRows(db, 'blobs_meta')],

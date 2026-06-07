@@ -6,14 +6,14 @@ Copy to `/tmp/composer-forensics/reports/YYYY-MM-DD-<origin-slug>.md` at session
 
 ## Session
 
-| Field | Value |
-|-------|--------|
-| **Date** | YYYY-MM-DD |
-| **Origin** | e.g. `https://main.composer.space` |
-| **Agent** | (optional) |
-| **User report** | (paste or summarize what the user said is wrong) |
-| **Recovery debug port** | open / not open |
-| **HTTPS** | yes → `COMPOSER_RECOVERY_HTTPS=1` required |
+| Field                   | Value                                            |
+| ----------------------- | ------------------------------------------------ |
+| **Date**                | YYYY-MM-DD                                       |
+| **Origin**              | e.g. `https://main.composer.space`               |
+| **Agent**               | (optional)                                       |
+| **User report**         | (paste or summarize what the user said is wrong) |
+| **Recovery debug port** | open / not open                                  |
+| **HTTPS**               | yes → `COMPOSER_RECOVERY_HTTPS=1` required       |
 
 ---
 
@@ -21,19 +21,17 @@ Copy to `/tmp/composer-forensics/reports/YYYY-MM-DD-<origin-slug>.md` at session
 
 What the user experiences (blank screen, slow space open, missing data, etc.):
 
--
-
----
+- ***
 
 ## Exploration log
 
 Chronological notes — commands run, observations, timings. Read-only unless user approved a change.
 
-| Step | Command / action | Result |
-|------|------------------|--------|
-| 1 | `dxos.recovery.status()` | |
-| 2 | `await dxos.recovery.boot()` | |
-| 3 | | |
+| Step | Command / action             | Result |
+| ---- | ---------------------------- | ------ |
+| 1    | `dxos.recovery.status()`     |        |
+| 2    | `await dxos.recovery.boot()` |        |
+| 3    |                              |        |
 
 ---
 
@@ -93,12 +91,12 @@ File or extend Linear/GitHub issues here. Include repro, doc ids, code pointers.
 
 > **Only fill this section after explicit user approval for data changes.**
 
-| Field | Value |
-|-------|--------|
-| **User approved** | yes / no / pending |
-| **Action** | e.g. `dxos.recovery.compactDocuments()` |
-| **Result** | |
-| **Verified** | how you confirmed improvement |
+| Field             | Value                                   |
+| ----------------- | --------------------------------------- |
+| **User approved** | yes / no / pending                      |
+| **Action**        | e.g. `dxos.recovery.compactDocuments()` |
+| **Result**        |                                         |
+| **Verified**      | how you confirmed improvement           |
 
 ---
 
@@ -122,8 +120,8 @@ File or extend Linear/GitHub issues here. Include repro, doc ids, code pointers.
 
 ## Artifacts
 
-| Artifact | Path |
-|----------|------|
-| Exported SQLite | `/tmp/.../DXOS.sqlite` |
-| Automerge inspect | |
-| Escalation bundle | |
+| Artifact          | Path                   |
+| ----------------- | ---------------------- |
+| Exported SQLite   | `/tmp/.../DXOS.sqlite` |
+| Automerge inspect |                        |
+| Escalation bundle |                        |

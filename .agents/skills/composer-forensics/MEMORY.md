@@ -20,7 +20,7 @@ Append a dated section per session (newest first): `## YYYY-MM-DD — <origin>` 
 - Full command docs: `COMMANDS.md`.
 - Linear issue draft: `LINEAR-tagindex-write-amplification.md`.
 - Composer `/recovery.html`: minimal safe mode (export OPFS SQLite, reset, boot minimal client, debug port on :9321).
-- Recovery debug: browser opens Debug Port first (polls with retry) → `composer-recovery.js '<snippet>'` one-shot (stdout JSON, exits). `--interactive` for REPL. HTTPS needs `COMPOSER_RECOVERY_HTTPS=1` + mkcert.
+- Recovery debug: browser opens Debug Port first (copy **session id** from log) → `composer-recovery.js --session <uuid> '<snippet>'` one-shot. Connect timeout default 6s if browser not polling. `--interactive` for REPL. HTTPS needs `COMPOSER_RECOVERY_HTTPS=1` + mkcert.
 - Boot loader excluded from `recovery.html` (only `index.html`).
 - **Doctor workflow (`DOCTOR.md`):** user opens debug port (agent never starts browser) → explore read-only → report in `/tmp/composer-forensics/reports/` → diagnose with separate DXOS / external issue blocks → **always confirm before data changes** → remediate with permission → close-out with next steps and issues to file.
 - `dxos.recovery.compactDocuments()` — document compaction epoch migration (requires boot + user approval).

@@ -8,10 +8,10 @@ Use this when the user has a **live Composer profile** and can open **`/recovery
 
 ## Roles
 
-| Who | Does |
-|-----|------|
-| **User** | Opens Composer in **their** browser, navigates to `/recovery.html`, clicks **Open Debug Port**, describes symptoms |
-| **Agent** | Runs `composer-recovery.js` from the repo — explores, writes report, diagnoses, **asks before any data change** |
+| Who       | Does                                                                                                               |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
+| **User**  | Opens Composer in **their** browser, navigates to `/recovery.html`, clicks **Open Debug Port**, describes symptoms |
+| **Agent** | Runs `composer-recovery.js` from the repo — explores, writes report, diagnoses, **asks before any data change**    |
 
 **IMPORTANT:** The agent **does not** start the browser, open Cursor’s browser, or drive the user’s Chrome profile. The user’s external Composer session owns their data and debug port.
 
@@ -37,7 +37,7 @@ On **HTTPS** origins, remind them you will use `COMPOSER_RECOVERY_HTTPS=1` (mkce
 Agent verifies connectivity (read-only):
 
 ```bash
-node .agents/skills/composer-forensics/scripts/composer-recovery.js 'return dxos.recovery.status()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
 ```
 
 Composer echoes each snippet in the recovery log before eval.
@@ -66,21 +66,21 @@ Copy from [reports/REPORT-TEMPLATE.md](reports/REPORT-TEMPLATE.md). Update **Exp
 
 ```bash
 # Status + boot minimal client
-node composer-recovery.js 'return dxos.recovery.status()'
-node composer-recovery.js 'await dxos.recovery.boot(); return { identity: dxos.client.halo.identity.get()?.identityKey.truncate() }'
+node composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return { identity: dxos.client.halo.identity.get()?.identityKey.truncate() }'
 
 # Spaces
-node composer-recovery.js 'await dxos.recovery.boot(); const s = dxos.client.spaces.get(); return s.map(x => ({ id: x.id, state: x.state.get() }))'
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); const s = dxos.client.spaces.get(); return s.map(x => ({ id: x.id, state: x.state.get() }))'
 
 # Open space + list objects (adjust space index / id)
-node composer-recovery.js 'await dxos.recovery.boot(); const space = dxos.client.spaces.get()[0]; await space.open(); return (await space.db.query(dxos.Filter.everything()).run()).map(o => ({ id: o.id, type: dxos.Obj.getTypename(o) }))'
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); const space = dxos.client.spaces.get()[0]; await space.open(); return (await space.db.query(dxos.Filter.everything()).run()).map(o => ({ id: o.id, type: dxos.Obj.getTypename(o) }))'
 ```
 
 If boot is too slow or fails, **Export SQLite** (user button or debug command) → offline pipeline:
 
 ```bash
 # Export via debug port — write full JSON to file first (avoid terminal truncation)
-node composer-recovery.js 'await dxos.recovery.boot(); return await dxos.client.services.host.exportSqliteDatabase()' > /tmp/recovery-export.json
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return await dxos.client.services.host.exportSqliteDatabase()' > /tmp/recovery-export.json
 # decode base64 → /tmp/composer-recovery-live.sqlite, then automerge-list.js / automerge-inspect.js
 ```
 
@@ -119,10 +119,10 @@ After approval, run the fix via debug port and log it in **Remediation**:
 
 ```bash
 # Example: document compaction epoch migration (TagIndex bloat, slow doc load)
-node composer-recovery.js 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments()'
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments()'
 
 # Target specific object docs only
-node composer-recovery.js 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments({ objectIds: ["01KTHX1R..."] })'
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments({ objectIds: ["01KTHX1R..."] })'
 ```
 
 Verify improvement (load time, space open, object still present) and record in the report.
@@ -167,11 +167,11 @@ Doctor session:
 
 ## Common fixes (after user approval)
 
-| Problem | Typical fix | Notes |
-|---------|-------------|--------|
-| Automerge history bloat (high binary/JSON ratio) | `dxos.recovery.compactDocuments()` | New epoch; old chunks may linger until GC — export before/after |
-| App won’t boot, unknown state | Export SQLite → offline forensics; avoid Reset until diagnosed | Reset is destructive |
-| Need code fix only | Diagnose + file DXOS issue; compaction does not replace app fix | TagIndex still needs `push`/`splice` fix |
+| Problem                                          | Typical fix                                                     | Notes                                                           |
+| ------------------------------------------------ | --------------------------------------------------------------- | --------------------------------------------------------------- |
+| Automerge history bloat (high binary/JSON ratio) | `dxos.recovery.compactDocuments()`                              | New epoch; old chunks may linger until GC — export before/after |
+| App won’t boot, unknown state                    | Export SQLite → offline forensics; avoid Reset until diagnosed  | Reset is destructive                                            |
+| Need code fix only                               | Diagnose + file DXOS issue; compaction does not replace app fix | TagIndex still needs `push`/`splice` fix                        |
 
 ---
 

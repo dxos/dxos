@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { resolveRecoveryDebugOrigin } from './constants';
+import { RECOVERY_DEBUG_RECONNECT_MS, resolveRecoveryDebugOrigin } from './constants';
 
 export type DebugCommand = {
   id: number;
@@ -37,9 +37,10 @@ export const runDebugPortLoop = async ({
 }: DebugPortOptions): Promise<void> => {
   const log = (line: string) => onLog?.(line);
 
-  log(`Connecting to ${origin} (session ${session})…`);
-  log('Run one command: node composer-recovery.js "<js snippet>"');
-  log('(Open Debug Port first — browser retries until the server appears.)');
+  log(`Session: ${session}`);
+  log(`Connecting to ${origin}…`);
+  log(`node composer-recovery.js --session ${session} "<js snippet>"`);
+  log('(Copy the session id above into every composer-recovery.js command.)');
 
   let waitingLogged = false;
 
@@ -95,7 +96,7 @@ export const runDebugPortLoop = async ({
   }
 };
 
-const RECONNECT_MS = 2_000;
+const RECONNECT_MS = RECOVERY_DEBUG_RECONNECT_MS;
 
 const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
   new Promise((resolve, reject) => {

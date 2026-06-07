@@ -9,7 +9,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
  * Used by both the in-app download buttons and the `globalThis.downloadLogs`
  * devtools hook.
  */
-export const downloadLogs = async (logStore: IdbLogStore): Promise<void> => {
+export const downloadLogs = async (logStore: IdbLogStore): Promise<number> => {
   const ndjson = await logStore.export();
   const blob = new Blob([ndjson], { type: 'application/x-ndjson' });
   const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
@@ -23,4 +23,5 @@ export const downloadLogs = async (logStore: IdbLogStore): Promise<void> => {
   } finally {
     URL.revokeObjectURL(url);
   }
+  return new TextEncoder().encode(ndjson).byteLength;
 };

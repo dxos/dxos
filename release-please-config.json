@@ -20,6 +20,11 @@
         },
         {
           "type": "json",
+          "path": ".agents/skills/composer-forensics/scripts/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "docs/package.json",
           "jsonpath": "$.version"
         },

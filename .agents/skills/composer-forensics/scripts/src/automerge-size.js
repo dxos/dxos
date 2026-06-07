@@ -42,7 +42,7 @@ export const analyzeDocumentSizes = (dbPath, documentId) => {
   const jsonBytes = Buffer.byteLength(json, 'utf8');
 
   const objectMetaRows = Number(
-    db.prepare("SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?").get(documentId)?.n ?? 0,
+    db.prepare('SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?').get(documentId)?.n ?? 0,
   );
 
   const combinedBytes = merged.byteLength;
@@ -85,7 +85,9 @@ export const printSizeComparison = (analysis) => {
   );
   console.log('');
   console.log('Storage size (what loadIncremental reads)');
-  console.log(`  combined binary: ${formatBytes(analysis.combinedBytes).padStart(10)}  merged snapshot + incremental bytes`);
+  console.log(
+    `  combined binary: ${formatBytes(analysis.combinedBytes).padStart(10)}  merged snapshot + incremental bytes`,
+  );
   console.log('Reified size (what the app sees after toJS + JSON.stringify)');
   console.log(`  JSON:            ${formatBytes(analysis.jsonBytes).padStart(10)}  compact JSON of materialized doc`);
   console.log('');

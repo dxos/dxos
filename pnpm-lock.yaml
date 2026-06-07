@@ -2310,6 +2310,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.3.0-fragments.1
         version: 3.3.0-fragments.1
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys

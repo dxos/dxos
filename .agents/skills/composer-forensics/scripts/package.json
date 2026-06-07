@@ -19,10 +19,13 @@
     "composer-forensics-automerge-inspect": "./automerge-inspect.js",
     "composer-forensics-automerge-list": "./automerge-list.js",
     "composer-forensics-composer-recovery": "./composer-recovery.js",
-    "composer-forensics-probe": "./probe.js"
+    "composer-forensics-probe": "./probe.js",
+    "composer-forensics-profile-unwrap": "./profile-unwrap.js",
+    "composer-forensics-profile-wrap": "./profile-wrap.js"
   },
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "crc-32": "catalog:"

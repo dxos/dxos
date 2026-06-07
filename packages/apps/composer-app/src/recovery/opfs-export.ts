@@ -2,74 +2,47 @@
 // Copyright 2026 DXOS.org
 //
 
-const DB_NAME = 'DXOS';
+import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
 
-type WorkerReply = [id: number, error: string | undefined, payload: unknown];
+import { readOpfsSqliteDatabase } from './opfs-pool';
+import { importOpfsDatabaseViaWorker } from './opfs-worker-bridge';
+
+const DB_NAME = OPFS_SQLITE_DB_FILENAME;
 
 /**
- * Opens the OPFS SQLite worker only (no DXOS client, sync, or plugins) and exports `DXOS` as bytes.
+ * Read the OPFS `DXOS` SQLite payload directly (no SQLite worker).
  */
-export const exportOpfsSqlite = async (): Promise<Uint8Array> => {
-  const worker = new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' });
+export const exportOpfsSqlite = async (): Promise<Uint8Array> => readOpfsSqliteDatabase(DB_NAME);
 
-  try {
-    await waitForReady(worker);
-    const [, error, payload] = await send(worker, ['export', nextMessageId()]);
-    if (error) {
-      throw new Error(error);
-    }
-    if (!(payload instanceof Uint8Array)) {
-      throw new Error('Export did not return bytes');
-    }
-    return payload;
-  } finally {
-    worker.postMessage(['close']);
-    worker.terminate();
-  }
+/**
+ * Export OPFS SQLite as a CBOR `.dxprofile` archive with a SQLITE_DATABASE entry.
+ */
+export const exportOpfsProfileArchive = async (options?: { origin?: string }): Promise<Uint8Array> => {
+  const database = await exportOpfsSqlite();
+  return encodeProfileArchive(createSqliteProfileArchive(DB_NAME, database, options));
 };
 
-let messageSeq = 0;
-const nextMessageId = () => ++messageSeq;
+/**
+ * Replace the OPFS `DXOS` database with raw SQLite bytes via the OPFS worker.
+ * Must go through AccessHandlePoolVFS sync handles — async OPFS writes are overwritten on worker open.
+ */
+export const importOpfsSqlite = async (bytes: Uint8Array): Promise<number> => importOpfsDatabaseViaWorker(bytes);
 
-const waitForReady = (worker: Worker): Promise<void> =>
-  new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('OPFS worker ready timeout')), 30_000);
-    const onMessage = (event: MessageEvent<WorkerReply | ['ready', undefined, undefined]>) => {
-      if (event.data[0] === 'ready') {
-        clearTimeout(timeout);
-        worker.removeEventListener('message', onMessage);
-        resolve();
-      }
-    };
-    worker.addEventListener('message', onMessage);
-    worker.addEventListener('error', (event) => {
-      clearTimeout(timeout);
-      reject(event.error ?? new Error('OPFS worker error'));
-    });
-  });
-
-const send = (worker: Worker, message: unknown): Promise<WorkerReply> =>
-  new Promise((resolve, reject) => {
-    const id = Array.isArray(message) && typeof message[1] === 'number' ? message[1] : -1;
-    const timeout = setTimeout(() => reject(new Error('OPFS worker response timeout')), 120_000);
-    const onMessage = (event: MessageEvent<WorkerReply>) => {
-      const [replyId] = event.data;
-      if (replyId !== id) {
-        return;
-      }
-      clearTimeout(timeout);
-      worker.removeEventListener('message', onMessage);
-      resolve(event.data);
-    };
-    worker.addEventListener('message', onMessage);
-    worker.postMessage(message);
-  });
+/** Trigger a browser download of a `.dxprofile` archive. */
+export const downloadProfileArchiveExport = (bytes: Uint8Array, filename?: string) => {
+  const date = new Date().toISOString().slice(0, 10);
+  downloadBinaryExport(bytes, filename ?? `composer-${date}.dxprofile`, 'application/octet-stream');
+};
 
 /** Trigger a browser download of raw SQLite bytes. */
 export const downloadSqliteExport = (bytes: Uint8Array, filename = `${DB_NAME}.sqlite`) => {
+  downloadBinaryExport(bytes, filename, 'application/x-sqlite3');
+};
+
+const downloadBinaryExport = (bytes: Uint8Array, filename: string, mimeType: string) => {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
-  const blob = new Blob([copy], { type: 'application/x-sqlite3' });
+  const blob = new Blob([copy], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;

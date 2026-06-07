@@ -3,10 +3,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { analyzeDocumentSizes, printSizeComparison } from './src/automerge-size.js';
-import { analyzeMutations, printMutationAnalysis } from './src/automerge-mutations.js';
-import { openDatabase } from './src/db.js';
 import { findLargestDocumentId } from './src/automerge-load.js';
+import { analyzeMutations, printMutationAnalysis } from './src/automerge-mutations.js';
+import { analyzeDocumentSizes, printSizeComparison } from './src/automerge-size.js';
+import { openDatabase } from './src/db.js';
 
 const usage = `Usage: automerge-inspect.js <DXOS.sqlite> <document-id|--largest> [--json] [--mutations]
 

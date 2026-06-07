@@ -114,7 +114,9 @@ export const listAutomergeDocuments = (db) => {
     }
   }
 
-  return [...documents.values()].sort((left, right) => right.bytes - left.bytes || left.documentId.localeCompare(right.documentId));
+  return [...documents.values()].sort(
+    (left, right) => right.bytes - left.bytes || left.documentId.localeCompare(right.documentId),
+  );
 };
 
 /**

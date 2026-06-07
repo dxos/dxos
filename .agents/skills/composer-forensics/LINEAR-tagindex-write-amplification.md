@@ -27,27 +27,27 @@ Root cause: `TagIndex.setTag` / `unsetTag` in `@dxos/app-toolkit` **replace enti
 
 Document: `2DWmBh837zCBGPFZheCWBH1KFMRL` (largest classic Automerge doc on affected profile).
 
-| Metric | Value |
-|--------|-------|
-| Combined binary (merged chunks) | 14.20 MiB |
-| Reified JSON (`toJS` + `JSON.stringify`) | 90 KiB |
-| Binary / JSON ratio | **161×** |
-| `loadIncremental` | **~15s** |
-| `toJS` | ~8ms |
-| Automerge changes | 3,149 |
-| Automerge ops | **32,664,386** |
-| Ops / change (median) | **10,342** |
-| Ops / change (max) | 21,952 |
-| Actors | 2 |
+| Metric                                   | Value          |
+| ---------------------------------------- | -------------- |
+| Combined binary (merged chunks)          | 14.20 MiB      |
+| Reified JSON (`toJS` + `JSON.stringify`) | 90 KiB         |
+| Binary / JSON ratio                      | **161×**       |
+| `loadIncremental`                        | **~15s**       |
+| `toJS`                                   | ~8ms           |
+| Automerge changes                        | 3,149          |
+| Automerge ops                            | **32,664,386** |
+| Ops / change (median)                    | **10,342**     |
+| Ops / change (max)                       | 21,952         |
+| Actors                                   | 2              |
 
 ### Op action breakdown (all changes decoded)
 
-| Action | Count | Share |
-|--------|------:|------:|
-| `set` | 31,451,560 | **96.3%** |
-| `makeText` | 1,209,669 | 3.7% |
-| `makeList` | 3,146 | ~0% |
-| `makeMap` | 11 | ~0% |
+| Action     |      Count |     Share |
+| ---------- | ---------: | --------: |
+| `set`      | 31,451,560 | **96.3%** |
+| `makeText` |  1,209,669 |      3.7% |
+| `makeList` |      3,146 |       ~0% |
+| `makeMap`  |         11 |       ~0% |
 
 ### Reified state (what the user actually has)
 
@@ -59,12 +59,12 @@ So: **3,149 edits → 32M ops → 90 KiB of live data**.
 
 ### Chunk growth
 
-| Chunk | Size | Δ ops | Δ changes | Load |
-|-------|------|------:|----------:|-----:|
-| snapshot | 6.09 MiB | 28,723,677 | 2,955 | ~11s |
-| incremental | 1.66 MiB | 0 | 0 | ~117ms |
-| incremental | 5.22 MiB | 0 | 0 | ~373ms |
-| incremental | 1.23 MiB | 3,940,709 | 194 | ~3.3s |
+| Chunk       | Size     |      Δ ops | Δ changes |   Load |
+| ----------- | -------- | ---------: | --------: | -----: |
+| snapshot    | 6.09 MiB | 28,723,677 |     2,955 |   ~11s |
+| incremental | 1.66 MiB |          0 |         0 | ~117ms |
+| incremental | 5.22 MiB |          0 |         0 | ~373ms |
+| incremental | 1.23 MiB |  3,940,709 |       194 |  ~3.3s |
 
 Most history is already baked into the snapshot; incremental loads add more without reducing replay cost.
 
@@ -104,7 +104,7 @@ Automerge CRDTs retain **full edit history**. Replacing an array value with a ne
 
 With ~3k tag operations on arrays that grow to hundreds of elements:
 
-- Each `setTag` can emit **O(n) ops** for an array of length *n*.
+- Each `setTag` can emit **O(n) ops** for an array of length _n_.
 - Summed over the lifetime: **O(n²) total ops** (classic CRDT footgun).
 - Observed: **~10k ops/change** median; recent changes **~20k ops/change**.
 
@@ -114,11 +114,11 @@ This is an application-level anti-pattern, not an Automerge bug — but it produ
 
 Any host object with `tags: TagIndex.field()` accumulates this history:
 
-| Area | Host type | Typical churn |
-|------|-----------|---------------|
-| Inbox | `Mailbox` | Per-message tag apply/remove |
-| Feed | `Subscription` | Star / archive on posts |
-| Commerce | `Search` | Starred results |
+| Area     | Host type      | Typical churn                |
+| -------- | -------------- | ---------------------------- |
+| Inbox    | `Mailbox`      | Per-message tag apply/remove |
+| Feed     | `Subscription` | Star / archive on posts      |
+| Commerce | `Search`       | Starred results              |
 
 Inbox Mailboxes with heavy tagging are the worst case (thousands of message ids in tag arrays).
 

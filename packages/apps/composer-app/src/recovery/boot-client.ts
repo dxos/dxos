@@ -33,12 +33,23 @@ export const bootRecoveryClient = async (): Promise<Client> => {
           disableP2pReplication: true,
           enableVectorIndexing: false,
           signalTelemetryEnabled: false,
+          edgeFeatures: {
+            feedReplicator: false,
+            echoReplicator: false,
+            subductionReplicator: false,
+            signaling: false,
+            agents: false,
+          },
           storage: {
             sqliteMode: Runtime.Client.Storage.SqliteMode.OPFS,
           },
         },
         services: {
           signaling: [],
+          // Recovery is offline/local — no edge fetch (recovery.html CSP blocks external connect-src).
+          edge: {
+            url: '',
+          },
         },
       },
     },

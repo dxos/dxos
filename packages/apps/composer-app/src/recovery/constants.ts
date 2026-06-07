@@ -5,6 +5,9 @@
 /** Default port for `composer-recovery.js` — keep in sync with that script. */
 export const RECOVERY_DEBUG_PORT = 9321;
 
+/** Browser retry interval when the debug server is unreachable — keep in sync with `composer-recovery.js`. */
+export const RECOVERY_DEBUG_RECONNECT_MS = 2_000;
+
 /**
  * Debug server origin matching the page scheme.
  * HTTPS pages must use an HTTPS recovery server (mixed content blocks http://127.0.0.1).

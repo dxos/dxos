@@ -6,26 +6,26 @@ Database name in OPFS: **`DXOS`**. Schema is created by ECHO pipeline migrations
 
 Core tables that should exist in a mature profile:
 
-| Table | Package / role |
-|-------|----------------|
-| `feeds` | Feed store |
-| `blocks` | Feed blocks |
-| `cursor_tokens` | Queue cursors |
-| `subscriptions` | Feed subscriptions |
-| `sync_state` | Feed sync |
-| `automerge_chunks` | Automerge doc storage |
-| `automerge_heads` | Automerge heads |
-| `objectMeta` | Entity index |
-| `reverseRef` | Reverse refs |
-| `ftsIndex` (+ `_config`, `_content`, `_data`, `_docsize`, `_idx`) | Full-text index |
-| `indexCursor` | Index tracker |
-| `space_metadata` | Space metadata |
-| `space_large` | Large space payloads |
-| `blobs_meta` | Blob metadata |
-| `blobs_data` | Blob bytes |
-| `hypercore_files` | Client services storage |
-| `keyring` | Halo keys (**sensitive**) |
-| `delete` | Tombstones / delete queue |
+| Table                                                             | Package / role            |
+| ----------------------------------------------------------------- | ------------------------- |
+| `feeds`                                                           | Feed store                |
+| `blocks`                                                          | Feed blocks               |
+| `cursor_tokens`                                                   | Queue cursors             |
+| `subscriptions`                                                   | Feed subscriptions        |
+| `sync_state`                                                      | Feed sync                 |
+| `automerge_chunks`                                                | Automerge doc storage     |
+| `automerge_heads`                                                 | Automerge heads           |
+| `objectMeta`                                                      | Entity index              |
+| `reverseRef`                                                      | Reverse refs              |
+| `ftsIndex` (+ `_config`, `_content`, `_data`, `_docsize`, `_idx`) | Full-text index           |
+| `indexCursor`                                                     | Index tracker             |
+| `space_metadata`                                                  | Space metadata            |
+| `space_large`                                                     | Large space payloads      |
+| `blobs_meta`                                                      | Blob metadata             |
+| `blobs_data`                                                      | Blob bytes                |
+| `hypercore_files`                                                 | Client services storage   |
+| `keyring`                                                         | Halo keys (**sensitive**) |
+| `delete`                                                          | Tombstones / delete queue |
 
 Table set varies by Composer version and migrations. Treat missing tables as a **version signal**, not always corruption.
 
@@ -103,24 +103,29 @@ SELECT SUM(LENGTH(data)) FROM blobs_data;
 ## Composer forensics — <origin> — <date>
 
 ### Source
+
 - Chrome profile: …
 - OPFS dir: File System/<ID>/t/00/
 - Extract path: …
 
 ### File validation
+
 - integrity_check: …
 - Tables: N found (M expected core)
 - DB size: … MB
 
 ### Domain summary
+
 - Spaces: …
 - objectMeta rows: … (deleted: …)
 - blocks: …
 - automerge_chunks: …
 
 ### Anomalies
+
 - …
 
 ### Next steps
+
 - …
 ```

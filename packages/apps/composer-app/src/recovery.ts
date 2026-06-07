@@ -2,24 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
+import { createSqliteProfileArchive, encodeProfileArchive, OPFS_SQLITE_DB_FILENAME } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 
-import { resolveRecoveryDebugOrigin } from './recovery/constants';
 import {
-  attachRecoveryHelpers,
-  getDxos,
-  installDxosGlobals,
-  type RecoveryHelpers,
-} from './recovery/dxos-globals';
-import { runDebugPortLoop } from './recovery/debug-port';
-import { bootRecoveryClient, destroyRecoveryClient, exportBootedSqlite, isRecoveryClientBooted } from './recovery/boot-client';
+  bootRecoveryClient,
+  destroyRecoveryClient,
+  exportBootedSqlite,
+  isRecoveryClientBooted,
+} from './recovery/boot-client';
 import { compactDocumentsInRecovery } from './recovery/compact-documents';
-import { downloadSqliteExport, exportOpfsSqlite } from './recovery/opfs-export';
+import { resolveRecoveryDebugOrigin } from './recovery/constants';
+import { runDebugPortLoop } from './recovery/debug-port';
+import { runRecoveryDiagnostics } from './recovery/diagnostics';
+import { downloadRecoveryLogs } from './recovery/download-logs';
+import { attachRecoveryHelpers, getDxos, installDxosGlobals, type RecoveryHelpers } from './recovery/dxos-globals';
+import { importProfileFromUrl, importSqliteInRecovery } from './recovery/import-sqlite';
+import { downloadProfileArchiveExport, exportOpfsSqlite } from './recovery/opfs-export';
+import { listOpfsPoolFiles } from './recovery/opfs-pool';
 import { resetComposerStorage } from './recovery/reset-storage';
 
 const logEl = document.getElementById('log')!;
-const exportButton = document.getElementById('export-sqlite') as HTMLButtonElement;
-const bootButton = document.getElementById('boot') as HTMLButtonElement;
+const exportProfileButton = document.getElementById('export-profile') as HTMLButtonElement;
+const downloadLogsButton = document.getElementById('download-logs') as HTMLButtonElement;
+const importSqliteButton = document.getElementById('import-sqlite') as HTMLButtonElement;
+const diagnosticsButton = document.getElementById('diagnostics') as HTMLButtonElement;
+const bootComposerButton = document.getElementById('boot-composer') as HTMLButtonElement;
 const resetButton = document.getElementById('reset') as HTMLButtonElement;
 const debugButton = document.getElementById('debug-port') as HTMLButtonElement;
 
@@ -29,51 +37,79 @@ const print = (message: string) => {
 };
 
 installDxosGlobals();
+
+const debugOrigin = resolveRecoveryDebugOrigin();
+
 print('Composer recovery mode');
 print(`Origin: ${window.location.origin}`);
-print('Static dxos globals installed (Filter, Obj, DXN, …). No client until Boot.');
 print('');
-const debugOrigin = resolveRecoveryDebugOrigin();
-print(`Debug port: ${debugOrigin}`);
+print('You are in safe mode — no client, plugins, sync, or indexing until you choose an action.');
+print('');
+print('Footer actions (left → right):');
+print('  Boot    — try opening full Composer at /');
+print('  Reset   — wipe all data for this origin (export first!)');
+print('  Export  — download .dxprofile backup (SQLite + origin metadata)');
+print('  Import  — restore .dxprofile or raw .sqlite into this origin');
+print('  Logs    — download NDJSON logs for debugging');
+print('  Debug Port — let an agent run commands via composer-recovery.js');
+print('');
+print('Header: Diagnostics — OPFS storage first, then client identity and spaces');
+print('');
+print('Typical flows:');
+print("  App won't boot → Export → offline forensics → Import");
+print('  Need agent help → Debug Port → copy session id from log when it appears');
+print('');
+print(`Debug port server: ${debugOrigin}`);
 if (window.location.protocol === 'https:') {
-  print('HTTPS page → use COMPOSER_RECOVERY_HTTPS=1 with mkcert-trusted cert.');
+  print('HTTPS page → run agent with COMPOSER_RECOVERY_HTTPS=1 and mkcert-trusted cert.');
 } else {
-  print('HTTP page → plain HTTP server is fine.');
+  print('HTTP page → plain HTTP debug server is fine.');
 }
-print('Debug: node composer-recovery.js "return dxos.recovery.status()"');
+print('After opening Debug Port:');
+print('  node composer-recovery.js --session <id> "return dxos.recovery.status()"');
 
 let debugAbort: AbortController | undefined;
 
-const exportSqliteBytes = async (): Promise<Uint8Array> => {
+const exportProfileArchiveBytes = async (): Promise<Uint8Array> => {
+  const archiveOptions = { origin: window.location.host };
   if (isRecoveryClientBooted()) {
-    return exportBootedSqlite();
+    const database = await exportBootedSqlite();
+    return encodeProfileArchive(createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, archiveOptions));
   }
-  return exportOpfsSqlite();
+  const database = await exportOpfsSqlite();
+  return encodeProfileArchive(createSqliteProfileArchive(OPFS_SQLITE_DB_FILENAME, database, archiveOptions));
 };
 
 const recoveryHelpers: RecoveryHelpers = {
   booted: isRecoveryClientBooted,
-  boot: async () => {
-    print('Booting minimal client (no replication, no auto-activate spaces)…');
+  startClient: async () => {
+    print('Starting minimal client (no replication, no auto-activate spaces)…');
     const started = performance.now();
     const client = await bootRecoveryClient();
     attachRecoveryHelpers(recoveryHelpers);
-    print(`Booted in ${(performance.now() - started).toFixed(0)} ms — dxos.client available`);
-    bootButton.textContent = 'Booted';
-    bootButton.disabled = true;
+    print(`Client started in ${(performance.now() - started).toFixed(0)} ms — dxos.client available`);
     return { identity: client.halo.identity.get()?.identityKey.truncate() };
   },
-  exportSqlite: async () => {
-    const bytes = await exportSqliteBytes();
-    downloadSqliteExport(bytes);
+  /** @deprecated Use {@link RecoveryHelpers.startClient}. */
+  boot: async () => recoveryHelpers.startClient(),
+  diagnostics: async () => {
+    const result = await runRecoveryDiagnostics(print);
+    attachRecoveryHelpers(recoveryHelpers);
+    return result;
+  },
+  exportProfile: async () => {
+    const bytes = await exportProfileArchiveBytes();
+    downloadProfileArchiveExport(bytes);
     return { byteLength: bytes.byteLength };
   },
+  exportSqlite: async () => recoveryHelpers.exportProfile(),
+  downloadLogs: downloadRecoveryLogs,
+  importSqlite: importSqliteInRecovery,
+  importProfileFromUrl,
   reset: async () => {
     await destroyRecoveryClient();
     mountDevtoolsHooks({});
     attachRecoveryHelpers(recoveryHelpers);
-    bootButton.textContent = 'Boot';
-    bootButton.disabled = false;
     await resetComposerStorage(print);
   },
   log: (message: string) => print(String(message)),
@@ -82,6 +118,11 @@ const recoveryHelpers: RecoveryHelpers = {
     booted: isRecoveryClientBooted(),
     hasClient: Boolean(getDxos().client),
   }),
+  inspectOpfsPool: listOpfsPoolFiles,
+  opfsExportViaWorker: async () => {
+    const bytes = await exportOpfsSqlite();
+    return { byteLength: bytes.byteLength };
+  },
   compactDocuments: async (options) => {
     print('Compacting linked Automerge documents (epoch migration)…');
     const started = performance.now();
@@ -100,21 +141,21 @@ const recoveryHelpers: RecoveryHelpers = {
 attachRecoveryHelpers(recoveryHelpers);
 
 const setBusy = (busy: boolean) => {
-  exportButton.disabled = busy;
+  exportProfileButton.disabled = busy;
+  downloadLogsButton.disabled = busy;
+  importSqliteButton.disabled = busy;
   resetButton.disabled = busy;
   debugButton.disabled = busy;
-  if (!isRecoveryClientBooted()) {
-    bootButton.disabled = busy;
-  }
+  diagnosticsButton.disabled = busy;
 };
 
-exportButton.addEventListener('click', () => {
+exportProfileButton.addEventListener('click', () => {
   void (async () => {
     setBusy(true);
     try {
-      print('Exporting SQLite…');
+      print('Exporting profile archive (.dxprofile with SQLite entry)…');
       const started = performance.now();
-      const { byteLength } = await recoveryHelpers.exportSqlite();
+      const { byteLength } = await recoveryHelpers.exportProfile();
       print(`Exported ${byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
     } catch (error) {
       print(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -124,19 +165,64 @@ exportButton.addEventListener('click', () => {
   })();
 });
 
-bootButton.addEventListener('click', () => {
+downloadLogsButton.addEventListener('click', () => {
   void (async () => {
     setBusy(true);
     try {
-      await recoveryHelpers.boot();
+      print('Downloading logs from IDB log collector…');
+      const started = performance.now();
+      const { byteLength } = await recoveryHelpers.downloadLogs();
+      print(`Downloaded ${byteLength.toLocaleString()} bytes in ${(performance.now() - started).toFixed(0)} ms`);
     } catch (error) {
-      print(`Boot failed: ${error instanceof Error ? error.message : String(error)}`);
-      bootButton.disabled = false;
-      bootButton.textContent = 'Boot';
+      print(`Download logs failed: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setBusy(false);
     }
   })();
+});
+
+importSqliteButton.addEventListener('click', () => {
+  if (
+    !confirm(
+      'Import a .dxprofile (SQLITE_DATABASE entry) or raw .sqlite file into this origin.\n\nThis overwrites the OPFS DXOS database. Reset first if you need a clean import.\n\nContinue?',
+    )
+  ) {
+    print('Import aborted.');
+    return;
+  }
+
+  void (async () => {
+    setBusy(true);
+    try {
+      print('Select .dxprofile or .sqlite file…');
+      print('Importing via OPFS worker (may take a minute for large profiles)…');
+      const { byteLength } = await recoveryHelpers.importSqlite();
+      attachRecoveryHelpers(recoveryHelpers);
+      print(`Imported ${byteLength.toLocaleString()} bytes — run Diagnostics to verify.`);
+    } catch (error) {
+      print(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  })();
+});
+
+diagnosticsButton.addEventListener('click', () => {
+  void (async () => {
+    setBusy(true);
+    try {
+      await recoveryHelpers.diagnostics();
+    } catch (error) {
+      print(`Diagnostics failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setBusy(false);
+    }
+  })();
+});
+
+bootComposerButton.addEventListener('click', () => {
+  print('Booting Composer…');
+  window.location.href = '/';
 });
 
 resetButton.addEventListener('click', () => {
@@ -181,12 +267,8 @@ debugButton.addEventListener('click', () => {
         session,
         evalCommand: async (code) => {
           const dxos = getDxos();
-          // eslint-disable-next-line no-new-func -- recovery debug port; user/agent initiated only.
-          const runner = new Function(
-            'dxos',
-            'recovery',
-            `"use strict"; return (async () => { ${code} })();`,
-          );
+          // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval -- recovery debug port; user/agent initiated only.
+          const runner = new Function('dxos', 'recovery', `"use strict"; return (async () => { ${code} })();`);
           return runner(dxos, recoveryHelpers);
         },
         onLog: print,

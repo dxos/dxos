@@ -19,11 +19,11 @@ python3 .agents/skills/composer-forensics/scripts/locate-origin.py \
 
 Options:
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--origin` | `https://main.composer.space` | Target origin URL |
+| Flag        | Default                        | Description              |
+| ----------- | ------------------------------ | ------------------------ |
+| `--origin`  | `https://main.composer.space`  | Target origin URL        |
 | `--profile` | `~/Library/.../Chrome/Default` | Chrome profile directory |
-| `--json` | off | Machine-readable output |
+| `--json`    | off                            | Machine-readable output  |
 
 Output fields:
 
@@ -71,6 +71,29 @@ Output:
 ```
 
 **Before extracting:** close Composer tabs for that origin when you need a consistent copy or clean `integrity_check`.
+
+---
+
+## 2b. Wrap / unwrap `.dxprofile` archives
+
+Recovery **Export Profile** downloads a CBOR `.dxprofile` with a `SQLITE_DATABASE` entry (`key` = OPFS filename, `value` = raw SQLite bytes). Offline forensics still use raw `.sqlite` files — convert with:
+
+```bash
+cd .agents/skills/composer-forensics/scripts && pnpm install
+
+# Raw SQLite → .dxprofile (for re-import via recovery)
+node profile-wrap.js /tmp/composer-forensics/main.composer.space/DXOS.sqlite
+
+# .dxprofile → raw SQLite (for probe / automerge tools)
+node profile-unwrap.js ./composer-2026-06-07.dxprofile --out-dir /tmp/composer-forensics/unwrapped
+```
+
+Options:
+
+| Script              | Flag        | Default | Description                                    |
+| ------------------- | ----------- | ------- | ---------------------------------------------- |
+| `profile-wrap.js`   | `--name`    | `DXOS`  | OPFS database filename stored in archive `key` |
+| `profile-unwrap.js` | `--out-dir` | `.`     | Directory for `<opfs-name>.sqlite` outputs     |
 
 ---
 
@@ -159,6 +182,7 @@ node automerge-inspect.js /tmp/.../DXOS.sqlite <document-id> --json
 ```
 
 Shows:
+
 - **combined binary** — merged snapshot + incremental bytes (`loadIncremental` input)
 - **JSON** — compact `JSON.stringify(Automerge.toJS(doc))`
 - **binary / JSON ratio** — high ratio + high ops/MiB suggests history bloat
@@ -201,6 +225,7 @@ node automerge-escalate.js /tmp/.../DXOS.sqlite <document-id> --out-dir /tmp/am-
 ```
 
 Writes:
+
 - **`<document-id>.bin`** — merged snapshot + incremental bytes (`loadIncremental` input)
 - **`<document-id>-report.md`** — load times, size comparison, chunk growth, op breakdown, hypothesis
 
@@ -250,12 +275,15 @@ sqlite3 /tmp/composer-forensics/main.composer.space/DXOS.sqlite \
 
 When the main app will not boot, open **`https://<origin>/recovery.html`** (or `http://localhost:5173/recovery.html` in dev).
 
-| Button | Action |
-|--------|--------|
-| Export SQLite | Download raw OPFS `DXOS` (or via client if booted) |
-| Boot | Minimal client — no P2P replication, no auto-activate spaces |
-| Reset | Wipe all origin storage |
-| Debug Port | Long-poll local agent on **9321** — open before running CLI |
+| Button         | Action                                                                     |
+| -------------- | -------------------------------------------------------------------------- |
+| Export Profile | Download `.dxprofile` with validated `SQLITE_DATABASE` entry (OPFS `DXOS`) |
+| Download Logs  | Export NDJSON from IDB log collector (`composer-logs`)                     |
+| Import Profile | Import `.dxprofile` or raw `.sqlite` into OPFS `DXOS` database             |
+| Start Client   | Minimal in-process client: no P2P replication, no auto-activate spaces     |
+| Boot           | Open main Composer app at `/`                                              |
+| Reset          | Wipe all origin storage                                                    |
+| Debug Port     | Long-poll local agent on **9321** — open before running CLI                |
 
 On load, **`dxos.*` static globals** are available (same as devtools: `Filter`, `Obj`, `DXN`, …). **`dxos.client`** only after Boot.
 
@@ -266,23 +294,25 @@ Browser keeps polling (retries every 2s if server down). Each agent command is a
 ```bash
 # 1. /recovery.html → Open Debug Port
 # 2. Run (stdout = JSON result, then exits):
-node .agents/skills/composer-forensics/scripts/composer-recovery.js 'return dxos.recovery.status()'
-node .agents/skills/composer-forensics/scripts/composer-recovery.js 'await dxos.recovery.boot(); return await dxos.client.services.host.exportSqliteDatabase()'
-node .agents/skills/composer-forensics/scripts/composer-recovery.js 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return await dxos.client.services.host.exportSqliteDatabase()'
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return await dxos.recovery.compactDocuments()'
 ```
 
 Environment:
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `COMPOSER_RECOVERY_PORT` | `9321` | Listen port |
-| `COMPOSER_RECOVERY_TIMEOUT` | `120000` | One-shot wait for browser (ms) |
-| `COMPOSER_RECOVERY_HTTPS` | off | TLS for HTTPS origins |
+| Variable                            | Default  | Purpose                                        |
+| ----------------------------------- | -------- | ---------------------------------------------- |
+| `COMPOSER_RECOVERY_PORT`            | `9321`   | Listen port                                    |
+| `COMPOSER_RECOVERY_SESSION`         | —        | Session id (alternative to `--session`)        |
+| `COMPOSER_RECOVERY_CONNECT_TIMEOUT` | `6000`   | Wait for browser poll (~3× reconnect interval) |
+| `COMPOSER_RECOVERY_TIMEOUT`         | `120000` | One-shot wait for eval result (ms)             |
+| `COMPOSER_RECOVERY_HTTPS`           | off      | TLS for HTTPS origins                          |
 
 Persistent REPL (optional — multiple commands, one server):
 
 ```bash
-node .agents/skills/composer-forensics/scripts/composer-recovery.js --interactive
+node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <uuid> --interactive
 ```
 
 HTTPS origin (production / Cloudflare Pages):
@@ -291,7 +321,7 @@ HTTPS origin (production / Cloudflare Pages):
 cd .agents/skills/composer-forensics/scripts
 mkcert -install
 mkcert -cert-file .recovery-tls/cert.pem -key-file .recovery-tls/key.pem localhost 127.0.0.1
-COMPOSER_RECOVERY_HTTPS=1 node composer-recovery.js 'return dxos.recovery.status()'
+COMPOSER_RECOVERY_HTTPS=1 node composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
 ```
 
 Extra commands in `--interactive` mode only (`POST /enqueue` on persistent server).
@@ -310,31 +340,31 @@ For product/engineering issues (e.g. Automerge bloat root cause), use or update 
 
 ## Script index
 
-| Script | Language | Purpose |
-|--------|----------|---------|
-| `scripts/locate-origin.py` | Python | Map origin → Chrome OPFS path |
-| `scripts/extract-opfs-sqlite.py` | Python | Strip headers → `DXOS.sqlite` |
-| `scripts/validate-extract.sh` | Shell | File-level validation |
-| `scripts/probe.js` | JavaScript | Domain summary + automerge subcommands |
-| `scripts/automerge-list.js` | JavaScript | Document ids sorted by combined chunk size |
-| `scripts/automerge-inspect.js` | JavaScript | Binary vs JSON size; `--mutations` for op breakdown |
-| `scripts/automerge-escalate.js` | JavaScript | Maintainer bundle: `.bin` + `-report.md` |
-| `scripts/automerge-bench-load.js` | JavaScript | Size comparison + loadIncremental timing |
-| `scripts/automerge-dump-json.js` | JavaScript | Dump `.bin` + `.json` with size report |
-| `scripts/composer-recovery.js` | JavaScript | One-shot debug bridge for `/recovery.html` |
-| `LINEAR-tagindex-write-amplification.md` | Doc | Linear issue draft (TagIndex bloat root cause + fix) |
+| Script                                   | Language   | Purpose                                              |
+| ---------------------------------------- | ---------- | ---------------------------------------------------- |
+| `scripts/locate-origin.py`               | Python     | Map origin → Chrome OPFS path                        |
+| `scripts/extract-opfs-sqlite.py`         | Python     | Strip headers → `DXOS.sqlite`                        |
+| `scripts/validate-extract.sh`            | Shell      | File-level validation                                |
+| `scripts/probe.js`                       | JavaScript | Domain summary + automerge subcommands               |
+| `scripts/automerge-list.js`              | JavaScript | Document ids sorted by combined chunk size           |
+| `scripts/automerge-inspect.js`           | JavaScript | Binary vs JSON size; `--mutations` for op breakdown  |
+| `scripts/automerge-escalate.js`          | JavaScript | Maintainer bundle: `.bin` + `-report.md`             |
+| `scripts/automerge-bench-load.js`        | JavaScript | Size comparison + loadIncremental timing             |
+| `scripts/automerge-dump-json.js`         | JavaScript | Dump `.bin` + `.json` with size report               |
+| `scripts/composer-recovery.js`           | JavaScript | One-shot debug bridge for `/recovery.html`           |
+| `LINEAR-tagindex-write-amplification.md` | Doc        | Linear issue draft (TagIndex bloat root cause + fix) |
 
 ---
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| `node:sqlite` not found | Use Node 24 via `proto` (`export PATH="$HOME/.proto/shims:$PATH"`) |
-| `@dxos/protocols` not found | Run `pnpm install` from repo root |
-| `integrity_check` fails | Close Chrome; re-extract; hot copies often still query fine |
-| Empty OPFS dir | Site data cleared or wrong profile — check `indexeddb_exists` from locate |
-| Probe identity empty | Profile never finished onboarding or metadata key missing |
-| Debug port won't connect from HTTPS | Mixed content — `COMPOSER_RECOVERY_HTTPS=1` + mkcert; CSP does not fix |
-| Debug port stops immediately | Re-open Debug Port (old behavior); now retries — reload `/recovery.html` |
-| One-shot times out | Open Debug Port first; increase `COMPOSER_RECOVERY_TIMEOUT` |
+| Issue                               | Fix                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| `node:sqlite` not found             | Use Node 24 via `proto` (`export PATH="$HOME/.proto/shims:$PATH"`)        |
+| `@dxos/protocols` not found         | Run `pnpm install` from repo root                                         |
+| `integrity_check` fails             | Close Chrome; re-extract; hot copies often still query fine               |
+| Empty OPFS dir                      | Site data cleared or wrong profile — check `indexeddb_exists` from locate |
+| Probe identity empty                | Profile never finished onboarding or metadata key missing                 |
+| Debug port won't connect from HTTPS | Mixed content — `COMPOSER_RECOVERY_HTTPS=1` + mkcert; CSP does not fix    |
+| Debug port stops immediately        | Re-open Debug Port (old behavior); now retries — reload `/recovery.html`  |
+| One-shot times out                  | Open Debug Port first; increase `COMPOSER_RECOVERY_TIMEOUT`               |

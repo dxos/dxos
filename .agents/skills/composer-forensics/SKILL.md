@@ -117,12 +117,15 @@ When Composer cannot boot (e.g. Automerge bloat), open **`/recovery.html`** on t
 
 **Default:** static `dxos` globals only (`dxos.Filter`, `dxos.Obj`, `dxos.DXN`, …) — no client, plugins, sync, or indexing.
 
-| Action | What it does |
-|--------|----------------|
-| **Export SQLite** | OPFS-only export, or via client after Boot |
-| **Boot** | Minimal in-process client: `disableP2pReplication`, no vector indexing, no auto-activate spaces |
-| **Reset** | Wipe origin storage (**requires user approval** in doctor workflow) |
-| **Debug Port** | Long-poll `127.0.0.1:9321` (scheme matches page). Browser retries until server appears. |
+| Action             | What it does                                                                                    |
+| ------------------ | ----------------------------------------------------------------------------------------------- |
+| **Export Profile** | `.dxprofile` archive with validated OPFS SQLite (`SQLITE_DATABASE` entry)                       |
+| **Download Logs**  | NDJSON from `@dxos/log-store-idb`                                                               |
+| **Import Profile** | `.dxprofile` or raw `.sqlite` → OPFS `DXOS` database                                            |
+| **Start Client**   | Minimal in-process client: `disableP2pReplication`, no vector indexing, no auto-activate spaces |
+| **Boot**           | Navigate to `/` — launch full Composer                                                          |
+| **Reset**          | Wipe origin storage (**requires user approval** in doctor workflow)                             |
+| **Debug Port**     | Long-poll `127.0.0.1:9321` (scheme matches page). Browser retries until server appears.         |
 
 After **Boot**, `dxos.client`, `dxos.spaces`, `dxos.halo`, `dxos.exportProfile()`, `dxos.recovery.compactDocuments()`, etc. match devtools hooks.
 
@@ -133,21 +136,22 @@ After **Boot**, `dxos.client`, `dxos.spaces`, `dxos.halo`, `dxos.exportProfile()
 No persistent server. Browser polls; agent runs one CLI command per eval.
 
 ```
-1. Open /recovery.html → "Open Debug Port"   (can be before step 2)
-2. node composer-recovery.js '<js snippet>'  (starts, delivers, prints, exits)
+1. Open /recovery.html → "Open Debug Port" (copy session id from log)
+2. node composer-recovery.js --session <uuid> '<js snippet>'  (starts, delivers, prints, exits)
 3. Repeat step 2 for each command (browser keeps polling)
 ```
 
 ```bash
 cd .agents/skills/composer-forensics/scripts
-node composer-recovery.js 'return dxos.recovery.status()'
-node composer-recovery.js 'await dxos.recovery.boot(); return dxos.spaces?.()'
+node composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
+node composer-recovery.js --session <uuid> 'await dxos.recovery.boot(); return dxos.spaces?.()'
 ```
 
 - **stdout** — JSON result payload (`ok`, `result` / `error`)
 - **stderr** — progress (`Queued`, `Delivered`, `One-shot mode — waiting…`)
 - **Exit code** — `0` on success, `1` on eval error or timeout
-- **`COMPOSER_RECOVERY_TIMEOUT`** — ms to wait for browser (default 120000)
+- **`COMPOSER_RECOVERY_CONNECT_TIMEOUT`** — ms to wait for browser poll (default 6000, ~3× reconnect interval)
+- **`COMPOSER_RECOVERY_TIMEOUT`** — ms to wait for eval result (default 120000)
 - **`--interactive`** — persistent REPL when you need many commands without re-running CLI
 
 **Mixed content / HTTPS:** CSP cannot override mixed-content. On `https://` origins the page fetches `https://127.0.0.1:9321`:
@@ -155,7 +159,7 @@ node composer-recovery.js 'await dxos.recovery.boot(); return dxos.spaces?.()'
 ```bash
 mkcert -install
 mkcert -cert-file .recovery-tls/cert.pem -key-file .recovery-tls/key.pem localhost 127.0.0.1
-COMPOSER_RECOVERY_HTTPS=1 node composer-recovery.js 'return dxos.recovery.status()'
+COMPOSER_RECOVERY_HTTPS=1 node composer-recovery.js --session <uuid> 'return dxos.recovery.status()'
 ```
 
 Export/Reset/Boot work without the debug port. Offline forensics on exported SQLite always works.
@@ -190,44 +194,44 @@ High **binary / JSON ratio** (e.g. >50×) with dominant **`set` ops** on a small
 
 ## `scripts/src/` modules
 
-| Module | Role |
-|--------|------|
-| `src/automerge-size.js` | Binary vs JSON analysis |
-| `src/automerge-mutations.js` | Change decode, op breakdown, hypotheses |
-| `src/automerge-escalate.js` | Maintainer bundle writer |
-| `src/automerge-load.js` | Timed load + largest-doc helper |
-| `src/automerge-chunks.js` | Chunk load/merge (StorageSubsystem order) |
-| `src/automerge-keys.js` | Chunk key encode/decode |
-| `src/automerge.js` | Document listing |
-| `src/automerge-dump.js` | `.bin` + `.json` dump |
-| `src/db.js`, `src/metadata.js`, `src/summary.js`, `src/format.js` | Probe helpers |
+| Module                                                            | Role                                      |
+| ----------------------------------------------------------------- | ----------------------------------------- |
+| `src/automerge-size.js`                                           | Binary vs JSON analysis                   |
+| `src/automerge-mutations.js`                                      | Change decode, op breakdown, hypotheses   |
+| `src/automerge-escalate.js`                                       | Maintainer bundle writer                  |
+| `src/automerge-load.js`                                           | Timed load + largest-doc helper           |
+| `src/automerge-chunks.js`                                         | Chunk load/merge (StorageSubsystem order) |
+| `src/automerge-keys.js`                                           | Chunk key encode/decode                   |
+| `src/automerge.js`                                                | Document listing                          |
+| `src/automerge-dump.js`                                           | `.bin` + `.json` dump                     |
+| `src/db.js`, `src/metadata.js`, `src/summary.js`, `src/format.js` | Probe helpers                             |
 
 Use `src/`, not `lib/` — repo `.gitignore` ignores `lib/`.
 
 ## Architecture
 
-| Layer | Detail |
-|-------|--------|
-| OPFS pool | Chrome `File System/<ID>/t/00/` — see [STORAGE.md](STORAGE.md) |
-| VFS header | 4096 bytes; SQLite at offset 4096 (`AccessHandlePoolVFS`) |
-| DB name | `DXOS` |
-| Metadata | `space_metadata.key = 'main'` → `EchoMetadata` protobuf |
-| Automerge | `automerge_heads`, `automerge_chunks` |
+| Layer      | Detail                                                         |
+| ---------- | -------------------------------------------------------------- |
+| OPFS pool  | Chrome `File System/<ID>/t/00/` — see [STORAGE.md](STORAGE.md) |
+| VFS header | 4096 bytes; SQLite at offset 4096 (`AccessHandlePoolVFS`)      |
+| DB name    | `DXOS`                                                         |
+| Metadata   | `space_metadata.key = 'main'` → `EchoMetadata` protobuf        |
+| Automerge  | `automerge_heads`, `automerge_chunks`                          |
 
 ## Scripts
 
-| Script | Role |
-|--------|------|
-| `locate-origin.py` | Origin → OPFS path |
-| `extract-opfs-sqlite.py` | Blobs → `DXOS.sqlite` |
-| `validate-extract.sh` | File-level checks |
-| `probe.js` | Profile summary + automerge subcommands |
-| `automerge-list.js` | Document ids + combined binary sizes |
-| `automerge-inspect.js` | Binary vs reified JSON size; `--mutations` for op breakdown |
-| `automerge-escalate.js` | Maintainer bundle: `.bin` + `-report.md` |
-| `automerge-bench-load.js` | Size comparison + loadIncremental timing |
-| `automerge-dump-json.js` | Dump `.bin` + `.json` with size report |
-| `composer-recovery.js` | One-shot debug bridge for `/recovery.html` (stdout JSON, exits) |
+| Script                    | Role                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| `locate-origin.py`        | Origin → OPFS path                                              |
+| `extract-opfs-sqlite.py`  | Blobs → `DXOS.sqlite`                                           |
+| `validate-extract.sh`     | File-level checks                                               |
+| `probe.js`                | Profile summary + automerge subcommands                         |
+| `automerge-list.js`       | Document ids + combined binary sizes                            |
+| `automerge-inspect.js`    | Binary vs reified JSON size; `--mutations` for op breakdown     |
+| `automerge-escalate.js`   | Maintainer bundle: `.bin` + `-report.md`                        |
+| `automerge-bench-load.js` | Size comparison + loadIncremental timing                        |
+| `automerge-dump-json.js`  | Dump `.bin` + `.json` with size report                          |
+| `composer-recovery.js`    | One-shot debug bridge for `/recovery.html` (stdout JSON, exits) |
 
 Probe package: `@dxos/composer-forensics` in `scripts/package.json` (workspace; run `pnpm install` from repo root).
 

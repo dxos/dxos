@@ -6,9 +6,9 @@ import { init, load, loadIncremental, stats, toJS } from '@automerge/automerge';
 
 import { loadDocumentChunks, mergeArrays } from './automerge-chunks.js';
 import { printSizeComparison } from './automerge-size.js';
+import { listAutomergeDocuments } from './automerge.js';
 import { openDatabase, tableExists } from './db.js';
 import { formatBytes, formatMs } from './format.js';
-import { listAutomergeDocuments } from './automerge.js';
 
 /**
  * Loads a document the same way automerge-repo StorageSubsystem.loadDoc does.
@@ -82,9 +82,7 @@ export const benchLoadDocument = (dbPath, documentId) => {
   }
 
   const result = loadDocumentTimed(chunks);
-  const objectCount = db
-    .prepare("SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?")
-    .get(documentId)?.n;
+  const objectCount = db.prepare('SELECT COUNT(*) AS n FROM objectMeta WHERE documentId = ?').get(documentId)?.n;
 
   const sizeAnalysis = {
     documentId,
@@ -99,8 +97,7 @@ export const benchLoadDocument = (dbPath, documentId) => {
     numChanges: result.stats.numChanges ?? 0,
     numOps: result.stats.numOps ?? 0,
     numActors: result.stats.numActors ?? 0,
-    opsPerMiB:
-      result.combinedBytes > 0 ? (result.stats.numOps ?? 0) / (result.combinedBytes / (1024 * 1024)) : 0,
+    opsPerMiB: result.combinedBytes > 0 ? (result.stats.numOps ?? 0) / (result.combinedBytes / (1024 * 1024)) : 0,
     loadMs: result.mergedMs,
     toJsMs: result.toJsMs,
     stringifyMs: result.stringifyMs,

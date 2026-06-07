@@ -5,8 +5,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { analyzeDocumentSizes } from './automerge-size.js';
 import { analyzeMutations } from './automerge-mutations.js';
+import { analyzeDocumentSizes } from './automerge-size.js';
 import { openDatabase } from './db.js';
 import { formatBytes, formatMs } from './format.js';
 
@@ -40,8 +40,12 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
   lines.push('## Size comparison');
   lines.push(`| Metric | Value |`);
   lines.push(`|--------|-------|`);
-  lines.push(`| Combined binary (loadIncremental input) | ${formatBytes(size.combinedBytes)} (${size.combinedBytes.toLocaleString()} bytes) |`);
-  lines.push(`| Reified JSON (toJS + JSON.stringify) | ${formatBytes(size.jsonBytes)} (${size.jsonBytes.toLocaleString()} bytes) |`);
+  lines.push(
+    `| Combined binary (loadIncremental input) | ${formatBytes(size.combinedBytes)} (${size.combinedBytes.toLocaleString()} bytes) |`,
+  );
+  lines.push(
+    `| Reified JSON (toJS + JSON.stringify) | ${formatBytes(size.jsonBytes)} (${size.jsonBytes.toLocaleString()} bytes) |`,
+  );
   lines.push(`| Binary / JSON ratio | ${size.binToJsonRatio.toFixed(2)}x |`);
   nl();
 
@@ -58,7 +62,9 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
   lines.push(`- **ops:** ${size.numOps.toLocaleString()}`);
   lines.push(`- **actors:** ${size.numActors}`);
   if (mutations.docStats?.cargoPackageVersion) {
-    lines.push(`- **automerge wasm:** ${mutations.docStats.cargoPackageName} ${mutations.docStats.cargoPackageVersion}`);
+    lines.push(
+      `- **automerge wasm:** ${mutations.docStats.cargoPackageName} ${mutations.docStats.cargoPackageVersion}`,
+    );
   }
   lines.push(`- **ops / MiB binary:** ${Math.round(size.opsPerMiB).toLocaleString()}`);
   if (size.numChanges > 0) {
@@ -129,7 +135,9 @@ export const formatEscalationReport = ({ size, mutations, dbPath, binPath }) => 
   lines.push('```');
   nl();
   lines.push('## Notes for maintainers');
-  lines.push('- Binary is concatenated snapshot + incremental chunk bytes exactly as stored in `automerge_chunks` (automerge-repo `StorageSubsystem.loadDoc` order).');
+  lines.push(
+    '- Binary is concatenated snapshot + incremental chunk bytes exactly as stored in `automerge_chunks` (automerge-repo `StorageSubsystem.loadDoc` order).',
+  );
   lines.push('- Reified JSON is the current materialized document (`Automerge.toJS`), not the on-disk encoding.');
   lines.push('- This extract is from production DXOS Composer user data; handle as confidential.');
   lines.push('- Please redact paths if sharing publicly.');
@@ -177,7 +185,9 @@ export const writeEscalationBundle = (dbPath, documentId, options = {}) => {
     console.log(`  ${binPath}`);
     console.log(`  ${reportPath}`);
     console.log('');
-    console.log(`binary: ${formatBytes(size.combinedBytes)}  json: ${formatBytes(size.jsonBytes)}  ratio: ${size.binToJsonRatio.toFixed(2)}x`);
+    console.log(
+      `binary: ${formatBytes(size.combinedBytes)}  json: ${formatBytes(size.jsonBytes)}  ratio: ${size.binToJsonRatio.toFixed(2)}x`,
+    );
     console.log(`load: ${formatMs(size.loadMs)}  changes: ${size.numChanges}  ops: ${size.numOps.toLocaleString()}`);
     if (mutations.hypotheses[0]) {
       console.log('');
