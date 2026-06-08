@@ -62,19 +62,15 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
     background: {
       fillStyle: '#EEE',
     },
-
     water: {
       fillStyle: '#555',
     },
-
     land: {
       fillStyle: '#999',
     },
-
     line: {
       strokeStyle: 'darkred',
     },
-
     point: {
       fillStyle: '#111111',
       strokeStyle: '#111111',
@@ -86,19 +82,15 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
     background: {
       fillStyle: '#111111',
     },
-
     water: {
       fillStyle: '#123E6A',
     },
-
     land: {
       fillStyle: '#032153',
     },
-
     line: {
       strokeStyle: '#111111',
     },
-
     point: {
       fillStyle: '#111111',
       strokeStyle: '#111111',

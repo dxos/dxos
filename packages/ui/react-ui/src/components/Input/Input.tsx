@@ -320,24 +320,6 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 TextInput.displayName = 'Input.TextInput';
 
 //
-// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
-// spinbutton semantics, and immutable separators. ISO string API:
-//   - Date     `YYYY-MM-DD`
-//   - Time     `HH:mm`
-//   - DateTime `YYYY-MM-DDTHH:mm`
-// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
-// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
-//
-
-const Time = SegmentedTime;
-const Date_ = SegmentedDate;
-const DateTime = SegmentedDateTime;
-
-type TimeProps = SegmentedTimeProps;
-type DateInputProps = SegmentedDateProps;
-type DateTimeInputProps = SegmentedDateTimeProps;
-
-//
 // TextArea
 //
 
@@ -485,6 +467,24 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
 Switch.displayName = 'Input.Switch';
 
 //
+// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
+// spinbutton semantics, and immutable separators. ISO string API:
+//   - Date     `YYYY-MM-DD`
+//   - Time     `HH:mm`
+//   - DateTime `YYYY-MM-DDTHH:mm`
+// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
+// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
+//
+
+const Time = SegmentedTime;
+const Date = SegmentedDate;
+const DateTime = SegmentedDateTime;
+
+type TimeProps = SegmentedTimeProps;
+type DateInputProps = SegmentedDateProps;
+type DateTimeInputProps = SegmentedDateTimeProps;
+
+//
 // Input
 //
 
@@ -495,7 +495,7 @@ export const Input = {
   TextInput,
   TextArea,
   Time,
-  Date: Date_,
+  Date,
   DateTime,
   Checkbox,
   Switch,

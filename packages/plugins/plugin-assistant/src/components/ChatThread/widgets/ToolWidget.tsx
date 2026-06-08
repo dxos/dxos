@@ -142,29 +142,31 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
 
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
-      <TogglePanel.Header classNames='flex items-center gap-2 text-sm text-placeholder'>
-        <Icon icon={headerIcon} size={4} classNames='shrink-0 opacity-70' />
-        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
-      </TogglePanel.Header>
       <TogglePanel.Content>
-        <TogglePanel.Viewport classNames='grid grid-cols-[32px_1fr]'>
-          <NumericTabs
-            ref={tabsRef}
-            classNames='p-1'
-            length={items.length}
-            selected={selected}
-            onSelect={handleSelect}
-          />
-          <JsonHighlighter
-            data={items[selected]?.content}
-            classNames='p-1 text-xs bg-transparent'
-            replacer={{
-              maxDepth: 3,
-              maxArrayLen: 10,
-              maxStringLen: 128,
-            }}
-          />
-        </TogglePanel.Viewport>
+        <TogglePanel.Header classNames='flex items-center gap-2 text-sm text-placeholder'>
+          <Icon icon={headerIcon} size={4} classNames='shrink-0 opacity-70' />
+          <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
+        </TogglePanel.Header>
+        <TogglePanel.Body>
+          <TogglePanel.Viewport classNames='grid grid-cols-[32px_1fr]'>
+            <NumericTabs
+              ref={tabsRef}
+              classNames='p-1'
+              length={items.length}
+              selected={selected}
+              onSelect={handleSelect}
+            />
+            <JsonHighlighter
+              data={items[selected]?.content}
+              classNames='p-1 text-xs bg-transparent'
+              replacer={{
+                maxDepth: 3,
+                maxArrayLen: 10,
+                maxStringLen: 128,
+              }}
+            />
+          </TogglePanel.Viewport>
+        </TogglePanel.Body>
       </TogglePanel.Content>
     </TogglePanel.Root>
   );
