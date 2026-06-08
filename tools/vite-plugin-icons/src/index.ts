@@ -69,8 +69,13 @@ export const IconsPlugin = ({
     if (detectedSymbols.size === lastWrittenSize) {
       return;
     }
-    lastWrittenSize = detectedSymbols.size;
+    // Capture the size now; advance `lastWrittenSize` only after a successful
+    // write so a failed `makeSprite` leaves it unchanged and the next call
+    // retries instead of skipping. (`makeSprite` snapshots the set on entry, so
+    // symbols added during the await leave size > lastWrittenSize and re-fire.)
+    const writtenSize = detectedSymbols.size;
     await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
+    lastWrittenSize = writtenSize;
     if (verbose) {
       const symbols = Array.from(detectedSymbols.values());
       symbols.sort();
@@ -189,9 +194,10 @@ export const IconsPlugin = ({
         }
         writeTimer = setTimeout(() => {
           writeTimer = null;
-          // `writeSprite` is a no-op when the symbol set hasn't grown since the
-          // last write (possible after a reload re-scans known modules).
-          void writeSprite();
+          // Route through `flushSprite` (not `writeSprite`) so a concurrent
+          // `/icons.svg` request coalesces onto this same in-flight write
+          // instead of racing it. No-op when the symbol set hasn't grown.
+          void flushSprite();
         }, writeDebounceMs);
       },
       // Force a final write at build close so production builds aren't
