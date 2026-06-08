@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
 import { Operation, ServiceResolver } from '@dxos/compute';
-import { unwrapExit } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 
 import { Capabilities } from '../../common';
@@ -74,5 +74,5 @@ export const useSpaceService = <T extends Context.Tag<any, any>>(
   if (!promise) {
     return undefined;
   }
-  return unwrapExit(use(promise));
+  return EffectEx.unwrapExit(use(promise));
 };

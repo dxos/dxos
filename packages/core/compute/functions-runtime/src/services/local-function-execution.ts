@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Query } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { FunctionInvocationService, type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -50,7 +50,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
                   functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
                 invokePromise: async (op: any, ...args: any[]) => {
                   try {
-                    const data = await runAndForwardErrors(
+                    const data = await EffectEx.runAndForwardErrors(
                       functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
                     );
                     return { data };
@@ -126,7 +126,7 @@ const invokeOperation = (
         functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
       invokePromise: async (op: any, ...args: any[]) => {
         try {
-          const data = await runAndForwardErrors(
+          const data = await EffectEx.runAndForwardErrors(
             functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
           );
           return { data };

@@ -11,7 +11,7 @@ import { Operation } from '@dxos/compute';
 import { DXN, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { dispatch } from './dispatch';
 import { type ExtractionTemplate, makeTemplateExtractor } from './ExtractionTemplate';
@@ -121,7 +121,7 @@ describe('template extractor + dispatch', () => {
         ),
       )
       .pipe(operationServiceStub)
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(result.created).toHaveLength(1);
     const contact = result.created[0] as Contact;
@@ -151,7 +151,7 @@ describe('template extractor + dispatch', () => {
         ),
       )
       .pipe(operationServiceStub)
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(outcome.cancelled).toBe(false);
     expect(outcome.extractorId).toBe(template.id);
@@ -178,7 +178,7 @@ describe('template extractor + dispatch', () => {
         ),
       )
       .pipe(operationServiceStub)
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(outcome.cancelled).toBe(true);
 

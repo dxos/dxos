@@ -143,7 +143,7 @@ export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType, typename?: s
 export const makeSingleSelectAnnotations = (
   jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
-) => {
+): Mutable<JsonSchemaType> => {
   jsonProperty.enum = options.map(({ id }) => id);
   jsonProperty.format = Format.TypeFormat.SingleSelect;
   jsonProperty.annotations = {
@@ -164,7 +164,7 @@ export const makeSingleSelectAnnotations = (
 export const makeMultiSelectAnnotations = (
   jsonProperty: Mutable<JsonSchemaType>,
   options: Array<{ id: string; title?: string; color?: string }>,
-) => {
+): Mutable<JsonSchemaType> => {
   // TODO(ZaymonFC): Is this how do we encode an array of enums?
   jsonProperty.type = 'object';
   jsonProperty.items = { type: 'string', enum: options.map(({ id }) => id) };

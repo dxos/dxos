@@ -10,8 +10,7 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
 import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
-import { DynamicRuntime, unwrapExit } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { DynamicRuntime, EffectEx, Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -187,7 +186,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const effect = this.invoke(op, ...args);
     const exit = await this._managedRuntime.runPromiseExit(effect);
     try {
-      const data = unwrapExit(exit);
+      const data = EffectEx.unwrapExit(exit);
       return { data };
     } catch (error) {
       log.catch(error as Error);

@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -20,7 +20,7 @@ export type FileInputProps = {
 
 export const FileInput = ({ schema, onChange }: FileInputProps) => {
   const { t } = useTranslation(meta.id);
-  const accept = findAnnotation<Record<string, string[]>>(schema.ast, FileAction.UploadAnnotationId);
+  const accept = SchemaEx.findAnnotation<Record<string, string[]>>(schema.ast, FileAction.UploadAnnotationId);
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);
 

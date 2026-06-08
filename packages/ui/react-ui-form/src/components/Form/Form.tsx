@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { Annotation as EchoAnnotation, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import {
   Column,
   type ColumnRootProps,
@@ -118,12 +118,12 @@ const useFormValues: {
   ): T | undefined;
 } = (componentName: string, path?: (string | number)[], defaultValue?: () => any) => {
   const stablePath = useMemo(() => path ?? [], [path ? path.join('.') : undefined]);
-  const jsonPath = createJsonPath(stablePath);
+  const jsonPath = SchemaEx.createJsonPath(stablePath);
   const {
     form: { values, onValueChange },
   } = useFormContext(componentName);
 
-  const value = getValue$(values, jsonPath);
+  const value = SchemaEx.getValue(values, jsonPath);
 
   // Apply default value once when the field has no value. lastAppliedPathRef prevents
   // re-applying on every render (e.g. when defaultValue() returns null) and ensures

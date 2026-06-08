@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
-import { type SchemaProperty, getProperties, isArrayType, isNestedType } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
 const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
@@ -25,7 +25,7 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
  * Get the property types of an AST and filter out properties that are not form inputs.
  *
  * The `FormInputAnnotation` is read from the raw property signature's AST (before
- * `encodedBoundAST` is applied by `getProperties`), because `encodedBoundAST` strips
+ * `encodedBoundAST` is applied by `SchemaEx.getProperties`), because `encodedBoundAST` strips
  * annotations from non-keyword inner types (e.g., `Schema.Struct`, `Schema.Array`).
  * Without this, fields like `Routine.input` (a JsonSchema struct) annotated
  * `FormInputAnnotation.set(false)` would still render in the form.
@@ -35,13 +35,13 @@ const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
  * `Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional)` works.
  *
  * Container properties (nested structs, unions, arrays) keep their *raw* AST rather than
- * the `encodedBoundAST` produced by `getProperties`. `encodedBoundAST` strips annotations
+ * the `encodedBoundAST` produced by `SchemaEx.getProperties`. `encodedBoundAST` strips annotations
  * from non-keyword inner types, so a `FormInputAnnotation` nested beneath an encoded container
  * (e.g. `RouteLeg.geometry`, reached via `Segment → details → routes → Route → legs`) would
  * otherwise be lost by the time recursion reaches it. Leaf/transformation fields stay encoded
  * (e.g. a `DateTime` still renders as its encoded string input).
  */
-export const getFormProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
+export const getFormProperties = (ast: SchemaAST.AST): SchemaEx.SchemaProperty[] => {
   const signatures = SchemaAST.getPropertySignatures(ast);
   const rawByName = new Map<PropertyKey, SchemaAST.AST>(signatures.map((prop) => [prop.name, unwrapOptional(prop)]));
   const hidden = new Set(
@@ -52,10 +52,10 @@ export const getFormProperties = (ast: SchemaAST.AST): SchemaProperty[] => {
       )
       .map((prop) => prop.name),
   );
-  return getProperties(ast)
+  return SchemaEx.getProperties(ast)
     .filter((prop) => !hidden.has(prop.name))
     .map((prop) => {
       const raw = rawByName.get(prop.name);
-      return raw && (isNestedType(raw) || isArrayType(raw)) ? { ...prop, type: raw } : prop;
+      return raw && (SchemaEx.isNestedType(raw) || SchemaEx.isArrayType(raw)) ? { ...prop, type: raw } : prop;
     });
 };

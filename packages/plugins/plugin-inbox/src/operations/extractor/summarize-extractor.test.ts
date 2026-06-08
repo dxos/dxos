@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Markdown } from '@dxos/plugin-markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
@@ -56,7 +56,7 @@ describe('SummarizeMessageExtractor', () => {
 
     const result = await summarizeMessage({ db, source: message })
       .pipe(Effect.provide(mockAiServiceLayer))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(result.created).toHaveLength(1);
     expect(result.updated).toEqual([]);

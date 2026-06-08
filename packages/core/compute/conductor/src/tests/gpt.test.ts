@@ -15,7 +15,7 @@ import { TestAiService } from '@dxos/ai/testing';
 import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { URI } from '@dxos/keys';
@@ -81,7 +81,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           }),
         );
 
-        const logger = runAndForwardErrors(output.values.text).then((token: any) => {
+        const logger = EffectEx.runAndForwardErrors(output.values.text).then((token: any) => {
           log.info('token', { token });
         });
 
@@ -130,7 +130,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //   const runtime = new TestRuntime();
   //   runtime.registerGraph(URI.make('dxn:compute:gpt1'), gpt1());
   //
-  //   await runAndForwardErrors(
+  //   await EffectEx.runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const computeResult = yield* runtime
@@ -155,7 +155,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //   const runtime = new TestRuntime();
   //   runtime.registerGraph(URI.make('dxn:compute:gpt2'), gpt2());
   //
-  //   await runAndForwardErrors(
+  //   await EffectEx.runAndForwardErrors(
   //     Effect.gen(function* () {
   //       const scope = yield* Scope.make();
   //       const outputs: ValueBag<GptOutput> = yield* runtime
@@ -169,7 +169,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //
   //       // log.info('text in test', { text: getDebugName(text) });
   //
-  //       const p = runAndForwardErrors(outputs.values.text).then((x) => {
+  //       const p = EffectEx.runAndForwardErrors(outputs.values.text).then((x) => {
   //         console.log({ x });
   //       });
   //

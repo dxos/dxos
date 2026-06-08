@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { byokHeaderLayer } from './byok';
 import * as Credential from './Credential';
@@ -31,7 +31,7 @@ describe('byokHeaderLayer', () => {
         ),
       ),
     );
-    await runAndForwardErrors(runnable as Effect.Effect<void>);
+    await EffectEx.runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBe('sk-ant-user');
   });
@@ -52,7 +52,7 @@ describe('byokHeaderLayer', () => {
         ),
       ),
     );
-    await runAndForwardErrors(runnable as Effect.Effect<void>);
+    await EffectEx.runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBeUndefined();
   });
@@ -73,7 +73,7 @@ describe('byokHeaderLayer', () => {
         ),
       ),
     );
-    await runAndForwardErrors(runnable as Effect.Effect<void>);
+    await EffectEx.runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.lastHeader).toBeUndefined();
   });
@@ -103,7 +103,7 @@ describe('byokHeaderLayer', () => {
         ),
       ),
     );
-    await runAndForwardErrors(runnable as Effect.Effect<void>);
+    await EffectEx.runAndForwardErrors(runnable as Effect.Effect<void>);
 
     expect(sink.called).toBe(true);
     expect(sink.lastHeader).toBeUndefined();

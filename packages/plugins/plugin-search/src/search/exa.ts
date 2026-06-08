@@ -11,7 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { ReferenceAnnotationId } from '@dxos/echo/internal';
-import { mapAst } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<T extends Type.AnyEntity> = {
@@ -223,8 +223,8 @@ const mapSchemaRefs = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoC
       return SoftRef.ast;
     }
 
-    return mapAst(ast, go);
+    return SchemaEx.mapAst(ast, go);
   };
 
-  return Schema.make(mapAst(schema.ast, go));
+  return Schema.make(SchemaEx.mapAst(schema.ast, go));
 };

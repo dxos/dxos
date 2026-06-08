@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, type SchemaProperty } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -29,7 +29,7 @@ export type FormFieldSetProps<T extends AnyProperties> = {
    * shows/hides the field set body. Used for nested objects.
    */
   collapsible?: boolean;
-  exclude?: (props: SchemaProperty[]) => SchemaProperty[];
+  exclude?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
   /**
    * Picks a named layout out of `FormLayoutAnnotation` when present.
    * Falls back to `'default'`. Ignored when the schema has no annotation
@@ -123,7 +123,7 @@ export const FormFieldSet = ({
           asChild
           classNames='pl-2'
           label={label}
-          path={createJsonPath(path ?? [])}
+          path={SchemaEx.createJsonPath(path ?? [])}
           button={
             collapsible && (
               <IconButton
@@ -168,7 +168,7 @@ const useFormFieldSetProperties = ({
   projection,
   values,
   sort,
-}: UseFormFieldSetPropertiesParams): SchemaProperty[] => {
+}: UseFormFieldSetPropertiesParams): SchemaEx.SchemaProperty[] => {
   // TODO(burdon): Updates on every value change.
   //  Remove values dep if can remove from getSchemaProperties.
   return useMemo(() => {
@@ -187,7 +187,7 @@ const useFormFieldSetProperties = ({
 
       // Filter properties to only include visible ones and order by projection.
       const visibleProps = filteredProps.filter((prop) => !hiddenProperties.has(prop.name.toString()));
-      const orderedProps: SchemaProperty[] = [];
+      const orderedProps: SchemaEx.SchemaProperty[] = [];
 
       // Add properties in projection field order.
       for (const fieldProjection of fieldProjections) {

@@ -13,7 +13,7 @@ import { getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { PluginRegistryButton, useLayout } from '@dxos/app-toolkit/ui';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -152,7 +152,7 @@ export const CreateObjectDialog = ({
       }).pipe(
         Effect.provideService(Capability.Service, manager.capabilities),
         Effect.provideService(Operation.Service, operationInvoker),
-        runAndForwardErrors,
+        EffectEx.runAndForwardErrors,
       ),
     [target, _shouldNavigate, onCreateObject, manager.capabilities, invoke, layout.mode],
   );

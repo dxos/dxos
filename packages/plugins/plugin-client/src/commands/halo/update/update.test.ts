@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './update';
 
@@ -24,5 +24,5 @@ describe('halo update', () => {
       expect(parsed).toHaveProperty('identityDid');
       expect(parsed).toHaveProperty('displayName', 'Updated Name');
       expect(parsed.identityDid).toBe(client.halo.identity.get()?.did);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });
