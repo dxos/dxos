@@ -47,20 +47,17 @@ export const useCarousel = (): CarouselContextValue => useCarouselContext('useCa
 // Root
 //
 
-export type CarouselRootProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Total number of slides; drives auto-advance and indicator counts. */
-    count: number;
-    /** Whether to auto-advance slides on mount. Defaults to `false`. */
-    autorun?: boolean;
-    /** Auto-advance interval in milliseconds. Set 0 to disable. */
-    intervalMs?: number;
-    defaultIndex?: number;
-  }>
->;
+export type CarouselRootProps = PropsWithChildren<{
+  /** Total number of slides; drives auto-advance and indicator counts. */
+  count: number;
+  /** Whether to auto-advance slides on mount. Defaults to `false`. */
+  autorun?: boolean;
+  /** Auto-advance interval in milliseconds. Set 0 to disable. */
+  intervalMs?: number;
+  defaultIndex?: number;
+}>;
 
 const CarouselRoot = ({
-  classNames,
   children,
   count,
   autorun = false,
@@ -105,26 +102,36 @@ const CarouselRoot = ({
 
   return (
     <CarouselProvider index={index} count={count} setIndex={setIndex} next={next} prev={prev}>
-      {/*
-       * Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
-       * gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
-       * its content height. With no parent height constraint, the `1fr` row simply tracks
-       * row-1 content — preserving the existing aspect-video behaviour for unbounded use.
-       */}
-      {/* TODO(burdon): Move to Carousel.theme.ts */}
-      <div
-        className={mx(
-          'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
-          classNames,
-        )}
-      >
-        {children}
-      </div>
+      {children}
     </CarouselProvider>
   );
 };
 
 CarouselRoot.displayName = 'Carousel.Root';
+
+//
+// Content
+//
+
+export type CarouselContentProps = ThemedClassName<PropsWithChildren<{}>>;
+
+const CarouselContent = ({ classNames, children }: CarouselContentProps) => (
+  // Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
+  // gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
+  // its content height. With no parent height constraint, the `1fr` row simply tracks
+  // row-1 content — preserving the existing aspect-video behaviour for unbounded use.
+  // TODO(burdon): Move to Carousel.theme.ts
+  <div
+    className={mx(
+      'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
+      classNames,
+    )}
+  >
+    {children}
+  </div>
+);
+
+CarouselContent.displayName = 'Carousel.Content';
 
 //
 // Viewport
@@ -354,6 +361,7 @@ CarouselCaption.displayName = 'Carousel.Caption';
 
 export const Carousel = {
   Root: CarouselRoot,
+  Content: CarouselContent,
   Viewport: CarouselViewport,
   Slide: CarouselSlide,
   Previous: CarouselPrevious,

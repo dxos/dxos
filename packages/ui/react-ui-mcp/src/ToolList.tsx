@@ -62,16 +62,32 @@ const useToolListContext = (): ToolListContextValue => {
 };
 
 //
-// Root
+// Root — headless; provides selection context only. Render a `ToolList.Content`
+// (or a custom listbox) inside it.
 //
 
-export type ToolListRootProps = ThemedClassName<{
-  /** The tools to render. Order is preserved as-is. */
-  tools: readonly Tool[];
+export type ToolListRootProps = PropsWithChildren<{
   /** Selected tool id; null when no row is highlighted. */
   selectedId?: string | null;
   /** Called when the user picks a tool. */
   onSelect?: (id: string) => void;
+}>;
+
+const ToolListRoot = ({ selectedId = null, onSelect, children }: ToolListRootProps): ReactNode => {
+  // Stable context value across renders that don't change selection so memoized
+  // children don't re-render unnecessarily.
+  const value = useMemo<ToolListContextValue>(() => ({ selectedId, onSelect }), [selectedId, onSelect]);
+  return <ToolListContext.Provider value={value}>{children}</ToolListContext.Provider>;
+};
+ToolListRoot.displayName = 'ToolList.Root';
+
+//
+// Content — the `role=listbox` container that renders rows from `tools`.
+//
+
+export type ToolListContentProps = ThemedClassName<{
+  /** The tools to render. Order is preserved as-is. */
+  tools: readonly Tool[];
   /**
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
@@ -80,23 +96,16 @@ export type ToolListRootProps = ThemedClassName<{
   children?: (tool: Tool) => ReactNode;
 }>;
 
-const ToolListRoot = ({ classNames, tools, selectedId = null, onSelect, children }: ToolListRootProps): ReactNode => {
-  // Stable context value across renders that don't change selection so memoized
-  // children don't re-render unnecessarily.
-  const value = useMemo<ToolListContextValue>(() => ({ selectedId, onSelect }), [selectedId, onSelect]);
-  return (
-    <ToolListContext.Provider value={value}>
-      <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
-        {({ items }) => (
-          <div role='listbox' className={mx('flex flex-col gap-px', classNames)}>
-            {items?.map((tool) => (children ? children(tool) : <ToolListItem key={tool.id} tool={tool} />))}
-          </div>
-        )}
-      </NaturalList.Root>
-    </ToolListContext.Provider>
-  );
-};
-ToolListRoot.displayName = 'ToolList.Root';
+const ToolListContent = ({ classNames, tools, children }: ToolListContentProps): ReactNode => (
+  <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
+    {({ items }) => (
+      <div role='listbox' className={mx('flex flex-col gap-px', classNames)}>
+        {items?.map((tool) => (children ? children(tool) : <ToolListItem key={tool.id} tool={tool} />))}
+      </div>
+    )}
+  </NaturalList.Root>
+);
+ToolListContent.displayName = 'ToolList.Content';
 
 //
 // Item
@@ -177,26 +186,31 @@ ToolListItemDescription.displayName = 'ToolList.ItemDescription';
 //
 // Default usage:
 //
-//   <ToolList.Root tools={tools} selectedId={id} onSelect={setId} />
+//   <ToolList.Root selectedId={id} onSelect={setId}>
+//     <ToolList.Content tools={tools} />
+//   </ToolList.Root>
 //
 // Custom row content:
 //
-//   <ToolList.Root tools={tools} selectedId={id} onSelect={setId}>
-//     {(tool) => (
-//       <ToolList.Item key={tool.id} tool={tool}>
-//         <Badge>{tool.id}</Badge>
-//         <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
-//       </ToolList.Item>
-//     )}
+//   <ToolList.Root selectedId={id} onSelect={setId}>
+//     <ToolList.Content tools={tools}>
+//       {(tool) => (
+//         <ToolList.Item key={tool.id} tool={tool}>
+//           <Badge>{tool.id}</Badge>
+//           <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
+//         </ToolList.Item>
+//       )}
+//     </ToolList.Content>
 //   </ToolList.Root>
 //
 
 export const ToolList = {
   Root: ToolListRoot,
+  Content: ToolListContent,
   Item: ToolListItem,
   ItemTitle: ToolListItemTitle,
   ItemDescription: ToolListItemDescription,
 };
 
 // Direct exports too for callers that prefer them over the namespace.
-export { ToolListRoot, ToolListItem, ToolListItemTitle, ToolListItemDescription };
+export { ToolListRoot, ToolListContent, ToolListItem, ToolListItemTitle, ToolListItemDescription };
