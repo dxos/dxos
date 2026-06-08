@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { SelectionSchema } from '@dxos/react-ui-attention/types';
 
@@ -285,7 +286,7 @@ export namespace LayoutOperation {
       icon: 'ph--arrow-square-out--regular',
     },
     executionMode: 'sync',
-    services: [Capability.Service],
+    services: [Capability.Service, Database.Service],
     input: Schema.Struct({
       // TODO(dmaretskyi): use Ref.Ref(Obj.Unknown)
       subject: Schema.Array(
