@@ -97,11 +97,14 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
   // Start in "custom end" mode when the current duration doesn't match a preset.
   const [customEnd, setCustomEnd] = useState(presetValue === undefined);
 
-  // When in duration mode, moving the start preserves the duration.
+  // Moving the start: all-day events are single-day (end tracks start); otherwise, in duration mode,
+  // preserve the duration.
   const setStart = (iso: string) =>
     update((event) => {
       event.startDate = iso;
-      if (!customEnd && durationMinutes != null) {
+      if (allDay) {
+        event.endDate = iso;
+      } else if (!customEnd && durationMinutes != null) {
         event.endDate = addMinutes(new Date(iso), durationMinutes).toISOString();
       }
     });
@@ -146,6 +149,10 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               onCheckedChange={(next) =>
                 update((event) => {
                   event.allDay = next;
+                  // All-day events are single-day: collapse the end onto the start.
+                  if (next) {
+                    event.endDate = event.startDate;
+                  }
                 })
               }
             />
@@ -158,11 +165,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         <DateTimeField value={data.startDate} withTime={!allDay} onChange={setStart} />
       </Card.Row>
 
-      {allDay ? (
-        <Card.Row icon='ph--calendar-dots--regular'>
-          <DateTimeField value={data.endDate} withTime={false} onChange={setEnd} />
-        </Card.Row>
-      ) : (
+      {/* All-day events are single-day, so no end field; timed events choose a duration or explicit end. */}
+      {!allDay && (
         <Card.Row icon='ph--hourglass--regular'>
           <div className='flex items-center gap-2'>
             <Select.Root value={customEnd ? CUSTOM_END : presetValue} onValueChange={handleDurationChange}>
