@@ -48,13 +48,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-audio"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"
-    },
-    {
-      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/ui-theme"

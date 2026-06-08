@@ -13,6 +13,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
+  type ElementType,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PropsWithChildren,
@@ -318,7 +319,7 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
       event.preventDefault();
     }, []);
 
-    const Comp: any = asChild ? Slot : 'div';
+    const Comp: ElementType = asChild ? Slot : 'div';
 
     // Padding follows `--gutter` to align with sibling `Column.Center`
     // content; falls back to `0.75rem` when not nested under `Column.Root`.

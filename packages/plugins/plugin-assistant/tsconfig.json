@@ -138,9 +138,6 @@
       "path": "../../ui/react-ui-search"
     },
     {
-      "path": "../../ui/react-ui-sfx"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -172,6 +169,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-integration"
     },
     {
       "path": "../plugin-map"

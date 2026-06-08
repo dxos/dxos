@@ -129,6 +129,9 @@
       "path": "../plugin-comments"
     },
     {
+      "path": "../plugin-graph"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {

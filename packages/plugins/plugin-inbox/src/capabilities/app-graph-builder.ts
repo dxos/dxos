@@ -7,7 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNode,
+  AppNodeMatcher,
+  createTypeSectionExtension,
+  getSpaceIdFromPath,
+} from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -16,6 +22,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
@@ -31,6 +38,8 @@ import {
   MAILBOX_DRAFTS_TYPE,
 } from '../constants';
 import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
+
+const calendarTypename = Type.getTypename(Calendar.Calendar);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
@@ -301,6 +310,32 @@ export default Capability.makeModule(
               },
             };
           }),
+      }),
+
+      createTypeSectionExtension(Calendar.Calendar),
+
+      GraphBuilder.createExtension({
+        id: 'calendarsSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === calendarTypename && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-calendar',
+              data: () =>
+                Operation.invoke(SpaceOperation.OpenCreateObject, {
+                  target: space.db,
+                  typename: calendarTypename,
+                }),
+              properties: {
+                label: ['add-object.label', { ns: calendarTypename }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
+            }),
+          ]),
       }),
 
       GraphBuilder.createExtension({

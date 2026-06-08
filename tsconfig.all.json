@@ -637,6 +637,9 @@
       "path": "packages/ui/react-ui-attention/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-audio/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-board/tsconfig.json"
     },
     {
@@ -662,6 +665,9 @@
     },
     {
       "path": "packages/ui/react-ui-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-experimental/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-form/tsconfig.json"
@@ -704,9 +710,6 @@
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-sfx/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-stack/tsconfig.json"

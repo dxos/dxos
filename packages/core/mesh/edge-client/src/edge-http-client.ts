@@ -439,6 +439,8 @@ export class EdgeHttpClient extends BaseHttpClient {
    * Returns the raw `Response` so streaming bodies are forwarded unchanged to `@effect/ai`.
    * Requires an identity to have been set via {@link setIdentity}.
    */
+  // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
+  // the auth/retry loop below duplicates the one in `_call`.
   public async anthropicAiRequest(request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
@@ -465,7 +467,10 @@ export class EdgeHttpClient extends BaseHttpClient {
       }
 
       const response = await fetch(target, { method, headers, body, signal: request.signal });
-      if (response.status === 401 && !handledAuth) {
+      // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
+      // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s (e.g. invalid BYOK rejected
+      // by Anthropic) lack it and must be surfaced verbatim.
+      if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
         this._authHeader = await this._handleUnauthorized(response);
         handledAuth = true;
         continue;

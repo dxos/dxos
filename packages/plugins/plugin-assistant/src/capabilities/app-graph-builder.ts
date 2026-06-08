@@ -7,18 +7,30 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNode,
+  LayoutOperation,
+  createTypeSectionExtension,
+  createTypeSectionPathResolver,
+  getActiveSpace,
+  getPersonalSpace,
+} from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
+import { isSpace } from '@dxos/client/echo';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Type, type Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import { getChatsPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [AgentPrompt] as const;
@@ -189,8 +201,52 @@ export default Capability.makeModule(
             }),
           ]),
       }),
+
+      // Section node: one Chat.Chat per space, hidden when empty.
+      createTypeSectionExtension(Chat.Chat),
+
+      // Create-chat action on the Chats section header.
+      GraphBuilder.createExtension({
+        id: 'chatsSectionActions',
+        match: (node) => {
+          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+          return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
+        },
+        actions: (space) =>
+          Effect.succeed([
+            Node.makeAction({
+              id: 'create-chat',
+              data: () =>
+                Effect.gen(function* () {
+                  const { object: chat } = yield* Operation.invoke(
+                    AssistantOperation.CreateChat,
+                    { db: space.db },
+                    { spaceId: space.db.spaceId },
+                  );
+                  const { subject } = yield* Operation.invoke(
+                    SpaceOperation.AddObject,
+                    { object: chat, target: space.db, hidden: true, targetNodeId: getChatsPath(space.db.spaceId) },
+                    { spaceId: space.db.spaceId },
+                  );
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [...subject] },
+                    { spaceId: space.db.spaceId },
+                  );
+                }),
+              properties: {
+                label: ['create-chat.label', { ns: meta.id }],
+                icon: 'ph--plus--regular',
+                disposition: 'list-item-primary',
+              },
+            }),
+          ]),
+      }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [
+      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Chat.Chat)),
+    ];
   }),
 );

@@ -50,15 +50,20 @@ describe('AssistantPlugin', () => {
     // OperationHandler auto-cascades from ProcessManagerPlugin.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
 
-    // AiService module must activate on SetupProcessManager (before the process manager is built).
+    // Process-manager layer specs must activate on SetupProcessManager.
     expect(harness.manager.getActive()).toContain(moduleId('AiService'));
+    expect(harness.manager.getActive()).toContain(moduleId('AiContext'));
+    expect(harness.manager.getActive()).toContain(moduleId('AgentRuntime'));
 
-    // AiService must be resolvable via the process manager's ServiceResolver.
+    // Space-affinity LayerSpec — resolution requires a space context.
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
     await harness.runPromise(
       Effect.gen(function* () {
         const aiService = yield* AiService.AiService;
         expect(aiService).toBeDefined();
-      }).pipe(Effect.provide(ServiceResolver.provide({}, AiService.AiService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService))),
     );
   });
 
@@ -73,6 +78,9 @@ describe('AssistantPlugin', () => {
       ],
     });
 
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
     await harness.runPromise(
       Effect.gen(function* () {
         const { text } = yield* LanguageModel.generateText({
@@ -82,7 +90,7 @@ describe('AssistantPlugin', () => {
       }).pipe(
         Effect.provide(
           AiService.model('ai.claude.model.claude-haiku-4-5').pipe(
-            Layer.provideMerge(ServiceResolver.provide({}, AiService.AiService)),
+            Layer.provideMerge(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService)),
           ),
         ),
       ),

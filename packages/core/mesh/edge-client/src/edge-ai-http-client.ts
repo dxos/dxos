@@ -11,11 +11,25 @@ import * as FiberRef from 'effect/FiberRef';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
+import { BYOK_HEADER } from '@dxos/protocols';
 
 import { type EdgeHttpClient } from './edge-http-client';
 
 export type GetEdgeHttpClient = () => EdgeHttpClient;
+
+/**
+ * Thrown by {@link EdgeAiHttpClient} when an AI request carrying {@link BYOK_HEADER} is rejected
+ * with 401/403 by the upstream provider — i.e. the user-supplied API key is invalid. Wrapped as
+ * the `cause` of an `HttpClientError.ResponseError` so it flows through `@effect/ai`'s error
+ * mapping; callers walk the cause chain (via {@link ByokError.is}) to render a useful message.
+ */
+export class ByokError extends BaseError.extend('ByokError', 'BYOK authentication failed') {
+  constructor(options: { status: number; provider: string } & BaseErrorOptions) {
+    super({ context: { status: options.status, provider: options.provider }, ...options });
+  }
+}
 
 /**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
@@ -43,6 +57,8 @@ export class EdgeAiHttpClient {
         ? Headers.merge(Headers.fromInput(options.headers), request.headers)
         : request.headers;
 
+      const carriedByok = !!headers[BYOK_HEADER.toLowerCase()];
+
       const send = (body: BodyInit | undefined) =>
         Effect.tryPromise({
           try: () =>
@@ -63,7 +79,37 @@ export class EdgeAiHttpClient {
               cause,
             });
           },
-        }).pipe(Effect.map((response) => HttpClientResponse.fromWeb(request, response)));
+        }).pipe(
+          Effect.flatMap((response) => {
+            const httpResponse = HttpClientResponse.fromWeb(request, response);
+            // A 401/403 on a BYOK-carrying request means the user's upstream key was rejected.
+            // Wrap as a typed ResponseError with `cause: ByokError` so it survives AiError's
+            // `fromRequestError` mapping; callers walk the cause chain to render a useful message.
+            if (carriedByok && (response.status === 401 || response.status === 403)) {
+              return Effect.tryPromise({
+                try: () => response.clone().json() as Promise<{ error?: { message?: string } } | undefined>,
+                catch: () => undefined,
+              }).pipe(
+                Effect.orElseSucceed(() => undefined),
+                Effect.flatMap((body) =>
+                  Effect.fail(
+                    new HttpClientError.ResponseError({
+                      request,
+                      response: httpResponse,
+                      reason: 'StatusCode',
+                      cause: new ByokError({
+                        status: response.status,
+                        provider: 'anthropic.com',
+                        message: body?.error?.message ?? 'Authentication failed',
+                      }),
+                    }),
+                  ),
+                ),
+              );
+            }
+            return Effect.succeed(httpResponse);
+          }),
+        );
 
       switch (request.body._tag) {
         case 'Raw':
