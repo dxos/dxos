@@ -3,14 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
+import { useObject } from '@dxos/react-client/echo';
 
 import { SupportSettings } from '#components';
 import {
@@ -25,7 +27,7 @@ import {
   SupportCompanion,
 } from '#containers';
 import { meta } from '#meta';
-import { Settings, Support } from '#types';
+import { Support } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE } from '../constants';
@@ -97,21 +99,30 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+        component: () => {
           const client = useClient();
           const { invokePromise } = useOperationInvoker();
+          const personal = getPersonalSpace(client);
+          const [properties, updateProperties] = useObject(personal?.properties);
+          const dismissed = properties
+            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+            : false;
+          const handleWelcomeDismissedChange = (value: boolean) =>
+            updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, value));
           const handleShowWelcome = () => {
-            const personal = getPersonalSpace(client);
             if (!personal) {
               return;
             }
-            Obj.update(personal.properties, (props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
+            updateProperties((props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
             const workspace = getSpacePath(personal.id);
             void invokePromise(LayoutOperation.Open, { subject: [`${workspace}/${SPACE_HOME_NODE_ID}`], workspace });
           };
           return (
-            <SupportSettings settings={settings} onSettingsChange={updateSettings} onShowWelcome={handleShowWelcome} />
+            <SupportSettings
+              welcomeDismissed={dismissed}
+              onWelcomeDismissedChange={handleWelcomeDismissedChange}
+              onShowWelcome={handleShowWelcome}
+            />
           );
         },
       }),

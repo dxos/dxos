@@ -4,28 +4,33 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type SupportSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings> & {
+export type SupportSettingsProps = {
+  welcomeDismissed?: boolean;
+  onWelcomeDismissedChange?: (dismissed: boolean) => void;
   onShowWelcome?: () => void;
 };
 
-export const SupportSettings = ({ settings, onSettingsChange, onShowWelcome }: SupportSettingsProps) => {
+export const SupportSettings = ({
+  welcomeDismissed,
+  onWelcomeDismissedChange,
+  onShowWelcome,
+}: SupportSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
         <SettingsForm.FieldSet
-          readonly={!onSettingsChange}
+          readonly={!onWelcomeDismissedChange}
           schema={Settings.Settings}
-          values={settings}
-          onValuesChanged={(values) => onSettingsChange?.(() => values)}
+          values={{ showWelcome: !welcomeDismissed }}
+          onValuesChanged={(values) => onWelcomeDismissedChange?.(!values.showWelcome)}
         />
         <Button onClick={onShowWelcome}>{t('show-welcome.button')}</Button>
       </SettingsForm.Section>
