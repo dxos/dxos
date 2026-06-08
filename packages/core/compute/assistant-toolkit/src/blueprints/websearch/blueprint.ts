@@ -19,7 +19,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make()),
     },
-    tools: Blueprint.toolDefinitions({ operations: [Fetch], tools: ['AnthropicWebSearch'] }),
+    tools: Blueprint.toolDefinitions({ operations: [Fetch] }),
   });
 
 const blueprint: Blueprint.Definition = {
