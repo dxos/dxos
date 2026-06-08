@@ -1163,7 +1163,7 @@ class ManagerImpl implements PluginManager {
   private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
     const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
     const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
-    log.warn('plugin failed', { id, phase, reason, error: error.message });
+    log.error('plugin failed to activate — will be auto-disabled', { id, phase, reason, error: error.message });
     this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
   }
 
@@ -1174,6 +1174,10 @@ class ManagerImpl implements PluginManager {
    * them being non-removable; the failure record is enough signal).
    */
   private _scheduleAutoDisable(id: string): void {
+    if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+      // Transient HMR failures must not persist; skip auto-disable in dev server.
+      return;
+    }
     if (this._get(this._coreAtom).includes(id)) {
       return;
     }
@@ -1182,6 +1186,7 @@ class ManagerImpl implements PluginManager {
     }
     this._runForkedFiber(
       this.disable(id).pipe(
+        Effect.tap(() => Effect.sync(() => log.error('plugin auto-disabled', { id }))),
         Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
         Effect.ignore,
       ),
