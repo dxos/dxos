@@ -38,9 +38,9 @@ const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content asChild>
-        <Map.Root>
-          <Map.Content ref={setController}>
+      <Panel.Content>
+        <Map.Root ref={setController}>
+          <Map.Content>
             <Map.Tiles url={url} />
             <Map.Markers markers={markers} />
             <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
