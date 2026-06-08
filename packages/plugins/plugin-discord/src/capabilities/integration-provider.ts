@@ -89,6 +89,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
     }),
   onSubmit: ({ values, provider }) =>
     Effect.gen(function* () {
+      // Trim defensively: onValidate is optional and callers bypass it in tests.
       const token = values.token.trim();
       const self = yield* validateToken(token);
       const account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
