@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Key } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 
 import { type AppCapabilities } from './capabilities';
@@ -53,9 +54,9 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  *   instead-of: Relying on the graph being fully populated before navigation, or accepting that the create dialog navigates to the database subtree
  *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
-export const createTypeSectionPathResolver =
-  (typename: string): AppCapabilities.NavigationPathResolver =>
-  (qualifiedPath) => {
+export const createTypeSectionPathResolver = (typename: string): AppCapabilities.NavigationPathResolver => {
+  invariant(typename, 'Typename must be provided to create a type section path resolver.');
+  return (qualifiedPath) => {
     const spaceId = getSpaceIdFromPath(qualifiedPath);
     if (!spaceId) {
       return Effect.succeed(Option.none());
@@ -74,3 +75,4 @@ export const createTypeSectionPathResolver =
 
     return Effect.succeed(Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId })));
   };
+};
