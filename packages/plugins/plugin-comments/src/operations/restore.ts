@@ -20,8 +20,10 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Restore> = ThreadOpe
       }
 
       // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
+      // 500ms gives React enough time to flush the render triggered by db.add(thread)
+      // before db.add(anchor) fires; 100ms was insufficient on slower CI environments.
       db.add(thread);
-      yield* Effect.promise(() => sleep(100));
+      yield* Effect.promise(() => sleep(500));
       db.add(anchor);
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
