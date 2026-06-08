@@ -106,10 +106,7 @@ export type CredentialForm<Values = any> = {
    * errors are shown inline. The return value — e.g. a fetched user object —
    * is forwarded to `onSubmit` as `validated` to avoid a redundant API call.
    */
-  onValidate?: (input: {
-    values: Values;
-    provider: IntegrationProviderEntry;
-  }) => Effect.Effect<unknown, Error>;
+  onValidate?: (input: { values: Values; provider: IntegrationProviderEntry }) => Effect.Effect<unknown, Error>;
   /** Build the next step of the integration flow from form values. */
   onSubmit: (input: {
     values: Values;
