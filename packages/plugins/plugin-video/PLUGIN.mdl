@@ -1,0 +1,278 @@
+---
+id: org.dxos.plugin.video
+name: VideoPlugin
+version: 0.1.0
+---
+
+A plugin for `DXOS` Composer that stores videos and transcribes them via a
+remote `EDGE` transcription service.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+
+## Types
+
+```mdl
+type Text
+  desc: Plain/markdown text object from `@dxos/types`. Referenced, not defined here.
+```
+
+```mdl
+type Video
+  desc: A video resource with an optional linked transcript.
+  fields:
+    name: string              # label
+    url: string               # source URL (Format.URL); embeddable in an iframe
+    transcript?: Ref<Text>    # optional link to a generated transcript text object
+```
+
+## Components
+
+```mdl
+component VideoArticle
+  desc: Article surface that plays a Video and offers transcription.
+  props:
+    video: Video
+  state:
+    transcribing: boolean       # request to EDGE in flight
+  slots:
+    toolbar?: ReactNode
+  actions:
+    transcribe()                # invokes op:transcribeVideo
+    openTranscript()            # navigates to video.transcript target
+  emits:
+    onTranscribed(transcript: Ref<Text>)
+  layout: |
+    ┌─────────────────────────┐
+    │ [toolbar slot] Transcribe│
+    ├─────────────────────────┤
+    │                         │
+    │   <iframe> video embed  │
+    │                         │
+    ├─────────────────────────┤
+    │ transcript link (if any)│
+    └─────────────────────────┘
+```
+
+## Services
+
+```mdl
+service TranscriptionService
+  desc: Remote EDGE worker that transcribes a video URL to text.
+  loading: lazy
+  ops:
+    transcribe(url: string, lang: string) → Text
+  note: |
+    HTTP GET https://transcription.dxos.network/video?url=<url>&lang=<lang>
+    Response: { text: string }. No auth. lang defaults to "en".
+    Invoked via EdgeHttpClient from @dxos/edge-client.
+  errors:
+    TranscriptionFailed: worker returned a non-2xx response or empty body
+```
+
+## Operations
+
+```mdl
+op transcribeVideo
+  desc: |
+    Transcribes a Video via the EDGE TranscriptionService, creates a Text
+    object with the result, and links it back via Video.transcript.
+  input:
+    video: Ref<Video>
+    lang?: string               # defaults to "en"
+  output: Ref<Text>             # the created/linked transcript
+  errors:
+    TranscriptionFailed: EDGE worker did not return a transcript
+    VideoNotFound: video ref could not be resolved
+  effects: [http, echo:write, echo:read]
+  requires: [TranscriptionService]
+  note: |
+    Resolves video.url → GET worker → Text.make({ content }) →
+    Database write → Obj.update(video, { transcript: Ref.make(text) }).
+    Exposed on the ./operations subpath for blueprint/tool reuse.
+```
+
+## Features
+
+```mdl
+feat F-1: Store Video
+
+  req F-1.1: A Video is created with a name and url.
+  req F-1.2: Video.transcript is initially unset.
+```
+
+```mdl
+feat F-2: Play Video
+
+  req F-2.1:
+    when: a Video is opened in the article surface
+    then: the video is rendered in an embed iframe derived from Video.url
+
+  req F-2.2:
+    when: Video.url cannot be embedded
+    then: a fallback link to the url is shown
+```
+
+```mdl
+feat F-3: Transcribe Video
+
+  req F-3.1:
+    when: the user triggers Transcribe on the VideoArticle
+    then: op:transcribeVideo is invoked with the Video ref and lang
+
+  req F-3.2:
+    when: op:transcribeVideo runs
+    then: TranscriptionService.transcribe is called with Video.url and lang
+    errors: [TranscriptionFailed]
+
+  req F-3.3:
+    when: the service returns transcript text
+    then: a Text object is created and Video.transcript is set to reference it
+
+  req F-3.4:
+    when: a request is in flight
+    then: VideoArticle reflects a transcribing state and disables re-triggering
+```
+
+```mdl
+feat F-4: View Transcript
+
+  req F-4.1:
+    when: Video.transcript is set
+    then: VideoArticle surfaces an affordance to open the transcript
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create video
+  given: a new Video is created with name and url
+  then:
+    - Video.name and Video.url are set
+    - Video.transcript is unset
+```
+
+```mdl
+test T-2: Render embed player
+  given: a Video with an embeddable url is opened in the article surface
+  then: an iframe with the derived embed src is rendered
+```
+
+```mdl
+test T-3: Transcribe success
+  given: a Video with a url, EDGE worker returns { text }
+  when: op:transcribeVideo is invoked
+  then:
+    - TranscriptionService.transcribe called with the url and lang
+    - a Text object is created with the returned text
+    - Video.transcript references the created Text
+    - the transcript Ref is returned
+```
+
+```mdl
+test T-4: Transcribe failure leaves video unchanged
+  given: a Video with a url, EDGE worker returns a non-2xx response
+  when: op:transcribeVideo is invoked
+  then:
+    - TranscriptionFailed error returned
+    - no Text object created
+    - Video.transcript remains unset
+```
+
+```mdl
+test T-5: Open transcript
+  given: a Video whose transcript is set, opened in the article surface
+  then: an affordance to open the transcript target is shown
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```
