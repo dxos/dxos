@@ -16,10 +16,10 @@ import { ThreadOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.Delete> = ThreadOperation.Delete.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
+    Effect.fnUntraced(function* ({ subject, anchor, thread: threadProp }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
-      const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
+      const thread = threadProp ?? (Relation.getSource(anchor) as Thread.Thread);
       const subjectId = Obj.getURI(subject);
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId];

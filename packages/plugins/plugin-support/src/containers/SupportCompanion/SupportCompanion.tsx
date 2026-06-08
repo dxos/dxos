@@ -70,15 +70,17 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
             {screenshots.length > 0 && (
-              <Carousel.Root classNames='w-full' count={screenshots.length}>
-                <Carousel.Previous />
-                <Carousel.Viewport>
-                  {screenshots.map((src, index) => (
-                    <Carousel.Slide key={src} index={index} src={src} />
-                  ))}
-                </Carousel.Viewport>
-                <Carousel.Next />
-                <Carousel.Indicators />
+              <Carousel.Root count={screenshots.length}>
+                <Carousel.Content classNames='w-full'>
+                  <Carousel.Previous />
+                  <Carousel.Viewport>
+                    {screenshots.map((src, index) => (
+                      <Carousel.Slide key={src} index={index} src={src} />
+                    ))}
+                  </Carousel.Viewport>
+                  <Carousel.Next />
+                  <Carousel.Indicators />
+                </Carousel.Content>
               </Carousel.Root>
             )}
             <MarkdownView classNames='w-full' content={content} />

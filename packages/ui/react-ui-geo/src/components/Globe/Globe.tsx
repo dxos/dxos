@@ -18,6 +18,7 @@ import { type ControlPosition } from 'leaflet';
 import React, {
   type PropsWithChildren,
   forwardRef,
+  useCallback,
   useEffect,
   useId,
   useImperativeHandle,
@@ -39,8 +40,15 @@ import {
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { GlobeContext, type GlobeContextType, type Point, type Vector, useGlobeContext } from '../../hooks';
-import { type LatLngLiteral } from '../../types';
+import {
+  GlobeContext,
+  type GlobeContextType,
+  type GlobeController,
+  type Point,
+  type Size,
+  type Vector,
+  useGlobeContext,
+} from '../../hooks';
 import {
   type Features,
   type StyleSet,
@@ -100,42 +108,6 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
   },
 };
 
-/**
- * Imperative options accepted by GlobeController.flyTo.
- */
-export type FlyToOptions = {
-  /** Base duration in ms (scales with great-circle distance). */
-  duration?: number;
-  /** Optional pitch offset applied along the latitude axis of the target. */
-  tilt?: number;
-  /**
-   * Optional per-frame callback fired before the rotation tween advances.
-   * Useful for layered animations (e.g. cursor / arc trails in tours).
-   * `t` runs 0→1 across the eased duration.
-   */
-  onTick?: (t: number) => void;
-};
-
-export type FlyToTarget = LatLngLiteral & {
-  /** Optional zoom factor; interpolated alongside rotation when set. */
-  zoom?: number;
-};
-
-export type GlobeController = {
-  canvas: HTMLCanvasElement;
-  projection: GeoProjection;
-  /**
-   * Animates the globe to the given lat/lng (and optional zoom) along a
-   * great-circle arc. Returns a Promise that resolves on completion and
-   * rejects if interrupted (e.g. by another flyTo on the same globe).
-   */
-  flyTo: (target: FlyToTarget, options?: FlyToOptions) => Promise<void>;
-  /**
-   * Interrupts any in-flight `flyTo` (used by tours when stopped mid-segment).
-   */
-  cancelFlyTo: () => void;
-} & Pick<GlobeContextType, 'zoom' | 'translation' | 'rotation' | 'setZoom' | 'setTranslation' | 'setRotation'>;
-
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
 const projectionMap: Record<ProjectionType, () => GeoProjection> = {
@@ -159,9 +131,15 @@ const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): G
 
 const DEFAULT_ZOOM = 1.5;
 
-type GlobeRootProps = Partial<Pick<GlobeContextType, 'center' | 'zoom' | 'translation' | 'rotation'>>;
+type GlobeRootProps = Partial<Pick<GlobeContextType, 'center' | 'zoom' | 'translation' | 'rotation'>> &
+  PropsWithChildren;
 
-const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
+/**
+ * Headless context/state provider for the globe. Renders no DOM; wrap a `Globe.Viewport` to mount
+ * the measured container. The current `GlobeController` (built by `Globe.Canvas`) is exposed via
+ * this component's `ref`.
+ */
+const GlobeRoot = forwardRef<GlobeController | null, GlobeRootProps>(
   (
     {
       children,
@@ -169,40 +147,78 @@ const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
       zoom: zoomProp = DEFAULT_ZOOM,
       translation: translationProp,
       rotation: rotationProp,
-      ...props
     },
     forwardedRef,
   ) => {
-    const localRef = useRef<HTMLDivElement>(null);
-    const composedRef = useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
-    const { width, height } = useResizeDetector<HTMLDivElement>({ targetRef: localRef });
-
+    const [size, setSize] = useState<Size>({ width: 0, height: 0 });
     const [center, setCenter] = useControlledState(centerProp);
     const [zoom, setZoom] = useControlledState(zoomProp);
     const [translation, setTranslation] = useControlledState<Point>(translationProp);
     const [rotation, setRotation] = useControlledState<Vector>(rotationProp);
 
+    // The controller is built by Globe.Canvas and registered here; Globe.Root re-exposes it via its
+    // ref. Held in state (not a ref) so that when Globe.Canvas registers a new controller, Root
+    // re-renders and the imperative handle below updates — re-running consumer effects keyed on the
+    // controller (e.g. useDrag/useWheel) once the canvas mounts.
+    const [controller, setController] = useState<GlobeController | null>(null);
+    const registerController = useCallback((next: GlobeController | null) => setController(next), []);
+
+    // Expose the live controller (or null until Globe.Canvas mounts) via Root's ref.
+    useImperativeHandle(forwardedRef, () => controller, [controller]);
+
     return (
       <GlobeContext.Provider
         value={{
-          size: { width, height },
+          size,
           center,
           zoom,
           translation,
           rotation,
+          setSize,
           setCenter,
           setZoom,
           setTranslation,
           setRotation,
+          registerController,
         }}
       >
-        <div {...composableProps(props, { classNames: 'relative dx-container' })} ref={composedRef}>
-          {children}
-        </div>
+        {children}
       </GlobeContext.Provider>
     );
   },
 );
+
+GlobeRoot.displayName = 'Globe.Root';
+
+//
+// Viewport
+//
+
+/** Consumer-facing props for `Globe.Viewport` (classNames + children). */
+type GlobeViewportProps = ThemedClassName<PropsWithChildren>;
+
+/**
+ * Measured container for the globe. Renders the `relative dx-container` div, observes its size, and
+ * publishes measurements to the context so `Globe.Canvas` can size the canvas.
+ */
+const GlobeViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { setSize } = useGlobeContext();
+  const localRef = useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
+  const { width, height } = useResizeDetector<HTMLDivElement>({ targetRef: localRef });
+
+  useEffect(() => {
+    setSize({ width: width ?? 0, height: height ?? 0 });
+  }, [width, height, setSize]);
+
+  return (
+    <div {...composableProps(props, { classNames: 'relative dx-container' })} ref={composedRef}>
+      {children}
+    </div>
+  );
+});
+
+GlobeViewport.displayName = 'Globe.Viewport';
 
 //
 // Canvas
@@ -216,156 +232,165 @@ type GlobeCanvasProps = {
 };
 
 /**
- * Basic globe renderer.
+ * Basic globe renderer. Builds the imperative `GlobeController` and registers it with `Globe.Root`
+ * (via `registerController` from context) so consumers reading the controller from Root's ref get
+ * the live instance.
  * https://github.com/topojson/world-atlas
  */
-// TODO(burdon): Move controller to root.
-const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: projectionProp, topology, features, styles: stylesProp }, forwardRef) => {
-    const { themeMode } = useThemeContext();
-    const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
+const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
+  const { themeMode } = useThemeContext();
+  const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
+  const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
+    useGlobeContext();
 
-    // Canvas.
-    const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
-    const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
+  const zoomRef = useDynamicRef(zoom);
 
-    // Projection.
-    const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
+  // Canvas.
+  const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
+  const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
-    // Layers.
-    // TODO(burdon): Generate on-the-fly based on what is visible.
-    const layers = useMemo(() => {
-      return timer(() => createLayers(topology as Topology, features, styles));
-    }, [topology, features, styles]);
+  // Projection.
+  const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
 
-    // State.
-    const { size, center, zoom, translation, rotation, setCenter, setZoom, setTranslation, setRotation } =
-      useGlobeContext();
-    const zoomRef = useDynamicRef(zoom);
+  // Layers.
+  // TODO(burdon): Generate on-the-fly based on what is visible.
+  const layers = useMemo(() => {
+    return timer(() => createLayers(topology as Topology, features, styles));
+  }, [topology, features, styles]);
 
-    // Update rotation when the center changes. Preserve current zoom — callers can set zoom
-    // independently via the `zoom` prop or `setZoom` on the controller.
-    useEffect(() => {
-      if (center) {
-        setRotation(positionToRotation(geoToPosition(center)));
-      }
-    }, [center]);
+  // Update rotation when the center changes. Preserve current zoom — callers can set zoom
+  // independently via the `zoom` prop or `setZoom` on the controller.
+  useEffect(() => {
+    if (center) {
+      setRotation(positionToRotation(geoToPosition(center)));
+    }
+  }, [center]);
 
-    // Per-instance flyTo plumbing. d3 named transitions are scoped per DOM
-    // element and `d3Selection()` returns the documentElement root, so a
-    // shared name would let one globe's flyTo interrupt another's. The
-    // useId-scoped name keeps each Globe.Canvas's transition isolated.
-    const flyToSelection = useMemo(() => d3Selection(), []);
-    const flyToTransitionName = `globe-fly-to-${useId()}`;
-    useEffect(
-      () => () => {
+  // Per-instance flyTo plumbing. d3 named transitions are scoped per DOM
+  // element and `d3Selection()` returns the documentElement root, so a
+  // shared name would let one globe's flyTo interrupt another's. The
+  // useId-scoped name keeps each Globe.Canvas's transition isolated.
+  const flyToSelection = useMemo(() => d3Selection(), []);
+  const flyToTransitionName = `globe-fly-to-${useId()}`;
+  useEffect(
+    () => () => {
+      flyToSelection.interrupt(flyToTransitionName);
+    },
+    [flyToSelection, flyToTransitionName],
+  );
+
+  // External controller.
+  const zooming = useRef(false);
+  const controller = useMemo<GlobeController>(() => {
+    return {
+      canvas,
+      projection,
+      get zoom() {
+        return zoomRef.current;
+      },
+      translation,
+      rotation,
+      setZoom: (state) => {
+        if (typeof state === 'function') {
+          const is = interpolateNumber(zoomRef.current, state(zoomRef.current));
+          // Stop easing if already zooming.
+          transition()
+            .ease(zooming.current ? easeLinear : easeSinOut)
+            .duration(200)
+            .tween('scale', () => (t) => setZoom(is(t)))
+            .on('end', () => {
+              zooming.current = false;
+            });
+        } else {
+          setZoom(state);
+        }
+      },
+      setTranslation,
+      setRotation,
+      flyTo: (target, options = {}) => {
+        const { duration = 1_200, tilt = 0, onTick } = options;
+        const p2 = geoToPosition(target);
+        const r1 = projection.rotate() as Vector;
+        const r2 = positionToRotation(p2, tilt);
+
+        // Approximate current centre from the inverse of the rotation.
+        const p1: [number, number] = [-r1[0], -r1[1]];
+        const rotationTween = createRotationTween(projection, setRotation, r1, r2);
+        const iz = target.zoom !== undefined ? interpolateNumber(zoomRef.current, target.zoom) : undefined;
+
+        flyToSelection.interrupt(flyToTransitionName);
+        const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, 1_500));
+        if (onTick) {
+          tx.tween('flyToOnTick', () => onTick);
+        }
+        tx.tween('flyToRotation', () => rotationTween);
+        if (iz) {
+          tx.tween('flyToZoom', () => (t: number) => setZoom(iz(t)));
+        }
+        return tx.end();
+      },
+      cancelFlyTo: () => {
         flyToSelection.interrupt(flyToTransitionName);
       },
-      [flyToSelection, flyToTransitionName],
-    );
+    };
+    // Keep the controller IDENTITY stable: only rebuild on these mount-stable deps. Deliberately
+    // exclude `center`/`translation`/`rotation` — they are read here as closure snapshots, and
+    // callers pass them as inline literals (e.g. `rotation={[0, 0, 0]}`), so a fresh reference every
+    // render would rebuild the controller, re-fire `registerController`, re-render Root, hand a new
+    // controller back through the consumer's `ref={setController}`, and loop forever. `projection`
+    // must stay in deps: switching between stories that pass different projection types creates a new
+    // instance via useMemo, and any consumer reading controller.projection (e.g. useDrag) would
+    // otherwise mutate a dead instance while the canvas renders the new one. The `useControlledState`
+    // setters and `zoomRef` are stable, so they need not be listed.
+  }, [canvas, projection, flyToSelection, flyToTransitionName]);
 
-    // External controller.
-    const zooming = useRef(false);
-    useImperativeHandle<GlobeController, GlobeController>(forwardRef, () => {
-      return {
-        canvas,
-        projection,
-        center,
-        get zoom() {
-          return zoomRef.current;
-        },
-        translation,
-        rotation,
-        setCenter,
-        setZoom: (state) => {
-          if (typeof state === 'function') {
-            const is = interpolateNumber(zoomRef.current, state(zoomRef.current));
-            // Stop easing if already zooming.
-            transition()
-              .ease(zooming.current ? easeLinear : easeSinOut)
-              .duration(200)
-              .tween('scale', () => (t) => setZoom(is(t)))
-              .on('end', () => {
-                zooming.current = false;
-              });
-          } else {
-            setZoom(state);
-          }
-        },
-        setTranslation,
-        setRotation,
-        flyTo: (target, options = {}) => {
-          const { duration = 1_200, tilt = 0, onTick } = options;
-          const p2 = geoToPosition(target);
-          const r1 = projection.rotate() as Vector;
-          const r2 = positionToRotation(p2, tilt);
-          // Approximate current centre from the inverse of the rotation.
-          const p1: [number, number] = [-r1[0], -r1[1]];
-          const rotationTween = createRotationTween(projection, setRotation, r1, r2);
+  // Register the controller with Globe.Root and clear it on unmount.
+  useEffect(() => {
+    registerController(controller);
+    return () => registerController(null);
+  }, [registerController, controller]);
 
-          const iz = target.zoom !== undefined ? interpolateNumber(zoomRef.current, target.zoom) : undefined;
+  // https://d3js.org/d3-geo/path#geoPath
+  // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+  // Keep the context alpha-enabled: when a style set omits `background`, `renderLayers`
+  // clears to transparent so the canvas's themed CSS background (below) shows through the
+  // area outside the globe — correct in both light and dark mode.
+  const generator = useMemo(
+    () => canvas && projection && geoPath(projection, canvas.getContext('2d')),
+    [canvas, projection],
+  );
 
-          flyToSelection.interrupt(flyToTransitionName);
-          const tx = flyToSelection.transition(flyToTransitionName).duration(flyDuration(p1, p2, duration, 1_500));
-          if (onTick) {
-            tx.tween('flyToOnTick', () => onTick);
-          }
-          tx.tween('flyToRotation', () => rotationTween);
-          if (iz) {
-            tx.tween('flyToZoom', () => (t: number) => setZoom(iz(t)));
-          }
-          return tx.end();
-        },
-        cancelFlyTo: () => {
-          flyToSelection.interrupt(flyToTransitionName);
-        },
-      };
-      // `projection` must be in deps: switching between stories that pass
-      // different projection types creates a new instance via useMemo, and
-      // any consumer reading controller.projection (e.g. useDrag) would
-      // otherwise mutate a dead instance while the canvas renders the new one.
-    }, [canvas, projection, flyToSelection, flyToTransitionName]);
+  // Render on change.
+  useEffect(() => {
+    if (canvas && projection) {
+      timer(() => {
+        // https://d3js.org/d3-geo/projection
+        projection
+          .scale((Math.min(size.width, size.height) / 2) * zoom)
+          .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
+          .rotate(rotation ?? [0, 0, 0]);
 
-    // https://d3js.org/d3-geo/path#geoPath
-    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-    // Keep the context alpha-enabled: when a style set omits `background`, `renderLayers`
-    // clears to transparent so the canvas's themed CSS background (below) shows through the
-    // area outside the globe — correct in both light and dark mode.
-    const generator = useMemo(
-      () => canvas && projection && geoPath(projection, canvas.getContext('2d')),
-      [canvas, projection],
-    );
+        // Provide a view-center for per-frame culling — only meaningful for
+        // projections that present a single visible hemisphere (e.g.
+        // orthographic). For Mercator/transverse-mercator the whole sphere
+        // is always visible, so we skip culling.
+        const isOrthographic = !projectionProp || projectionProp === 'orthographic';
+        const [lambda, phi] = (rotation ?? [0, 0, 0]) as Vector;
+        const viewCenter: [number, number] | undefined = isOrthographic ? [-lambda, -phi] : undefined;
 
-    // Render on change.
-    useEffect(() => {
-      if (canvas && projection) {
-        timer(() => {
-          // https://d3js.org/d3-geo/projection
-          projection
-            .scale((Math.min(size.width, size.height) / 2) * zoom)
-            .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
-            .rotate(rotation ?? [0, 0, 0]);
-
-          // Provide a view-center for per-frame culling — only meaningful for
-          // projections that present a single visible hemisphere (e.g.
-          // orthographic). For Mercator/transverse-mercator the whole sphere
-          // is always visible, so we skip culling.
-          const isOrthographic = !projectionProp || projectionProp === 'orthographic';
-          const [lambda, phi] = (rotation ?? [0, 0, 0]) as Vector;
-          const viewCenter: [number, number] | undefined = isOrthographic ? [-lambda, -phi] : undefined;
-
-          renderLayers(generator, layers, zoom, styles, viewCenter);
-        });
-      }
-    }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
-
-    if (!size.width || !size.height) {
-      return null;
+        renderLayers(generator, layers, zoom, styles, viewCenter);
+      });
     }
+  }, [generator, size, zoom, translation, rotation, layers, projectionProp]);
 
-    return <canvas ref={canvasRef} className='bg-base-surface' width={size.width} height={size.height} />;
-  },
-);
+  if (!size.width || !size.height) {
+    return null;
+  }
+
+  return <canvas ref={canvasRef} className='bg-base-surface' width={size.width} height={size.height} />;
+};
+
+GlobeCanvas.displayName = 'Globe.Canvas';
 
 //
 // Debug
@@ -427,6 +452,7 @@ const GlobeAction = ({ onAction, position = 'bottomright', ...props }: GlobeCont
 
 export const Globe = {
   Root: GlobeRoot,
+  Viewport: GlobeViewport,
   Canvas: GlobeCanvas,
   Zoom: GlobeZoom,
   Action: GlobeAction,
@@ -434,4 +460,4 @@ export const Globe = {
   Panel: GlobePanel,
 };
 
-export type { GlobeRootProps, GlobeCanvasProps };
+export type { GlobeRootProps, GlobeViewportProps, GlobeCanvasProps };
