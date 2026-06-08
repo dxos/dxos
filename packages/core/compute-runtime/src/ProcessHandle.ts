@@ -129,6 +129,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
   readonly #onStatusChanged: (() => void) | undefined;
   readonly #hasRunningChildren: () => boolean;
+  readonly #onTerminate?: () => Effect.Effect<void>;
 
   constructor(
     readonly pid: Process.ID,
@@ -146,6 +147,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
+    onTerminate?: () => Effect.Effect<void>,
     persistence?: Persistence,
     restoring?: boolean,
     encodeInput?: (input: I) => Effect.Effect<unknown>,
@@ -165,6 +167,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
     this.#hasRunningChildren = hasRunningChildren ?? (() => false);
+    this.#onTerminate = onTerminate;
     this.#persistence = persistence ?? NOOP_PERSISTENCE;
     this.#restoring = restoring ?? false;
     this.#encodeInput = encodeInput ?? ((input) => Effect.succeed(input));
@@ -268,6 +271,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       log('lifecycle: terminating');
       this.#finished = true;
       this.#setStatus(Process.State.TERMINATING);
+      if (this.#onTerminate !== undefined) {
+        yield* this.#onTerminate();
+      }
       yield* this.#cleanup();
       this.#setStatus(Process.State.TERMINATED, Exit.void);
     });
@@ -295,6 +301,12 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       log('lifecycle: suspend');
       // Prevent spurious state transitions if handler fibers are interrupted.
       this.#finished = true;
+      const state =
+        this.#alarmTimer !== null || this.#hasRunningChildren()
+          ? Process.State.HYBERNATING
+          : Process.State.IDLE;
+      yield* this.#persistence.setState(state);
+      this.#setStatus(state);
       // Clears in-memory timer only; does NOT touch persisted alarmDueAt.
       this.#clearAlarm();
       Queue.unsafeOffer(this.#outputQueue, Option.none());

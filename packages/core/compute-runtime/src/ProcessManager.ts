@@ -301,14 +301,30 @@ export class ProcessManagerImpl implements Manager {
 
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid) {
-        const { state } = handle.snapshotStatus();
-        if (state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED) {
-          return true;
-        }
+      if (handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle)) {
+        return true;
       }
     }
     return false;
+  }
+
+  #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const children = [...this.#handles.values()].filter(
+        (handle) => handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle),
+      );
+      for (const child of children) {
+        log('lifecycle: terminate child', { parentPid, childPid: child.pid });
+        yield* child.terminate();
+      }
+    });
+  }
+
+  static #isNonTerminal(handle: ProcessHandle.ProcessHandleImpl<any, any, any>): boolean {
+    const { state } = handle.snapshotStatus();
+    return (
+      state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED
+    );
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Info[] {
@@ -518,6 +534,7 @@ export class ProcessManagerImpl implements Manager {
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
+        () => this.#terminateChildren(id),
         persistence,
         false,
         encodeInput,
@@ -696,6 +713,7 @@ export class ProcessManagerImpl implements Manager {
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
+        () => this.#terminateChildren(id),
         persistence,
         true, // restoring — suppresses onSpawn
         encodeInput,

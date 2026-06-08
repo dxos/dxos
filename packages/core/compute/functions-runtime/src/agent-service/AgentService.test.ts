@@ -73,6 +73,7 @@ const TEST_DATA = {
 
 interface ResearchTask {
   id: string;
+  state: 'pending' | 'completed' | 'interrupted';
   website: string;
   deferred: Deferred.Deferred<string>;
 }
@@ -80,6 +81,7 @@ interface ResearchTask {
 class ResearchService extends Context.Tag('@dxos/functions-runtime/ResearchService')<
   ResearchService,
   {
+    getTasks: () => readonly ResearchTask[];
     research: (website: string) => Effect.Effect<string>;
     waitForTaskToAppear: () => Effect.Effect<void>;
     completeOneTask: () => Effect.Effect<void>;
@@ -93,6 +95,7 @@ const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* (
   const complete = (task: ResearchTask) =>
     Effect.gen(function* () {
       log.info('complete research', { id: task.id, website: task.website });
+      task.state = 'completed';
       const result = TEST_DATA.research[task.website];
       if (!result) {
         yield* Effect.die(new Error(`No research found for ${task.website}`));
@@ -102,22 +105,31 @@ const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* (
     });
 
   return ResearchService.of({
+    getTasks: () => tasks,
     research: (website: string) =>
       Effect.gen(function* () {
         const id = crypto.randomUUID();
-        const task: ResearchTask = { id, website, deferred: yield* Deferred.make<string>() };
+        const task: ResearchTask = { id, state: 'pending', website, deferred: yield* Deferred.make<string>() };
         log.info('start research', { id, website });
         tasks.push(task);
         yield* Queue.offer(taskSignal, undefined);
         return yield* Deferred.await(task.deferred).pipe(Effect.onInterrupt(() => Effect.sync(() => {
           log.info('interrupt research', { id, website: task.website });
-          tasks.splice(tasks.indexOf(task), 1);
+          task.state = 'interrupted';
         })));
       }),
-    waitForTaskToAppear: () => Queue.take(taskSignal).pipe(Effect.asVoid),
+    waitForTaskToAppear: () => Effect.gen(function* () {
+      while (true) {
+        const task = tasks.find(t => t.state === 'pending');
+        if (task) {
+          return;
+        }
+        yield* Queue.take(taskSignal);
+      }
+    }),
     completeOneTask: () =>
       Effect.gen(function* () {
-        const task = tasks.shift();
+        const task = tasks.find(t => t.state === 'pending');
         if (!task) {
           return;
         }
@@ -125,12 +137,12 @@ const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* (
       }),
     completeAllTasks: () =>
       Effect.gen(function* () {
-        while (tasks.length > 0) {
-          const task = tasks.shift();
+        while (true) {
+          const task = tasks.find(t => t.state === 'pending');
           if (!task) {
             return;
           }
-          yield* complete(task);
+          yield* complete(task!);
         }
       }),
   });
@@ -223,6 +235,26 @@ describe('Agent Service', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+
+  it.scoped(
+    'can be stopped while waiting for a tool call',
+    Effect.fnUntraced(
+      function* (_) {
+        let agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint],
+        });
+        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        yield* researchService.waitForTaskToAppear();
+
+        yield* agent.terminate();
+        expect(researchService.getTasks().map((task) => task.state)).toEqual(['interrupted']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 
   it.scoped(

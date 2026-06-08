@@ -56,6 +56,11 @@ export interface Session {
   waitForCompletion: () => Effect.Effect<void>;
 
   /**
+   * Terminates the agent process and clears its durable storage.
+   */
+  terminate: () => Effect.Effect<void>;
+
+  /**
    * Subscribe to ephemeral trace events (e.g., streaming partial messages).
    * Replays buffered events, then streams new ones until the process ends.
    */
@@ -219,7 +224,10 @@ export const layer = (opts?: {
               });
             }
 
-            const session = makeSession(handle, feed);
+            const releaseSession = () => {
+              sessionCache.delete(feed.id);
+            };
+            const session = makeSession(handle, feed, releaseSession);
             sessionCache.set(feed.id, { model, handle, session });
             return session;
           }),
@@ -230,10 +238,15 @@ export const layer = (opts?: {
     }),
   );
 
-const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
+const makeSession = (
+  process: ProcessManager.Handle<string, void>,
+  feed: Feed.Feed,
+  releaseSession: () => void,
+): Session => ({
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
   waitForCompletion: () => process.runToCompletion(),
+  terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
   subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
