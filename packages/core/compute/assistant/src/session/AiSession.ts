@@ -18,7 +18,7 @@ import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService
 import { type Blueprint, type OperationRegistry, McpServer, Operation, Trace } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -215,7 +215,7 @@ export class Service extends Context.Tag('@dxos/assistant/AiSessionService')<Ser
         Layer.scoped(
           Service,
           Effect.gen(function* () {
-            const session = yield* acquireReleaseResource(() => new Session(options));
+            const session = yield* EffectEx.acquireReleaseResource(() => new Session(options));
             return session;
           }),
         ),

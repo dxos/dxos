@@ -29,7 +29,7 @@ import {
   type QueueFactory,
 } from '@dxos/echo-db';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -112,7 +112,7 @@ export const wrapFunctionHandler = (
         let result: any = await func.handler(dataWithDecodedRefs);
 
         if (Effect.isEffect(result)) {
-          result = await runAndForwardErrors(
+          result = await EffectEx.runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
               Effect.provide(funcContext.createLayer()),

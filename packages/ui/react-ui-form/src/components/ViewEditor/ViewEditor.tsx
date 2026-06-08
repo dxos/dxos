@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
 import { EID, Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type Registry, Type, View } from '@dxos/echo';
-import { type JsonProp } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -295,7 +295,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
   const handleShow = useCallback(
     (property: string) => {
       setExpandedField(undefined);
-      projectionModel.showFieldProjection(property as JsonProp);
+      projectionModel.showFieldProjection(property as SchemaEx.JsonProp);
     },
     [projectionModel],
   );

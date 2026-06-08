@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Database, type Key } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -50,7 +50,7 @@ export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: Cu
         return;
       }
       setError(undefined);
-      void runAndForwardErrors(
+      void EffectEx.runAndForwardErrors(
         Effect.gen(function* () {
           // Close the dialog before re-entering the coordinator so OAuth
           // popups / new tabs aren't blocked by a stacked layout op.

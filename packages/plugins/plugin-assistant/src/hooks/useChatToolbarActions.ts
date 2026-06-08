@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -54,7 +54,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           return invoke(AssistantOperation.SetCurrentChat, {
             companionTo,
             chat: undefined,
-          }).pipe(runAndForwardErrors);
+          }).pipe(EffectEx.runAndForwardErrors);
         },
       )
       .action(
@@ -69,7 +69,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           Effect.gen(function* () {
             invariant(chat);
             yield* invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db?.spaceId });
-          }).pipe(runAndForwardErrors),
+          }).pipe(EffectEx.runAndForwardErrors),
       )
       .action(
         'branch',
@@ -108,7 +108,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                       companionTo,
                       chat,
                     });
-                  }).pipe(runAndForwardErrors),
+                  }).pipe(EffectEx.runAndForwardErrors),
               );
             });
         },

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Operation } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import type { RuntimeServices, ServiceContainer } from '../services';
 
@@ -33,7 +33,7 @@ export class FunctionExecutor {
     if (Effect.isEffect(result)) {
       data = await (result as Effect.Effect<unknown, unknown, RuntimeServices>).pipe(
         Effect.provide(this._services.createLayer()),
-        runAndForwardErrors,
+        EffectEx.runAndForwardErrors,
       );
     } else {
       data = await result;

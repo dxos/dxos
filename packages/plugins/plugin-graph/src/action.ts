@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Operation } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 /**
  * Run an action with required layers: Operation.Service, Capability.Service, and captured context.
@@ -23,7 +23,7 @@ export const runAction = async (
   action: Node.Action,
   params: Node.InvokeProps = {},
 ): Promise<void> =>
-  runAndForwardErrors(
+  EffectEx.runAndForwardErrors(
     action
       .data(params)
       .pipe(
