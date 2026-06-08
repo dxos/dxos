@@ -32,32 +32,26 @@ const defaultStyles: StyleSet = {
   water: {
     fillStyle: '#0a0a0a',
   },
-
   land: {
     fillStyle: '#050505',
     strokeStyle: 'darkgreen',
   },
-
   graticule: {
     strokeStyle: '#111',
   },
-
   line: {
     lineWidth: 1,
     lineDash: [4, 16],
     strokeStyle: 'yellow',
   },
-
   point: {
     pointRadius: 2,
     fillStyle: 'red',
   },
-
   cursor: {
     fillStyle: 'orange',
     pointRadius: 2,
   },
-
   arc: {
     lineWidth: 2,
     strokeStyle: 'yellow',
@@ -69,17 +63,14 @@ const dotStyles: StyleSet = {
     fillStyle: '#444',
     pointRadius: 2,
   },
-
   point: {
     pointRadius: 2,
     fillStyle: 'red',
   },
-
   cursor: {
     fillStyle: 'orange',
     pointRadius: 2,
   },
-
   arc: {
     lineWidth: 2,
     strokeStyle: 'yellow',
@@ -336,16 +327,13 @@ const monochrome: StyleSet = {
   water: {
     fillStyle: '#191919',
   },
-
   land: {
     fillStyle: '#444',
     strokeStyle: '#222',
   },
-
   border: {
     strokeStyle: '#111',
   },
-
   graticule: {
     strokeStyle: '#111',
   },
@@ -360,7 +348,7 @@ export const Mercator = () => {
 
   return (
     <Globe.Root zoom={0.7} rotation={initialRotation} ref={setController}>
-      <Globe.Viewport classNames='flex grow overflow-hidden'>
+      <Globe.Viewport>
         <Globe.Canvas topology={topology} projection='mercator' styles={monochrome} />
         <Globe.Zoom onAction={handleAction} />
       </Globe.Viewport>
