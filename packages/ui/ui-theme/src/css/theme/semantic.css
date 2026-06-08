@@ -50,7 +50,7 @@
   --color-input-surface: var(--dx-elevation-4);
   --color-toolbar-surface: var(--dx-elevation-5);
   --color-modal-surface: var(--dx-elevation-6);
-  --color-popover-surface: var(--dx-elevation-7);
+  --color-popover-surface: var(--dx-elevation-6);
 
   /* Sidebar / panel layout levels */
   --color-l0-surface: var(--dx-elevation-1);
@@ -67,6 +67,10 @@
   --color-inverse-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
   --color-base-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+
+  /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
+  --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));
+  --color-sidebar-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-75));
 
   /* Focus */
   --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-850));
@@ -86,7 +90,7 @@
    * `*-base` primitives are the un-offset values; 
    * surface contexts (e.g. .dx-main-sidebar in state.css) re-derive the public token off the base via relative oklch. 
    */
-  --dx-hover-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-750));
+  --dx-hover-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-850));
   --color-hover-surface: var(--dx-hover-surface-base);
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 

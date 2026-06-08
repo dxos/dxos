@@ -41,12 +41,12 @@
   .dx-modal-surface,
   .dx-popover-surface {
     --color-hover-surface: light-dark(
-      oklch(from var(--surface-bg) calc(l - 0.05) c h),
-      oklch(from var(--surface-bg) calc(l + 0.05) c h)
-    );
-    --color-current-surface: light-dark(
       oklch(from var(--surface-bg) calc(l - 0.08) c h),
       oklch(from var(--surface-bg) calc(l + 0.08) c h)
+    );
+    --color-current-surface: light-dark(
+      oklch(from var(--surface-bg) calc(l - 0.1) c h),
+      oklch(from var(--surface-bg) calc(l + 0.1) c h)
     );
     --color-current-surface-hover: light-dark(
       oklch(from var(--surface-bg) calc(l - 0.12) c h),
