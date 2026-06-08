@@ -157,8 +157,12 @@ export const useObject: {
  */
 const useObjectValue = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Obj.Snapshot<T> | undefined => {
   const atom = useMemo(() => {
-    if (objOrRef == null) {return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);}
-    if (Ref.isRef(objOrRef)) {return Obj.atom(objOrRef);}
+    if (objOrRef == null) {
+      return Atom.make<Obj.Snapshot<T> | undefined>(() => undefined);
+    }
+    if (Ref.isRef(objOrRef)) {
+      return Obj.atom(objOrRef);
+    }
     return Obj.atom(objOrRef);
   }, [objOrRef]);
   return useAtomValue(atom) as Obj.Snapshot<T> | undefined;
@@ -172,7 +176,9 @@ const useObjectProperty = <T extends Obj.Unknown, K extends keyof T>(
   property: K,
 ): T[K] | undefined => {
   const atom = useMemo(() => {
-    if (obj == null) {return Atom.make<T[K] | undefined>(() => undefined);}
+    if (obj == null) {
+      return Atom.make<T[K] | undefined>(() => undefined);
+    }
     return Obj.atomProperty(obj, property);
   }, [obj, property]);
   return useAtomValue(atom);
