@@ -547,10 +547,11 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
       const first = db.add(createTestObject({ value: 1 }));
       await db.flush();
-      await sleep(20);
+      // createdAt is sourced from Automerge change time (1-second resolution); gaps must exceed 1s.
+      await sleep(1100);
       const second = db.add(createTestObject({ value: 2 }));
       await db.flush();
-      await sleep(20);
+      await sleep(1100);
       const third = db.add(createTestObject({ value: 3 }));
       await db.flush();
 
@@ -568,8 +569,8 @@ describe('Query', () => {
       const touchOrder = [objects[1], objects[4], objects[0]];
       for (const object of touchOrder) {
         await sleep(1100);
-        Obj.update(object, (obj: any) => {
-          obj.value = (obj.value ?? 0) + 100;
+        Obj.update(object, (object: any) => {
+          object.value = (object.value ?? 0) + 100;
         });
         await db.flush();
       }
