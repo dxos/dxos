@@ -298,6 +298,7 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     await runAndForwardErrors(
       Effect.gen(this, function* () {
+        log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
