@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 type HostInvitationProps = {
@@ -36,7 +36,7 @@ export const hostInvitation = ({
 
     const runCallback = (effect: Effect.Effect<void> | undefined) => {
       if (effect) {
-        runAndForwardErrors(effect).catch(() => {
+        EffectEx.runAndForwardErrors(effect).catch(() => {
           // Ignore callback errors
         });
       }
@@ -47,13 +47,13 @@ export const hostInvitation = ({
         switch (invitation.state) {
           case Invitation.State.CONNECTING: {
             runCallback(callbacks?.onConnecting?.(invitation));
-            runAndForwardErrors(Queue.offer(connectingQueue, invitation)).catch(() => {});
+            EffectEx.runAndForwardErrors(Queue.offer(connectingQueue, invitation)).catch(() => {});
             break;
           }
 
           case Invitation.State.SUCCESS: {
             runCallback(callbacks?.onSuccess?.(invitation));
-            runAndForwardErrors(Queue.offer(invitationQueue, invitation)).catch(() => {});
+            EffectEx.runAndForwardErrors(Queue.offer(invitationQueue, invitation)).catch(() => {});
             break;
           }
         }
@@ -61,7 +61,7 @@ export const hostInvitation = ({
       (err: unknown) => {
         // Forward error to Effect chain via error queue
         const error = err instanceof Error ? err : new Error(String(err));
-        runAndForwardErrors(Queue.offer(errorQueue, error)).catch(() => {
+        EffectEx.runAndForwardErrors(Queue.offer(errorQueue, error)).catch(() => {
           // Error queue full or other issue - log but continue
         });
       },

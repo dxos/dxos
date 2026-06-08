@@ -6,7 +6,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import React, { useCallback, useMemo } from 'react';
 
-import { getAnnotation, type SchemaProperty } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { Input, Select } from '@dxos/react-ui';
 
 import { getFormProperties, type SelectOption, detectFieldType, getSelectOptionsFromAst } from '../../util';
@@ -134,7 +134,7 @@ SettingsFieldSet.displayName = 'Settings.FieldSet';
 //
 
 type SettingsFieldItemProps = {
-  property: SchemaProperty;
+  property: SchemaEx.SchemaProperty;
   path: string;
   value: any;
   onChange: (value: any) => void;
@@ -158,8 +158,8 @@ const SettingsFieldItem = ({
 }: SettingsFieldItemProps) => {
   const { type } = property;
   const name = property.name.toString();
-  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type) ?? String.capitalize(name);
-  const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type) ?? String.capitalize(name);
+  const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
 
   // Custom field renderer.
   if (customField) {

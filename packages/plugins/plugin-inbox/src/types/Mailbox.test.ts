@@ -9,7 +9,7 @@ import { TagIndex } from '@dxos/app-toolkit';
 import { Feed, Filter, Tag } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Message } from '@dxos/types';
 
 import { Builder } from '../testing/builder';
@@ -36,7 +36,9 @@ describe('Mailbox tags', () => {
 
     const { messages } = new Builder().createMessages(1).build();
     const [message] = messages;
-    await runAndForwardErrors(Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(queues))));
+    await EffectEx.runAndForwardErrors(
+      Feed.append(feed, [message]).pipe(Effect.provide(createFeedServiceLayer(queues))),
+    );
 
     // Applying a tag creates a Tag object and indexes the message under its uri.
     const tagUri = await Mailbox.applyTag(mailbox, { label: 'Urgent' }, message, db);

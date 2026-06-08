@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type JsonPath, getField } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
@@ -300,7 +300,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Lower-level version that requires explicit schema parameter.
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
-// TODO(burdon): Convert to JsonPath?
+// TODO(burdon): Convert to SchemaEx.JsonPath?
 export const getLabelWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
@@ -312,7 +312,7 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
       'accessor',
       'Label annotation must be a string or an array of strings',
     );
-    const value = getField(object, accessor as JsonPath);
+    const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
     switch (typeof value) {
       case 'string': {
         const trimmed = value.trim();
@@ -363,14 +363,14 @@ export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionA
  * Returns the description for a given object based on {@link DescriptionAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-// TODO(burdon): Convert to JsonPath?
+// TODO(burdon): Convert to SchemaEx.JsonPath?
 export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
   const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
   assertArgument(typeof accessor === 'string', 'accessor', 'Description annotation must be a string');
-  const value = getField(object, accessor as JsonPath);
+  const value = SchemaEx.getField(object, accessor as SchemaEx.JsonPath);
   switch (typeof value) {
     case 'string':
     case 'number':

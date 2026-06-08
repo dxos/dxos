@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { type LayoutOperation } from '@dxos/app-toolkit';
+import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
+import { type LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Process } from '@dxos/compute';
 
 import { meta } from '#meta';
@@ -31,6 +31,8 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
     const monitor = yield* Capability.get(Capabilities.ProcessMonitor);
+    const manager = yield* Capability.get(Capabilities.PluginManager);
+    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
 
     const addToast = (toast: LayoutOperation.Toast) => {
       const state = registry.get(ephemeralAtom);
@@ -86,6 +88,41 @@ export default Capability.makeModule(
     const unsubscribeMonitor = registry.subscribe(monitor.processTreeAtom, handleProcesses);
 
     //
+    // Plugin failures — show one toast when any plugin fails to activate, with a link to the registry.
+    //
+
+    let hasShownFailureToast = false;
+
+    const handleFailures = (failures: readonly PluginManager.PluginFailure[]) => {
+      if (failures.length === 0) {
+        hasShownFailureToast = false;
+        return;
+      }
+      if (hasShownFailureToast) {
+        return;
+      }
+      hasShownFailureToast = true;
+      // Replace any stale plugin-failure toast so at most one is ever visible.
+      const toast: LayoutOperation.Toast = {
+        id: 'plugin-failure',
+        title: ['plugin-failure.title', { ns: meta.id }],
+        description: ['plugin-failure.description', { ns: meta.id }],
+        icon: 'ph--warning--regular',
+        duration: ERROR_TOAST_DURATION,
+        actionLabel: ['plugin-failure-action.label', { ns: meta.id }],
+        actionAlt: ['plugin-failure-action.alt', { ns: meta.id }],
+        onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+      };
+      const state = registry.get(ephemeralAtom);
+      registry.set(ephemeralAtom, {
+        ...state,
+        toasts: [...state.toasts.filter((t) => t.id !== 'plugin-failure'), toast],
+      });
+    };
+
+    const unsubscribeFailures = registry.subscribe(manager.failed, handleFailures);
+
+    //
     // Undo — driven by the history tracker's `undoable` stream (it owns the registry lookup).
     //
 
@@ -121,10 +158,11 @@ export default Capability.makeModule(
       }).pipe(Effect.provideService(Capability.Service, capabilities)),
     );
 
-    // Track both subscriptions so they are torn down when the module deactivates.
+    // Track all subscriptions so they are torn down when the module deactivates.
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.gen(function* () {
         unsubscribeMonitor();
+        unsubscribeFailures();
         yield* Fiber.interrupt(undoFiber);
       }),
     );

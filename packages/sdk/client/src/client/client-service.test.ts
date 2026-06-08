@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { ConfigService } from '@dxos/config';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { ClientService } from './client-service';
 
@@ -20,7 +20,7 @@ describe('ClientService', () => {
       const client = yield* ClientService;
       return client;
     }).pipe(Effect.provide(TestLayer));
-    const client = await runAndForwardErrors(program);
+    const client = await EffectEx.runAndForwardErrors(program);
     expect(client).toBeDefined();
   });
 
@@ -33,7 +33,7 @@ describe('ClientService', () => {
       });
       return identity;
     }).pipe(Effect.provide(TestLayer));
-    const identity = await runAndForwardErrors(program);
+    const identity = await EffectEx.runAndForwardErrors(program);
     expect(identity).toBeDefined();
   });
 });

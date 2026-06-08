@@ -11,7 +11,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { DXN, Annotation, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { ViewAnnotation } from '@dxos/schema';
 
 const TableSchema = Schema.Struct({
@@ -54,7 +55,7 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
     const schema = JsonSchema.toEffectSchema(jsonSchema);
     const properties = SchemaAST.getPropertySignatures(schema.ast);
     for (const property of properties) {
-      const name = property.name.toString() as JsonPath;
+      const name = property.name.toString() as SchemaEx.JsonPath;
       if (sizes?.[name]) {
         table.sizes[name] = sizes[name];
         continue;

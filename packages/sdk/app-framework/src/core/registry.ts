@@ -5,7 +5,7 @@
 import { Atom, type Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 /**
@@ -132,7 +132,7 @@ export class Manager {
 
     if (provider !== undefined) {
       // Fire-and-forget initial load. Errors are surfaced via the atom's `error` field.
-      void runAndForwardErrors(
+      void EffectEx.runAndForwardErrors(
         provider.listPlugins().pipe(
           Effect.match({
             onSuccess: (entries) => atomRegistry.set(this.plugins, { entries, loading: false, error: null }),

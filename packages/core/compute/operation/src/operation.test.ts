@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
 import { TestSchema } from '@dxos/echo/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 describe('Operation', () => {
@@ -139,7 +139,7 @@ describe('Operation', () => {
         Effect.provideService(AiService, {
           prompt: (_text) => 'Two users found',
         }),
-        runAndForwardErrors,
+        EffectEx.runAndForwardErrors,
       );
 
       expect(result.results).toEqual(['user1', 'user2']);
@@ -205,7 +205,7 @@ describe('Operation', () => {
         }),
       );
 
-      const result = await opWithHandler.handler({ delay: 10 }).pipe(runAndForwardErrors);
+      const result = await opWithHandler.handler({ delay: 10 }).pipe(EffectEx.runAndForwardErrors);
 
       expect(result).toEqual({ done: true });
     });
@@ -238,7 +238,7 @@ describe('Operation', () => {
         Effect.provideService(DatabaseService, {
           query: (_sql) => ['user1', 'user2'],
         }),
-        runAndForwardErrors,
+        EffectEx.runAndForwardErrors,
       );
 
       expect(result.results).toEqual(['user1', 'user2']);

@@ -32,7 +32,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
-import { causeToError, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -73,17 +73,10 @@ export type AiChatProcessorOptions = {
    */
   chat?: Ref.Ref<Chat.Chat>;
   system?: string;
-  /**
-   * Probability of automatically updating chat name after each request.
-   * Chat name is always updated if it has no name.
-   * @default 0.1 (10%)
-   */
-  autoUpdateNameChance?: number;
 };
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  autoUpdateNameChance: 0.1,
 };
 
 export type ProcessorRequestOptions = {};
@@ -256,12 +249,17 @@ export class AiChatProcessor {
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(requestProp.message);
         log('chat processor submitPrompt returned, waiting for agent', {});
+
+        // On the first message (no name yet), schedule rename immediately so it
+        // runs concurrently with the AI response rather than waiting for completion.
+        if (!this._options.chat?.target?.name) {
+          yield* this.#updateChatName(requestProp.message);
+        }
+
         yield* session.waitForCompletion();
         log.info('session complete');
 
         this.#flushStreaming();
-
-        yield* this.#maybeUpdateChatName();
       });
 
       this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
@@ -274,14 +272,14 @@ export class AiChatProcessor {
           return;
         }
 
-        throw causeToError(exit.cause);
+        throw EffectEx.causeToError(exit.cause);
       }
 
       this.#registry.set(this.error, Option.none());
       this.#lastRequest = undefined;
       this.#requestFiber = undefined;
     } catch (err) {
-      // `causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
+      // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
       // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
       this.#registry.set(this.error, Option.some(parseError(err)));
@@ -296,7 +294,7 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await runAndForwardErrors(
+    await EffectEx.runAndForwardErrors(
       Effect.gen(this, function* () {
         log.info('cancelling request', { fiber: this.#requestFiber });
         if (this.#requestFiber) {
@@ -335,7 +333,7 @@ export class AiChatProcessor {
     if (!spaceId) {
       return;
     }
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._runtime.runPromiseExit(
         Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
           Effect.provide(this._spaceLayer),
@@ -411,18 +409,12 @@ export class AiChatProcessor {
   }
 
   /**
-   * Conditionally schedule chat name update in detached fork mode.
-   * Updates if chat has no name OR based on random chance (default 10%).
+   * Schedule a chat name update as a detached (fire-and-forget) operation.
+   * Called automatically on the first message; can also be invoked manually via the toolbar.
    */
-  #maybeUpdateChatName(): Effect.Effect<void, never, Operation.Service> {
+  #updateChatName(prompt?: string): Effect.Effect<void, never, Operation.Service> {
     const chat = this._options.chat?.target;
     if (!chat) {
-      return Effect.void;
-    }
-
-    const chance = this._options.autoUpdateNameChance ?? defaultOptions.autoUpdateNameChance ?? 0.1;
-    const shouldUpdate = !chat.name || Math.random() < chance;
-    if (!shouldUpdate) {
       return Effect.void;
     }
 
@@ -431,7 +423,7 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(AssistantOperation.UpdateChatName, { chat }, { spaceId });
+    log.info('scheduling chat name update');
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
   }
 }

@@ -8,7 +8,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery, useType as defaultUseType } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
@@ -88,13 +88,13 @@ export const RefField = (props: RefFieldProps) => {
   const { status, error } = getStatus();
 
   const typename = useMemo(
-    () => (type ? findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
+    () => (type ? SchemaEx.findAnnotation<ReferenceAnnotationValue>(type, ReferenceAnnotationId)?.typename : undefined),
     [type],
   );
 
   const results = useResults(db, typename);
   const options = useMemo(() => {
-    const parentLabel = type ? findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
+    const parentLabel = type ? SchemaEx.findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
     return getOptions(results, { parentLabel });
   }, [results, getOptions, type]);
 

@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Filter, Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { Organization } from '@dxos/types';
@@ -185,7 +185,7 @@ describe('TripMessageExtractor', () => {
   const extract = (raw: string, payload: unknown) =>
     TripMessageExtractor.extract({ db, source: parseFixtureMessage(raw) })
       .pipe(Effect.provide(Layer.mergeAll(mockAiService({ object: payload }), noResolver)))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
   test('id and kinds', ({ expect }) => {
     expect(TripMessageExtractor.id).toBe(TEMPLATE_ID);

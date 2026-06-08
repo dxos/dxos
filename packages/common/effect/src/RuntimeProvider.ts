@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 
-import { runAndForwardErrors, unwrapExit } from './errors';
+import { runAndForwardErrors, unwrapExit } from './internal/errors';
 
 /**
  * Provides effect runtime with services to run effects.

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './list';
 
@@ -26,5 +26,5 @@ describe('device list', () => {
       expect(parsed[0]).toHaveProperty('key');
       expect(parsed[0]).toHaveProperty('type');
       expect(parsed[0]).toHaveProperty('kind');
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

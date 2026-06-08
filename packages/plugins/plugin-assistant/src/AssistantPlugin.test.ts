@@ -15,7 +15,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
@@ -105,7 +105,9 @@ describe('AssistantPlugin', () => {
 
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
 
-    const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
 
     await harness.runPromise(
       Effect.gen(function* () {
