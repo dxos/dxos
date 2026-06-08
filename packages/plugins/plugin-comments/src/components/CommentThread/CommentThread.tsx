@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import { Message as MessageComponent, type ThreadComponents, Thread } from '@dxos/react-ui-thread';
@@ -49,13 +49,24 @@ export const CommentThread = ({
   const { t } = useTranslation(meta.id);
   const identity = useIdentity();
   const space = getSpace(anchor);
+  const members = useMembers(space?.key);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as ThreadType.Thread;
   const threadUri = Obj.getURI(thread);
   const [messages] = useObject(thread, 'messages');
   const activity = useStatus(space, threadUri);
 
-  const getMetadata = useCallback((message: Message.Message) => getMessageMetadata(Obj.getURI(message)), []);
+  const getMetadata = useCallback(
+    (message: Message.Message) => {
+      const senderIdentity = members.find(
+        (member) =>
+          (message.sender.identityDid && member.identity.did === message.sender.identityDid) ||
+          (message.sender.identityKey && member.identity.identityKey.toHex() === message.sender.identityKey),
+      );
+      return getMessageMetadata(Obj.getURI(message), senderIdentity?.identity, message.sender);
+    },
+    [members],
+  );
   const textboxMetadata = useMemo(() => getMessageMetadata(threadUri, identity ?? undefined), [threadUri, identity]);
   const loadedMessages = useMemo(
     () => (messages ?? []).map((ref) => ref.target).filter((message): message is Message.Message => !!message),
