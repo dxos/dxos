@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { addMinutes, differenceInMinutes } from 'date-fns';
-import React, { useState } from 'react';
+import { addMinutes, differenceInMinutes, format } from 'date-fns';
+import React from 'react';
 
 import { type Database } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
@@ -34,32 +34,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
   const end = parseDate(data.endDate);
   const durationMinutes = start && end ? differenceInMinutes(end, start) : undefined;
   const presetValue = DURATION_PRESETS.find((preset) => Number(preset.value) === durationMinutes)?.value;
-  // Start in "custom end" mode when the current duration doesn't match a preset.
-  const [customEnd, setCustomEnd] = useState(presetValue === undefined);
-
-  // Moving the start: all-day events are single-day (end tracks start); otherwise, in duration mode,
-  // preserve the duration.
-  const setStart = (iso: string) =>
-    update((event) => {
-      event.startDate = iso;
-      if (allDay) {
-        event.endDate = iso;
-      } else if (!customEnd && durationMinutes != null) {
-        event.endDate = addMinutes(new Date(iso), durationMinutes).toISOString();
-      }
-    });
-
-  const setEnd = (iso: string) =>
-    update((event) => {
-      event.endDate = iso;
-    });
 
   const handleDurationChange = (value: string) => {
-    if (value === CUSTOM_END) {
-      setCustomEnd(true);
-      return;
-    }
-    setCustomEnd(false);
     update((event) => {
       event.endDate = addMinutes(start ?? new Date(), Number(value)).toISOString();
     });
@@ -109,31 +85,74 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
             </IconBlock>
           }
         >
-          {allDay ? <Input.Date value={data.startDate} /> : <Input.DateTime value={data.startDate} />}
+          {allDay ? (
+            <Input.Date
+              value={toDateInput(data.startDate)}
+              onValueChange={(value) => {
+                const iso = fromDateInput(value);
+                if (iso) {
+                  update((event) => {
+                    // All-day events are single-day: keep the end aligned with the start.
+                    event.startDate = iso;
+                    event.endDate = iso;
+                  });
+                }
+              }}
+            />
+          ) : (
+            <Input.DateTime
+              value={toDateTimeInput(data.startDate)}
+              onValueChange={(value) => {
+                const iso = fromDateInput(value);
+                if (iso) {
+                  update((event) => {
+                    event.startDate = iso;
+                  });
+                }
+              }}
+            />
+          )}
         </Card.Row>
       </Input.Root>
 
-      {/* All-day events are single-day, so no end field; timed events choose a duration or explicit end. */}
       {!allDay && (
-        <Card.Row>
-          <div className='flex items-center gap-2'>
-            <Select.Root value={customEnd ? CUSTOM_END : presetValue} onValueChange={handleDurationChange}>
-              <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {DURATION_PRESETS.map((preset) => (
-                      <Select.Option key={preset.value} value={preset.value}>
-                        {preset.label}
-                      </Select.Option>
-                    ))}
-                    <Select.Option value={CUSTOM_END}>{t('event-duration-custom.label')}</Select.Option>
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </div>
-        </Card.Row>
+        <Input.Root>
+          <Card.Row
+            icon={
+              <IconBlock>
+                <Input.TriggerIcon icon='ph--calendar--regular' />
+              </IconBlock>
+            }
+          >
+            <div className='grid grid-cols-[1fr_auto] gap-2'>
+              <Input.DateTime
+                value={toDateTimeInput(data.endDate)}
+                onValueChange={(value) => {
+                  const iso = fromDateInput(value);
+                  if (iso) {
+                    update((event) => {
+                      event.endDate = iso;
+                    });
+                  }
+                }}
+              />
+              <Select.Root value={presetValue} onValueChange={handleDurationChange}>
+                <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {DURATION_PRESETS.map((preset) => (
+                        <Select.Option key={preset.value} value={preset.value}>
+                          {preset.label}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </div>
+          </Card.Row>
+        </Input.Root>
       )}
 
       {data.attendees.map((attendee, index) => (
@@ -144,15 +163,16 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 };
 
 /** Duration presets (minutes) offered as an alternative to picking an explicit end time. */
+// TODO(burdon): Translations.
 const DURATION_PRESETS = [
   { value: '15', label: '15 minutes' },
   { value: '30', label: '30 minutes' },
+  { value: '45', label: '45 minutes' },
   { value: '60', label: '1 hour' },
   { value: '90', label: '90 minutes' },
   { value: '120', label: '2 hours' },
   { value: '180', label: '3 hours' },
 ];
-const CUSTOM_END = 'custom';
 
 const parseDate = (iso?: string): Date | undefined => {
   if (!iso) {
@@ -160,4 +180,26 @@ const parseDate = (iso?: string): Date | undefined => {
   }
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? undefined : date;
+};
+
+/** Formats a stored ISO string as the `YYYY-MM-DD` value expected by `Input.Date`. */
+const toDateInput = (iso?: string): string => {
+  const date = parseDate(iso);
+  return date ? format(date, 'yyyy-MM-dd') : '';
+};
+
+/** Formats a stored ISO string as the `YYYY-MM-DDTHH:mm` value expected by `Input.DateTime`. */
+const toDateTimeInput = (iso?: string): string => {
+  const date = parseDate(iso);
+  return date ? format(date, "yyyy-MM-dd'T'HH:mm") : '';
+};
+
+/** Parses a segmented `Input.Date`/`Input.DateTime` value (local time) back to a stored ISO string. */
+const fromDateInput = (value: string): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  // Date-only values are parsed as local midnight to avoid a UTC day shift.
+  const date = new Date(value.includes('T') ? value : `${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 };
