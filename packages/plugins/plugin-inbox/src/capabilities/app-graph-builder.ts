@@ -324,9 +324,15 @@ export default Capability.makeModule(
           }
 
           const eventId = get(selectedId(matched.nodeId));
-          const event = get(
+          const fromFeed = get(
             AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
           )[0];
+          // Draft events live in the space db (not the feed); fall back to a db lookup so the
+          // companion resolves a locally-created event too.
+          const fromDb = eventId
+            ? get(AtomQuery.make<Event.Event>(db, Query.select(Filter.id(eventId))))[0]
+            : undefined;
+          const event = fromFeed ?? fromDb;
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('event'),

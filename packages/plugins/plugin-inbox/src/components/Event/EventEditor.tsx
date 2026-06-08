@@ -1,0 +1,188 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { addMinutes, differenceInMinutes, format } from 'date-fns';
+import React, { useState } from 'react';
+
+import { Obj, type Database } from '@dxos/echo';
+import { Card, DatePicker, Input, Select, useTranslation } from '@dxos/react-ui';
+import { type Actor, type Event as EventType } from '@dxos/types';
+
+import { meta } from '#meta';
+
+import { Header } from '../Header';
+
+export type EventEditorProps = {
+  event: EventType.Event;
+  db?: Database.Database;
+  onContactCreate?: (actor: Actor.Actor) => void;
+};
+
+/** Duration presets (minutes) offered as an alternative to picking an explicit end time. */
+const DURATION_PRESETS = [
+  { value: '15', label: '15 minutes' },
+  { value: '30', label: '30 minutes' },
+  { value: '60', label: '1 hour' },
+  { value: '90', label: '90 minutes' },
+  { value: '120', label: '2 hours' },
+  { value: '180', label: '3 hours' },
+];
+const CUSTOM_END = 'custom';
+
+const parseDate = (iso?: string): Date | undefined => {
+  if (!iso) {
+    return undefined;
+  }
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+};
+
+const applyTime = (date: Date | undefined, time: string): Date => {
+  const [hours, minutes] = time.split(':').map((part) => parseInt(part, 10));
+  const out = date ? new Date(date) : new Date();
+  out.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+  return out;
+};
+
+/** Standard react-ui date (+ optional time) picker bound to an ISO string value. */
+const DateTimeField = ({
+  value,
+  withTime = true,
+  onChange,
+}: {
+  value?: string;
+  withTime?: boolean;
+  onChange: (iso: string) => void;
+}) => {
+  const date = parseDate(value);
+  return (
+    <DatePicker.Root
+      mode='single'
+      withTime={withTime}
+      value={date}
+      onValueChange={(next) => next && onChange(next.toISOString())}
+    >
+      <DatePicker.Trigger format={withTime ? 'PPP p' : 'PPP'} />
+      <DatePicker.Content>
+        <DatePicker.Calendar />
+        {withTime && (
+          <Input.Root>
+            <Input.Time
+              value={date ? format(date, 'HH:mm') : ''}
+              onValueChange={(time) => onChange(applyTime(date, time).toISOString())}
+            />
+          </Input.Root>
+        )}
+      </DatePicker.Content>
+    </DatePicker.Root>
+  );
+};
+
+/**
+ * Editable form for an event's title, all-day flag, start, and end (explicit or via a duration preset).
+ * Used for draft events; mutates the live ECHO object in place.
+ */
+export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
+  const { t } = useTranslation(meta.id);
+  const allDay = !!event.allDay;
+  const start = parseDate(event.startDate);
+  const end = parseDate(event.endDate);
+  const durationMinutes = start && end ? differenceInMinutes(end, start) : undefined;
+  const presetValue = DURATION_PRESETS.find((preset) => Number(preset.value) === durationMinutes)?.value;
+  // Start in "custom end" mode when the current duration doesn't match a preset.
+  const [customEnd, setCustomEnd] = useState(presetValue === undefined);
+
+  const setTitle = (title: string) =>
+    Obj.update(event, (event) => {
+      event.title = title;
+    });
+
+  const setAllDay = (next: boolean) =>
+    Obj.update(event, (event) => {
+      event.allDay = next;
+    });
+
+  // When in duration mode, moving the start preserves the duration.
+  const setStart = (iso: string) =>
+    Obj.update(event, (event) => {
+      event.startDate = iso;
+      if (!customEnd && durationMinutes != null) {
+        event.endDate = addMinutes(new Date(iso), durationMinutes).toISOString();
+      }
+    });
+
+  const setEnd = (iso: string) =>
+    Obj.update(event, (event) => {
+      event.endDate = iso;
+    });
+
+  const handleDurationChange = (value: string) => {
+    if (value === CUSTOM_END) {
+      setCustomEnd(true);
+      return;
+    }
+    setCustomEnd(false);
+    Obj.update(event, (event) => {
+      event.endDate = addMinutes(start ?? new Date(), Number(value)).toISOString();
+    });
+  };
+
+  return (
+    <>
+      <Card.Row icon='ph--check--regular'>
+        <Input.Root>
+          <Input.TextInput
+            placeholder={t('event-untitled.label')}
+            value={event.title ?? ''}
+            onChange={(ev) => setTitle(ev.target.value)}
+          />
+        </Input.Root>
+      </Card.Row>
+
+      <Card.Row icon='ph--clock--regular'>
+        <Input.Root>
+          <div className='flex items-center gap-2'>
+            <Input.Switch checked={allDay} onCheckedChange={setAllDay} />
+            <Input.Label>{t('event-all-day.label')}</Input.Label>
+          </div>
+        </Input.Root>
+      </Card.Row>
+
+      <Card.Row icon='ph--calendar--regular'>
+        <DateTimeField value={event.startDate} withTime={!allDay} onChange={setStart} />
+      </Card.Row>
+
+      {allDay ? (
+        <Card.Row icon='ph--calendar-dots--regular'>
+          <DateTimeField value={event.endDate} withTime={false} onChange={setEnd} />
+        </Card.Row>
+      ) : (
+        <Card.Row icon='ph--hourglass--regular'>
+          <div className='flex items-center gap-2'>
+            <Select.Root value={customEnd ? CUSTOM_END : presetValue} onValueChange={handleDurationChange}>
+              <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {DURATION_PRESETS.map((preset) => (
+                      <Select.Option key={preset.value} value={preset.value}>
+                        {preset.label}
+                      </Select.Option>
+                    ))}
+                    <Select.Option value={CUSTOM_END}>{t('event-duration-custom.label')}</Select.Option>
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+            {customEnd && <DateTimeField value={event.endDate} withTime onChange={setEnd} />}
+          </div>
+        </Card.Row>
+      )}
+
+      {event.attendees.map((attendee, index) => (
+        <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
+      ))}
+    </>
+  );
+};

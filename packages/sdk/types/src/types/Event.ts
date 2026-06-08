@@ -29,6 +29,12 @@ export const Event = Schema.Struct({
   endDate: Schema.String,
 
   /**
+   * Whether the event spans whole days (no time-of-day). Maps to Google Calendar `start.date`/`end.date`
+   * rather than `start.dateTime`/`end.dateTime`.
+   */
+  allDay: Schema.optional(Schema.Boolean),
+
+  /**
    * Physical location of the event (https://schema.org/Event `location`).
    */
   location: Schema.optional(Geo.PostalAddress),

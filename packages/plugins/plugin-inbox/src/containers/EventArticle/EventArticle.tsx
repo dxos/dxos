@@ -5,16 +5,18 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '#components';
 import { useShadowObject } from '#hooks';
-import { InboxOperation } from '#types';
+import { InboxOperation, DraftEvent } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
@@ -22,8 +24,14 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
   const { invokePromise } = useOperationInvoker();
   const id = Obj.getURI(subject);
   const db = Obj.getDatabase(calendar);
+  // Resolve the live (mutable, reactive) db object so edits to a draft re-render the controlled
+  // inputs. The companion subject can be a non-reactive snapshot; querying by id yields the proxy.
+  const live = useQuery(db, Query.select(Filter.id(subject.id)))[0];
+  const event = live ?? subject;
   const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
+  // A draft event (locally created, not yet synced) is editable and savable.
+  const draft = DraftEvent.instanceOf(event);
 
   const handleNoteCreate = useCallback(async () => {
     invariant(db);
@@ -45,16 +53,41 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
     [db, invokePromise],
   );
 
+  // Promote the event from a companion to the main view (mirrors MessageArticle).
+  const handleOpen = useCallback(() => {
+    void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(event)] });
+  }, [invokePromise, event]);
+
+  // Push this draft event to Google Calendar.
+  const handleSave = useCallback(() => {
+    if (calendar) {
+      void invokePromise(InboxOperation.SyncDraftEvents, { calendar, event });
+    }
+  }, [invokePromise, calendar, event]);
+
+  // Delete the event (locally if draft, otherwise on Google Calendar too).
+  const handleDelete = useCallback(() => {
+    if (calendar) {
+      void invokePromise(InboxOperation.DeleteEvent, { calendar, event });
+    }
+  }, [invokePromise, calendar, event]);
+
   return (
-    <Event.Root event={subject}>
+    <Event.Root event={event}>
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
-          <Event.Toolbar alwaysActive onNoteCreate={handleNoteCreate} />
+          <Event.Toolbar
+            alwaysActive
+            onNoteCreate={handleNoteCreate}
+            onOpen={calendar ? handleOpen : undefined}
+            onSave={draft ? handleSave : undefined}
+            onDelete={calendar ? handleDelete : undefined}
+          />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Event.Viewport>
-            <Event.Header db={db} onContactCreate={handleContactCreate} />
-            <Event.Body />
+            <Event.Header db={db} editable={draft} onContactCreate={handleContactCreate} />
+            <Event.Body editable={draft} />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
             {notes && (
               <Surface.Surface type={AppSurface.Section} data={{ subject: notes, attendableId: id }} limit={1} />

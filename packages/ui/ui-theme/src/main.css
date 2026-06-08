@@ -78,8 +78,8 @@
  * Tailwind ignores `node_modules` and common build/output dirs by default,
  * so a broad workspace glob is safe.
  */
-@source "../../../**/*.{ts,tsx,html}";
-@source "../../../../tools/**/*.{ts,tsx,html}";
+@source '../../../**/*.{ts,tsx,html}';
+@source '../../../../tools/**/*.{ts,tsx,html}';
 
 /**
  * Exclude generated/static data files that have no Tailwind classes but are
@@ -87,32 +87,32 @@
  * a single 5MB geo-data file can pin Vite at 100% CPU for tens of seconds on
  * a cold start.
  */
-@source not "../../../ui/react-ui-geo/data/**";
-@source not "../../../ui/solid-ui-geo/data/**";
-@source not "../../../apps/composer-app/src/plugins/welcome/components/Welcome/hero-image.ts";
+@source not '../../../ui/react-ui-geo/data/**';
+@source not '../../../ui/solid-ui-geo/data/**';
+@source not '../../../apps/composer-app/src/plugins/welcome/components/Welcome/hero-image.ts';
 
 /**
  * Force-emit CSS variables for the full color palette for all:
  * --color-{hue}-{shade}
  * --color-{hue}-{style}
  */
-@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
-@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{bg,bg-hover,fg,surface,text,border}");
-@source inline("bg-{primary,secondary}-{50,100,200,300,400,500,600,700,800,900,950}");
-@source inline("border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border");
-@source inline("bg-{info,success,warning,error}-{bg,surface,fg,text,border}");
-@source inline("border-{info,success,warning,error}-border");
+@source inline('bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}');
+@source inline('bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{bg,bg-hover,fg,surface,text,border}');
+@source inline('bg-{primary,secondary}-{50,100,200,300,400,500,600,700,800,900,950}');
+@source inline('border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border');
+@source inline('bg-{info,success,warning,error}-{bg,surface,fg,text,border}');
+@source inline('border-{info,success,warning,error}-border');
 
 /**
  * Force-emit tokens consumed by web components / .pcss files outside the
  * Tailwind source-scan graph (e.g. lit-grid's dx-grid.pcss uses var(--color-grid-line)).
  */
-@source inline("bg-grid-{surface,fg,line,highlight,comment,comment-active,selection-surface,selection-fg}");
+@source inline('bg-grid-{surface,fg,line,highlight,comment,comment-active,selection-surface,selection-fg}');
 /* 
  * Sidebar surfaces alias each other (e.g. header-surface -> l0-surface); force-emit so the vars
  * exist in apps that use the alias but not the underlying utility (e.g. devtools). 
  */
-@source inline("bg-{l0,r0,l1,r1}-surface");
+@source inline('bg-{l0,r0,l1,r1}-surface');
 
 /**
  * Plugins must come after all imports.
@@ -134,4 +134,4 @@
 /** Supports mouse/trackpad (Web) */
 @custom-variant hover-hover (@media (hover: hover));
 /** Active navigation */
-@custom-variant is-current (&[aria-current]:not([aria-current="false"]));
+@custom-variant is-current (&[aria-current]:not([aria-current='false']));
