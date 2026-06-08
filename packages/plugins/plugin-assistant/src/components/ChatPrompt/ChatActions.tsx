@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ChatEvent } from '../Chat';
+import { type ChatEvent } from '../Chat/events';
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{

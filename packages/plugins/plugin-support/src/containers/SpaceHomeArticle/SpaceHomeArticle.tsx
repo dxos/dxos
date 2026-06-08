@@ -87,7 +87,9 @@ export const SpaceHomeArticle = ({ role, subject }: SpaceHomeArticleProps) => {
 
   const query = useMemo(
     () =>
-      Query.select(filter ?? Filter.everything()).orderBy(Order.updated('desc')).limit(RECENT_LIMIT),
+      Query.select(filter ?? Filter.everything())
+        .orderBy(Order.updated('desc'))
+        .limit(RECENT_LIMIT),
     [filter],
   );
   const recent = useQuery(filter && space ? space.db : undefined, query);
