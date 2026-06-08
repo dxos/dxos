@@ -23,32 +23,15 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  * Register with `AppPlugin.addNavigationResolverModule`. One resolver per type is enough;
  * the capability system fans them out until one returns `Option.some`.
  *
- * Two things must work together for navigation to land in the custom section:
- *
- * 1. **Path resolver** (this helper) — maps `root/<spaceId>/<typename>/<objectId>` to an EID so
- *    `validateNavigationTarget` doesn't 404 before the graph has populated.
- *
- * 2. **CreateObjectEntry subject** — in each plugin's `CreateObjectEntry`, pass
- *    `targetNodeId: getSectionPath(options.db.spaceId)` to `SpaceOperation.AddObject`.
- *    The handler computes `subject = targetNodeId + "/" + objectId`, which is exactly the custom
- *    section path. `OpenCreateObject` navigates to `subject[0]` after creation, so this routes
- *    the create-dialog path to the section rather than the database subtree:
- *    ```ts
- *    createObject: (props, options) =>
- *      Effect.gen(function* () {
- *        const object = MyType.make(props);
- *        return yield* Operation.invoke(SpaceOperation.AddObject, {
- *          object,
- *          target: options.target,
- *          hidden: true,
- *          targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
- *        });
- *      }),
- *    ```
+ * Also set `targetNodeId: getSectionPath(options.db.spaceId)` in the plugin's `CreateObjectEntry`
+ * so the create dialog navigates to the type section rather than the generic database section:
+ * ```ts
+ * targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
+ * ```
  *
  * @idiom org.dxos.app-toolkit.typeSectionPathResolver
- *   applies: Plugins that expose a type section via {@link createTypeSectionExtension} and need navigation — from direct invocation, deep-link, page reload, or the create dialog — to land in the custom section rather than the database subtree
- *   instead-of: Relying on the graph being fully populated before navigation, or accepting that the create dialog navigates to the database subtree
+ *   applies: Plugins that expose a type section via {@link createTypeSectionExtension} and need navigation to the type section instead of falling back to the generic database section
+ *   instead-of: Navigating to the database section after object creation, or getting a 404 on deep-link and page reload before the graph has populated
  *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
 export const createTypeSectionPathResolver = (type: Type.Type): AppCapabilities.NavigationPathResolver => {
