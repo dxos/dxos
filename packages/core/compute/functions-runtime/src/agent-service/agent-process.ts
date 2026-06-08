@@ -22,13 +22,14 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Credential, McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 interface AgentProcessOptions {
@@ -72,6 +73,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
+        // Needed in the fiber's context — `byokHeaderLayer`'s per-request callback reads it.
+        Credential.CredentialsService,
       ],
     },
     (ctx) =>
@@ -87,6 +90,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
+        // Queued tool results were never consumed by onAlarm — reported flags from the synchronous
+        // execution path are stale after reload and would cause onAlarm to drop them.
+        yield* toolCallManager.reconcileWithInputQueue(inputQueue);
 
         return {
           onInput: Effect.fnUntraced(function* (prompt: string) {
@@ -101,26 +107,42 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onAlarm: Effect.fnUntraced(
             function* () {
               log('agent onAlarm fired', { pending: inputQueue.length });
+
+              while (inputQueue.length > 0) {
+                const head = inputQueue[0];
+                if (head._tag === 'tool_result' && toolCallManager.isReported(head.pid)) {
+                  inputQueue.shift();
+                  log.info('skip tool result that was reported synchronously', { pid: head.pid });
+                  continue;
+                }
+                break;
+              }
+
               const item = inputQueue.shift();
               if (!item) {
                 log('agent onAlarm empty queue', {});
-                return;
-              }
-
-              if (item._tag === 'tool_result' && toolCallManager.isReported(item.pid)) {
-                log.info('skip tool result that was reported synchronously', { pid: item.pid });
-                // Ignore tool results that were reported synchronously.
+                yield* AgentEventsKey.set(inputQueue);
                 return;
               }
 
               log('agent onAlarm handling', { tag: item._tag });
 
-              const prompt = Match.value(item).pipe(
-                Match.tag('prompt', (item) => item.content),
+              const prompt: ContentBlock.Any[] = Match.value(item).pipe(
+                Match.tag('prompt', (item) => [ContentBlock.Text.make({ text: item.content })]),
                 Match.tag('tool_result', (item) =>
                   item.isError
-                    ? toolErrorResponse(item.pid, item.result as string)
-                    : toolResultResponse(item.pid, item.result),
+                    ? [
+                        ContentBlock.Text.make({
+                          text: toolErrorResponse(item.pid, item.result as string),
+                          disposition: 'synthetic',
+                        }),
+                      ]
+                    : [
+                        ContentBlock.Text.make({
+                          text: toolResultResponse(item.pid, item.result),
+                          disposition: 'synthetic',
+                        }),
+                      ],
                 ),
                 Match.exhaustive,
               );
@@ -166,7 +188,21 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
 
               const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-              const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
+              const attachExit = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.exit);
+              if (Exit.isFailure(attachExit)) {
+                // Completed tool children are not rehydrated on reload; the result is in inputQueue or was
+                // delivered synchronously before the interrupted turn.
+                if (
+                  toolCallManager.isToolCall(event.pid) ||
+                  inputQueue.some((item) => item._tag === 'tool_result' && item.pid === event.pid) ||
+                  toolCallManager.isReported(event.pid)
+                ) {
+                  log.verbose('childEvent skipped (process gone, result already handled)', { pid: event.pid });
+                  return;
+                }
+                return yield* Effect.failCause(attachExit.cause).pipe(Effect.orDie);
+              }
+              const fiber = attachExit.value;
               const result = yield* fiber.await.pipe(Effect.orDie).pipe(
                 Effect.map(
                   Exit.match({
@@ -285,6 +321,30 @@ class ToolCallManager {
 
   isReported(pid: Process.ID) {
     return this.#state.activeCalls.some((call) => call.pid === pid && call.reported);
+  }
+
+  /**
+   * Clears reported flags for tool calls that still have a pending queue entry.
+   * After reload the in-flight createRequest is gone, so those results must be redelivered via onAlarm.
+   */
+  reconcileWithInputQueue(queue: readonly AgentEvent[]) {
+    return Effect.gen(this, function* () {
+      let changed = false;
+      for (const item of queue) {
+        if (item._tag !== 'tool_result') {
+          continue;
+        }
+        const call = this.#state.activeCalls.find((entry) => entry.pid === item.pid);
+        if (call?.reported) {
+          call.reported = false;
+          changed = true;
+          log('reconcile queued tool result', { pid: item.pid });
+        }
+      }
+      if (changed) {
+        yield* ToolCallStateKey.set(this.#state);
+      }
+    }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
   }
 }
 

@@ -3,6 +3,7 @@
 //
 
 export * from './errors';
+export { byokHeaderLayer } from './byok';
 
 export * as Blueprint from './Blueprint';
 export * as Credential from './Credential';

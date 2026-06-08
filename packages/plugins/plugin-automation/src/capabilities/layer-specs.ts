@@ -14,7 +14,6 @@ import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Registry } from '@dxos/echo';
 import {
-  AgentService,
   FeedTraceSink,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
@@ -92,15 +91,6 @@ const OpaqueToolkitSpec = LayerSpec.make(
         });
       }),
     ),
-);
-
-const AgentServiceSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [ProcessManager.ProcessManagerService],
-    provides: [AgentService.AgentService],
-  },
-  () => AgentService.layer(),
 );
 
 const OperationRegistrySpec = LayerSpec.make(
@@ -186,7 +176,6 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
     Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
-    Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
     Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
     Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),

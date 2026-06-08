@@ -107,12 +107,18 @@ export type CredentialForm<Values = any> = {
    * message; on success `onSubmit` proceeds normally.
    */
   onValidate?: (input: { values: Values; provider: IntegrationProviderEntry }) => Effect.Effect<void, Error>;
-  /** Build the next step of the integration flow from form values. */
+  /**
+   * Build the next step of the integration flow from form values.
+   *
+   * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's
+   * `Effect.catchAll` — use these for user-visible validation messages. Do NOT `Effect.orDie`
+   * validation errors; defects bypass the dialog's failure handler and crash the request.
+   */
   onSubmit: (input: {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
-  }) => Effect.Effect<CredentialFormResult>;
+  }) => Effect.Effect<CredentialFormResult, Error>;
 };
 
 /**
