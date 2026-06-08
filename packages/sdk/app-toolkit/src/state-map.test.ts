@@ -10,7 +10,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, DXN, Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
+
+const { runAndForwardErrors } = EffectEx;
 import { type EntityId } from '@dxos/keys';
 
 import * as StateMap from './StateMap';
