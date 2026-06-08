@@ -257,6 +257,41 @@ describe('Agent Service', () => {
   );
 
   it.scoped(
+    'recovers queued tool results after reload',
+    Effect.fnUntraced(
+      function* (_) {
+        let agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint],
+        });
+        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+
+        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        yield* researchService.waitForTaskToAppear();
+        yield* researchService.completeOneTask();
+
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+        yield* AgentService.hydrate();
+
+        // Redelivery may re-issue tools from the interrupted turn.
+        yield* researchService.waitForTaskToAppear();
+        yield* researchService.completeAllTasks();
+
+        agent = yield* AgentService.getSession(agent.feed);
+        yield* agent.waitForCompletion();
+
+        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const text = messages.map(Message.extractText).join('\n');
+        expect(text.toLocaleLowerCase()).toContain('cyberdyne');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  it.scoped(
     'rehydrates an idle session and replays conversation history',
     Effect.fnUntraced(
       function* (_) {
