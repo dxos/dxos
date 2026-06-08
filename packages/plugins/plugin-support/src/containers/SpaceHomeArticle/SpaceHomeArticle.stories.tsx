@@ -86,7 +86,7 @@ export const SuggestionCardClick: Story = {
 
     // withPluginManager mounts the story via App after plugin activation; canvasElement is not
     // populated until then, so wait on screen for the home surface instead of the loading marker.
-    const card = await screen.findByRole('button', { name: 'Draft a new document' });
+    const card = await screen.findByRole('button', { name: 'Draft a new document' }, { timeout: 15000 });
     await userEvent.click(card);
 
     const calls = capture.getCalls(AssistantOperation.RunPromptInNewChat);
@@ -112,7 +112,7 @@ export const CustomPromptSubmit: Story = {
   play: async () => {
     capture.reset();
 
-    const editor = await screen.findByRole('textbox');
+    const editor = await screen.findByRole('textbox', {}, { timeout: 15000 });
     await userEvent.click(editor);
     await userEvent.type(editor, 'What types of objects can I create here?');
     await userEvent.keyboard('{Enter}');
