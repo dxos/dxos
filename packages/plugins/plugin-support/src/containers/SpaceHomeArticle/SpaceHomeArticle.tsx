@@ -15,8 +15,8 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
-import { AtomObj } from '@dxos/echo-atom';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
