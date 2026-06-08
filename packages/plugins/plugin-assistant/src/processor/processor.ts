@@ -423,5 +423,4 @@ export class AiChatProcessor {
     log.info('scheduling chat name update');
     return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
   }
-
 }
