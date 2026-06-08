@@ -42,9 +42,11 @@ export default Capability.makeModule(
                     { object: sheet, target: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [getSheetPath(space.db.spaceId, sheet.id)],
-                  });
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [getSheetPath(space.db.spaceId, sheet.id)] },
+                    { spaceId: space.db.spaceId },
+                  );
                 }),
               properties: {
                 label: ['add-object.label', { ns: sheetTypename }],

@@ -42,9 +42,11 @@ export default Capability.makeModule(
                     { object: sketch, target: space.db },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [getSketchPath(space.db.spaceId, sketch.id)],
-                  });
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [getSketchPath(space.db.spaceId, sketch.id)] },
+                    { spaceId: space.db.spaceId },
+                  );
                 }),
               properties: {
                 label: ['add-object.label', { ns: sketchTypename }],

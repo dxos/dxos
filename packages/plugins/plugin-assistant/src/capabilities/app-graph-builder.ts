@@ -224,7 +224,11 @@ export default Capability.makeModule(
                   );
                   yield* Database.flush();
                   const chatPath = getChatPath(space.db.spaceId, chat.id);
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [chatPath] },
+                    { spaceId: space.db.spaceId },
+                  );
                 }),
               properties: {
                 label: ['create-chat.label', { ns: meta.id }],

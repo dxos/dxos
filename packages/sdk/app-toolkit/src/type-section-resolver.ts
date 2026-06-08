@@ -30,8 +30,8 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  * ```
  *
  * @idiom org.dxos.app-toolkit.typeSectionPathResolver
- *   applies: Plugins that expose a type section via {@link createTypeSectionExtension} and need navigation to the type section instead of falling back to the generic database section
- *   instead-of: Navigating to the database section after object creation, or getting a 404 on deep-link and page reload before the graph has populated
+ *   applies: Plugins that expose a type section via {@link createTypeSectionExtension} and need navigation to the type section instead of falling back to the generic database section.
+ *   instead-of: Navigating to the database section after object creation, or getting a 404 on deep-link and page reload before the graph has populated.
  *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
 export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabilities.NavigationPathResolver => {

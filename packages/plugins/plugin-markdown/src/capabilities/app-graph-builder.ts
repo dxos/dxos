@@ -40,9 +40,11 @@ export default Capability.makeModule(
                     {},
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [getDocumentPath(space.db.spaceId, doc.id)],
-                  });
+                  yield* Operation.invoke(
+                    LayoutOperation.Open,
+                    { subject: [getDocumentPath(space.db.spaceId, doc.id)] },
+                    { spaceId: space.db.spaceId },
+                  );
                 }),
               properties: {
                 label: ['add-object.label', { ns: documentTypename }],
