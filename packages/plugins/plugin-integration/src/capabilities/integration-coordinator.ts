@@ -500,6 +500,7 @@ export default Capability.makeModule(
       spaceId,
       providerId,
       values,
+      validated,
     }) =>
       Effect.gen(function* () {
         const provider = yield* resolveProvider(getProviderEntries, providerId);
@@ -507,7 +508,7 @@ export default Capability.makeModule(
           return yield* Effect.fail(new Error(`Provider ${providerId} has no credentialForm.`));
         }
 
-        const result = yield* provider.credentialForm.onSubmit({ values, provider, db });
+        const result = yield* provider.credentialForm.onSubmit({ values, provider, db, validated });
 
         if (result.kind === 'complete') {
           yield* finalizePendingEntry(invoker, {

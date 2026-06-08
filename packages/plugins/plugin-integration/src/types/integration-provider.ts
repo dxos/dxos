@@ -101,11 +101,22 @@ export type CredentialForm<Values = any> = {
   schema: Schema.Schema<Values, any>;
   /** Optional defaults pre-filled into the form. */
   defaultValues?: Partial<Values>;
+  /**
+   * Optional async pre-submit validation. Runs before the dialog closes so
+   * errors are shown inline. The return value — e.g. a fetched user object —
+   * is forwarded to `onSubmit` as `validated` to avoid a redundant API call.
+   */
+  onValidate?: (input: {
+    values: Values;
+    provider: IntegrationProviderEntry;
+  }) => Effect.Effect<unknown, Error>;
   /** Build the next step of the integration flow from form values. */
   onSubmit: (input: {
     values: Values;
     provider: IntegrationProviderEntry;
     db: Database.Database;
+    /** Present when `onValidate` was defined and succeeded; `undefined` otherwise. */
+    validated?: unknown;
   }) => Effect.Effect<CredentialFormResult>;
 };
 

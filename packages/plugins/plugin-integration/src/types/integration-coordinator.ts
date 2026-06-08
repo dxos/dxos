@@ -59,6 +59,8 @@ export type IntegrationCoordinator = {
     spaceId: Key.SpaceId;
     providerId: string;
     values: unknown;
+    /** Result from `credentialForm.onValidate`, forwarded to `onSubmit` as `validated`. */
+    validated?: unknown;
   }) => Effect.Effect<CreateIntegrationResult, Error>;
   /**
    * Finalize a redirect-flow OAuth callback received via `/redirect/oauth`.
