@@ -8,7 +8,7 @@ import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
-  type MapContentProps,
+  type MapViewportProps,
   type MapController,
   type MapRootProps,
   useMapZoomHandler,
@@ -16,7 +16,7 @@ import {
 
 import { type GeoControlProps } from '../types';
 
-export type MapControlProps = GeoControlProps & MapContentProps & MapRootProps;
+export type MapControlProps = GeoControlProps & MapViewportProps & MapRootProps;
 
 export const MapControl = composable<HTMLDivElement, MapControlProps>(
   // Map.Root is headless and exposes the controller via ref, so MapControl has no DOM ref to forward.
@@ -44,13 +44,13 @@ export const MapControl = composable<HTMLDivElement, MapControlProps>(
 
     return (
       <Map.Root onChange={onChange} ref={setController}>
-        <Map.Content {...props} center={center} zoom={zoom} minZoom={3}>
+        <Map.Viewport {...props} center={center} zoom={zoom} minZoom={3}>
           <Map.Tiles url={tileUrl} />
           <Map.Lines lines={lines} />
           <Map.Markers markers={markers} lines={lines} selected={selected} onSelect={onSelect} />
           {onToggle && <Map.Action onAction={handleAction} />}
           <Map.Zoom onAction={handleZoomAction} />
-        </Map.Content>
+        </Map.Viewport>
       </Map.Root>
     );
   },

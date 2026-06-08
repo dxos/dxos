@@ -39,15 +39,15 @@ const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
         </Panel.Toolbar>
       )}
       {/* Map.Root is headless (context only), so it sits outside Panel.Content; Panel.Content asChild
-          then targets the Leaflet frame (Map.Content) directly — no extra wrapper element. */}
+          then targets the Leaflet frame (Map.Viewport) directly — no extra wrapper element. */}
       <Map.Root ref={setController}>
         <Panel.Content asChild>
-          <Map.Content>
+          <Map.Viewport>
             <Map.Tiles url={url} />
             <Map.Markers markers={markers} />
             <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
             <Map.Action position='bottomright' />
-          </Map.Content>
+          </Map.Viewport>
         </Panel.Content>
       </Map.Root>
     </Panel.Root>

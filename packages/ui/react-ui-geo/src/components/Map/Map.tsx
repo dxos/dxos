@@ -61,7 +61,7 @@ type MapController = {
 type MapContextValue = {
   attention?: boolean;
   onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
-  /** Called by Map.Content to register/unregister the leaflet map with the controller owned by Map.Root. */
+  /** Called by Map.Viewport to register/unregister the leaflet map with the controller owned by Map.Root. */
   registerMap: (map: L.Map | null) => void;
 };
 
@@ -74,7 +74,7 @@ const [MapContextProvider, useMapContext] = createContext<MapContextValue>('Map'
 type MapRootProps = PropsWithChildren<Pick<MapContextValue, 'onChange'>>;
 
 /**
- * Context provider for the map. Must wrap Map.Content. The ref exposes a {@link MapController}.
+ * Context provider for the map. Must wrap Map.Viewport. The ref exposes a {@link MapController}.
  */
 const MapRoot = forwardRef<MapController, MapRootProps>(({ children, onChange }, forwardedRef) => {
   const mapRef = useRef<L.Map | null>(null);
@@ -112,15 +112,15 @@ const MapRoot = forwardRef<MapController, MapRootProps>(({ children, onChange },
 MapRoot.displayName = 'Map.Root';
 
 //
-// Content
+// Viewport
 //
 
-type MapContentProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
+type MapViewportProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-const MAP_CONTENT_NAME = 'Map.Content';
+const MAP_VIEWPORT_NAME = 'Map.Viewport';
 
 /**
  * Recalculates the leaflet map size when its container resizes (e.g. a companion
@@ -197,12 +197,12 @@ const MapPinchZoom = () => {
   return null;
 };
 
-// Map.Content is the focusable Leaflet frame. It can be the target of a parent `<Panel.Content asChild>`
+// Map.Viewport is the focusable Leaflet frame. It can be the target of a parent `<Panel.Content asChild>`
 // (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
 // container element, so the forwarded DOM ref can't be attached and is intentionally unused.
-const MapContent = forwardRef<HTMLDivElement, MapContentProps>((props, _forwardedRef) => {
+const MapViewport = forwardRef<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
   const { scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...rest } = props;
-  const { attention, registerMap } = useMapContext(MAP_CONTENT_NAME);
+  const { attention, registerMap } = useMapContext(MAP_VIEWPORT_NAME);
   // Local copy of the leaflet map for this component's own effects; also registered with Map.Root.
   const [map, setMap] = useState<L.Map | null>(null);
 
@@ -255,7 +255,7 @@ const MapContent = forwardRef<HTMLDivElement, MapContentProps>((props, _forwarde
   );
 });
 
-MapContent.displayName = 'Map.Content';
+MapViewport.displayName = 'Map.Viewport';
 
 //
 // Tiles
@@ -512,7 +512,7 @@ const MapAction = ({ onAction, position = 'bottomright', ...props }: MapControlP
 
 export const Map = {
   Root: MapRoot,
-  Content: MapContent,
+  Viewport: MapViewport,
   Tiles: MapTiles,
   Markers: MapMarkers,
   Lines: MapLines,
@@ -523,7 +523,7 @@ export const Map = {
 export {
   type MapController,
   type MapRootProps,
-  type MapContentProps,
+  type MapViewportProps,
   type MapTilesProps,
   type MapMarkersProps,
   type MapLinesProps,
