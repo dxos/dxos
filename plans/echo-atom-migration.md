@@ -14,7 +14,7 @@ Currently 39 source files import from `@dxos/echo-atom`. They all live in `packa
 
 ### Current packages and dependency chain
 
-```
+```text
 @dxos/echo        (core reactive model, no atom dep)
     ↑
 @dxos/echo-atom   (atom wrappers, depends on @effect-atom/atom + @dxos/echo)
@@ -24,7 +24,7 @@ plugins / sdk     (consumer code)
 
 After migration:
 
-```
+```text
 @dxos/echo        (core model + atom wrappers, adds @effect-atom/atom dep)
     ↑
 plugins / sdk     (consumer code, imports only @dxos/echo)
@@ -131,7 +131,7 @@ export interface QueryResult<T> {
 
 Move the implementation files from `echo-atom` here with minimal changes:
 
-```
+```text
 packages/core/echo/echo/src/atom-impl/
   index.ts          — re-exports for internal use
   ref-utils.ts      — loadRefTarget helper (moved verbatim from echo-atom)

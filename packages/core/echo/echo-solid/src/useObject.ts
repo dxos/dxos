@@ -145,10 +145,36 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
   // Determine if input is a ref.
   const isRef = createMemo(() => Ref.isRef(resolvedInput()));
 
+  // Signal to notify when a ref's target loads.
+  // Incremented by the ref.atom subscription below so that liveObj re-evaluates.
+  const [refLoadVersion, setRefLoadVersion] = createSignal(0, { equals: false });
+
+  // Subscribe to ref.atom (load-only) to detect when the ref target becomes available.
+  // This drives liveObj reactivity for the property-subscription case.
+  createEffect(() => {
+    const input = resolvedInput();
+    if (!input || !Ref.isRef(input)) {
+      return;
+    }
+    const unsubscribe = registry.subscribe(
+      input.atom,
+      () => {
+        setRefLoadVersion((v) => v + 1);
+      },
+      { immediate: false },
+    );
+    onCleanup(unsubscribe);
+  });
+
   // Get the live object for the callback (refs need to dereference).
+  // For refs, depends on refLoadVersion so it re-evaluates when the target loads.
   const liveObj = createMemo(() => {
     const input = resolvedInput();
-    return isRef() ? (input as Ref.Ref<T>)?.target : (input as T | undefined);
+    if (!isRef()) {
+      return input as T | undefined;
+    }
+    refLoadVersion();
+    return (input as Ref.Ref<T>)?.target;
   });
 
   // Create a stable callback that handles both object and property updates.
@@ -178,8 +204,6 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
   };
 
   if (property !== undefined) {
-    // For property subscriptions on refs, we subscribe to trigger re-render on load.
-    useObjectValue(registry, objOrRef);
     return [useObjectProperty(registry, liveObj, property), callback as ObjectPropUpdateCallback<T[K]>];
   } else {
     return [useObjectValue(registry, objOrRef), callback as ObjectUpdateCallback<T>];
@@ -200,7 +224,7 @@ function useObjectValue<T extends Obj.Unknown>(
   // Initialize with the current value (if available).
   const initialInput = resolvedInput();
   const initialValue = initialInput
-    ? registry.get(Ref.isRef(initialInput) ? Obj.atom(initialInput) : Obj.atom(initialInput))
+    ? registry.get(Ref.isRef(initialInput) ? Obj.atom(initialInput) : Obj.atom(initialInput as T))
     : undefined;
   const [value, setValue] = createSignal<T | undefined>(initialValue as T | undefined);
 
@@ -213,7 +237,7 @@ function useObjectValue<T extends Obj.Unknown>(
       return;
     }
 
-    const atom = Ref.isRef(input) ? Obj.atom(input) : Obj.atom(input);
+    const atom = Ref.isRef(input) ? Obj.atom(input) : Obj.atom(input as T);
     const currentValue = registry.get(atom);
     setValue(() => currentValue as unknown as T);
 

@@ -143,9 +143,9 @@ export const useObject: {
   );
 
   if (property !== undefined) {
-    // For property subscriptions on refs, we subscribe to trigger re-render on load.
-    // TODO(dxos): Property subscriptions on refs may not update correctly until the ref loads.
-    useObjectValue(objOrRef);
+    // For refs, subscribe to load event only (not full mutation tracking).
+    // Property-level updates are handled by useObjectProperty once the ref loads.
+    useRefLoad(objOrRef);
     return [useObjectProperty(liveObj, property as any), callback];
   } else {
     return [useObjectValue(objOrRef), callback];
@@ -166,6 +166,22 @@ const useObjectValue = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefi
     return Obj.atom(objOrRef);
   }, [objOrRef]);
   return useAtomValue(atom) as Obj.Snapshot<T> | undefined;
+};
+
+/**
+ * Internal hook for subscribing to ref resolution only (load-once).
+ * Triggers a re-render when the ref target first becomes available,
+ * without subscribing to subsequent target mutations.
+ * For non-refs, this is a no-op.
+ */
+const useRefLoad = <T extends Obj.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): void => {
+  const atom = useMemo(() => {
+    if (objOrRef == null || !Ref.isRef(objOrRef)) {
+      return Atom.make<T | undefined>(() => undefined);
+    }
+    return objOrRef.atom;
+  }, [objOrRef]);
+  useAtomValue(atom);
 };
 
 /**
