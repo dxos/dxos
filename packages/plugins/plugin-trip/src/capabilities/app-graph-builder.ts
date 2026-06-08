@@ -13,7 +13,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Calendar } from '@dxos/plugin-inbox';
+import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import { linkedSegment, type SelectionManager } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
@@ -27,10 +27,16 @@ import { getPlanningWindowDays } from '../operations/extractor/config';
  * `'range'` selection if present, otherwise today through today + the configured planning window.
  */
 const resolvePlanningWindow = (selectionManager: SelectionManager, nodeId: string): { from: Date; to: Date } => {
-  const selected = selectionManager.getSelected(nodeId, 'range');
+  // Read without asserting the mode (the dedicated range context may be empty or, defensively, hold
+  // another mode), falling back to the default window otherwise.
+  const selection = selectionManager.getSelection(getCalendarRangeSelectionId(nodeId));
+  const range =
+    selection?.mode === 'range' && selection.from && selection.to
+      ? { from: selection.from, to: selection.to }
+      : undefined;
   const now = new Date();
-  const from = selected?.from ? startOfDay(new Date(selected.from)) : startOfDay(now);
-  const to = selected?.to ? endOfDay(new Date(selected.to)) : endOfDay(addDays(now, getPlanningWindowDays()));
+  const from = range ? startOfDay(new Date(range.from)) : startOfDay(now);
+  const to = range ? endOfDay(new Date(range.to)) : endOfDay(addDays(now, getPlanningWindowDays()));
   return { from, to };
 };
 
