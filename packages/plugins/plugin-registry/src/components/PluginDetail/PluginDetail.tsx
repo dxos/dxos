@@ -191,13 +191,15 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
-                  <Carousel.Root classNames='contents' count={screenshots.length}>
-                    <Carousel.Viewport>
-                      {screenshots.map((src, index) => (
-                        <Carousel.Slide key={src} index={index} src={src} alt={name} />
-                      ))}
-                    </Carousel.Viewport>
-                    <Carousel.Indicators />
+                  <Carousel.Root count={screenshots.length}>
+                    <Carousel.Content classNames='contents'>
+                      <Carousel.Viewport>
+                        {screenshots.map((src, index) => (
+                          <Carousel.Slide key={src} index={index} src={src} alt={name} />
+                        ))}
+                      </Carousel.Viewport>
+                      <Carousel.Indicators />
+                    </Carousel.Content>
                   </Carousel.Root>
                 </Section.Body>
               </Section.Root>

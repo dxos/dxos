@@ -77,16 +77,18 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
             </>
 
             {slides.length > 0 && (
-              <Carousel.Root classNames='max-w-[50rem]' count={slides.length}>
-                <Carousel.Previous />
-                <Carousel.Viewport>
-                  {slides.map((slide, i) => (
-                    <Carousel.Slide key={slide.src} index={i} src={slide.src} alt={slide.description} />
-                  ))}
-                </Carousel.Viewport>
-                <Carousel.Next />
-                <Carousel.Indicators />
-                <Carousel.Caption>{(i) => slides[i]?.description}</Carousel.Caption>
+              <Carousel.Root count={slides.length}>
+                <Carousel.Content classNames='max-w-[50rem]'>
+                  <Carousel.Previous />
+                  <Carousel.Viewport>
+                    {slides.map((slide, i) => (
+                      <Carousel.Slide key={slide.src} index={i} src={slide.src} alt={slide.description} />
+                    ))}
+                  </Carousel.Viewport>
+                  <Carousel.Next />
+                  <Carousel.Indicators />
+                  <Carousel.Caption>{(i) => slides[i]?.description}</Carousel.Caption>
+                </Carousel.Content>
               </Carousel.Root>
             )}
           </ScrollArea.Viewport>

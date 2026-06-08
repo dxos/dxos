@@ -5,8 +5,8 @@
 import { select } from 'd3';
 import { useEffect } from 'react';
 
-import { type GlobeController } from '../components';
 import { geoInertiaDrag } from '../util';
+import { type GlobeController } from './context';
 
 export type GlobeDragEvent = {
   type: 'start' | 'move' | 'end';

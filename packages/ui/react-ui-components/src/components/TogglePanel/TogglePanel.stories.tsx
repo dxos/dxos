@@ -81,20 +81,22 @@ const DefaultStory = (props: TogglePanelRootProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <TogglePanel.Root classNames='border border-separator' {...props}>
-          <TogglePanel.Header
-            icon={
-              running ? (
-                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
-              ) : undefined
-            }
-          >
-            Test
-          </TogglePanel.Header>
+        <TogglePanel.Root {...props}>
           <TogglePanel.Content>
-            <TogglePanel.Viewport>
-              <MarkdownView classNames='p-2 text-sm' content={text.join('\n\n')} />
-            </TogglePanel.Viewport>
+            <TogglePanel.Header
+              icon={
+                running ? (
+                  <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
+                ) : undefined
+              }
+            >
+              Test
+            </TogglePanel.Header>
+            <TogglePanel.Body>
+              <TogglePanel.Viewport>
+                <MarkdownView classNames='p-2 text-sm' content={text.join('\n\n')} />
+              </TogglePanel.Viewport>
+            </TogglePanel.Body>
           </TogglePanel.Content>
         </TogglePanel.Root>
       </Panel.Content>
