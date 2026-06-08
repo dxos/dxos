@@ -129,7 +129,9 @@ export const bind = (host: Obj.Any, key: string): Accessor => {
         if (!has(record, tagId)) {
           record[tagId] = [objectId];
         } else if (!record[tagId].includes(objectId)) {
-          record[tagId] = [...record[tagId], objectId];
+          // push() mutates in place → O(1) Automerge op (list insert).
+          // spread-replace would emit O(n) ops per call → quadratic history (DX-984).
+          record[tagId].push(objectId);
         }
       }),
     unsetTag: (tagId, objectId) =>
@@ -137,11 +139,15 @@ export const bind = (host: Obj.Any, key: string): Accessor => {
         if (!has(record, tagId)) {
           return;
         }
-        const next = record[tagId].filter((existing) => existing !== objectId);
-        if (next.length === 0) {
+        const index = record[tagId].indexOf(objectId);
+        if (index === -1) {
+          return;
+        }
+        // splice() removes in place → O(1) Automerge op (list delete).
+        // filter-replace would emit O(n) ops per call → quadratic history (DX-984).
+        record[tagId].splice(index, 1);
+        if (record[tagId].length === 0) {
           delete record[tagId];
-        } else {
-          record[tagId] = next;
         }
       }),
   };

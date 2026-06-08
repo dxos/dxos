@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { APP_SCHEME, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities } from '#types';
@@ -124,7 +124,7 @@ export default Capability.makeModule(
         Effect.gen(function* () {
           yield* dispatchNavigationHandlers();
           yield* invoke(LayoutOperation.UpdateDialog, { state: false });
-        }).pipe(Effect.provideService(Capability.Service, capabilities), runAndForwardErrors);
+        }).pipe(Effect.provideService(Capability.Service, capabilities), EffectEx.runAndForwardErrors);
 
       yield* invoke(LayoutOperation.UpdateDialog, {
         subject: NATIVE_REDIRECT_DIALOG,

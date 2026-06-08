@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
-import { Filter, Key, Query, Scope } from '@dxos/echo';
+import { Database, Filter, Key, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention/types';
@@ -57,7 +57,7 @@ export const validateNavigationTarget = (params: {
   pathResolvers: AppCapabilities.NavigationPathResolver[];
   checkLocalExistence?: ExistenceChecker;
   checkRemoteExistence?: ExistenceChecker;
-}): Effect.Effect<string> => {
+}): Effect.Effect<string, never, Database.Service> => {
   const { graph, subjectId, pathResolvers, checkLocalExistence, checkRemoteExistence } = params;
 
   // Skip validation for system paths.

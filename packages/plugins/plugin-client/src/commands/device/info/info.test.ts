@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './info';
 
@@ -24,5 +24,5 @@ describe('device info', () => {
       expect(parsed).toHaveProperty('deviceKey');
       expect(parsed).toHaveProperty('profile');
       expect(parsed.deviceKey).toBe(client.halo.device?.deviceKey.toHex());
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

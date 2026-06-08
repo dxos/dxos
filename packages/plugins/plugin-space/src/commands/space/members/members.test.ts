@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './members';
 
@@ -29,5 +29,5 @@ describe('space members', () => {
       expect(parsed[0]).toHaveProperty('key');
       expect(parsed[0]).toHaveProperty('presence');
       // name might be undefined if identity has no displayName
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

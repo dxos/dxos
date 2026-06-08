@@ -10,16 +10,7 @@ import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import {
-  createJsonPath,
-  findNode,
-  getAnnotation,
-  getDiscriminatedType,
-  isArrayType,
-  isDiscriminatedUnion,
-  isLiteralUnion,
-  isNestedType,
-} from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -129,9 +120,9 @@ export const FormField = (props: FormFieldProps) => {
     onCreate,
   } = props;
   const { t } = useTranslation(translationKey);
-  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
-  const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
-  const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
+  const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
+  const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
+  const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
   // `name === null` means "no header" -- collapse to an empty string so
   // downstream consumers keep their `label: string` types, and the falsy
@@ -144,7 +135,7 @@ export const FormField = (props: FormFieldProps) => {
   );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
-  const jsonPath = createJsonPath(path ?? []);
+  const jsonPath = SchemaEx.createJsonPath(path ?? []);
   const fieldProps: FormFieldComponentProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
@@ -188,7 +179,7 @@ export const FormField = (props: FormFieldProps) => {
   // Array field.
   //
 
-  if (isArrayType(type)) {
+  if (SchemaEx.isArrayType(type)) {
     return <ArrayField fieldProps={fieldState} label={label} {...props} />;
   }
 
@@ -259,11 +250,11 @@ export const FormField = (props: FormFieldProps) => {
   // Nested Object field.
   //
 
-  if (isNestedType(type)) {
-    const baseNode = findNode(type, isDiscriminatedUnion);
+  if (SchemaEx.isNestedType(type)) {
+    const baseNode = SchemaEx.findNode(type, SchemaEx.isDiscriminatedUnion);
     const typeLiteral = baseNode
-      ? getDiscriminatedType(baseNode, fieldState.getValue() as any)
-      : findNode(type, SchemaAST.isTypeLiteral);
+      ? SchemaEx.getDiscriminatedType(baseNode, fieldState.getValue() as any)
+      : SchemaEx.findNode(type, SchemaAST.isTypeLiteral);
 
     if (typeLiteral) {
       const schema = Schema.make(typeLiteral);
@@ -346,7 +337,7 @@ const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldCompo
 };
 
 const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
-  if (isLiteralUnion(ast)) {
+  if (SchemaEx.isLiteralUnion(ast)) {
     return ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
   }
 

@@ -14,8 +14,7 @@ import * as HashSet from 'effect/HashSet';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
-import { runAndForwardErrors } from '@dxos/effect';
-import { Performance } from '@dxos/effect';
+import { EffectEx, Performance } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -375,7 +374,7 @@ class ManagerImpl implements PluginManager {
         Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
         Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause)),
       )
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {

@@ -21,7 +21,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor, type UseTextEditor } from '@dxos/react-ui-editor';
 import {
@@ -354,7 +354,7 @@ const useMarkdownStreamQueue = (
     );
 
     return () => {
-      void runAndForwardErrors(Fiber.interrupt(fork));
+      void EffectEx.runAndForwardErrors(Fiber.interrupt(fork));
     };
   }, [view, queue, chunkSize, delayMs]);
 };
@@ -427,7 +427,7 @@ const createMarkdownStreamController = ({
         // collected several streaming partials before React rendered.
         const queue = queueRef.current;
         if (queue) {
-          await runAndForwardErrors(Queue.offer(queue, text));
+          await EffectEx.runAndForwardErrors(Queue.offer(queue, text));
         }
       }
     },

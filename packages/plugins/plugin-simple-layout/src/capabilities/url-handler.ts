@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -32,7 +32,7 @@ export default Capability.makeModule(
           handlers.map((handler) => handler(url)),
           { concurrency: 'unbounded' },
         );
-      }).pipe(Effect.provideService(Capability.Service, capabilities), runAndForwardErrors);
+      }).pipe(Effect.provideService(Capability.Service, capabilities), EffectEx.runAndForwardErrors);
 
     /**
      * Handle navigation from a URL.

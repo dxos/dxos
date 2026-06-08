@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './identity';
 
@@ -21,7 +21,7 @@ describe('halo identity', () => {
       expect(TestConsole.extractJsonString(logs[0])).toEqual(
         JSON.stringify({ error: 'Identity not initialized' }, null, 2),
       );
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 
   test('should print identity if initialized', ({ expect }) =>
     Effect.gen(function* () {
@@ -36,5 +36,5 @@ describe('halo identity', () => {
         identityDid: client.halo.identity.get()?.did,
         displayName: client.halo.identity.get()?.profile?.displayName,
       });
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

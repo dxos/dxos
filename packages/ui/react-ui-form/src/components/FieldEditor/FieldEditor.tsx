@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Filter, Obj, type Registry, Type, type View } from '@dxos/echo';
 import { Format, FormatEnums, formatToType } from '@dxos/echo/internal';
-import { type SchemaProperty } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
@@ -103,7 +103,10 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
     [t, schemas, referenceSchema],
   );
 
-  const propIsNotType = useCallback((props: SchemaProperty[]) => props.filter((prop) => prop.name !== 'type'), []);
+  const propIsNotType = useCallback(
+    (props: SchemaEx.SchemaProperty[]) => props.filter((prop) => prop.name !== 'type'),
+    [],
+  );
 
   const handleValuesChanged = useCallback<NonNullable<FormRootProps<PropertyType>['onValuesChanged']>>(
     (_props) => {

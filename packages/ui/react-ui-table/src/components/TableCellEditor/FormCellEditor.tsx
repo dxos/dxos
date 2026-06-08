@@ -5,8 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Entity, Type } from '@dxos/echo';
-import { Ref, getValue } from '@dxos/echo/internal';
+import { Entity, Ref, Type } from '@dxos/echo';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
@@ -152,7 +152,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
         .map((obj) => {
           return {
             id: Entity.getURI(obj),
-            label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
+            label: SchemaEx.getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
           };
         })
         .filter(isTruthy),
