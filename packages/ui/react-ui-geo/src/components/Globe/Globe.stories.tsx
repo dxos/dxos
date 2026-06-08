@@ -13,6 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { loadTopology } from '../../data';
 import {
+  type GlobeController,
   type Level,
   type Vector,
   useDrag,
@@ -26,7 +27,7 @@ import {
 import { type LatLngLiteral } from '../../types';
 import { type StyleSet, closestPoint } from '../../util';
 import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
+import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe';
 
 const defaultStyles: StyleSet = {
   water: {

@@ -14,6 +14,7 @@
 
 import React, {
   type ComponentProps,
+  Fragment,
   type PropsWithChildren,
   type ReactNode,
   createContext,
@@ -103,7 +104,13 @@ const ToolListContent = composable<HTMLDivElement, ToolListContentProps>(
     <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
       {({ items }) => (
         <div {...composableProps(props, { role: 'listbox', classNames: 'flex flex-col gap-px' })} ref={forwardedRef}>
-          {items?.map((tool) => (renderItem ? renderItem(tool) : <ToolListItem key={tool.id} tool={tool} />))}
+          {items?.map((tool) =>
+            renderItem ? (
+              <Fragment key={tool.id}>{renderItem(tool)}</Fragment>
+            ) : (
+              <ToolListItem key={tool.id} tool={tool} />
+            ),
+          )}
         </div>
       )}
     </NaturalList.Root>

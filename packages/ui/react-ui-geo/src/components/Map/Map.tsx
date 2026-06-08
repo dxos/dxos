@@ -203,7 +203,16 @@ const MapPinchZoom = () => {
  * container element, so the forwarded DOM ref can't be attached and is intentionally unused.
  */
 const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
-  const { scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...rest } = props;
+  const {
+    scrollWheelZoom = true,
+    doubleClickZoom = true,
+    touchZoom = true,
+    center,
+    zoom,
+    whenReady,
+    children,
+    ...rest
+  } = props;
   const { attention, registerMap } = useMapContext(MAP_VIEWPORT_NAME);
   // Local copy of the leaflet map for this component's own effects; also registered with Map.Root.
   const [map, setMap] = useState<L.Map | null>(null);
@@ -247,7 +256,7 @@ const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwar
       zoomSnap={0}
       center={center ?? defaults.center}
       zoom={zoom ?? defaults.zoom}
-      whenReady={() => {}}
+      whenReady={whenReady}
       ref={setMapRef}
     >
       <MapResize />

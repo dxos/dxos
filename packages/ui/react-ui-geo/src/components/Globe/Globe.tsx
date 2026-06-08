@@ -62,10 +62,6 @@ import {
 } from '../../util';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
-// The controller type definitions live in `hooks/context.tsx` (to avoid a hooks→components import
-// cycle); re-export them here so existing importers of `./Globe` keep working.
-export type { GlobeController, FlyToTarget, FlyToOptions } from '../../hooks';
-
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
  */
@@ -244,18 +240,8 @@ type GlobeCanvasProps = {
 const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: stylesProp }: GlobeCanvasProps) => {
   const { themeMode } = useThemeContext();
   const styles = useMemo(() => stylesProp ?? defaultStyles[themeMode], [stylesProp, themeMode]);
-  const {
-    size,
-    center,
-    zoom,
-    translation,
-    rotation,
-    setCenter,
-    setZoom,
-    setTranslation,
-    setRotation,
-    registerController,
-  } = useGlobeContext();
+  const { size, center, zoom, translation, rotation, setZoom, setTranslation, setRotation, registerController } =
+    useGlobeContext();
 
   const zoomRef = useDynamicRef(zoom);
 
@@ -299,13 +285,11 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
     return {
       canvas,
       projection,
-      center,
       get zoom() {
         return zoomRef.current;
       },
       translation,
       rotation,
-      setCenter,
       setZoom: (state) => {
         if (typeof state === 'function') {
           const is = interpolateNumber(zoomRef.current, state(zoomRef.current));

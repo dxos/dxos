@@ -44,7 +44,7 @@ const Root = ({ children, open: openProp, defaultOpen = false, duration = 250, o
 
   useEffect(() => {
     onChangeOpen?.(open);
-  }, [open]);
+  }, [open, onChangeOpen]);
 
   return (
     <TogglePanelContext duration={duration} open={open} setOpen={setOpen}>
