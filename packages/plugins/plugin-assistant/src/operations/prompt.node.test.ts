@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -33,7 +33,9 @@ describe('Agent prompt (composer plugin harness)', () => {
         plugins: [ClientPlugin({}), AssistantPlugin(), AutomationPlugin()],
       });
 
-      const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+      const { personalSpace } = await EffectEx.runAndForwardErrors(
+        initializeIdentity(harness.get(ClientCapabilities.Client)),
+      );
 
       await harness.runPromise(
         Effect.gen(function* () {

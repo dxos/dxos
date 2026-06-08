@@ -10,7 +10,7 @@ import React, { type ComponentProps, useMemo } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 
 import { IntegrationAuthButton } from '#components';
@@ -66,7 +66,7 @@ export default Capability.makeModule(() =>
           if (!fieldAst) {
             return false;
           }
-          const annotation = findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>(fieldAst, IntegrationProviderAnnotationId);
           return !!annotation;
         },
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {

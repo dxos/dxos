@@ -55,6 +55,8 @@ export const UpdateChatName = Operation.make({
   services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
+    /** Initial user message text; used when the feed has no history yet (e.g. auto-rename on first send). */
+    prompt: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });

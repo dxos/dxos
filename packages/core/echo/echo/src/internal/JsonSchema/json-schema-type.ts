@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { JsonPath, type JsonProp } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 import { type Mutable } from '../common/proxy';
 import { EntityKindSchema } from '../common/types';
@@ -34,7 +34,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * Label for this schema.
    * Mapped from {@link LabelAnnotationId}.
    */
-  labelProp: Schema.optional(Schema.Union(JsonPath, Schema.Array(JsonPath))),
+  labelProp: Schema.optional(Schema.Union(SchemaEx.JsonPath, Schema.Array(SchemaEx.JsonPath))),
 
   /**
    * Generator function for this schema.
@@ -339,14 +339,14 @@ export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType;
 
 // TODO(burdon): Factor out JSON schema utils.
 
-export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): JsonSchemaType | undefined => {
+export const getSchemaProperty = (schema: JsonSchemaType, property: SchemaEx.JsonProp): JsonSchemaType | undefined => {
   return schema.properties?.[property];
 };
 
 // TODO(burdon): Properties should be ordered.
 export const setSchemaProperty = (
   schema: Mutable<JsonSchemaType>,
-  property: JsonProp,
+  property: SchemaEx.JsonProp,
   value: Mutable<JsonSchemaType>,
 ) => {
   schema.properties ??= {};

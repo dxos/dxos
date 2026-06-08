@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { Annotation } from '@dxos/echo';
-import { getProperties } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 import { Place } from './Place';
 import * as Segment from './Segment';
@@ -15,13 +15,13 @@ describe('Segment schemas', () => {
   test('transport variants extend the shared TransportFields', ({ expect }) => {
     // `Schema.extend` merges the shared transport fields with each variant's own fields,
     // producing a traversable type literal that the form layout can resolve against.
-    const names = getProperties(Segment.FlightDetails.ast).map((prop) => String(prop.name));
+    const names = SchemaEx.getProperties(Segment.FlightDetails.ast).map((prop) => String(prop.name));
     expect(names).toEqual(expect.arrayContaining(['_tag', 'origin', 'destination', 'departAt', 'arriveAt', 'number']));
     // Flight-specific fields are present too.
     expect(names).toEqual(expect.arrayContaining(['terminalFrom', 'gateFrom']));
 
     // Train carries the shared fields plus its own.
-    const trainNames = getProperties(Segment.TrainDetails.ast).map((prop) => String(prop.name));
+    const trainNames = SchemaEx.getProperties(Segment.TrainDetails.ast).map((prop) => String(prop.name));
     expect(trainNames).toEqual(expect.arrayContaining(['origin', 'destination', 'platform', 'coach']));
   });
 

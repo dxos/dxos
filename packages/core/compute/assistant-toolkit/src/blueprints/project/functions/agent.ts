@@ -9,7 +9,7 @@ import { AiService } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { ContentBlock } from '@dxos/types';
 
@@ -32,7 +32,7 @@ export default AgentWorker.pipe(
       );
       invariant(chatFeed, 'Agent chat feed not found.');
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
+      const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
 
       const agentsInContext = session.context.getObjects().filter(Obj.instanceOf(Agent.Agent));
       if (agentsInContext.length !== 1) {

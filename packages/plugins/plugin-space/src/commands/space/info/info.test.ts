@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './info';
 
@@ -28,5 +28,5 @@ describe('space info', () => {
       expect(parsed).toHaveProperty('state');
       expect(parsed).toHaveProperty('key');
       expect(parsed.id).toBe(space.id);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

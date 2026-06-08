@@ -121,11 +121,13 @@ export const bind = <S extends object = Record<string, unknown>>(host: Obj.Any, 
     },
     patch: (id, patch) =>
       write((record) => {
+        // Initialize the sub-map via the ECHO proxy so all subsequent field writes
+        // go through the proxy rather than a detached plain object (same principle
+        // as TagIndex push/splice: never replace a live proxy value with a plain object).
         if (!has(record, id)) {
-          record[id] = { ...patch };
-        } else {
-          Object.assign(record[id], patch);
+          record[id] = {};
         }
+        Object.assign(record[id], patch);
       }),
     remove: (id) =>
       write((record) => {

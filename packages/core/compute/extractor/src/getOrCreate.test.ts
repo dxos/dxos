@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { getOrCreate } from './getOrCreate';
 import { fromResolvers } from './Resolver';
@@ -45,7 +45,7 @@ describe('getOrCreate', () => {
     const candidate = Obj.make(Contact, { email: 'new@example.test', name: 'New Person' });
     const { object, created } = await getOrCreate(Contact, candidate, { identity: { email: 'new@example.test' } })
       .pipe(Effect.provide(resolverLayer()))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(created).toBe(true);
     expect(object).toBe(candidate);
@@ -65,7 +65,7 @@ describe('getOrCreate', () => {
       },
     })
       .pipe(Effect.provide(resolverLayer()))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(created).toBe(false);
     expect(object.id).toBe(existing.id);
@@ -76,7 +76,7 @@ describe('getOrCreate', () => {
     const candidate = Obj.make(Contact, { email: 'any@example.test' });
     const { created } = await getOrCreate(Contact, candidate)
       .pipe(Effect.provide(resolverLayer()))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(created).toBe(true);
   });

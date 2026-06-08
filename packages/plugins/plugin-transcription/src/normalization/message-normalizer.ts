@@ -8,7 +8,7 @@ import type * as Runtime from 'effect/Runtime';
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Feed, Filter } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -55,7 +55,7 @@ export class MessageNormalizer extends Resource {
 
     const queryResult = await Feed.query(this._feed, Filter.type(Message.Message)).pipe(
       Effect.provide(this._feedRuntime),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
 
     const updateMessages = () => {
@@ -116,6 +116,6 @@ export class MessageNormalizer extends Resource {
     log.info('writing messages', { messages });
     const lastMessage = messages[messages.length - 1];
     this._cursor.timestamp = lastMessage.created;
-    await Feed.append(this._feed, messages).pipe(Effect.provide(this._feedRuntime), runAndForwardErrors);
+    await Feed.append(this._feed, messages).pipe(Effect.provide(this._feedRuntime), EffectEx.runAndForwardErrors);
   }
 }

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
-import { type JsonPath, createJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 const TestSchema = Schema.Struct({
   name: Schema.String,
@@ -81,7 +81,7 @@ describe('json-schema', () => {
   });
 
   test('path', () => {
-    const path = createJsonPath(['identities', 0, 'type']);
+    const path = SchemaEx.createJsonPath(['identities', 0, 'type']);
     console.log(path.toString());
   });
 
@@ -91,7 +91,7 @@ describe('json-schema', () => {
     // New property.
     addProperty({
       root: jsonSchema,
-      path: createJsonPath([]),
+      path: SchemaEx.createJsonPath([]),
       name: 'website',
       schema: JsonSchema.toJsonSchema(Schema.String),
       optional: false,
@@ -100,7 +100,7 @@ describe('json-schema', () => {
     // New property.
     addProperty({
       root: jsonSchema,
-      path: createJsonPath(['identities', 0]),
+      path: SchemaEx.createJsonPath(['identities', 0]),
       name: 'value',
       schema: JsonSchema.toJsonSchema(
         Schema.Struct({
@@ -121,7 +121,7 @@ describe('json-schema', () => {
       console.log(pathString.padEnd(32), typeString.padEnd(8), isSchemaOptional(context));
     });
 
-    // Root path is empty JsonPath.
+    // Root path is empty SchemaEx.JsonPath.
     expect(paths).toContain('');
     // Direct properties on the root object.
     expect(paths).toContain('name');
@@ -136,7 +136,7 @@ describe('json-schema', () => {
 export type SchemaContext = {
   parentSchema: JsonSchema.JsonSchema | null;
   propertyNameOrIndex: string | number | null;
-  path: JsonPath;
+  path: SchemaEx.JsonPath;
 };
 
 /**
@@ -160,7 +160,7 @@ export function traverseJsonSchema(
   const context: SchemaContext = {
     parentSchema,
     propertyNameOrIndex,
-    path: createJsonPath(segments),
+    path: SchemaEx.createJsonPath(segments),
   };
 
   const result = callback(schema, context);
@@ -253,7 +253,7 @@ export function isSchemaOptional(context: SchemaContext): boolean {
 
 export type AddNewPropertyProps = {
   root: JsonSchema.JsonSchema;
-  path: JsonPath;
+  path: SchemaEx.JsonPath;
   name: string;
   schema: JsonSchema.JsonSchema;
   optional: boolean;

@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 
@@ -36,7 +36,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
       const paths = Object.keys(changed).filter((path) => changed[path]);
       Obj.update(segment, () => {
         for (const path of paths) {
-          const parts = splitJsonPath(path as JsonPath);
+          const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
           const value = Obj.getValue(values as any, parts);
           Obj.setValue(segment, parts, value);
         }

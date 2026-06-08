@@ -8,7 +8,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -40,7 +40,7 @@ export const CreateSpaceDialog = () => {
           yield* Effect.promise(() => invokePromise(LayoutOperation.UpdateDialog, { state: false }));
         }
       });
-      await runAndForwardErrors(program);
+      await EffectEx.runAndForwardErrors(program);
     },
     [invokePromise],
   );

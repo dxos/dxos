@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Database, Feed, Filter, Query } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -72,7 +72,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
     );
 
     return () => {
-      void runAndForwardErrors(Fiber.interrupt(fiber));
+      void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
     };
   }, [space, feed, generator, delay]);
 
