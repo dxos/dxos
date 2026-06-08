@@ -4,7 +4,6 @@
 
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ServiceResolver } from '@dxos/compute';
