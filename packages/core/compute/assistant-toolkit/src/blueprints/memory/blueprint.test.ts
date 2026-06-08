@@ -15,14 +15,13 @@ import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { EntityId } from '@dxos/keys';
 
 import { Memory } from '../../types/Memory';
-import { WebSearchBlueprint, WebSearchToolkit } from '../websearch';
+import { WebSearchToolkit } from '../websearch';
 import MemoryBlueprint from './blueprint';
 import { MemoryHandlers } from './operations';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
   operationHandlers: MemoryHandlers,
   types: [Memory, Blueprint.Blueprint, Feed.Feed],
   blueprints: [MemoryBlueprint.make()],
@@ -30,11 +29,10 @@ const TestLayer = AssistantTestLayer({
 });
 
 const TestLayerWithWebSearch = AssistantTestLayer({
-  aiServicePreset: 'edge-remote',
   operationHandlers: MemoryHandlers,
   toolkits: [OpaqueToolkit.make(WebSearchToolkit, Layer.empty)],
   types: [Memory, Blueprint.Blueprint, Feed.Feed],
-  blueprints: [MemoryBlueprint.make(), WebSearchBlueprint.make()],
+  blueprints: [MemoryBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -115,7 +113,7 @@ describe('Memory Blueprint', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          blueprints: [MemoryBlueprint.make(), WebSearchBlueprint.make()],
+          blueprints: [MemoryBlueprint.make()],
         });
         yield* agent.submitPrompt(
           "I'm going to LA next week. Find me some good hotels and remember the recommendations.",
