@@ -106,7 +106,16 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 const iso = fromDateInput(value);
                 if (iso) {
                   update((event) => {
+                    const previousStart = parseDate(event.startDate);
+                    const previousEnd = parseDate(event.endDate);
+                    // Preserve the current duration so the end stays after the new start.
+                    const duration =
+                      previousStart && previousEnd ? differenceInMinutes(previousEnd, previousStart) : 0;
                     event.startDate = iso;
+                    event.endDate = addMinutes(
+                      new Date(iso),
+                      Math.max(duration, MIN_DURATION_MINUTES),
+                    ).toISOString();
                   });
                 }
               }}
@@ -131,7 +140,12 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                   const iso = fromDateInput(value);
                   if (iso) {
                     update((event) => {
-                      event.endDate = iso;
+                      const startDate = parseDate(event.startDate);
+                      // The end must stay after the start; clamp to a minimum duration otherwise.
+                      event.endDate =
+                        startDate && new Date(iso) <= startDate
+                          ? addMinutes(startDate, MIN_DURATION_MINUTES).toISOString()
+                          : iso;
                     });
                   }
                 }}
@@ -161,6 +175,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     </>
   );
 };
+
+/** Minimum event duration (minutes) enforced to keep the end after the start. */
+const MIN_DURATION_MINUTES = 15;
 
 /** Duration presets (minutes) offered as an alternative to picking an explicit end time. */
 // TODO(burdon): Translations.
