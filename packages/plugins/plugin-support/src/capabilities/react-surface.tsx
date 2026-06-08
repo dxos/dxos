@@ -6,8 +6,11 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Annotation, Obj } from '@dxos/echo';
+import { useClient } from '@dxos/react-client';
 
 import { SupportSettings } from '#components';
 import {
@@ -24,7 +27,8 @@ import {
 import { meta } from '#meta';
 import { Settings, Support } from '#types';
 
-import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
+import { WelcomeDismissedAnnotation } from '../annotations';
+import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -95,7 +99,20 @@ export default Capability.makeModule(() =>
         filter: AppSurface.settings(AppSurface.Article, meta.id),
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <SupportSettings settings={settings} onSettingsChange={updateSettings} />;
+          const client = useClient();
+          const { invokePromise } = useOperationInvoker();
+          const handleShowWelcome = () => {
+            const personal = getPersonalSpace(client);
+            if (!personal) {
+              return;
+            }
+            Obj.update(personal.properties, (props) => Annotation.set(props, WelcomeDismissedAnnotation, false));
+            const workspace = getSpacePath(personal.id);
+            void invokePromise(LayoutOperation.Open, { subject: [`${workspace}/${SPACE_HOME_NODE_ID}`], workspace });
+          };
+          return (
+            <SupportSettings settings={settings} onSettingsChange={updateSettings} onShowWelcome={handleShowWelcome} />
+          );
         },
       }),
     ]),
