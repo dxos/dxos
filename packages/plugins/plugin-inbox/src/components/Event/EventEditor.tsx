@@ -5,7 +5,8 @@
 import { addMinutes, differenceInMinutes, format } from 'date-fns';
 import React, { useState } from 'react';
 
-import { Obj, type Database } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Card, DatePicker, Input, Select, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
@@ -81,31 +82,24 @@ const DateTimeField = ({
 
 /**
  * Editable form for an event's title, all-day flag, start, and end (explicit or via a duration preset).
- * Used for draft events; mutates the live ECHO object in place.
+ * Used for draft events. Subscribes to the live ECHO object via `useObject` so edits re-render the
+ * controlled inputs; mutations go through its update callback.
  */
 export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
   const { t } = useTranslation(meta.id);
-  const allDay = !!event.allDay;
-  const start = parseDate(event.startDate);
-  const end = parseDate(event.endDate);
+  const [data, update] = useObject(event);
+
+  const allDay = !!data.allDay;
+  const start = parseDate(data.startDate);
+  const end = parseDate(data.endDate);
   const durationMinutes = start && end ? differenceInMinutes(end, start) : undefined;
   const presetValue = DURATION_PRESETS.find((preset) => Number(preset.value) === durationMinutes)?.value;
   // Start in "custom end" mode when the current duration doesn't match a preset.
   const [customEnd, setCustomEnd] = useState(presetValue === undefined);
 
-  const setTitle = (title: string) =>
-    Obj.update(event, (event) => {
-      event.title = title;
-    });
-
-  const setAllDay = (next: boolean) =>
-    Obj.update(event, (event) => {
-      event.allDay = next;
-    });
-
   // When in duration mode, moving the start preserves the duration.
   const setStart = (iso: string) =>
-    Obj.update(event, (event) => {
+    update((event) => {
       event.startDate = iso;
       if (!customEnd && durationMinutes != null) {
         event.endDate = addMinutes(new Date(iso), durationMinutes).toISOString();
@@ -113,7 +107,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     });
 
   const setEnd = (iso: string) =>
-    Obj.update(event, (event) => {
+    update((event) => {
       event.endDate = iso;
     });
 
@@ -123,7 +117,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       return;
     }
     setCustomEnd(false);
-    Obj.update(event, (event) => {
+    update((event) => {
       event.endDate = addMinutes(start ?? new Date(), Number(value)).toISOString();
     });
   };
@@ -134,8 +128,12 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         <Input.Root>
           <Input.TextInput
             placeholder={t('event-untitled.label')}
-            value={event.title ?? ''}
-            onChange={(ev) => setTitle(ev.target.value)}
+            value={data.title ?? ''}
+            onChange={(ev) =>
+              update((event) => {
+                event.title = ev.target.value;
+              })
+            }
           />
         </Input.Root>
       </Card.Row>
@@ -143,19 +141,26 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       <Card.Row icon='ph--clock--regular'>
         <Input.Root>
           <div className='flex items-center gap-2'>
-            <Input.Switch checked={allDay} onCheckedChange={setAllDay} />
+            <Input.Switch
+              checked={allDay}
+              onCheckedChange={(next) =>
+                update((event) => {
+                  event.allDay = next;
+                })
+              }
+            />
             <Input.Label>{t('event-all-day.label')}</Input.Label>
           </div>
         </Input.Root>
       </Card.Row>
 
       <Card.Row icon='ph--calendar--regular'>
-        <DateTimeField value={event.startDate} withTime={!allDay} onChange={setStart} />
+        <DateTimeField value={data.startDate} withTime={!allDay} onChange={setStart} />
       </Card.Row>
 
       {allDay ? (
         <Card.Row icon='ph--calendar-dots--regular'>
-          <DateTimeField value={event.endDate} withTime={false} onChange={setEnd} />
+          <DateTimeField value={data.endDate} withTime={false} onChange={setEnd} />
         </Card.Row>
       ) : (
         <Card.Row icon='ph--hourglass--regular'>
@@ -175,12 +180,12 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-            {customEnd && <DateTimeField value={event.endDate} withTime onChange={setEnd} />}
+            {customEnd && <DateTimeField value={data.endDate} withTime onChange={setEnd} />}
           </div>
         </Card.Row>
       )}
 
-      {event.attendees.map((attendee, index) => (
+      {data.attendees.map((attendee, index) => (
         <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
       ))}
     </>
