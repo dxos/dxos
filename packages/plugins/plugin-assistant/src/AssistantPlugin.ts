@@ -22,7 +22,6 @@ import {
   AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
-  NavigationResolver,
   AssistantState,
   BlueprintDefinition,
   CompanionChatProvisioner,
@@ -47,7 +46,6 @@ const StateReady = AppActivationEvents.createStateEvent(meta.id);
 
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

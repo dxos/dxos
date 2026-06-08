@@ -12,6 +12,7 @@ import {
   AppNode,
   LayoutOperation,
   createTypeSectionExtension,
+  createTypeSectionPathResolver,
   getActiveSpace,
   getPersonalSpace,
 } from '@dxos/app-toolkit';
@@ -244,6 +245,9 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return [
+      Capability.contributes(AppCapabilities.AppGraphBuilder, extensions),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Chat.Chat)),
+    ];
   }),
 );
