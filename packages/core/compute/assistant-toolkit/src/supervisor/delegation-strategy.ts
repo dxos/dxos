@@ -10,7 +10,7 @@ import { AiContext } from '@dxos/assistant';
 import { Routine } from '@dxos/compute';
 import { Supervisor } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type Delegation, type DelegationStrategy } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -98,7 +98,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // recursively delegate. Resolved from the conversation's AiContext bindings.
       const inheritedBlueprints = yield* Effect.gen(function* () {
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+        const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return binder.getBlueprints().filter((blueprint) => Obj.getMeta(blueprint).key !== DelegationBlueprint.key);
       }).pipe(Effect.scoped);
       const blueprints = inheritedBlueprints.map((blueprint) => Ref.make(blueprint));
