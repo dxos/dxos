@@ -17,17 +17,9 @@ import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSp
 import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-import {
-  AssistantCapabilities,
-  AssistantOperation,
-  ChatPrompt,
-  type ChatEvent,
-  type ChatType,
-  useChatProcessor,
-  useChatServices,
-  useOnline,
-  usePresets,
-} from '@dxos/plugin-assistant';
+import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
+import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
+import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';

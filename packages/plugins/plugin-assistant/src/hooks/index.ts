@@ -15,3 +15,6 @@ export * from './useFlush';
 export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
+
+// TODO(wittjosiah): Factor AiChatProcessor out of plugin-assistant into a standalone package.
+export { type AiChatProcessor } from '../processor';
