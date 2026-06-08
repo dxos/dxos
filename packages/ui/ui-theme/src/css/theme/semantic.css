@@ -20,8 +20,8 @@
    *   3    canvas  base, deck
    *   4    raised  card, group, input
    *   5    bar     toolbar (sticky, drop-shadowed)
-   *   6    modal   dialog, modal
-   *   7    float   popover, menu, toast, tooltip
+   *   6    modal   dialog, modal, popover
+   *   7    float   menu, toast, tooltip
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
