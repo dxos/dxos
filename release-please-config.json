@@ -1090,6 +1090,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-audio/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-board/package.json",
           "jsonpath": "$.version"
         },
@@ -1131,6 +1136,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-experimental/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1201,11 +1211,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-search/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-sfx/package.json",
           "jsonpath": "$.version"
         },
         {
