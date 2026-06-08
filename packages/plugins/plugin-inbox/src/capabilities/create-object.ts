@@ -14,6 +14,8 @@ import { Event, Message } from '@dxos/types';
 import { InboxOperation } from '#types';
 import { Calendar, Mailbox } from '#types';
 
+import { getCalendarsPath } from '../paths';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
@@ -52,7 +54,7 @@ export default Capability.makeModule(
               object,
               target: options.target,
               hidden: true,
-              targetNodeId: options.targetNodeId,
+              targetNodeId: options.targetNodeId ?? getCalendarsPath(options.db.spaceId),
             });
           }),
       }),

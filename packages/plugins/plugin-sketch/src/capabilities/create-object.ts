@@ -12,6 +12,8 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { Sketch } from '#types';
 
+import { getSketchesPath } from '../paths';
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
@@ -23,7 +25,7 @@ export default Capability.makeModule(
             object,
             target: options.target,
             hidden: true,
-            targetNodeId: options.targetNodeId,
+            targetNodeId: options.targetNodeId ?? getSketchesPath(options.db.spaceId),
           });
         }),
     });
