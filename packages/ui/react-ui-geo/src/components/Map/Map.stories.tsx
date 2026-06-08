@@ -25,7 +25,7 @@ const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
   return (
     <Panel.Root>
       {urlProp && (
-        <Panel.Toolbar>
+        <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Input.Root>
               <Input.TextInput
@@ -38,16 +38,18 @@ const DefaultStory = ({ url: urlProp, markers = [] }: DefaultStoryProps) => {
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content>
-        <Map.Root ref={setController}>
+      {/* Map.Root is headless (context only), so it sits outside Panel.Content; Panel.Content asChild
+          then targets the Leaflet frame (Map.Content) directly — no extra wrapper element. */}
+      <Map.Root ref={setController}>
+        <Panel.Content asChild>
           <Map.Content>
             <Map.Tiles url={url} />
             <Map.Markers markers={markers} />
             <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
             <Map.Action position='bottomright' />
           </Map.Content>
-        </Map.Root>
-      </Panel.Content>
+        </Panel.Content>
+      </Map.Root>
     </Panel.Root>
   );
 };

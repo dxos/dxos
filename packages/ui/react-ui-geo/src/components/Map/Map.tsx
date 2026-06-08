@@ -28,7 +28,7 @@ import {
 } from 'react-leaflet';
 
 import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import { composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types';
@@ -197,16 +197,11 @@ const MapPinchZoom = () => {
   return null;
 };
 
-const MapContent = ({
-  classNames,
-  scrollWheelZoom = true,
-  doubleClickZoom = true,
-  touchZoom = true,
-  center,
-  zoom,
-  children,
-  ...props
-}: MapContentProps) => {
+// Map.Content is the focusable Leaflet frame. It can be the target of a parent `<Panel.Content asChild>`
+// (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
+// container element, so the forwarded DOM ref can't be attached and is intentionally unused.
+const MapContent = forwardRef<HTMLDivElement, MapContentProps>((props, _forwardedRef) => {
+  const { scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...rest } = props;
   const { attention, registerMap } = useMapContext(MAP_CONTENT_NAME);
   // Local copy of the leaflet map for this component's own effects; also registered with Map.Root.
   const [map, setMap] = useState<L.Map | null>(null);
@@ -237,9 +232,10 @@ const MapContent = ({
 
   return (
     <MapContainer
-      {...props}
-      // Frame classes (formerly on Map.Root): focusable grid container.
-      className={mx('dx-container group relative grid dx-focus-ring-inset bg-base-surface!', classNames)}
+      {...composableProps(rest, {
+        // Frame classes (formerly on Map.Root): focusable grid container.
+        classNames: 'dx-container group relative grid dx-focus-ring-inset bg-base-surface!',
+      })}
       attributionControl={false}
       zoomControl={false}
       scrollWheelZoom={scrollWheelZoom}
@@ -257,7 +253,7 @@ const MapContent = ({
       {children}
     </MapContainer>
   );
-};
+});
 
 MapContent.displayName = 'Map.Content';
 
