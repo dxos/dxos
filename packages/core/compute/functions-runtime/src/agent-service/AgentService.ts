@@ -157,6 +157,9 @@ export const layer = (opts?: {
         });
 
       const hydrateAgents = Effect.fnUntraced(function* () {
+        // Handles cached before shutdown are suspended and no longer registered with the manager.
+        sessionCache.clear();
+
         const executable = makeExecutable();
         const agents = yield* processManager.list({ key: AGENT_PROCESS_KEY });
         log('agent hydrate', { count: agents.length });

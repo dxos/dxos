@@ -30,9 +30,9 @@ const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 const DEBUG_TIMEOUT_MS = 3_600_000;
 
-// Node-only Vitest NDJSON file sink (@dxos/log/vitest). Edge can reuse the same modules for Miniflare tail bridges.
-const VITEST_LOG_GLOBAL_SETUP = new URL('./packages/common/log/src/vitest/global-setup.ts', import.meta.url).pathname;
-const VITEST_LOG_SETUP = new URL('./packages/common/log/src/vitest/setup.ts', import.meta.url).pathname;
+// Node-only Vitest NDJSON file sink (@dxos/vite-plugin-log/vitest). Relative paths avoid a moon dep cycle.
+const VITEST_LOG_GLOBAL_SETUP = new URL('./tools/vite-plugin-log/src/vitest/global-setup.ts', import.meta.url).pathname;
+const VITEST_LOG_SETUP = new URL('./tools/vite-plugin-log/src/vitest/setup.ts', import.meta.url).pathname;
 
 // Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
 // `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level

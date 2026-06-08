@@ -7,12 +7,14 @@ import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
+import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -53,6 +55,23 @@ const Failing = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Per-test gate for {@link SlowChild}; set in the repro test before spawning the parent.
+ */
+const SlowChildGate = {
+  taskSignal: undefined as Queue.Queue<void> | undefined,
+  completeDeferred: undefined as Deferred.Deferred<void> | undefined,
+  alarmStarted: undefined as Deferred.Deferred<void> | undefined,
+  alarmResume: undefined as Deferred.Deferred<void> | undefined,
+  alarmHandlerFinished: undefined as Ref.Ref<boolean> | undefined,
+};
+
+const SlowChild = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.slowChild'), name: 'SlowChild' },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Number,
+});
+
 const handlers = OperationHandlerSet.make(
   Double.pipe(
     Operation.withHandler(
@@ -68,7 +87,53 @@ const handlers = OperationHandlerSet.make(
       }),
     ),
   ),
+  SlowChild.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ value }) {
+        if (SlowChildGate.taskSignal === undefined || SlowChildGate.completeDeferred === undefined) {
+          return yield* Effect.die('SlowChild gate not initialized');
+        }
+        yield* Queue.offer(SlowChildGate.taskSignal, undefined);
+        yield* Deferred.await(SlowChildGate.completeDeferred);
+        return value;
+      }),
+    ),
+  ),
 );
+
+/**
+ * Parent whose alarm handler invokes {@link SlowChild} and blocks until it completes.
+ * Mirrors agent-process awaiting an async tool call during shutdown.
+ */
+const makeParentAwaitingChild = () =>
+  Process.make(
+    {
+      key: 'test.parent-awaiting-child',
+      input: Schema.Void,
+      output: Schema.Void,
+      services: [ProcessManager.ProcessOperationInvoker.Service],
+    },
+    (ctx) =>
+      Effect.succeed({
+        onSpawn: () => Effect.void,
+        onInput: () =>
+          Effect.sync(() => {
+            ctx.setAlarm(0);
+          }),
+        onAlarm: () =>
+          Effect.gen(function* () {
+            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+            // Detach child invocation so the alarm handler can block on external completion,
+            // matching agent-process awaiting an async tool call at shutdown.
+            yield* Deferred.succeed(SlowChildGate.alarmStarted!, undefined);
+            yield* Effect.fork(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+            yield* Deferred.await(SlowChildGate.alarmResume!);
+            yield* Ref.set(SlowChildGate.alarmHandlerFinished!, true);
+            ctx.succeed();
+          }),
+        onChildEvent: () => Effect.void,
+      }),
+  );
 
 /**
  * Never exits keeps adding numbers to the accumulator.
@@ -874,6 +939,129 @@ describe('durability', () => {
       // onSpawn NOT re-run because its event already settled; alarm re-armed instead.
       expect(spawnCount).toEqual(1);
       yield* (yield* managerB.attach(handle.pid)).terminate();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'hydrating parent blocks until interrupted alarm handler is resumed externally',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const alarmStarted = yield* Deferred.make<void>();
+      const alarmResume = yield* Deferred.make<void>();
+      const alarmHandlerFinished = yield* Ref.make(false);
+      const blockingParent = Process.make(
+        {
+          key: 'test.blocking-alarm-hydrate',
+          input: Schema.Void,
+          output: Schema.Void,
+          services: [],
+        },
+        (ctx) =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () =>
+              Effect.sync(() => {
+                ctx.setAlarm(0);
+              }),
+            onAlarm: () =>
+              Effect.gen(function* () {
+                yield* Deferred.succeed(alarmStarted, undefined);
+                yield* Deferred.await(alarmResume);
+                yield* Ref.set(alarmHandlerFinished, true);
+              }),
+            onChildEvent: () => Effect.void,
+          }),
+      );
+
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const handle = yield* managerA.spawn(blockingParent);
+      yield* handle.submitInput(undefined);
+      yield* Deferred.await(alarmStarted);
+
+      yield* managerA.shutdown();
+
+      const store = new ProcessStore(kv);
+      const parentRecord = yield* store.getProcess(handle.pid);
+      expect(parentRecord?.events.map((event) => event._tag)).toContain('alarm');
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormant = yield* managerB.list({ key: blockingParent.key });
+      expect(dormant).toHaveLength(1);
+
+      // `hydrate` redelivers the unsettled alarm event synchronously — callers cannot proceed
+      // until the handler is resumed out-of-band (AgentService deadlock during tool calls).
+      const hydrateFiber = yield* dormant[0].hydrate(blockingParent).pipe(Effect.fork);
+
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 100)));
+      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
+
+      yield* Deferred.succeed(alarmResume, undefined);
+      yield* Fiber.join(hydrateFiber);
+      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(true);
+
+      const restored = yield* managerB.attach(handle.pid);
+      expect(restored.status.state).toEqual(Process.State.IDLE);
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'hydrating parent blocks until redelivered alarm child is completed externally',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      SlowChildGate.taskSignal = yield* Queue.unbounded();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      SlowChildGate.alarmStarted = yield* Deferred.make<void>();
+      SlowChildGate.alarmResume = yield* Deferred.make<void>();
+
+      const parentExecutable = makeParentAwaitingChild();
+      const childKey = DXN.getName(SlowChild.meta.key);
+
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const handle = yield* managerA.spawn(parentExecutable);
+      yield* handle.submitInput(undefined);
+      yield* Deferred.await(SlowChildGate.alarmStarted);
+      yield* Queue.take(SlowChildGate.taskSignal);
+
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParents = yield* managerB.list({ key: parentExecutable.key });
+      expect(dormantParents).toHaveLength(1);
+
+      const dormantChildren = yield* managerB.list({ key: childKey });
+      expect(dormantChildren.length).toBeGreaterThanOrEqual(1);
+
+      const alarmHandlerFinished = yield* Ref.make(false);
+      SlowChildGate.alarmHandlerFinished = alarmHandlerFinished;
+
+      const hydrateFiber = yield* dormantParents[0].hydrate(parentExecutable).pipe(Effect.fork);
+      yield* Queue.take(SlowChildGate.taskSignal);
+
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 100)));
+      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
+
+      yield* Deferred.succeed(SlowChildGate.alarmResume, undefined);
+      yield* Fiber.join(hydrateFiber);
+      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(true);
+
+      const restored = yield* managerB.attach(handle.pid);
+      expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
+
+      SlowChildGate.taskSignal = undefined;
+      SlowChildGate.completeDeferred = undefined;
+      SlowChildGate.alarmStarted = undefined;
+      SlowChildGate.alarmResume = undefined;
+      SlowChildGate.alarmHandlerFinished = undefined;
     }, Effect.provide(DurabilityTestLayer)),
   );
 

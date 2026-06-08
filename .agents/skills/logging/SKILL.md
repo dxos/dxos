@@ -61,9 +61,9 @@ LOG_FILTER=debug moon run functions-runtime:test -- AgentService.test.ts
 
 Use **`trace`** for maximum noise, **`info`** for quieter runs, or a path-scoped value (e.g. `AgentService:debug`, `functions-runtime:debug`) to narrow output. This does **not** write `app.log`; it only affects the **console processor** during that command.
 
-## Tests: NDJSON file sink (`@dxos/log/vitest`)
+## Tests: NDJSON file sink (`@dxos/vite-plugin-log/vitest`)
 
-Node Vitest projects wire **`@dxos/log/vitest`** via `vitest.base.config.ts` (`global-setup` truncates once; per-worker `setup` installs a file processor). Logs flow: **`@dxos/log` → `serializeToJsonl` → `JsonlFileLogStore` → `<package>/test.log`** (NDJSON, compatible with `scripts/query-logs.mjs`).
+Node Vitest projects wire **`@dxos/vite-plugin-log/vitest`** via `vitest.base.config.ts` (`global-setup` truncates once; per-worker `setup` installs a file processor). Logs flow: **`@dxos/log` → `serializeToJsonl` → `JsonlFileLogStore` → `<package>/test.log`** (NDJSON, compatible with `scripts/query-logs.mjs`).
 
 | Env | Role |
 | --- | --- |
@@ -76,7 +76,7 @@ LOG_FILTER=lifecycle:debug moon run functions-runtime:test -- AgentService.test.
 node scripts/query-logs.mjs packages/core/compute/functions-runtime/test.log -q lifecycle:debug
 ```
 
-Exported for reuse (e.g. edge Miniflare tail → `JsonlFileLogStore.pushLines`): `JsonlFileLogStore`, `installNodeLogProcessor`, `resolveTestLogFilePath`, `truncateTestLogFile` from **`@dxos/log/vitest`**.
+Exported for reuse (e.g. edge Miniflare tail → `JsonlFileLogStore.pushLines`): `JsonlFileLogStore`, `installNodeLogProcessor`, `resolveTestLogFilePath`, `truncateTestLogFile` from **`@dxos/vite-plugin-log/vitest`**.
 
 ## Querying logs: `scripts/query-logs.mjs`
 

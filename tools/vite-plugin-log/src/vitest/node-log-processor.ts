@@ -2,10 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LogConfig, type LogEntry, type LogProcessor, shouldLog } from '../context';
-import { serializeToJsonl } from '../jsonl';
-import { log } from '../log';
-import { parseFilter } from '../options';
+import {
+  log,
+  parseFilter,
+  serializeToJsonl,
+  shouldLog,
+  type LogConfig,
+  type LogEntry,
+  type LogProcessor,
+} from '@dxos/log';
 
 import { type JsonlFileLogStore } from './jsonl-file-log-store';
 import { resolveTestLogFilter } from './paths';

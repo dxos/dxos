@@ -196,12 +196,11 @@ describe('Agent Service', () => {
           blueprints: [ResearchBlueprint],
         });
         yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
-        const completionFiber = yield* agent.waitForCompletion().pipe(Effect.fork);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService, {});
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeOneTask();
-        yield* Fiber.join(completionFiber);
+        yield* agent.waitForCompletion()
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -209,26 +208,33 @@ describe('Agent Service', () => {
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
   );
 
-  it.scoped.only(
+  it.scoped(
     'restart during tool call',
     Effect.fnUntraced(
       function* (_) {
-        const agent = yield* AgentService.createSession({
+        let agent = yield* AgentService.createSession({
           blueprints: [ResearchBlueprint],
         });
         yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
-        const completionFiber = yield* agent.waitForCompletion().pipe(Effect.fork);
 
         const researchService = yield* ServiceResolver.resolve(ResearchService, {});
         yield* researchService.waitForTaskToAppear();
 
         const processManager = yield* ProcessManager.ProcessManagerService;
+
+        // Hydrate redelivers the interrupted alarm synchronously; unblock the tool while hydrate runs.
+        const resumeFiber = yield* Effect.gen(function* () {
+          yield* researchService.waitForTaskToAppear();
+          yield* researchService.completeOneTask();
+        }).pipe(Effect.fork);
+
         yield* processManager.shutdown();
         yield* processManager.startup();
         yield* AgentService.hydrate();
+        yield* Fiber.join(resumeFiber);
 
-        yield* researchService.completeOneTask();
-        yield* Fiber.join(completionFiber);
+        agent = yield* AgentService.getSession(agent.feed);
+        yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
