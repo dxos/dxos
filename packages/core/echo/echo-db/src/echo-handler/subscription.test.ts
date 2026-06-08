@@ -183,7 +183,7 @@ describe('create subscription', () => {
     expect(Annotation.get(task, ColorAnnotation).pipe(Option.getOrUndefined)).to.equal('red');
     // A meta/annotation mutation must notify the object's subscribers, like a data mutation.
     expect(counter.value).to.equal(2);
-    expect(subscribeCalls).to.be.greaterThan(0);
+    expect(subscribeCalls).to.equal(1);
 
     // The snapshot (what `useObject`/`AtomObj` expose to React) must carry the annotation.
     const snapshot = Obj.getSnapshot(task);

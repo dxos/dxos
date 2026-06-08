@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
-import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import {
   AssistantCapabilities,
@@ -87,9 +87,7 @@ export const SpaceHomeArticle = ({ role, subject }: SpaceHomeArticleProps) => {
 
   const query = useMemo(
     () =>
-      // NOTE: Avoid Order.updated here — timestamp ordering disables limit pushdown in the query
-      // planner, forcing a full-space scan over the wide typename OR filter before slicing.
-      Query.select(filter ?? Filter.everything()).limit(RECENT_LIMIT),
+      Query.select(filter ?? Filter.everything()).orderBy(Order.updated('desc')).limit(RECENT_LIMIT),
     [filter],
   );
   const recent = useQuery(filter && space ? space.db : undefined, query);
