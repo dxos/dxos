@@ -13,6 +13,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
@@ -24,6 +25,7 @@ import { log } from '@dxos/log';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessManagerService } from './process-manager-service';
+import { ProcessStore, type PersistedProcess } from './process-store';
 import { createProcessTraceService } from './process-trace';
 import * as ProcessHandle from './ProcessHandle';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
@@ -97,6 +99,12 @@ export interface Handle<I, O> {
    * or {@link Process.State.TERMINATED}.
    */
   runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O>;
+
+  /**
+   * Hydrates a dormant persisted process using the supplied definition.
+   * No-op when the handle is already live (returns self).
+   */
+  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>>;
 }
 
 export namespace Handle {
@@ -165,6 +173,30 @@ export interface ListOptions {
   readonly target?: URI.URI;
 }
 
+const matchesListOptions = (
+  fields: {
+    readonly key: string;
+    readonly parentId: Process.ID | null;
+    readonly state: Process.State;
+    readonly target: URI.URI | null;
+  },
+  options?: ListOptions,
+): boolean => {
+  if (options?.key !== undefined && fields.key !== options.key) {
+    return false;
+  }
+  if (options?.parentProcessId !== undefined && fields.parentId !== options.parentProcessId) {
+    return false;
+  }
+  if (options?.state !== undefined && fields.state !== options.state) {
+    return false;
+  }
+  if (options?.target !== undefined && fields.target !== options.target) {
+    return false;
+  }
+  return true;
+};
+
 /**
  * API for managing processes.
  */
@@ -180,16 +212,26 @@ export interface Manager {
   attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>>;
 
   /**
-   * List all spawned processes.
+   * Lists live processes and, when no live match exists, non-terminal processes
+   * persisted in durable storage. Dormant entries expose {@link Handle.pid} and
+   * metadata but require {@link Handle.hydrate} before inputs can be submitted.
    */
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]>;
 
   runAllProcessesToCompletion(): Effect.Effect<void>;
 
   /**
-   * Terminates all spawned processes (e.g. when tearing down the manager layer).
+   * Suspends all live processes, clears in-memory handle state, and persists durable records to KV.
+   * Mimics app teardown. Idempotent — safe to call multiple times before {@link startup}.
+   * Live processes must be rehydrated externally via {@link Handle.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void>;
+
+  /**
+   * Marks the manager as ready after {@link shutdown}, mimicking a fresh boot from KV storage.
+   * Does not rehydrate processes — callers supply definitions via {@link Handle.hydrate}.
+   */
+  startup(): Effect.Effect<void>;
 
   /**
    * Operation handlers supplied at construction (same set used for nested {@link Operation.Service} in processes).
@@ -225,9 +267,12 @@ export class ProcessManagerImpl implements Manager {
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
   readonly #traceSink: Trace.Sink;
   readonly #runtimeName: Trace.RuntimeName | undefined;
+  readonly #store: ProcessStore;
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
+  readonly #lifecycleSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  #shutDown = false;
 
   constructor(opts: ProcessManagerImplOpts) {
     this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
@@ -237,6 +282,7 @@ export class ProcessManagerImpl implements Manager {
     this.#handlerSet = opts.handlerSet;
     this.#traceSink = opts.traceSink;
     this.#runtimeName = opts.runtimeName;
+    this.#store = new ProcessStore(opts.kvStore);
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
@@ -255,14 +301,28 @@ export class ProcessManagerImpl implements Manager {
 
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid) {
-        const { state } = handle.snapshotStatus();
-        if (state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED) {
-          return true;
-        }
+      if (handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle)) {
+        return true;
       }
     }
     return false;
+  }
+
+  #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const children = [...this.#handles.values()].filter(
+        (handle) => handle.parentId === parentPid && ProcessManagerImpl.#isNonTerminal(handle),
+      );
+      for (const child of children) {
+        log('lifecycle: terminate child', { parentPid, childPid: child.pid });
+        yield* child.terminate();
+      }
+    });
+  }
+
+  static #isNonTerminal(handle: ProcessHandle.ProcessHandleImpl<any, any, any>): boolean {
+    const { state } = handle.snapshotStatus();
+    return state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Info[] {
@@ -274,62 +334,43 @@ export class ProcessManagerImpl implements Manager {
   }
 
   /**
-   * Terminates every spawned process handle (children before parents), clears alarms, and empties the handle map.
-   * Safe to call when there are no handles. Per-handle `terminate` is idempotent.
+   * Suspends every live process handle and drops all in-memory manager state.
+   * Durable records remain in KV for external {@link Handle.hydrate} after {@link startup}.
    */
-  // TODO(dmaretskyi): Make it so that the ProcessManager is durable, then this will not terminate processes. just stop scheduling callbacks.
   shutdown(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
-      const handleCount = this.#handles.size;
-      if (handleCount === 0) {
-        log('lifecycle: manager shutdown skipped');
-        return;
-      }
-      log('lifecycle: manager shutting down', { handleCount, pids: [...this.#handles.keys()] });
-      const order = this.#shutdownTerminationOrder();
-      for (const handle of order) {
-        yield* handle.terminate();
-      }
-      this.#handles.clear();
-      this.#refreshProcessTree();
-      log('lifecycle: manager shutdown complete', { terminated: order.length });
-    });
+    return this.#lifecycleSemaphore.withPermits(1)(
+      Effect.gen(this, function* () {
+        if (this.#shutDown) {
+          log('lifecycle: manager shutdown skipped (already shut down)');
+          return;
+        }
+        const handleCount = this.#handles.size;
+        if (handleCount > 0) {
+          log('lifecycle: manager suspending', { handleCount, pids: [...this.#handles.keys()] });
+          for (const handle of this.#handles.values()) {
+            yield* handle.suspend();
+          }
+        }
+        this.#handles.clear();
+        this.#shutDown = true;
+        this.#refreshProcessTree();
+        log('lifecycle: manager suspended', { suspended: handleCount });
+      }),
+    );
   }
 
-  /**
-   * Pids with no pending children in the handle map first, so child processes shut down before parents.
-   */
-  #shutdownTerminationOrder(): ProcessHandle.ProcessHandleImpl<any, any, any>[] {
-    const byPid = new Map(this.#handles);
-    const pending = new Set<Process.ID>(byPid.keys());
-    const result: ProcessHandle.ProcessHandleImpl<any, any, any>[] = [];
-
-    const pendingChildCount = (pid: Process.ID): number => {
-      let count = 0;
-      for (const childPid of pending) {
-        const child = byPid.get(childPid)!;
-        if (child.parentId === pid) {
-          count++;
+  startup(): Effect.Effect<void> {
+    return this.#lifecycleSemaphore.withPermits(1)(
+      Effect.sync(() => {
+        if (!this.#shutDown) {
+          log('lifecycle: manager startup skipped (not shut down)');
+          return;
         }
-      }
-      return count;
-    };
-
-    while (pending.size > 0) {
-      let leaves = [...pending].filter((pid) => pendingChildCount(pid) === 0);
-      if (leaves.length === 0) {
-        leaves = [[...pending][0]!];
-      }
-      for (const pid of leaves) {
-        pending.delete(pid);
-        const handle = byPid.get(pid);
-        if (handle) {
-          result.push(handle);
-        }
-      }
-    }
-
-    return result;
+        this.#shutDown = false;
+        this.#refreshProcessTree();
+        log('lifecycle: manager started');
+      }),
+    );
   }
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
@@ -458,6 +499,23 @@ export class ProcessManagerImpl implements Manager {
           }
         });
 
+      // Persistence adapter bound to this process id.
+      const persistence = {
+        setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
+        setState: (state: Process.State) => this.#store.setState(id, state),
+        removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
+        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id),
+      };
+
+      // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
+      const defRaw = definition as unknown as { input: Schema.Schema<I, any, never> };
+      // Fall back to null rather than crashing if encoding fails (e.g. operation passed undefined
+      // for a Struct({}) input schema). The handler still receives the original typed value;
+      // re-delivery after restart will see null and may also fail, but that is best-effort by design.
+      const encodeInput = (input: I): Effect.Effect<unknown> =>
+        Schema.encode(defRaw.input)(input).pipe(Effect.orElseSucceed(() => null));
+
       const handle = new ProcessHandle.ProcessHandleImpl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
@@ -474,16 +532,246 @@ export class ProcessManagerImpl implements Manager {
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
+        () => this.#terminateChildren(id),
+        persistence,
+        false,
+        encodeInput,
+        undefined,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
       this.#refreshProcessTree();
 
-      // TODO(dmaretskyi): Background?
-      yield* handle.runOnSpawn();
+      // Write initial durable record before running onSpawn.
+      yield* this.#store.putProcess({
+        id,
+        key: definition.key,
+        params: { name: params.name ?? null, target: params.target ?? null, notify: params.notify ?? null },
+        environment: { space: environment.space, conversation: environment.conversation },
+        parentId: Option.getOrNull(parentOption),
+        state: Process.State.RUNNING,
+        alarmDueAt: null,
+        events: [],
+      });
+
+      // Append spawn event; seq is passed to runOnSpawn so it's removed when the handler settles.
+      const spawnSeq = yield* this.#store.appendEvent(id, { _tag: 'spawn' });
+      yield* handle.runOnSpawn(spawnSeq);
       log('lifecycle: started', { pid: id, key: definition.key });
 
       return handle;
+    });
+  }
+
+  /**
+   * Re-hydrates a persisted process record into a live handle without running onSpawn.
+   */
+  #rehydrate(
+    record: PersistedProcess,
+    definition: Process.Process<any, any, any>,
+  ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
+    return Effect.gen(this, function* () {
+      const id = record.id;
+      log('lifecycle: rehydrate', { pid: id, key: record.key });
+
+      const scope = yield* Scope.make();
+      const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
+      const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
+
+      const parentOption = Option.fromNullable(record.parentId);
+      // Deserialization boundary: schema stores space/conversation as plain strings;
+      // cast back to opaque branded types.
+      const environment: Environment = {
+        space: record.environment.space as SpaceId | undefined,
+        conversation: record.environment.conversation as URI.URI | undefined,
+      };
+
+      const resolutionContext: LayerSpec.LayerContext = {
+        space: environment.space,
+        conversation: environment.conversation,
+        process: id,
+      };
+
+      let handleRef: ProcessHandle.ProcessHandleImpl<any, any, any> | null = null;
+
+      // Deserialization boundary: schema stores target/notify as plain unknown values;
+      // cast back to their structural types.
+      const params: Process.Params = {
+        name: record.params.name,
+        target: record.params.target as URI.URI | null,
+        ...(record.params.notify != null ? { notify: record.params.notify as Process.Params['notify'] } : {}),
+      };
+
+      const ctx: Process.ProcessContext<any, any> = {
+        id,
+        params,
+        succeed: () => {
+          handleRef?.requestSucceed();
+        },
+        fail: (error: Error) => {
+          handleRef?.requestFail(error);
+        },
+        submitOutput: (output: any) => {
+          handleRef?.requestSubmitOutput(output);
+        },
+        setAlarm: (timeout?: number) => {
+          handleRef?.requestAlarm(timeout);
+        },
+      };
+
+      let builtinCtx = Context.empty().pipe(
+        Context.add(StorageService.StorageService, storage),
+        Context.add(Scope.Scope, scope),
+        Context.add(
+          Trace.TraceService,
+          createProcessTraceService({
+            pid: id,
+            parentPid: record.parentId ?? undefined,
+            processName: params.name ?? undefined,
+            runtimeName: this.#runtimeName,
+            space: environment.space,
+            sink: this.#traceSink,
+            onEphemeral: (message) => handleRef?.pushEphemeral(message),
+          }),
+        ),
+      );
+
+      if (this.#handlerSet) {
+        const childInvoker = ProcessOperationInvoker.make({
+          manager: this,
+          handlerSet: this.#handlerSet,
+          parentProcessId: id,
+        });
+        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
+        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
+      }
+
+      const builtinTagKeys = new Set([
+        StorageService.StorageService.key,
+        Scope.Scope.key,
+        Trace.TraceService.key,
+        Operation.Service.key,
+        ProcessOperationInvoker.Service.key,
+      ]);
+      const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
+
+      let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
+      if (externalServices.length > 0) {
+        serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+          Effect.orDie,
+        );
+      }
+
+      const fullCtx = Context.merge(builtinCtx, serviceCtx);
+      const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+
+      const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
+        Effect.gen(this, function* () {
+          log('lifecycle: ended', { pid: handle.pid, state });
+          if (handle.parentId !== null) {
+            const parentHandle = this.#handles.get(handle.parentId);
+            if (parentHandle) {
+              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
+              parentHandle.requestChildEvent({
+                _tag: 'exited',
+                pid: handle.pid,
+                result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
+              });
+            }
+          }
+        });
+
+      const persistence = {
+        setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
+        setState: (state: Process.State) => this.#store.setState(id, state),
+        removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
+        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
+        deleteRecord: () => this.#store.deleteProcess(id),
+      };
+
+      // Process.make spreads opts into the definition object at runtime; cast is safe at this boundary.
+      const defRaw = definition as unknown as { input: Schema.Schema<any, any, never> };
+      const encodeInput = (input: any): Effect.Effect<unknown> => Schema.encode(defRaw.input)(input).pipe(Effect.orDie);
+
+      const handle = new ProcessHandle.ProcessHandleImpl<any, any, any>(
+        id,
+        Option.getOrNull(parentOption),
+        callbacks,
+        scope,
+        fullCtx,
+        this.#registry,
+        outputQueue,
+        storage,
+        definition.key,
+        params,
+        environment,
+        this.#traceSink,
+        onFinished,
+        () => this.#refreshProcessTree(),
+        () => this.#hasNonTerminalChildren(id),
+        () => this.#terminateChildren(id),
+        persistence,
+        true, // restoring — suppresses onSpawn
+        encodeInput,
+        record.state, // hydrate the persisted state instead of defaulting to RUNNING
+      );
+      handleRef = handle;
+      this.#handles.set(id, handle);
+      this.#refreshProcessTree();
+
+      // Re-arm a still-pending alarm.
+      if (record.alarmDueAt !== null) {
+        handle.rearmAlarm(record.alarmDueAt);
+      }
+
+      // Re-deliver events that never settled (interrupted by shutdown), in seq order.
+      // Forked so hydrate returns immediately; handlers run on the process scope like normal inputs.
+      const pendingEvents = [...record.events].sort((a, b) => a.seq - b.seq);
+      if (pendingEvents.length > 0) {
+        log('lifecycle: redeliver pending events', { pid: id, count: pendingEvents.length });
+        yield* Effect.forkIn(
+          Effect.forEach(pendingEvents, (event) => handle.redeliver(event, definition), { discard: true }),
+          scope,
+        );
+      }
+
+      return handle;
+    });
+  }
+
+  #hydrateFromDefinition<I, O>(id: Process.ID, definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> {
+    return Effect.gen(this, function* () {
+      const existing = this.#handles.get(id);
+      if (existing) {
+        log('lifecycle: hydrate skipped (already live)', { pid: id });
+        return existing as unknown as Handle<I, O>;
+      }
+
+      const record = yield* this.#store.getProcess(id);
+      if (record === undefined) {
+        return yield* Effect.die(new Error(`No persisted process record: ${id}`));
+      }
+
+      if (record.key !== definition.key) {
+        return yield* Effect.die(
+          new Error(`Process definition key mismatch for ${id}: expected "${record.key}", got "${definition.key}"`),
+        );
+      }
+
+      if (
+        record.state === Process.State.SUCCEEDED ||
+        record.state === Process.State.FAILED ||
+        record.state === Process.State.TERMINATED
+      ) {
+        yield* this.#store.deleteProcess(id);
+        return yield* Effect.die(new Error(`Cannot hydrate terminal process: ${id}`));
+      }
+
+      log('lifecycle: hydrate', { pid: id, key: record.key });
+      const handle = yield* this.#rehydrate(record, definition);
+      return handle as unknown as Handle<I, O>;
     });
   }
 
@@ -500,21 +788,57 @@ export class ProcessManagerImpl implements Manager {
   }
 
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
-    return Effect.sync(() => {
-      let impls: ProcessHandle.ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
-      if (options?.key !== undefined) {
-        impls = impls.filter((handle) => handle.key === options.key);
+    return Effect.gen(this, function* () {
+      const results: Handle.Any[] = [];
+      const seenIds = new Set<Process.ID>();
+
+      for (const handle of this.#handles.values()) {
+        if (
+          !matchesListOptions(
+            {
+              key: handle.key,
+              parentId: handle.parentId,
+              state: handle.snapshotStatus().state,
+              target: handle.params.target,
+            },
+            options,
+          )
+        ) {
+          continue;
+        }
+        results.push(handle);
+        seenIds.add(handle.pid);
       }
-      if (options?.parentProcessId !== undefined) {
-        impls = impls.filter((handle) => handle.parentId === options.parentProcessId);
+
+      const persisted = yield* this.#store.listProcesses();
+      for (const record of persisted) {
+        if (seenIds.has(record.id)) {
+          continue;
+        }
+        if (
+          record.state === Process.State.SUCCEEDED ||
+          record.state === Process.State.FAILED ||
+          record.state === Process.State.TERMINATED
+        ) {
+          continue;
+        }
+        if (
+          !matchesListOptions(
+            {
+              key: record.key,
+              parentId: record.parentId,
+              state: record.state,
+              target: record.params.target as URI.URI | null,
+            },
+            options,
+          )
+        ) {
+          continue;
+        }
+        results.push(new DormantHandle(record, (definition) => this.#hydrateFromDefinition(record.id, definition)));
       }
-      if (options?.state !== undefined) {
-        impls = impls.filter((handle) => handle.snapshotStatus().state === options.state);
-      }
-      if (options?.target !== undefined) {
-        impls = impls.filter((handle) => handle.params.target === options.target);
-      }
-      return impls;
+
+      return results;
     });
   }
 
@@ -531,9 +855,64 @@ export class ProcessManagerImpl implements Manager {
 }
 
 /**
+ * Read-only handle view of a persisted process that is not currently live.
+ * Returned by {@link ProcessManagerImpl.list} until {@link Handle.hydrate} is called.
+ */
+class DormantHandle<I, O> implements Handle<I, O> {
+  readonly pid: Process.ID;
+  readonly parentId: Process.ID | null;
+  readonly key: string;
+  readonly params: Process.Params;
+  readonly environment: Environment;
+  readonly status: Status;
+  readonly statusAtom: Atom.Atom<Status>;
+  readonly #rehydrate: (definition: Process.Process<I, O, any>) => Effect.Effect<Handle<I, O>>;
+
+  constructor(
+    record: PersistedProcess,
+    rehydrate: (definition: Process.Process<I, O, any>) => Effect.Effect<Handle<I, O>>,
+  ) {
+    this.#rehydrate = rehydrate;
+    this.pid = record.id;
+    this.parentId = record.parentId;
+    this.key = record.key;
+    this.params = {
+      name: record.params.name,
+      target: record.params.target as URI.URI | null,
+      ...(record.params.notify != null ? { notify: record.params.notify as Process.Params['notify'] } : {}),
+    };
+    this.environment = {
+      space: record.environment.space as SpaceId | undefined,
+      conversation: record.environment.conversation as URI.URI | undefined,
+    };
+    this.status = {
+      state: record.state,
+      exit: Option.none(),
+      startedAt: new Date(0),
+      completedAt: Option.none(),
+    };
+    this.statusAtom = Atom.make(this.status);
+  }
+
+  hydrate = (definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>> => this.#rehydrate(definition);
+
+  submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  subscribeOutputs = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
+
+  subscribeEphemeral = (): Stream.Stream<Trace.Message> => Stream.die(new Error('Process not hydrated'));
+
+  terminate = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+
+  runAndExit = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
+}
+
+/**
  * Scoped layer that provides ProcessManager and ProcessMonitorService.
- * On scope close, the manager's `shutdown()` runs (layer finalizer), stopping
- * alarms and process work so the shared Atom registry is not updated after disposal.
+ * On scope close, the manager's `shutdown()` runs (layer finalizer), suspending
+ * process state so it can be hydrated on the next boot.
  *
  * Requires KeyValueStore, ServiceResolver, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.

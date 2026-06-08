@@ -7,6 +7,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
@@ -461,6 +462,24 @@ export interface InvokeOptions {
    */
   tracing?: unknown;
 }
+
+/**
+ * Annotation that marks an operation as idempotent — safe to retry even if a previous execution
+ * was interrupted mid-handler. When absent the operation is treated as non-idempotent, and the
+ * process runtime will fail (rather than re-run) any handler that was interrupted.
+ */
+export const IdempotentAnnotation = Annotation.make({
+  id: 'org.dxos.operation.idempotent',
+  schema: Schema$.Boolean,
+});
+
+/**
+ * Returns true when the operation is explicitly annotated as idempotent.
+ */
+export const isIdempotent = (op: Definition.Any): boolean =>
+  op.meta.annotations
+    ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, IdempotentAnnotation), () => false)
+    : false;
 
 /**
  * Operation service interface - provides unified access to operation invocation and scheduling.

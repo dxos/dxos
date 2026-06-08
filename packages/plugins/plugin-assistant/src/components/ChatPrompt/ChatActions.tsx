@@ -63,7 +63,7 @@ export const ChatActions = ({
       )}
 
       <IconButton
-        disabled={!processing}
+        // disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         variant='ghost'
         icon='ph--x--regular'
         iconOnly

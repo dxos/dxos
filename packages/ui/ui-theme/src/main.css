@@ -76,7 +76,16 @@
  *   ../../../../tools/ → `tools/`
  *
  * Tailwind ignores `node_modules` and common build/output dirs by default,
- * so a broad workspace glob is safe.
+ * so a broad workspace glob is safe *for scanning*.
+ *
+ * NOTE: Tailwind's scanner respects `.gitignore` (so `dist/` is never
+ * scanned), but it hands Vite a coarse `dir-dependency` glob and Vite
+ * re-expands that itself, ignoring only `node_modules`. That re-expansion
+ * sweeps `dist/**` `.d.ts` files into the watch set and causes a `main.css`
+ * HMR storm on every package rebuild. Build outputs are excluded from the
+ * dev watcher in `plugins/ThemePlugin.ts` (`server.watch.ignored`) rather
+ * than here, because `@source not` does NOT propagate to the glob Vite
+ * re-expands.
  */
 @source "../../../**/*.{ts,tsx,html}";
 @source "../../../../tools/**/*.{ts,tsx,html}";

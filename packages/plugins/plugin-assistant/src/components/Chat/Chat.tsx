@@ -106,8 +106,8 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
         }
 
         case 'cancel': {
+          void processor.cancel();
           if (streaming) {
-            void processor.cancel();
             if (lastPrompt.current) {
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
             }
