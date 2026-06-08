@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
@@ -38,7 +38,9 @@ export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }:
     const target =
       mode === 'join-new-identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
     if (onReset) {
-      await runAndForwardErrors(onReset({ target }).pipe(Effect.provideService(Capability.Service, capabilityManager)));
+      await EffectEx.runAndForwardErrors(
+        onReset({ target }).pipe(Effect.provideService(Capability.Service, capabilityManager)),
+      );
     }
   }, [client, mode, onReset, capabilityManager]);
 

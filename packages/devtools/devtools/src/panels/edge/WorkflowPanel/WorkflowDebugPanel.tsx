@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { makeFeedService } from '@dxos/echo-db';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -129,7 +129,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
         response = await edgeClient.executeWorkflow(Context.default(), space.id, props.graph.id, requestBody);
       } else {
         const compiled = await props.loader.load(EID.make({ entityId: props.graph.id }));
-        response = await runAndForwardErrors(
+        response = await EffectEx.runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))
             .pipe(

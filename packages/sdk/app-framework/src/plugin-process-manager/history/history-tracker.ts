@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Stream from 'effect/Stream';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
@@ -123,7 +123,7 @@ export const make = (
   };
 
   const undoPromise = async (): Promise<{ error?: Error }> => {
-    return runAndForwardErrors(undo())
+    return EffectEx.runAndForwardErrors(undo())
       .then(() => ({}))
       .catch((error) => {
         log.catch(error);

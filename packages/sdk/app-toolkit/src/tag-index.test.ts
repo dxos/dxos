@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import * as TagIndex from './TagIndex';
 
@@ -71,6 +71,6 @@ describe('TagIndex (feed integration)', () => {
       tags.unsetTag(urgent, hello.id);
       expect([...tags.objects(urgent)]).toEqual([]);
       expect(tags.tagIds()).toEqual([]);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 });

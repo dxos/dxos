@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 import { DXN, Format, Type } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/internal';
-import { setValue } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { random } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -94,15 +94,15 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
         // TODO(ZaymonFC): Restore this once I know how to derive the type from the schema.
         switch (type) {
           case TypeEnum.String: {
-            setValue(item, path, `Updated ${Date.now()}`);
+            SchemaEx.setValue(item, path, `Updated ${Date.now()}`);
             break;
           }
           case TypeEnum.Number: {
-            setValue(item, path, Math.floor(Math.random() * 100));
+            SchemaEx.setValue(item, path, Math.floor(Math.random() * 100));
             break;
           }
           case TypeEnum.Boolean: {
-            setValue(item, path, !item[path]);
+            SchemaEx.setValue(item, path, !item[path]);
             break;
           }
         }

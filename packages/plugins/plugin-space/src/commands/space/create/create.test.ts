@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './create';
 
@@ -38,7 +38,7 @@ describe('space create', () => {
         // name might be undefined and omitted from JSON, which is fine
       }
       expect(client.spaces.get().length).toBeGreaterThan(0);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 
   it('should create a space with a name', () =>
     Effect.gen(function* () {
@@ -63,5 +63,5 @@ describe('space create', () => {
         expect(parsed).toHaveProperty('key');
         expect(parsed).toHaveProperty('name', 'Test Space');
       }
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

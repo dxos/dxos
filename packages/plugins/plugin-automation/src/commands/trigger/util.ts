@@ -15,7 +15,7 @@ import { FormBuilder } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Annotation, Database, Entity, Feed, Filter, Obj, Query, type QueryAST, Ref, Scope, Type } from '@dxos/echo';
-import { getProperties } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { FeedAnnotation } from '@dxos/schema';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
@@ -121,7 +121,7 @@ export const promptForSchemaInput = Effect.fn(function* (
     return {};
   }
 
-  const properties = getProperties(ast);
+  const properties = SchemaEx.getProperties(ast);
   if (properties.length === 0) {
     return {};
   }

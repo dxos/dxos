@@ -19,7 +19,7 @@ import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } 
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
@@ -285,7 +285,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.succeed(false)),
     Match.exhaustive,
-    runAndForwardErrors,
+    EffectEx.runAndForwardErrors,
   );
 
   // Detect mobile operating systems (phones only, not tablets).
@@ -300,7 +300,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
     Match.exhaustive,
-    runAndForwardErrors,
+    EffectEx.runAndForwardErrors,
   );
 
   // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
@@ -403,7 +403,7 @@ const main = async () => {
   bootStatus('Loading plugins…');
   const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isPwa, isTauri);
-  const remotePluginsResult = await runAndForwardErrors(
+  const remotePluginsResult = await EffectEx.runAndForwardErrors(
     UrlLoader.preload({
       cache: assetCache,
       onPluginLoaded: (loaded, total) => {

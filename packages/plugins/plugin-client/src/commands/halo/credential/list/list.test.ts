@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { handler } from './list';
 
@@ -23,5 +23,5 @@ describe('halo credential list', () => {
       expect(logs).toHaveLength(1);
       const parsed = TestConsole.parseJson(logs[0]);
       expect(Array.isArray(parsed)).toBe(true);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
 });

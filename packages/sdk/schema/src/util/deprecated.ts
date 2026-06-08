@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
-import { isDiscriminatedUnion, isTupleType, visit } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -21,8 +21,8 @@ const getSimpleType = (node: SchemaAST.AST): string | undefined => {
     SchemaAST.isObjectKeyword(node) ||
     SchemaAST.isTypeLiteral(node) ||
     // TODO(wittjosiah): Tuples are actually arrays.
-    isTupleType(node) ||
-    isDiscriminatedUnion(node)
+    SchemaEx.isTupleType(node) ||
+    SchemaEx.isDiscriminatedUnion(node)
   ) {
     return 'object';
   }
@@ -65,7 +65,7 @@ export type SchemaFieldDescription = {
  */
 export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
-  visit(
+  SchemaEx.visit(
     schema.ast,
     (node, path) => {
       const { type, format } = toFieldValueType(node);

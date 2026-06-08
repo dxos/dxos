@@ -18,7 +18,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
-import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { EffectEx, type RuntimeProvider } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type EntityMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
@@ -1395,8 +1395,8 @@ export class QueryExecutor extends Resource {
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     const runtimeProvider = this._runtime;
     invariant(runtimeProvider, 'SQL runtime is required.');
-    const runtime = await runAndForwardErrors(runtimeProvider);
-    return await unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+    const runtime = await EffectEx.runAndForwardErrors(runtimeProvider);
+    return await EffectEx.unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   }
 
   private async _queryAllFromSqlIndex(
