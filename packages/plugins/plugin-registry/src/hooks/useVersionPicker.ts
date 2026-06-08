@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
 import { type Registry, UrlLoader } from '@dxos/app-framework';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 /**
  * Owns the version picker's state machine: fetches the available versions list
@@ -70,7 +70,7 @@ export const useVersionPicker = ({
           setSelectedVersionTag(undefined);
         },
       }),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
     return () => {
       cancelled = true;

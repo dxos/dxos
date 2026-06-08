@@ -31,7 +31,7 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, Feed, Registry, Tag, Type } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-db';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 
@@ -135,7 +135,7 @@ export const AssistantTestLayer = ({
                 }
                 const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const binder = yield* acquireReleaseResource(
+                const binder = yield* EffectEx.acquireReleaseResource(
                   () =>
                     new AiContext.Binder({
                       feed,
@@ -152,7 +152,7 @@ export const AssistantTestLayer = ({
                 }
                 const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const session = yield* acquireReleaseResource(
+                const session = yield* EffectEx.acquireReleaseResource(
                   () =>
                     new AiSession.Session({
                       feed,

@@ -2,15 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { createFeedServiceLayer } from '@dxos/echo-db';
+import { createFeedServiceLayer, getObjectCore } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
+import { EntityId } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';
 
@@ -18,6 +20,11 @@ import * as TagIndex from './TagIndex';
 const Item = Schema.Struct({
   text: Schema.String,
 }).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.Item', '0.1.0')));
+
+/** Minimal host for op-count benchmarks (no required feed ref). */
+const BenchHost = Schema.Struct({
+  tags: TagIndex.field(),
+}).pipe(Type.makeObject(DXN.make('org.dxos.test.tagindex.BenchHost', '0.1.0')));
 
 /** A host pairing an immutable feed of items with a tag index over them. */
 const Host = Schema.Struct({
@@ -34,6 +41,66 @@ describe('TagIndex (feed integration)', () => {
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  // Regression for DX-984: setTag/unsetTag must use push/splice (in-place), not spread-replace.
+  // Spread-replace causes O(n) Automerge ops per call → O(n²) total → multi-MiB documents.
+  test('setTag emits O(1) Automerge ops per append', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [BenchHost] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const host = yield* Database.add(Obj.make(BenchHost, {}));
+      yield* Database.flush();
+
+      const tags = TagIndex.bind(host, 'tags');
+      const core = getObjectCore(host);
+      const urgent = 'dxn:tag:urgent';
+      const N = 200;
+
+      const opsBefore = A.stats(core.getDoc()).numOps;
+      for (let i = 0; i < N; i++) {
+        tags.setTag(urgent, EntityId.random());
+      }
+      const totalOps = A.stats(core.getDoc()).numOps - opsBefore;
+
+      // push() → O(1) ops/call. Each ULID (~26 chars) costs ~27 Automerge ops when stored as text,
+      // so totalOps ≈ N * 27 ≈ 5,400.
+      // spread-replace → O(n) ops/call → totalOps ≈ N²/2 * 27 ≈ 540,000 for N=200.
+      expect(totalOps).toBeLessThan(N * 50);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+  });
+
+  test('unsetTag emits O(1) Automerge ops per removal', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [BenchHost] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    await Effect.gen(function* () {
+      const host = yield* Database.add(Obj.make(BenchHost, {}));
+      yield* Database.flush();
+
+      const tags = TagIndex.bind(host, 'tags');
+      const core = getObjectCore(host);
+      const urgent = 'dxn:tag:urgent';
+      const N = 200;
+      const ids = Array.from({ length: N }, () => EntityId.random());
+
+      for (const id of ids) {
+        tags.setTag(urgent, id);
+      }
+
+      const opsBefore = A.stats(core.getDoc()).numOps;
+      for (const id of ids) {
+        tags.unsetTag(urgent, id);
+      }
+      const totalOps = A.stats(core.getDoc()).numOps - opsBefore;
+
+      // splice() → O(1) ops/call → totalOps ≈ N.
+      // filter-replace → O(n) ops/call → totalOps ≈ N²/2 ≈ 20,000 for N=200.
+      expect(totalOps).toBeLessThan(N * 5);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('tags immutable feed objects and filters the feed by tag', async ({ expect }) => {
@@ -71,6 +138,6 @@ describe('TagIndex (feed integration)', () => {
       tags.unsetTag(urgent, hello.id);
       expect([...tags.objects(urgent)]).toEqual([]);
       expect(tags.tagIds()).toEqual([]);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 });

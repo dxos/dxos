@@ -5,7 +5,7 @@
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { acquireReleaseResource } from './resource';
+import { acquireReleaseResource } from './internal/resource';
 
 it.effect(
   'acquire-release',

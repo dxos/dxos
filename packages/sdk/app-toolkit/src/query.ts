@@ -16,7 +16,7 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -51,7 +51,7 @@ export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST
 
   return resolveType(query, resolve).pipe(
     Effect.map((type) => Option.getOrUndefined(type)),
-    runAndForwardErrors,
+    EffectEx.runAndForwardErrors,
   );
 };
 

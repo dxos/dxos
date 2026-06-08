@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { DXN, SpaceId } from '@dxos/keys';
 
@@ -75,7 +75,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost();
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
     expect(result.cursors).toHaveLength(0);
@@ -91,7 +91,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(1);
     expect(result.objects[0].documentId).toBe(handle.documentId);
@@ -136,7 +136,7 @@ describe('AutomergeDataSource', () => {
       { indexName: 'fts', spaceId: null, sourceName: 'automerge', resourceId: handle2.documentId, cursor: doc2Heads },
     ];
 
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
 
     // Only doc1 changed.
     expect(result.objects).toHaveLength(1);
@@ -165,7 +165,7 @@ describe('AutomergeDataSource', () => {
       },
     ];
 
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), cursors));
 
     expect(result.objects).toHaveLength(0);
     expect(result.cursors).toHaveLength(0);
@@ -184,7 +184,9 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), [], { limit: 2 }));
+    const result = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), [], { limit: 2 }),
+    );
 
     expect(result.objects).toHaveLength(2);
     expect(result.cursors).toHaveLength(2);
@@ -201,7 +203,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(2);
     expect(result.objects.map((o) => o.data.id)).toContain('obj-1');
@@ -227,7 +229,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
   });
@@ -245,7 +247,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(1);
     const obj = result.objects[0];
@@ -272,7 +274,7 @@ describe('AutomergeDataSource', () => {
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
-    const result = await runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
   });

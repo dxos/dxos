@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { getLiteralValues } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 export const ModelProvider = Schema.Union(
   Schema.Literal('edge').annotations({ title: 'DXOS' }),
@@ -14,7 +14,7 @@ export const ModelProvider = Schema.Union(
   Schema.Literal('lmstudio').annotations({ title: 'LM Studio' }),
 );
 export type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
-export const ModelProviders = getLiteralValues(ModelProvider);
+export const ModelProviders = SchemaEx.getLiteralValues(ModelProvider);
 
 export const ChatView = Schema.Union(
   Schema.Literal('normal').annotations({ title: 'Normal' }),
@@ -23,7 +23,7 @@ export const ChatView = Schema.Union(
   Schema.Literal('debug').annotations({ title: 'Debug' }),
 );
 export type ChatView = Schema.Schema.Type<typeof ChatView>;
-export const ChatViews = getLiteralValues(ChatView);
+export const ChatViews = SchemaEx.getLiteralValues(ChatView);
 
 export const ModelDefaults = Schema.mutable(
   Schema.Struct({

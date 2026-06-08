@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContext } from '@dxos/assistant';
 import { LayerSpec, ServiceNotAvailableError } from '@dxos/compute';
 import { Database, EID, Feed } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 //
 // Capability Module
@@ -74,7 +74,7 @@ const AiContextSpec = LayerSpec.make(
         }
         const feed = yield* Database.resolve(EID.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+        const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
         return { binder };
       }),
     ),

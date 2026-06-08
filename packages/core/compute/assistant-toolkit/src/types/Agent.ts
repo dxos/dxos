@@ -13,7 +13,7 @@ import { type Blueprint } from '@dxos/compute';
 import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -184,7 +184,7 @@ export const resetChatHistory = (
       Effect.flatMap(Database.load),
     );
     const runtime = yield* Effect.runtime<Feed.FeedService>();
-    const existingContextBinder = yield* acquireReleaseResource(
+    const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
         new AiContext.Binder({
           feed: existingFeed,

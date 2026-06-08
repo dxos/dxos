@@ -11,7 +11,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Database, Obj, Type } from '@dxos/echo';
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 import { KanbanArticle, KanbanSettings } from '#containers';
@@ -46,7 +46,10 @@ export default Capability.makeModule(() =>
           target: Database.Database | Collection.Collection | undefined;
           fieldPropertyAst?: SchemaAST.AST;
         } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>(
+            (data.schema as Schema.Schema.All).ast,
+            PivotColumnAnnotationId,
+          );
           return !!annotation;
         },
         component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {

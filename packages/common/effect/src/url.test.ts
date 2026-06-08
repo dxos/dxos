@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { ParamKeyAnnotation, UrlParser } from './url';
+import { ParamKeyAnnotation, UrlParser } from './internal/url';
 
 const Invitation = Schema.Struct({
   accessToken: Schema.String,
