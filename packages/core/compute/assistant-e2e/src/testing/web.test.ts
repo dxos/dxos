@@ -11,11 +11,11 @@ import { agentTest, agentTestTimeout } from '../harness';
 
 Obj.ID.dangerouslyDisableRandomness();
 
-// TODO(burdon): Re-enable + regenerate web.conversations.json. The DatabaseBlueprint serializes the
-//   space's registered schemas (incl. @dxos/types Event) into the agent prompt, so the Event schema
-//   change (location/allDay) invalidated this fixture. Regeneration requires the live web-search tool
-//   (org.dxos.function.web-search.fetch + Anthropic web search), which is not registered in the local
-//   harness runtime, so it can only be regenerated in an environment that provides it.
+// TODO(burdon): Re-enable + regenerate web.conversations.json. The Event schema change
+//   (location/allDay) invalidated this fixture (DatabaseBlueprint serializes registered schemas into
+//   the prompt). The web-search Fetch handler is now registered (plugin-assistant), so the tool
+//   resolves; but regeneration still needs Anthropic's live web_search tool to return results, which
+//   it does not in this local harness — regenerate in an environment where web_search works.
 describe.skip('Web', () => {
   it.effect(
     'search the web',

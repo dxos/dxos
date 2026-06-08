@@ -21,6 +21,7 @@ import {
   LinearBlueprint,
   PlanningBlueprint,
   WebSearchBlueprint,
+  WebSearchHandlers,
   MemoryBlueprint,
   AutomationBlueprint,
 } from '@dxos/assistant-toolkit';
@@ -50,6 +51,7 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
     Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
+    Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
   ]),
 );
 
