@@ -127,11 +127,7 @@ export abstract class BaseHttpClient {
           if (body.success) {
             return body.data;
           }
-        } else if (
-          response.status === 401 &&
-          response.headers.get('WWW-Authenticate') !== null &&
-          !handledAuth
-        ) {
+        } else if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
           // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
           // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s lack it.
           this._authHeader = await this._handleUnauthorized(response);
