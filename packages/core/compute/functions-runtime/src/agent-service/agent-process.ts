@@ -27,7 +27,7 @@ import { Process } from '@dxos/compute';
 import { ProcessManager, Supervisor } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
@@ -91,7 +91,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { ServiceResolver } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -37,7 +37,9 @@ describe('TriggerRuntimeController', () => {
 
     // Creating identity also creates the personal space and emits SpacesReady,
     // which is what gates the TriggerRuntimeController module's activation.
-    const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
     const dispatcher = await getDispatcher(harness, personalSpace.id);
@@ -83,7 +85,9 @@ describe('TriggerRuntimeController', () => {
       plugins: [ClientPlugin({ types: [Feed.Feed] }), AutomationPlugin()],
     });
 
-    const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
     const dispatcher = await getDispatcher(harness, personalSpace.id);

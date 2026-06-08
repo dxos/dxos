@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Node } from '@dxos/app-graph';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
@@ -23,7 +23,7 @@ export const executeMenuAction = async (action: MenuAction, params: Node.InvokeP
     effect = effect.pipe(Effect.provide(action._actionContext));
   }
 
-  await runAndForwardErrors(effect);
+  await EffectEx.runAndForwardErrors(effect);
 };
 
 export const getShortcut = (action: Node.ActionLike) => {

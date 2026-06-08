@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -43,7 +43,7 @@ export const RelatedToOrganization = ({
           subject: [contactPath],
           workspace: db ? getSpacePath(db.spaceId) : undefined,
         });
-      }).pipe(runAndForwardErrors),
+      }).pipe(EffectEx.runAndForwardErrors),
     [invoke, db, contacts, spaceContactTable],
   );
 

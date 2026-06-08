@@ -31,7 +31,7 @@ import {
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import type { Database, Feed } from '@dxos/echo';
-import { unwrapExit } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -268,7 +268,7 @@ export class ComputeGraphController extends Resource {
       executor.setOutputs(nodeId, Effect.succeed(ValueBag.make(outputs)));
     }
 
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
         Effect.gen(this, function* () {
           const scope = yield* Scope.make();
@@ -331,7 +331,7 @@ export class ComputeGraphController extends Resource {
         : this._graph.nodes.filter((node) => node.type != null && AUTO_TRIGGER_NODES.includes(node.type));
     const allAffectedNodes = [...new Set(triggerNodes.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._computeRuntime.runPromiseExit(
         Effect.gen(this, function* () {
           const scope = yield* Scope.make();

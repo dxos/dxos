@@ -10,7 +10,7 @@ import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { createJsonPath, findNode, getAnnotation, getBaseType } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { Input } from '@dxos/react-ui';
 
 import { useFormFieldState } from '../Form';
@@ -160,7 +160,7 @@ export type ResolvedLayoutField = {
 const resolvePropertySignature = (ast: SchemaAST.AST, segments: string[]): SchemaAST.PropertySignature | undefined => {
   let node: SchemaAST.AST = ast;
   for (let index = 0; index < segments.length; index++) {
-    const typeLiteral = findNode(node, SchemaAST.isTypeLiteral);
+    const typeLiteral = SchemaEx.findNode(node, SchemaAST.isTypeLiteral);
     if (!typeLiteral) {
       return undefined;
     }
@@ -195,18 +195,18 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
 
   // Normalized leaf type (optional unwrapped, refinements stripped, signature-level
   // annotations merged) — matches how `getProperties` feeds `FormField`.
-  const { type: baseType } = getBaseType(prop);
+  const { type: baseType } = SchemaEx.getBaseType(prop);
   const type =
     prop.annotations && Reflect.ownKeys(prop.annotations).length > 0
       ? ({ ...baseType, annotations: { ...baseType.annotations, ...prop.annotations } } as SchemaAST.AST)
       : baseType;
 
-  const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
+  const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
 
-  // Label detection reads the *raw* property type: `getBaseType`'s `encodedBoundAST`
+  // Label detection reads the *raw* property type: `SchemaEx.getBaseType`'s `encodedBoundAST`
   // strips annotations from non-keyword inner types (e.g. nested structs), which would
   // drop the `LabelAnnotation` we rely on here.
-  const labelType = findNode(prop.type, SchemaAST.isTypeLiteral);
+  const labelType = SchemaEx.findNode(prop.type, SchemaAST.isTypeLiteral);
   const labelled = labelType != null && Option.isSome(Annotation.LabelAnnotation.getFromAst(labelType));
 
   return {
@@ -241,7 +241,7 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
   return (
     <div className='contents'>
       <Input.Root>
-        {layout !== 'inline' && <FormFieldLabel readonly label={label} path={createJsonPath(path)} />}
+        {layout !== 'inline' && <FormFieldLabel readonly label={label} path={SchemaEx.createJsonPath(path)} />}
         <p className='truncate min-w-0' title={text}>
           {text}
         </p>

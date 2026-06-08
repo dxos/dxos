@@ -5,13 +5,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
-import { DecimalPrecision, JsonProp, type JsonSchemaType, SelectOption, TypeEnum } from '@dxos/echo/internal';
+import { DecimalPrecision, type JsonSchemaType, SelectOption, TypeEnum } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 
 /**
  * Base schema.
  */
 export const BaseProperty = Schema.Struct({
-  property: JsonProp.annotations({
+  property: SchemaEx.JsonProp.annotations({
     title: 'Property',
     description: 'Property name',
   }),
@@ -82,7 +83,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
       description: 'Name of the record type',
     }),
     referencePath: Schema.optional(
-      JsonProp.annotations({
+      SchemaEx.JsonProp.annotations({
         title: 'Lookup property',
         description: 'Referenced property',
       }),

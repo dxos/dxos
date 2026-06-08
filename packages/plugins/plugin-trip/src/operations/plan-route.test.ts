@@ -10,7 +10,7 @@ import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';
 
@@ -54,7 +54,7 @@ describe('PlanRoute', () => {
     planRouteHandler
       .handler({ trip })
       .pipe(Effect.provideService(Capability.Service, capabilityService(service)))
-      .pipe(Effect.provide(Database.layer(db)), runAndForwardErrors);
+      .pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
   test('writes a route (geometry + endpoint geo) onto each road segment', async ({ expect }) => {
     const trip = addTrip([roadLeg('London', 'Avignon'), roadLeg('Avignon', 'Barcelona')]);

@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -46,7 +46,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return;
     }
     registry.set(busyAtom, true);
-    void runAndForwardErrors(
+    void EffectEx.runAndForwardErrors(
       invoker
         .invoke(
           FeedOperation.CurateMagazine,
@@ -62,7 +62,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       return;
     }
     registry.set(busyAtom, true);
-    void runAndForwardErrors(
+    void EffectEx.runAndForwardErrors(
       invoker
         .invoke(
           FeedOperation.ClearMagazine,

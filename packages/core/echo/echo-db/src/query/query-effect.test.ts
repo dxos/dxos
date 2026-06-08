@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { TestDatabaseLayer } from '../testing';
 
@@ -27,7 +27,7 @@ describe('Database.query (Effect API)', () => {
       const results = yield* Database.query(Filter.type(TestSchema.Person)).run;
       expect(results).toHaveLength(2);
       expect(results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
-    }).pipe(Effect.provide(TestLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 
   test('run accepts Query AST', async ({ expect }) => {
@@ -38,7 +38,7 @@ describe('Database.query (Effect API)', () => {
       const results = yield* Database.query(Query.select(Filter.type(TestSchema.Person, { name: 'alice' }))).run;
       expect(results).toHaveLength(1);
       expect(results[0]?.name).toBe('alice');
-    }).pipe(Effect.provide(TestLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 
   test('first returns Option', async ({ expect }) => {
@@ -53,7 +53,7 @@ describe('Database.query (Effect API)', () => {
 
       const missing = yield* Database.query(Filter.type(TestSchema.Person, { name: 'missing' })).first;
       expect(Option.isNone(missing)).toBe(true);
-    }).pipe(Effect.provide(TestLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 
   test('evaluating the effect yields a QueryResult', async ({ expect }) => {
@@ -66,7 +66,7 @@ describe('Database.query (Effect API)', () => {
       const results = queryResult.runSync();
       expect(results).toHaveLength(1);
       expect(results[0]?.name).toBe('alice');
-    }).pipe(Effect.provide(TestLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 
   test('subscribe fires with current results when fire: true', async ({ expect }) => {
@@ -86,6 +86,6 @@ describe('Database.query (Effect API)', () => {
       expect(queryResult.results).toHaveLength(2);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
       unsubscribe();
-    }).pipe(Effect.provide(TestLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 });

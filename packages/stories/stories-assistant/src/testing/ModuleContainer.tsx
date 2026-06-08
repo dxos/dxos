@@ -12,7 +12,7 @@ import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer, makeRegistry } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';
 import { StorybookCapabilities } from '@dxos/plugin-testing';
@@ -73,7 +73,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
 
     const feedTarget = await chat.feed.load();
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await runAndForwardErrors(
+    const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });

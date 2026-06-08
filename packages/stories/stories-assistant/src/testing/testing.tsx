@@ -33,7 +33,7 @@ import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceRes
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -192,7 +192,7 @@ const PluginManagerHost = ({
 
     return () => {
       manager.capabilities.remove(capability.interface, capability.implementation);
-      void runAndForwardErrors(manager.shutdown());
+      void EffectEx.runAndForwardErrors(manager.shutdown());
     };
   }, [manager, contextId, children]);
 

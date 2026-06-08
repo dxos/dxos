@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Doc } from '@automerge/automerge';
+import { next as A, type Doc, toJS } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Schema from 'effect/Schema';
 
@@ -118,6 +118,35 @@ export class MigrationBuilder {
 
   deleteObject(id: string): void {
     this._deleteObjects.push(id);
+  }
+
+  /**
+   * Re-materializes linked object documents into fresh Automerge docs without history.
+   * Call {@link _commit} to publish a new space epoch with updated root links.
+   */
+  async compactLinkedDocuments(objectIds?: string[]): Promise<{ compacted: string[]; skipped: string[] }> {
+    const linkIds = objectIds ?? Object.keys(this._rootDoc.links ?? {});
+    const compacted: string[] = [];
+    const skipped: string[] = [];
+
+    for (const id of linkIds) {
+      const oldHandle = await this._findObjectContainingHandle(id);
+      if (!oldHandle) {
+        skipped.push(id);
+        continue;
+      }
+
+      await oldHandle.whenReady();
+      const materialized = toJS(oldHandle.doc()!) as DatabaseDirectory;
+      const newHandle = this._repo.create<DatabaseDirectory>(materialized);
+      await newHandle.whenReady();
+      invariant(newHandle.url, 'Compacted document URL not available after whenReady');
+      this._newLinks[id] = newHandle.url;
+      this._addHandleToFlushList(newHandle.documentId!);
+      compacted.push(id);
+    }
+
+    return { compacted, skipped };
   }
 
   async changeProperties(changeFn: (properties: EntityStructure) => void): Promise<void> {

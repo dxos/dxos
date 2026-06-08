@@ -17,7 +17,7 @@ import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
 import { Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -116,7 +116,7 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const feedServiceLayer = createFeedServiceLayer(space.queues);
-    const runtime = await runAndForwardErrors(
+    const runtime = await EffectEx.runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
     const session = new AiSession.Session({ feed, runtime, registry: this._registry });

@@ -15,7 +15,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt, BlueprintManagerBlueprint, DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Ref, Tag } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
@@ -161,7 +161,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
         yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
 
         const { personalSpace } = yield* Effect.promise(() =>
-          runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+          EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
 
         if (options.expect === 'failure') {

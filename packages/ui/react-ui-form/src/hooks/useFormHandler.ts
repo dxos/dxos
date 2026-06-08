@@ -8,7 +8,7 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type JsonPath, createJsonPath, fromEffectValidationPath, getValue as getValue$ } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';
@@ -81,12 +81,12 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
   values: Partial<T>;
 
   /** Map of changed fields. */
-  changed: Record<JsonPath, boolean>;
+  changed: Record<SchemaEx.JsonPath, boolean>;
   // TODO(burdon): How is this different from above?
-  touched: Record<JsonPath, boolean>;
+  touched: Record<SchemaEx.JsonPath, boolean>;
 
   /** Map of error strings. */
-  errors: Record<JsonPath, string>;
+  errors: Record<SchemaEx.JsonPath, string>;
 
   /** Whether the form can be saved (i.e., data is valid). */
   isValid: boolean;
@@ -121,9 +121,9 @@ export const useFormHandler = <T extends AnyProperties>({
   onCancel,
   ...props
 }: FormHandlerProps<T>): FormHandler<T> => {
-  const [changed, setChanged] = useState<Record<JsonPath, boolean>>({});
-  const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
-  const [errors, setErrors] = useState<Record<JsonPath, string>>({});
+  const [changed, setChanged] = useState<Record<SchemaEx.JsonPath, boolean>>({});
+  const [touched, setTouched] = useState<Record<SchemaEx.JsonPath, boolean>>({});
+  const [errors, setErrors] = useState<Record<SchemaEx.JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
   const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
   const [values$, setValues] = useControllableState<Partial<T>>({
@@ -218,7 +218,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
     (path) => {
-      const jsonPath = Array.isArray(path) ? createJsonPath(path) : path;
+      const jsonPath = Array.isArray(path) ? SchemaEx.createJsonPath(path) : path;
       const [_, error] =
         Object.entries(errors).find(
           ([errorPath]) =>
@@ -226,7 +226,7 @@ export const useFormHandler = <T extends AnyProperties>({
         ) ?? [];
 
       // Only show errors for touched fields.
-      const isTouched = touched[jsonPath as JsonPath];
+      const isTouched = touched[jsonPath as SchemaEx.JsonPath];
       if (!isTouched) {
         return {
           status: undefined,
@@ -244,7 +244,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const getValue = useCallback<FormHandler<T>['getValue']>(
     (path) => {
-      return getValue$(values, createJsonPath(path));
+      return SchemaEx.getValue(values, SchemaEx.createJsonPath(path));
     },
     [values],
   );
@@ -253,7 +253,7 @@ export const useFormHandler = <T extends AnyProperties>({
     (path, type, value) => {
       log('onValueChange', { path, value });
 
-      const jsonPath = createJsonPath(path);
+      const jsonPath = SchemaEx.createJsonPath(path);
       const pathArray = path;
       let parsedValue = value as any;
       try {
@@ -288,7 +288,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const onBlur = useCallback(
     async (path: (string | number)[]) => {
-      const jsonPath = createJsonPath(path);
+      const jsonPath = SchemaEx.createJsonPath(path);
 
       // TODO(burdon): Check value has changed from original.
       setTouched((touched) => ({ ...touched, [jsonPath]: true }));
@@ -368,13 +368,13 @@ const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): 
 const flatMap = (errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
-      // Convert the validation error path format to our JsonPath format.
-      const jsonPath = fromEffectValidationPath(path);
+      // Convert the validation error path format to our SchemaEx.JsonPath format.
+      const jsonPath = SchemaEx.fromEffectValidationPath(path);
       if (!(jsonPath in result)) {
         result[jsonPath] = message;
       }
       return result;
     },
-    {} as Record<JsonPath, string>,
+    {} as Record<SchemaEx.JsonPath, string>,
   );
 };
