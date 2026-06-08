@@ -104,14 +104,16 @@ export const SpaceHomeArticle = ({ role, subject }: SpaceHomeArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      {showWelcome && (
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.Button onClick={handleStartTour}>{t('start-tour.button')}</Toolbar.Button>
-            <Toolbar.Button onClick={() => setDismissed(true)}>{t('hide-welcome.button')}</Toolbar.Button>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-      )}
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          {showWelcome && (
+            <>
+              <Toolbar.Button onClick={handleStartTour}>{t('start-tour.button')}</Toolbar.Button>
+              <Toolbar.Button onClick={() => setDismissed(true)}>{t('hide-welcome.button')}</Toolbar.Button>
+            </>
+          )}
+        </Toolbar.Root>
+      </Panel.Toolbar>
       <Panel.Content asChild>
         {/* Match the AI chat content width (`dx-document`): content at the top, prompt pinned at the bottom. */}
         <div className='flex flex-col bs-full min-bs-0'>

@@ -81,7 +81,7 @@ export const translations = [
         'welcome.description':
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',
         'start-tour.button': 'Start tour',
-        'hide-welcome.button': 'Hide',
+        'hide-welcome.button': 'Hide Welcome',
         // Settings.
         'settings.title': 'Support settings',
         'show-welcome.button': 'Show welcome page',

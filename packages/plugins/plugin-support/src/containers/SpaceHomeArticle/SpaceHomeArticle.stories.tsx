@@ -3,10 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -31,7 +34,18 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({ createIdentity: true, createSpace: true }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { personalSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => personalSpace.waitUntilReady());
+            }),
+        }),
+      ],
+    }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -43,5 +57,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Personal space: shows Welcome panel (carousel + Start tour + Hide) at the top. */
+/** Personal space: shows Welcome panel + toolbar (Start tour, Hide Welcome) at the top. */
 export const Default: Story = {};
