@@ -22,20 +22,15 @@ export const byokHeaderLayer = (
     HttpClient.HttpClient,
     Effect.gen(function* () {
       const client = yield* HttpClient.HttpClient;
-      // The cast erases the per-request `CredentialsService` requirement from the returned client's
-      // type. That requirement is real: `mapRequestEffect`'s callback yields it on every request,
-      // pulled from the *caller's fiber context*. The Layer's R says `CredentialsService` for
-      // bookkeeping but `Layer.provide` upstream only satisfies the type — runtime injection has to
-      // happen via the fiber executing the request (e.g. `AgentProcess.requires`).
+      const credentials = yield* Credential.CredentialsService;
       return HttpClient.mapRequestEffect(client, (request) =>
         Effect.gen(function* () {
-          const credentials = yield* Credential.CredentialsService;
           const matches = yield* Effect.tryPromise(() => credentials.queryCredentials({ service: providerHost })).pipe(
             Effect.orElseSucceed((): Credential.ServiceCredential[] => []),
           );
           const apiKey = matches.find((credential) => credential.apiKey)?.apiKey;
           return apiKey ? HttpClientRequest.setHeader(request, BYOK_HEADER, apiKey) : request;
         }),
-      ) as HttpClient.HttpClient;
+      );
     }),
   );

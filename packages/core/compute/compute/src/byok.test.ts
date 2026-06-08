@@ -24,8 +24,12 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provide(credentialsLayer([{ service: 'anthropic.com', apiKey: 'sk-ant-user' }])),
-      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
+      Effect.provide(
+        byokHeaderLayer('anthropic.com').pipe(
+          Layer.provide(captureHeaderClient(sink)),
+          Layer.provide(credentialsLayer([{ service: 'anthropic.com', apiKey: 'sk-ant-user' }])),
+        ),
+      ),
     );
     await runAndForwardErrors(runnable as Effect.Effect<void>);
 
@@ -41,8 +45,12 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provide(credentialsLayer([])),
-      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
+      Effect.provide(
+        byokHeaderLayer('anthropic.com').pipe(
+          Layer.provide(captureHeaderClient(sink)),
+          Layer.provide(credentialsLayer([])),
+        ),
+      ),
     );
     await runAndForwardErrors(runnable as Effect.Effect<void>);
 
@@ -58,8 +66,12 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provide(credentialsLayer([{ service: 'anthropic.com' }])),
-      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
+      Effect.provide(
+        byokHeaderLayer('anthropic.com').pipe(
+          Layer.provide(captureHeaderClient(sink)),
+          Layer.provide(credentialsLayer([{ service: 'anthropic.com' }])),
+        ),
+      ),
     );
     await runAndForwardErrors(runnable as Effect.Effect<void>);
 
@@ -84,8 +96,12 @@ describe('byokHeaderLayer', () => {
     });
 
     const runnable = program.pipe(
-      Effect.provide(failingCredentials),
-      Effect.provide(byokHeaderLayer('anthropic.com').pipe(Layer.provide(captureHeaderClient(sink)))),
+      Effect.provide(
+        byokHeaderLayer('anthropic.com').pipe(
+          Layer.provide(captureHeaderClient(sink)),
+          Layer.provide(failingCredentials),
+        ),
+      ),
     );
     await runAndForwardErrors(runnable as Effect.Effect<void>);
 
