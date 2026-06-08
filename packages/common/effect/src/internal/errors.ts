@@ -200,6 +200,9 @@ export const runAndForwardErrors = async <A, E>(
   return unwrapExit(exit);
 };
 
+/** Alias for {@link runAndForwardErrors} — preferred name when accessed via `EffectEx.runPromise`. */
+export const runPromise = runAndForwardErrors;
+
 /**
  * Runs the embedded effect asynchronously and throws any failures and defects as errors.
  */

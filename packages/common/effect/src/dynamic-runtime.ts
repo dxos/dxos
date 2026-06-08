@@ -10,7 +10,7 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
 
-import { unwrapExit } from './errors';
+import { unwrapExit } from './internal/errors';
 
 /**
  * Helper type to construct a union of tag identifiers from an array of tags.

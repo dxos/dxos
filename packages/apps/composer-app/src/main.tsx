@@ -285,7 +285,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.succeed(false)),
     Match.exhaustive,
-    EffectEx.runAndForwardErrors,
+    EffectEx.runPromise,
   );
 
   // Detect mobile operating systems (phones only, not tablets).
@@ -300,7 +300,7 @@ const main = async () => {
     ),
     Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
     Match.exhaustive,
-    EffectEx.runAndForwardErrors,
+    EffectEx.runPromise,
   );
 
   // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
@@ -403,7 +403,7 @@ const main = async () => {
   bootStatus('Loading plugins…');
   const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isPwa, isTauri);
-  const remotePluginsResult = await EffectEx.runAndForwardErrors(
+  const remotePluginsResult = await EffectEx.runPromise(
     UrlLoader.preload({
       cache: assetCache,
       onPluginLoaded: (loaded, total) => {
