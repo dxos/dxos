@@ -674,6 +674,94 @@ const DurabilityTestLayer = Layer.mergeAll(
   Trace.layerNoop,
 );
 
+describe('reentrancy', () => {
+  it.effect(
+    'shutdown and startup are idempotent',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeSumAggregator();
+      const handle = yield* manager.spawn(executable);
+      yield* handle.runAndExit({ inputs: [1] }).pipe(Stream.runCollect);
+
+      yield* manager.shutdown();
+      yield* manager.shutdown();
+      yield* manager.startup();
+      yield* manager.startup();
+
+      const dormant = yield* manager.list({ key: executable.key });
+      const restored = yield* dormant[0].hydrate(executable);
+      const outputs = yield* restored.runAndExit({ inputs: [2] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([3]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'shutdown clears in-memory handles; startup exposes dormant processes from KV',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeSumAggregator();
+      const handle = yield* manager.spawn(executable);
+      const pid = handle.pid;
+
+      yield* handle.runAndExit({ inputs: [3] }).pipe(Stream.runCollect);
+      yield* manager.shutdown();
+
+      const attachExit = yield* manager.attach(pid).pipe(Effect.exit);
+      expect(Exit.isFailure(attachExit)).toEqual(true);
+
+      yield* manager.startup();
+
+      const dormant = yield* manager.list({ key: executable.key });
+      expect(dormant).toHaveLength(1);
+      expect(dormant[0].pid).toEqual(pid);
+
+      const restored = yield* dormant[0].hydrate(executable);
+      const outputs = yield* restored.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([7]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'concurrent shutdown and startup calls are serialized',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeSumAggregator();
+      yield* manager.spawn(executable);
+
+      yield* Effect.all(
+        [manager.shutdown(), manager.startup(), manager.shutdown(), manager.startup()],
+        { concurrency: 'unbounded', discard: true },
+      );
+
+      const dormant = yield* manager.list({ key: executable.key });
+      expect(dormant).toHaveLength(1);
+      const restored = yield* dormant[0].hydrate(executable);
+      const outputs = yield* restored.runAndExit({ inputs: [1] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([1]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'shutdown and startup with external hydrate resumes a hibernating alarm process',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeWaitingExecutable();
+      const handle = yield* manager.spawn(executable);
+      expect(handle.status.state).toEqual(Process.State.HYBERNATING);
+
+      yield* manager.shutdown();
+      yield* manager.startup();
+
+      const dormant = yield* manager.list({ key: executable.key });
+      const restored = yield* dormant[0].hydrate(executable);
+      expect(restored.status.state).toEqual(Process.State.HYBERNATING);
+
+      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 600)));
+      expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+});
+
 describe('durability', () => {
   const mkManager = (deps: {
     kv: KeyValueStore.KeyValueStore;

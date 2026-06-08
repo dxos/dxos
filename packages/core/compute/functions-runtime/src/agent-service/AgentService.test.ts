@@ -25,6 +25,7 @@ import { Message, Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as AgentService from './AgentService';
+import { ProcessManager } from '..';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -199,6 +200,33 @@ describe('Agent Service', () => {
 
         const researchService = yield* ServiceResolver.resolve(ResearchService, {});
         yield* researchService.waitForTaskToAppear();
+        yield* researchService.completeOneTask();
+        yield* Fiber.join(completionFiber);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  it.scoped.only(
+    'restart during tool call',
+    Effect.fnUntraced(
+      function* (_) {
+        const agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint],
+        });
+        yield* agent.submitPrompt(`Research ${JSON.stringify(TEST_DATA.organizations[0])}`);
+        const completionFiber = yield* agent.waitForCompletion().pipe(Effect.fork);
+
+        const researchService = yield* ServiceResolver.resolve(ResearchService, {});
+        yield* researchService.waitForTaskToAppear();
+
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+        yield* AgentService.hydrate();
+
         yield* researchService.completeOneTask();
         yield* Fiber.join(completionFiber);
       },

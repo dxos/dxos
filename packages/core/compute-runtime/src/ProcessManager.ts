@@ -221,9 +221,17 @@ export interface Manager {
   runAllProcessesToCompletion(): Effect.Effect<void>;
 
   /**
-   * Terminates all spawned processes (e.g. when tearing down the manager layer).
+   * Suspends all live processes, clears in-memory handle state, and persists durable records to KV.
+   * Mimics app teardown. Idempotent — safe to call multiple times before {@link startup}.
+   * Live processes must be rehydrated externally via {@link Handle.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void>;
+
+  /**
+   * Marks the manager as ready after {@link shutdown}, mimicking a fresh boot from KV storage.
+   * Does not rehydrate processes — callers supply definitions via {@link Handle.hydrate}.
+   */
+  startup(): Effect.Effect<void>;
 
   /**
    * Operation handlers supplied at construction (same set used for nested {@link Operation.Service} in processes).
@@ -263,6 +271,8 @@ export class ProcessManagerImpl implements Manager {
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
+  readonly #lifecycleSemaphore = Effect.runSync(Effect.makeSemaphore(1));
+  #shutDown = false;
 
   constructor(opts: ProcessManagerImplOpts) {
     this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
@@ -310,24 +320,43 @@ export class ProcessManagerImpl implements Manager {
   }
 
   /**
-   * Suspends every spawned process handle (preserving durable state) and clears the handle map.
-   * Suspended processes can be hydrated on the next boot via {@link Handle.hydrate}.
+   * Suspends every live process handle and drops all in-memory manager state.
+   * Durable records remain in KV for external {@link Handle.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
-      const handleCount = this.#handles.size;
-      if (handleCount === 0) {
-        log('lifecycle: manager shutdown skipped');
-        return;
-      }
-      log('lifecycle: manager suspending', { handleCount, pids: [...this.#handles.keys()] });
-      for (const handle of this.#handles.values()) {
-        yield* handle.suspend();
-      }
-      this.#handles.clear();
-      this.#refreshProcessTree();
-      log('lifecycle: manager suspended', { suspended: handleCount });
-    });
+    return this.#lifecycleSemaphore.withPermits(1)(
+      Effect.gen(this, function* () {
+        if (this.#shutDown) {
+          log('lifecycle: manager shutdown skipped (already shut down)');
+          return;
+        }
+        const handleCount = this.#handles.size;
+        if (handleCount > 0) {
+          log('lifecycle: manager suspending', { handleCount, pids: [...this.#handles.keys()] });
+          for (const handle of this.#handles.values()) {
+            yield* handle.suspend();
+          }
+        }
+        this.#handles.clear();
+        this.#shutDown = true;
+        this.#refreshProcessTree();
+        log('lifecycle: manager suspended', { suspended: handleCount });
+      }),
+    );
+  }
+
+  startup(): Effect.Effect<void> {
+    return this.#lifecycleSemaphore.withPermits(1)(
+      Effect.sync(() => {
+        if (!this.#shutDown) {
+          log('lifecycle: manager startup skipped (not shut down)');
+          return;
+        }
+        this.#shutDown = false;
+        this.#refreshProcessTree();
+        log('lifecycle: manager started');
+      }),
+    );
   }
 
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
