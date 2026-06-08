@@ -191,13 +191,14 @@ export const TitlesOnly: Story = {
     <div className={GRID_LAYOUT}>
       <PaneTools>
         <ToolList.Root selectedId={SAMPLE_TOOLS[0].id}>
-          <ToolList.Content tools={SAMPLE_TOOLS}>
-            {(tool) => (
+          <ToolList.Content
+            tools={SAMPLE_TOOLS}
+            renderItem={(tool) => (
               <ToolList.Item key={tool.id} tool={tool}>
                 <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
               </ToolList.Item>
             )}
-          </ToolList.Content>
+          />
         </ToolList.Root>
       </PaneTools>
       <PaneForm>

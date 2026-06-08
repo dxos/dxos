@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { MediaPlayer, type MediaKind } from '../MediaPlayer';
 
@@ -115,21 +115,23 @@ CarouselRoot.displayName = 'Carousel.Root';
 
 export type CarouselContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
-const CarouselContent = ({ classNames, children }: CarouselContentProps) => (
+// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref land on the grid.
+const CarouselContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
   // Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
   // gives the carousel a definite height, and row 2 (Indicators / Caption) sticks to
   // its content height. With no parent height constraint, the `1fr` row simply tracks
   // row-1 content — preserving the existing aspect-video behaviour for unbounded use.
   // TODO(burdon): Move to Carousel.theme.ts
   <div
-    className={mx(
-      'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
-      classNames,
-    )}
+    {...composableProps(props, {
+      classNames:
+        'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
+    })}
+    ref={forwardedRef}
   >
     {children}
   </div>
-);
+));
 
 CarouselContent.displayName = 'Carousel.Content';
 

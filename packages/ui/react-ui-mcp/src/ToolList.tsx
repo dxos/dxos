@@ -21,7 +21,7 @@ import React, {
   useMemo,
 } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { List as NaturalList } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
@@ -91,19 +91,23 @@ export type ToolListContentProps = ThemedClassName<{
   /**
    * Optional render override for each row. Default renders title +
    * description via `<ToolList.Item>`. Override when you want extra row
-   * content (badges, kbd hints, etc.).
+   * content (badges, kbd hints, etc.). (Not `children` so the part can be a
+   * `composable` Slot target — see below.)
    */
-  children?: (tool: Tool) => ReactNode;
+  renderItem?: (tool: Tool) => ReactNode;
 }>;
 
-const ToolListContent = ({ classNames, tools, children }: ToolListContentProps): ReactNode => (
-  <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
-    {({ items }) => (
-      <div role='listbox' className={mx('flex flex-col gap-px', classNames)}>
-        {items?.map((tool) => (children ? children(tool) : <ToolListItem key={tool.id} tool={tool} />))}
-      </div>
-    )}
-  </NaturalList.Root>
+// `composable` so a parent `<… asChild>` (Slot) is respected — the injected className/ref land on the listbox.
+const ToolListContent = composable<HTMLDivElement, ToolListContentProps>(
+  ({ tools, renderItem, ...props }, forwardedRef) => (
+    <NaturalList.Root<Tool> items={tools as Tool[]} getId={(t) => t.id}>
+      {({ items }) => (
+        <div {...composableProps(props, { role: 'listbox', classNames: 'flex flex-col gap-px' })} ref={forwardedRef}>
+          {items?.map((tool) => (renderItem ? renderItem(tool) : <ToolListItem key={tool.id} tool={tool} />))}
+        </div>
+      )}
+    </NaturalList.Root>
+  ),
 );
 ToolListContent.displayName = 'ToolList.Content';
 
@@ -193,14 +197,15 @@ ToolListItemDescription.displayName = 'ToolList.ItemDescription';
 // Custom row content:
 //
 //   <ToolList.Root selectedId={id} onSelect={setId}>
-//     <ToolList.Content tools={tools}>
-//       {(tool) => (
+//     <ToolList.Content
+//       tools={tools}
+//       renderItem={(tool) => (
 //         <ToolList.Item key={tool.id} tool={tool}>
 //           <Badge>{tool.id}</Badge>
 //           <ToolList.ItemTitle>{tool.title}</ToolList.ItemTitle>
 //         </ToolList.Item>
 //       )}
-//     </ToolList.Content>
+//     />
 //   </ToolList.Root>
 //
 
