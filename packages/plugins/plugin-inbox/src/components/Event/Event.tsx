@@ -118,7 +118,7 @@ const EventHeader = ({ db, editable, onContactCreate }: EventHeaderProps) => {
       border={false}
       fullWidth
       // Card.Body is `display: contents`, so rows are direct grid items — add row-gap when editing.
-      classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-2')}
+      classNames={mx('p-1 border-b border-subdued-separator', editable && 'gap-y-1')}
     >
       <Card.Body>
         <EventDetails event={event} title='heading' editable={editable} db={db} onContactCreate={onContactCreate} />
