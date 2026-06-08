@@ -301,7 +301,9 @@ export class AiChatProcessor {
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-      }),
+        const session = yield* AgentService.getSession(this._feed);
+        yield* session.terminate();
+      }).pipe(Effect.provide(this._spaceLayer)),
     );
 
     this.#requestFiber = undefined;
