@@ -34,7 +34,7 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  *   instead-of: Navigating to the database section after object creation, or getting a 404 on deep-link and page reload before the graph has populated
  *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
-export const createTypeSectionPathResolver = (type: Type.Type): AppCapabilities.NavigationPathResolver => {
+export const createTypeSectionPathResolver = (type: Type.AnyEntity): AppCapabilities.NavigationPathResolver => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create a type section path resolver.');
   return (qualifiedPath) => {

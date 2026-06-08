@@ -43,7 +43,7 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  *   uses: {@link createTypeSectionExtension}, {@link AppNodeMatcher.whenSpace}, {@link AtomQuery}, {@link Filter.type}, {@link createObjectNode}
  */
 export const createTypeSectionExtension = (
-  type: Type.Type,
+  type: Type.AnyEntity,
   options?: {
     /** Position hint for the section in the sidebar. */
     position?: 'first' | 'last';

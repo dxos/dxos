@@ -152,7 +152,7 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  *   instead-of: Building path strings with template literals at the call site
  *   uses: {@link createTypeSectionPaths}
  */
-export const createTypeSectionPaths = (type: Type.Type) => {
+export const createTypeSectionPaths = (type: Type.AnyEntity) => {
   const typename = Type.getTypename(type);
   invariant(typename, 'Schema must have a typename to create type section paths.');
   return {
