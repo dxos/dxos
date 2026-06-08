@@ -204,16 +204,18 @@ const WelcomePanel = memo(() => {
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
       <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
-        <Carousel.Root classNames='max-w-[50rem]' count={slides.length}>
-          <Carousel.Previous />
-          <Carousel.Viewport>
-            {slides.map((slide, index) => (
-              <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
-            ))}
-          </Carousel.Viewport>
-          <Carousel.Next />
-          <Carousel.Indicators />
-          <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
+        <Carousel.Root count={slides.length}>
+          <Carousel.Content classNames='max-w-[50rem]'>
+            <Carousel.Previous />
+            <Carousel.Viewport>
+              {slides.map((slide, index) => (
+                <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
+              ))}
+            </Carousel.Viewport>
+            <Carousel.Next />
+            <Carousel.Indicators />
+            <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
+          </Carousel.Content>
         </Carousel.Root>
       )}
     </div>

@@ -185,6 +185,7 @@ export const AssistantTestServiceResolverLayer = ({
           AiService.AiService,
           OperationRegistry.Service,
           Registry.Service,
+          Credential.CredentialsService,
         ),
         ServiceResolver.fromContext(extraSericesRt.context),
       );

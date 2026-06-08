@@ -77,6 +77,9 @@ export abstract class BaseHttpClient {
     }
   }
 
+  // TODO(mykola): Extend `_call` to support streaming/raw `Response` returns so
+  // `EdgeHttpClient.anthropicAiRequest` can be absorbed here and the auth/retry loop
+  // stops being duplicated across the two paths.
   protected async _call<T>(ctx: Context, url: URL, args: HttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
     // Log presence/size only — never log raw body contents which may contain PII.
@@ -124,7 +127,9 @@ export abstract class BaseHttpClient {
           if (body.success) {
             return body.data;
           }
-        } else if (response.status === 401 && !handledAuth) {
+        } else if (response.status === 401 && response.headers.get('WWW-Authenticate') !== null && !handledAuth) {
+          // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
+          // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s lack it.
           this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;

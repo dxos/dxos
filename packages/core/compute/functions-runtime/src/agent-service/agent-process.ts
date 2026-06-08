@@ -22,7 +22,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Credential, McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
@@ -73,6 +73,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         Feed.FeedService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
+        // Needed in the fiber's context — `byokHeaderLayer`'s per-request callback reads it.
+        Credential.CredentialsService,
       ],
     },
     (ctx) =>

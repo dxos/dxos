@@ -130,7 +130,7 @@ type DefaultStoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation
   };
 
 const DefaultStory = ({
-  zoom: _zoom = 1,
+  zoom: zoomProp = 1,
   translation,
   rotation = [0, 0, 0],
   projection,
@@ -215,7 +215,7 @@ const DefaultStory = ({
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex' }}>
-      <Globe.Root zoom={_zoom} translation={translation} rotation={rotation}>
+      <Globe.Root zoom={zoomProp} translation={translation} rotation={rotation}>
         <Globe.Canvas
           ref={setController}
           topology={styles?.dots ? dots() : topology()}

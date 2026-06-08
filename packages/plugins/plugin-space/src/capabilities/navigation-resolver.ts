@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
+  getActiveSpace,
   getObjectPath,
   getSpaceIdFromPath,
   getSpacePath,
@@ -15,12 +16,16 @@ import {
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const capabilities = yield* Capability.Service;
+
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
     const resolver: AppCaps.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
@@ -80,10 +85,11 @@ export default Capability.makeModule(
       if (path.includes('/') || !Key.EntityId.isValid(path)) {
         return Effect.succeed(Option.none());
       }
-      return Effect.gen(function* () {
-        const { db } = yield* Database.Service;
-        return Option.some(EID.make({ spaceId: db.spaceId, entityId: path as Key.EntityId }));
-      });
+      const space = getActiveSpace(client, capabilities);
+      if (!space) {
+        return Effect.succeed(Option.none());
+      }
+      return Effect.succeed(Option.some(EID.make({ spaceId: space.id, entityId: path as Key.EntityId })));
     };
 
     return [

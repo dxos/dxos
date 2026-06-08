@@ -13,6 +13,11 @@ import { SpaceId } from '@dxos/keys';
  */
 export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
 
+/**
+ * HTTP header sent on every Edge request to provide a BYOK (Bring Your Own Key) for AI services.
+ */
+export const BYOK_HEADER = 'X-BYOK';
+
 // TODO(burdon): Rename EdgerRouterEndpoint.
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {

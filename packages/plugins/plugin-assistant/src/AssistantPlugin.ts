@@ -20,6 +20,7 @@ import {
   AgentRuntime,
   AiContext as AiContextCapability,
   AiService,
+  IntegrationProvider,
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
@@ -102,6 +103,11 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: () => AiService(options),
     })),
     Plugin.addModule({
+      // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+      // dispatched as their own processes (e.g. via `Operation.invoke` from
+      // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
+      // conversation-scoped services without an inline `Effect.provideService`
+      // upstream. See `capabilities/ai-context.ts` for the rationale.
       activatesOn: ActivationEvents.SetupProcessManager,
       activate: AiContextCapability,
     }),
@@ -132,6 +138,10 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
     Plugin.addModule({
       activatesOn: ClientEvents.SetupMigration,
       activate: Migrations,
+    }),
+    Plugin.addModule({
+      activatesOn: AppActivationEvents.SetupIntegrationProviders,
+      activate: IntegrationProvider,
     }),
     AppPlugin.addPluginAssetModule({
       asset: { pluginId: meta.id, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

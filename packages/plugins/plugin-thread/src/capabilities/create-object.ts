@@ -14,6 +14,7 @@ import { Channel } from '@dxos/types';
 // graph isn't pulled into this capability module's evaluation.
 import { ChannelCreatePanel } from '#containers';
 
+import { getChannelsPath } from '../paths';
 import { ThreadCapabilities, resolveProvider } from '../types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
@@ -37,7 +38,7 @@ export default Capability.makeModule(
             object,
             target: opts.target,
             hidden: true,
-            targetNodeId: opts.targetNodeId,
+            targetNodeId: opts.targetNodeId ?? getChannelsPath(opts.db.spaceId),
           });
         }),
     });

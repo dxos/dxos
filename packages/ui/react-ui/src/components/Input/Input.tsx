@@ -3,16 +3,14 @@
 //
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -74,16 +72,21 @@ type InputTriggerContextValue = {
   hasTrigger: boolean;
 };
 
-const InputTriggerContext = createContext<InputTriggerContextValue | undefined>(undefined);
+// Default context makes the trigger registry a no-op outside `Input.Root` (consumers opt in).
+const [InputTriggerProvider, useInputTriggerContext] = createContext<InputTriggerContextValue>(INPUT_NAME, {
+  registerTrigger: () => () => {},
+  trigger: () => {},
+  hasTrigger: false,
+});
 
 /**
  * Field hook. Pass an opener function; while the field is mounted, an `Input.TriggerIcon`
  * sibling will call this opener on press. Returns a no-op when used outside `Input.Root`.
  */
 const useInputTrigger = (handler: InputTriggerHandler | undefined) => {
-  const ctx = useContext(InputTriggerContext);
+  const ctx = useInputTriggerContext('useInputTrigger');
   useEffect(() => {
-    if (!ctx || !handler) {
+    if (!handler) {
       return;
     }
     return ctx.registerTrigger(handler);
@@ -113,12 +116,10 @@ const Root = (props: InputRootProps) => {
     handlerRef.current?.();
   }, []);
 
-  const value = useMemo(() => ({ registerTrigger, trigger, hasTrigger }), [registerTrigger, trigger, hasTrigger]);
-
   return (
-    <InputTriggerContext.Provider value={value}>
+    <InputTriggerProvider registerTrigger={registerTrigger} trigger={trigger} hasTrigger={hasTrigger}>
       <InputRoot {...props} />
-    </InputTriggerContext.Provider>
+    </InputTriggerProvider>
   );
 };
 
@@ -136,8 +137,8 @@ type TriggerIconProps = Omit<IconButtonProps, 'label' | 'onClick'> & { label?: s
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
   ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const ctx = useContext(InputTriggerContext);
-    if (!ctx?.hasTrigger) {
+    const ctx = useInputTriggerContext('Input.TriggerIcon');
+    if (!ctx.hasTrigger) {
       return null;
     }
 
@@ -319,24 +320,6 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 TextInput.displayName = 'Input.TextInput';
 
 //
-// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
-// spinbutton semantics, and immutable separators. ISO string API:
-//   - Date     `YYYY-MM-DD`
-//   - Time     `HH:mm`
-//   - DateTime `YYYY-MM-DDTHH:mm`
-// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
-// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
-//
-
-const Time = SegmentedTime;
-const Date_ = SegmentedDate;
-const DateTime = SegmentedDateTime;
-
-type TimeProps = SegmentedTimeProps;
-type DateInputProps = SegmentedDateProps;
-type DateTimeInputProps = SegmentedDateTimeProps;
-
-//
 // TextArea
 //
 
@@ -484,6 +467,24 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
 Switch.displayName = 'Input.Switch';
 
 //
+// Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
+// spinbutton semantics, and immutable separators. ISO string API:
+//   - Date     `YYYY-MM-DD`
+//   - Time     `HH:mm`
+//   - DateTime `YYYY-MM-DDTHH:mm`
+// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
+// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
+//
+
+const Time = SegmentedTime;
+const Date = SegmentedDate;
+const DateTime = SegmentedDateTime;
+
+type TimeProps = SegmentedTimeProps;
+type DateInputProps = SegmentedDateProps;
+type DateTimeInputProps = SegmentedDateTimeProps;
+
+//
 // Input
 //
 
@@ -494,7 +495,7 @@ export const Input = {
   TextInput,
   TextArea,
   Time,
-  Date: Date_,
+  Date,
   DateTime,
   Checkbox,
   Switch,
