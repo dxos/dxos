@@ -18,6 +18,7 @@ import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
+import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
@@ -114,6 +115,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
   [
     // Default
     AssistantPlugin.meta.id,
+    CommentsPlugin.meta.id,
     FilePlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
@@ -177,6 +179,7 @@ export const getPlugins = ({
     BoardPlugin(),
     CallsPlugin(),
     ChessPlugin(),
+    CommentsPlugin(),
     ClientPlugin({
       config,
       services,

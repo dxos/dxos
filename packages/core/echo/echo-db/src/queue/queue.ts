@@ -260,7 +260,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithScope = query.from(Scope.space(this._spaceId), Scope.feed(this._echoUri));
+    const queryWithScope = query.from(Scope.space({ id: this._spaceId }), Scope.feed(this._echoUri));
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 

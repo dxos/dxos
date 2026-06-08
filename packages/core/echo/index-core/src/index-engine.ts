@@ -218,6 +218,13 @@ export class IndexEngine {
     return this.#objectMetaIndex.lookupByObjectId(query);
   }
 
+  queryObjectIds(query: {
+    spaceIds: readonly SpaceId[];
+    objectIds: readonly EntityMeta['objectId'][];
+  }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryObjectIds(query);
+  }
+
   update(
     ctx: Context,
     dataSource: IndexDataSource,

@@ -23,6 +23,7 @@ import {
 import { Form } from '@dxos/react-ui-form';
 
 import { setSafeModeUrl } from '../../config';
+import { RECOVERY_PATH } from '../../constants';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -132,6 +133,10 @@ export const ResetDialog = ({
     window.location.href = setSafeModeUrl(true);
   }, []);
 
+  const handleRecovery = useCallback(() => {
+    window.location.href = RECOVERY_PATH;
+  }, []);
+
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -189,6 +194,13 @@ export const ResetDialog = ({
               iconOnly={!isNotMobile}
               label={t('safe-mode.label')}
               onClick={handleSafeMode}
+            />
+            <IconButton
+              icon='ph--lifebuoy--regular'
+              iconOnly={!isNotMobile}
+              label={t('recovery.label')}
+              onClick={handleRecovery}
+              data-testid='resetDialog.recovery'
             />
             {onReset && (
               <DropdownMenu.Root>

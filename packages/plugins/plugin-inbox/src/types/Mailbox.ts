@@ -4,8 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, TagIndex, Tagging, Type } from '@dxos/echo';
+import { BlueprintsAnnotation, TagIndex, Tagging } from '@dxos/app-toolkit';
+import { DXN, Annotation, type Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 import { Message } from '@dxos/types';

@@ -724,7 +724,7 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
               Scope.feed(queue1.uri),
             ]),
           )
@@ -738,7 +738,7 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
               Scope.feed(queue2.uri),
             ]),
           )
@@ -752,7 +752,7 @@ describe('Query', () => {
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from([
-              ...bothSpaces.map((spaceId) => Scope.space(spaceId)),
+              ...bothSpaces.map((spaceId) => Scope.space({ id: spaceId })),
               Scope.feed(queue1.uri),
               Scope.feed(queue2.uri),
             ]),

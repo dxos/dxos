@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -17,6 +17,7 @@ import * as Order from './Order';
 import * as Query from './Query';
 import * as Ref from './Ref';
 import { TestSchema } from './testing';
+import * as Type from './Type';
 
 describe('query api', () => {
   describe('Query', () => {
@@ -119,6 +120,16 @@ describe('query api', () => {
         property: null,
         typename: null,
       });
+    });
+
+    test('reference through array of refs is typed', () => {
+      const objects = Query.select(Filter.type(TestSchema.Container)).reference('objects');
+      expectTypeOf<Query.Type<typeof objects>>().toEqualTypeOf<Obj.Unknown>();
+    });
+
+    test('reference through single ref is typed', () => {
+      const assignee = Query.select(Filter.type(TestSchema.Task)).reference('assignee');
+      expectTypeOf<Query.Type<typeof assignee>>().toEqualTypeOf<Type.InstanceType<typeof TestSchema.Person>>();
     });
 
     test('get all tasks for employees of Cyberdyne', () => {

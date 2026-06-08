@@ -23,6 +23,7 @@ export const translations = [
         'update-and-reload-page.label': 'Update',
         'reload-page.label': 'Reload',
         'safe-mode.label': 'Safe mode',
+        'recovery.label': 'Recovery',
         'reset-app.label': 'Reset',
         'reset-app-confirm.label': 'Confirm to WIPE ALL DATA from this device.',
         'INVALID_STORAGE_VERSION.title': 'Invalid storage version',

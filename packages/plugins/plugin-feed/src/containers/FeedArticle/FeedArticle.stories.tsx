@@ -25,7 +25,7 @@ const useFeedData = (feedUrl?: string): { feed: Subscription.Subscription; posts
     let cancelled = false;
     const load = async () => {
       if (feedUrl) {
-        const { fetchRss } = await import('../../util/fetch-rss');
+        const { fetchRss } = await import('../../operations/sources/rss');
         const result = await fetchRss(feedUrl, { corsProxy: '/api/rss?url=' });
         if (!cancelled) {
           setData(result);
