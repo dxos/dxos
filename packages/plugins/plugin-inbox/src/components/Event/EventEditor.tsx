@@ -150,7 +150,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                   }
                 }}
               />
-              <Select.Root value={presetValue} onValueChange={handleDurationChange}>
+              {/* Empty string (not undefined) keeps the control controlled so it clears to the */}
+              {/* placeholder when the duration doesn't match a preset. */}
+              <Select.Root value={presetValue ?? ''} onValueChange={handleDurationChange}>
                 <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
                 <Select.Portal>
                   <Select.Content>
