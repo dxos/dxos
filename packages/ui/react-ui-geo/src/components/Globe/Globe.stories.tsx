@@ -263,15 +263,15 @@ const Earth = ({ level }: { level: Level }) => {
   );
 };
 
-export const Earth110 = () => {
+export const Topology110 = () => {
   return <Earth level='110m' />;
 };
 
-export const Earth50 = () => {
+export const Topology50 = () => {
   return <Earth level='50m' />;
 };
 
-export const Earth10 = () => {
+export const Topology10 = () => {
   return <Earth level='10m' />;
 };
 
@@ -280,7 +280,7 @@ export const Earth10 = () => {
  * code-split chunk fetched on demand the first time its tier is entered (default tiers: 110m / 50m).
  * Reads the live zoom from the globe context, so it must render inside `Globe.Root`.
  */
-const EarthLODContent = ({ controller }: { controller: GlobeController | null | undefined }) => {
+const DynamicCanvas = ({ controller }: { controller: GlobeController | null | undefined }) => {
   const { zoom } = useGlobeContext();
   const topology = useTopology(zoom);
   const handleAction = useGlobeZoomHandler(controller);
@@ -290,16 +290,16 @@ const EarthLODContent = ({ controller }: { controller: GlobeController | null | 
     <Globe.Viewport>
       <Globe.Canvas topology={topology} styles={defaultStyles} />
       <Globe.Zoom onAction={handleAction} />
+      <Globe.Debug />
     </Globe.Viewport>
   );
 };
 
-export const EarthLOD = () => {
+export const Dynamic = () => {
   const [controller, setController] = useState<GlobeController | null>();
   return (
     <Globe.Root zoom={1.2} rotation={[0, 0, 0]} ref={setController}>
-      <EarthLODContent controller={controller} />
-      <Globe.Debug />
+      <DynamicCanvas controller={controller} />
     </Globe.Root>
   );
 };
@@ -426,7 +426,7 @@ export const Globe6: Story = {
   },
 };
 
-export const GlobeVersorDrag: Story = {
+export const VersorDrag: Story = {
   args: {
     drag: true,
     wheel: true,

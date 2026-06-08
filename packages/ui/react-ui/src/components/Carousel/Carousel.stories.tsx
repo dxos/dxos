@@ -9,9 +9,7 @@ import { withTheme } from '../../testing';
 import { Carousel } from './Carousel';
 
 // Stable placeholder images so the story renders without network fixtures.
-const IMAGES = Array.from({ length: 5 }).map(
-  (_, index) => `https://placehold.co/640x360?text=Slide+${index + 1}`,
-);
+const IMAGES = Array.from({ length: 5 }).map((_, index) => `https://placehold.co/640x360?text=Slide+${index + 1}`);
 
 type DefaultStoryProps = { count?: number };
 
