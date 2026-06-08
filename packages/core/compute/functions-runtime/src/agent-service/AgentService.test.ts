@@ -313,11 +313,9 @@ describe('Agent Service', () => {
 
         const researchService = yield* ServiceResolver.resolve(ResearchService, {});
         const taskDrainer = yield* Effect.gen(function* () {
-          while (true) {
-            yield* researchService.waitForTaskToAppear();
-            yield* researchService.completeOneTask();
-          }
-        }).pipe(Effect.fork);
+          yield* researchService.waitForTaskToAppear();
+          yield* researchService.completeOneTask();
+        }).pipe(Effect.forever, Effect.fork);
 
         let ephemeralEventCount = 0;
         const ephemeralFiber = yield* agent.subscribeEphemeral().pipe(
@@ -337,6 +335,7 @@ describe('Agent Service', () => {
           yield* agent.submitPrompt(JSON.stringify(org));
         }
         yield* agent.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
+        // TODO(dmaretskyi): wait until settles and only now start draining
         yield* agent.waitForCompletion();
 
         yield* Fiber.interrupt(taskDrainer);
