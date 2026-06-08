@@ -15,9 +15,9 @@ import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxo
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { mx } from '@dxos/ui-theme';
 
+import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 
-import { useChatKeymapExtensions } from '../../hooks/useChatKeymap';
 import { type AiChatProcessor } from '../../processor';
 import { type ChatEvent } from '../Chat/events';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
