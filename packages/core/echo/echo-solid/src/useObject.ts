@@ -6,7 +6,6 @@ import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
 import { Obj, Ref } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 export interface ObjectUpdateCallback<T> {
@@ -189,7 +188,7 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
 
 /**
  * Internal function for subscribing to an Echo object or Ref.
- * AtomObj.make handles both objects and refs, returning snapshots.
+ * Obj.atom handles both objects and refs, returning snapshots.
  */
 function useObjectValue<T extends Obj.Unknown>(
   registry: Registry.Registry,
@@ -200,7 +199,9 @@ function useObjectValue<T extends Obj.Unknown>(
 
   // Initialize with the current value (if available).
   const initialInput = resolvedInput();
-  const initialValue = initialInput ? registry.get(AtomObj.make(initialInput)) : undefined;
+  const initialValue = initialInput
+    ? registry.get(Ref.isRef(initialInput) ? Obj.atom(initialInput) : Obj.atom(initialInput))
+    : undefined;
   const [value, setValue] = createSignal<T | undefined>(initialValue as T | undefined);
 
   // Subscribe to atom updates.
@@ -212,7 +213,7 @@ function useObjectValue<T extends Obj.Unknown>(
       return;
     }
 
-    const atom = AtomObj.make(input);
+    const atom = Ref.isRef(input) ? Obj.atom(input) : Obj.atom(input);
     const currentValue = registry.get(atom);
     setValue(() => currentValue as unknown as T);
 
@@ -240,7 +241,7 @@ function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
 ): Accessor<T[K] | undefined> {
   // Initialize with the current value (if available).
   const initialObj = obj();
-  const initialValue = initialObj ? registry.get(AtomObj.makeProperty(initialObj, property)) : undefined;
+  const initialValue = initialObj ? registry.get(Obj.atomProperty(initialObj, property)) : undefined;
   const [value, setValue] = createSignal<T[K] | undefined>(initialValue);
 
   // Subscribe to atom updates.
@@ -252,7 +253,7 @@ function useObjectProperty<T extends Obj.Unknown, K extends keyof T>(
       return;
     }
 
-    const atom = AtomObj.makeProperty(currentObj, property);
+    const atom = Obj.atomProperty(currentObj, property);
     const currentValue = registry.get(atom);
     setValue(() => currentValue);
 

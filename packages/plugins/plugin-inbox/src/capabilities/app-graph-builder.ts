@@ -11,14 +11,13 @@ import { AppCapabilities, AppNode, AppNodeMatcher, getSpaceIdFromPath } from '@d
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
-import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { EID } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
-import { type Event, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -51,7 +50,7 @@ export default Capability.makeModule(
         id: 'mailboxesSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
+          const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
           if (mailboxes.length === 0) {
             return Effect.succeed([]);
           }
@@ -77,18 +76,18 @@ export default Capability.makeModule(
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
         },
         connector: (space, get) => {
-          const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
+          const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               // Reactively count messages newer than the mailbox's `viewedAt` cursor. Querying the feed here
               // subscribes the connector to message changes, so the count updates after sync (new messages) and
               // after the mailbox is viewed (cursor advances, see `Mailbox.markViewed`).
-              // Cast as elsewhere in this file: `AtomRef.make` resolves to `Obj.Snapshot<Feed.Feed>`, which
-              // `Query.from` does not accept; the snapshot is structurally the feed for query purposes.
-              const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+              // `.atom` resolves to `Obj.Snapshot<Feed.Feed>`, which `Query.from` does not accept;
+              // the snapshot is structurally the feed for query purposes.
+              const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
               const messages = feed
-                ? get(AtomQuery.make<Message.Message>(space.db, Query.select(Filter.type(Message.Message)).from(feed)))
+                ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom)
                 : [];
               const modifiedCount = Mailbox.getNewMessageCount(mailbox, messages);
 
@@ -176,9 +175,7 @@ export default Capability.makeModule(
 
           const mailboxUri = Obj.getURI(mailbox);
           const messageId = get(selectedId(node.id));
-          const message = messageId
-            ? get(AtomQuery.make<Message.Message>(db, Query.select(Filter.id(messageId))))[0]
-            : undefined;
+          const message = messageId ? get(db.query(Query.select(Filter.id(messageId))).atom)[0] : undefined;
           const draft = message && DraftMessage.belongsTo(message, mailboxUri) ? message : undefined;
           return Effect.succeed([
             AppNode.makeCompanion({
@@ -217,17 +214,14 @@ export default Capability.makeModule(
         connector: (matched, get) => {
           const mailbox = matched.mailbox;
           const db = Obj.getDatabase(mailbox);
-          const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+          const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
           const messageId = get(selectedId(matched.nodeId));
           const message = get(
-            AtomQuery.make<Message.Message>(
-              db,
-              Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed),
-            ),
+            db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
           return Effect.succeed([
             AppNode.makeCompanion({
@@ -272,24 +266,22 @@ export default Capability.makeModule(
               return null;
             }
 
-            const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
+            const mailboxes = get(space.db.query(Filter.type(Mailbox.Mailbox)).atom);
             const mailbox = mailboxes.find((m: Mailbox.Mailbox) => m.id === mailboxId);
             if (!mailbox) {
               return null;
             }
 
-            const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
+            const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
             const mailboxUri = Obj.getURI(mailbox);
 
             // TODO(wittjosiah): This is awkward, clean it up.
             let message: Message.Message | undefined;
             if (feed) {
-              message = get(
-                AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId)).from(feed)),
-              )[0];
+              message = get(space.db.query(Query.select(Filter.id(messageId)).from(feed)).atom)[0];
             }
             if (!message) {
-              const fromDb = get(AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId))))[0];
+              const fromDb = get(space.db.query(Query.select(Filter.id(messageId))).atom)[0];
               if (fromDb && DraftMessage.belongsTo(fromDb, mailboxUri)) {
                 message = fromDb;
               }
@@ -318,15 +310,13 @@ export default Capability.makeModule(
         connector: (matched, get) => {
           const calendar = matched.calendar;
           const db = Obj.getDatabase(calendar);
-          const feed = calendar.feed ? (get(AtomRef.make(calendar.feed)) as Feed.Feed | undefined) : undefined;
+          const feed = calendar.feed ? (get(calendar.feed.atom) as Feed.Feed | undefined) : undefined;
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
           const eventId = get(selectedId(matched.nodeId));
-          const event = get(
-            AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
-          )[0];
+          const event = get(db.query(Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)).atom)[0];
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('event'),
@@ -346,7 +336,7 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
+          const integrations = get(db.query(Filter.type(Integration.Integration)).atom);
           const integration = integrations.find((integration) =>
             integration.targets.some(
               (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === mailbox.id,
@@ -391,7 +381,7 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
+          const integrations = get(db.query(Filter.type(Integration.Integration)).atom);
           const integration = integrations.find((integration) =>
             integration.targets.some(
               (target) => target.object && EID.getEntityId(EID.tryParse(target.object.uri)!) === calendar.id,

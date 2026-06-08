@@ -11,7 +11,6 @@ import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode } from '@dxo
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -38,7 +37,7 @@ export default Capability.makeModule(
         id: 'magazines',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const magazines = get(AtomQuery.make(space.db, Filter.type(Magazine.Magazine)));
+          const magazines = get(space.db.query(Filter.type(Magazine.Magazine)).atom);
 
           return Effect.succeed([
             Node.make({
@@ -105,7 +104,7 @@ export default Capability.makeModule(
           let post: Subscription.Post | undefined;
           if (postId) {
             for (const ref of magazine.posts) {
-              const resolved = get(AtomRef.make(ref)) as Subscription.Post | undefined;
+              const resolved = get(ref.atom) as Subscription.Post | undefined;
               if (resolved?.id === postId) {
                 post = resolved;
                 break;

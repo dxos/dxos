@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { EntityId, URI } from '@dxos/keys';
 
+import * as AtomImpl from './atom-impl/obj-atoms';
 import * as internal from './internal';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
@@ -334,3 +335,9 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  */
 export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+
+//
+// Atoms
+//
+
+export const atom: typeof AtomImpl.makeEntity = AtomImpl.makeEntity;

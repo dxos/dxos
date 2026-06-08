@@ -12,7 +12,6 @@ import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -141,7 +140,7 @@ export default Capability.makeModule(
               Option.fromNullable(state.currentChat[objectUri]),
               Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryMake(dxnStr))),
               Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
-              Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
+              Option.map((ref) => get(Obj.atom(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
               Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,

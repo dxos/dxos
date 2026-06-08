@@ -70,7 +70,6 @@ export const DEFAULT_PACKAGES = [
 
   // packages/core/echo
   '@dxos/echo',
-  '@dxos/echo-atom',
   '@dxos/echo-db',
   '@dxos/echo-pipeline',
   '@dxos/echo-protocol',

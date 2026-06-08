@@ -13,6 +13,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
+import * as AtomImpl from './atom-impl/obj-atoms';
 import type * as Database from './Database';
 import * as Entity from './Entity';
 import * as internal from './internal';
@@ -572,3 +573,9 @@ export type Version = internal.EntityVersion;
  * Accepts both reactive relations and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
+
+//
+// Atoms
+//
+
+export const atom: typeof AtomImpl.makeRelation = AtomImpl.makeRelation;

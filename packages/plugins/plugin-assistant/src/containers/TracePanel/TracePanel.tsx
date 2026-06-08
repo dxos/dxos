@@ -15,7 +15,6 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Process, Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
@@ -154,15 +153,15 @@ const getExecutionGraph = (
   { eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   const traceMessages = pipe(
-    AtomQuery.make(space.db, FeedTraceSink.query),
-    Atom.map((feeds) =>
-      // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
-      AtomQuery.make(
-        space.db,
-        feeds.length > 0
-          ? Query.type(Trace.Message).from(feeds[0])
-          : (Query.select(Filter.nothing()) as Query.Query<never>),
-      ),
+    space.db.query(FeedTraceSink.query).atom,
+    Atom.map(
+      (feeds) =>
+        // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
+        space.db.query(
+          feeds.length > 0
+            ? Query.type(Trace.Message).from(feeds[0])
+            : (Query.select(Filter.nothing()) as Query.Query<never>),
+        ).atom,
     ),
     (atom) => Atom.make((get) => get(get(atom))),
   );

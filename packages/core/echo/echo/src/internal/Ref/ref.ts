@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
@@ -18,6 +19,7 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
+import { refSimpleFamily } from '../../atom-impl/ref-atoms';
 import * as Database from '../../Database';
 import type * as Type from '../../Type';
 import {
@@ -218,6 +220,13 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * Clones the reference object.
    */
   noInline(): Ref<T>;
+
+  /**
+   * Read-only atom for the ref target.
+   * Resolves once when the target loads; does NOT subscribe to target object mutations.
+   * Use `Obj.atom(ref)` if you need reactive snapshots that update on every object mutation.
+   */
+  get atom(): Atom.Atom<T | undefined>;
 
   /**
    * Serializes the reference to a JSON object.
@@ -536,6 +545,10 @@ export class RefImpl<T> implements Ref<T> {
   /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
   [Equal.symbol](that: Equal.Equal): boolean {
     return that instanceof RefImpl && this.#uri === that.uri;
+  }
+
+  get atom(): Atom.Atom<T | undefined> {
+    return refSimpleFamily(this);
   }
 
   /**
