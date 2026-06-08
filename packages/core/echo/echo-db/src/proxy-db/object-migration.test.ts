@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { JsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
@@ -181,11 +181,11 @@ test('chained migrations', async () => {
 //   db.add(
 //     Obj.make(ViewTypeV1, {
 //       fields: [
-//         { id: '8cb60541', path: 'name' as JsonPath },
-//         { id: '902dd8b5', path: 'email' as JsonPath },
-//         { id: 'e288952b', path: 'salary' as JsonPath, size: 150 },
-//         { id: 'cbdc987c', path: 'active' as JsonPath, size: 100 },
-//         { id: '922fd882', path: 'manager' as JsonPath, referencePath: 'name' as JsonPath },
+//         { id: '8cb60541', path: 'name' as SchemaEx.JsonPath },
+//         { id: '902dd8b5', path: 'email' as SchemaEx.JsonPath },
+//         { id: 'e288952b', path: 'salary' as SchemaEx.JsonPath, size: 150 },
+//         { id: 'cbdc987c', path: 'active' as SchemaEx.JsonPath, size: 100 },
+//         { id: '922fd882', path: 'manager' as SchemaEx.JsonPath, referencePath: 'name' as SchemaEx.JsonPath },
 //       ],
 //       name: 'View',
 //       query: { type: 'com.example.type.b1e66ff8' },
@@ -200,10 +200,10 @@ test('chained migrations', async () => {
 
 export const FieldSchema = Schema.Struct({
   id: Schema.String,
-  path: JsonPath,
+  path: SchemaEx.JsonPath,
   visible: Schema.optional(Schema.Boolean),
   size: Schema.optional(Schema.Number),
-  referencePath: Schema.optional(JsonPath),
+  referencePath: Schema.optional(SchemaEx.JsonPath),
 });
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;

@@ -14,7 +14,7 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Operation, Routine, ServiceResolver, type Blueprint } from '@dxos/compute';
 import { Database, Feed, Ref, Tag } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
@@ -43,7 +43,7 @@ const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => Ai
   AiService.AiService.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
     Effect.map((service) => (_upstream: AiService.Service) => service),
-    runAndForwardErrors,
+    EffectEx.runAndForwardErrors,
   );
 
 const createDefaultPlugins = async (options: { plugins?: Plugin.Plugin[] }): Promise<Plugin.Plugin[]> => [
@@ -114,7 +114,7 @@ export type VariantConfig =
  * The task creates a full Composer test harness via `createComposerTestApp` / `createDefaultPlugins`,
  * initializes an identity, fires `SetupArtifactDefinition`, then invokes `runAgentPrompt` with the
  * resolved model and the personal space. All execution is wrapped in an Effect scope; errors are
- * propagated to the caller via `runAndForwardErrors`.
+ * propagated to the caller via `EffectEx.runAndForwardErrors`.
  */
 export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig> => {
   return async (input: I, variant: VariantConfig) => {
@@ -127,7 +127,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
       output: options.output,
     });
 
-    return runAndForwardErrors(
+    return EffectEx.runAndForwardErrors(
       Effect.scoped(
         Effect.gen(function* () {
           const harness = yield* Effect.acquireRelease(
@@ -142,7 +142,7 @@ export const createEvalRunner = <I, O>(options: CreateEvalRunnerOptions<I, O>): 
           yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
 
           const { personalSpace } = yield* Effect.promise(() =>
-            runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
+            EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
           );
 
           return yield* Effect.promise(() => runAgentPrompt(harness, prompt, model, personalSpace.id, input));

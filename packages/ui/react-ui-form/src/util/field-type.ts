@@ -4,7 +4,7 @@
 
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { getAnnotation, isLiteralUnion } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 /**
  * Detected field type for a schema property.
@@ -20,7 +20,7 @@ export type SelectOption = {
  * Detect the field type from an Effect Schema AST node.
  */
 export const detectFieldType = (ast: SchemaAST.AST): SettingsFieldType | undefined => {
-  if (isLiteralUnion(ast)) {
+  if (SchemaEx.isLiteralUnion(ast)) {
     return 'select';
   }
   if (SchemaAST.isTypeLiteral(ast)) {
@@ -44,7 +44,7 @@ export const detectFieldType = (ast: SchemaAST.AST): SettingsFieldType | undefin
  * Reads title annotations from individual literals for labels.
  */
 export const getSelectOptionsFromAst = (ast: SchemaAST.AST): SelectOption[] | undefined => {
-  if (!isLiteralUnion(ast)) {
+  if (!SchemaEx.isLiteralUnion(ast)) {
     return undefined;
   }
 
@@ -53,7 +53,7 @@ export const getSelectOptionsFromAst = (ast: SchemaAST.AST): SelectOption[] | un
     if (typeof value !== 'string' && typeof value !== 'number') {
       return [];
     }
-    const title = getAnnotation<string>(SchemaAST.TitleAnnotationId, false)(literalNode);
+    const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId, false)(literalNode);
     const label = title ?? (typeof value === 'string' ? value.charAt(0).toUpperCase() + value.slice(1) : String(value));
     return [{ value, label }];
   });

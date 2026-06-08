@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
+import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
@@ -70,16 +70,18 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const handleChange = useCallback(
       (
         { [META_TAGS_KEY]: metaTags, ...values }: any,
-        { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> },
+        { isValid, changed }: { isValid: boolean; changed: Record<SchemaEx.JsonPath, boolean> },
       ) => {
         if (!isValid) {
           return;
         }
 
-        const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
+        const changedPaths = Object.keys(changed).filter(
+          (path) => changed[path as SchemaEx.JsonPath],
+        ) as SchemaEx.JsonPath[];
 
         // Handle meta-tags separately using Obj.update.
-        const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === META_TAGS_KEY);
+        const hasTagsChange = changedPaths.some((path) => SchemaEx.splitJsonPath(path)[0] === META_TAGS_KEY);
         if (hasTagsChange) {
           Obj.update(object, (object) => {
             // Copy so later in-place form mutations don't bypass the `Obj.update` boundary.
@@ -88,11 +90,11 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         }
 
         // Handle other property changes.
-        const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== META_TAGS_KEY);
+        const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
         if (nonTagPaths.length > 0) {
           Obj.update(object, () => {
             for (const path of nonTagPaths) {
-              const parts = splitJsonPath(path);
+              const parts = SchemaEx.splitJsonPath(path);
               const value = Obj.getValue(values as any, parts);
               Obj.setValue(object, parts, value);
             }

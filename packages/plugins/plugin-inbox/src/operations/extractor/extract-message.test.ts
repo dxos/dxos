@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import { Capability, CapabilityManager } from '@dxos/app-framework';
 import { Filter, Obj, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type ExtractError, type ExtractResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
@@ -124,7 +124,7 @@ describe('ExtractMessage operation handler', () => {
     const result = await handler
       .handler({ db, source: message })
       .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.provide(AiService.notAvailable))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(calledExtractorId).toBe('high');
     expect(result.extractorId).toBe('high');
@@ -156,7 +156,7 @@ describe('ExtractMessage operation handler', () => {
     const result = await handler
       .handler({ db, source: message })
       .pipe(Effect.provideService(Capability.Service, capabilityService), Effect.provide(AiService.notAvailable))
-      .pipe(runAndForwardErrors);
+      .pipe(EffectEx.runAndForwardErrors);
 
     expect(result.created).toBe(1);
     expect(result.extractorId).toBe(extractorId);

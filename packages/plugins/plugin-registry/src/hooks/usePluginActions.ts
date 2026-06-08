@@ -9,7 +9,7 @@ import { type PluginManager, type Registry, UrlLoader } from '@dxos/app-framewor
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { useNode } from '@dxos/plugin-graph';
 
 import { getPluginSpecPath } from '#meta';
@@ -66,7 +66,10 @@ export const usePluginActions = ({
 
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const requestDisable = useDisableConfirmation(manager, (id) => void runAndForwardErrors(manager.disable(id)));
+  const requestDisable = useDisableConfirmation(
+    manager,
+    (id) => void EffectEx.runAndForwardErrors(manager.disable(id)),
+  );
 
   const specPath = getPluginSpecPath(pluginId);
   const hasSpecNode = !!useNode(graph, specPath);
@@ -77,7 +80,7 @@ export const usePluginActions = ({
   const handleEnableChange = useCallback(
     (enabled: boolean) => {
       if (enabled) {
-        void runAndForwardErrors(manager.enable(pluginId));
+        void EffectEx.runAndForwardErrors(manager.enable(pluginId));
         return;
       }
 
@@ -87,7 +90,7 @@ export const usePluginActions = ({
   );
 
   const handleUninstall = useCallback(() => {
-    void runAndForwardErrors(manager.remove(pluginId));
+    void EffectEx.runAndForwardErrors(manager.remove(pluginId));
   }, [manager, pluginId]);
 
   const handleInstall = useCallback(() => {
@@ -109,7 +112,7 @@ export const usePluginActions = ({
           syncInstalledVersion();
         }),
       ),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }, [manager, moduleUrl, catalogEntry, syncInstalledVersion]);
 
@@ -131,7 +134,7 @@ export const usePluginActions = ({
           syncInstalledVersion();
         }),
       ),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }, [manager, pluginId, moduleUrl, catalogEntry, syncInstalledVersion]);
 
@@ -157,7 +160,7 @@ export const usePluginActions = ({
           syncInstalledVersion();
         }),
       ),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }, [manager, pluginId, isInstalled, selectedVersionTag, pickerVersions, syncInstalledVersion]);
 

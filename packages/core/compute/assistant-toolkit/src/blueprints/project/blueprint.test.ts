@@ -11,7 +11,7 @@ import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint, Trigger, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { acquireReleaseResource } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
@@ -93,7 +93,9 @@ describe('Agent', () => {
         const chatFeed = agent.chat?.target?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(
+          () => new AiSession.Session({ feed: chatFeed, runtime }),
+        );
         yield* Effect.promise(() => session.context.open());
 
         const documentUri = Obj.getURI(document);
@@ -131,7 +133,9 @@ describe('Agent', () => {
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(
+          () => new AiSession.Session({ feed: chatFeed, runtime }),
+        );
         yield* Effect.promise(() => session.context.open());
 
         yield* session
@@ -284,7 +288,9 @@ describe('Agent', () => {
         invariant(chatFeed, 'Agent chat feed not found.');
         yield* Database.flush();
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(
+          () => new AiSession.Session({ feed: chatFeed, runtime }),
+        );
         yield* Effect.promise(() => session.context.open());
 
         yield* session

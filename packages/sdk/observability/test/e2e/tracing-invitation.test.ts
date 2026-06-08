@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client, Config, DXOS_VERSION, LocalClientServices } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MemoryTransportFactory } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -70,7 +70,7 @@ const initTracing = (config: Config): Promise<Observability> =>
       }),
     ),
     initialize,
-    runAndForwardErrors,
+    EffectEx.runAndForwardErrors,
   );
 
 describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['tracing-e2e'] }, () => {
@@ -109,8 +109,8 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       await guest.halo.createIdentity({ displayName: 'tracing-e2e-guest' });
 
       // Subscribe identity stream → stamp `did` (+ `deviceKey`/`deviceProfile`) on every span.
-      await runAndForwardErrors(observability.addDataProvider(identityProvider(host.services.services)));
-      await runAndForwardErrors(observability.addDataProvider(identityProvider(guest.services.services)));
+      await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(host.services.services)));
+      await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(guest.services.services)));
 
       // Create edge agent on host so the space can be admitted by edge when a
       // DELEGATED invitation arrives.
@@ -156,7 +156,7 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       await sleep(8_000);
     } finally {
       // BatchSpanProcessor defers export by 5s; flush explicitly before teardown.
-      await runAndForwardErrors(observability.flush());
+      await EffectEx.runAndForwardErrors(observability.flush());
 
       // `Client.destroy()` can block on in-flight edge replication; cap it so the
       // test doesn't hang if the worker is still finishing a sync round.
@@ -166,7 +166,7 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
           sleep(15_000).then(() => log.warn(`${label}.destroy() timed out; leaking`)),
         ]);
       await Promise.all([destroyWithTimeout(host, 'host'), destroyWithTimeout(guest, 'guest')]);
-      await runAndForwardErrors(observability.close());
+      await EffectEx.runAndForwardErrors(observability.close());
     }
 
     console.log(`### done — SigNoz filter: ctx.tag = '${clientTag}'`);

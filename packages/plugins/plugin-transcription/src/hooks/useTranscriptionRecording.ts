@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Feed, Obj } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -47,7 +47,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
         blocks,
       });
       const feedServiceLayer = createFeedServiceLayer(space.queues);
-      await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+      await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
     },
     [space, feed, identity],
   );

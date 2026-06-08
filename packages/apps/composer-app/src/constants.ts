@@ -17,3 +17,6 @@ export const LOG_STORE_DB_NAME = 'composer-logs';
  * Export trims to this size so the upload never exceeds the worker's cap.
  */
 export const FEEDBACK_LOGS_MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+
+/** Recovery mode entry point (minimal client, export, debug port). */
+export const RECOVERY_PATH = '/recovery.html';

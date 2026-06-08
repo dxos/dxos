@@ -110,7 +110,14 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
-    .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
+    .filter((anchor) => {
+      // Relation.getSource can throw while ECHO is resolving the proxy during restore.
+      try {
+        return Obj.instanceOf(Thread.Thread, Relation.getSource(anchor));
+      } catch {
+        return false;
+      }
+    })
     .concat(drafts ?? []);
 
   const handleChangeViewState = useCallback(

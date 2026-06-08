@@ -11,7 +11,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -157,7 +157,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
@@ -191,7 +191,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), EffectEx.runAndForwardErrors);
       },
       interval,
     );

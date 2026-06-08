@@ -70,6 +70,35 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     name: 'vite-plugin-dxos-ui-theme',
     config: (): UserConfig => {
       return {
+        server: {
+          watch: {
+            // Stop build outputs from driving HMR — they are the root of the
+            // `main.css` HMR storm.
+            //
+            // Tailwind's `@source` scanning (see `src/main.css`) registers its
+            // scanned source files as Vite watch dependencies of the compiled
+            // theme CSS. Tailwind's own scanner respects `.gitignore` (and the
+            // `@source not` directives), so it never *scans* `dist/`. BUT the
+            // scanner hands Vite a coarse `dir-dependency` glob — e.g.
+            // `{**/*.html,**/*.ts,**/*.tsx}` — and Vite re-expands that glob
+            // itself, ignoring only `node_modules` (not `.gitignore`, not the
+            // `@source not` negations). The re-expansion therefore sweeps in
+            // every `packages/*/dist/**/*.d.ts` (`.d.ts` matches `**/*.ts`),
+            // making each emitted declaration file a watch-dependency of
+            // `main.css`. A single package rebuild emits dozens of `.d.ts` in a
+            // tight burst, and each write re-invalidates the theme — 40+ HMR
+            // pings for `main.css` in one second, repeating on every rebuild.
+            //
+            // Ignoring build outputs in the watcher is also semantically
+            // correct: in dev the workspace resolves `@dxos/*` via the `source`
+            // export condition (see `vite-plugin-import-source`), so `dist/`
+            // is never consumed at runtime and its churn should never trigger
+            // HMR. Vite concatenates these patterns with its built-in ignores
+            // (`**/node_modules/**`, `**/.git/**`, …), so this is purely
+            // additive.
+            ignored: ['**/dist/**', '**/out/**'],
+          },
+        },
         css: {
           postcss: {
             plugins: [

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Allow debug-port fetch to local recovery server (does not bypass mixed-content; use HTTPS server on HTTPS pages). -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="connect-src 'self' http://127.0.0.1:9321 https://127.0.0.1:9321 http://localhost:9321 https://localhost:9321"
+    />
+    <title>Composer Recovery</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        background: #0b0f14;
+        color: #d7e0ea;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        padding: 1rem 1.25rem 0.5rem;
+        border-bottom: 1px solid #1e2936;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      header p {
+        margin: 0.35rem 0 0;
+        font-size: 0.8rem;
+        color: #8fa3b8;
+      }
+      .header-actions {
+        margin-top: 0.65rem;
+      }
+      .header-actions button {
+        flex: none;
+        width: auto;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.72rem;
+      }
+      #log {
+        flex: 1;
+        margin: 0;
+        padding: 1rem 1.25rem 4.5rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow: auto;
+        font-size: 0.8rem;
+        line-height: 1.45;
+      }
+      footer {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        padding: 0.5rem 0.75rem;
+        border-top: 1px solid #1e2936;
+        background: rgba(11, 15, 20, 0.96);
+        backdrop-filter: blur(8px);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+      }
+      button {
+        flex: 1 1 0;
+        min-width: 0;
+        border: 1px solid #334155;
+        background: #111827;
+        color: inherit;
+        border-radius: 0.5rem;
+        padding: 0.55rem 0.35rem;
+        font: inherit;
+        font-size: 0.72rem;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+      }
+      button:hover:not(:disabled) {
+        background: #1e293b;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.primary {
+        border-color: #2563eb;
+        background: #1d4ed8;
+      }
+      button.danger {
+        border-color: #7f1d1d;
+        background: #991b1b;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Composer Recovery</h1>
+      <p>Safe mode — static <code>dxos</code> globals only. Use Diagnostics to inspect the profile.</p>
+      <div class="header-actions">
+        <button
+          type="button"
+          id="diagnostics"
+          title="Inspect OPFS storage, then boot client and show identity and spaces"
+        >
+          Diagnostics
+        </button>
+      </div>
+    </header>
+    <pre id="log"></pre>
+    <footer>
+      <div class="actions">
+        <button type="button" id="boot-composer" class="primary" title="Open full Composer at /">Boot</button>
+        <button type="button" id="reset" class="danger" title="Wipe all origin storage">Reset</button>
+        <button type="button" id="export-profile" title="Export .dxprofile archive with OPFS SQLite database">
+          Export
+        </button>
+        <button type="button" id="import-sqlite" title="Import .dxprofile or raw .sqlite into OPFS DXOS database">
+          Import
+        </button>
+        <button type="button" id="download-logs" title="Download logs from IDB log collector">Logs</button>
+        <button type="button" id="debug-port" title="Open agent debug port">Debug Port</button>
+      </div>
+    </footer>
+    <script type="module" src="/src/recovery.ts"></script>
+  </body>
+</html>

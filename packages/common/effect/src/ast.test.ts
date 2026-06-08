@@ -20,8 +20,8 @@ import {
   isDiscriminatedUnion,
   isOption,
   visit,
-} from './ast';
-import { type JsonPath, type JsonProp } from './json-path';
+} from './internal/ast';
+import { type JsonPath, type JsonProp } from './internal/json-path';
 
 const ZipCode = Schema.String.pipe(
   Schema.pattern(/^\d{5}$/, {
