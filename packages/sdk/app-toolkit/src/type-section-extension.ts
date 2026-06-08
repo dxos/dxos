@@ -4,8 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
@@ -44,7 +42,7 @@ import { createObjectNode, getDynamicLabel } from './object-node';
  *   uses: {@link createTypeSectionExtension}, {@link AppNodeMatcher.whenSpace}, {@link AtomQuery}, {@link Filter.type}, {@link createObjectNode}
  */
 export const createTypeSectionExtension = (
-  type: Schema.Schema.AnyNoContext,
+  type: Type.Type,
   options?: {
     /** Position hint for the section in the sidebar. */
     position?: 'first' | 'last';
