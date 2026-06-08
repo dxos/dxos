@@ -38,20 +38,20 @@ plugins / sdk     (consumer code, imports only @dxos/echo)
 
 ### Symbol-by-symbol migration table
 
-| Old (`@dxos/echo-atom`) | New (`@dxos/echo`) | Return type | Notes |
-|---|---|---|---|
-| `AtomObj.make(obj)` | `Obj.atom(obj)` | `Atom<Obj.Snapshot<T>>` | Main path |
-| `AtomObj.make(ref)` | `Obj.atom(ref)` | `Atom<Obj.Snapshot<T> \| undefined>` | Also subscribes to target object changes (see distinction below) |
-| `AtomObj.make(undefined)` | `Obj.atom(undefined)` | `Atom<undefined>` | No-op overload |
-| `AtomObj.make(entity)` | `Entity.atom(entity)` | `Atom<Entity.Snapshot>` | For kind-agnostic code |
-| `AtomObj.make(relation)` | `Relation.atom(relation)` | `Atom<Relation.Snapshot<T>>` | |
-| `AtomObj.makeWithReactive(obj)` | `Obj.atomReactive(obj)` | `Atom<T>` | Returns live proxy, not snapshot |
-| `AtomObj.makeWithReactive(ref)` | `Obj.atomReactive(ref)` | `Atom<T \| undefined>` | |
-| `AtomObj.makeWithReactive(undefined)` | `Obj.atomReactive(undefined)` | `Atom<undefined>` | |
-| `AtomObj.makeProperty(obj, key)` | `Obj.atomProperty(obj, key)` | `Atom<T[K]>` | Fine-grained, only fires on key change |
-| `AtomRef.make(ref)` | `ref.atom` | `Atom<T \| undefined>` | Resolves ref once; does NOT subscribe to target mutation |
-| `AtomQuery.fromQuery(result)` | `queryResult.atom` | `Atom<T[]>` | Memoized per QueryResult instance |
-| `AtomQuery.make(db, query)` | `Database.queryAtom(db, query)` | `Atom<T[]>` | Cross-call memoized by (db id + AST) |
+| Old (`@dxos/echo-atom`)               | New (`@dxos/echo`)              | Return type                          | Notes                                                            |
+| ------------------------------------- | ------------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| `AtomObj.make(obj)`                   | `Obj.atom(obj)`                 | `Atom<Obj.Snapshot<T>>`              | Main path                                                        |
+| `AtomObj.make(ref)`                   | `Obj.atom(ref)`                 | `Atom<Obj.Snapshot<T> \| undefined>` | Also subscribes to target object changes (see distinction below) |
+| `AtomObj.make(undefined)`             | `Obj.atom(undefined)`           | `Atom<undefined>`                    | No-op overload                                                   |
+| `AtomObj.make(entity)`                | `Entity.atom(entity)`           | `Atom<Entity.Snapshot>`              | For kind-agnostic code                                           |
+| `AtomObj.make(relation)`              | `Relation.atom(relation)`       | `Atom<Relation.Snapshot<T>>`         |                                                                  |
+| `AtomObj.makeWithReactive(obj)`       | `Obj.atomReactive(obj)`         | `Atom<T>`                            | Returns live proxy, not snapshot                                 |
+| `AtomObj.makeWithReactive(ref)`       | `Obj.atomReactive(ref)`         | `Atom<T \| undefined>`               |                                                                  |
+| `AtomObj.makeWithReactive(undefined)` | `Obj.atomReactive(undefined)`   | `Atom<undefined>`                    |                                                                  |
+| `AtomObj.makeProperty(obj, key)`      | `Obj.atomProperty(obj, key)`    | `Atom<T[K]>`                         | Fine-grained, only fires on key change                           |
+| `AtomRef.make(ref)`                   | `ref.atom`                      | `Atom<T \| undefined>`               | Resolves ref once; does NOT subscribe to target mutation         |
+| `AtomQuery.fromQuery(result)`         | `queryResult.atom`              | `Atom<T[]>`                          | Memoized per QueryResult instance                                |
+| `AtomQuery.make(db, query)`           | `Database.queryAtom(db, query)` | `Atom<T[]>`                          | Cross-call memoized by (db id + AST)                             |
 
 ### Key semantic distinction: `Obj.atom(ref)` vs `ref.atom`
 
@@ -78,7 +78,10 @@ export namespace Obj {
 
   // Property atom (fine-grained)
   export function atomProperty<T extends Obj.Unknown, K extends keyof T>(obj: T, key: K): Atom<T[K]>;
-  export function atomProperty<T extends Obj.Unknown, K extends keyof T>(obj: T | undefined, key: K): Atom<T[K] | undefined>;
+  export function atomProperty<T extends Obj.Unknown, K extends keyof T>(
+    obj: T | undefined,
+    key: K,
+  ): Atom<T[K] | undefined>;
 }
 
 // --- Entity namespace additions ---
@@ -207,6 +210,7 @@ The `refSimpleFamily` is the simple version (one-shot load, no subscription to t
 The `QueryResult` interface lives in `packages/core/echo/echo/src/QueryResult.ts`. Its implementations live in `@dxos/echo-db` and other packages.
 
 Two options:
+
 - **Option A**: Add `atom` to the `QueryResult` interface and update all implementations.
 - **Option B**: Make `atom` a default-implemented extension (standalone function) and expose it as both `result.atom` and a stand-alone `QueryResult.atom(result)` function.
 
@@ -245,11 +249,11 @@ Do NOT leave forwarding shims. Instead:
 
 ### Pattern table
 
-| Old import | New import |
-|---|---|
-| `import { AtomObj } from '@dxos/echo-atom'` | `import { Obj } from '@dxos/echo'` |
+| Old import                                    | New import                                           |
+| --------------------------------------------- | ---------------------------------------------------- |
+| `import { AtomObj } from '@dxos/echo-atom'`   | `import { Obj } from '@dxos/echo'`                   |
 | `import { AtomQuery } from '@dxos/echo-atom'` | `import { Database, QueryResult } from '@dxos/echo'` |
-| `import { AtomRef } from '@dxos/echo-atom'` | *(use `ref.atom` directly)* |
+| `import { AtomRef } from '@dxos/echo-atom'`   | _(use `ref.atom` directly)_                          |
 
 ### Usage rewrites
 
@@ -295,11 +299,11 @@ All follow the same pattern: `AtomObj.make(obj)` and `AtomQuery.make(db, query/f
 
 ## Package Dependency Changes
 
-| Package | Change |
-|---|---|
-| `@dxos/echo` | Add `"@effect-atom/atom": "catalog:"` to dependencies |
+| Package                  | Change                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `@dxos/echo`             | Add `"@effect-atom/atom": "catalog:"` to dependencies                                 |
 | All 39 consumer packages | Remove `"@dxos/echo-atom": "workspace:*"`, already have `"@dxos/echo": "workspace:*"` |
-| `@dxos/echo-atom` | Deleted |
+| `@dxos/echo-atom`        | Deleted                                                                               |
 
 ---
 
