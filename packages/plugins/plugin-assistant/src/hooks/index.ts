@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+// TODO(wittjosiah): Factor hooks out of plugin-assistant into a standalone package.
 
 export * from './useBlueprintRegistry';
 export * from './useChatKeymap';
@@ -16,5 +17,4 @@ export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
 
-// TODO(wittjosiah): Factor AiChatProcessor out of plugin-assistant into a standalone package.
 export { type AiChatProcessor } from '../processor';
