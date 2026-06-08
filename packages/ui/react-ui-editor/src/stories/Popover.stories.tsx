@@ -48,9 +48,10 @@ type DefaultStoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 const DefaultStory = ({ text, ...props }: DefaultStoryProps) => {
   const [controller, setController] = useState<EditorController | null>(null);
   const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
+  const getView = useCallback(() => controller?.view ?? null, [controller]);
 
   return (
-    <EditorMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
+    <EditorMenuProvider getView={getView} groups={groupsRef.current} {...menuProps}>
       <EditorStory ref={setController} text={text} extensions={extension} />
     </EditorMenuProvider>
   );

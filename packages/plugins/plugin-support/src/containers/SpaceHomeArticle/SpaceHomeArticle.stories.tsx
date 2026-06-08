@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, screen, userEvent, waitFor } from 'storybook/test';
 
 import { makeOperationCapture, withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
@@ -81,14 +81,12 @@ export const Default: Story = {};
  *   uses: {@link makeOperationCapture}, {@link AssistantOperation.RunPromptInNewChat}
  */
 export const SuggestionCardClick: Story = {
-  play: async ({ canvasElement }) => {
+  play: async () => {
     capture.reset();
-    const canvas = within(canvasElement);
 
-    // Wait for space initialization to complete (loading marker disappears).
-    await waitFor(() => expect(canvas.queryByTestId('loading')).toBeNull(), { timeout: 15000 });
-    // Then wait for suggestion cards to appear.
-    const card = await canvas.findByText('Draft a new document', {}, { timeout: 15000 });
+    // withPluginManager mounts the story via App after plugin activation; canvasElement is not
+    // populated until then, so wait on screen for the home surface instead of the loading marker.
+    const card = await screen.findByRole('button', { name: 'Draft a new document' });
     await userEvent.click(card);
 
     const calls = capture.getCalls(AssistantOperation.RunPromptInNewChat);
@@ -98,33 +96,31 @@ export const SuggestionCardClick: Story = {
 };
 
 /**
- * Typing a custom prompt and pressing Enter creates an in-memory chat (real) and then navigates
- * to it (mocked via LayoutOperation.Open capture). Asserts both operations are invoked.
+ * Typing a custom prompt and pressing Enter persists the in-memory backing chat and navigates to
+ * it (mocked via LayoutOperation.Open capture). Asserts navigation fires with the chat's path.
+ *
+ * Note: the component re-creates its backing chat whenever the input is reset (mount, and again
+ * after each submit via the `nonce` bump), so `CreateChat` call counts are not asserted here — the
+ * meaningful effect of submitting is the navigation, which only fires on submit.
  *
  * @idiom org.dxos.app-framework.testing.operationCapture
  *   applies: Testing custom prompt submission in SpaceHomeArticle
  *   instead-of: Running LayoutOperation.Open and dealing with full navigation in Storybook
- *   uses: {@link makeOperationCapture}, {@link AssistantOperation.CreateChat}, {@link LayoutOperation.Open}
+ *   uses: {@link makeOperationCapture}, {@link LayoutOperation.Open}
  */
 export const CustomPromptSubmit: Story = {
-  play: async ({ canvasElement }) => {
+  play: async () => {
     capture.reset();
-    const canvas = within(canvasElement);
 
-    // Wait for space initialization to complete.
-    await waitFor(() => expect(canvas.queryByTestId('loading')).toBeNull(), { timeout: 15000 });
-    const editor = await canvas.findByRole('textbox', {}, { timeout: 15000 });
+    const editor = await screen.findByRole('textbox');
     await userEvent.click(editor);
     await userEvent.type(editor, 'What types of objects can I create here?');
     await userEvent.keyboard('{Enter}');
 
-    // CreateChat runs for real (not mocked) — in-memory chat is created.
-    const chatCalls = capture.getCalls(AssistantOperation.CreateChat);
-    await expect(chatCalls).toHaveLength(1);
-    await expect(chatCalls[0].input.addToSpace).toBe(false);
-
-    // LayoutOperation.Open is mocked — navigation was triggered but not executed.
+    // Submit navigates to the newly-persisted chat. LayoutOperation.Open is mocked — the navigation
+    // is captured but not executed — and its subject is the chat's object path.
+    await waitFor(() => expect(capture.getCalls(LayoutOperation.Open)).toHaveLength(1));
     const navCalls = capture.getCalls(LayoutOperation.Open);
-    await expect(navCalls).toHaveLength(1);
+    await expect(navCalls[0].input.subject).toHaveLength(1);
   },
 };

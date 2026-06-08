@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -75,7 +75,11 @@ export type MediaPlayerProps = ThemedClassName<{
   autoPlay?: boolean;
   loop?: boolean;
   muted?: boolean;
-  /** Defaults to 'anonymous' for cross-origin sources (e.g. signed S3 URLs). */
+  /**
+   * CORS mode for `<video>`/`<audio>`. Omitted by default — plain playback needs no CORS, and
+   * forcing it breaks sources whose response/redirect lacks `access-control-allow-origin` (e.g.
+   * Cloudflare Stream's signed MP4 redirect). Set 'anonymous' only when reading frames into a canvas.
+   */
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   /** CSS `object-fit` for `<img>` and `<video>`. Ignored for `<iframe>`/`<audio>`. Defaults to 'cover'. */
   fit?: MediaFit;
@@ -97,7 +101,7 @@ export const MediaPlayer = ({
   loop = false,
   muted = false,
   alt,
-  crossOrigin = 'anonymous',
+  crossOrigin,
   fit = 'cover',
 }: MediaPlayerProps) => {
   const fitClass = FIT_CLASS[fit];
@@ -112,7 +116,7 @@ export const MediaPlayer = ({
           autoPlay={autoPlay}
           loop={loop}
           muted={muted}
-          crossOrigin={crossOrigin}
+          crossOrigin={crossOrigin || undefined}
           aria-label={alt}
         />
       );
@@ -126,7 +130,7 @@ export const MediaPlayer = ({
         autoPlay={autoPlay}
         loop={loop}
         muted={muted}
-        crossOrigin={crossOrigin}
+        crossOrigin={crossOrigin || undefined}
         aria-label={alt}
       />
     );
@@ -155,23 +159,18 @@ type IframePlayerProps = ThemedClassName<{
 }>;
 
 const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
-  const [loaded, setLoaded] = useState(false);
   return (
     <div className={mx('relative bg-baseSurface', classNames)}>
       <iframe
         src={src}
         title={alt ?? 'Embedded media'}
         loading='lazy'
-        className={mx(
-          'border-none w-full h-full transition-opacity duration-150',
-          loaded ? 'opacity-100' : 'opacity-0',
-        )}
+        className='border-none w-full h-full'
         style={{ colorScheme: 'dark' }}
         sandbox={DEFAULT_IFRAME_SANDBOX}
         referrerPolicy='no-referrer'
         allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
         allowFullScreen
-        onLoad={() => setLoaded(true)}
       />
     </div>
   );
