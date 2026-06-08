@@ -12,7 +12,6 @@ export const ThreadOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-proposals'),
   () => import('./delete'),
   () => import('./delete-message'),
-  () => import('./on-create-space'),
   () => import('./respond-to-thread'),
   () => import('./restore'),
   () => import('./restore-message'),

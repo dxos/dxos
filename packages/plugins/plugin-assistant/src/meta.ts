@@ -41,15 +41,3 @@ export const ASSISTANT_DIALOG = DXN.make(`${meta.id}.assistantDialog`);
 
 /** Companion variant identifier for the assistant chat panel. */
 export const ASSISTANT_COMPANION_VARIANT = 'assistant-chat';
-
-/** Local segment id for the per-space home virtual node (one per space, under the space node). */
-export const SPACE_HOME_NODE_ID = 'home';
-
-/** Type tag for the per-space home virtual node. */
-export const SPACE_HOME_NODE_TYPE = `${meta.id}.space-home-node`;
-
-/**
- * Prefix for the home node's surface subject. The space id is appended so each space's home node
- * resolves to its own space (`${SPACE_HOME_SUBJECT_PREFIX}${space.id}`).
- */
-export const SPACE_HOME_SUBJECT_PREFIX = `${meta.id}/home/`;

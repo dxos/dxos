@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SupportSettings } from '#components';
@@ -17,14 +17,14 @@ import {
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
+  SpaceHomeArticle,
   SupportArticle,
   SupportCompanion,
-  WelcomeArticle,
 } from '#containers';
 import { meta } from '#meta';
-import { type Settings, Support } from '#types';
+import { Support } from '#types';
 
-import { SHORTCUTS_DIALOG, WELCOME_NODE_ID } from '../constants';
+import { SHORTCUTS_DIALOG, SPACE_HOME_SUBJECT_PREFIX } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -40,9 +40,12 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: 'welcomeArticle',
-        filter: AppSurface.literal(AppSurface.Article, WELCOME_NODE_ID),
-        component: ({ role }) => <WelcomeArticle role={role} />,
+        id: 'spaceHome',
+        filter: AppSurface.subject(
+          AppSurface.Article,
+          (subject): subject is string => typeof subject === 'string' && subject.startsWith(SPACE_HOME_SUBJECT_PREFIX),
+        ),
+        component: ({ data, role }) => <SpaceHomeArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'feedback',
@@ -90,10 +93,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <SupportSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
+        component: () => <SupportSettings />,
       }),
     ]),
   ),

@@ -3,35 +3,54 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useAtomCapability, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type Chat } from '@dxos/assistant-toolkit';
+import {
+  useAtomCapability,
+  useCapabilities,
+  useCapability,
+  useOperationInvoker,
+  usePluginManager,
+} from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
-import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-import { type Space, useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
-import { Card, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  AssistantCapabilities,
+  AssistantOperation,
+  ChatPrompt,
+  type ChatEvent,
+  type ChatType,
+  useChatProcessor,
+  useChatServices,
+  useOnline,
+  usePresets,
+} from '@dxos/plugin-assistant';
+import { type Space, useObject, useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
+import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
-import { type ChatEvent } from '#components';
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '#hooks';
-import { SPACE_HOME_SUBJECT_PREFIX, meta } from '#meta';
-import { AssistantCapabilities, AssistantOperation } from '#types';
+import { meta } from '#meta';
+import { HelpOperation } from '#types';
 
-import { ChatPrompt } from '../../components/ChatPrompt';
+import { WelcomeDismissedAnnotation } from '../../annotations';
 
 /** Number of recently-modified objects to surface as cards. */
 const RECENT_LIMIT = 3;
 
 /** Default starter prompts shown when the space has no recent objects yet. */
 const SUGGESTION_KEYS = [
-  'space-home.suggestion.summarize',
-  'space-home.suggestion.draft-doc',
-  'space-home.suggestion.ideas',
+  'space-home.suggestion-draft-doc.label',
+  'space-home.suggestion-data-type.label',
+  'space-home.suggestion-ideas.label',
 ] as const;
+
+const WELCOME_SLIDE = {
+  src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+  description: 'Welcome to DXOS',
+};
 
 export type SpaceHomeArticleProps = {
   role?: string;
@@ -40,46 +59,71 @@ export type SpaceHomeArticleProps = {
 };
 
 /**
- * Per-space home surface. Shows the most-recently-modified objects (of registered, non-hidden
- * types) as cards, with default starter prompts when the space is empty, above the assistant
- * prompt. The prompt is backed by an in-memory chat; submitting persists that chat to the space,
- * navigates to it, and the message is submitted there.
+ * Per-space home surface. On the personal space it shows the Welcome content at the top (until
+ * dismissed). Below that are the most-recently-modified objects (of registered, non-hidden types),
+ * or starter prompts when the space is empty, above the assistant prompt pinned at the bottom.
  */
 export const SpaceHomeArticle = ({ role, subject }: SpaceHomeArticleProps) => {
   const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
 
-  const spaceId = subject.slice(SPACE_HOME_SUBJECT_PREFIX.length);
+  const spaceId = subject.slice(subject.lastIndexOf('/') + 1);
   const spaces = useSpaces();
   const space = useMemo(() => spaces.find((current) => current.id === spaceId), [spaces, spaceId]);
 
   // Recent objects are scoped to the registered object types contributed to the schema capability,
-  // excluding relations and types marked hidden.
+  // excluding relations, types marked hidden, and collections (structural containers).
   const schemas = useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
+    const collectionTypename = Type.getTypename(Collection.Collection);
     const types = schemas
       .flat()
       .filter(Type.isType)
       .filter((type) => getTypeAnnotation(Type.getSchema(type))?.kind !== EntityKind.Relation)
-      .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)));
+      .filter((type) => !HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false)))
+      .filter((type) => Type.getTypename(type) !== collectionTypename);
     return types.length > 0 ? Filter.or(...types.map((type) => Filter.typename(Type.getTypename(type)))) : undefined;
   }, [schemas]);
 
   const query = useMemo(
     () =>
-      Query.select(filter ?? Filter.everything())
-        .orderBy(Order.updated('desc'))
-        .limit(RECENT_LIMIT),
+      // NOTE: Avoid Order.updated here — timestamp ordering disables limit pushdown in the query
+      // planner, forcing a full-space scan over the wide typename OR filter before slicing.
+      Query.select(filter ?? Filter.everything()).limit(RECENT_LIMIT),
     [filter],
   );
   const recent = useQuery(filter && space ? space.db : undefined, query);
 
+  const [dismissed, setDismissed] = useWelcomeDismissed(space);
+  const isPersonal = !!space && isPersonalSpace(space);
+  const showWelcome = isPersonal && !dismissed;
+
+  const handleStartTour = useCallback(() => {
+    void invokePromise(HelpOperation.Start);
+  }, [invokePromise]);
+
   return (
     <Panel.Root role={role}>
+      {showWelcome && (
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Button onClick={handleStartTour}>{t('start-tour.button')}</Toolbar.Button>
+            <Toolbar.Button onClick={() => setDismissed(true)}>{t('hide-welcome.button')}</Toolbar.Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+      )}
       <Panel.Content asChild>
-        {/* Match the AI chat content width (`dx-document`): recent/suggestions at the top, prompt pinned at the bottom. */}
+        {/* Match the AI chat content width (`dx-document`): content at the top, prompt pinned at the bottom. */}
         <div className='flex flex-col bs-full min-bs-0'>
           <ScrollArea.Root classNames='grow min-bs-0' orientation='vertical'>
             <ScrollArea.Viewport classNames='dx-document flex flex-col gap-4 p-4'>
+              {/* Keep mounted on the personal space (hidden when dismissed) so the Stream iframe is not
+                  torn down and re-created on every show/hide — that remount was freezing the UI. */}
+              {isPersonal && (
+                <div className={showWelcome ? undefined : 'hidden'}>
+                  <WelcomePanel />
+                </div>
+              )}
               <h2 className='text-sm font-medium text-description'>
                 {recent.length > 0 ? t('space-home.recent.heading') : t('space-home.suggestions.heading')}
               </h2>
@@ -106,12 +150,84 @@ type SpaceScopedProps = {
 };
 
 /**
+ * Reactively read the per-space "welcome dismissed" annotation (synced via space properties) and a
+ * setter that persists it. `useObject` subscribes to the properties object, so the Hide button, the
+ * Settings "Show welcome page" action, and other devices all re-render live.
+ */
+const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void] => {
+  const [properties, updateProperties] = useObject(space?.properties);
+  const dismissed = properties
+    ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+    : false;
+  const setDismissed = useCallback(
+    (value: boolean) => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, value)),
+    [updateProperties],
+  );
+  return [dismissed, setDismissed];
+};
+
+/**
+ * Welcome content (personal space): plugin showcase carousel. The guided-tour and dismiss actions
+ * live in the panel toolbar (see {@link SpaceHomeArticle}).
+ *
+ * Memoized (no props) so the home article's ongoing reactive re-renders (recent-objects query, spaces,
+ * assistant chat) never re-render the carousel or its cross-origin Cloudflare Stream iframe.
+ */
+const WelcomePanel = memo(() => {
+  const { t } = useTranslation(meta.id);
+  const manager = usePluginManager();
+
+  const slides = useMemo(() => {
+    const seen = new Set<string>();
+    const result: Array<{ key: string; src: string; description: string }> = [{ key: 'welcome', ...WELCOME_SLIDE }];
+    for (const plugin of manager.getPlugins()) {
+      for (const [index, src] of (plugin.meta.screenshots ?? []).entries()) {
+        if (seen.has(src)) {
+          continue;
+        }
+        seen.add(src);
+        result.push({
+          key: `${plugin.meta.id}:${index}`,
+          src,
+          // Use the short plugin name — meta.description can be multi-kB and stalls caption/layout.
+          description: plugin.meta.name ?? plugin.meta.id,
+        });
+      }
+    }
+    return result;
+  }, [manager]);
+
+  return (
+    <div className='flex flex-col items-center gap-4 pbe-2 border-be border-separator'>
+      <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
+      <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+      {slides.length > 0 && (
+        <Carousel.Root classNames='max-w-[50rem]' count={slides.length}>
+          <Carousel.Previous />
+          <Carousel.Viewport>
+            {slides.map((slide, index) => (
+              <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
+            ))}
+          </Carousel.Viewport>
+          <Carousel.Next />
+          <Carousel.Indicators />
+          <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
+        </Carousel.Root>
+      )}
+    </div>
+  );
+});
+
+WelcomePanel.displayName = 'WelcomePanel';
+
+/**
  * The assistant prompt, backed by an in-memory chat. On submit the chat is persisted to the space,
  * the message is queued as a pending prompt, and the chat is opened (where the prompt is submitted).
  */
 const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+
   const registry = useRegistry();
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
@@ -121,7 +237,7 @@ const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const { preset, ...presetProps } = usePresets(online);
 
   // In-memory backing chat (not yet added to the space). `nonce` forces a fresh chat after submit.
-  const [chat, setChat] = useState<Chat.Chat>();
+  const [chat, setChat] = useState<ChatType.Chat>();
   const [nonce, setNonce] = useState(0);
   useEffect(() => {
     if (!space) {
@@ -203,13 +319,7 @@ const SuggestionCards = ({ space }: SpaceScopedProps) => {
       {SUGGESTION_KEYS.map((key) => {
         const prompt = t(key);
         return (
-          <Card.Root
-            key={key}
-            fullWidth
-            role='button'
-            classNames='cursor-pointer'
-            onClick={() => handleRunPrompt(prompt)}
-          >
+          <Card.Root key={key} fullWidth role='button' classNames='cursor-pointer' onClick={() => handleRunPrompt(prompt)}>
             <Card.Header>
               <Toolbar.IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
               <Card.Title>{prompt}</Card.Title>
@@ -232,8 +342,7 @@ const RecentObjectCard = ({ space, object }: RecentObjectCardProps) => {
 
   const typename = Obj.getTypename(object) ?? '';
   const label =
-    Obj.getLabel(object) ??
-    toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: object.id }], t);
+    Obj.getLabel(object) ?? toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: object.id }], t);
   const iconAnnotation = Obj.getIcon(object);
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const styles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;

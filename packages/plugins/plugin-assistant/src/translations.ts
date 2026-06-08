@@ -105,14 +105,6 @@ export const translations: Resource[] = [
         'invocations.label': 'Invocations',
         'trace.label': 'Trace',
 
-        'space-home-node.label': 'Home',
-        'space-home.recent.heading': 'Recent',
-        'space-home.prompt.placeholder': 'Ask the assistant anything…',
-        'space-home.suggestions.heading': 'Get started',
-        'space-home.suggestion.summarize': 'Summarize what’s in this space',
-        'space-home.suggestion.draft-doc': 'Draft a new document',
-        'space-home.suggestion.ideas': 'Suggest some ideas to work on',
-
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'reset-blueprints.label': 'Reset blueprints',

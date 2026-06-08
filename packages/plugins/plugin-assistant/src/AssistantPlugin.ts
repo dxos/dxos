@@ -2,19 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
@@ -37,7 +34,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AssistantEvents, AssistantOperation, type AssistantPluginOptions } from '#types';
+import { AssistantEvents, type AssistantPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
@@ -85,16 +82,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
     activatesOn: AppActivationEvents.SetupSettings,
     firesAfterActivation: [StateReady],
     activate: AssistantState,
-  }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(AssistantOperation.OnCreateSpace, params),
-        ),
-      ),
   }),
   Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,

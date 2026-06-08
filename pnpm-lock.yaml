@@ -14249,6 +14249,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand

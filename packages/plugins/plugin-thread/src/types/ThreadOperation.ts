@@ -7,26 +7,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Key, Obj, Ref, Type, DXN } from '@dxos/echo';
+import { Database, Key, Obj, Ref, Type, DXN } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Actor, AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
 const makeKey = (name: string) => DXN.make(`${meta.id}.operation.${name}`);
-
-export const OnCreateSpace = Operation.make({
-  meta: { key: makeKey('onCreateSpace'), name: 'On Create Space', icon: 'ph--chat-text--regular' },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Type.getSchema(Collection.Collection),
-    isDefault: Schema.Boolean.pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-});
 
 export const CreateChannel = Operation.make({
   meta: { key: makeKey('createChannel'), name: 'Create Channel', icon: 'ph--hash--regular' },

@@ -6,13 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    showWelcome: Schema.Boolean.annotations({
-      title: 'Show welcome article',
-      description: 'Display the Welcome surface at the top of the personal space.',
-    }),
-  }),
-);
+// Welcome visibility is no longer a global setting — it is a synced per-space annotation
+// (see `WelcomeDismissedAnnotation`). The settings panel exposes a "Show welcome page" action
+// instead of a stored field, so this schema is intentionally empty for now.
+export const Settings = Schema.mutable(Schema.Struct({}));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

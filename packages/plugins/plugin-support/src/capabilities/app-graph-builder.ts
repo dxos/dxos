@@ -6,18 +6,29 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
+import { HelpCapabilities, HelpOperation } from '#types';
 
-import { SHORTCUTS_DIALOG, WELCOME_NODE_ID, WELCOME_NODE_TYPE } from '../constants';
+import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_ID, SPACE_HOME_NODE_TYPE, SPACE_HOME_SUBJECT_PREFIX } from '../constants';
+
+// Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
+// whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
+// rebuilt inline on every evaluation always compares unequal, so the graph re-emits the node, remounting
+// the node's surface (and any cross-origin iframe it hosts) and freezing the app.
+type LabelTuple = [string, { ns: string }];
+const OPEN_HELP_TOUR_LABEL: LabelTuple = ['open-help-tour.message', { ns: meta.id }];
+const OPEN_SHORTCUTS_LABEL: LabelTuple = ['open-shortcuts.label', { ns: meta.id }];
+const HELP_COMPANION_LABEL: LabelTuple = ['help-companion.label', { ns: meta.id }];
+const HELP_LABEL: LabelTuple = ['help.label', { ns: meta.id }];
+const DISCORD_LABEL: LabelTuple = ['discord.label', { ns: meta.id }];
+const SPACE_HOME_NODE_LABEL: LabelTuple = ['space-home-node.label', { ns: meta.id }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       GraphBuilder.createExtension({
@@ -32,7 +43,7 @@ export default Capability.makeModule(
                 yield* Operation.invoke(HelpOperation.Start);
               }),
               properties: {
-                label: ['open-help-tour.message', { ns: meta.id }],
+                label: OPEN_HELP_TOUR_LABEL,
                 icon: 'ph--info--regular',
                 keyBinding: {
                   macos: 'shift+meta+/',
@@ -51,7 +62,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['open-shortcuts.label', { ns: meta.id }],
+                label: OPEN_SHORTCUTS_LABEL,
                 icon: 'ph--keyboard--regular',
                 keyBinding: {
                   macos: 'meta+ctrl+/',
@@ -71,7 +82,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               id: 'help',
-              label: ['help-companion.label', { ns: meta.id }],
+              label: HELP_COMPANION_LABEL,
               icon: 'ph--info--regular',
               data: 'help',
               position: 'last',
@@ -88,7 +99,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('help'),
-              label: ['help.label', { ns: meta.id }],
+              label: HELP_LABEL,
               icon: 'ph--megaphone--regular',
               data: null,
               position: 'first',
@@ -106,7 +117,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: linkedSegment('discord'),
-              label: ['discord.label', { ns: meta.id }],
+              label: DISCORD_LABEL,
               icon: 'ph--discord-logo--regular',
               data: null,
               position: 'first',
@@ -114,42 +125,34 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
-      // The node is fully virtual (no backing ECHO object); the matching Article surface
-      // is selected via the `welcome` literal subject. Gated by the `showWelcome` setting.
-      // The extension itself is positioned `first` so its node is inserted ahead of other
-      // `position: 'first'` siblings (Settings, Collections) under the personal space.
+      // Per-space Home virtual node, hoisted to the top of every space's navtree. The node is fully
+      // virtual (no backing ECHO object); the matching Article surface resolves the space from the
+      // subject (`${SPACE_HOME_SUBJECT_PREFIX}${space.id}`). The extension is positioned `first` so
+      // its node is inserted ahead of other `position: 'first'` siblings (Settings, Collections).
       GraphBuilder.createExtension({
-        id: 'welcome',
+        id: 'spaceHome',
         position: 'first',
         match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          if (!isPersonalSpace(space)) {
-            return Effect.succeed([]);
-          }
-
-          // Settings atom may not be contributed yet on first render — default to "show".
-          const settingsAtom = capabilities.get(SupportCapabilities.Settings);
-          if (settingsAtom && !get(settingsAtom).showWelcome) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
+        // NOTE: The connector re-evaluates whenever the space node emits (e.g. when the assistant writes
+        // feed/queue data). `addNodeImpl` dedupes properties by reference, so the static `properties` and
+        // its `label` array MUST be stable singletons — otherwise each re-eval mints a "changed" node,
+        // remounting the Home Article surface (and its cross-origin welcome iframe) and freezing the app.
+        connector: (space) =>
+          Effect.succeed([
             {
-              id: WELCOME_NODE_ID,
-              type: WELCOME_NODE_TYPE,
-              data: WELCOME_NODE_ID,
+              id: SPACE_HOME_NODE_ID,
+              type: SPACE_HOME_NODE_TYPE,
+              data: `${SPACE_HOME_SUBJECT_PREFIX}${space.id}`,
               properties: {
-                label: ['welcome-node.label', { ns: meta.id }],
-                icon: 'ph--lifebuoy--regular',
-                iconHue: 'rose',
+                label: SPACE_HOME_NODE_LABEL,
+                icon: 'ph--house--regular',
+                iconHue: 'cyan',
                 position: 'first',
                 draggable: false,
                 droppable: false,
               },
             } satisfies Node.NodeArg<string>,
-          ]);
-        },
+          ]),
       }),
     ]);
 
