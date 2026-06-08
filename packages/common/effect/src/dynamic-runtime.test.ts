@@ -11,7 +11,7 @@ import * as Runtime from 'effect/Runtime';
 import { describe, expect, test } from 'vitest';
 
 import * as DynamicRuntime from './dynamic-runtime';
-import { runAndForwardErrors } from './errors';
+import { runAndForwardErrors } from './internal/errors';
 
 // Test service tags
 class Database extends Context.Tag('Database')<Database, { query: (sql: string) => Effect.Effect<string[]> }>() {}

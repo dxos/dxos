@@ -11,7 +11,7 @@ import { StateMap, TagIndex } from '@dxos/app-toolkit';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { type Database, DXN, Annotation, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
 
@@ -366,6 +366,6 @@ export const appendPostContent = async (
   });
   await Feed.append(echoFeed, [content]).pipe(
     Effect.provide(createFeedServiceLayer(space.queues)),
-    runAndForwardErrors,
+    EffectEx.runAndForwardErrors,
   );
 };

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 describe('effect-basics', () => {
@@ -14,7 +14,7 @@ describe('effect-basics', () => {
     test('stream', async ({ expect }) => {
       const stream = Stream.range(1, 10);
       const sum = stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
-      await expect(runAndForwardErrors(sum)).resolves.toBe(55);
+      await expect(EffectEx.runAndForwardErrors(sum)).resolves.toBe(55);
     });
 
     test('stream is not an effect', ({ expect }) => {
@@ -34,7 +34,7 @@ describe('effect-basics', () => {
     //   return value;
     // });
 
-    await runAndForwardErrors(compute);
-    await runAndForwardErrors(compute);
+    await EffectEx.runAndForwardErrors(compute);
+    await EffectEx.runAndForwardErrors(compute);
   });
 });

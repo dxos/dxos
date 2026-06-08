@@ -13,7 +13,7 @@ import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } fro
 import { RootCollectionAnnotation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Database, Entity, Obj, Type } from '@dxos/echo';
-import { findAnnotation } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
@@ -216,7 +216,7 @@ export default Capability.makeModule(
         id: 'createInitialSpaceFormHue',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
           return !!annotation;
         },
         component: ({ data, ...inputProps }) => {
@@ -240,7 +240,7 @@ export default Capability.makeModule(
         id: 'createInitialSpaceFormIcon',
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema<any>; fieldPropertyAst?: SchemaAST.AST } => {
-          const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
+          const annotation = SchemaEx.findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
           return !!annotation;
         },
         component: ({ data, ...inputProps }) => {
@@ -280,7 +280,10 @@ export default Capability.makeModule(
             return false;
           }
 
-          const annotation = findAnnotation((data.schema as Schema.Schema.All).ast, TypeInputOptionsAnnotationId);
+          const annotation = SchemaEx.findAnnotation(
+            (data.schema as Schema.Schema.All).ast,
+            TypeInputOptionsAnnotationId,
+          );
           return !!annotation;
         },
         component: ({ data: { schema, target, fieldPropertyAst }, ...inputProps }) => {
@@ -291,7 +294,7 @@ export default Capability.makeModule(
 
           const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-          const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
+          const annotation = SchemaEx.findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
           const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;

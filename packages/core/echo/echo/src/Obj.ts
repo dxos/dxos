@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import * as Utils from 'effect/Utils';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import { createJsonPath } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EntityId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
@@ -387,7 +387,7 @@ export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallb
  * ```
  */
 export const getValue = (obj: Unknown | Snapshot, path: readonly (string | number)[]): any => {
-  return internal.getValue(obj, createJsonPath(path));
+  return SchemaEx.getValue(obj, SchemaEx.createJsonPath(path));
 };
 
 /**

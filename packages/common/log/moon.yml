@@ -12,3 +12,4 @@ tasks:
       - '--entryPoint=src/platform/node/index.ts'
       - '--entryPoint=src/processors/console-stub.ts'
       - '--entryPoint=src/processors/console-processor.ts'
+      - '--entryPoint=src/processors/file-processor.ts'

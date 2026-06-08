@@ -5,7 +5,7 @@
 import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Plugin from './plugin';
@@ -151,7 +151,7 @@ describe('UrlLoader', () => {
         get: () => null,
         set: () => {},
       };
-      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
+      const result = await EffectEx.runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -160,7 +160,7 @@ describe('UrlLoader', () => {
         get: () => '{{invalid json',
         set: () => {},
       };
-      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
+      const result = await EffectEx.runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -169,7 +169,7 @@ describe('UrlLoader', () => {
         get: () => 'null',
         set: () => {},
       };
-      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
+      const result = await EffectEx.runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -178,7 +178,7 @@ describe('UrlLoader', () => {
         get: () => '{}',
         set: () => {},
       };
-      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
+      const result = await EffectEx.runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
 
@@ -187,7 +187,7 @@ describe('UrlLoader', () => {
         get: () => '[{"title":"no url"}]',
         set: () => {},
       };
-      const result = await runAndForwardErrors(UrlLoader.preload({ storage }));
+      const result = await EffectEx.runAndForwardErrors(UrlLoader.preload({ storage }));
       expect(result).toEqual([]);
     });
   });
@@ -196,7 +196,7 @@ describe('UrlLoader', () => {
     it('removes the persisted entry and evicts cached assets', async ({ expect }) => {
       const storage = memoryStorage('[{"id":"p1","url":"https://x/p1.json"},{"id":"p2","url":"https://x/p2.json"}]');
       const { cache, calls } = recordingCache();
-      await runAndForwardErrors(UrlLoader.uninstall('p1', { storage, cache }));
+      await EffectEx.runAndForwardErrors(UrlLoader.uninstall('p1', { storage, cache }));
       expect(UrlLoader.getRemoteEntries({ storage })).toEqual([{ id: 'p2', url: 'https://x/p2.json' }]);
       expect(calls).toEqual([{ method: 'evict', pluginId: 'p1' }]);
     });
@@ -215,7 +215,7 @@ describe('UrlLoader', () => {
         resolve: (_id, url) => Effect.succeed(url),
         list: () => Effect.succeed([] as readonly string[]),
       };
-      await runAndForwardErrors(UrlLoader.uninstall('p1', { storage, cache }));
+      await EffectEx.runAndForwardErrors(UrlLoader.uninstall('p1', { storage, cache }));
       expect(UrlLoader.getRemoteEntries({ storage })).toEqual([]);
     });
   });

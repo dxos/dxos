@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { useSoundEffect } from '@dxos/react-ui-audio';
 
 import { type TranscriberProps } from '../transcriber';
 import { useAudioTrack } from './useAudioTrack';

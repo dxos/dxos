@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { Avatar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
@@ -31,7 +31,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
         subject: [organizationPath],
         workspace: db ? getSpacePath(db.spaceId) : undefined,
       });
-    }).pipe(runAndForwardErrors);
+    }).pipe(EffectEx.runAndForwardErrors);
   }, [invoke, organization]);
 
   return (

@@ -3,7 +3,6 @@
 //
 
 import { Registry } from '@effect-atom/atom';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -17,6 +16,7 @@ import { OperationInvoker } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
+import { layerIdb } from './idb-key-value-store';
 
 //
 // Capability Module
@@ -110,7 +110,7 @@ export default Capability.makeModule(
       Layer.succeed(Registry.AtomRegistry, atomRegistry),
       Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver),
       OperationHandlerSet.provide(handlerSet),
-      KeyValueStore.layerMemory,
+      layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
     );
 

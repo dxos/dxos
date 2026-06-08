@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Obj, Registry, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 
 import { makeRegistry, registryLayer, registryLayerWithUpstream } from './registry';
 
@@ -74,7 +74,7 @@ describe('Registry', () => {
       return registry.list();
     });
 
-    const result = await runAndForwardErrors(program.pipe(Effect.provide(registryLayer({ initial: [obj] }))));
+    const result = await EffectEx.runAndForwardErrors(program.pipe(Effect.provide(registryLayer({ initial: [obj] }))));
     expect(result).toHaveLength(1);
     expect((result[0] as any).value).toBe(42);
   });
@@ -93,7 +93,7 @@ describe('Registry', () => {
       registryLayer({ initial: [upstreamObj] }),
     );
 
-    const result = await runAndForwardErrors(program.pipe(Effect.provide(stack)));
+    const result = await EffectEx.runAndForwardErrors(program.pipe(Effect.provide(stack)));
     expect(result.sort()).toEqual([1, 2]);
   });
 
