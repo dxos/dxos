@@ -11,8 +11,6 @@ import { Database, DXN, Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { EffectEx } from '@dxos/effect';
-
-const { runAndForwardErrors } = EffectEx;
 import { type EntityId } from '@dxos/keys';
 
 import * as StateMap from './StateMap';
@@ -60,6 +58,6 @@ describe('StateMap (database integration)', () => {
 
       // Each new entry: makeMap + set field ≈ 2–3 ops, well under 10 per entry.
       expect(totalOps).toBeLessThan(N * 10);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 });
