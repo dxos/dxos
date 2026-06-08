@@ -34,12 +34,29 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
         "require": "./dist/lib/node/index.cjs",
         "default": "./dist/lib/node-esm/index.mjs"
-      }
+      },
+      "default": "./dist/lib/node-esm/index.mjs"
+    },
+    "./vitest": {
+      "source": "./src/vitest/index.ts",
+      "types": "./dist/types/src/vitest/index.d.ts",
+      "default": "./dist/lib/node-esm/vitest/index.mjs"
+    },
+    "./vitest/global-setup": {
+      "source": "./src/vitest/global-setup.ts",
+      "types": "./dist/types/src/vitest/global-setup.d.ts",
+      "default": "./dist/lib/node-esm/vitest/global-setup.mjs"
+    },
+    "./vitest/setup": {
+      "source": "./src/vitest/setup.ts",
+      "types": "./dist/types/src/vitest/setup.d.ts",
+      "default": "./dist/lib/node-esm/vitest/setup.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

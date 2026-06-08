@@ -12,3 +12,6 @@ tasks:
       - '--entryPoint=src/platform/node/index.ts'
       - '--entryPoint=src/processors/console-stub.ts'
       - '--entryPoint=src/processors/console-processor.ts'
+      - '--entryPoint=src/vitest/index.ts'
+      - '--entryPoint=src/vitest/global-setup.ts'
+      - '--entryPoint=src/vitest/setup.ts'
