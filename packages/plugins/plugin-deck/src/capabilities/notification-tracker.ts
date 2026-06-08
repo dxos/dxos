@@ -102,7 +102,8 @@ export default Capability.makeModule(
         return;
       }
       hasShownFailureToast = true;
-      addToast({
+      // Replace any stale plugin-failure toast so at most one is ever visible.
+      const toast: LayoutOperation.Toast = {
         id: 'plugin-failure',
         title: ['plugin-failure.title', { ns: meta.id }],
         description: ['plugin-failure.description', { ns: meta.id }],
@@ -111,6 +112,11 @@ export default Capability.makeModule(
         actionLabel: ['plugin-failure-action.label', { ns: meta.id }],
         actionAlt: ['plugin-failure-action.alt', { ns: meta.id }],
         onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+      };
+      const state = registry.get(ephemeralAtom);
+      registry.set(ephemeralAtom, {
+        ...state,
+        toasts: [...state.toasts.filter((t) => t.id !== 'plugin-failure'), toast],
       });
     };
 
