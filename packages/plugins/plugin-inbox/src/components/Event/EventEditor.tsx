@@ -91,6 +91,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update],
   );
 
+  const gridClasses = 'grid grid-cols-[1fr_8rem] gap-2';
+
   return (
     <>
       <Card.Row>
@@ -115,7 +117,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
             </IconBlock>
           }
         >
-          <div className='grid grid-cols-[1fr_8rem] gap-2'>
+          <div className={gridClasses}>
             {allDay ? (
               <Input.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
             ) : (
@@ -151,24 +153,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               </IconBlock>
             }
           >
-            <div className='grid grid-cols-[1fr_8rem] gap-2'>
+            <div className={gridClasses}>
               <Input.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
-              {/* Empty string (not undefined) keeps the control controlled so it clears to the */}
-              {/* placeholder when the duration doesn't match a preset. */}
-              <Select.Root value={presetValue ?? ''} onValueChange={handleDurationChange}>
-                <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {DURATION_PRESETS.map((preset) => (
-                        <Select.Option key={preset.value} value={preset.value}>
-                          {preset.label}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
+              <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
             </div>
           </Card.Row>
         </Input.Root>
@@ -178,6 +165,32 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         <Header.PersonRow key={attendee.email ?? index} actor={attendee} db={db} onContactCreate={onContactCreate} />
       ))}
     </>
+  );
+};
+
+type SelectDurationProps = {
+  value?: string;
+  onValueChange: (value: string) => void;
+};
+
+/** Duration preset picker. Empty string keeps the control controlled so it clears to the placeholder. */
+const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <Select.Root value={value ?? ''} onValueChange={onValueChange}>
+      <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            {DURATION_PRESETS.map((preset) => (
+              <Select.Option key={preset.value} value={preset.value}>
+                {preset.label}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };
 
