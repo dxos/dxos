@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -159,18 +159,23 @@ type IframePlayerProps = ThemedClassName<{
 }>;
 
 const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
+  const [loaded, setLoaded] = useState(false);
   return (
     <div className={mx('relative bg-baseSurface', classNames)}>
       <iframe
         src={src}
         title={alt ?? 'Embedded media'}
         loading='lazy'
-        className='border-none w-full h-full'
+        className={mx(
+          'border-none w-full h-full transition-opacity duration-150',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
         style={{ colorScheme: 'dark' }}
         sandbox={DEFAULT_IFRAME_SANDBOX}
         referrerPolicy='no-referrer'
         allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
         allowFullScreen
+        onLoad={() => setLoaded(true)}
       />
     </div>
   );
