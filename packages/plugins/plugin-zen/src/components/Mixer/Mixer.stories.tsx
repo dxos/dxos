@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Oscilloscope } from '@dxos/react-ui-sfx';
+import { Oscilloscope } from '@dxos/react-ui-audio';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMixerEngine } from '#hooks';
