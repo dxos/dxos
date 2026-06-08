@@ -15,6 +15,7 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
+import { AtomObj } from '@dxos/echo-atom';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
@@ -22,6 +23,7 @@ import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -89,18 +91,35 @@ export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
     void invokePromise(HelpOperation.Start);
   }, [invokePromise]);
 
+  const handleHideWelcome = useCallback(() => setDismissed(true), [setDismissed]);
+
+  // Reactive toolbar: reads the dismissed annotation via get(AtomObj.make(space.properties)) so the
+  // menu action graph updates without a React re-render cycle when the annotation changes. Always
+  // rendered — actions are hidden when welcome is not shown, but the toolbar slot stays visible so
+  // future actions can be added without structural changes.
+  const menuActions = useMenuBuilder(
+    (get) => {
+      const properties = space?.properties ? get(AtomObj.make(space.properties)) : undefined;
+      const isDismissed = properties
+        ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+        : false;
+      const showActions = isPersonal && !isDismissed;
+
+      return MenuBuilder.make()
+        .action('start-tour', { label: t('start-tour.button'), hidden: !showActions }, handleStartTour)
+        .action('hide-welcome', { label: t('hide-welcome.button'), hidden: !showActions }, handleHideWelcome)
+        .build();
+    },
+    [space?.properties, isPersonal, t, handleStartTour, handleHideWelcome],
+  );
+
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          {showWelcome && (
-            <>
-              <Toolbar.Button onClick={handleStartTour}>{t('start-tour.button')}</Toolbar.Button>
-              <Toolbar.Button onClick={() => setDismissed(true)}>{t('hide-welcome.button')}</Toolbar.Button>
-            </>
-          )}
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <Menu.Root {...menuActions}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar />
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content asChild>
         {/* Match the AI chat content width (`dx-document`): content at the top, prompt pinned at the bottom. */}
         <div className='flex flex-col bs-full min-bs-0'>
