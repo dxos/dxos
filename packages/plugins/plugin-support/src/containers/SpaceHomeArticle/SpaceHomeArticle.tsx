@@ -6,12 +6,7 @@ import * as Option from 'effect/Option';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import {
-  useCapabilities,
-  useCapability,
-  useOperationInvoker,
-  usePluginManager,
-} from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
