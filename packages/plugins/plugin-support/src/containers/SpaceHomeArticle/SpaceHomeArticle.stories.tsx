@@ -74,6 +74,11 @@ export const Default: Story = {};
 /**
  * Clicking a suggestion card fires RunPromptInNewChat with the card's prompt text.
  * RunPromptInNewChat is mocked so no navigation occurs in Storybook.
+ *
+ * @idiom org.dxos.app-framework.testing.operationCapture
+ *   applies: Testing suggestion-card clicks in SpaceHomeArticle
+ *   instead-of: Loading RunPromptInNewChat handler and asserting navigation side effects
+ *   uses: {@link makeOperationCapture}, {@link AssistantOperation.RunPromptInNewChat}
  */
 export const SuggestionCardClick: Story = {
   play: async ({ canvasElement }) => {
@@ -93,6 +98,11 @@ export const SuggestionCardClick: Story = {
 /**
  * Typing a custom prompt and pressing Enter creates an in-memory chat (real) and then navigates
  * to it (mocked via LayoutOperation.Open capture). Asserts both operations are invoked.
+ *
+ * @idiom org.dxos.app-framework.testing.operationCapture
+ *   applies: Testing custom prompt submission in SpaceHomeArticle
+ *   instead-of: Running LayoutOperation.Open and dealing with full navigation in Storybook
+ *   uses: {@link makeOperationCapture}, {@link AssistantOperation.CreateChat}, {@link LayoutOperation.Open}
  */
 export const CustomPromptSubmit: Story = {
   play: async ({ canvasElement }) => {

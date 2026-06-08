@@ -64,6 +64,12 @@ export type OperationCapture = {
   reset(): void;
 };
 
+/**
+ * @idiom org.dxos.app-framework.testing.operationCapture
+ *   applies: Storybook play-function tests for components that call plugin operations
+ *   instead-of: Loading every plugin whose operations the component triggers
+ *   uses: {@link makeOperationCapture}, {@link withPluginManager}
+ */
 export const makeOperationCapture = (
   mockedOperations: readonly Operation.Definition.Any[],
   spyFn?: (impl: (...args: any[]) => any) => any,
