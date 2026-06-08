@@ -66,5 +66,7 @@ export const Event = Schema.Struct({
 );
 
 export type Event = Type.InstanceType<typeof Event>;
-export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>): Event =>
-  Obj.make(Event, { attendees, ...props });
+
+export type MakeProps = MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>;
+
+export const make = ({ attendees = [], ...props }: MakeProps): Event => Obj.make(Event, { attendees, ...props });

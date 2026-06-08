@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { addMinutes, differenceInMinutes, format } from 'date-fns';
+import { addMinutes, differenceInMinutes } from 'date-fns';
 import React, { useState } from 'react';
 
 import { type Database } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, DatePicker, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Card, IconBlock, Input, Select, useTranslation } from '@dxos/react-ui';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -18,66 +18,6 @@ export type EventEditorProps = {
   event: EventType.Event;
   db?: Database.Database;
   onContactCreate?: (actor: Actor.Actor) => void;
-};
-
-/** Duration presets (minutes) offered as an alternative to picking an explicit end time. */
-const DURATION_PRESETS = [
-  { value: '15', label: '15 minutes' },
-  { value: '30', label: '30 minutes' },
-  { value: '60', label: '1 hour' },
-  { value: '90', label: '90 minutes' },
-  { value: '120', label: '2 hours' },
-  { value: '180', label: '3 hours' },
-];
-const CUSTOM_END = 'custom';
-
-const parseDate = (iso?: string): Date | undefined => {
-  if (!iso) {
-    return undefined;
-  }
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? undefined : date;
-};
-
-const applyTime = (date: Date | undefined, time: string): Date => {
-  const [hours, minutes] = time.split(':').map((part) => parseInt(part, 10));
-  const out = date ? new Date(date) : new Date();
-  out.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
-  return out;
-};
-
-/** Standard react-ui date (+ optional time) picker bound to an ISO string value. */
-const DateTimeField = ({
-  value,
-  withTime = true,
-  onChange,
-}: {
-  value?: string;
-  withTime?: boolean;
-  onChange: (iso: string) => void;
-}) => {
-  const date = parseDate(value);
-  return (
-    <DatePicker.Root
-      mode='single'
-      withTime={withTime}
-      value={date}
-      onValueChange={(next) => next && onChange(next.toISOString())}
-    >
-      <DatePicker.Trigger format={withTime ? 'PPP p' : 'PPP'} />
-      <DatePicker.Content>
-        <DatePicker.Calendar />
-        {withTime && (
-          <Input.Root>
-            <Input.Time
-              value={date ? format(date, 'HH:mm') : ''}
-              onValueChange={(time) => onChange(applyTime(date, time).toISOString())}
-            />
-          </Input.Root>
-        )}
-      </DatePicker.Content>
-    </DatePicker.Root>
-  );
 };
 
 /**
@@ -161,9 +101,17 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         </Input.Root>
       </Card.Row>
 
-      <Card.Row icon='ph--calendar--regular'>
-        <DateTimeField value={data.startDate} withTime={!allDay} onChange={setStart} />
-      </Card.Row>
+      <Input.Root>
+        <Card.Row
+          icon={
+            <IconBlock>
+              <Input.TriggerIcon icon='ph--calendar--regular' />
+            </IconBlock>
+          }
+        >
+          {allDay ? <Input.Date value={data.startDate} /> : <Input.DateTime value={data.startDate} />}
+        </Card.Row>
+      </Input.Root>
 
       {/* All-day events are single-day, so no end field; timed events choose a duration or explicit end. */}
       {!allDay && (
@@ -184,7 +132,6 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-            {customEnd && <DateTimeField value={data.endDate} withTime onChange={setEnd} />}
           </div>
         </Card.Row>
       )}
@@ -194,4 +141,23 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       ))}
     </>
   );
+};
+
+/** Duration presets (minutes) offered as an alternative to picking an explicit end time. */
+const DURATION_PRESETS = [
+  { value: '15', label: '15 minutes' },
+  { value: '30', label: '30 minutes' },
+  { value: '60', label: '1 hour' },
+  { value: '90', label: '90 minutes' },
+  { value: '120', label: '2 hours' },
+  { value: '180', label: '3 hours' },
+];
+const CUSTOM_END = 'custom';
+
+const parseDate = (iso?: string): Date | undefined => {
+  if (!iso) {
+    return undefined;
+  }
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 };
