@@ -18,6 +18,7 @@ import {
   Operation,
   OperationRegistry,
   Trace,
+  byokHeaderLayer,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
@@ -208,7 +209,7 @@ class FunctionContext extends Resource {
       : configuredCredentialsLayer([]);
 
     const aiLayer = this.context.services.functionsAiService
-      ? InternalAiServiceLayer(this.context.services.functionsAiService)
+      ? InternalAiServiceLayer(this.context.services.functionsAiService).pipe(Layer.provide(credentials))
       : AiService.notAvailable;
 
     const operationServiceLayer = this.context.services.functionsService
@@ -276,22 +277,18 @@ const makeTraceWriterLayer = (traceService: TraceProtocol.TraceService): Layer.L
     },
   });
 
-/**
- * AI service layer that proxies HTTP requests through the EDGE-provided `FunctionsAiService`.
- */
-const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) =>
-  AiModelResolver.AiModelResolver.buildAiService.pipe(
-    Layer.provide(
-      AnthropicResolver.make().pipe(
-        Layer.provide(
-          AnthropicClient.layer({
-            // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
-            apiUrl: 'http://internal/provider/anthropic',
-          }).pipe(Layer.provide(FunctionsAiHttpClient.layer(functionsAiService))),
-        ),
-      ),
-    ),
+/** Proxies Anthropic requests through the EDGE-provided `FunctionsAiService`, BYOK-wrapped. */
+const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiService) => {
+  // `apiUrl` is a sentinel — the request gets re-routed by the AI gateway in EDGE.
+  const httpClient = byokHeaderLayer('anthropic.com').pipe(
+    Layer.provide(FunctionsAiHttpClient.layer(functionsAiService)),
   );
+  const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://internal/provider/anthropic' }).pipe(
+    Layer.provide(httpClient),
+  );
+  const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
+  return AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+};
 
 /**
  * Backs `Operation.Service` with the EDGE-provided `FunctionsService` so that operation

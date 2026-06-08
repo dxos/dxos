@@ -15,6 +15,10 @@ export const AiService = Capability.lazy<AssistantPluginOptions | void, Capabili
   'AiService',
   () => import('./ai-service'),
 );
+export const IntegrationProvider = Capability.lazy(
+  'AnthropicIntegrationProvider',
+  () => import('./integration-provider'),
+);
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 export const CompanionChatProvisioner = Capability.lazy(

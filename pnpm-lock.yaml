@@ -4936,6 +4936,9 @@ importers:
       '@effect-atom/atom':
         specifier: 'catalog:'
         version: 0.5.3(patch_hash=90a97dcb5aa93197ad34b41c932b405a7ba98679af6885de637ffa20a623672e)(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.96.1(effect@3.21.3)
     devDependencies:
       effect:
         specifier: 3.21.3
@@ -6155,6 +6158,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7831,6 +7837,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-integration':
+        specifier: workspace:*
+        version: link:../plugin-integration
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
