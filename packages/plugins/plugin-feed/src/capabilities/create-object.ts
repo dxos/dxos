@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { getMagazinesPath } from '../paths';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -13,6 +12,8 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
+
+import { getMagazinesPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -54,9 +55,7 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object: magazine,
               target: options.target,
-              targetNodeId:
-                options.targetNodeId ??
-                (db ? getMagazinesPath(db.spaceId) : undefined),
+              targetNodeId: options.targetNodeId ?? (db ? getMagazinesPath(db.spaceId) : undefined),
             });
           }),
       }),

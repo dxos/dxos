@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { getSketchesPath } from '../paths';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { Sketch } from '#types';
+
+import { getSketchesPath } from '../paths';
 
 const typename = Type.getTypename(Sketch.Sketch);
 

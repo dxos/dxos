@@ -13,6 +13,7 @@ import { Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { Markdown, MarkdownOperation } from '#types';
+
 import { getDocumentPath } from '../paths';
 
 const documentTypename = Type.getTypename(Markdown.Document);

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+
 import { GraphBuilder, Node } from '@dxos/app-graph';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
@@ -68,7 +69,10 @@ export const createTypeSectionExtension = (
 
       // Mirror createObjectNode: look up the registered Type.Type entity to read icon/hue.
       // Raw schema classes don't carry annotations reliably; the registry copy does.
-      const typeEntity = space.db.graph.registry.list().filter(Type.isType).find((t) => Type.getTypename(t) === typename);
+      const typeEntity = space.db.graph.registry
+        .list()
+        .filter(Type.isType)
+        .find((t) => Type.getTypename(t) === typename);
       const registeredSchema = typeEntity ? Type.getSchema(typeEntity) : undefined;
       const annotation = (() => {
         try {

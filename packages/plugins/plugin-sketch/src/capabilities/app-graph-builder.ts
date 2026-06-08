@@ -14,6 +14,7 @@ import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { Sketch } from '#types';
+
 import { getSketchPath } from '../paths';
 
 const sketchTypename = Type.getTypename(Sketch.Sketch);

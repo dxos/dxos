@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { getChannelsPath } from '../paths';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
@@ -15,6 +14,7 @@ import { Channel } from '@dxos/types';
 // graph isn't pulled into this capability module's evaluation.
 import { ChannelCreatePanel } from '#containers';
 
+import { getChannelsPath } from '../paths';
 import { ThreadCapabilities, resolveProvider } from '../types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
@@ -39,8 +39,7 @@ export default Capability.makeModule(
             object,
             target: opts.target,
             hidden: true,
-            targetNodeId:
-              opts.targetNodeId ?? (db ? getChannelsPath(db.spaceId) : undefined),
+            targetNodeId: opts.targetNodeId ?? (db ? getChannelsPath(db.spaceId) : undefined),
           });
         }),
     });

@@ -53,7 +53,8 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  *   instead-of: Relying on the graph being fully populated before navigation, or accepting that the create dialog navigates to the database subtree
  *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
-export const createTypeSectionPathResolver = (typename: string): AppCapabilities.NavigationPathResolver =>
+export const createTypeSectionPathResolver =
+  (typename: string): AppCapabilities.NavigationPathResolver =>
   (qualifiedPath) => {
     const spaceId = getSpaceIdFromPath(qualifiedPath);
     if (!spaceId) {

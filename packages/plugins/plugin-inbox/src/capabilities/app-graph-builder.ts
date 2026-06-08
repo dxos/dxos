@@ -7,7 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, createTypeSectionExtension, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNode,
+  AppNodeMatcher,
+  createTypeSectionExtension,
+  getSpaceIdFromPath,
+} from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';

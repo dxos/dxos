@@ -10,7 +10,14 @@ import { Operation } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, NavigationResolver, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  CreateObject,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { FeedOperation, Magazine, Subscription } from '#types';

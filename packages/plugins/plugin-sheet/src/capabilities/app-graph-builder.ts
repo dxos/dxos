@@ -14,6 +14,7 @@ import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { Sheet } from '#types';
+
 import { getSheetPath } from '../paths';
 
 const sheetTypename = Type.getTypename(Sheet.Sheet);

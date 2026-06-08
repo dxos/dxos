@@ -11,7 +11,14 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { AppGraphBuilder, ChannelBackendFeed, CreateObject, NavigationResolver, OperationHandler, ReactSurface } from '#capabilities';
+import {
+  AppGraphBuilder,
+  ChannelBackendFeed,
+  CreateObject,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ThreadOperation } from '#types';

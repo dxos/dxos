@@ -16,9 +16,9 @@ import {
   getPersonalSpace,
 } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
+import { isSpace } from '@dxos/client/echo';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { isSpace } from '@dxos/client/echo';
 import { DXN, Database, Filter, Obj, Type, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -28,6 +28,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
+
 import { getChatPath } from '../paths';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */

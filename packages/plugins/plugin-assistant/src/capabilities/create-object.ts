@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, Capabilities } from '@dxos/app-framework';
-import { getChatsPath } from '../paths';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -14,6 +13,8 @@ import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { AssistantOperation } from '#types';
+
+import { getChatsPath } from '../paths';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
