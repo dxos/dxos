@@ -8,6 +8,7 @@ import React from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { makeOperationCapture, withPluginManager } from '@dxos/app-framework/testing';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -31,7 +32,10 @@ const DefaultStory = () => {
   return <SpaceHomeArticle role='article' subject={subject} />;
 };
 
-const capture = makeOperationCapture(fn);
+// Mock operations that should be captured but NOT executed (e.g. navigation has no effect in
+// Storybook). Everything else (AssistantOperation.CreateChat, etc.) executes for real so the
+// prompt flow works normally.
+const capture = makeOperationCapture([AssistantOperation.RunPromptInNewChat, LayoutOperation.Open], fn);
 
 const meta = {
   title: 'plugins/plugin-support/containers/SpaceHomeArticle',
@@ -69,6 +73,7 @@ export const Default: Story = {};
 
 /**
  * Clicking a suggestion card fires RunPromptInNewChat with the card's prompt text.
+ * RunPromptInNewChat is mocked so no navigation occurs in Storybook.
  */
 export const SuggestionCardClick: Story = {
   play: async ({ canvasElement }) => {
@@ -86,9 +91,8 @@ export const SuggestionCardClick: Story = {
 };
 
 /**
- * Typing a custom prompt and pressing Enter fires RunPromptInNewChat (via the in-memory
- * chat creation + pending prompt handoff). We assert on CreateChat being invoked since
- * the full navigation is not observable in Storybook.
+ * Typing a custom prompt and pressing Enter creates an in-memory chat (real) and then navigates
+ * to it (mocked via LayoutOperation.Open capture). Asserts both operations are invoked.
  */
 export const CustomPromptSubmit: Story = {
   play: async ({ canvasElement }) => {
@@ -100,9 +104,13 @@ export const CustomPromptSubmit: Story = {
     await userEvent.type(editor, 'What types of objects can I create here?');
     await userEvent.keyboard('{Enter}');
 
-    // The prompt submit path creates an in-memory chat first.
+    // CreateChat runs for real (not mocked) — in-memory chat is created.
     const chatCalls = capture.getCalls(AssistantOperation.CreateChat);
     await expect(chatCalls).toHaveLength(1);
     await expect(chatCalls[0].input.addToSpace).toBe(false);
+
+    // LayoutOperation.Open is mocked — navigation was triggered but not executed.
+    const navCalls = capture.getCalls(LayoutOperation.Open);
+    await expect(navCalls).toHaveLength(1);
   },
 };
