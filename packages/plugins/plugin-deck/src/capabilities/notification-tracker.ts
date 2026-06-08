@@ -104,12 +104,12 @@ export default Capability.makeModule(
       hasShownFailureToast = true;
       addToast({
         id: 'plugin-failure',
-        title: 'A plugin failed to activate',
-        description: 'See Plugin Registry for details.',
+        title: ['plugin-failure.title', { ns: meta.id }],
+        description: ['plugin-failure.description', { ns: meta.id }],
         icon: 'ph--warning--regular',
         duration: ERROR_TOAST_DURATION,
-        actionLabel: 'Open Registry',
-        actionAlt: 'Open Plugin Registry',
+        actionLabel: ['plugin-failure-action.label', { ns: meta.id }],
+        actionAlt: ['plugin-failure-action.alt', { ns: meta.id }],
         onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
       });
     };
