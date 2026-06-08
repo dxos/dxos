@@ -14,12 +14,10 @@ import { Sheet } from '#types';
 
 import { getSheetsPath } from '../paths';
 
-const typename = Type.getTypename(Sheet.Sheet);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: typename,
+      id: Type.getTypename(Sheet.Sheet),
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Sheet.make(props);

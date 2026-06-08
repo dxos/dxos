@@ -40,8 +40,6 @@ const whenNonChatObject = NodeMatcher.whenAll(
   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Chat.Chat)),
 );
 
-const chatTypename = Type.getTypename(Chat.Chat);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
@@ -211,7 +209,7 @@ export default Capability.makeModule(
         id: 'chatsSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === chatTypename && space ? Option.some(space) : Option.none();
+          return node.type === Type.getTypename(Chat.Chat) && space ? Option.some(space) : Option.none();
         },
         actions: (space) =>
           Effect.succeed([

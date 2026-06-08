@@ -82,7 +82,7 @@ export default Capability.makeModule(
       Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
       Capability.contributes(
         AppCapabilities.NavigationPathResolver,
-        createTypeSectionPathResolver(Type.getTypename(Calendar.Calendar)),
+        createTypeSectionPathResolver(Calendar.Calendar),
       ),
     ];
   }),

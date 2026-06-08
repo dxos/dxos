@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Key } from '@dxos/echo';
+import { Key, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 
@@ -29,7 +29,7 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  *    `validateNavigationTarget` doesn't 404 before the graph has populated.
  *
  * 2. **CreateObjectEntry subject** — in each plugin's `CreateObjectEntry`, pass
- *    `targetNodeId: getTypeSectionPath(spaceId, typename)` to `SpaceOperation.AddObject`.
+ *    `targetNodeId: getSectionPath(options.db.spaceId)` to `SpaceOperation.AddObject`.
  *    The handler computes `subject = targetNodeId + "/" + objectId`, which is exactly the custom
  *    section path. `OpenCreateObject` navigates to `subject[0]` after creation, so this routes
  *    the create-dialog path to the section rather than the database subtree:
@@ -37,14 +37,11 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  *    createObject: (props, options) =>
  *      Effect.gen(function* () {
  *        const object = MyType.make(props);
- *        const db = Database.isDatabase(options.target)
- *          ? options.target
- *          : Obj.getDatabase(options.target)!;
  *        return yield* Operation.invoke(SpaceOperation.AddObject, {
  *          object,
  *          target: options.target,
  *          hidden: true,
- *          targetNodeId: getTypeSectionPath(db.spaceId, typename),
+ *          targetNodeId: options.targetNodeId ?? getSectionPath(options.db.spaceId),
  *        });
  *      }),
  *    ```
@@ -54,8 +51,9 @@ import { getSpaceIdFromPath, getSpacePath } from './paths';
  *   instead-of: Relying on the graph being fully populated before navigation, or accepting that the create dialog navigates to the database subtree
  *   uses: {@link createTypeSectionPathResolver}, {@link AppCapabilities.NavigationPathResolver}, {@link createTypeSectionPaths}, {@link createTypeSectionExtension}
  */
-export const createTypeSectionPathResolver = (typename: string): AppCapabilities.NavigationPathResolver => {
-  invariant(typename, 'Typename must be provided to create a type section path resolver.');
+export const createTypeSectionPathResolver = (type: Type.Type): AppCapabilities.NavigationPathResolver => {
+  const typename = Type.getTypename(type);
+  invariant(typename, 'Schema must have a typename to create a type section path resolver.');
   return (qualifiedPath) => {
     const spaceId = getSpaceIdFromPath(qualifiedPath);
     if (!spaceId) {

@@ -14,12 +14,10 @@ import { Sketch } from '#types';
 
 import { getSketchesPath } from '../paths';
 
-const typename = Type.getTypename(Sketch.Sketch);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: typename,
+      id: Type.getTypename(Sketch.Sketch),
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Sketch.make(props);
