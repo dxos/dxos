@@ -34,7 +34,7 @@ export interface Service {
   hydrate: () => Effect.Effect<void>;
 }
 
-export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
+export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() { }
 
 /**
  * Handle to an agent session.
@@ -203,7 +203,8 @@ export const layer = (opts?: {
 
             let handle: ProcessManager.Handle<string, void>;
             if (processes.length > 0) {
-              handle = yield* processes[0].hydrate(executable);
+              yield* processes[0].hydrate(executable);
+              handle = processes[0];
             } else {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',

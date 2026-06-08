@@ -104,7 +104,7 @@ export interface Handle<I, O> {
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>>;
+  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<void>;
 }
 
 export namespace Handle {
@@ -711,9 +711,14 @@ export class ProcessManagerImpl implements Manager {
       }
 
       // Re-deliver events that never settled (interrupted by shutdown), in seq order.
+      // Forked so hydrate returns immediately; handlers run on the process scope like normal inputs.
       const pendingEvents = [...record.events].sort((a, b) => a.seq - b.seq);
-      for (const event of pendingEvents) {
-        yield* handle.redeliver(event, definition);
+      if (pendingEvents.length > 0) {
+        log('lifecycle: redeliver pending events', { pid: id, count: pendingEvents.length });
+        yield* Effect.forkIn(
+          Effect.forEach(pendingEvents, (event) => handle.redeliver(event, definition), { discard: true }),
+          scope,
+        );
       }
 
       return handle;

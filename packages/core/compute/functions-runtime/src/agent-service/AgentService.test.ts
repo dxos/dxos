@@ -74,6 +74,7 @@ const TEST_DATA = {
 };
 
 interface ResearchTask {
+  id: string;
   website: string;
   deferred: Deferred.Deferred<string>;
 }
@@ -93,7 +94,7 @@ const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* (
   const tasks: ResearchTask[] = [];
   const complete = (task: ResearchTask) =>
     Effect.gen(function* () {
-      log.info('complete research', { website: task.website });
+      log.info('complete research', { id: task.id, website: task.website });
       const result = TEST_DATA.research[task.website];
       if (!result) {
         yield* Effect.die(new Error(`No research found for ${task.website}`));
@@ -105,11 +106,15 @@ const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* (
   return ResearchService.of({
     research: (website: string) =>
       Effect.gen(function* () {
-        log.info('start research', { website });
-        const task = yield* Deferred.make<string>();
-        tasks.push({ website, deferred: task });
+        const id = crypto.randomUUID();
+        const task: ResearchTask = { id, website, deferred: yield* Deferred.make<string>() };
+        log.info('start research', { id, website });
+        tasks.push(task);
         yield* Queue.offer(taskSignal, undefined);
-        return yield* Deferred.await(task);
+        return yield* Deferred.await(task.deferred).pipe(Effect.onInterrupt(() => Effect.sync(() => {
+          log.info('interrupt research', { id, website: task.website });
+          tasks.splice(tasks.indexOf(task), 1);
+        })));
       }),
     waitForTaskToAppear: () => Queue.take(taskSignal).pipe(Effect.asVoid),
     completeOneTask: () =>
@@ -122,7 +127,11 @@ const makeResearchService = Layer.effect(ResearchService, Effect.gen(function* (
       }),
     completeAllTasks: () =>
       Effect.gen(function* () {
-        for (const task of tasks) {
+        while (tasks.length > 0) {
+          const task = tasks.shift();
+          if (!task) {
+            return;
+          }
           yield* complete(task);
         }
       }),
@@ -222,21 +231,14 @@ describe('Agent Service', () => {
         yield* researchService.waitForTaskToAppear();
 
         const processManager = yield* ProcessManager.ProcessManagerService;
-
-        // Hydrate redelivers the interrupted alarm synchronously, which re-runs the AI request and
-        // re-issues the Research tool call against a fresh child process. The pre-restart child is
-        // orphaned (never rehydrated), so its task lingers in the queue ahead of the live child's
-        // task. Drain all pending tasks: completing the orphan is a harmless no-op, completing the
-        // live child's task unblocks the re-run while hydrate is still awaiting it.
-        const resumeFiber = yield* Effect.gen(function* () {
-          yield* researchService.waitForTaskToAppear();
-          yield* researchService.completeAllTasks();
-        }).pipe(Effect.fork);
-
         yield* processManager.shutdown();
         yield* processManager.startup();
         yield* AgentService.hydrate();
-        yield* Fiber.join(resumeFiber);
+
+        // Hydrate returns immediately; redelivery re-issues the research tool on a fresh child.
+        // Drain all queued tasks (orphaned pre-restart + live child).
+        yield* researchService.waitForTaskToAppear();
+        yield* researchService.completeAllTasks();
 
         agent = yield* AgentService.getSession(agent.feed);
         yield* agent.waitForCompletion();

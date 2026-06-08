@@ -943,7 +943,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'hydrating parent blocks until interrupted alarm handler is resumed externally',
+    'hydrating parent redelivers interrupted alarm asynchronously',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -993,16 +993,15 @@ describe('durability', () => {
       const dormant = yield* managerB.list({ key: blockingParent.key });
       expect(dormant).toHaveLength(1);
 
-      // `hydrate` redelivers the unsettled alarm event synchronously — callers cannot proceed
-      // until the handler is resumed out-of-band (AgentService deadlock during tool calls).
-      const hydrateFiber = yield* dormant[0].hydrate(blockingParent).pipe(Effect.fork);
-
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 100)));
+      // `hydrate` returns immediately; the unsettled alarm is redelivered on the process scope.
+      yield* dormant[0].hydrate(blockingParent);
+      yield* Deferred.await(alarmStarted);
       expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
 
       yield* Deferred.succeed(alarmResume, undefined);
-      yield* Fiber.join(hydrateFiber);
-      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(true);
+      yield* Effect.promise(() =>
+        expect.poll(() => Effect.runPromise(Ref.get(alarmHandlerFinished))).toEqual(true),
+      );
 
       const restored = yield* managerB.attach(handle.pid);
       expect(restored.status.state).toEqual(Process.State.IDLE);
@@ -1010,7 +1009,7 @@ describe('durability', () => {
   );
 
   it.effect(
-    'hydrating parent blocks until redelivered alarm child is completed externally',
+    'hydrating parent redelivers interrupted alarm child asynchronously',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
       const registry = yield* Registry.AtomRegistry;
@@ -1044,15 +1043,14 @@ describe('durability', () => {
       const alarmHandlerFinished = yield* Ref.make(false);
       SlowChildGate.alarmHandlerFinished = alarmHandlerFinished;
 
-      const hydrateFiber = yield* dormantParents[0].hydrate(parentExecutable).pipe(Effect.fork);
+      yield* dormantParents[0].hydrate(parentExecutable);
       yield* Queue.take(SlowChildGate.taskSignal);
-
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 100)));
       expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
 
-      yield* Deferred.succeed(SlowChildGate.alarmResume, undefined);
-      yield* Fiber.join(hydrateFiber);
-      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(true);
+      yield* Deferred.succeed(SlowChildGate.alarmResume!, undefined);
+      yield* Effect.promise(() =>
+        expect.poll(() => Effect.runPromise(Ref.get(alarmHandlerFinished))).toEqual(true),
+      );
 
       const restored = yield* managerB.attach(handle.pid);
       expect(restored.status.state).toEqual(Process.State.SUCCEEDED);

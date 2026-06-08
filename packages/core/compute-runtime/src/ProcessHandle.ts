@@ -323,7 +323,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
 
   /**
    * Re-deliver a persisted event that never settled before shutdown.
-   * Called by the manager during hydrate, in seq order.
+   * Called by the manager during hydrate (forked on the process scope, in seq order).
    */
   redeliver(event: PersistedEvent, definition: Process.Process<I, O, any>): Effect.Effect<void> {
     switch (event._tag) {
