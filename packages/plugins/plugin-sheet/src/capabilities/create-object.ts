@@ -5,25 +5,29 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { getSheetsPath } from '../paths';
 import { Operation } from '@dxos/compute';
-import { Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { Sheet } from '#types';
 
+const typename = Type.getTypename(Sheet.Sheet);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Type.getTypename(Sheet.Sheet),
+      id: typename,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Sheet.make(props);
+          const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,
             hidden: true,
-            targetNodeId: options.targetNodeId,
+            targetNodeId: options.targetNodeId ?? (db ? getSheetsPath(db.spaceId) : undefined),
           });
         }),
     });

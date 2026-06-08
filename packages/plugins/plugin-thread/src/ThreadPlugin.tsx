@@ -11,7 +11,7 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { ChannelBackendFeed, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, ChannelBackendFeed, CreateObject, NavigationResolver, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ThreadOperation } from '#types';
@@ -22,6 +22,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 // TODO(wittjosiah): Rename to ChatPlugin.
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({

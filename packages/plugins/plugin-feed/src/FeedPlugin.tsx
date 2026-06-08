@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, BlueprintDefinition, CreateObject, NavigationResolver, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { FeedOperation, Magazine, Subscription } from '#types';
@@ -23,6 +23,7 @@ export const FeedPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
     activate: AppGraphBuilder,
   }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),

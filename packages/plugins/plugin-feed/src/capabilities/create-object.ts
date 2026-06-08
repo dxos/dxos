@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { getMagazinesPath } from '../paths';
 import { Operation } from '@dxos/compute';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -49,10 +50,13 @@ export default Capability.makeModule(
             // blueprint, attached to the in-memory routine at curation time (no persisted routine).
             const magazine = Magazine.make({ ...magazineProps, instructions });
 
+            const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object: magazine,
               target: options.target,
-              targetNodeId: options.targetNodeId,
+              targetNodeId:
+                options.targetNodeId ??
+                (db ? getMagazinesPath(db.spaceId) : undefined),
             });
           }),
       }),

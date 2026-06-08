@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { getChannelsPath } from '../paths';
 import { Operation } from '@dxos/compute';
-import { Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
 
@@ -33,11 +34,13 @@ export default Capability.makeModule(
           const object = provider
             ? Channel.make({ name, backend: { kind: provider.kind, config: provider.makeConfig(options ?? {}) } })
             : Channel.make({ name });
+          const db = Database.isDatabase(opts.target) ? opts.target : Obj.getDatabase(opts.target);
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: opts.target,
             hidden: true,
-            targetNodeId: opts.targetNodeId,
+            targetNodeId:
+              opts.targetNodeId ?? (db ? getChannelsPath(db.spaceId) : undefined),
           });
         }),
     });

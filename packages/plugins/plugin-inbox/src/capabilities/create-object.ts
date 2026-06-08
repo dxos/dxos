@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { getCalendarsPath } from '../paths';
 import { Operation } from '@dxos/compute';
-import { Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { Event, Message } from '@dxos/types';
@@ -48,11 +49,14 @@ export default Capability.makeModule(
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Calendar.make(props);
+            const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
               hidden: true,
-              targetNodeId: options.targetNodeId,
+              targetNodeId:
+                options.targetNodeId ??
+                (db ? getCalendarsPath(db.spaceId) : undefined),
             });
           }),
       }),

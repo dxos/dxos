@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability, Capabilities } from '@dxos/app-framework';
+import { getChatsPath } from '../paths';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -29,7 +30,7 @@ export default Capability.makeModule(
               object,
               target: options.target,
               hidden: true,
-              targetNodeId: options.targetNodeId,
+              targetNodeId: options.targetNodeId ?? getChatsPath(options.db.spaceId),
             });
           }),
       }),

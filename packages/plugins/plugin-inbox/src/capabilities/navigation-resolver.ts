@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import { AppCapabilities, createTypeSectionPathResolver, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Key, Type } from '@dxos/echo';
 import { EID, URI } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { Mailbox } from '#types';
+import { Calendar, Mailbox } from '#types';
 
 import { getMailboxAllMailPath, getMailboxesSectionId } from '../paths';
 
@@ -74,6 +74,10 @@ export default Capability.makeModule(
     return [
       Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
       Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
+      Capability.contributes(
+        AppCapabilities.NavigationPathResolver,
+        createTypeSectionPathResolver(Type.getTypename(Calendar.Calendar)),
+      ),
     ];
   }),
 );
