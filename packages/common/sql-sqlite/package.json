@@ -28,6 +28,11 @@
       "browser": "./dist/lib/browser/OpfsWorker.mjs",
       "node": "./dist/lib/node-esm/OpfsWorker.mjs"
     },
+    "./opfs-pool-sync": {
+      "types": "./dist/types/src/opfs-pool-sync.d.ts",
+      "browser": "./dist/lib/browser/opfs-pool-sync.mjs",
+      "node": "./dist/lib/node-esm/opfs-pool-sync.mjs"
+    },
     "./SqliteMigrator": {
       "types": "./dist/types/src/SqliteMigrator.d.ts",
       "browser": "./dist/lib/browser/SqliteMigrator.mjs",

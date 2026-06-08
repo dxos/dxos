@@ -126,6 +126,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-comments"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -133,9 +136,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

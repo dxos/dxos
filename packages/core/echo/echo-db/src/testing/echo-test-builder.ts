@@ -227,6 +227,7 @@ export class EchoTestPeer extends Resource {
     client.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
+      queueService: this._echoHost.queuesService,
     });
     await client.open();
     return client;

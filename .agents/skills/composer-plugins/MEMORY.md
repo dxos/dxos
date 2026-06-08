@@ -4,6 +4,23 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-06-05 — plugin-comments (factored from plugin-thread), react-ui-thread
+
+### No plugin → plugin deps when factoring a feature out
+
+- When splitting a feature into a new plugin, the new plugin MUST NOT import the donor plugin. Push shared UI down into a `react-ui-*` package and shared schema into `@dxos/types`; both plugins depend only on those. plugin-comments was carved out of plugin-thread with zero dep on it.
+- Cross-plugin runtime sharing (operations, state atoms) does NOT cross the plugin boundary — each plugin owns its own ops/state. The comment ops + `State`/`ViewState` + agent stack moved wholesale into plugin-comments; chat ops stayed in plugin-thread.
+
+### Story sample data: real schema + @dxos/schema/testing generator
+
+- Stories use the real `@dxos/types` schema (`Message.Message`) generated via `@dxos/schema/testing` (`createGenerator(random as ValueGenerator, Message.Message).createObjects(n)`), NOT bespoke `*Entity` testing types. The generator leaves union-array fields (e.g. `blocks`) empty — enrich after generation with `Obj.update(m, …)` to set a `{ _tag: 'text', text }` block. `Obj.update` returns void; return the object from `.map`.
+
+### react-ui-thread is a pure presentational layer
+
+- `Message.*` / `Thread.*` are radix-composite namespaces; `Thread.Messages` renders message tiles via `react-ui-mosaic` `Mosaic.VirtualStack` (`draggable={false}`, inside `Mosaic.Container` + `ScrollArea`). `Thread.Root` provides a `ThreadContextValue` (getMetadata / components.Object / callbacks) via `@radix-ui/react-context`; tiles read it (a Mosaic `Tile` only receives `{id,data,location}`, so per-tile config must come from context).
+- Object/`reference` message blocks need `Surface` (app-framework) which CANNOT live in a `react-ui-*` package — inject it via `Thread.Root` `components={{ Object }}`; each plugin supplies a one-line Surface tile.
+- A message tile must be self-contained (`grid grid-cols-[var(--dx-rail-size)_1fr]`), NOT `grid-cols-subgrid col-span-2` — subgrid breaks inside a virtual stack where each tile is in its own positioned wrapper.
+
 ## 2026-06-03 — plugin-feed (Magazine routine + inline form), react-ui-form, compute
 
 ### Inline a referenced object in a Form

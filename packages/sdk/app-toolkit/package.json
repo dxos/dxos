@@ -72,6 +72,7 @@
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

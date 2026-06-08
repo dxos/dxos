@@ -152,6 +152,7 @@ export const translations: Resource[] = [
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
         'mcp-server-error.label': 'MCP server unavailable',
+        'ai-service-error.label': 'AI service error',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
