@@ -27,7 +27,7 @@ const makeQuery = (): QueryAST.Query => ({
   },
   from: {
     _tag: 'scope',
-    scopes: [Scope.space(SpaceId.random())],
+    scopes: [Scope.space({ id: SpaceId.random() })],
   },
 });
 

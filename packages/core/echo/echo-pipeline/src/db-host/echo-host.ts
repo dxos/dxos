@@ -15,7 +15,6 @@ import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import type {
@@ -55,7 +54,6 @@ import { SpaceStateManager } from './space-state-manager';
 const RUN_SQLITE_QUICK_CHECK_ON_STARTUP = false;
 
 export type EchoHostProps = {
-  kv: LevelDB;
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
@@ -110,7 +108,6 @@ export class EchoHost extends Resource {
   private _indexesUpToDate = false;
 
   constructor({
-    kv,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     runtime,
@@ -123,7 +120,7 @@ export class EchoHost extends Resource {
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
-      db: kv,
+      runtime,
       dataMonitor: this._echoDataMonitor,
       peerIdProvider,
       getSpaceKeyByRootDocumentId,
@@ -232,18 +229,6 @@ export class EchoHost extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    log('echo-host: opening automerge host...');
-    await this._automergeHost.open(ctx);
-    log('echo-host: automerge host opened');
-
-    log('echo-host: opening query service...');
-    await this._queryService.open(ctx);
-    log('echo-host: query service opened');
-
-    log('echo-host: opening space state manager...');
-    await this._spaceStateManager.open(ctx);
-    log('echo-host: space state manager opened');
-
     // Timeout needs to be outside effect runtime to catch the layer hanging on startup.
     await asyncTimeout(
       RuntimeProvider.runPromise(this._runtime)(testSqlite()),
@@ -259,6 +244,20 @@ export class EchoHost extends Resource {
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     log('echo-host: feed store migration done');
+
+    // AutomergeHost._open() runs its own migrations (automerge_chunks, heads) before
+    // constructing the Repo, so table creation is handled there.
+    log('echo-host: opening automerge host...');
+    await this._automergeHost.open(ctx);
+    log('echo-host: automerge host opened');
+
+    log('echo-host: opening query service...');
+    await this._queryService.open(ctx);
+    log('echo-host: query service opened');
+
+    log('echo-host: opening space state manager...');
+    await this._spaceStateManager.open(ctx);
+    log('echo-host: space state manager opened');
     this._feedStore.onNewBlocks.on(this._ctx, () => {
       this._updateIndexes.schedule();
     });
@@ -493,7 +492,6 @@ export class EchoHost extends Resource {
       } else {
         this._indexesUpToDate = true;
       }
-
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       const hint = hintFromIndexingResult(combinedResult);
       if (hint) {

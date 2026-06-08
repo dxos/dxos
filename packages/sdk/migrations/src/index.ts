@@ -5,5 +5,6 @@
 export type { EntityStructure } from '@dxos/echo-protocol';
 
 export * from './annotations';
+export * from './document-compaction';
 export * from './migration-builder';
 export * from './migrations';

@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -129,7 +129,13 @@ export default defineConfig((env) => ({
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
         reset: path.resolve(dirname, './reset.html'),
+        recovery: path.resolve(dirname, './recovery.html'),
       },
+      // NOTE: Vite 8 / rolldown eagerly walks into the `test` config imported via
+      // `vitest.base.config.ts`, which pulls in @vitest/browser-playwright -> playwright(-core)
+      // and its CJS-only chromium-bidi deps. These are dev-only, must not be in the app bundle,
+      // and cannot be resolved cleanly as ESM, so mark them external.
+      external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
         // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
@@ -161,33 +167,41 @@ export default defineConfig((env) => ({
       './internal.html',
       './devtools.html',
       './reset.html',
+      './recovery.html',
       path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
-    alias: {
-      ['node-fetch']: 'isomorphic-fetch',
-      ['node:util']: '@dxos/node-std/util',
-      ['node:path']: '@dxos/node-std/path',
-      ['util']: '@dxos/node-std/util',
-      ['path']: '@dxos/node-std/path',
-      ['node:crypto']: '@dxos/node-std/crypto',
-      ['crypto']: '@dxos/node-std/crypto',
-      ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+    // NOTE: Under Vite 8 / rolldown, string-keyed aliases are treated as prefix matches, which means
+    // a bare `util` alias also rewrites `util/types` → `@dxos/node-std/util/types` (not exported).
+    // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
+    // native node: polyfill layer handle subpaths like `node:util/types`.
+    alias: [
+      { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
+      { find: /^node:util$/, replacement: '@dxos/node-std/util' },
+      { find: /^node:path$/, replacement: '@dxos/node-std/path' },
+      { find: /^util$/, replacement: '@dxos/node-std/util' },
+      { find: /^path$/, replacement: '@dxos/node-std/path' },
+      { find: /^node:crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^crypto$/, replacement: '@dxos/node-std/crypto' },
+      { find: /^tiktoken\/lite$/, replacement: path.resolve(dirname, 'stub.mjs') },
       // NOTE: react-ui must be aliased because vite-plugin-import-source only intercepts imports from
       //   source files — imports embedded inside compiled dist/ files bypass it entirely.
       // '@dxos/react-ui': path.resolve(rootDir, 'packages/ui/react-ui/src'),
       // TODO(wittjosiah): Remove this once we have a better solution.
       // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
       //   might resolve differently, resulting in two distinct module instances.
-      '@dxos/solid-ui-geo': path.resolve(rootDir, 'packages/ui/solid-ui-geo/src'),
-      '@dxos/plugin-map-solid': path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src'),
-      '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),
-      '@dxos/effect-atom-solid': path.resolve(rootDir, 'packages/common/effect-atom-solid/src'),
-      '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
+      { find: '@dxos/solid-ui-geo', replacement: path.resolve(rootDir, 'packages/ui/solid-ui-geo/src') },
+      { find: '@dxos/plugin-map-solid', replacement: path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src') },
+      { find: '@dxos/web-context-solid', replacement: path.resolve(rootDir, 'packages/common/web-context-solid/src') },
+      { find: '@dxos/effect-atom-solid', replacement: path.resolve(rootDir, 'packages/common/effect-atom-solid/src') },
+      { find: '@dxos/echo-solid', replacement: path.resolve(rootDir, 'packages/core/echo/echo-solid/src') },
       // Worker entry point for OPFS SQLite.
-      '@dxos/client/opfs-worker': path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
-    },
+      {
+        find: '@dxos/client/opfs-worker',
+        replacement: path.resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
+      },
+    ],
   },
   worker: {
     format: 'es' as const,
@@ -222,6 +236,25 @@ export default defineConfig((env) => ({
             res.statusCode = 502;
             res.end(String(error));
           }
+        });
+      },
+    },
+
+    // Dev-only: serve forensics test profile for recovery import testing.
+    {
+      name: 'recovery-test-fixture',
+      configureServer(server) {
+        const fixturePath =
+          process.env.COMPOSER_TEST_DXPROFILE ??
+          '/tmp/composer-forensics/main.composer.space-test/main.composer.space.dxprofile';
+        server.middlewares.use('/test-fixtures/main.composer.space.dxprofile', (req, res) => {
+          if (!existsSync(fixturePath)) {
+            res.statusCode = 404;
+            res.end(`Test profile not found at ${fixturePath}`);
+            return;
+          }
+          res.setHeader('Content-Type', 'application/octet-stream');
+          createReadStream(fixturePath).pipe(res);
         });
       },
     },

@@ -4,44 +4,29 @@
 
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { useObject } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
 import { Card, Focus, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type Subscription } from '#types';
+import { useMagazinePostData } from '#atoms';
+import { type Magazine, type Subscription } from '#types';
 
-import { formatDate } from '../../util/format-date';
-import { getImageUrl, getSnippet } from '../../util/post-state';
+import { formatDate } from '../../util/date';
 
 export type MagazineTileProps = {
   post: Subscription.Post;
+  magazine: Magazine.Magazine;
   current?: boolean;
-  /** Per-Post state owned by the parent (resolved from the Subscription's tags / read marker). */
-  read?: boolean;
-  starred?: boolean;
-  onToggleStar?: (post: Subscription.Post) => void;
-  feedName?: string;
-  published?: string;
   onOpen?: (post: Subscription.Post) => void;
+  onToggleStar?: (post: Subscription.Post, starred: boolean) => void;
 };
 
-export const MagazineTile = ({
-  post,
-  current,
-  read = false,
-  starred = false,
-  onToggleStar,
-  feedName,
-  published,
-  onOpen,
-}: MagazineTileProps) => {
-  useObject(post);
-  // snippet/imageUrl are derived from the Post's description (grid posts aren't content-fetched).
-  const imageUrl = getImageUrl(post);
-  const snippet = getSnippet(post) || undefined;
+export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: MagazineTileProps) => {
+  // All per-Post derivation (snapshot, read, starred, snippet, image, feed name) happens in
+  // atom-land; this tile re-renders only when THIS post's slice changes, not when a sibling does.
+  const { post: snapshot, feedName, read, starred, snippet, imageUrl } = useMagazinePostData(post, magazine);
 
   // `Focus.Item` calls `onCurrentChange` on click and on Enter.
-  // For MagazineTile, "activate the current tile" means "open the post" — same effect as the previous direct onClick.
   const handleCurrentChange = useCallback(() => {
     onOpen?.(post);
   }, [onOpen, post]);
@@ -50,9 +35,9 @@ export const MagazineTile = ({
     (event: MouseEvent<HTMLButtonElement>) => {
       // Prevent Focus.Item's onClick from firing the open action — clicks on the star toggle should not open the post.
       event.stopPropagation();
-      onToggleStar?.(post);
+      onToggleStar?.(post, starred);
     },
-    [onToggleStar, post],
+    [onToggleStar, post, starred],
   );
 
   return (
@@ -62,7 +47,7 @@ export const MagazineTile = ({
         classNames={mx('dx-hover dx-current cursor-pointer transition-opacity', read && !current && 'opacity-60')}
       >
         {imageUrl && (
-          <Card.Poster alt={post.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
+          <Card.Poster alt={snapshot.title ?? 'Article'} image={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
           <Card.IconBlock>
@@ -76,7 +61,7 @@ export const MagazineTile = ({
               onClick={handleToggleStar}
             />
           </Card.IconBlock>
-          {post.title ? <Card.Title classNames='line-clamp-2'>{post.title}</Card.Title> : <div />}
+          {snapshot.title ? <Card.Title classNames='line-clamp-2'>{snapshot.title}</Card.Title> : <div />}
           <Card.IconBlock />
         </Card.Header>
         <Card.Body>
@@ -90,7 +75,7 @@ export const MagazineTile = ({
           <Card.Row>
             <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-1.5 text-sm text-description overflow-hidden'>
               <span className='truncate'>{feedName ?? ''}</span>
-              <span className='text-end shrink-0'>{published ?? ''}</span>
+              <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
             </div>
           </Card.Row>
         </Card.Body>
@@ -100,5 +85,5 @@ export const MagazineTile = ({
 };
 
 /** Convenience: format a Post's published date the way the magazine view shows it. */
-export const formatPublished = (post: Subscription.Post): string | undefined =>
+const formatPublished = (post: Obj.Snapshot<Subscription.Post>): string | undefined =>
   post.published ? formatDate(post.published) : undefined;

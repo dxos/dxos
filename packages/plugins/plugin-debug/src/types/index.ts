@@ -45,6 +45,7 @@ export namespace Devtools {
     export const id = `${Devtools.id}.client`;
     export const Config = `${Devtools.Client.id}.config`;
     export const Storage = `${Devtools.Client.id}.storage`;
+    export const Sqlite = `${Devtools.Client.id}.sqlite`;
     export const Logs = `${Devtools.Client.id}.logs`;
     export const Diagnostics = `${Devtools.Client.id}.diagnostics`;
   }

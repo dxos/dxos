@@ -11,9 +11,7 @@ import { type Entity, Filter, Obj, type QueryResult } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { type PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
 import { TestSchema } from '../testing';
@@ -166,7 +164,7 @@ describe('Index queries', () => {
   });
 
   test('index available data', async () => {
-    const { builder, level, sqlitePath } = createTestBuilder();
+    const { builder, sqlitePath } = createTestBuilder();
     onTestFinished(async () => {
       await builder.destroy();
     });
@@ -184,9 +182,6 @@ describe('Index queries', () => {
 
       await client.destroy();
     }
-
-    await level.open();
-    await level.sublevel('index-storage').clear();
 
     {
       const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
@@ -315,14 +310,11 @@ describe('Index queries', () => {
   });
 
   const createTestBuilder = () => {
-    const level = createTestLevel();
-    const storage = createStorage({ type: StorageType.RAM });
-    const builder = new TestBuilder();
-    builder.storage = () => storage;
-    builder.level = () => level;
     // Use file-based SQLite for index persistence tests.
     const sqlitePath = `/tmp/dxos-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`;
-    return { builder, level, sqlitePath };
+    const builder = new TestBuilder();
+    builder.sqlitePath = sqlitePath;
+    return { builder, sqlitePath };
   };
 });
 

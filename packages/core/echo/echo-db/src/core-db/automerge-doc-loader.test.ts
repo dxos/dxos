@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { createTestSqliteRuntime } from '@dxos/echo-pipeline/testing';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { EntityId, PublicKey, SpaceId } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { RepoProxy } from '../automerge';
@@ -80,12 +80,10 @@ describe('AutomergeDocumentLoader', () => {
 
   const setupTest = async () => {
     const spaceId = await createIdFromSpaceKey(SPACE_KEY);
-    const level = createTestLevel();
-    await openAndClose(level);
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
 
-    const host = new AutomergeHost({
-      db: level,
-    });
+    const host = new AutomergeHost({ runtime });
     await openAndClose(host);
     const dataService = new DataServiceImpl({
       automergeHost: host,
