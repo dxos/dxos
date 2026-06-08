@@ -122,7 +122,6 @@ export const translations: Resource[] = [
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
-        'chats-section.label': 'AI Chats',
         'create-chat.label': 'New AI Chat',
 
         'toolkit.label': 'Toolkit',
