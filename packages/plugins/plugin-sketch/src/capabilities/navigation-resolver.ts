@@ -11,9 +11,6 @@ import { Sketch } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(
-      AppCapabilities.NavigationPathResolver,
-      createTypeSectionPathResolver(Sketch.Sketch),
-    );
+    return Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Sketch.Sketch));
   }),
 );

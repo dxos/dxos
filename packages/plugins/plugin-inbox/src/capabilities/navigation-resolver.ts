@@ -80,10 +80,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
       Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
-      Capability.contributes(
-        AppCapabilities.NavigationPathResolver,
-        createTypeSectionPathResolver(Calendar.Calendar),
-      ),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Calendar.Calendar)),
     ];
   }),
 );

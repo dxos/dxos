@@ -11,9 +11,6 @@ import { Sheet } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(
-      AppCapabilities.NavigationPathResolver,
-      createTypeSectionPathResolver(Sheet.Sheet),
-    );
+    return Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Sheet.Sheet));
   }),
 );

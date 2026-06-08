@@ -10,9 +10,6 @@ import { Chat } from '@dxos/assistant-toolkit';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(
-      AppCapabilities.NavigationPathResolver,
-      createTypeSectionPathResolver(Chat.Chat),
-    );
+    return Capability.contributes(AppCapabilities.NavigationPathResolver, createTypeSectionPathResolver(Chat.Chat));
   }),
 );
