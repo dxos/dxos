@@ -14,9 +14,9 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { todo } from '@dxos/debug';
-import { Ref } from '@dxos/echo';
+import { DXN, Filter, Ref, Registry } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { RefFromLLM } from '../util';
@@ -26,13 +26,13 @@ export const makeToolResolverFromOperations = <R = never>({
 }: { toolkit?: OpaqueToolkit.OpaqueToolkit<never, never, R> } = {}): Layer.Layer<
   ToolResolverService,
   never,
-  OpaqueToolkit.OpaqueToolkitProvider | OperationRegistry.Service | R
+  OpaqueToolkit.OpaqueToolkitProvider | Registry.Service | R
 > => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
       const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
-      const operationRegistry = yield* OperationRegistry.Service;
+      const registry = yield* Registry.Service;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
@@ -43,14 +43,15 @@ export const makeToolResolverFromOperations = <R = never>({
               return tool;
             }
 
-            return yield* operationRegistry.resolve(id).pipe(
-              Effect.flatMap(
-                Option.match({
-                  onSome: (_) => Effect.succeed(projectFunctionToTool(_)),
-                  onNone: () => Effect.fail(new AiToolNotFoundError(id)),
-                }),
-              ),
+            // Normalize to a full DXN key (tool IDs are plain NSIDs, stored keys are full DXNs).
+            const key = DXN.isDXN(id) ? id : `dxn:${id}`;
+            const results = yield* Effect.promise(() =>
+              registry.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
             );
+            if (results.length > 0) {
+              return projectFunctionToTool(Operation.deserialize(results[0]));
+            }
+            return yield* Effect.fail(new AiToolNotFoundError(id));
           }),
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),

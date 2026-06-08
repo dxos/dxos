@@ -26,8 +26,8 @@ import {
   type ToolResolverService,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { type Blueprint, Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { type Blueprint, Trace, Operation } from '@dxos/compute';
+import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
@@ -44,7 +44,7 @@ export type RunRequirements =
   | ToolResolverService
   | Database.Service
   | Operation.Service
-  | OperationRegistry.Service
+  | Registry.Service
   | Trace.TraceService;
 
 export type Options = {

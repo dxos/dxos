@@ -10,7 +10,7 @@ import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
-import { type Credential, type Operation, type OperationRegistry, Trace } from '@dxos/compute';
+import { type Credential, type Operation, Trace } from '@dxos/compute';
 import {
   ComputeBeginEvent,
   ComputeCustomEvent,
@@ -30,7 +30,7 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { Database, Feed } from '@dxos/echo';
+import type { Database, Feed, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
@@ -96,7 +96,7 @@ export type ComputeServices =
   | Feed.FeedService
   | Credential.CredentialsService
   | Operation.Service
-  | OperationRegistry.Service;
+  | Registry.Service;
 
 /**
  * Nodes that will automatically trigger the execution of the graph on startup.

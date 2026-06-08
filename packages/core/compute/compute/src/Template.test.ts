@@ -3,16 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
+import { Registry } from '@dxos/echo';
 
 import { FunctionNotFoundError } from './errors';
 import * as Operation from './Operation';
-import * as OperationRegistry from './OperationRegistry';
 import * as Template from './Template';
+
+// Access the symbol used by Obj.getMeta so we can set it on plain test records.
+const META_SYM = Symbol.for('@dxos/echo/Meta');
 
 describe('Template', () => {
   describe('make', () => {
@@ -86,25 +88,93 @@ describe('Template', () => {
   });
 
   describe('processTemplate', () => {
+    const GREET_KEY = DXN.make('org.example.test.greet');
+
     const greet = Operation.withHandler(
       Operation.make({
         input: Schema.Void,
         output: Schema.String,
-        meta: { key: DXN.make('org.example.test.greet') },
+        meta: { key: GREET_KEY },
       }),
       () => Effect.succeed('Alice'),
     );
 
-    const stubRegistry = (operations: Record<string, Operation.Definition.Any>) =>
-      Effect.provideService(OperationRegistry.Service, {
-        resolve: (key) => Effect.succeed(Option.fromNullable(operations[key])),
+    // Traverse an ECHO filter AST to find the first metaKey value.
+    const extractMetaKey = (ast: any): string | undefined => {
+      if (!ast) {
+        return undefined;
+      }
+      if (ast.metaKey) {
+        return ast.metaKey;
+      }
+      if (Array.isArray(ast.filters)) {
+        for (const f of ast.filters) {
+          const k = extractMetaKey(f);
+          if (k) {
+            return k;
+          }
+        }
+      }
+      return undefined;
+    };
+
+    // Minimal Registry.Service stub that stores plain test records by DXN meta-key.
+    const makeRegistryStub = (records: Record<string, any>) =>
+      Effect.provideService(Registry.Service, {
+        [Registry.TypeId]: Registry.TypeId,
+        id: 'test-registry',
+        changed: { on: () => () => {} } as any,
+        local: [],
+        add: () => {},
+        remove: () => false,
+        clear: () => {},
+        get: () => undefined,
+        getByURI: () => undefined,
+        list: () => Object.values(records) as any,
+        query: (filterOrQuery: any) => {
+          const ast = filterOrQuery?.ast ?? filterOrQuery;
+          const metaKey = extractMetaKey(ast);
+          const result = metaKey != null && records[metaKey] != null ? [records[metaKey]] : [];
+          return {
+            entries: result.map((r: any) => ({ object: r })),
+            results: result,
+            run: async () => result,
+            runEntries: async () => result.map((r: any) => ({ object: r })),
+            runSync: () => result,
+            runSyncEntries: () => result.map((r: any) => ({ object: r })),
+            first: async () => result[0],
+            firstOrUndefined: async () => result[0],
+            subscribe: () => () => {},
+          };
+        },
+      } as any);
+
+    // Creates a plain object that Operation.deserialize can process without ECHO infrastructure.
+    const makeOpRecord = (key: string, name: string): Operation.PersistentOperation => {
+      const record: any = { name };
+      Object.defineProperty(record, META_SYM, {
+        value: { key, version: '0.0.0', keys: [], annotations: {} },
+        enumerable: false,
+        configurable: true,
+        writable: true,
       });
+      return record as Operation.PersistentOperation;
+    };
+
+    // Handler map: full DXN key → invocable function.
+    const handlersByKey: Record<string, (input: any) => Effect.Effect<any, any, any>> = {
+      [GREET_KEY]: (input) => greet.handler(input),
+    };
 
     const stubInvoker = Effect.provideService(Operation.Service, {
-      invoke: (op, input) => (op as any).handler(input),
+      invoke: (op: any, input: any) => {
+        const key = String(op.meta.key);
+        const handler = handlersByKey[key];
+        return handler ? handler(input) : Effect.die(`no handler for key: ${key}`);
+      },
       schedule: () => Effect.succeed(undefined),
       invokePromise: () => Promise.resolve({}),
-    } as Operation.OperationService);
+    } as unknown as Operation.OperationService);
 
     test('resolves a value-kind input from its default', async () => {
       const template = Template.make({
@@ -112,18 +182,18 @@ describe('Template', () => {
         inputs: [{ name: 'name', kind: 'value', default: 'world' }],
       });
 
-      const result = await Template.processTemplate(template).pipe(stubRegistry({}), stubInvoker, Effect.runPromise);
+      const result = await Template.processTemplate(template).pipe(makeRegistryStub({}), stubInvoker, Effect.runPromise);
       expect(result).toBe('Hello world!');
     });
 
     test('resolves an operation-kind input and substitutes the result', async () => {
       const template = Template.make({
         source: 'Hello {{name}}.',
-        inputs: [{ name: 'name', kind: 'operation', operation: 'test.greet' }],
+        inputs: [{ name: 'name', kind: 'operation', operation: GREET_KEY }],
       });
 
       const result = await Template.processTemplate(template).pipe(
-        stubRegistry({ 'test.greet': greet }),
+        makeRegistryStub({ [GREET_KEY]: makeOpRecord(GREET_KEY, 'greet') }),
         stubInvoker,
         Effect.runPromise,
       );
@@ -138,7 +208,7 @@ describe('Template', () => {
       });
 
       const result = await Template.processTemplate(template).pipe(
-        stubRegistry({}),
+        makeRegistryStub({}),
         stubInvoker,
         Effect.either,
         Effect.runPromise,

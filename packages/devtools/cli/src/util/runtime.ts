@@ -15,7 +15,8 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Credential, Trace, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
-import { type Database, Feed, type Key } from '@dxos/echo';
+import { type Database, Feed, type Key, Registry } from '@dxos/echo';
+import { registryLayer } from '@dxos/echo-db';
 import { credentialsLayerFromDatabase } from '@dxos/functions';
 
 export type AiChatServices =
@@ -24,7 +25,7 @@ export type AiChatServices =
   | Database.Service
   | Feed.FeedService
   | Operation.Service
-  | OperationRegistry.Service
+  | Registry.Service
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
@@ -77,7 +78,8 @@ export const chatLayer = ({
   );
 
   return operationServiceLayer.pipe(
-    Layer.provideMerge(OperationRegistry.layer),
+    Layer.provideMerge(OperationRegistry.operationsToRegistryLayer),
+    Layer.provideMerge(registryLayer()),
     Layer.provideMerge(OperationHandlerSet.provide(functions)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(credentialsLayerFromDatabase()),

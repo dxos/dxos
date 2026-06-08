@@ -10,8 +10,7 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
-import { ProcessManager } from '@dxos/compute-runtime';
+import { LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Registry } from '@dxos/echo';
 import {
   AgentService,
@@ -37,7 +36,7 @@ import { invariant } from '@dxos/invariant';
  * Gathers contributed {@link Capabilities.OperationHandler} sets from the
  * {@link Capability.Service} and exposes them through the
  * {@link OperationHandlerSet.OperationHandlerProvider} tag so space-affinity
- * specs (e.g. {@link OperationRegistrySpec}) can consume them through the
+ * specs (e.g. {@link OperationsToRegistrySpec}) can consume them through the
  * normal LayerStack resolution path.
  */
 const OperationHandlerProviderSpec = LayerSpec.make(
@@ -103,13 +102,13 @@ const AgentServiceSpec = LayerSpec.make(
   () => AgentService.layer(),
 );
 
-const OperationRegistrySpec = LayerSpec.make(
+const OperationsToRegistrySpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [Database.Service, OperationHandlerSet.OperationHandlerProvider],
-    provides: [OperationRegistry.Service],
+    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider],
+    provides: [Registry.Service],
   },
-  () => OperationRegistry.layer,
+  () => OperationRegistry.operationsToRegistryLayer,
 );
 
 /**
@@ -187,7 +186,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, RegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
     Capability.contributes(Capabilities.LayerSpec, AgentServiceSpec),
-    Capability.contributes(Capabilities.LayerSpec, OperationRegistrySpec),
+    Capability.contributes(Capabilities.LayerSpec, OperationsToRegistrySpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerStateStoreSpec),
     Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),

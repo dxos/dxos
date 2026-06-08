@@ -27,7 +27,6 @@ import { type Chat } from '@dxos/assistant-toolkit';
 import {
   type Credential,
   Operation,
-  type OperationRegistry,
   type ServiceNotAvailableError,
   Trace,
 } from '@dxos/compute';
@@ -60,7 +59,7 @@ export type SpaceServices =
   | Credential.CredentialsService
   | AiService.AiService
   | AgentService.AgentService
-  | OperationRegistry.Service
+  | Registry.Service
   | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {

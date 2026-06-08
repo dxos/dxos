@@ -79,7 +79,6 @@ export type AssistantTestServices =
   | AiService.AiService
   | Database.Service
   | Registry.Service
-  | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
@@ -167,14 +166,13 @@ export const AssistantTestLayer = ({
               OpaqueToolkit.OpaqueToolkitProvider,
               Feed.FeedService,
               AiService.AiService,
-              OperationRegistry.Service,
               Registry.Service,
             ),
           );
         }),
       ),
     ),
-    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
+    Layer.provideMerge(AiService.model(resolvedModel)),
     Layer.provideMerge(
       Match.value(tracing).pipe(
         Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
@@ -194,6 +192,7 @@ export const AssistantTestLayer = ({
         configuredCredentialsLayer(credentials),
       ),
     ),
+    Layer.provideMerge(OperationRegistry.operationsToRegistryLayer),
     Layer.provideMerge(registryLayer({ initial: blueprints })),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),

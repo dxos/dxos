@@ -11,10 +11,10 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { Feed } from '@dxos/echo';
+import { Feed, Registry } from '@dxos/echo';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
@@ -231,7 +231,7 @@ const ServiceLayer = Layer.empty.pipe(
         schedule: () => Effect.die('Operation.Service not available in test.'),
         invokePromise: async () => ({ error: new Error('Not available') }),
       } as any),
-      Layer.succeed(OperationRegistry.Service, { resolve: () => Effect.succeed(undefined) } as any),
+      Layer.succeed(Registry.Service, { query: () => ({ run: async () => [], results: [], entries: [], runSync: () => [], runSyncEntries: () => [], first: async () => undefined, firstOrUndefined: async () => undefined, subscribe: () => () => {} }) } as any),
     ),
   ),
   Layer.provideMerge(
