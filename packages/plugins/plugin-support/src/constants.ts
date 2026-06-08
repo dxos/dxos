@@ -24,4 +24,3 @@ export const SPACE_HOME_NODE_ID = 'home';
  * Free-form node type tag for the virtual Home node. Avoids the ECHO-object node matchers in app-graph.
  */
 export const SPACE_HOME_NODE_TYPE = `${meta.id}.space-home-node`;
-
