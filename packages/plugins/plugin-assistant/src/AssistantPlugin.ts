@@ -19,6 +19,8 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
 import {
+  AgentHydrator,
+  AgentRuntime,
   AiContext as AiContextCapability,
   AiService,
   IntegrationProvider,
@@ -123,9 +125,19 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activate: AiContextCapability,
     }),
     Plugin.addModule({
+      activatesOn: ActivationEvents.SetupProcessManager,
+      activate: AgentRuntime,
+    }),
+  )
+  .pipe(
+    Plugin.addModule({
       // TODO(wittjosiah): Use a different event.
       activatesOn: ActivationEvents.Startup,
       activate: Toolkit,
+    }),
+    Plugin.addModule({
+      activatesOn: ActivationEvents.ProcessManagerReady,
+      activate: AgentHydrator,
     }),
     Plugin.addModule({
       activatesOn: ActivationEvent.allOf(
@@ -140,9 +152,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
       activatesOn: ClientEvents.SetupMigration,
       activate: Migrations,
     }),
-    // Note: split into a second .pipe() to keep each call under @effect/Pipeable's 20-overload ceiling.
-  )
-  .pipe(
     Plugin.addModule({
       activatesOn: AppActivationEvents.SetupIntegrationProviders,
       activate: IntegrationProvider,

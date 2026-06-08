@@ -50,8 +50,10 @@ describe('AssistantPlugin', () => {
     // OperationHandler auto-cascades from ProcessManagerPlugin.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
 
-    // AiService module must activate on SetupProcessManager (before the process manager is built).
+    // Process-manager layer specs must activate on SetupProcessManager.
     expect(harness.manager.getActive()).toContain(moduleId('AiService'));
+    expect(harness.manager.getActive()).toContain(moduleId('AiContext'));
+    expect(harness.manager.getActive()).toContain(moduleId('AgentRuntime'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
     const { personalSpace } = await EffectEx.runAndForwardErrors(

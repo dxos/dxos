@@ -69,6 +69,12 @@ interface TestLayerOptions {
    * @default false
    */
   enableToolBackgrounding?: boolean;
+
+  /**
+   * Extra services to make available in the service resolver.
+   * Operations can depend on those services.
+   */
+  extraServices?: Layer.Layer<any, never, never>;
 }
 
 export type AssistantTestServices =
@@ -92,21 +98,110 @@ export type AssistantTestServices =
   | Trace.TraceSink
   | FeedTraceSink.FeedTraceSink;
 
-export const AssistantTestLayer = ({
-  aiServicePreset = 'direct',
-  model,
-  operationHandlers = [],
-  toolkits = [],
-  types = [],
-  credentials = [],
-  tracing = 'noop',
-  disableLlmMemoization = false,
-  blueprints = [],
-  systemPrompt,
-  enableToolBackgrounding = false,
-}: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
+export const AssistantTestLayer = (
+  options: TestLayerOptions = {},
+): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const resolvedModel: ModelName =
-    model ?? (aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+    options.model ??
+    (options.aiServicePreset === 'ollama' ? 'ai.ollama.model.gpt-oss:20b' : 'ai.claude.model.claude-opus-4-6');
+
+  return Layer.empty.pipe(
+    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
+    Layer.provideMerge(
+      AgentService.layer({
+        systemPrompt: options.systemPrompt,
+        model: resolvedModel,
+        enableToolBackgrounding: options.enableToolBackgrounding,
+      }),
+    ),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
+    Layer.provideMerge(AssistantTestServiceResolverLayer(options)),
+    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
+    Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
+    Layer.provideMerge(
+      TestAiService({ preset: options.aiServicePreset, disableMemoization: options.disableLlmMemoization }),
+    ),
+    Layer.provideMerge(AssistantTestBaseLayer(options)),
+    Layer.orDie,
+  );
+};
+
+/**
+ * Service resolver for testing.
+ */
+export const AssistantTestServiceResolverLayer = ({
+  extraServices = Layer.empty as any,
+}: Pick<TestLayerOptions, 'extraServices'>) =>
+  Layer.scoped(
+    ServiceResolver.ServiceResolver,
+    Effect.gen(function* () {
+      const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
+        Effect.map(Context.pick(Database.Service, Feed.FeedService)),
+        Effect.map(Layer.succeedContext),
+      );
+
+      const extraSericesRt = yield* Layer.toRuntime(extraServices);
+
+      return ServiceResolver.compose(
+        ServiceResolver.succeed(AiContext.Service, (context) =>
+          Effect.gen(function* () {
+            if (!context.conversation) {
+              return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
+            }
+            const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
+            const runtime = yield* Effect.runtime<Feed.FeedService>();
+            const binder = yield* EffectEx.acquireReleaseResource(
+              () =>
+                new AiContext.Binder({
+                  feed,
+                  runtime,
+                }),
+            );
+            return { binder };
+          }).pipe(Effect.provide(services)),
+        ),
+        ServiceResolver.succeed(AiSession.Service, (context) =>
+          Effect.gen(function* () {
+            if (!context.conversation) {
+              return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
+            }
+            const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
+            const runtime = yield* Effect.runtime<Feed.FeedService>();
+            const session = yield* EffectEx.acquireReleaseResource(
+              () =>
+                new AiSession.Session({
+                  feed,
+                  runtime,
+                }),
+            );
+            return session;
+          }).pipe(Effect.provide(services)),
+        ),
+        yield* ServiceResolver.fromRequirements(
+          Database.Service,
+          OpaqueToolkit.OpaqueToolkitProvider,
+          Feed.FeedService,
+          AiService.AiService,
+          OperationRegistry.Service,
+          Registry.Service,
+          Credential.CredentialsService,
+        ),
+        ServiceResolver.fromContext(extraSericesRt.context),
+      );
+    }),
+  );
+
+/**
+ * Only storage + registry.
+ */
+export const AssistantTestBaseLayer = ({
+  toolkits = [],
+  operationHandlers = [],
+  types = [],
+  blueprints = [],
+  credentials = [],
+}: Pick<TestLayerOptions, 'operationHandlers' | 'toolkits' | 'types' | 'blueprints' | 'tracing' | 'credentials'>) => {
   const toolkit = OpaqueToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
@@ -115,87 +210,15 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
-    Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-    Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
-    Layer.provideMerge(AgentService.layer({ systemPrompt, model: resolvedModel, enableToolBackgrounding })),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(OperationRegistry.layer),
     Layer.provideMerge(
-      Layer.effect(
-        ServiceResolver.ServiceResolver,
-        Effect.gen(function* () {
-          const services = yield* Effect.context<Database.Service | Feed.FeedService>().pipe(
-            Effect.map(Context.pick(Database.Service, Feed.FeedService)),
-            Effect.map(Layer.succeedContext),
-          );
-          return ServiceResolver.compose(
-            ServiceResolver.succeed(AiContext.Service, (context) =>
-              Effect.gen(function* () {
-                if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
-                }
-                const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-                const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const binder = yield* EffectEx.acquireReleaseResource(
-                  () =>
-                    new AiContext.Binder({
-                      feed,
-                      runtime,
-                    }),
-                );
-                return { binder };
-              }).pipe(Effect.provide(services)),
-            ),
-            ServiceResolver.succeed(AiSession.Service, (context) =>
-              Effect.gen(function* () {
-                if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
-                }
-                const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
-                const runtime = yield* Effect.runtime<Feed.FeedService>();
-                const session = yield* EffectEx.acquireReleaseResource(
-                  () =>
-                    new AiSession.Session({
-                      feed,
-                      runtime,
-                    }),
-                );
-                return session;
-              }).pipe(Effect.provide(services)),
-            ),
-            yield* ServiceResolver.fromRequirements(
-              Database.Service,
-              OpaqueToolkit.OpaqueToolkitProvider,
-              Feed.FeedService,
-              AiService.AiService,
-              OperationRegistry.Service,
-              Registry.Service,
-              Credential.CredentialsService,
-            ),
-          );
-        }),
-      ),
-    ),
-    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(resolvedModel))),
-    Layer.provideMerge(
-      Match.value(tracing).pipe(
-        Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
-        Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
-        Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
-        Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
-        Match.exhaustive,
-      ) as Layer.Layer<Trace.TraceSink | FeedTraceSink.FeedTraceSink>,
-    ),
-    Layer.provideMerge(
-      Layer.mergeAll(
-        TestAiService({ preset: aiServicePreset, disableMemoization: disableLlmMemoization }),
-        TestDatabaseLayer({
-          spaceKey: 'fixed',
-          types,
-        }),
-        configuredCredentialsLayer(credentials),
-      ),
+      TestDatabaseLayer({
+        spaceKey: 'fixed',
+        types,
+      }),
     ),
     Layer.provideMerge(registryLayer({ initial: blueprints })),
+    Layer.provideMerge(configuredCredentialsLayer(credentials)),
     Layer.provideMerge(OpaqueToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
     Layer.provideMerge(KeyValueStore.layerMemory),
@@ -203,6 +226,17 @@ export const AssistantTestLayer = ({
     Layer.orDie,
   );
 };
+
+const AssistantTestTracingLayer = (
+  mode: 'noop' | 'console' | 'pretty' | 'feed',
+): Layer.Layer<FeedTraceSink.FeedTraceSink | Trace.TraceSink, never, Database.Service | Feed.FeedService> =>
+  Match.value(mode).pipe(
+    Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
+    Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
+    Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
+    Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
+    Match.exhaustive,
+  );
 
 interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 
