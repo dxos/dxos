@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { sleep } from '@dxos/async';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
+import { batchEvents } from '@dxos/echo/internal';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { ThreadOperation } from '../types';
@@ -19,12 +19,14 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Restore> = ThreadOpe
         return;
       }
 
-      // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
-      // 500ms gives React enough time to flush the render triggered by db.add(thread)
-      // before db.add(anchor) fires; 100ms was insufficient on slower CI environments.
-      db.add(thread);
-      yield* Effect.promise(() => sleep(500));
-      db.add(anchor);
+      // Batch both additions so a single reactive notification fires after both objects
+      // are in the database. Previously a sleep(100) separated the two calls to prevent
+      // a crash in Relation.setSource(anchor) during an intermediate render — batching
+      // eliminates the intermediate render entirely without any artificial delay.
+      batchEvents(() => {
+        db.add(thread);
+        db.add(anchor);
+      });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'comments.undo-delete',
