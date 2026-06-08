@@ -91,6 +91,19 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update],
   );
 
+  const handleAllDayChange = useCallback(
+    (next: boolean) => {
+      update((event) => {
+        event.allDay = next;
+        // All-day events are single-day: collapse the end onto the start.
+        if (next) {
+          event.endDate = event.startDate;
+        }
+      });
+    },
+    [update],
+  );
+
   const gridClasses = 'grid grid-cols-[1fr_8rem] gap-2';
 
   return (
@@ -125,18 +138,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
             )}
             <Input.Root>
               <div className='flex items-center gap-2'>
-                <Input.Switch
-                  checked={allDay}
-                  onCheckedChange={(next) =>
-                    update((event) => {
-                      event.allDay = next;
-                      // All-day events are single-day: collapse the end onto the start.
-                      if (next) {
-                        event.endDate = event.startDate;
-                      }
-                    })
-                  }
-                />
+                <Input.Switch checked={allDay} onCheckedChange={handleAllDayChange} />
                 <Input.Label>{t('event-all-day.label')}</Input.Label>
               </div>
             </Input.Root>
