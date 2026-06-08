@@ -2380,6 +2380,18 @@ importers:
 
   packages/apps/composer-app:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: 'catalog:'
+        version: 1.7.7
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
+        specifier: 'catalog:'
+        version: 3.2.10(@types/react@19.2.14)(react@19.2.6)
+      '@automerge/automerge':
+        specifier: 3.3.0-fragments.1
+        version: 3.3.0-fragments.1
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.23(patch_hash=5250d255400ca80b2aaff1bde10b1eebc01b0dcf0ad69d936c8b42bbd4dda5d9)
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.2
@@ -2710,9 +2722,39 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 'catalog:'
+        version: 0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)
+      '@effect/ai-anthropic':
+        specifier: 'catalog:'
+        version: 0.26.0(@effect/ai@0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
+      '@effect/ai-openai':
+        specifier: 'catalog:'
+        version: 0.40.0(@effect/ai@0.36.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 0.76.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.9.1
+      '@opentelemetry/api-logs':
+        specifier: 'catalog:'
+        version: 0.218.0
+      '@opentelemetry/exporter-logs-otlp-http':
+        specifier: 'catalog:'
+        version: 0.218.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-metrics-otlp-http':
+        specifier: 'catalog:'
+        version: 0.218.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs':
+        specifier: 'catalog:'
+        version: 0.218.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-metrics':
+        specifier: 'catalog:'
+        version: 2.7.1(@opentelemetry/api@1.9.1)
       '@radix-ui/react-context-menu':
         specifier: 'catalog:'
         version: 2.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -2740,6 +2782,9 @@ importers:
       '@tauri-apps/plugin-os':
         specifier: 'catalog:'
         version: 2.3.2
+      '@xstate/react':
+        specifier: 'catalog:'
+        version: 3.2.1(@types/react@19.2.14)(react@19.2.6)(xstate@4.37.1)
       codemirror:
         specifier: 'catalog:'
         version: 6.0.2
@@ -2758,6 +2803,9 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.6(react@19.2.6)
+      react-qr-rounded:
+        specifier: 'catalog:'
+        version: 1.0.0(react@19.2.6)
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
@@ -2767,6 +2815,9 @@ importers:
       workbox-routing:
         specifier: 'catalog:'
         version: 7.4.0
+      xstate:
+        specifier: 'catalog:'
+        version: 4.37.1
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
