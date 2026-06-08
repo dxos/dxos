@@ -4,9 +4,11 @@
 
 import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
-import { Context, Fiber, Layer } from 'effect';
-import { Deferred } from 'effect';
+import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -22,10 +24,9 @@ import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, Organization } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 import * as AgentService from './AgentService';
-import { ProcessManager } from '..';
+import { ProcessManager } from '../index';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -222,10 +223,14 @@ describe('Agent Service', () => {
 
         const processManager = yield* ProcessManager.ProcessManagerService;
 
-        // Hydrate redelivers the interrupted alarm synchronously; unblock the tool while hydrate runs.
+        // Hydrate redelivers the interrupted alarm synchronously, which re-runs the AI request and
+        // re-issues the Research tool call against a fresh child process. The pre-restart child is
+        // orphaned (never rehydrated), so its task lingers in the queue ahead of the live child's
+        // task. Drain all pending tasks: completing the orphan is a harmless no-op, completing the
+        // live child's task unblocks the re-run while hydrate is still awaiting it.
         const resumeFiber = yield* Effect.gen(function* () {
           yield* researchService.waitForTaskToAppear();
-          yield* researchService.completeOneTask();
+          yield* researchService.completeAllTasks();
         }).pipe(Effect.fork);
 
         yield* processManager.shutdown();
@@ -240,6 +245,53 @@ describe('Agent Service', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  it.scoped(
+    'rehydrates an idle session and replays conversation history',
+    Effect.fnUntraced(
+      function* (_) {
+        let agent = yield* AgentService.createSession();
+        yield* agent.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* agent.waitForCompletion();
+
+        // Simulate app teardown + reboot while the session sits idle (nothing in-flight).
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+        yield* AgentService.hydrate();
+
+        // The rehydrated agent is bound to the same feed, so a follow-up that only makes sense
+        // with prior context resolves against the pre-restart turn.
+        agent = yield* AgentService.getSession(agent.feed);
+        yield* agent.submitPrompt('What country did I just ask you about? Reply with just the country name.');
+        yield* agent.waitForCompletion();
+
+        const messages = yield* Feed.runQuery(agent.feed, Filter.type(Message.Message));
+        const text = messages.map(Message.extractText).join('\n');
+        expect(text.toLocaleLowerCase()).toContain('paris');
+        expect(text.toLocaleLowerCase()).toContain('france');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined },
+  );
+
+  it.scoped(
+    'hydrate is a no-op when there are no persisted agents',
+    Effect.fnUntraced(
+      function* (_) {
+        // Reboot over an empty store: hydrate must neither throw nor block, and is idempotent.
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+        yield* AgentService.hydrate();
+        yield* AgentService.hydrate();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
   );
 
   // TODO(dmaretskyi): Figure out how to make it not sleep for 45 seconds.
