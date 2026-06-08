@@ -3,7 +3,7 @@
 //
 
 import { addMinutes, differenceInMinutes, format } from 'date-fns';
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { type Database } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
@@ -35,11 +35,61 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
   const durationMinutes = start && end ? differenceInMinutes(end, start) : undefined;
   const presetValue = DURATION_PRESETS.find((preset) => Number(preset.value) === durationMinutes)?.value;
 
-  const handleDurationChange = (value: string) => {
-    update((event) => {
-      event.endDate = addMinutes(start ?? new Date(), Number(value)).toISOString();
-    });
-  };
+  const handleStartDateChange = useCallback(
+    (value: string) => {
+      const iso = fromDateInput(value);
+      if (iso) {
+        update((event) => {
+          // All-day events are single-day: keep the end aligned with the start.
+          event.startDate = iso;
+          event.endDate = iso;
+        });
+      }
+    },
+    [update],
+  );
+
+  const handleStartDateTimeChange = useCallback(
+    (value: string) => {
+      const iso = fromDateInput(value);
+      if (iso) {
+        update((event) => {
+          const previousStart = parseDate(event.startDate);
+          const previousEnd = parseDate(event.endDate);
+          // Preserve the current duration so the end stays after the new start.
+          const duration = previousStart && previousEnd ? differenceInMinutes(previousEnd, previousStart) : 0;
+          event.startDate = iso;
+          event.endDate = addMinutes(new Date(iso), Math.max(duration, MIN_DURATION_MINUTES)).toISOString();
+        });
+      }
+    },
+    [update],
+  );
+
+  const handleEndDateTimeChange = useCallback(
+    (value: string) => {
+      const iso = fromDateInput(value);
+      if (iso) {
+        update((event) => {
+          const startDate = parseDate(event.startDate);
+          // The end must stay after the start; clamp to a minimum duration otherwise.
+          event.endDate =
+            startDate && new Date(iso) <= startDate ? addMinutes(startDate, MIN_DURATION_MINUTES).toISOString() : iso;
+        });
+      }
+    },
+    [update],
+  );
+
+  const handleDurationChange = useCallback(
+    (value: string) => {
+      update((event) => {
+        const startDate = parseDate(event.startDate) ?? new Date();
+        event.endDate = addMinutes(startDate, Number(value)).toISOString();
+      });
+    },
+    [update],
+  );
 
   return (
     <>
@@ -57,26 +107,6 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
         </Input.Root>
       </Card.Row>
 
-      <Card.Row>
-        <Input.Root>
-          <div className='flex items-center gap-2'>
-            <Input.Switch
-              checked={allDay}
-              onCheckedChange={(next) =>
-                update((event) => {
-                  event.allDay = next;
-                  // All-day events are single-day: collapse the end onto the start.
-                  if (next) {
-                    event.endDate = event.startDate;
-                  }
-                })
-              }
-            />
-            <Input.Label>{t('event-all-day.label')}</Input.Label>
-          </div>
-        </Input.Root>
-      </Card.Row>
-
       <Input.Root>
         <Card.Row
           icon={
@@ -85,42 +115,30 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
             </IconBlock>
           }
         >
-          {allDay ? (
-            <Input.Date
-              value={toDateInput(data.startDate)}
-              onValueChange={(value) => {
-                const iso = fromDateInput(value);
-                if (iso) {
-                  update((event) => {
-                    // All-day events are single-day: keep the end aligned with the start.
-                    event.startDate = iso;
-                    event.endDate = iso;
-                  });
-                }
-              }}
-            />
-          ) : (
-            <Input.DateTime
-              value={toDateTimeInput(data.startDate)}
-              onValueChange={(value) => {
-                const iso = fromDateInput(value);
-                if (iso) {
-                  update((event) => {
-                    const previousStart = parseDate(event.startDate);
-                    const previousEnd = parseDate(event.endDate);
-                    // Preserve the current duration so the end stays after the new start.
-                    const duration =
-                      previousStart && previousEnd ? differenceInMinutes(previousEnd, previousStart) : 0;
-                    event.startDate = iso;
-                    event.endDate = addMinutes(
-                      new Date(iso),
-                      Math.max(duration, MIN_DURATION_MINUTES),
-                    ).toISOString();
-                  });
-                }
-              }}
-            />
-          )}
+          <div className='grid grid-cols-[1fr_8rem] gap-2'>
+            {allDay ? (
+              <Input.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+            ) : (
+              <Input.DateTime value={toDateTimeInput(data.startDate)} onValueChange={handleStartDateTimeChange} />
+            )}
+            <Input.Root>
+              <div className='flex items-center gap-2'>
+                <Input.Switch
+                  checked={allDay}
+                  onCheckedChange={(next) =>
+                    update((event) => {
+                      event.allDay = next;
+                      // All-day events are single-day: collapse the end onto the start.
+                      if (next) {
+                        event.endDate = event.startDate;
+                      }
+                    })
+                  }
+                />
+                <Input.Label>{t('event-all-day.label')}</Input.Label>
+              </div>
+            </Input.Root>
+          </div>
         </Card.Row>
       </Input.Root>
 
@@ -133,23 +151,8 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               </IconBlock>
             }
           >
-            <div className='grid grid-cols-[1fr_auto] gap-2'>
-              <Input.DateTime
-                value={toDateTimeInput(data.endDate)}
-                onValueChange={(value) => {
-                  const iso = fromDateInput(value);
-                  if (iso) {
-                    update((event) => {
-                      const startDate = parseDate(event.startDate);
-                      // The end must stay after the start; clamp to a minimum duration otherwise.
-                      event.endDate =
-                        startDate && new Date(iso) <= startDate
-                          ? addMinutes(startDate, MIN_DURATION_MINUTES).toISOString()
-                          : iso;
-                    });
-                  }
-                }}
-              />
+            <div className='grid grid-cols-[1fr_8rem] gap-2'>
+              <Input.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
               {/* Empty string (not undefined) keeps the control controlled so it clears to the */}
               {/* placeholder when the duration doesn't match a preset. */}
               <Select.Root value={presetValue ?? ''} onValueChange={handleDurationChange}>
