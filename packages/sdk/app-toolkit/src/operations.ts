@@ -305,7 +305,7 @@ export namespace LayoutOperation {
       navigation: Schema.optional(
         NavigationMode.annotations({
           description:
-            'How navigation should resolve the requested path. Validate checks the path first; immediate opens it directly and lets the graph catch up.',
+            'How navigation should resolve the requested path. Use validate (the default) to check the path exists before navigating. Immediate is for internal use only.',
         }),
       ),
       pivotId: Schema.optional(

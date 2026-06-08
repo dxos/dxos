@@ -74,9 +74,23 @@ export default Capability.makeModule(
       return Effect.succeed(Option.some(EID.make({ spaceId, entityId: objectId as Key.EntityId })));
     };
 
+    // Resolve a bare entity ID (no path separators) against the current space.
+    // Agents sometimes pass raw entity IDs from object creation results instead of full paths.
+    // TODO(wittjosiah): Remove cast once NavigationPathResolver type includes Database.Service.
+    const bareEntityPathResolver: AppCaps.NavigationPathResolver = ((path: string) => {
+      if (path.includes('/') || !Key.EntityId.isValid(path)) {
+        return Effect.succeed(Option.none());
+      }
+      return Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        return Option.some(EID.make({ spaceId: db.spaceId, entityId: path as Key.EntityId }));
+      });
+    }) as AppCaps.NavigationPathResolver;
+
     return [
       Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
       Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, bareEntityPathResolver),
     ];
   }),
 );
