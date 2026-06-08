@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { makeOperationCapture, withPluginManager } from '@dxos/app-framework/testing';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
 import { AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -26,7 +26,8 @@ const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[0];
   if (!space) {
-    return null;
+    // Still initializing — render a marker so play functions can waitFor it to disappear.
+    return <div data-testid='loading' />;
   }
   const subject = `${SPACE_HOME_SUBJECT_PREFIX}${space.id}`;
   return <SpaceHomeArticle role='article' subject={subject} />;
@@ -55,6 +56,7 @@ const meta = {
         }),
         AssistantPlugin(),
       ],
+      setupEvents: [AppActivationEvents.SetupSettings],
       capabilities: (manager) => capture.wrap(manager),
     }),
   ],
@@ -85,8 +87,10 @@ export const SuggestionCardClick: Story = {
     capture.reset();
     const canvas = within(canvasElement);
 
-    // Wait for suggestion cards to appear (space must be ready first).
-    const card = await canvas.findByText('Draft a new document', {}, { timeout: 10000 });
+    // Wait for space initialization to complete (loading marker disappears).
+    await waitFor(() => expect(canvas.queryByTestId('loading')).toBeNull(), { timeout: 15000 });
+    // Then wait for suggestion cards to appear.
+    const card = await canvas.findByText('Draft a new document', {}, { timeout: 15000 });
     await userEvent.click(card);
 
     const calls = capture.getCalls(AssistantOperation.RunPromptInNewChat);
@@ -109,7 +113,9 @@ export const CustomPromptSubmit: Story = {
     capture.reset();
     const canvas = within(canvasElement);
 
-    const editor = await canvas.findByRole('textbox', {}, { timeout: 10000 });
+    // Wait for space initialization to complete.
+    await waitFor(() => expect(canvas.queryByTestId('loading')).toBeNull(), { timeout: 15000 });
+    const editor = await canvas.findByRole('textbox', {}, { timeout: 15000 });
     await userEvent.click(editor);
     await userEvent.type(editor, 'What types of objects can I create here?');
     await userEvent.keyboard('{Enter}');

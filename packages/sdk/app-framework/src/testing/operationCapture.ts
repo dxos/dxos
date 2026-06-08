@@ -18,6 +18,19 @@ export type CapturedCall<I = unknown> = {
 
 type CapabilityManagerLike = {
   get: (cap: Capability.InterfaceDef<Capabilities.OperationInvoker>) => Capabilities.OperationInvoker;
+  getAll: (cap: Capability.InterfaceDef<Capabilities.OperationInvoker>) => Capabilities.OperationInvoker[];
+};
+
+export type OperationCapture = {
+  /**
+   * Wraps the real OperationInvoker from the given manager. Pass to
+   * `withPluginManager({ capabilities: (m) => capture.wrap(m) })`.
+   */
+  wrap(manager: CapabilityManagerLike): Capability.Any[];
+  /** Returns all recorded calls (mocked or real) for the given operation. */
+  getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[];
+  /** Clears all recorded calls (useful between play function steps). */
+  reset(): void;
 };
 
 /**
@@ -51,20 +64,7 @@ type CapabilityManagerLike = {
  * expect(calls).toHaveLength(1);
  * expect(calls[0].input.prompt).toBe('Draft a new document');
  * ```
- */
-export type OperationCapture = {
-  /**
-   * Wraps the real OperationInvoker from the given manager. Pass to
-   * `withPluginManager({ capabilities: (m) => capture.wrap(m) })`.
-   */
-  wrap(manager: CapabilityManagerLike): Capability.Any[];
-  /** Returns all recorded calls (mocked or real) for the given operation. */
-  getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[];
-  /** Clears all recorded calls (useful between play function steps). */
-  reset(): void;
-};
-
-/**
+ *
  * @idiom org.dxos.app-framework.testing.operationCapture
  *   applies: Storybook play-function tests for components that call plugin operations
  *   instead-of: Loading every plugin whose operations the component triggers
@@ -86,30 +86,48 @@ export const makeOperationCapture = (
 
   return {
     wrap(manager) {
-      const real = manager.get(Capabilities.OperationInvoker);
+      // Use getAll to find the real invoker that was registered before our wrapper. manager.get
+      // returns the last contribution (ours, once added), but getAll returns them all in order.
+      // On first invocation (when activation is complete) we find the non-wrapper contribution.
+      let real: Capabilities.OperationInvoker | undefined;
+      const delegate = () => {
+        if (!real) {
+          const all = manager.getAll(Capabilities.OperationInvoker);
+          real = all.find((inv) => inv !== wrapped);
+        }
+        return real;
+      };
 
       const wrapped: Capabilities.OperationInvoker = {
-        ...real,
+        get invocations() {
+          return delegate()!.invocations;
+        },
+        get pendingFollowups() {
+          return delegate()!.pendingFollowups;
+        },
+        get awaitFollowups() {
+          return delegate()!.awaitFollowups;
+        },
         invoke: (op: Operation.Definition<any, any>, input?: unknown, ...rest: any[]) => {
           recordFn(op, input);
           if (mockedKeys.has(String(op.meta.key))) {
             return Effect.succeed(undefined as any);
           }
-          return (real.invoke as any)(op, input, ...rest);
+          return (delegate()!.invoke as any)(op, input, ...rest);
         },
         invokePromise: async (op: Operation.Definition<any, any>, input?: unknown, ...rest: any[]) => {
           recordFn(op, input);
           if (mockedKeys.has(String(op.meta.key))) {
             return { data: undefined };
           }
-          return (real.invokePromise as any)(op, input, ...rest);
+          return (delegate()!.invokePromise as any)(op, input, ...rest);
         },
         schedule: (op: Operation.Definition<any, any>, input?: unknown, ...rest: any[]) => {
           recordFn(op, input);
           if (mockedKeys.has(String(op.meta.key))) {
             return Effect.succeed(undefined);
           }
-          return (real.schedule as any)(op, input, ...rest);
+          return (delegate()!.schedule as any)(op, input, ...rest);
         },
       };
 
