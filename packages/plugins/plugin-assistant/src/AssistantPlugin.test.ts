@@ -54,7 +54,9 @@ describe('AssistantPlugin', () => {
     expect(harness.manager.getActive()).toContain(moduleId('AiService'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
-    const { personalSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
     await harness.runPromise(
       Effect.gen(function* () {
         const aiService = yield* AiService.AiService;
@@ -74,7 +76,9 @@ describe('AssistantPlugin', () => {
       ],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
+    const { personalSpace } = await EffectEx.runAndForwardErrors(
+      initializeIdentity(harness.get(ClientCapabilities.Client)),
+    );
     await harness.runPromise(
       Effect.gen(function* () {
         const { text } = yield* LanguageModel.generateText({
