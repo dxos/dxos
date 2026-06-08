@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
 import { Annotation, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
@@ -12,11 +13,14 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
+import { Settings } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../../annotations';
 import { SPACE_HOME_NODE_ID } from '../../constants';
 
-export const SupportSettings = () => {
+export type SupportSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
+
+export const SupportSettings = ({ settings, onSettingsChange }: SupportSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const { invokePromise } = useOperationInvoker();
@@ -41,6 +45,12 @@ export const SupportSettings = () => {
   return (
     <SettingsForm.Viewport>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+        <SettingsForm.FieldSet
+          readonly={!onSettingsChange}
+          schema={Settings.Settings}
+          values={settings}
+          onValuesChanged={(values) => onSettingsChange?.(() => values)}
+        />
         <Button onClick={handleShowWelcome}>{t('show-welcome.button')}</Button>
       </SettingsForm.Section>
     </SettingsForm.Viewport>

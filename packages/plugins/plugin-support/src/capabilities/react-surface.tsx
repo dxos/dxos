@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { type SpaceId } from '@dxos/keys';
+import { useSpace } from '@dxos/react-client/echo';
 
 import { SupportSettings } from '#components';
 import {
@@ -22,7 +24,7 @@ import {
   SupportCompanion,
 } from '#containers';
 import { meta } from '#meta';
-import { Support } from '#types';
+import { Settings, Support } from '#types';
 
 import { SHORTCUTS_DIALOG, SPACE_HOME_SUBJECT_PREFIX } from '../constants';
 
@@ -45,7 +47,12 @@ export default Capability.makeModule(() =>
           AppSurface.Article,
           (subject): subject is string => typeof subject === 'string' && subject.startsWith(SPACE_HOME_SUBJECT_PREFIX),
         ),
-        component: ({ data, role }) => <SpaceHomeArticle role={role} subject={data.subject} />,
+        component: ({ data, role }) => {
+          // subject = `${SPACE_HOME_SUBJECT_PREFIX}${space.id}` — space.id is a SpaceId.
+          const spaceId = (data.subject as string).slice(SPACE_HOME_SUBJECT_PREFIX.length) as SpaceId;
+          const space = useSpace(spaceId);
+          return <SpaceHomeArticle role={role} space={space} />;
+        },
       }),
       Surface.create({
         id: 'feedback',
@@ -93,7 +100,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.id),
-        component: () => <SupportSettings />,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return <SupportSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
     ]),
   ),

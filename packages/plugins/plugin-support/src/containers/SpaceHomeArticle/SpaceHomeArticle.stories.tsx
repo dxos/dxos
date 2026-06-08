@@ -18,7 +18,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SPACE_HOME_SUBJECT_PREFIX } from '../../constants';
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 
 /** Renders SpaceHomeArticle for the first available space. */
@@ -29,8 +28,7 @@ const DefaultStory = () => {
     // Still initializing — render a marker so play functions can waitFor it to disappear.
     return <div data-testid='loading' />;
   }
-  const subject = `${SPACE_HOME_SUBJECT_PREFIX}${space.id}`;
-  return <SpaceHomeArticle role='article' subject={subject} />;
+  return <SpaceHomeArticle role='article' space={space} />;
 };
 
 // Mock operations that should be captured but NOT executed (e.g. navigation has no effect in

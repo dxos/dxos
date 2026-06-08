@@ -20,7 +20,7 @@ import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/inte
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
-import { type Space, useObject, useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -46,8 +46,7 @@ const WELCOME_SLIDE = {
 
 export type SpaceHomeArticleProps = {
   role?: string;
-  /** Surface subject: `${SPACE_HOME_SUBJECT_PREFIX}${space.id}`. */
-  subject: string;
+  space: Space | undefined;
 };
 
 /**
@@ -55,13 +54,9 @@ export type SpaceHomeArticleProps = {
  * dismissed). Below that are the most-recently-modified objects (of registered, non-hidden types),
  * or starter prompts when the space is empty, above the assistant prompt pinned at the bottom.
  */
-export const SpaceHomeArticle = ({ role, subject }: SpaceHomeArticleProps) => {
+export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-
-  const spaceId = subject.slice(subject.lastIndexOf('/') + 1);
-  const spaces = useSpaces();
-  const space = useMemo(() => spaces.find((current) => current.id === spaceId), [spaces, spaceId]);
 
   // Recent objects are scoped to the registered object types contributed to the schema capability,
   // excluding relations, types marked hidden, and collections (structural containers).
