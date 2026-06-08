@@ -319,7 +319,13 @@ const SuggestionCards = ({ space }: SpaceScopedProps) => {
       {SUGGESTION_KEYS.map((key) => {
         const prompt = t(key);
         return (
-          <Card.Root key={key} fullWidth role='button' classNames='cursor-pointer' onClick={() => handleRunPrompt(prompt)}>
+          <Card.Root
+            key={key}
+            fullWidth
+            role='button'
+            classNames='cursor-pointer'
+            onClick={() => handleRunPrompt(prompt)}
+          >
             <Card.Header>
               <Toolbar.IconButton variant='ghost' label={prompt} icon='ph--sparkle--regular' iconOnly />
               <Card.Title>{prompt}</Card.Title>
@@ -342,7 +348,8 @@ const RecentObjectCard = ({ space, object }: RecentObjectCardProps) => {
 
   const typename = Obj.getTypename(object) ?? '';
   const label =
-    Obj.getLabel(object) ?? toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: object.id }], t);
+    Obj.getLabel(object) ??
+    toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: object.id }], t);
   const iconAnnotation = Obj.getIcon(object);
   const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
   const styles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
