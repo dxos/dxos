@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import { addDays, endOfDay, startOfDay } from 'date-fns';
+import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -115,8 +115,20 @@ export default Capability.makeModule(
                   return;
                 }
                 const { from, to } = resolvePlanningWindow(selectionManager, nodeId);
+                // Narrow materialization at query time so the cost scales with the window, not the whole
+                // feed. `startDate` is stored in Google's raw form (timed events carry UTC offsets, all-day
+                // events are date-only), so a precise lexicographic bound is unsafe; widen by a day on each
+                // side (comfortably covers any UTC offset) and apply the exact epoch-based window below.
+                const lowerBound = format(subDays(from, 1), 'yyyy-MM-dd');
+                const upperBound = format(addDays(to, 1), 'yyyy-MM-dd');
                 const events = yield* Effect.promise(() =>
-                  db.query(Query.select(Filter.type(Event.Event)).from(feed)).run(),
+                  db
+                    .query(
+                      Query.select(
+                        Filter.type(Event.Event, { startDate: Filter.between(lowerBound, upperBound) }),
+                      ).from(feed),
+                    )
+                    .run(),
                 );
                 const inWindow = events.filter((event) => {
                   const start = event.startDate ? new Date(event.startDate) : undefined;
