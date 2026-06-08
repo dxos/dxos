@@ -51,7 +51,7 @@ const meta = {
         }),
         AssistantPlugin(),
       ],
-      capabilities: [capture.capability],
+      capabilities: (manager) => capture.wrap(manager),
     }),
   ],
   parameters: {
@@ -81,7 +81,7 @@ export const SuggestionCardClick: Story = {
 
     const calls = capture.getCalls(AssistantOperation.RunPromptInNewChat);
     await expect(calls).toHaveLength(1);
-    await expect((calls[0].input as any).prompt).toBe('Draft a new document');
+    await expect(calls[0].input.prompt).toBe('Draft a new document');
   },
 };
 
@@ -102,7 +102,7 @@ export const CustomPromptSubmit: Story = {
 
     // The prompt submit path creates an in-memory chat first.
     const chatCalls = capture.getCalls(AssistantOperation.CreateChat);
-    await expect(chatCalls.length).toBeGreaterThan(0);
-    await expect((chatCalls[0].input as any).addToSpace).toBe(false);
+    await expect(chatCalls).toHaveLength(1);
+    await expect(chatCalls[0].input.addToSpace).toBe(false);
   },
 };

@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as PubSub from 'effect/PubSub';
 
 import { type Operation } from '@dxos/compute';
 
@@ -18,20 +17,21 @@ export type CapturedCall<I = unknown> = {
 };
 
 /**
- * Creates a capture object that records `invokePromise` calls for assertion in Storybook play
- * functions. Contributes a stub `Capabilities.OperationInvoker` and exposes `getCalls(op)` for
+ * Creates a capture object that intercepts `invokePromise` calls for assertion in Storybook play
+ * functions. Wraps the real `Capabilities.OperationInvoker` so all operations still execute
+ * normally — the capture only records calls without blocking them. Exposes `getCalls(op)` for
  * typed per-operation assertions.
  *
  * Pass a `spyFn` wrapper (e.g. `fn` from `storybook/test`) to get Storybook Actions panel
- * integration and vi-style matchers on the underlying spy. If omitted a plain function is used.
+ * integration and vi-style matchers on the recording. If omitted a plain function is used.
  *
  * @example
  * ```ts
  * import { fn } from 'storybook/test';
  * const capture = makeOperationCapture(fn);
  *
- * // Pass to withPluginManager:
- * capabilities: [capture.capability]
+ * // Pass to withPluginManager — the capture reads the real invoker from the manager:
+ * capabilities: [(manager) => [capture.attach(manager)]]
  *
  * // Assert in a play function:
  * const calls = capture.getCalls(AssistantOperation.RunPromptInNewChat);
@@ -40,8 +40,13 @@ export type CapturedCall<I = unknown> = {
  * ```
  */
 export type OperationCapture = {
-  /** Contribute this via `withPluginManager({ capabilities: [capture.capability] })`. */
-  readonly capability: Capability.Any;
+  /**
+   * Returns a `Capability.Any` array that wraps the real OperationInvoker with recording.
+   * Pass the result to `withPluginManager({ capabilities: [(m) => capture.wrap(m)] })`.
+   */
+  wrap(manager: {
+    get: (cap: Capability.InterfaceDef<Capabilities.OperationInvoker>) => Capabilities.OperationInvoker;
+  }): Capability.Any[];
   /** Returns all recorded calls whose operation key matches the given definition. */
   getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[];
   /** Clears all recorded calls (useful between play function steps). */
@@ -55,26 +60,30 @@ export type OperationCapture = {
 export const makeOperationCapture = (spyFn?: (impl: (...args: any[]) => any) => any): OperationCapture => {
   const calls: CapturedCall[] = [];
 
-  const recordingImpl = async (op: Operation.Definition<any, any>, input?: unknown) => {
+  const record = (op: Operation.Definition<any, any>, input?: unknown) => {
     calls.push({ operationKey: String(op.meta.key), input: input ?? {} });
-    return { data: undefined };
   };
 
-  const invokePromise = spyFn ? spyFn(recordingImpl) : recordingImpl;
-
-  const stub: Capabilities.OperationInvoker = {
-    invoke: () => Effect.succeed(undefined as any),
-    schedule: () => Effect.succeed(undefined),
-    invokePromise: invokePromise as any,
-    invocations: Effect.runSync(PubSub.unbounded()),
-    pendingFollowups: Effect.succeed(0),
-    awaitFollowups: Effect.void,
-  };
-
-  const capability = Capability.contributes(Capabilities.OperationInvoker, stub);
+  const recordFn = spyFn ? spyFn(record) : record;
 
   return {
-    capability,
+    wrap(manager) {
+      const real = manager.get(Capabilities.OperationInvoker);
+
+      const wrapped: Capabilities.OperationInvoker = {
+        ...real,
+        invoke: (op: Operation.Definition<any, any>, input?: unknown, ...rest: any[]) => {
+          recordFn(op, input);
+          return (real.invoke as any)(op, input, ...rest);
+        },
+        invokePromise: async (op: Operation.Definition<any, any>, input?: unknown, ...rest: any[]) => {
+          recordFn(op, input);
+          return (real.invokePromise as any)(op, input, ...rest);
+        },
+      };
+
+      return [Capability.contributes(Capabilities.OperationInvoker, wrapped)];
+    },
     getCalls<I, O>(op: Operation.Definition<I, O>): CapturedCall<I>[] {
       const key = String(op.meta.key);
       return calls.filter((c) => c.operationKey === key) as CapturedCall<I>[];
