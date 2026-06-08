@@ -55,16 +55,16 @@ export const CustomTokenDialog = ({ db, spaceId, providerId, providerLabel }: Cu
 
       const validationEffect = credentialForm?.onValidate
         ? credentialForm.onValidate({ values: values as never, provider })
-        : Effect.succeed(undefined as unknown);
+        : Effect.void;
 
       void EffectEx.runAndForwardErrors(
         validationEffect.pipe(
-          Effect.flatMap((validated) =>
+          Effect.andThen(
             Effect.gen(function* () {
               // Close the dialog before re-entering the coordinator so OAuth
               // popups / new tabs aren't blocked by a stacked layout op.
               yield* invoke(LayoutOperation.UpdateDialog, { state: false });
-              yield* coordinator.submitCredentialForm({ db, spaceId, providerId, values, validated });
+              yield* coordinator.submitCredentialForm({ db, spaceId, providerId, values });
             }),
           ),
           Effect.catchAll((failure) =>

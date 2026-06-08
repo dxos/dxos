@@ -85,15 +85,13 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
       if (token.length === 0) {
         return yield* Effect.fail(new Error('Bot token is required.'));
       }
-      return yield* validateToken(token);
+      yield* validateToken(token);
     }),
-  // Token already validated; build objects from the returned user identity.
-  onSubmit: ({ values, provider, validated }) =>
-    Effect.sync(() => {
-      // Type boundary: onValidate and onSubmit are co-located; validated is the DiscordUser from validateToken.
-      const self = validated as Awaited<Effect.Effect.Success<ReturnType<typeof validateToken>>>;
-      const account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
+  onSubmit: ({ values, provider }) =>
+    Effect.gen(function* () {
       const token = values.token.trim();
+      const self = yield* validateToken(token);
+      const account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       const accessToken = Obj.make(AccessToken.AccessToken, {
         source: DISCORD_SOURCE,
         account,
@@ -106,7 +104,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
         targets: [],
       });
       return { kind: 'complete' as const, accessToken, integration };
-    }),
+    }).pipe(Effect.orDie),
 };
 
 /**
