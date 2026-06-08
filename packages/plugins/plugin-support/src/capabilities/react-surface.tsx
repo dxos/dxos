@@ -3,11 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import * as Option from 'effect/Option';
+import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { isPersonalSpace } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Annotation } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 
 import { SupportSettings } from '#components';
 import {
@@ -24,6 +28,7 @@ import {
 import { meta } from '#meta';
 import { Settings, Support } from '#types';
 
+import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG, SPACE_HOME_NODE_TYPE } from '../constants';
 
 export default Capability.makeModule(() =>
@@ -44,7 +49,18 @@ export default Capability.makeModule(() =>
         filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
         component: ({ role }) => {
           const space = useActiveSpace();
-          return <SpaceHomeArticle role={role} space={space} />;
+          const [properties, updateProperties] = useObject(space?.properties);
+          const dismissed = properties
+            ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
+            : false;
+          const showWelcome = space && isPersonalSpace(space) ? !dismissed : undefined;
+          const handleHideWelcome = useCallback(
+            () => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, true)),
+            [updateProperties],
+          );
+          return (
+            <SpaceHomeArticle role={role} space={space} showWelcome={showWelcome} onHideWelcome={handleHideWelcome} />
+          );
         },
       }),
       Surface.create({

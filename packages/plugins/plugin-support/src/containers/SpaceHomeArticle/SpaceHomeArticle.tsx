@@ -7,23 +7,20 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getObjectPathFromObject, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Event } from '@dxos/async';
-import { Annotation, Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
+import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { EntityKind, HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { AssistantCapabilities, AssistantOperation, type ChatType } from '@dxos/plugin-assistant';
 import { ChatPrompt, type ChatEvent } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
-import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
+import { type Space, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { Card, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
-
-import { WelcomeDismissedAnnotation } from '../../annotations';
 
 /** Number of recently-modified objects to surface as cards. */
 const RECENT_LIMIT = 3;
@@ -43,6 +40,13 @@ const WELCOME_SLIDE = {
 export type SpaceHomeArticleProps = {
   role?: string;
   space: Space | undefined;
+  /**
+   * Whether the welcome panel is visible. `undefined` = not a personal space (panel not mounted).
+   * The surface component derives this from the per-space WelcomeDismissedAnnotation.
+   */
+  showWelcome?: boolean;
+  /** Persists the welcome-dismissed state; provided by the surface component. */
+  onHideWelcome?: () => void;
 };
 
 /**
@@ -50,7 +54,7 @@ export type SpaceHomeArticleProps = {
  * dismissed). Below that are the most-recently-modified objects (of registered, non-hidden types),
  * or starter prompts when the space is empty, above the assistant prompt pinned at the bottom.
  */
-export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
+export const SpaceHomeArticle = ({ role, space, showWelcome, onHideWelcome }: SpaceHomeArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
@@ -77,34 +81,25 @@ export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
   );
   const recent = useQuery(filter && space ? space.db : undefined, query);
 
-  const [dismissed, setDismissed] = useWelcomeDismissed(space);
-  const isPersonal = !!space && isPersonalSpace(space);
-  const showWelcome = isPersonal && !dismissed;
-
   const handleStartTour = useCallback(() => {
     void invokePromise(HelpOperation.Start);
   }, [invokePromise]);
 
-  const handleHideWelcome = useCallback(() => setDismissed(true), [setDismissed]);
-
-  // Reactive toolbar: reads the dismissed annotation via get(AtomObj.make(space.properties)) so the
-  // menu action graph updates without a React re-render cycle when the annotation changes. Always
-  // rendered — actions are hidden when welcome is not shown, but the toolbar slot stays visible so
-  // future actions can be added without structural changes.
+  // Always rendered — actions are hidden when welcome is not shown, but the toolbar slot stays
+  // visible so future actions can be added without structural changes.
   const menuActions = useMenuBuilder(
-    (get) => {
-      const properties = space?.properties ? get(AtomObj.make(space.properties)) : undefined;
-      const isDismissed = properties
-        ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-        : false;
-      const showActions = isPersonal && !isDismissed;
-
+    (_get) => {
+      const showActions = showWelcome !== undefined;
       return MenuBuilder.make()
         .action('start-tour', { label: t('start-tour.button'), hidden: !showActions }, handleStartTour)
-        .action('hide-welcome', { label: t('hide-welcome.button'), hidden: !showActions }, handleHideWelcome)
+        .action(
+          'hide-welcome',
+          { label: t('hide-welcome.button'), hidden: !showActions || !showWelcome },
+          onHideWelcome ?? (() => {}),
+        )
         .build();
     },
-    [space?.properties, isPersonal, t, handleStartTour, handleHideWelcome],
+    [showWelcome, t, handleStartTour, onHideWelcome],
   );
 
   return (
@@ -119,9 +114,9 @@ export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
         <div className='flex flex-col bs-full min-bs-0'>
           <ScrollArea.Root classNames='grow min-bs-0' orientation='vertical'>
             <ScrollArea.Viewport classNames='dx-document flex flex-col gap-4 p-4'>
-              {/* Keep mounted on the personal space (hidden when dismissed) so the Stream iframe is not
-                  torn down and re-created on every show/hide — that remount was freezing the UI. */}
-              {isPersonal && (
+              {/* Keep mounted on personal space (hidden when dismissed) so the Stream iframe is not
+                  torn down and re-created on show/hide — that remount freezes the UI. */}
+              {showWelcome !== undefined && (
                 <div className={showWelcome ? undefined : 'hidden'}>
                   <WelcomePanel />
                 </div>
@@ -149,23 +144,6 @@ export const SpaceHomeArticle = ({ role, space }: SpaceHomeArticleProps) => {
 
 type SpaceScopedProps = {
   space?: Space;
-};
-
-/**
- * Reactively read the per-space "welcome dismissed" annotation (synced via space properties) and a
- * setter that persists it. `useObject` subscribes to the properties object, so the Hide button, the
- * Settings "Show welcome page" action, and other devices all re-render live.
- */
-const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void] => {
-  const [properties, updateProperties] = useObject(space?.properties);
-  const dismissed = properties
-    ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-    : false;
-  const setDismissed = useCallback(
-    (value: boolean) => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, value)),
-    [updateProperties],
-  );
-  return [dismissed, setDismissed];
 };
 
 /**
