@@ -99,6 +99,9 @@
       "path": "../react-ui-attention"
     },
     {
+      "path": "../react-ui-audio"
+    },
+    {
       "path": "../react-ui-canvas"
     },
     {
@@ -108,13 +111,13 @@
       "path": "../react-ui-editor"
     },
     {
+      "path": "../react-ui-experimental"
+    },
+    {
       "path": "../react-ui-form"
     },
     {
       "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../react-ui-sfx"
     },
     {
       "path": "../react-ui-stack"

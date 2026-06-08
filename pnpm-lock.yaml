@@ -2930,6 +2930,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
+      '@dxos/react-ui-experimental':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-experimental
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -2963,9 +2966,6 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../../ui/react-ui-pickers
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7897,9 +7897,6 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -8439,12 +8436,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-audio
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -8539,15 +8539,15 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-audio
       '@dxos/react-ui-gameboard':
         specifier: workspace:*
         version: link:../../ui/react-ui-gameboard
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13341,15 +13341,15 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-audio
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -15085,6 +15085,9 @@ importers:
       '@dxos/react-edge-client':
         specifier: workspace:*
         version: link:../../sdk/react-edge-client
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-audio
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -15097,9 +15100,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -15670,15 +15670,15 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-audio
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -17322,6 +17322,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-experimental':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-experimental
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -17337,9 +17340,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -18109,6 +18109,46 @@ importers:
         specifier: '>=8.0.16'
         version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/ui/react-ui-audio:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      d3:
+        specifier: 'catalog:'
+        version: 7.9.0
+      react-resize-detector:
+        specifier: 'catalog:'
+        version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@types/d3':
+        specifier: 'catalog:'
+        version: 7.4.3
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.6(react@19.2.6)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/ui/react-ui-board:
     dependencies:
       '@atlaskit/pragmatic-drag-and-drop':
@@ -18417,6 +18457,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../react-ui-audio
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../react-ui-canvas
@@ -18426,15 +18469,15 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/react-ui-experimental':
+        specifier: workspace:*
+        version: link:../react-ui-experimental
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../react-ui-form
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
@@ -18680,9 +18723,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../react-ui-sfx
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
@@ -18850,12 +18890,12 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-experimental':
+        specifier: workspace:*
+        version: link:../react-ui-experimental
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../react-ui-markdown
-      '@dxos/react-ui-sfx':
-        specifier: workspace:*
-        version: link:../react-ui-sfx
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -19191,6 +19231,106 @@ importers:
       vite-plugin-wasm:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+
+  packages/ui/react-ui-experimental:
+    dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)(react@19.2.6)(scheduler@0.27.0)
+      '@react-three/drei':
+        specifier: 'catalog:'
+        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@10.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.178.0))(@types/react@19.2.14)(@types/three@0.165.0)(immer@10.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.178.0)
+      '@react-three/fiber':
+        specifier: 'catalog:'
+        version: 9.5.0(@types/react@19.2.14)(immer@10.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.178.0)
+      d3:
+        specifier: 'catalog:'
+        version: 7.9.0
+      flubber:
+        specifier: 'catalog:'
+        version: 0.4.2
+      glsl-curl-noise2:
+        specifier: 'catalog:'
+        version: 0.0.4
+      glsl-noise:
+        specifier: 'catalog:'
+        version: 0.0.0
+      glslify:
+        specifier: 'catalog:'
+        version: 7.1.1
+      leva:
+        specifier: 'catalog:'
+        version: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      motion:
+        specifier: 'catalog:'
+        version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      ogl:
+        specifier: 'catalog:'
+        version: 1.0.11
+      react-resize-detector:
+        specifier: 'catalog:'
+        version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      three:
+        specifier: 'catalog:'
+        version: 0.178.0
+    devDependencies:
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../brand
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-audio':
+        specifier: workspace:*
+        version: link:../react-ui-audio
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@types/d3':
+        specifier: 'catalog:'
+        version: 7.4.3
+      '@types/flubber':
+        specifier: 'catalog:'
+        version: 0.4.0
+      '@types/lodash.defaultsdeep':
+        specifier: 'catalog:'
+        version: 4.6.7
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.165.0
+      lodash.defaultsdeep:
+        specifier: 'catalog:'
+        version: 4.6.1
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.6(react@19.2.6)
+      vite:
+        specifier: '>=8.0.16'
+        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-form:
     dependencies:
@@ -20352,103 +20492,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.14)
-      react:
-        specifier: ~19.2.3
-        version: 19.2.6
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.6(react@19.2.6)
-      vite:
-        specifier: '>=8.0.16'
-        version: 8.0.16(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/ui/react-ui-sfx:
-    dependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.5.0(@effect/experimental@0.60.0(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3)(ioredis@5.3.2))(@effect/platform@0.96.1(effect@3.21.3))(@effect/rpc@0.75.1(@effect/platform@0.96.1(effect@3.21.3))(effect@3.21.3))(effect@3.21.3)(react@19.2.6)(scheduler@0.27.0)
-      '@react-three/drei':
-        specifier: 'catalog:'
-        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@10.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.178.0))(@types/react@19.2.14)(@types/three@0.165.0)(immer@10.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.178.0)
-      '@react-three/fiber':
-        specifier: 'catalog:'
-        version: 9.5.0(@types/react@19.2.14)(immer@10.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.178.0)
-      d3:
-        specifier: 'catalog:'
-        version: 7.9.0
-      flubber:
-        specifier: 'catalog:'
-        version: 0.4.2
-      glsl-curl-noise2:
-        specifier: 'catalog:'
-        version: 0.0.4
-      glsl-noise:
-        specifier: 'catalog:'
-        version: 0.0.0
-      glslify:
-        specifier: 'catalog:'
-        version: 7.1.1
-      leva:
-        specifier: 'catalog:'
-        version: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      motion:
-        specifier: 'catalog:'
-        version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      ogl:
-        specifier: 'catalog:'
-        version: 1.0.11
-      react-resize-detector:
-        specifier: 'catalog:'
-        version: 11.0.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      three:
-        specifier: 'catalog:'
-        version: 0.178.0
-    devDependencies:
-      '@dxos/brand':
-        specifier: workspace:*
-        version: link:../brand
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@types/d3':
-        specifier: 'catalog:'
-        version: 7.4.3
-      '@types/flubber':
-        specifier: 'catalog:'
-        version: 0.4.0
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.14)
-      '@types/three':
-        specifier: 'catalog:'
-        version: 0.165.0
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
       react:
         specifier: ~19.2.3
         version: 19.2.6
@@ -54239,7 +54282,7 @@ snapshots:
       events: 3.3.0
       glsl-resolve: 0.0.1
       glsl-tokenizer: 2.1.5
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
       inherits: 2.0.4
       map-limit: 0.0.1
       resolve: 1.22.10
@@ -55641,7 +55684,7 @@ snapshots:
     dependencies:
       universalify: 2.0.0
     optionalDependencies:
-      graceful-fs: 4.2.10
+      graceful-fs: 4.2.11
 
   jsonify@0.0.1: {}
 
@@ -55772,7 +55815,7 @@ snapshots:
 
   leva@0.10.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
-      '@radix-ui/react-portal': 1.1.4(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@radix-ui/react-portal': 1.1.9(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@radix-ui/react-tooltip': 1.1.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@stitches/react': 1.2.8(react@19.2.6)
       '@use-gesture/react': 10.3.1(react@19.2.6)

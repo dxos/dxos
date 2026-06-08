@@ -177,7 +177,6 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
