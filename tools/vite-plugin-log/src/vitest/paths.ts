@@ -24,8 +24,7 @@ export const isTestLogFileEnabled = (): boolean =>
  * Filter expression for the file sink (`LOG_FILTER` syntax).
  * `DX_TEST_LOG_FILTER` overrides `LOG_FILTER`; defaults to `debug`.
  */
-export const resolveTestLogFilter = (): string =>
-  process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FILTER ?? 'debug';
+export const resolveTestLogFilter = (): string => process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FILTER ?? 'debug';
 
 /**
  * Truncate (create) the log file before a Vitest run.

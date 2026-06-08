@@ -15,7 +15,9 @@ const globalSetup = (): void => {
   const path = resolveTestLogFilePath();
   truncateTestLogFile(path);
   // eslint-disable-next-line no-console
-  console.log(`[vitest] test log file: ${path} (filter: ${process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FILTER ?? 'debug'})`);
+  console.log(
+    `[vitest] test log file: ${path} (filter: ${process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FILTER ?? 'debug'})`,
+  );
 };
 
 export default globalSetup;

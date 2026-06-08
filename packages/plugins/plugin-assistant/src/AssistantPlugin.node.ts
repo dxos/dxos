@@ -28,7 +28,7 @@ import {
 import { meta } from '#meta';
 import { AssistantEvents, type AssistantPluginOptions } from '#types';
 
-export const AssistantPlugin =  Plugin.define<AssistantPluginOptions | void>(meta)
+export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
     AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -70,10 +70,10 @@ export const AssistantPlugin =  Plugin.define<AssistantPluginOptions | void>(met
       activatesOn: ActivationEvents.SetupProcessManager,
       activate: AiContextCapability,
     }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    activate: Toolkit,
-  }),
+    Plugin.addModule({
+      activatesOn: ActivationEvents.Startup,
+      activate: Toolkit,
+    }),
     Plugin.addModule({
       activatesOn: ActivationEvents.SetupProcessManager,
       activate: AgentRuntime,

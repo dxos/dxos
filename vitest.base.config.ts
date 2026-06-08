@@ -210,11 +210,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
-      setupFiles: [
-        ...setupFiles,
-        new URL('./tools/vitest/setup.ts', import.meta.url).pathname,
-        VITEST_LOG_SETUP,
-      ],
+      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname, VITEST_LOG_SETUP],
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui

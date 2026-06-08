@@ -322,9 +322,7 @@ export class ProcessManagerImpl implements Manager {
 
   static #isNonTerminal(handle: ProcessHandle.ProcessHandleImpl<any, any, any>): boolean {
     const { state } = handle.snapshotStatus();
-    return (
-      state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED
-    );
+    return state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED;
   }
 
   #buildProcessTreeSnapshot(): readonly Process.Info[] {

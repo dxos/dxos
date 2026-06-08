@@ -66,5 +66,5 @@ export const make = ({
 };
 
 export const extractText = (message: Message): string => {
-  return message.blocks.flatMap((block) => block._tag === 'text' ? [block.text] : []).join('\n');
+  return message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n');
 };

@@ -65,11 +65,11 @@ Use **`trace`** for maximum noise, **`info`** for quieter runs, or a path-scoped
 
 Node Vitest projects wire **`@dxos/vite-plugin-log/vitest`** via `vitest.base.config.ts` (`global-setup` truncates once; per-worker `setup` installs a file processor). Logs flow: **`@dxos/log` → `serializeToJsonl` → `JsonlFileLogStore` → `<package>/test.log`** (NDJSON, compatible with `scripts/query-logs.mjs`).
 
-| Env | Role |
-| --- | --- |
-| `DX_TEST_LOG=0` | Disable file sink |
-| `DX_TEST_LOG_FILE` | Override path (edge: same as legacy `EDGE_TEST_LOG_FILE`) |
-| `DX_TEST_LOG_FILTER` / `LOG_FILTER` | File sink filter (default `debug`) |
+| Env                                 | Role                                                      |
+| ----------------------------------- | --------------------------------------------------------- |
+| `DX_TEST_LOG=0`                     | Disable file sink                                         |
+| `DX_TEST_LOG_FILE`                  | Override path (edge: same as legacy `EDGE_TEST_LOG_FILE`) |
+| `DX_TEST_LOG_FILTER` / `LOG_FILTER` | File sink filter (default `debug`)                        |
 
 ```bash
 LOG_FILTER=lifecycle:debug moon run functions-runtime:test -- AgentService.test.ts

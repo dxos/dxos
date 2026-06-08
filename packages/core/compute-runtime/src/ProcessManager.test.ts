@@ -794,10 +794,10 @@ describe('reentrancy', () => {
       const executable = makeSumAggregator();
       yield* manager.spawn(executable);
 
-      yield* Effect.all(
-        [manager.shutdown(), manager.startup(), manager.shutdown(), manager.startup()],
-        { concurrency: 'unbounded', discard: true },
-      );
+      yield* Effect.all([manager.shutdown(), manager.startup(), manager.shutdown(), manager.startup()], {
+        concurrency: 'unbounded',
+        discard: true,
+      });
 
       const dormant = yield* manager.list({ key: executable.key });
       expect(dormant).toHaveLength(1);

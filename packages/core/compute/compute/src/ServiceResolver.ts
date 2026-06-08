@@ -41,7 +41,7 @@ export const resolve: {
   <Tag extends Context.Tag<any, any>>(
     tag: Tag,
     context: ResolutionContext,
-  ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>
+  ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>;
 } = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
 
 export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(

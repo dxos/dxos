@@ -302,9 +302,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       // Prevent spurious state transitions if handler fibers are interrupted.
       this.#finished = true;
       const state =
-        this.#alarmTimer !== null || this.#hasRunningChildren()
-          ? Process.State.HYBERNATING
-          : Process.State.IDLE;
+        this.#alarmTimer !== null || this.#hasRunningChildren() ? Process.State.HYBERNATING : Process.State.IDLE;
       yield* this.#persistence.setState(state);
       this.#setStatus(state);
       // Clears in-memory timer only; does NOT touch persisted alarmDueAt.
