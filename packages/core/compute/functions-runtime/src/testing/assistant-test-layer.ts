@@ -151,7 +151,7 @@ export const AssistantTestServiceResolverLayer = ({
             }
             const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
             const runtime = yield* Effect.runtime<Feed.FeedService>();
-            const binder = yield* acquireReleaseResource(
+            const binder = yield* EffectEx.acquireReleaseResource(
               () =>
                 new AiContext.Binder({
                   feed,
@@ -168,7 +168,7 @@ export const AssistantTestServiceResolverLayer = ({
             }
             const feed = yield* Database.resolve(context.conversation, Feed.Feed).pipe(Effect.orDie);
             const runtime = yield* Effect.runtime<Feed.FeedService>();
-            const session = yield* acquireReleaseResource(
+            const session = yield* EffectEx.acquireReleaseResource(
               () =>
                 new AiSession.Session({
                   feed,

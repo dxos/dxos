@@ -104,7 +104,7 @@ export interface Handle<I, O> {
    * Hydrates a dormant persisted process using the supplied definition.
    * No-op when the handle is already live (returns self).
    */
-  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<void>;
+  hydrate(definition: Process.Process<I, O, any>): Effect.Effect<Handle<I, O>>;
 }
 
 export namespace Handle {

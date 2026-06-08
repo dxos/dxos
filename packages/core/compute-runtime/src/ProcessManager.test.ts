@@ -28,6 +28,7 @@ import {
 } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation, Database, DXN } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -1000,7 +1001,7 @@ describe('durability', () => {
 
       yield* Deferred.succeed(alarmResume, undefined);
       yield* Effect.promise(() =>
-        expect.poll(() => Effect.runPromise(Ref.get(alarmHandlerFinished))).toEqual(true),
+        expect.poll(() => EffectEx.runAndForwardErrors(Ref.get(alarmHandlerFinished))).toEqual(true),
       );
 
       const restored = yield* managerB.attach(handle.pid);
@@ -1017,7 +1018,7 @@ describe('durability', () => {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const traceSink = yield* Trace.TraceSink;
 
-      SlowChildGate.taskSignal = yield* Queue.unbounded();
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
       SlowChildGate.completeDeferred = yield* Deferred.make<void>();
       SlowChildGate.alarmStarted = yield* Deferred.make<void>();
       SlowChildGate.alarmResume = yield* Deferred.make<void>();
@@ -1029,7 +1030,8 @@ describe('durability', () => {
       const handle = yield* managerA.spawn(parentExecutable);
       yield* handle.submitInput(undefined);
       yield* Deferred.await(SlowChildGate.alarmStarted);
-      yield* Queue.take(SlowChildGate.taskSignal);
+      const taskSignalA = SlowChildGate.taskSignal;
+      yield* Queue.take(taskSignalA);
 
       yield* managerA.shutdown();
 
@@ -1044,12 +1046,13 @@ describe('durability', () => {
       SlowChildGate.alarmHandlerFinished = alarmHandlerFinished;
 
       yield* dormantParents[0].hydrate(parentExecutable);
-      yield* Queue.take(SlowChildGate.taskSignal);
+      const taskSignalB = SlowChildGate.taskSignal;
+      yield* Queue.take(taskSignalB);
       expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
 
       yield* Deferred.succeed(SlowChildGate.alarmResume!, undefined);
       yield* Effect.promise(() =>
-        expect.poll(() => Effect.runPromise(Ref.get(alarmHandlerFinished))).toEqual(true),
+        expect.poll(() => EffectEx.runAndForwardErrors(Ref.get(alarmHandlerFinished))).toEqual(true),
       );
 
       const restored = yield* managerB.attach(handle.pid);
