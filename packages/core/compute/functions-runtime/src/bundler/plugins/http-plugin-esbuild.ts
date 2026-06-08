@@ -10,7 +10,7 @@ import * as Function from 'effect/Function';
 import * as Schedule from 'effect/Schedule';
 import { type Loader, type Plugin } from 'esbuild';
 
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 
 const MAX_RETRIES = 5;
@@ -70,7 +70,7 @@ export const httpPlugin: Plugin = {
           ),
         ),
         Effect.provide(FetchHttpClient.layer),
-        runAndForwardErrors,
+        EffectEx.runAndForwardErrors,
       );
     });
   },

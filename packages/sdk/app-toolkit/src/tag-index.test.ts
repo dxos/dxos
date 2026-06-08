@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { createFeedServiceLayer, getObjectCore } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';
@@ -69,7 +69,7 @@ describe('TagIndex (feed integration)', () => {
       // so totalOps ≈ N * 27 ≈ 5,400.
       // spread-replace → O(n) ops/call → totalOps ≈ N²/2 * 27 ≈ 540,000 for N=200.
       expect(totalOps).toBeLessThan(N * 50);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('unsetTag emits O(1) Automerge ops per removal', async ({ expect }) => {
@@ -100,7 +100,7 @@ describe('TagIndex (feed integration)', () => {
       // splice() → O(1) ops/call → totalOps ≈ N.
       // filter-replace → O(n) ops/call → totalOps ≈ N²/2 ≈ 20,000 for N=200.
       expect(totalOps).toBeLessThan(N * 5);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
   test('tags immutable feed objects and filters the feed by tag', async ({ expect }) => {
@@ -138,6 +138,6 @@ describe('TagIndex (feed integration)', () => {
       tags.unsetTag(urgent, hello.id);
       expect([...tags.objects(urgent)]).toEqual([]);
       expect(tags.tagIds()).toEqual([]);
-    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+    }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 });

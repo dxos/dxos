@@ -7,14 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
 import { Ref } from '@dxos/echo';
-import {
-  createJsonPath,
-  findNode,
-  getArrayElementType,
-  getDiscriminatedType,
-  isDiscriminatedUnion,
-  isNestedType,
-} from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -39,13 +32,15 @@ export const ArrayField = ({
   ...props
 }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
-  const elementType = getArrayElementType(type);
+  const elementType = SchemaEx.getArrayElementType(type);
   const { onValueChange } = inputProps;
   const values = useFormValues(ArrayField.displayName, path, () => []);
 
   const getDefaultObjectValue = (typeNode: SchemaAST.AST): any => {
-    const baseNode = findNode(typeNode, isDiscriminatedUnion);
-    const typeLiteral = baseNode ? getDiscriminatedType(baseNode, {}) : findNode(typeNode, SchemaAST.isTypeLiteral);
+    const baseNode = SchemaEx.findNode(typeNode, SchemaEx.isDiscriminatedUnion);
+    const typeLiteral = baseNode
+      ? SchemaEx.getDiscriminatedType(baseNode, {})
+      : SchemaEx.findNode(typeNode, SchemaAST.isTypeLiteral);
     if (!typeLiteral) {
       return {};
     }
@@ -62,7 +57,7 @@ export const ArrayField = ({
 
   const handleAdd = useCallback(() => {
     const defaultValue =
-      isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
+      SchemaEx.isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
     // `values` is `undefined` on first render for arrays whose parent path
     // hasn't been materialised in the form values yet (e.g. `package.repos`
     // when the form starts with no `package`). `useFormValues`'s default-
@@ -86,14 +81,14 @@ export const ArrayField = ({
     return null;
   }
 
-  const renderItemAsObject = elementType && isNestedType(elementType) && !Ref.isRefType(elementType);
+  const renderItemAsObject = elementType && SchemaEx.isNestedType(elementType) && !Ref.isRefType(elementType);
 
   return (
     <>
       {(layout !== 'static' || (values && values.length > 0)) && (
         <div className='flex items-center gap-2'>
           <div className='flex-1 min-w-0'>
-            <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
+            <FormFieldLabel readonly={readonly} label={label} path={SchemaEx.createJsonPath(path ?? [])} asChild />
           </div>
           {!readonly && layout !== 'static' && (
             <IconBlock inline icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
@@ -168,7 +163,7 @@ export const getDefaultValue = (ast?: SchemaAST.AST): any => {
       return getDefaultValue(ast.f());
     }
     default: {
-      if (ast && isNestedType(ast)) {
+      if (ast && SchemaEx.isNestedType(ast)) {
         return {};
       } else {
         throw new Error(`Unsupported type: ${ast?._tag}`);

@@ -32,7 +32,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
-import { causeToError, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -272,14 +272,14 @@ export class AiChatProcessor {
           return;
         }
 
-        throw causeToError(exit.cause);
+        throw EffectEx.causeToError(exit.cause);
       }
 
       this.#registry.set(this.error, Option.none());
       this.#lastRequest = undefined;
       this.#requestFiber = undefined;
     } catch (err) {
-      // `causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
+      // `EffectEx.causeToError` above unwraps the fiber failure into the underlying error (e.g. an AiError
       // carrying "model 'x' not found"); `parseError` decides what to surface to the user.
       log.error('request failed', { error: err });
       this.#registry.set(this.error, Option.some(parseError(err)));
@@ -294,7 +294,7 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await runAndForwardErrors(
+    await EffectEx.runAndForwardErrors(
       Effect.gen(this, function* () {
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
@@ -330,7 +330,7 @@ export class AiChatProcessor {
     if (!spaceId) {
       return;
     }
-    unwrapExit(
+    EffectEx.unwrapExit(
       await this._runtime.runPromiseExit(
         Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
           Effect.provide(this._spaceLayer),

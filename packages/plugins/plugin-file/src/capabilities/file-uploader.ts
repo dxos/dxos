@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { FileOperation } from '#types';
@@ -29,7 +29,7 @@ export default Capability.makeModule(
         };
       });
 
-      return runAndForwardErrors(program);
+      return EffectEx.runAndForwardErrors(program);
     });
   }),
 );

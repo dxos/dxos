@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { Button, Dialog, Input, useTranslation } from '@dxos/react-ui';
 
@@ -42,7 +42,7 @@ export const LoadPluginDialog = () => {
         }),
       ),
       Effect.tap(() => Effect.sync(() => setLoading(false))),
-      runAndForwardErrors,
+      EffectEx.runAndForwardErrors,
     );
   }, [url, manager]);
 

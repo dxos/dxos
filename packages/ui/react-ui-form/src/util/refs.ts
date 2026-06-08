@@ -6,7 +6,7 @@ import type * as SchemaAST from 'effect/SchemaAST';
 
 import { Ref } from '@dxos/echo';
 import { type ReferenceAnnotationValue, ReferenceAnnotationId } from '@dxos/echo/internal';
-import { findAnnotation, getArrayElementType, isArrayType } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 
 type RefProps = {
   ast: SchemaAST.AST;
@@ -16,11 +16,14 @@ type RefProps = {
 
 export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
   // Array of references.
-  if (isArrayType(ast)) {
-    const elementType = getArrayElementType(ast);
+  if (SchemaEx.isArrayType(ast)) {
+    const elementType = SchemaEx.getArrayElementType(ast);
     if (elementType) {
       if (Ref.isRefType(elementType)) {
-        const typename = findAnnotation<ReferenceAnnotationValue>(elementType, ReferenceAnnotationId)?.typename;
+        const typename = SchemaEx.findAnnotation<ReferenceAnnotationValue>(
+          elementType,
+          ReferenceAnnotationId,
+        )?.typename;
         return { ast: elementType, isArray: true, typename };
       }
     }
@@ -28,7 +31,7 @@ export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
 
   // Direct reference.
   if (Ref.isRefType(ast)) {
-    const typename = findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename;
+    const typename = SchemaEx.findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId)?.typename;
     return { ast, isArray: false, typename };
   }
 

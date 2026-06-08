@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { promiseWithCauseCapture } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
@@ -242,7 +242,7 @@ export const resolve: {
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;
-    const object = yield* promiseWithCauseCapture(() =>
+    const object = yield* EffectEx.promiseWithCauseCapture(() =>
       db.graph
         .createRefResolver({
           context: {
@@ -266,7 +266,7 @@ export const resolve: {
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
-    const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
+    const object = yield* EffectEx.promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
       return yield* Effect.fail(new Err.EntityNotFoundError(ref.uri));
     }
@@ -298,7 +298,7 @@ export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Eff
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.addType(type)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.addType(type)))).pipe(
     Effect.withSpan('Database.addType'),
   );
 
@@ -314,7 +314,7 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  * @see {@link Database.flush}
  */
 export const flush = (opts?: FlushOptions) =>
-  Service.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts)))).pipe(
+  Service.pipe(Effect.flatMap(({ db }) => EffectEx.promiseWithCauseCapture(() => db.flush(opts)))).pipe(
     Effect.withSpan('Database.flush'),
   );
 
@@ -340,7 +340,7 @@ export const runQuery: {
   <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
 } = (queryOrFilter: Query.Any | Filter.Any) =>
   query(queryOrFilter as any).pipe(
-    Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
+    Effect.flatMap((queryResult) => EffectEx.promiseWithCauseCapture(() => queryResult.run())),
     Effect.withSpan('Database.runQuery'),
   );
 
@@ -354,7 +354,7 @@ export const runQueryFirst: {
 } = (queryOrFilter: Query.Any | Filter.Any) =>
   query(queryOrFilter as any).pipe(
     Effect.flatMap((queryResult) =>
-      promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
+      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
     ),
     Effect.withSpan('Database.runQueryFirst'),
   );
@@ -363,9 +363,9 @@ const makeQueryResultEffect = <T>(
   eff: Effect.Effect<QueryResult.QueryResult<T>, never, Service>,
 ): QueryResult.QueryResultEffect<T, never, Service> => {
   return {
-    run: Effect.flatMap(eff, (result) => promiseWithCauseCapture(() => result.run())),
+    run: Effect.flatMap(eff, (result) => EffectEx.promiseWithCauseCapture(() => result.run())),
     first: Effect.flatMap(eff, (result) =>
-      promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
+      EffectEx.promiseWithCauseCapture(async () => Option.fromNullable(await result.firstOrUndefined())),
     ),
 
     // Effect internals

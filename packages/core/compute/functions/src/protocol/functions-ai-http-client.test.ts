@@ -11,7 +11,7 @@ import * as Exit from 'effect/Exit';
 import { describe, test } from 'vitest';
 
 import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
@@ -87,7 +87,7 @@ describe('FunctionsAiHttpClient', () => {
       }),
     );
 
-    const result = await runAndForwardErrors(runRequest(service));
+    const result = await EffectEx.runAndForwardErrors(runRequest(service));
     expect(result.status).toBe(200);
   });
 
@@ -99,7 +99,7 @@ describe('FunctionsAiHttpClient', () => {
       }),
     );
 
-    const result = await runAndForwardErrors(runRequest(service));
+    const result = await EffectEx.runAndForwardErrors(runRequest(service));
     expect(result.status).toBe(500);
   });
 });

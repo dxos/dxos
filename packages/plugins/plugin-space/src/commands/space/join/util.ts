@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 
 import { type AuthenticatingInvitationObservable, Invitation } from '@dxos/client/invitations';
-import { runAndForwardErrors } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 
@@ -29,7 +29,7 @@ export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationProp
 
     const runCallback = (effect: Effect.Effect<void> | undefined) => {
       if (effect) {
-        runAndForwardErrors(effect).catch(() => {
+        EffectEx.runAndForwardErrors(effect).catch(() => {
           // Ignore callback errors
         });
       }
@@ -52,7 +52,7 @@ export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationProp
                 invariant(code, 'No code provided');
                 yield* Effect.tryPromise(() => observable.authenticate(code));
               })
-                .pipe(runAndForwardErrors)
+                .pipe(EffectEx.runAndForwardErrors)
                 .catch(() => {
                   // Error handling
                 });
@@ -62,14 +62,14 @@ export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationProp
 
           case Invitation.State.SUCCESS: {
             runCallback(callbacks?.onSuccess?.(invitation));
-            runAndForwardErrors(Queue.offer(doneQueue, invitation)).catch(() => {});
+            EffectEx.runAndForwardErrors(Queue.offer(doneQueue, invitation)).catch(() => {});
             break;
           }
         }
       },
       (err) => {
         if (err instanceof AlreadyJoinedError) {
-          runAndForwardErrors(Queue.offer(doneQueue, observable.get())).catch(() => {});
+          EffectEx.runAndForwardErrors(Queue.offer(doneQueue, observable.get())).catch(() => {});
           return;
         }
         throw err;
