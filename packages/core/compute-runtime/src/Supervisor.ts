@@ -3,6 +3,7 @@
 //
 
 // @import-as-namespace
+// TODO(burodn): Rename Delegator; or lift to supervisor.ts.
 
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';

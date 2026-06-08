@@ -21,6 +21,7 @@ import {
   LinearBlueprint,
   PlanningBlueprint,
   WebSearchBlueprint,
+  WebSearchHandlers,
   MemoryBlueprint,
   AutomationBlueprint,
   DelegationBlueprint,
@@ -56,6 +57,7 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
     Capability.contributes(Capabilities.OperationHandler, DelegationHandlers),
+    Capability.contributes(Capabilities.OperationHandler, WebSearchHandlers),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).

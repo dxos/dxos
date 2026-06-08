@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DelegationBlueprint } from '../blueprints/delegation';
+import { DelegationBlueprint } from '../blueprints';
 import { AgentPrompt } from '../functions';
 import { Agent } from '../types';
 
