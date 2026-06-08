@@ -24,6 +24,6 @@ describe('Web', () => {
         'Web search works.',
       ],
     }),
-    { timeout: agentTestTimeout() },
+    { timeout: agentTestTimeout(), tags: ['flaky'] },
   );
 });
